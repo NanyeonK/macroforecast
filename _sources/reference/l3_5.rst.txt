@@ -29,11 +29,11 @@ Isolating the L3 contribution when L2's cleaning is well-trusted.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``raw_vs_cleaned_vs_features``, ``features_only``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``features_only``
 ^^^^^^^^^^^^^^^^^
@@ -51,11 +51,11 @@ When upstream stages are well-trusted and the focus is on the L3 output's proper
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``raw_vs_cleaned_vs_features``, ``cleaned_vs_features``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``raw_vs_cleaned_vs_features``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -73,11 +73,11 @@ Default broad audit; tracking the panel's evolution from raw FRED data through t
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``cleaned_vs_features``, ``features_only``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``comparison_output_form``  (L3_5_A_comparison_axis)
 ---------------------------------------------------------
@@ -102,11 +102,11 @@ Verifying expected dimensionality changes -- e.g. confirming PCA reduced 100 col
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``side_by_side``, ``distribution_shift``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``distribution_shift``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -124,11 +124,11 @@ Detecting feature transforms that materially reshape distributions (e.g. wavelet
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``side_by_side``, ``dimension_summary``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -146,11 +146,11 @@ Comprehensive feature-stage audit; recommended for first-time runs.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``side_by_side``, ``dimension_summary``, ``distribution_shift``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``side_by_side``
 ^^^^^^^^^^^^^^^^
@@ -168,11 +168,11 @@ Default multi-stage view; matches L2.5.A output style for consistency.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``dimension_summary``, ``distribution_shift``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``factor_view``  (L3_5_B_factor_block_inspection)
 ------------------------------------------------------
@@ -197,12 +197,12 @@ Quantifying how much variance the chosen ``n_components`` retains; threshold heu
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
 
 **Related options**: ``scree_plot``, ``loadings_heatmap``, ``factor_timeseries``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``factor_timeseries``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -220,12 +220,12 @@ Confirming factors track recognisable cycles (NBER recessions, oil-price spikes,
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
 
 **Related options**: ``scree_plot``, ``loadings_heatmap``, ``cumulative_variance``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``loadings_heatmap``
 ^^^^^^^^^^^^^^^^^^^^
@@ -243,12 +243,12 @@ Interpreting factor identity; high-loading variables suggest the factor's econom
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
 
 **Related options**: ``scree_plot``, ``factor_timeseries``, ``cumulative_variance``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -266,12 +266,12 @@ Default rich factor diagnostic; the standard package for factor-model papers.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
 
 **Related options**: ``scree_plot``, ``loadings_heatmap``, ``factor_timeseries``, ``cumulative_variance``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``scree_plot``
 ^^^^^^^^^^^^^^
@@ -289,12 +289,12 @@ Choosing ``n_components`` -- the elbow heuristic remains the most popular tool.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
 
 **Related options**: ``loadings_heatmap``, ``factor_timeseries``, ``cumulative_variance``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``dfm_diagnostics``  (L3_5_B_factor_block_inspection)
 ----------------------------------------------------------
@@ -319,12 +319,12 @@ Detecting non-stationarity in the factor dynamics; rolling-window estimates flag
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
 
 **Related options**: ``idiosyncratic_acf``, ``multi``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``idiosyncratic_acf``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -342,12 +342,12 @@ Validating the idiosyncratic-AR(1) assumption; large residual ACF at lags > 1 in
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
 
 **Related options**: ``factor_var_stability``, ``multi``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -365,12 +365,12 @@ Comprehensive DFM validation; recommended after any DFM fit.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
 
 **Related options**: ``factor_var_stability``, ``idiosyncratic_acf``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``none``
 ^^^^^^^^
@@ -388,12 +388,12 @@ Pipelines without DFM blocks (PCA-only or no-factor pipelines).
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.
 
 **Related options**: ``factor_var_stability``, ``idiosyncratic_acf``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``feature_correlation``  (L3_5_C_feature_correlation)
 ----------------------------------------------------------
@@ -418,11 +418,11 @@ Detecting block-level redundancy before L4; informs whether to drop a block.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``within_block``, ``with_target``, ``multi``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -440,11 +440,11 @@ Default rich correlation audit.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``within_block``, ``cross_block``, ``with_target``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``none``
 ^^^^^^^^
@@ -462,11 +462,11 @@ Memory-constrained sweeps with very wide feature panels (n_features > 5000).
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``within_block``, ``cross_block``, ``with_target``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``with_target``
 ^^^^^^^^^^^^^^^
@@ -484,11 +484,11 @@ Spotting top candidate predictors; pairs naturally with the L7 ``cumulative_r2_c
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``within_block``, ``cross_block``, ``multi``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``within_block``
 ^^^^^^^^^^^^^^^^
@@ -506,11 +506,11 @@ Detecting redundancy within a block -- high within-block correlations suggest a 
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``cross_block``, ``with_target``, ``multi``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``correlation_method``  (L3_5_C_feature_correlation)
 ---------------------------------------------------------
@@ -535,11 +535,11 @@ Linear-association default. Activates the ``pearson`` branch on L3.5.correlation
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``spearman``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``spearman``
 ^^^^^^^^^^^^
@@ -557,11 +557,11 @@ Monotonic, robust to outliers; preferred for non-Gaussian features.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``pearson``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``correlation_view``  (L3_5_C_feature_correlation)
 -------------------------------------------------------
@@ -586,11 +586,11 @@ Large feature panels with block structure; reveals clusters of correlated featur
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``full_matrix``, ``top_k``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``full_matrix``
 ^^^^^^^^^^^^^^^
@@ -608,11 +608,11 @@ Small feature panels (< 100 cols).
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``clustered_heatmap``, ``top_k``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``top_k``
 ^^^^^^^^^
@@ -630,11 +630,11 @@ Cheapest readout for very wide panels.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``full_matrix``, ``clustered_heatmap``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``lag_view``  (L3_5_D_lag_block_inspection)
 ------------------------------------------------
@@ -659,11 +659,11 @@ Standard time-series ACF view; informs choice of maximum lag length.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``lag_correlation_decay``, ``partial_autocorrelation``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``lag_correlation_decay``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -681,11 +681,11 @@ Choosing maximum lag length quantitatively -- the half-life of the ACF gives a n
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``autocorrelation_per_lag``, ``partial_autocorrelation``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -703,11 +703,11 @@ Default rich lag audit. Activates the ``multi`` branch on L3.5.lag_view; combine
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``autocorrelation_per_lag``, ``lag_correlation_decay``, ``partial_autocorrelation``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``partial_autocorrelation``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -725,11 +725,11 @@ Choosing AR(p) order; the lag at which PACF first hits the noise band suggests p
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``autocorrelation_per_lag``, ``lag_correlation_decay``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``marx_view``  (L3_5_D_lag_block_inspection)
 -------------------------------------------------
@@ -754,12 +754,12 @@ Pipelines without MARX blocks.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
 
 **Related options**: ``weight_decay_visualization``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``weight_decay_visualization``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -777,12 +777,12 @@ MARX-specific block diagnostic; shows the decay shape of the multi-scale moving 
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
 
 **Related options**: ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``selection_view``  (L3_5_E_selected_features_post_selection)
 ------------------------------------------------------------------
@@ -807,11 +807,11 @@ Default rich audit. Activates the ``multi`` branch on L3.5.selection_view; combi
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``selected_list``, ``selection_count_per_origin``, ``selection_stability``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``selected_list``
 ^^^^^^^^^^^^^^^^^
@@ -829,11 +829,11 @@ Cheapest readout; the raw record of feature-selection decisions.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``selection_count_per_origin``, ``selection_stability``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``selection_count_per_origin``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -851,11 +851,11 @@ Detecting selection volatility; large variation across origins flags an unstable
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``selected_list``, ``selection_stability``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``selection_stability``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -873,11 +873,11 @@ Quantifying selection robustness; high stability is a positive indicator for the
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``selected_list``, ``selection_count_per_origin``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``stability_metric``  (L3_5_E_selected_features_post_selection)
 --------------------------------------------------------------------
@@ -902,11 +902,11 @@ Default stability metric; ``|A ∩ B| / |A ∪ B|`` is intuitive and bounded in 
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``kuncheva``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``kuncheva``
 ^^^^^^^^^^^^
@@ -924,12 +924,12 @@ Larger feature panels where Jaccard is biased toward 0; explicitly corrects for 
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 * Kuncheva (2007) 'A stability index for feature selection', AIA proceedings.
 
 **Related options**: ``jaccard``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``diagnostic_format``  (L3_5_Z_export)
 -------------------------------------------
@@ -954,11 +954,11 @@ Quickest path to spreadsheet / pandas; collaborators who avoid JSON.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``html``, ``json``, ``latex_table``, ``multi``, ``pdf``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``html``
 ^^^^^^^^
@@ -976,11 +976,11 @@ Sharing diagnostics with collaborators who do not have the repo checked out.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``csv``, ``json``, ``latex_table``, ``multi``, ``pdf``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``json``
 ^^^^^^^^
@@ -998,11 +998,11 @@ Default; required when diagnostics participate in the bit-exact replication chai
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``csv``, ``html``, ``latex_table``, ``multi``, ``pdf``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``latex_table``
 ^^^^^^^^^^^^^^^
@@ -1020,11 +1020,11 @@ Paper-quality export when the user is drafting a manuscript.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``csv``, ``html``, ``json``, ``multi``, ``pdf``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -1042,11 +1042,11 @@ Comprehensive runs covering paper, slides and machine-readable consumers in one 
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``pdf``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``pdf``
 ^^^^^^^
@@ -1064,11 +1064,11 @@ Publication-grade plots; LaTeX-rendered figures.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``multi``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``png``
 ^^^^^^^
@@ -1086,11 +1086,11 @@ Slide / web embedding where vector formats are unnecessary.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``csv``, ``html``, ``json``, ``latex_table``, ``multi``, ``pdf``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``attach_to_manifest``  (L3_5_Z_export)
 --------------------------------------------
@@ -1105,7 +1105,7 @@ axis ``attach_to_manifest``  (L3_5_Z_export)
 
 Embed diagnostic artifacts into manifest.json's diagnostics index.
 
-Default. Diagnostic file paths and content hashes are recorded in ``manifest.diagnostics``, so ``macrocast.replicate(manifest_path)`` validates that every diagnostic re-runs to a bit-identical artifact. Required for reproducibility-critical sweeps.
+Default. Diagnostic file paths and content hashes are recorded in ``manifest.diagnostics``, so ``macroforecast.replicate(manifest_path)`` validates that every diagnostic re-runs to a bit-identical artifact. Required for reproducibility-critical sweeps.
 
 **When to use**
 
@@ -1113,11 +1113,11 @@ Default; ensures replication includes the diagnostics.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``false``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``false``
 ^^^^^^^^^
@@ -1133,11 +1133,11 @@ Long-running production sweeps where diagnostics blow up the manifest size.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``true``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``figure_dpi``  (L3_5_Z_export)
 ------------------------------------
@@ -1167,11 +1167,11 @@ When the recipe is feeding a paper draft.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``false``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``false``
 ^^^^^^^^^
@@ -1187,8 +1187,8 @@ Default; LaTeX adds tooling overhead that is wasted for non-paper runs.
 
 **References**
 
-* macrocast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
 **Related options**: ``true``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.

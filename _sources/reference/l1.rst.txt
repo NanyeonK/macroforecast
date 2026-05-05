@@ -19,7 +19,7 @@ axis ``custom_source_policy``  (l1_a)
 
 Use the McCracken-Ng curated FRED-MD/QD/SD vintages.
 
-Loads the bundled FRED snapshot via macrocast's raw adapter -- no network access at runtime, no per-user data file. Vintages are pinned in ``macrocast/raw/datasets/`` so two users on the same package version see identical raw inputs.
+Loads the bundled FRED snapshot via macroforecast's raw adapter -- no network access at runtime, no per-user data file. Vintages are pinned in ``macroforecast/raw/datasets/`` so two users on the same package version see identical raw inputs.
 
 This is the canonical recipe path: every published replication script, every example in the gallery, and every CI check uses ``official_only`` so cross-user comparability is bit-exact.
 
@@ -33,7 +33,7 @@ Forecasting on non-FRED panels (firm-level data, country-specific series); needs
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
@@ -50,7 +50,7 @@ Forecasting on non-FRED panels (firm-level data, country-specific series); needs
       leaf_config:
         target: CPIAUCSL
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``custom_panel_only``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ When McCracken-Ng's curation (t-codes, group tags) is part of the study design -
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``official_only``, ``official_plus_custom``
 
@@ -93,7 +93,7 @@ When McCracken-Ng's curation (t-codes, group tags) is part of the study design -
           y:    [1.0, 2.0]
           x1:   [0.5, 1.0]
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``official_plus_custom``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -115,7 +115,7 @@ Pure custom panels (use ``custom_panel_only``); pure official panels (use ``offi
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``official_only``, ``custom_panel_only``
 
@@ -132,7 +132,7 @@ Pure custom panels (use ``custom_panel_only``); pure official panels (use ``offi
         custom_source_path: data/proprietary_indicator.parquet
         custom_merge_rule: left_join
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``dataset``  (l1_a)
 ------------------------
@@ -161,7 +161,7 @@ Monthly inflation, employment, industrial-production, and term-structure forecas
 
 **Related options**: ``custom_source_policy``, ``frequency``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fred_qd``
 ^^^^^^^^^^^
@@ -183,7 +183,7 @@ GDP, consumption, investment, productivity nowcasting / forecasting.
 
 **Related options**: ``custom_source_policy``, ``frequency``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fred_sd``
 ^^^^^^^^^^^
@@ -201,11 +201,11 @@ State-level employment / payroll / housing forecasting; geographic-importance st
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``custom_source_policy``, ``frequency``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fred_md+fred_sd``
 ^^^^^^^^^^^^^^^^^^^
@@ -221,11 +221,11 @@ Studies where state-level targets need national-aggregate predictors.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``custom_source_policy``, ``frequency``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fred_qd+fred_sd``
 ^^^^^^^^^^^^^^^^^^^
@@ -241,11 +241,11 @@ Quarterly state-level studies (rare; use only when the target is quarterly state
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``custom_source_policy``, ``frequency``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``frequency``  (l1_a)
 --------------------------
@@ -262,7 +262,7 @@ Sample at monthly cadence; pairs with FRED-MD / monthly custom panels.
 
 Sets the canonical sampling frequency to monthly. Affects horizon resolution (1 = one month ahead), L2 frequency-alignment rules (only applicable when datasets mix), and the ``standard_md`` horizon set.
 
-The default is ``derived``: macrocast infers the frequency from ``dataset`` (fred_md → monthly, fred_qd → quarterly). Setting frequency explicitly is required for custom panels.
+The default is ``derived``: macroforecast infers the frequency from ``dataset`` (fred_md → monthly, fred_qd → quarterly). Setting frequency explicitly is required for custom panels.
 
 **When to use**
 
@@ -270,11 +270,11 @@ Custom panels with monthly observations; explicit override of the FRED-MD defaul
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``quarterly``, ``dataset``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``quarterly``
 ^^^^^^^^^^^^^
@@ -290,11 +290,11 @@ GDP / NIPA-style targets; quarterly custom panels; FRED-QD-based studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``monthly``, ``dataset``, ``horizon_set``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``information_set_type``  (l1_a)
 -------------------------------------
@@ -319,11 +319,11 @@ Default for any benchmark study; comparable to published work.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``pseudo_oos_on_revised_data``, ``vintage_policy``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``pseudo_oos_on_revised_data``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -339,11 +339,11 @@ When the recipe wants to make the pseudo-OOS protocol explicit (e.g., for clarit
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``final_revised_data``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``vintage_policy``  (l1_a)
 -------------------------------
@@ -372,11 +372,11 @@ Real-time forecasting evaluations -- those need ALFRED vintages.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``information_set_type``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``fred_sd_frequency_policy``  (l1_a)
 -----------------------------------------
@@ -399,11 +399,11 @@ Exploratory work where mixed-frequency status is informative but should not bloc
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``allow_mixed_frequency``, ``reject_mixed_known_frequency``, ``require_single_known_frequency``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``allow_mixed_frequency``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -419,11 +419,11 @@ Standard FRED-SD pipelines that need both monthly and quarterly variables.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``report_only``, ``reject_mixed_known_frequency``, ``require_single_known_frequency``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``reject_mixed_known_frequency``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -439,11 +439,11 @@ Defensive recipes that should fail loudly if FRED-SD upstream changes deliver mi
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``require_single_known_frequency``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``require_single_known_frequency``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -459,11 +459,11 @@ Strictly mono-frequency studies (e.g. monthly-only).
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``reject_mixed_known_frequency``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``target_structure``  (l1_b)
 ---------------------------------
@@ -488,7 +488,7 @@ Default. Any standard forecasting benchmark.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``multi_target``
 
@@ -500,7 +500,7 @@ Default. Any standard forecasting benchmark.
       leaf_config:
         target: CPIAUCSL
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``multi_target``
 ^^^^^^^^^^^^^^^^
@@ -522,11 +522,11 @@ Independent per-target studies -- those are usually clearer as separate sweep ce
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``single_target``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``variable_universe``  (l1_c)
 ----------------------------------
@@ -549,12 +549,12 @@ Default. Any high-dimensional benchmark following McCracken-Ng.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``missing_availability``, ``official_transform_policy``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``core_variables``
 ^^^^^^^^^^^^^^^^^^
@@ -570,12 +570,12 @@ Low-dimensional benchmark; comparison against published 'core' panel results.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``missing_availability``, ``official_transform_policy``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``category_variables``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -591,12 +591,12 @@ Within-category importance studies; testing whether one block alone is sufficien
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``missing_availability``, ``official_transform_policy``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``target_specific_variables``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -612,12 +612,12 @@ Domain-specific studies where each target has a known predictor block.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``missing_availability``, ``official_transform_policy``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``explicit_variable_list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -625,7 +625,7 @@ Domain-specific studies where each target has a known predictor block.
 
 Use exactly the columns listed in leaf_config.variable_universe_columns.
 
-Most flexible option. The recipe author supplies the full predictor column list in leaf_config; macrocast filters the panel to that list verbatim. No grouping logic, no category lookup.
+Most flexible option. The recipe author supplies the full predictor column list in leaf_config; macroforecast filters the panel to that list verbatim. No grouping logic, no category lookup.
 
 **When to use**
 
@@ -633,12 +633,12 @@ Replication scripts that need an exact predictor set; ablations.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``missing_availability``, ``official_transform_policy``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``missing_availability``  (l1_c)
 -------------------------------------
@@ -665,11 +665,11 @@ When the panel is sparsely observed -- listwise deletion can leave too few rows.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``keep_available_rows``, ``impute_predictors_only``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``keep_available_rows``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -685,11 +685,11 @@ Default for FRED-MD / -QD recipes where L2.D EM imputation is the canonical work
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``require_complete_rows``, ``impute_predictors_only``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``impute_predictors_only``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -705,11 +705,11 @@ Recipes where the target should be the ground-truth signal and never imputed.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``keep_available_rows``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``zero_fill_leading_predictor_gaps``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -729,11 +729,11 @@ When zero is a meaningful value for the predictor -- choose ``preserve_raw_missi
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``require_complete_rows``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``raw_missing_policy``  (l1_c)
 -----------------------------------
@@ -756,11 +756,11 @@ Default; required when L2.D will run EM-factor or similar global imputation.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``zero_fill_leading_predictor_missing_before_tcode``, ``impute_raw_predictors``, ``drop_raw_missing_rows``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``zero_fill_leading_predictor_missing_before_tcode``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -780,11 +780,11 @@ When zero is a meaningful value for the predictor.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``preserve_raw_missing``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``impute_raw_predictors``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -800,11 +800,11 @@ Pipelines that use ``no_transform`` t-codes and need cleaning at L1.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``preserve_raw_missing``, ``drop_raw_missing_rows``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``drop_raw_missing_rows``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -824,11 +824,11 @@ When the panel is small -- you'll lose a lot of rows.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``preserve_raw_missing``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``raw_outlier_policy``  (l1_c)
 -----------------------------------
@@ -851,11 +851,11 @@ Default; the canonical workflow.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``winsorize_raw``, ``iqr_clip_raw``, ``mad_clip_raw``, ``zscore_clip_raw``, ``set_raw_outliers_to_missing``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``winsorize_raw``
 ^^^^^^^^^^^^^^^^^
@@ -871,11 +871,11 @@ Heavy-tailed financial / macro series where extreme observations would dominate 
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``preserve_raw_outliers``, ``iqr_clip_raw``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``iqr_clip_raw``
 ^^^^^^^^^^^^^^^^
@@ -891,11 +891,11 @@ Robust outlier handling on non-normal series.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``winsorize_raw``, ``mad_clip_raw``, ``zscore_clip_raw``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mad_clip_raw``
 ^^^^^^^^^^^^^^^^
@@ -911,11 +911,11 @@ Highly non-Gaussian series with sparse outliers.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``iqr_clip_raw``, ``zscore_clip_raw``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``zscore_clip_raw``
 ^^^^^^^^^^^^^^^^^^^
@@ -935,11 +935,11 @@ Heavy-tailed series -- use ``iqr_clip_raw`` or ``mad_clip_raw``.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``iqr_clip_raw``, ``mad_clip_raw``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``set_raw_outliers_to_missing``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -955,11 +955,11 @@ Pipelines where outliers should be re-imputed coherently with other missing data
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``preserve_raw_outliers``, ``winsorize_raw``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``release_lag_rule``  (l1_c)
 ---------------------------------
@@ -982,11 +982,11 @@ Backtests where real-time vintage data is unavailable.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``fixed_lag_all_series``, ``series_specific_lag``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``fixed_lag_all_series``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1002,11 +1002,11 @@ Coarse real-time approximations.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``series_specific_lag``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``series_specific_lag``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1022,11 +1022,11 @@ Real-time / nowcasting studies that respect publication delays.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``fixed_lag_all_series``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``contemporaneous_x_rule``  (l1_c)
 ---------------------------------------
@@ -1049,11 +1049,11 @@ Default; standard fitting / nowcasting flow.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``forbid_same_period_predictors``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``forbid_same_period_predictors``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1069,11 +1069,11 @@ Pure forecasting setups where contemporaneous information would create look-ahea
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``allow_same_period_predictors``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``official_transform_policy``  (l1_c)
 ------------------------------------------
@@ -1102,12 +1102,12 @@ Studies that want to compare alternative transform schemes (use ``keep_official_
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``keep_official_raw_scale``, ``official_transform_scope``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``keep_official_raw_scale``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1123,11 +1123,11 @@ Tree / forest models that don't require stationarity; alternative-transform stud
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``apply_official_tcode``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``official_transform_scope``  (l1_c)
 -----------------------------------------
@@ -1150,11 +1150,11 @@ When predictors are already pre-transformed.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``predictors_only``, ``target_and_predictors``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``predictors_only``
 ^^^^^^^^^^^^^^^^^^^
@@ -1172,11 +1172,11 @@ When the target is pre-engineered (e.g. growth rate).
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``target_only``, ``target_and_predictors``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``target_and_predictors``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1194,11 +1194,11 @@ Default; FRED-MD / -QD recipes.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``target_only``, ``predictors_only``, ``none``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``none``
 ^^^^^^^^
@@ -1214,11 +1214,11 @@ Custom panels with bespoke transforms.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``target_and_predictors``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``target_geography_scope``  (l1_d)
 ---------------------------------------
@@ -1241,11 +1241,11 @@ State-level case studies (e.g., CA / TX / NY-specific forecasts).
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``all_states``, ``selected_states``, ``predictor_geography_scope``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``all_states``
 ^^^^^^^^^^^^^^
@@ -1263,11 +1263,11 @@ Geographic-importance studies; cross-state benchmark comparisons.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``single_state``, ``selected_states``, ``fred_sd_state_group``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``selected_states``
 ^^^^^^^^^^^^^^^^^^^
@@ -1283,11 +1283,11 @@ Region-specific studies (Northeast vs. Midwest), Census-division comparisons.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``all_states``, ``fred_sd_state_group``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``predictor_geography_scope``  (l1_d)
 ------------------------------------------
@@ -1310,11 +1310,11 @@ Default for state-level forecasts.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``all_states``, ``selected_states``, ``national_only``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``all_states``
 ^^^^^^^^^^^^^^
@@ -1330,11 +1330,11 @@ Spillover / cross-state interaction studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``match_target``, ``selected_states``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``selected_states``
 ^^^^^^^^^^^^^^^^^^^
@@ -1350,11 +1350,11 @@ Custom regional studies (e.g. neighbouring states).
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``match_target``, ``all_states``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``national_only``
 ^^^^^^^^^^^^^^^^^
@@ -1374,11 +1374,11 @@ State-level forecasts where regional predictors carry signal.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``all_states``, ``match_target``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``fred_sd_state_group``  (l1_d)
 ------------------------------------
@@ -1403,13 +1403,13 @@ Default; comprehensive 51-jurisdiction panel.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``census_region_northeast``, ``census_region_midwest``, ``census_region_south``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_region_northeast``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1427,13 +1427,13 @@ Northeastern regional studies; comparing services-heavy economies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_midwest``, ``census_region_south``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_region_midwest``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1451,13 +1451,13 @@ Manufacturing-belt and Plains regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_south``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_region_south``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1475,13 +1475,13 @@ Southern regional studies; Sun Belt vs Rust Belt comparisons.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_region_west``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -1499,13 +1499,13 @@ Pacific Coast tech and Mountain West commodity studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_new_england``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1523,13 +1523,13 @@ Finance / education / biotech regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_middle_atlantic``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1547,13 +1547,13 @@ Financial-centre regional studies (NY metro).
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_east_north_central``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1571,13 +1571,13 @@ Manufacturing / Rust Belt regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_west_north_central``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1595,13 +1595,13 @@ Agricultural / commodity regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_south_atlantic``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1619,13 +1619,13 @@ Atlantic Seaboard regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_east_south_central``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1643,13 +1643,13 @@ Tennessee Valley / Auto-Alley regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_west_south_central``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1667,13 +1667,13 @@ Energy-sector regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_mountain``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1691,13 +1691,13 @@ Mountain West regional studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``census_division_pacific``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1715,13 +1715,13 @@ Pacific Coast tech and non-contiguous-state studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``contiguous_48_plus_dc``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1739,13 +1739,13 @@ Continental US studies; spatial econometrics with adjacency matrices.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``custom_state_group``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -1763,13 +1763,13 @@ Bespoke regional groupings not captured by Census definitions.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 * US Census Bureau (2020) 'Geographic Levels: Regions and Divisions', US Census Bureau Geography Division. <https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html>
 
 **Related options**: ``all_states``, ``census_region_northeast``, ``census_region_midwest``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``state_selection``  (l1_d)
 --------------------------------
@@ -1792,11 +1792,11 @@ Default; state-group already does the filtering.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``selected_states``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``selected_states``
 ^^^^^^^^^^^^^^^^^^^
@@ -1812,11 +1812,11 @@ Custom regional studies that need a non-standard state subset.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``all_states``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``fred_sd_variable_group``  (l1_d)
 ---------------------------------------
@@ -1841,12 +1841,12 @@ Default; broadest predictor block.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``labor_market_core``, ``employment_sector``, ``income``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``labor_market_core``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1864,12 +1864,12 @@ Labour-market focused studies; Sahm-rule recession analysis at state level.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``employment_sector``, ``income``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``employment_sector``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1887,12 +1887,12 @@ Industry-level employment studies; structural-transformation analysis.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``income``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``gsp_output``
 ^^^^^^^^^^^^^^
@@ -1910,12 +1910,12 @@ Aggregate output studies; state-level GDP forecasting.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``housing``
 ^^^^^^^^^^^
@@ -1933,12 +1933,12 @@ Housing-cycle studies; foreclosure / mortgage-market analysis.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``trade``
 ^^^^^^^^^
@@ -1956,12 +1956,12 @@ Trade-flow studies; port-region economic analysis.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``income``
 ^^^^^^^^^^
@@ -1979,12 +1979,12 @@ Consumer / household income studies; transfer-payment analysis.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``direct_analog_high_confidence``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2002,12 +2002,12 @@ Cross-frequency studies needing direct national-state mapping.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``provisional_analog_medium``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2025,12 +2025,12 @@ Sensitivity analyses on the analog mapping.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``semantic_review_outputs``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2048,12 +2048,12 @@ Audit-trail diagnostics for the FRED-SD construction process.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``no_reliable_analog``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -2071,12 +2071,12 @@ State-only studies; spatial-econometric panels that ignore national aggregates.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``custom_sd_variable_group``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2094,12 +2094,12 @@ Bespoke variable selections not captured by built-in groupings.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``all_sd_variables``, ``labor_market_core``, ``employment_sector``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``sd_variable_selection``  (l1_d)
 --------------------------------------
@@ -2124,11 +2124,11 @@ Default broad-spectrum study. Selecting ``all_sd_variables`` on ``l1.sd_variable
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``selected_sd_variables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``selected_sd_variables``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2144,11 +2144,11 @@ Targeted studies that focus on specific FRED-SD series.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``all_sd_variables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``sample_start_rule``  (l1_e)
 ----------------------------------
@@ -2171,11 +2171,11 @@ Studies that want maximum sample length and trust L2 imputation to handle leadin
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``max_balanced``, ``fixed_date``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fixed_date``
 ^^^^^^^^^^^^^^
@@ -2191,11 +2191,11 @@ Replication scripts; ablation studies over alternative start dates.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``max_balanced``, ``earliest_available``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``max_balanced``
 ^^^^^^^^^^^^^^^^
@@ -2217,11 +2217,11 @@ Custom panels where every series shares the same start date (use ``earliest_avai
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``earliest_available``, ``fixed_date``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``sample_end_rule``  (l1_e)
 --------------------------------
@@ -2246,11 +2246,11 @@ Default. Studies that want to use the full available history.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``fixed_date``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fixed_date``
 ^^^^^^^^^^^^^^
@@ -2266,11 +2266,11 @@ Pre-COVID benchmark studies; matching a paper's reported sample window.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``latest_available``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``horizon_set``  (l1_f)
 ----------------------------
@@ -2293,12 +2293,12 @@ Default for monthly studies. Comparable to published monthly benchmarks.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``standard_qd``, ``single``, ``custom_list``, ``range_up_to_h``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``standard_qd``
 ^^^^^^^^^^^^^^^
@@ -2316,12 +2316,12 @@ Default for quarterly (FRED-QD) studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
 **Related options**: ``standard_md``, ``single``, ``custom_list``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``single``
 ^^^^^^^^^^
@@ -2337,11 +2337,11 @@ One-shot studies (h=1 nowcasting, h=12 long-horizon ablation).
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``standard_md``, ``standard_qd``, ``custom_list``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``custom_list``
 ^^^^^^^^^^^^^^^
@@ -2357,11 +2357,11 @@ Replication of papers with non-standard horizon sets; ablation studies.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``standard_md``, ``standard_qd``, ``range_up_to_h``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``range_up_to_h``
 ^^^^^^^^^^^^^^^^^
@@ -2377,11 +2377,11 @@ Dense horizon studies with direct-h forecasting.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``custom_list``, ``standard_md``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``regime_definition``  (l1_g)
 ----------------------------------
@@ -2404,11 +2404,11 @@ Default for any study without an explicit regime structure.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``external_nber``, ``external_user_provided``, ``estimated_markov_switching``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``external_nber``
 ^^^^^^^^^^^^^^^^^
@@ -2426,7 +2426,7 @@ Standard recession-conditioning studies; comparing models' performance during re
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * National Bureau of Economic Research, 'US Business Cycle Expansions and Contractions'. <https://www.nber.org/research/business-cycle-dating>
 
 **Related options**: ``none``, ``external_user_provided``
@@ -2439,7 +2439,7 @@ Standard recession-conditioning studies; comparing models' performance during re
       fixed_axes:
         regime_definition: external_nber
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``external_user_provided``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2457,11 +2457,11 @@ Custom regime studies (monetary stance, fiscal stance, alternative recession-dat
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``none``, ``external_nber``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``estimated_markov_switching``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2479,12 +2479,12 @@ Inflation-regime studies; recession-prediction; any study that wants endogenous 
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * Hamilton (1989) 'A new approach to the economic analysis of nonstationary time series and the business cycle', Econometrica 57(2). (doi:10.2307/1912559)
 
 **Related options**: ``estimated_threshold``, ``estimated_structural_break``, ``regime_estimation_temporal_rule``, ``n_regimes``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``estimated_threshold``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -2494,7 +2494,7 @@ Tong (1990) SETAR threshold model -- regime by threshold variable.
 
 Estimates ``n_regimes`` regimes by grid-searching the threshold on a chosen ``threshold_variable`` (defaults to lagged target). The regime per observation is determined by which side of the threshold the variable falls on.
 
-Tong's original SETAR uses AR(p) per regime; macrocast's runtime fits AR(``threshold_ar_p``) per partition and selects the threshold minimising joint SSR.
+Tong's original SETAR uses AR(p) per regime; macroforecast's runtime fits AR(``threshold_ar_p``) per partition and selects the threshold minimising joint SSR.
 
 **When to use**
 
@@ -2502,12 +2502,12 @@ Self-exciting threshold dynamics (e.g., interest-rate stance regimes); non-linea
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * Tong (1990) 'Non-linear Time Series: A Dynamical System Approach', Oxford University Press.
 
 **Related options**: ``estimated_markov_switching``, ``estimated_structural_break``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``estimated_structural_break``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2523,12 +2523,12 @@ Studies hypothesising structural change (e.g., pre/post Volcker, pre/post Great 
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * Bai & Perron (1998) 'Estimating and testing linear models with multiple structural changes', Econometrica 66(1). (doi:10.2307/2998540)
 
 **Related options**: ``estimated_markov_switching``, ``estimated_threshold``, ``max_breaks``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``regime_estimation_temporal_rule``  (l1_g)
 ------------------------------------------------
@@ -2552,11 +2552,11 @@ Default; OOS-safe regime estimation.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``rolling_window_per_origin``, ``block_recompute``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``rolling_window_per_origin``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2572,11 +2572,11 @@ Drifting / non-stationary regime structure.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``expanding_window_per_origin``, ``block_recompute``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``block_recompute``
 ^^^^^^^^^^^^^^^^^^^
@@ -2592,8 +2592,8 @@ Long sweeps where per-origin regime re-fits are infeasible.
 
 **References**
 
-* macrocast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
+* macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: ``expanding_window_per_origin``, ``rolling_window_per_origin``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.

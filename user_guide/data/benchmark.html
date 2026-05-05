@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Benchmark &amp; Predictor Universe (1.4) &mdash; macrocast</title>
+  <title>Benchmark &amp; Predictor Universe (1.4) &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">macrocast</a>
+          <a href="../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Benchmark &amp; Predictor Universe (1.4)</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/benchmark.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/user_guide/data/benchmark.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -192,7 +192,7 @@
 <section id="functions-features">
 <h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._run_benchmark_executor</span></code> dispatches by <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._run_benchmark_executor</span></code> dispatches by <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> value.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code>: z-scored leading-factor regression; falls back to <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> for training windows &lt; 6 rows.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>: inline dispatch over <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite</span></code> members (allowed set: historical_mean, zero_change, autoregressive_bic, rolling_mean, autoregressive_fixed_lag, autoregressive_diffusion_index). Missing or unsupported members raise <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code> / <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>: look up the forecast at <code class="docutils literal notranslate"><span class="pre">train.index[-1]</span> <span class="pre">+</span> <span class="pre">horizon</span></code> months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.</p></li>
@@ -258,7 +258,7 @@
 <section id="id2">
 <h3>Functions &amp; features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._raw_panel_columns(frame,</span> <span class="pre">target,</span> <span class="pre">predictor_family,</span> <span class="pre">spec)</span></code> dispatches on the rule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._raw_panel_columns(frame,</span> <span class="pre">target,</span> <span class="pre">predictor_family,</span> <span class="pre">spec)</span></code> dispatches on the rule.</p></li>
 <li><p>Target column is always excluded from the predictor set.</p></li>
 <li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_based</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></li>
 </ul>
@@ -329,7 +329,7 @@
 <section id="id5">
 <h3>Functions &amp; features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_variable_universe(raw_result,</span> <span class="pre">rule,</span> <span class="pre">spec,</span> <span class="pre">target)</span></code> is called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_variable_universe(raw_result,</span> <span class="pre">rule,</span> <span class="pre">spec,</span> <span class="pre">target)</span></code> is called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></li>
 <li><p>Target and date columns are always preserved after filtering.</p></li>
 <li><p>Runtime discovery (stability / correlation) is out of scope — users supply the subset.</p></li>
 <li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>; <code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns</span></code> entries for the current target(s).</p></li>
@@ -410,7 +410,7 @@
 <section id="id9">
 <h3>Functions &amp; features<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Module: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.deterministic</span></code> — <code class="docutils literal notranslate"><span class="pre">augment_frame(df,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index=None,</span> <span class="pre">break_dates=None)</span></code> + <code class="docutils literal notranslate"><span class="pre">augment_array(X,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index,</span> <span class="pre">break_dates=None)</span></code>.</p></li>
+<li><p>Module: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.deterministic</span></code> — <code class="docutils literal notranslate"><span class="pre">augment_frame(df,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index=None,</span> <span class="pre">break_dates=None)</span></code> + <code class="docutils literal notranslate"><span class="pre">augment_array(X,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index,</span> <span class="pre">break_dates=None)</span></code>.</p></li>
 <li><p>Wired into <code class="docutils literal notranslate"><span class="pre">_build_raw_panel_training_data</span></code> after preprocessing. Both X_train and X_pred are augmented identically so the fitted coefficients apply at prediction time.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">monthly_seasonal</span></code> / <code class="docutils literal notranslate"><span class="pre">quarterly_seasonal</span></code> require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></li>
 <li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">break_dummies</span></code> requires non-empty <code class="docutils literal notranslate"><span class="pre">leaf_config.break_dates</span></code>.</p></li>

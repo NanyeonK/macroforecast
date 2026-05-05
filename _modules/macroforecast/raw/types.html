@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>macrocast.raw.types &mdash; macrocast</title>
+  <title>macroforecast.raw.types &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -61,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">macrocast</a>
+          <a href="../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -70,7 +70,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">macrocast.raw.types</li>
+      <li class="breadcrumb-item active">macroforecast.raw.types</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -79,7 +79,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for macrocast.raw.types</h1><div class="highlight"><pre>
+  <h1>Source code for macroforecast.raw.types</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
@@ -92,7 +92,7 @@
 
 
 <div class="viewcode-block" id="RawVersionRequest">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.RawVersionRequest">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.RawVersionRequest">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RawVersionRequest</span><span class="p">:</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">DatasetId</span>
@@ -102,7 +102,7 @@
 
 
 <div class="viewcode-block" id="RawDatasetMetadata">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.RawDatasetMetadata">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.RawDatasetMetadata">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RawDatasetMetadata</span><span class="p">:</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span>
@@ -117,7 +117,7 @@
 
 
 <div class="viewcode-block" id="RawArtifactRecord">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.RawArtifactRecord">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.RawArtifactRecord">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RawArtifactRecord</span><span class="p">:</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span>
@@ -135,7 +135,7 @@
 
 
 <div class="viewcode-block" id="RawLoadResult">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.RawLoadResult">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.RawLoadResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RawLoadResult</span><span class="p">:</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">Any</span>

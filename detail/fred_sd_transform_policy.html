@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FRED-SD Transform Policy &mdash; macrocast</title>
+  <title>FRED-SD Transform Policy &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">FRED-SD Transform Policy</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/fred_sd_transform_policy.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/detail/fred_sd_transform_policy.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -82,7 +82,7 @@
              
   <section id="fred-sd-transform-policy">
 <h1>FRED-SD Transform Policy<a class="headerlink" href="#fred-sd-transform-policy" title="Link to this heading"></a></h1>
-<p>FRED-SD transformation codes are a research layer in macrocast. They are not
+<p>FRED-SD transformation codes are a research layer in macroforecast. They are not
 source metadata.</p>
 <section id="policy">
 <h2>Policy<a class="headerlink" href="#policy" title="Link to this heading"></a></h2>
@@ -94,7 +94,7 @@ source metadata.</p>
 </ul>
 <p>Opt-in runtime policy:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -106,7 +106,7 @@ source metadata.</p>
 </pre></div>
 </div>
 <p>The opt-in map is <code class="docutils literal notranslate"><span class="pre">sd-analog-v0.1</span></code>. It is stored in
-<code class="docutils literal notranslate"><span class="pre">macrocast.raw.sd_inferred_tcodes.SD_INFERRED_TCODE_MAP</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">macroforecast.raw.sd_inferred_tcodes.SD_INFERRED_TCODE_MAP</span></code>.</p>
 <p>Important interpretation:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">sd-analog-v0.1</span></code> is not a state-by-state stationarity optimizer.</p></li>
@@ -131,7 +131,7 @@ researcher could choose. They should not be conflated.</p>
 <th class="head"><p>what it does</p></th>
 <th class="head"><p>benefit</p></th>
 <th class="head"><p>risk</p></th>
-<th class="head"><p>macrocast status</p></th>
+<th class="head"><p>macroforecast status</p></th>
 </tr>
 </thead>
 <tbody>
@@ -278,7 +278,7 @@ research override.</p>
 </tbody>
 </table>
 <p>The manifest also emits a warning:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>FRED-SD inferred/empirical t-codes are macrocast research metadata, not official FRED-SD metadata
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>FRED-SD inferred/empirical t-codes are macroforecast research metadata, not official FRED-SD metadata
 </pre></div>
 </div>
 </section>
@@ -319,7 +319,7 @@ decision; interpolation does not create a new official monthly analog.</p></li>
 </section>
 <section id="state-level-stationarity-audit">
 <h2>State-Level Stationarity Audit<a class="headerlink" href="#state-level-stationarity-audit" title="Link to this heading"></a></h2>
-<p>On 2026-04-26, macrocast checked the actual FRED-SD live by-series workbook
+<p>On 2026-04-26, macroforecast checked the actual FRED-SD live by-series workbook
 <code class="docutils literal notranslate"><span class="pre">series-2026-03.xlsx</span></code> against candidate codes <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">6)</span></code> for every
 state column, using observations from 2005-06 onward. For each
 <code class="docutils literal notranslate"><span class="pre">SD</span> <span class="pre">variable</span> <span class="pre">x</span> <span class="pre">state</span></code>, the audit selected the candidate with the best simple
@@ -649,7 +649,7 @@ score-ranked diagnostics with reviewed status metadata from
 </section>
 <section id="runtime-order">
 <h2>Runtime Order<a class="headerlink" href="#runtime-order" title="Link to this heading"></a></h2>
-<p>For composite datasets, macrocast first aligns component frequencies:</p>
+<p>For composite datasets, macroforecast first aligns component frequencies:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code> uses monthly frequency.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code> uses quarterly frequency.</p></li>

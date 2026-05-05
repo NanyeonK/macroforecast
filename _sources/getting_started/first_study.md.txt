@@ -115,7 +115,7 @@ Fixed design:
 ## Execute
 
 ```python
-from macrocast.core import execute_minimal_forecast
+from macroforecast.core import execute_minimal_forecast
 
 result = execute_minimal_forecast(open("my_study.yaml").read())
 ```

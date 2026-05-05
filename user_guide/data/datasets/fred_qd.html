@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FRED-QD &mdash; macrocast</title>
+  <title>FRED-QD &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">macrocast</a>
+          <a href="../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">FRED-QD</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/datasets/fred_qd.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/user_guide/data/datasets/fred_qd.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -82,7 +82,7 @@
              
   <section id="fred-qd">
 <h1>FRED-QD<a class="headerlink" href="#fred-qd" title="Link to this heading"></a></h1>
-<p>Quarterly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Sister dataset to <a class="reference internal" href="fred_md.html"><span class="std std-doc">FRED-MD</span></a>, designed for longer-horizon forecasting and for factor models requiring quarterly frequency (GDP, productivity, balance-sheet aggregates). Loaded via <code class="docutils literal notranslate"><span class="pre">macrocast.load_fred_qd()</span></code> when <code class="docutils literal notranslate"><span class="pre">path.1_data_task.fixed_axes.dataset</span> <span class="pre">==</span> <span class="pre">&quot;fred_qd&quot;</span></code>.</p>
+<p>Quarterly U.S. macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Sister dataset to <a class="reference internal" href="fred_md.html"><span class="std std-doc">FRED-MD</span></a>, designed for longer-horizon forecasting and for factor models requiring quarterly frequency (GDP, productivity, balance-sheet aggregates). Loaded via <code class="docutils literal notranslate"><span class="pre">macroforecast.load_fred_qd()</span></code> when <code class="docutils literal notranslate"><span class="pre">path.1_data_task.fixed_axes.dataset</span> <span class="pre">==</span> <span class="pre">&quot;fred_qd&quot;</span></code>.</p>
 <section id="citation-authoritative-source">
 <h2>Citation &amp; authoritative source<a class="headerlink" href="#citation-authoritative-source" title="Link to this heading"></a></h2>
 <ul class="simple">
@@ -91,10 +91,10 @@
 <li><p><strong>Variable appendix (current)</strong>: <a class="reference external" href="https://research.stlouisfed.org/econ/mccracken/fred-databases/"><code class="docutils literal notranslate"><span class="pre">FRED-QD_updated_appendix.pdf</span></code></a> — the authoritative list of every series, T-code, source FRED ID, and variable description. The package does not redistribute the appendix.</p></li>
 </ul>
 </section>
-<section id="what-macrocast-downloads">
-<h2>What macrocast downloads<a class="headerlink" href="#what-macrocast-downloads" title="Link to this heading"></a></h2>
+<section id="what-macroforecast-downloads">
+<h2>What macroforecast downloads<a class="headerlink" href="#what-macroforecast-downloads" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>Current vintage</strong>: <code class="docutils literal notranslate"><span class="pre">https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-qd/quarterly/current.csv</span></code> (referenced in <code class="docutils literal notranslate"><span class="pre">macrocast/raw/datasets/fred_qd.py</span></code>). Replaced by the maintainers at each quarter’s advance release.</p></li>
+<li><p><strong>Current vintage</strong>: <code class="docutils literal notranslate"><span class="pre">https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-qd/quarterly/current.csv</span></code> (referenced in <code class="docutils literal notranslate"><span class="pre">macroforecast/raw/datasets/fred_qd.py</span></code>). Replaced by the maintainers at each quarter’s advance release.</p></li>
 <li><p><strong>Historical vintage</strong>: <code class="docutils literal notranslate"><span class="pre">https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-qd/quarterly/{vintage}.csv</span></code> with <code class="docutils literal notranslate"><span class="pre">vintage</span></code> as <code class="docutils literal notranslate"><span class="pre">YYYY-Q</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">2020-06</span></code>). Accessed when the recipe pins <code class="docutils literal notranslate"><span class="pre">information_set_type</span> <span class="pre">==</span> <span class="pre">&quot;real_time_vintage&quot;</span></code> plus <code class="docutils literal notranslate"><span class="pre">leaf_config.data_vintage</span></code>.</p></li>
 </ul>
 <p>Same two-row header format as FRED-MD: row 1 holds the T-code per series, rows 2+ are quarterly observations starting 1959:Q1.</p>
@@ -158,7 +158,7 @@
 </tbody>
 </table>
 <p>Case 8 is used sparingly — the paper notes that unit-root-test-driven T-code selection sometimes differs from codes used by prior literature, and the appendix flags these cases explicitly.</p>
-<p>Flow into macrocast is via the same <code class="docutils literal notranslate"><span class="pre">tcode_policy</span></code> axis as FRED-MD (1.1 does not override it).</p>
+<p>Flow into macroforecast is via the same <code class="docutils literal notranslate"><span class="pre">tcode_policy</span></code> axis as FRED-MD (1.1 does not override it).</p>
 </section>
 <section id="changes-from-the-2020-working-paper-2021-fed-review-publication-to-current">
 <h2>Changes from the 2020 working paper / 2021 Fed Review publication to current<a class="headerlink" href="#changes-from-the-2020-working-paper-2021-fed-review-publication-to-current" title="Link to this heading"></a></h2>
@@ -169,20 +169,20 @@
 <li><p><strong>Additions</strong> when a new Fed release adds a directly useful aggregate — rare but non-zero. The 14-category structure accommodates additions without a group rename.</p></li>
 <li><p><strong>Balance-sheet refinements</strong> — the “Non-Household Balance Sheets” group was the working paper’s main contribution over Stock–Watson (2012a); refinements to this group (e.g., updating a “banks vs non-banks” split) occur as Fed source data gets restructured.</p></li>
 </ul>
-<p>As with FRED-MD, the authoritative change log lives in the appendix PDF; macrocast does not mirror it. Bit-identical replication of a published study requires pinning the exact vintage via <code class="docutils literal notranslate"><span class="pre">leaf_config.data_vintage</span></code>.</p>
+<p>As with FRED-MD, the authoritative change log lives in the appendix PDF; macroforecast does not mirror it. Bit-identical replication of a published study requires pinning the exact vintage via <code class="docutils literal notranslate"><span class="pre">leaf_config.data_vintage</span></code>.</p>
 </section>
 <section id="loader-behaviour">
 <h2>Loader behaviour<a class="headerlink" href="#loader-behaviour" title="Link to this heading"></a></h2>
 <p>Mirror of FRED-MD:</p>
 <ul class="simple">
-<li><p>Caches download at <code class="docutils literal notranslate"><span class="pre">~/.cache/macrocast/raw/</span></code>.</p></li>
+<li><p>Caches download at <code class="docutils literal notranslate"><span class="pre">~/.cache/macroforecast/raw/</span></code>.</p></li>
 <li><p>Parsing via <code class="docutils literal notranslate"><span class="pre">parse_fred_csv</span></code> (same shared helper).</p></li>
 <li><p>No data redistribution. Network access or <code class="docutils literal notranslate"><span class="pre">local_source</span></code> path required on first load.</p></li>
 <li><p>Schema: date index (quarter-end) + numeric columns with FRED series IDs as column names.</p></li>
 </ul>
 </section>
-<section id="known-limitations-in-macrocast-v1-0">
-<h2>Known limitations in macrocast v1.0<a class="headerlink" href="#known-limitations-in-macrocast-v1-0" title="Link to this heading"></a></h2>
+<section id="known-limitations-in-macroforecast-v1-0">
+<h2>Known limitations in macroforecast v1.0<a class="headerlink" href="#known-limitations-in-macroforecast-v1-0" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>Same as FRED-MD: no per-variable metadata surface, no auto T-code validation across vintages, <code class="docutils literal notranslate"><span class="pre">data_vintage</span></code> required for real-time_vintage mode.</p></li>
 <li><p><strong>Quarterly / monthly alignment</strong>: when a study mixes FRED-QD with FRED-MD, aligning them requires the <code class="docutils literal notranslate"><span class="pre">alignment_rule</span></code> axis (1.5). v1.0 implements month-to-quarter aggregation (operational) but mixed-frequency evaluation is limited to single-frequency panels at each horizon.</p></li>

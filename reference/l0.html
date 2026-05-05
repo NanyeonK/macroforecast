@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>L0 – Study Setup &mdash; macrocast</title>
+  <title>L0 – Study Setup &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -79,7 +79,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -90,7 +90,7 @@
           <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
       <li class="breadcrumb-item active">L0  –  Study Setup</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/reference/l0.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/reference/l0.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -132,7 +132,7 @@
 <p>Long-running production sweeps where a transient failure on one cell (e.g., a memory hiccup on one bootstrap iteration) should not abort the whole study.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L0 §A: ‘fail_fast vs continue_on_failure is the canonical execution-policy choice for any cell-loop study.’</p></li>
+<li><p>macroforecast design Part 1, L0 §A: ‘fail_fast vs continue_on_failure is the canonical execution-policy choice for any cell-loop study.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">continue_on_failure</span></code></p>
 <p><strong>Examples</strong></p>
@@ -144,7 +144,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="continue-on-failure">
@@ -158,7 +158,7 @@
 <p>Authoring iteration – failures are usually configuration problems that affect every cell, and <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code> shortens the feedback loop.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L0 §A: ‘continue_on_failure preserves partial coverage; the manifest carries enough context to diagnose each failed cell after the run.’</p></li>
+<li><p>macroforecast design Part 1, L0 §A: ‘continue_on_failure preserves partial coverage; the manifest carries enough context to diagnose each failed cell after the run.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code></p>
 <p><strong>Examples</strong></p>
@@ -170,7 +170,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -191,7 +191,7 @@
 <h3><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code><a class="headerlink" href="#seeded-reproducible" title="Link to this heading"></a></h3>
 <p>Fix a deterministic seed and propagate it through every RNG.</p>
 <p>The cell-loop reads <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code> (default <code class="docutils literal notranslate"><span class="pre">0</span></code>) and applies it to <code class="docutils literal notranslate"><span class="pre">random.seed</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy.random.seed</span></code>, <code class="docutils literal notranslate"><span class="pre">torch.manual_seed</span></code> (when torch is installed), and the <code class="docutils literal notranslate"><span class="pre">PYTHONHASHSEED</span></code> environment variable for the current process. Each L4 estimator inherits the seed via its <code class="docutils literal notranslate"><span class="pre">params.random_state</span></code> key (issue #215); per-fit-node <code class="docutils literal notranslate"><span class="pre">random_state</span></code> overrides the L0 seed when present.</p>
-<p>This is the only mode under which <code class="docutils literal notranslate"><span class="pre">macrocast.replicate(manifest)</span></code> can verify bit-exact sink hashes. Use it for every study you intend to publish, share, or compare against later.</p>
+<p>This is the only mode under which <code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(manifest)</span></code> can verify bit-exact sink hashes. Use it for every study you intend to publish, share, or compare against later.</p>
 <p><strong>When to use</strong></p>
 <p>Default. Required for any study where bit-exact replication matters (papers, internal benchmarks, regression tests, comparisons across package versions).</p>
 <p><strong>When NOT to use</strong></p>
@@ -199,7 +199,7 @@
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>Stodden, McNutt, Bailey et al. (2016) ‘Enhancing reproducibility for computational methods’, Science 354(6317). (doi:10.1126/science.aah6168)</p></li>
-<li><p>macrocast PR #215 – L0 random_seed propagation into L4 random_state.</p></li>
+<li><p>macroforecast PR #215 – L0 random_seed propagation into L4 random_state.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">exploratory</span></code></p>
 <p><strong>Examples</strong></p>
@@ -213,7 +213,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="exploratory">
@@ -227,7 +227,7 @@
 <p>Anything you intend to publish or share. The reviewer will not be able to reproduce your manifest.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L0 §A: ‘exploratory mode trades reproducibility for unbiased sampling of stochastic variability.’</p></li>
+<li><p>macroforecast design Part 1, L0 §A: ‘exploratory mode trades reproducibility for unbiased sampling of stochastic variability.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code></p>
 <p><strong>Examples</strong></p>
@@ -239,7 +239,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -267,7 +267,7 @@
 <p>Multi-cell sweeps where each cell takes more than a minute and the machine has multiple CPU cores. Switch to <code class="docutils literal notranslate"><span class="pre">parallel</span></code> and record the speed-up in the manifest.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L0 §A: ‘compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.’</p></li>
+<li><p>macroforecast design Part 1, L0 §A: ‘compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">parallel</span></code></p>
 <p><strong>Examples</strong></p>
@@ -279,7 +279,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="parallel">
@@ -299,9 +299,9 @@
 <p>Recipes that mutate global state (e.g., a custom L3 op that writes to a shared file or a base estimator with a non-thread-safe C extension). Audit thread / process safety before flipping the switch.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast PR #173 – cell-level ProcessPoolExecutor.</p></li>
-<li><p>macrocast PR #204 / #250 – sub-cell ThreadPoolExecutor.</p></li>
-<li><p>macrocast PR #279 – deterministic per-origin seed propagation.</p></li>
+<li><p>macroforecast PR #173 – cell-level ProcessPoolExecutor.</p></li>
+<li><p>macroforecast PR #204 / #250 – sub-cell ThreadPoolExecutor.</p></li>
+<li><p>macroforecast PR #279 – deterministic per-origin seed propagation.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">serial</span></code></p>
 <p><strong>Examples</strong></p>
@@ -325,7 +325,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>

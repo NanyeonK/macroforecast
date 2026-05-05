@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>macrocast.core.figures &mdash; macrocast</title>
+  <title>macroforecast.core.figures &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -61,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">macrocast</a>
+          <a href="../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -70,7 +70,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">macrocast.core.figures</li>
+      <li class="breadcrumb-item active">macroforecast.core.figures</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -79,7 +79,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for macrocast.core.figures</h1><div class="highlight"><pre>
+  <h1>Source code for macroforecast.core.figures</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Figure rendering for L7 importance and L4.5/L3.5/L1.5 diagnostics.</span>
 
 <span class="sd">This module is intentionally lightweight: matplotlib is the only required</span>
@@ -106,7 +106,7 @@
 
 
 <div class="viewcode-block" id="render_bar_global">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_bar_global">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_bar_global">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_bar_global</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
     <span class="n">plt</span> <span class="o">=</span> <span class="n">_ensure_matplotlib</span><span class="p">()</span>
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
@@ -127,7 +127,7 @@
 
 
 <div class="viewcode-block" id="render_heatmap">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_heatmap">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_heatmap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_heatmap</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
     <span class="n">plt</span> <span class="o">=</span> <span class="n">_ensure_matplotlib</span><span class="p">()</span>
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
@@ -152,7 +152,7 @@
 
 
 <div class="viewcode-block" id="render_pdp_line">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_pdp_line">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_pdp_line">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_pdp_line</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
     <span class="n">plt</span> <span class="o">=</span> <span class="n">_ensure_matplotlib</span><span class="p">()</span>
     <span class="n">output_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
@@ -201,7 +201,7 @@
 
 
 <div class="viewcode-block" id="render_us_state_choropleth">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_us_state_choropleth">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_us_state_choropleth">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_us_state_choropleth</span><span class="p">(</span>
     <span class="n">importance_by_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -257,7 +257,7 @@
 
 
 <div class="viewcode-block" id="render_default_for_op">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_default_for_op">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_default_for_op">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_default_for_op</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">payload</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -280,7 +280,7 @@
 
 
 <div class="viewcode-block" id="render_scree_plot">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_scree_plot">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_scree_plot">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_scree_plot</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L3.5 -- factor scree plot (eigenvalue per component).&quot;&quot;&quot;</span>
 
@@ -302,7 +302,7 @@
 
 
 <div class="viewcode-block" id="render_factor_timeseries">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_factor_timeseries">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_factor_timeseries">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_factor_timeseries</span><span class="p">(</span><span class="n">factors</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L3.5 -- factor scores over time.&quot;&quot;&quot;</span>
 
@@ -326,7 +326,7 @@
 
 
 <div class="viewcode-block" id="render_fitted_vs_actual">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_fitted_vs_actual">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_fitted_vs_actual">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_fitted_vs_actual</span><span class="p">(</span><span class="n">fitted</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L4.5 -- fitted vs actual scatter.&quot;&quot;&quot;</span>
 
@@ -353,7 +353,7 @@
 
 
 <div class="viewcode-block" id="render_rolling_loss">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_rolling_loss">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_rolling_loss">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_rolling_loss</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L4.5 -- rolling training loss curve.&quot;&quot;&quot;</span>
 
@@ -380,7 +380,7 @@
 
 
 <div class="viewcode-block" id="render_beeswarm">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_beeswarm">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_beeswarm">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_beeswarm</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #205 -- SHAP beeswarm. Falls back to a strip-plot bar when the</span>
 <span class="sd">    full SHAP package isn&#39;t installed.&quot;&quot;&quot;</span>
@@ -407,7 +407,7 @@
 
 
 <div class="viewcode-block" id="render_force_plot">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_force_plot">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_force_plot">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_force_plot</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #249 -- single-prediction SHAP force plot. Bidirectional bar</span>
 <span class="sd">    chart: positive contributions push the prediction up (right, blue),</span>
@@ -440,7 +440,7 @@
 
 
 <div class="viewcode-block" id="render_shap_dependence_scatter">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_shap_dependence_scatter">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_shap_dependence_scatter">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_shap_dependence_scatter</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -490,7 +490,7 @@
 
 
 <div class="viewcode-block" id="render_ale_line">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_ale_line">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_ale_line">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_ale_line</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #205 -- ALE line per feature.&quot;&quot;&quot;</span>
 
@@ -521,7 +521,7 @@
 
 
 <div class="viewcode-block" id="render_attribution_heatmap">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_attribution_heatmap">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_attribution_heatmap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_attribution_heatmap</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #249 -- gradient attribution heatmap. Diverging RdBu colormap</span>
 <span class="sd">    centred at 0 (positive vs negative attributions). When the input is</span>
@@ -554,7 +554,7 @@
 
 
 <div class="viewcode-block" id="render_inclusion_heatmap">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_inclusion_heatmap">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_inclusion_heatmap">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_inclusion_heatmap</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #249 -- (lambda × feature) lasso inclusion heatmap. Greens</span>
 <span class="sd">    palette with a 0/1 colorbar (inclusion frequency in [0, 1]).&quot;&quot;&quot;</span>
@@ -582,7 +582,7 @@
 
 
 <div class="viewcode-block" id="render_lasso_path_inclusion_order">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_lasso_path_inclusion_order">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_lasso_path_inclusion_order">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_lasso_path_inclusion_order</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -623,7 +623,7 @@
 
 
 <div class="viewcode-block" id="render_pip_bar">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_pip_bar">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_pip_bar">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_pip_bar</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #249 -- BVAR posterior inclusion probability bar with HDI bars</span>
 <span class="sd">    when ``hdi_low`` / ``hdi_high`` columns are present.</span>
@@ -651,7 +651,7 @@
 
 
 <div class="viewcode-block" id="render_shapley_waterfall">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_shapley_waterfall">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_shapley_waterfall">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_shapley_waterfall</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;L7 #205 -- transformation Shapley waterfall.&quot;&quot;&quot;</span>
 
@@ -678,7 +678,7 @@
 
 
 <div class="viewcode-block" id="render_feature_heatmap_over_time">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_feature_heatmap_over_time">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_feature_heatmap_over_time">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_feature_heatmap_over_time</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -709,7 +709,7 @@
 
 
 <div class="viewcode-block" id="render_historical_decomp_stacked_bar">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_historical_decomp_stacked_bar">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_historical_decomp_stacked_bar">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_historical_decomp_stacked_bar</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -752,7 +752,7 @@
 
 
 <div class="viewcode-block" id="render_irf_with_confidence_band">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_irf_with_confidence_band">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_irf_with_confidence_band">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_irf_with_confidence_band</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -798,7 +798,7 @@
 
 
 <div class="viewcode-block" id="render_bar_grouped_by_pipeline">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_bar_grouped_by_pipeline">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_bar_grouped_by_pipeline">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_bar_grouped_by_pipeline</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -835,7 +835,7 @@
 
 
 <div class="viewcode-block" id="render_importance_by_horizon_bar">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.figures.render_importance_by_horizon_bar">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.figures.render_importance_by_horizon_bar">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">render_importance_by_horizon_bar</span><span class="p">(</span>
     <span class="n">table</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>

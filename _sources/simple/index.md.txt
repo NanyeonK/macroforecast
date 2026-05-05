@@ -2,18 +2,18 @@
 
 This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.
 
-> **API status note (v0.5.x)**: the `mc.forecast(...)` and
-> `mc.Experiment(...).compare_models([...]).run()` forms shown
+> **API status note (v0.5.x)**: the `mf.forecast(...)` and
+> `mf.Experiment(...).compare_models([...]).run()` forms shown
 > throughout this Simple track are the **planned shape** for v0.6+.
-> They are not yet exported from `macrocast.__all__`.
+> They are not yet exported from `macroforecast.__all__`.
 >
 > The current canonical entry surface is:
 >
-> * `macrocast.run("recipe.yaml")` -- run a YAML recipe end-to-end.
-> * `macrocast.replicate("manifest.json")` -- bit-exact replicate.
-> * `macrocast.scaffold.builder.RecipeBuilder` -- build recipes
+> * `macroforecast.run("recipe.yaml")` -- run a YAML recipe end-to-end.
+> * `macroforecast.replicate("manifest.json")` -- bit-exact replicate.
+> * `macroforecast.scaffold.builder.RecipeBuilder` -- build recipes
 >   programmatically (`b.l0(...)`, `b.l1(...)`, ..., `b.to_yaml()`).
-> * `python -m macrocast scaffold` -- interactive recipe wizard.
+> * `python -m macroforecast scaffold` -- interactive recipe wizard.
 >
 > See the **Detail (code): Full** track for working examples that
 > match the v0.5.x runtime exactly. The Simple-track snippets below
@@ -23,9 +23,9 @@ This track is for researchers who want to run macroeconomic forecasting experime
 The simple API is organized around `forecast` and `Experiment`.
 
 ```python
-import macrocast as mc
+import macroforecast as mf
 
-result = mc.forecast(
+result = mf.forecast(
     "fred_md",
     target="INDPRO",
     start="1980-01",
@@ -37,7 +37,7 @@ result = mc.forecast(
 For comparisons and custom methods, use `Experiment`.
 
 ```python
-exp = mc.Experiment(
+exp = mf.Experiment(
     dataset="fred_md",
     target="INDPRO",
     start="1980-01",

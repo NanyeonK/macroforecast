@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FRED-SD &mdash; macrocast</title>
+  <title>FRED-SD &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -74,7 +74,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -85,7 +85,7 @@
           <li class="breadcrumb-item"><a href="index.html">Simple Docs</a></li>
       <li class="breadcrumb-item active">FRED-SD</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/simple/fred_sd.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/simple/fred_sd.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -96,26 +96,26 @@
   <section id="fred-sd">
 <h1>FRED-SD<a class="headerlink" href="#fred-sd" title="Link to this heading"></a></h1>
 <blockquote>
-<div><p><strong>API status note (v0.5.x)</strong>: this page uses the planned mc.forecast / mc.Experiment Python facade
-shape. Those are not yet exported from macrocast.<strong>all</strong>. For working v0.5.x code, use
-macrocast.run(“recipe.yaml”), macrocast.replicate(“manifest.json”),
-the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-python -m macrocast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
+<div><p><strong>API status note (v0.5.x)</strong>: this page uses the planned mf.forecast / mf.Experiment Python facade
+shape. Those are not yet exported from macroforecast.<strong>all</strong>. For working v0.5.x code, use
+macroforecast.run(“recipe.yaml”), macroforecast.replicate(“manifest.json”),
+the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+python -m macroforecast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
 </div></blockquote>
 <p>FRED-SD can be used by itself or together with FRED-MD/FRED-QD.</p>
 <p>The important rule is simple:</p>
 <ul class="simple">
 <li><p>FRED-MD and FRED-QD publish official transformation codes.</p></li>
 <li><p>FRED-SD does not publish official transformation codes.</p></li>
-<li><p>macrocast therefore leaves FRED-SD source values untransformed by default.</p></li>
+<li><p>macroforecast therefore leaves FRED-SD source values untransformed by default.</p></li>
 <li><p>Reviewed and empirical FRED-SD t-codes are available only when you opt in.</p></li>
 </ul>
 <section id="frequency">
 <h2>Frequency<a class="headerlink" href="#frequency" title="Link to this heading"></a></h2>
 <p>FRED-MD fixes the experiment to monthly frequency:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
     <span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
     <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
     <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -125,7 +125,7 @@ python -m macrocast scaffold. See <a class="reference internal" href="index.html
 </pre></div>
 </div>
 <p>FRED-QD fixes the experiment to quarterly frequency:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
     <span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
     <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
     <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -135,7 +135,7 @@ python -m macrocast scaffold. See <a class="reference internal" href="index.html
 </pre></div>
 </div>
 <p>FRED-SD alone requires <code class="docutils literal notranslate"><span class="pre">frequency</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
     <span class="s2">&quot;fred_sd&quot;</span><span class="p">,</span>
     <span class="n">target</span><span class="o">=</span><span class="s2">&quot;UR_CA&quot;</span><span class="p">,</span>
     <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -151,7 +151,7 @@ python -m macrocast scaffold. See <a class="reference internal" href="index.html
 <p>Use <code class="docutils literal notranslate"><span class="pre">use_fred_sd_selection()</span></code> to restrict the FRED-SD component before the
 workbook is widened into <code class="docutils literal notranslate"><span class="pre">VARIABLE_STATE</span></code> columns:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -167,10 +167,10 @@ columns.</p>
 </section>
 <section id="mixed-frequency-representation">
 <h2>Mixed-Frequency Representation<a class="headerlink" href="#mixed-frequency-representation" title="Link to this heading"></a></h2>
-<p>FRED-SD mixes monthly and quarterly state series. By default macrocast keeps the
+<p>FRED-SD mixes monthly and quarterly state series. By default macroforecast keeps the
 selected FRED-SD columns on the experiment calendar and records the decision:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -220,7 +220,7 @@ research route, so keep the selected predictor set explicit.</p>
 <p>Use inferred SD t-codes only when you want the reviewed national-analog
 research layer:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -247,7 +247,7 @@ research layer:</p>
 <p>Use the empirical variable-global policy when you want the 2026-04-26
 stationarity audit choice: one code per FRED-SD variable, shared across states.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>

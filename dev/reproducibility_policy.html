@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reproducibility Policy &mdash; macrocast</title>
+  <title>Reproducibility Policy &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Reproducibility Policy</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/dev/reproducibility_policy.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/dev/reproducibility_policy.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -88,20 +88,20 @@
 <code class="docutils literal notranslate"><span class="pre">tests/core/test_deterministic_replay.py</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">tests/core/test_execution_cache.py</span></code>.</p>
 </div></blockquote>
-<p>macrocast v0.1 promises that <strong>the same recipe produces the same artifacts
+<p>macroforecast v0.1 promises that <strong>the same recipe produces the same artifacts
 bit-for-bit</strong>, on the same machine and across machines that share the
 package version + dependency lockfile. This page documents what
 “reproducible” means in practice, what knobs control it, and what is
 deliberately <em>out of scope</em>.</p>
 <section id="public-api">
 <h2>Public API<a class="headerlink" href="#public-api" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span>
 
 <span class="c1"># Run any recipe (inline YAML, dict, or Path).</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/&quot;</span><span class="p">)</span>
 
 <span class="c1"># Re-execute the stored manifest and verify per-cell sink hashes match.</span>
-<span class="n">replication</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;out/manifest.json&quot;</span><span class="p">)</span>
+<span class="n">replication</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;out/manifest.json&quot;</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">recipe_match</span>
 <span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">sink_hashes_match</span>
 </pre></div>
@@ -149,7 +149,7 @@ validator. Pass <code class="docutils literal notranslate"><span class="pre">ran
 </section>
 <section id="what-apply-seed-actually-seeds">
 <h2>What <code class="docutils literal notranslate"><span class="pre">_apply_seed</span></code> actually seeds<a class="headerlink" href="#what-apply-seed-actually-seeds" title="Link to this heading"></a></h2>
-<p>A best-effort propagation that covers every RNG macrocast or its
+<p>A best-effort propagation that covers every RNG macroforecast or its
 dependencies are likely to touch:</p>
 <table class="docutils align-default">
 <thead>
@@ -194,7 +194,7 @@ sweep produces <em>identical</em> streams cell-by-cell.</p>
 </section>
 <section id="bit-exact-replicate">
 <h2>Bit-exact replicate<a class="headerlink" href="#bit-exact-replicate" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast.replicate(manifest_path)</span></code> reads the stored manifest, expands
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(manifest_path)</span></code> reads the stored manifest, expands
 the same sweep, and re-executes every cell. The returned
 <code class="docutils literal notranslate"><span class="pre">ReplicationResult</span></code> carries:</p>
 <ul class="simple">
@@ -219,10 +219,10 @@ when produced) are byte-equal across runs.</p>
 <h2>Shared raw cache (<code class="docutils literal notranslate"><span class="pre">cache_root</span></code>)<a class="headerlink" href="#shared-raw-cache-cache-root" title="Link to this heading"></a></h2>
 <p>Multi-cell sweeps that hit the same FRED vintage many times share the
 on-disk raw cache when you pass <code class="docutils literal notranslate"><span class="pre">cache_root=</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macrocast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span>
     <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/sweep_a&quot;</span><span class="p">,</span>
-    <span class="n">cache_root</span><span class="o">=</span><span class="s2">&quot;/var/macrocast/raw_cache&quot;</span><span class="p">,</span>
+    <span class="n">cache_root</span><span class="o">=</span><span class="s2">&quot;/var/macroforecast/raw_cache&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -284,11 +284,11 @@ artifacts.</p>
 <h2>Worked examples<a class="headerlink" href="#worked-examples" title="Link to this heading"></a></h2>
 <section id="single-path-recipe-identical-artifacts-twice">
 <h3>Single-path recipe -&gt; identical artifacts twice<a class="headerlink" href="#single-path-recipe-identical-artifacts-twice" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="n">a</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;out/a&quot;</span><span class="p">))</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;out/b&quot;</span><span class="p">))</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;out/a&quot;</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;out/b&quot;</span><span class="p">))</span>
 
 <span class="c1"># Every cell&#39;s sink hashes match (excluding path-dependent l1, l8).</span>
 <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">cells</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">cells</span><span class="p">):</span>
@@ -309,17 +309,17 @@ artifacts.</p>
 <span class="s2">  nodes:</span>
 <span class="s2">    - {id: lag_x, type: step, op: lag, params: {n_lag: {sweep: [1, 2, 3, 4]}}, ...}</span>
 <span class="s2">&quot;&quot;&quot;</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
 <span class="c1"># Cells get seeds 100, 101, 102, 103.</span>
 </pre></div>
 </div>
 </section>
 <section id="replicate-the-manifest">
 <h3>Replicate the manifest<a class="headerlink" href="#replicate-the-manifest" title="Link to this heading"></a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span>
 
-<span class="n">primary</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;paper_recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;paper_out/&quot;</span><span class="p">)</span>
-<span class="n">replication</span> <span class="o">=</span> <span class="n">macrocast</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;paper_out/manifest.json&quot;</span><span class="p">)</span>
+<span class="n">primary</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;paper_recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;paper_out/&quot;</span><span class="p">)</span>
+<span class="n">replication</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;paper_out/manifest.json&quot;</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">sink_hashes_match</span>
 </pre></div>
 </div>

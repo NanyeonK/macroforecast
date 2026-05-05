@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Custom Extensions &mdash; macrocast</title>
+  <title>Custom Extensions &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Custom Extensions</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/custom_extensions.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/detail/custom_extensions.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -89,18 +89,18 @@ Layer 0 task, Layer 1 data treatment, split, benchmark, and evaluation path.</p>
 <section id="extension-map">
 <h2>Extension Map<a class="headerlink" href="#extension-map" title="Link to this heading"></a></h2>
 <p>Implemented runtime extension points:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mc</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span> <span class="o">|</span> <span class="s2">&quot;rotation&quot;</span> <span class="o">|</span> <span class="s2">&quot;factor&quot;</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span> <span class="o">|</span> <span class="s2">&quot;rotation&quot;</span> <span class="o">|</span> <span class="s2">&quot;factor&quot;</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The public contract metadata is available from:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mc</span><span class="o">.</span><span class="n">custom_method_extension_contracts</span><span class="p">()</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">custom_model_contract_metadata</span><span class="p">()</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">custom_preprocessor_contract_metadata</span><span class="p">()</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">target_transformer_contract_metadata</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">custom_method_extension_contracts</span><span class="p">()</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">custom_model_contract_metadata</span><span class="p">()</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">custom_preprocessor_contract_metadata</span><span class="p">()</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">target_transformer_contract_metadata</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Custom benchmarks and custom metrics are not decorator APIs yet. Benchmark
@@ -115,7 +115,7 @@ fit: temporal filters, lag-polynomial summaries, nonlinear transforms, factor
 construction, rotation, supervised feature construction, or other
 research-specific blocks.</p>
 <p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mc</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="s2">&quot;my_block&quot;</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="s2">&quot;my_block&quot;</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_block</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
     <span class="o">...</span>
     <span class="k">return</span> <span class="n">FeatureBlockCallableResult</span><span class="p">(</span>
@@ -156,7 +156,7 @@ interactions across blocks, supervised block weighting, residualized block
 composition, or a custom low-dimensional representation built from multiple
 blocks.</p>
 <p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mc</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="s2">&quot;my_combiner&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="s2">&quot;my_combiner&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_combiner</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
     <span class="n">train</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">blocks_train</span><span class="p">[</span><span class="s2">&quot;candidate_z&quot;</span><span class="p">]</span>
     <span class="n">pred</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">blocks_pred</span><span class="p">[</span><span class="s2">&quot;candidate_z&quot;</span><span class="p">]</span>
@@ -194,7 +194,7 @@ research method keeps the same conceptual Layer 2 representation but applies a
 final matrix operation before Layer 3, such as a user-defined scaler,
 winsorizer, shrinkage transform, residualization, or sparse screen.</p>
 <p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mc</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="s2">&quot;my_preprocess&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="s2">&quot;my_preprocess&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_preprocess</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="o">...</span>
     <span class="k">return</span> <span class="n">X_train_new</span><span class="p">,</span> <span class="n">X_test_new</span>
@@ -208,7 +208,7 @@ target scale changes, use <code class="docutils literal notranslate"><span class
 <p>Target transformers support research designs where <code class="docutils literal notranslate"><span class="pre">y</span></code> itself is transformed
 and forecasts must be inverted to the raw target scale.</p>
 <p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mc</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="s2">&quot;my_target_transform&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="s2">&quot;my_target_transform&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MyTargetTransform</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_train</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
@@ -232,7 +232,7 @@ loss, likelihood, optimization, recursive rule, or prediction function but
 should consume the same <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>, <code class="docutils literal notranslate"><span class="pre">y_train</span></code>, and <code class="docutils literal notranslate"><span class="pre">Z_pred</span></code> interface as built-in
 models.</p>
 <p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mc</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_model</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="o">...</span>
     <span class="k">return</span> <span class="n">y_pred</span>
@@ -329,7 +329,7 @@ policy and Layer 2 representation choices auditable.</p>
 template and
 <code class="docutils literal notranslate"><span class="pre">examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml</span></code> as the
 matching recipe skeleton. YAML can select the registered <code class="docutils literal notranslate"><span class="pre">model_family</span></code>, but it
-does not import Python code. Import the module that calls <code class="docutils literal notranslate"><span class="pre">&#64;mc.custom_model(...)</span></code>
+does not import Python code. Import the module that calls <code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_model(...)</span></code>
 before compiling or running the recipe.</p>
 </section>
 </section>

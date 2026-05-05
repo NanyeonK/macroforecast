@@ -27,13 +27,13 @@ Distributional forecasts; comparing point and density forecasts on a common scal
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
 * Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``log_score``
 ^^^^^^^^^^^^^
@@ -51,12 +51,12 @@ Default scoring rule for Bayesian forecasts; probabilistic horse-race ranking.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mae``
 ^^^^^^^
@@ -76,12 +76,12 @@ When the squared-loss decision rule is what the user actually faces.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``mse``, ``rmse``, ``medae``, ``mape``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mape``
 ^^^^^^^^
@@ -101,12 +101,12 @@ Targets that can be near zero (rates, growth rates) -- division by tiny ``|y_t|`
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Hyndman & Koehler (2006) 'Another look at measures of forecast accuracy', International Journal of Forecasting 22(4): 679-688. (doi:10.1016/j.ijforecast.2006.03.001)
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``medae``
 ^^^^^^^^^
@@ -126,11 +126,11 @@ Standard reporting -- mean-based metrics are the convention.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``mape``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mse``
 ^^^^^^^
@@ -150,12 +150,12 @@ Heavy-tailed forecast errors -- a single outlier dominates the score; consider M
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``rmse``, ``mae``, ``medae``, ``mape``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mse_reduction``
 ^^^^^^^^^^^^^^^^^
@@ -171,12 +171,12 @@ Default reporting in horse-race tables when 'positive = better' is preferred.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Campbell & Thompson (2008) 'Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?', Review of Financial Studies 21(4): 1509-1531. (doi:10.1093/rfs/hhm055)
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``r2_oos``
 ^^^^^^^^^^
@@ -192,12 +192,12 @@ Macro / financial forecasting tradition; literature-compatibility with CT-2008-e
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Campbell & Thompson (2008) 'Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?', Review of Financial Studies 21(4): 1509-1531. (doi:10.1093/rfs/hhm055)
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``relative_mae``
 ^^^^^^^^^^^^^^^^
@@ -213,11 +213,11 @@ Heavy-tailed targets where MSE is too sensitive to outliers.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``relative_mse``
 ^^^^^^^^^^^^^^^^
@@ -233,12 +233,12 @@ Default reporting metric in horse-race tables; comparing candidate models agains
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``rmse``
 ^^^^^^^^
@@ -258,12 +258,12 @@ Heavy-tailed errors -- inherits MSE's outlier sensitivity.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``mse``, ``mae``, ``medae``, ``mape``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``theil_u1``
 ^^^^^^^^^^^^
@@ -283,12 +283,12 @@ Modern reporting -- U2 is more interpretable as a ratio against the no-change be
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Theil (1966) 'Applied Economic Forecasting', North-Holland (Chapter 2: Inequality coefficients).
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``theil_u2``
 ^^^^^^^^^^^^
@@ -308,12 +308,12 @@ When a custom benchmark (not random walk) is preferred -- use ``relative_mse`` i
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Theil (1966) 'Applied Economic Forecasting', North-Holland (Chapter 2: Inequality coefficients).
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``point_metrics``  (L5_A_metric_specification)
 ---------------------------------------------------
@@ -340,12 +340,12 @@ When the squared-loss decision rule is what the user actually faces.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``mse``, ``rmse``, ``medae``, ``mape``, ``theil_u1``, ``theil_u2``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mape``
 ^^^^^^^^
@@ -365,13 +365,13 @@ Targets that can be near zero (rates, growth rates) -- division by tiny ``|y_t|`
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 * Hyndman & Koehler (2006) 'Another look at measures of forecast accuracy', International Journal of Forecasting 22(4): 679-688. (doi:10.1016/j.ijforecast.2006.03.001)
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``, ``theil_u1``, ``theil_u2``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``medae``
 ^^^^^^^^^
@@ -391,12 +391,12 @@ Standard reporting -- mean-based metrics are the convention.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``mape``, ``theil_u1``, ``theil_u2``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mse``
 ^^^^^^^
@@ -416,12 +416,12 @@ Heavy-tailed forecast errors -- a single outlier dominates the score; consider M
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``rmse``, ``mae``, ``medae``, ``mape``, ``theil_u1``, ``theil_u2``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``rmse``
 ^^^^^^^^
@@ -441,12 +441,12 @@ Heavy-tailed errors -- inherits MSE's outlier sensitivity.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``mse``, ``mae``, ``medae``, ``mape``, ``theil_u1``, ``theil_u2``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``theil_u1``
 ^^^^^^^^^^^^
@@ -466,12 +466,12 @@ Modern reporting -- U2 is more interpretable as a ratio against the no-change be
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Theil (1966) 'Applied Economic Forecasting', North-Holland (Chapter 2: Inequality coefficients).
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``, ``mape``, ``theil_u2``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``theil_u2``
 ^^^^^^^^^^^^
@@ -491,12 +491,12 @@ When a custom benchmark (not random walk) is preferred -- use ``relative_mse`` i
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Theil (1966) 'Applied Economic Forecasting', North-Holland (Chapter 2: Inequality coefficients).
 
 **Related options**: ``mse``, ``rmse``, ``mae``, ``medae``, ``mape``, ``theil_u1``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``density_metrics``  (L5_A_metric_specification)
 -----------------------------------------------------
@@ -519,13 +519,13 @@ Interval-calibration audits; reporting alongside interval_score.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
 * Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
 
 **Related options**: ``log_score``, ``crps``, ``interval_score``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``crps``
 ^^^^^^^^
@@ -541,13 +541,13 @@ Distributional forecasts; comparing point and density forecasts on a common scal
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
 * Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
 
 **Related options**: ``log_score``, ``interval_score``, ``coverage_rate``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``interval_score``
 ^^^^^^^^^^^^^^^^^^
@@ -563,14 +563,14 @@ Prediction-interval evaluation; balancing tightness against coverage.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
 * Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
 * Winkler (1972) 'A Decision-Theoretic Approach to Interval Estimation', JASA 67(337): 187-191.
 
 **Related options**: ``log_score``, ``crps``, ``coverage_rate``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``log_score``
 ^^^^^^^^^^^^^
@@ -588,13 +588,13 @@ Default scoring rule for Bayesian forecasts; probabilistic horse-race ranking.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
 * Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
 
 **Related options**: ``crps``, ``interval_score``, ``coverage_rate``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``direction_metrics``  (L5_A_metric_specification)
 -------------------------------------------------------
@@ -617,12 +617,12 @@ Formal directional-accuracy reporting (paired with the L6 PT test).
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Pesaran & Timmermann (1992) 'A simple nonparametric test of predictive performance', JBES 10(4): 461-465.
 
 **Related options**: ``success_ratio``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``success_ratio``
 ^^^^^^^^^^^^^^^^^
@@ -642,12 +642,12 @@ Standalone significance testing -- needs PT correction for unconditional directi
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Pesaran & Timmermann (1992) 'A simple nonparametric test of predictive performance', JBES 10(4): 461-465.
 
 **Related options**: ``pesaran_timmermann_metric``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``relative_metrics``  (L5_A_metric_specification)
 ------------------------------------------------------
@@ -670,12 +670,12 @@ Default reporting in horse-race tables when 'positive = better' is preferred.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Campbell & Thompson (2008) 'Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?', Review of Financial Studies 21(4): 1509-1531. (doi:10.1093/rfs/hhm055)
 
 **Related options**: ``relative_mse``, ``relative_mae``, ``r2_oos``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``r2_oos``
 ^^^^^^^^^^
@@ -691,12 +691,12 @@ Macro / financial forecasting tradition; literature-compatibility with CT-2008-e
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Campbell & Thompson (2008) 'Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?', Review of Financial Studies 21(4): 1509-1531. (doi:10.1093/rfs/hhm055)
 
 **Related options**: ``relative_mse``, ``relative_mae``, ``mse_reduction``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``relative_mae``
 ^^^^^^^^^^^^^^^^
@@ -712,12 +712,12 @@ Heavy-tailed targets where MSE is too sensitive to outliers.
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``relative_mse``, ``mse_reduction``, ``r2_oos``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``relative_mse``
 ^^^^^^^^^^^^^^^^
@@ -733,12 +733,12 @@ Default reporting metric in horse-race tables; comparing candidate models agains
 
 **References**
 
-* macrocast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
+* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
 * Diebold (2017) 'Forecasting in Economics, Business, Finance and Beyond', University of Pennsylvania (free online). <https://www.sas.upenn.edu/~fdiebold/Textbooks.html>
 
 **Related options**: ``relative_mae``, ``mse_reduction``, ``r2_oos``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``benchmark_window``  (L5_B_benchmark_comparison)
 ------------------------------------------------------

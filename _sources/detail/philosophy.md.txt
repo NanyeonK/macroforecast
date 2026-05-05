@@ -1,6 +1,6 @@
 # Philosophy
 
-macrocast exists to help macroeconomic forecasting researchers compare methods under a common, auditable framework.
+macroforecast exists to help macroeconomic forecasting researchers compare methods under a common, auditable framework.
 
 Core philosophy:
 

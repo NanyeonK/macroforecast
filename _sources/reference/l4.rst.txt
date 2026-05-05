@@ -27,12 +27,12 @@ Default benchmark in any forecasting horse race; replication of papers reporting
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Stock & Watson (2007) 'Why Has US Inflation Become Harder to Forecast?', JMCB 39.
 
 **Related options**: ``var``, ``factor_augmented_ar``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``ols``
 ^^^^^^^
@@ -52,12 +52,12 @@ High-dimensional panels (p ≈ n) -- use ridge / lasso instead.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Greene (2018) 'Econometric Analysis', 8th ed., Pearson.
 
 **Related options**: ``ridge``, ``lasso``, ``elastic_net``, ``ar_p``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``ridge``
 ^^^^^^^^^
@@ -75,12 +75,12 @@ High-dimensional macro panels with collinear predictors; standard benchmark.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Hoerl & Kennard (1970) 'Ridge regression: biased estimation for nonorthogonal problems', Technometrics 12(1).
 
 **Related options**: ``lasso``, ``elastic_net``, ``lasso_path``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``lasso``
 ^^^^^^^^^
@@ -96,12 +96,12 @@ Variable selection; sparse forecasts on high-dimensional panels.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Tibshirani (1996) 'Regression Shrinkage and Selection via the Lasso', JRSS-B 58(1).
 
 **Related options**: ``ridge``, ``elastic_net``, ``lasso_path``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``elastic_net``
 ^^^^^^^^^^^^^^^
@@ -117,12 +117,12 @@ Correlated predictor blocks where lasso alone gives unstable selection.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Zou & Hastie (2005) 'Regularization and variable selection via the elastic net', JRSS-B 67(2).
 
 **Related options**: ``ridge``, ``lasso``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``lasso_path``
 ^^^^^^^^^^^^^^
@@ -138,11 +138,11 @@ When the recipe wants automatic α selection without an explicit search_algorith
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
 **Related options**: ``lasso``, ``ridge``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``bayesian_ridge``
 ^^^^^^^^^^^^^^^^^^
@@ -158,11 +158,11 @@ Studies that need coefficient credible intervals; default-Bayesian baselines.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
 **Related options**: ``ridge``, ``bvar_minnesota``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``glmboost``
 ^^^^^^^^^^^^
@@ -178,12 +178,12 @@ Transparent feature-selection pathways; alternative to lasso.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Bühlmann & Hothorn (2007) 'Boosting algorithms: Regularization, prediction and model fitting', Statistical Science 22(4).
 
 **Related options**: ``lasso``, ``elastic_net``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``huber``
 ^^^^^^^^^
@@ -199,12 +199,12 @@ Series with sporadic outliers that aren't worth flagging in L2.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Huber (1964) 'Robust Estimation of a Location Parameter', Annals of Mathematical Statistics 35(1).
 
 **Related options**: ``ols``, ``ridge``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``var``
 ^^^^^^^
@@ -224,12 +224,12 @@ High-dimensional panels (VAR scales O(p²)); use BVAR shrinkage instead.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1).
 
 **Related options**: ``bvar_minnesota``, ``factor_augmented_var``, ``ar_p``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``factor_augmented_ar``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,12 +245,12 @@ High-dimensional macro panels (FRED-MD/QD); diffusion-index baselines.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460).
 
 **Related options**: ``factor_augmented_var``, ``principal_component_regression``, ``ar_p``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``principal_component_regression``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -266,11 +266,11 @@ Diffusion-index forecasts where AR augmentation hurts performance.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
 **Related options**: ``factor_augmented_ar``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``decision_tree``
 ^^^^^^^^^^^^^^^^^
@@ -286,12 +286,12 @@ Ablation studies; cheap non-linear baselines.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Breiman, Friedman, Stone & Olshen (1984) 'Classification and Regression Trees', CRC Press.
 
 **Related options**: ``random_forest``, ``extra_trees``, ``gradient_boosting``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``random_forest``
 ^^^^^^^^^^^^^^^^^
@@ -307,12 +307,12 @@ Default non-linear benchmark; non-stationary series where linear models fail.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Breiman (2001) 'Random Forests', Machine Learning 45(1).
 
 **Related options**: ``extra_trees``, ``gradient_boosting``, ``xgboost``, ``macroeconomic_random_forest``, ``quantile_regression_forest``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``extra_trees``
 ^^^^^^^^^^^^^^^
@@ -328,12 +328,12 @@ Quick non-linear baseline; large ensemble experiments.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Geurts, Ernst & Wehenkel (2006) 'Extremely randomized trees', Machine Learning 63(1).
 
 **Related options**: ``random_forest``, ``gradient_boosting``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``gradient_boosting``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -349,12 +349,12 @@ Default boosted baseline when xgboost / lightgbm are unavailable.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Friedman (2001) 'Greedy function approximation: A gradient boosting machine', Annals of Statistics 29(5).
 
 **Related options**: ``xgboost``, ``lightgbm``, ``catboost``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``xgboost``
 ^^^^^^^^^^^
@@ -362,7 +362,7 @@ Default boosted baseline when xgboost / lightgbm are unavailable.
 
 XGBoost gradient-boosted trees (optional dependency).
 
-Requires ``pip install macrocast[xgboost]``. Histogram-based tree construction; native quantile loss; GPU support. Standard production-grade boosting library.
+Requires ``pip install macroforecast[xgboost]``. Histogram-based tree construction; native quantile loss; GPU support. Standard production-grade boosting library.
 
 **When to use**
 
@@ -374,12 +374,12 @@ Lightweight installs (no extra installed) -- raises ImportError.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Chen & Guestrin (2016) 'XGBoost: A Scalable Tree Boosting System', KDD.
 
 **Related options**: ``gradient_boosting``, ``lightgbm``, ``catboost``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``lightgbm``
 ^^^^^^^^^^^^
@@ -387,7 +387,7 @@ Lightweight installs (no extra installed) -- raises ImportError.
 
 LightGBM gradient-boosted trees (optional dependency).
 
-Requires ``pip install macrocast[lightgbm]``. Leaf-wise tree growth; fast on wide / categorical-heavy panels.
+Requires ``pip install macroforecast[lightgbm]``. Leaf-wise tree growth; fast on wide / categorical-heavy panels.
 
 **When to use**
 
@@ -399,12 +399,12 @@ Lightweight installs (no extra installed) -- raises ImportError.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Ke et al. (2017) 'LightGBM: A Highly Efficient Gradient Boosting Decision Tree', NeurIPS.
 
 **Related options**: ``xgboost``, ``gradient_boosting``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``catboost``
 ^^^^^^^^^^^^
@@ -412,7 +412,7 @@ Lightweight installs (no extra installed) -- raises ImportError.
 
 CatBoost gradient-boosted trees (optional dependency).
 
-Requires ``pip install macrocast[catboost]``. Ordered boosting + native categorical handling.
+Requires ``pip install macroforecast[catboost]``. Ordered boosting + native categorical handling.
 
 **When to use**
 
@@ -420,12 +420,12 @@ Categorical-heavy panels; ordered-boosting research.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Prokhorenkova et al. (2018) 'CatBoost: unbiased boosting with categorical features', NeurIPS.
 
 **Related options**: ``xgboost``, ``lightgbm``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``svr_linear``
 ^^^^^^^^^^^^^^
@@ -443,12 +443,12 @@ Robust linear baselines; comparison against ridge.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Drucker, Burges, Kaufman, Smola & Vapnik (1997) 'Support Vector Regression Machines', NeurIPS.
 
 **Related options**: ``svr_rbf``, ``svr_poly``, ``ridge``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``svr_rbf``
 ^^^^^^^^^^^
@@ -466,11 +466,11 @@ Small / medium-dim non-linear regression; kernel-method ablations.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
 **Related options**: ``svr_linear``, ``svr_poly``, ``random_forest``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``svr_poly``
 ^^^^^^^^^^^^
@@ -486,11 +486,11 @@ Polynomial-kernel ablations. Selecting ``svr_poly`` on ``l4.family`` activates t
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
 **Related options**: ``svr_rbf``, ``svr_linear``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``mlp``
 ^^^^^^^
@@ -506,11 +506,11 @@ Non-linear regression baselines; ablations against deep NN.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
 **Related options**: ``lstm``, ``gru``, ``transformer``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``lstm``
 ^^^^^^^^
@@ -518,7 +518,7 @@ Non-linear regression baselines; ablations against deep NN.
 
 Long short-term memory recurrent NN (torch, optional).
 
-Requires ``pip install macrocast[deep]``. Sequence-aware RNN with input/forget/output gates. Trains on sliding windows of the lagged feature panel.
+Requires ``pip install macroforecast[deep]``. Sequence-aware RNN with input/forget/output gates. Trains on sliding windows of the lagged feature panel.
 
 **When to use**
 
@@ -530,12 +530,12 @@ Without [deep] installed -- raises NotImplementedError.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Hochreiter & Schmidhuber (1997) 'Long short-term memory', Neural Computation 9(8).
 
 **Related options**: ``gru``, ``transformer``, ``mlp``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``gru``
 ^^^^^^^
@@ -543,7 +543,7 @@ Without [deep] installed -- raises NotImplementedError.
 
 Gated recurrent unit RNN (torch, optional).
 
-Requires ``pip install macrocast[deep]``. Simpler than LSTM (one fewer gate); often comparable on macro panels.
+Requires ``pip install macroforecast[deep]``. Simpler than LSTM (one fewer gate); often comparable on macro panels.
 
 **When to use**
 
@@ -555,12 +555,12 @@ Without [deep] installed.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Cho et al. (2014) 'Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation', EMNLP.
 
 **Related options**: ``lstm``, ``transformer``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``transformer``
 ^^^^^^^^^^^^^^^
@@ -568,7 +568,7 @@ Without [deep] installed.
 
 Transformer encoder regressor (torch, optional).
 
-Requires ``pip install macrocast[deep]``. Self-attention on the lagged feature panel. Single encoder layer; suitable as a non-linear sequence-attention baseline.
+Requires ``pip install macroforecast[deep]``. Self-attention on the lagged feature panel. Single encoder layer; suitable as a non-linear sequence-attention baseline.
 
 **When to use**
 
@@ -580,12 +580,12 @@ Without [deep] installed.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Vaswani et al. (2017) 'Attention is all you need', NeurIPS.
 
 **Related options**: ``lstm``, ``gru``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``knn``
 ^^^^^^^
@@ -601,12 +601,12 @@ Non-parametric baselines; sensitivity studies.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Cover & Hart (1967) 'Nearest neighbor pattern classification', IEEE Trans. on Information Theory 13(1).
 
 **Related options**: ``random_forest``, ``svr_rbf``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``bvar_minnesota``
 ^^^^^^^^^^^^^^^^^^
@@ -624,12 +624,12 @@ Multi-series forecasting where standard VAR overfits; macro panels with strong u
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Litterman (1986) 'Forecasting With Bayesian Vector Autoregressions -- Five Years of Experience', JBES 4(1).
 
 **Related options**: ``bvar_normal_inverse_wishart``, ``var``, ``factor_augmented_var``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``bvar_normal_inverse_wishart``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -645,12 +645,12 @@ Studies preferring a fully-conjugate prior over Litterman's hand-tuned shrinkage
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Kadiyala & Karlsson (1997) 'Numerical Methods for Estimation and Inference in Bayesian VAR-models', Journal of Applied Econometrics 12(2).
 
 **Related options**: ``bvar_minnesota``, ``var``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``factor_augmented_var``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -668,12 +668,12 @@ Monetary-policy / macro-state studies; diffusion-index VAR baselines.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Bernanke, Boivin & Eliasz (2005) 'Measuring the Effects of Monetary Policy: A Factor-Augmented Vector Autoregressive Approach', QJE 120(1).
 
 **Related options**: ``var``, ``factor_augmented_ar``, ``bvar_minnesota``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``macroeconomic_random_forest``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -689,12 +689,12 @@ Macro forecasting with non-stationary parameter dynamics; alternative to switchi
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Coulombe (2024) 'A Neural Phillips Curve and a Deep Output Gap', Journal of Monetary Economics, forthcoming.
 
 **Related options**: ``random_forest``, ``bvar_minnesota``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``dfm_mixed_mariano_murasawa``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -710,12 +710,12 @@ Mixed-frequency nowcasting (e.g., quarterly GDP from monthly indicators).
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Mariano & Murasawa (2010) 'A coincident index, common factors, and monthly real GDP', Oxford Bulletin of Economics and Statistics 72(1).
 
 **Related options**: ``factor_augmented_ar``, ``factor_augmented_var``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``quantile_regression_forest``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -731,12 +731,12 @@ Growth-at-risk / VaR studies; density forecasting.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Meinshausen (2006) 'Quantile Regression Forests', JMLR 7.
 
 **Related options**: ``random_forest``, ``bagging``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``bagging``
 ^^^^^^^^^^^
@@ -752,12 +752,12 @@ Variance reduction on noisy series; quantile bands without quantile regression.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 * Breiman (1996) 'Bagging Predictors', Machine Learning 24(2).
 
 **Related options**: ``random_forest``, ``extra_trees``, ``quantile_regression_forest``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``forecast_strategy``  (L4_B_forecast_strategy)
 ----------------------------------------------------
@@ -780,9 +780,9 @@ Default for most studies. Comparable across publications.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``iterated``
 ^^^^^^^^^^^^
@@ -798,9 +798,9 @@ Speed-sensitive sweeps; replication of papers using iterated VAR.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``path_average``
 ^^^^^^^^^^^^^^^^
@@ -816,9 +816,9 @@ Cumulative-growth forecasting (e.g., Stock-Watson 2002).
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``training_start_rule``  (L4_C_training_window)
 ----------------------------------------------------
@@ -841,9 +841,9 @@ Default. Comparable across publications.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``rolling``
 ^^^^^^^^^^^
@@ -859,9 +859,9 @@ Non-stationary series; structural-change studies.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``fixed``
 ^^^^^^^^^
@@ -877,9 +877,9 @@ Replication of papers with fixed training windows.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``refit_policy``  (L4_C_training_window)
 ---------------------------------------------
@@ -902,9 +902,9 @@ Default. Standard walk-forward protocol.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``every_n_origins``
 ^^^^^^^^^^^^^^^^^^^
@@ -920,9 +920,9 @@ Long sweeps with slow estimators (e.g., LSTM / xgboost on large panels).
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``single_fit``
 ^^^^^^^^^^^^^^
@@ -938,9 +938,9 @@ In-sample studies; coefficient-stability pins.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``search_algorithm``  (L4_D_tuning)
 ----------------------------------------
@@ -965,9 +965,9 @@ Default. Studies with hand-picked hyperparameters.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``cv_path``
 ^^^^^^^^^^^
@@ -983,9 +983,9 @@ Quick alpha selection; comparable to published cross-validated linear baselines.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``grid_search``
 ^^^^^^^^^^^^^^^
@@ -1001,9 +1001,9 @@ Reproducible hyperparameter sweeps; comparison against published grid-tuned base
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``random_search``
 ^^^^^^^^^^^^^^^^^
@@ -1019,9 +1019,9 @@ Larger search spaces; black-box hyperparameter exploration.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``bayesian_optimization``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1029,7 +1029,7 @@ Larger search spaces; black-box hyperparameter exploration.
 
 Optuna TPE optimisation (optional dependency).
 
-Requires ``pip install macrocast[tuning]`` (optuna). Falls back to ``random_search`` when optuna isn't installed.
+Requires ``pip install macroforecast[tuning]`` (optuna). Falls back to ``random_search`` when optuna isn't installed.
 
 **When to use**
 
@@ -1037,9 +1037,9 @@ Expensive estimators where each fit costs many seconds; hyperparameter spaces wi
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``genetic_algorithm``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1055,6 +1055,6 @@ Discrete / categorical hyperparameter spaces where TPE struggles.
 
 **References**
 
-* macrocast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.

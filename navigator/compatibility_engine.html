@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Compatibility Engine &mdash; macrocast</title>
+  <title>Compatibility Engine &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -72,7 +72,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -83,7 +83,7 @@
           <li class="breadcrumb-item"><a href="index.html">Navigator Docs</a></li>
       <li class="breadcrumb-item active">Compatibility Engine</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/navigator/compatibility_engine.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/navigator/compatibility_engine.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -135,7 +135,7 @@
 <td><p>Current runtime uses the univariate target-history sequence route. Full multivariate <code class="docutils literal notranslate"><span class="pre">feature_runtime=sequence_tensor</span></code> remains gated until the Layer 2 sequence representation handoff is opened.</p></td>
 </tr>
 <tr class="row-even"><td><p>registered custom <code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
-<td><p>Enabled in the current Python process after <code class="docutils literal notranslate"><span class="pre">&#64;mc.custom_model(...)</span></code> registration. Custom names are valid forecast generators, but YAML alone cannot register the callable.</p></td>
+<td><p>Enabled in the current Python process after <code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_model(...)</span></code> registration. Custom names are valid forecast generators, but YAML alone cannot register the callable.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_representation=native_frequency_block_payload</span></code></p></td>
 <td><p>Requires <code class="docutils literal notranslate"><span class="pre">dataset</span></code> including <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_builder=raw_feature_panel</span></code>, and <code class="docutils literal notranslate"><span class="pre">forecast_type=direct</span></code>. It enables FRED-SD native-frequency payloads for registered custom models and supported MIDAS routes.</p></td>

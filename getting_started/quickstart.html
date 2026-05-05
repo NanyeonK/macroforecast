@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quickstart &mdash; macrocast</title>
+  <title>Quickstart &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,7 +71,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -82,7 +82,7 @@
           <li class="breadcrumb-item"><a href="index.html">Getting Started</a></li>
       <li class="breadcrumb-item active">Quickstart</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/getting_started/quickstart.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/getting_started/quickstart.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -93,11 +93,11 @@
   <section id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
 <p>Run a core layer-contract forecast in under 5 minutes.</p>
-<p>This quickstart uses <code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime.execute_minimal_forecast</span></code>. It is the current end-to-end runtime path for L1-L8 artifacts. It is intentionally narrower than the full schema registry: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.</p>
+<p>This quickstart uses <code class="docutils literal notranslate"><span class="pre">macroforecast.core.runtime.execute_minimal_forecast</span></code>. It is the current end-to-end runtime path for L1-L8 artifacts. It is intentionally narrower than the full schema registry: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.</p>
 <p>For the exact support boundary, read <a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a>.</p>
 <section id="run-a-minimal-core-recipe">
 <h2>Run A Minimal Core Recipe<a class="headerlink" href="#run-a-minimal-core-recipe" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
 
 <span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">1_data:</span>
@@ -223,7 +223,7 @@
 </section>
 <section id="legacy-compiler-path">
 <h2>Legacy Compiler Path<a class="headerlink" href="#legacy-compiler-path" title="Link to this heading"></a></h2>
-<p>Older docs and recipes that use <code class="docutils literal notranslate"><span class="pre">macrocast.compiler.compile_recipe_yaml</span></code> still target the legacy experiment engine. Use that path for older Stage-style recipes. Use the core runtime path above for L0-L8 layer-contract recipes.</p>
+<p>Older docs and recipes that use <code class="docutils literal notranslate"><span class="pre">macroforecast.compiler.compile_recipe_yaml</span></code> still target the legacy experiment engine. Use that path for older Stage-style recipes. Use the core runtime path above for L0-L8 layer-contract recipes.</p>
 </section>
 <section id="next-steps">
 <h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>

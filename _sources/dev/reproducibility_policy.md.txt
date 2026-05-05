@@ -5,7 +5,7 @@
 > `tests/core/test_deterministic_replay.py`, and
 > `tests/core/test_execution_cache.py`.
 
-macrocast v0.1 promises that **the same recipe produces the same artifacts
+macroforecast v0.1 promises that **the same recipe produces the same artifacts
 bit-for-bit**, on the same machine and across machines that share the
 package version + dependency lockfile. This page documents what
 "reproducible" means in practice, what knobs control it, and what is
@@ -14,13 +14,13 @@ deliberately *out of scope*.
 ## Public API
 
 ```python
-import macrocast
+import macroforecast
 
 # Run any recipe (inline YAML, dict, or Path).
-result = macrocast.run("recipe.yaml", output_directory="out/")
+result = macroforecast.run("recipe.yaml", output_directory="out/")
 
 # Re-execute the stored manifest and verify per-cell sink hashes match.
-replication = macrocast.replicate("out/manifest.json")
+replication = macroforecast.replicate("out/manifest.json")
 assert replication.recipe_match
 assert replication.sink_hashes_match
 ```
@@ -53,7 +53,7 @@ validator. Pass `random_seed` explicitly when you want a non-zero base.
 
 ## What `_apply_seed` actually seeds
 
-A best-effort propagation that covers every RNG macrocast or its
+A best-effort propagation that covers every RNG macroforecast or its
 dependencies are likely to touch:
 
 | Library | Call |
@@ -85,7 +85,7 @@ sweep produces *identical* streams cell-by-cell.
 
 ## Bit-exact replicate
 
-`macrocast.replicate(manifest_path)` reads the stored manifest, expands
+`macroforecast.replicate(manifest_path)` reads the stored manifest, expands
 the same sweep, and re-executes every cell. The returned
 `ReplicationResult` carries:
 
@@ -112,10 +112,10 @@ Multi-cell sweeps that hit the same FRED vintage many times share the
 on-disk raw cache when you pass `cache_root=`:
 
 ```python
-macrocast.run(
+macroforecast.run(
     "recipe.yaml",
     output_directory="out/sweep_a",
-    cache_root="/var/macrocast/raw_cache",
+    cache_root="/var/macroforecast/raw_cache",
 )
 ```
 
@@ -149,11 +149,11 @@ artifacts.
 ### Single-path recipe -> identical artifacts twice
 
 ```python
-import macrocast
+import macroforecast
 from pathlib import Path
 
-a = macrocast.run("recipe.yaml", output_directory=Path("out/a"))
-b = macrocast.run("recipe.yaml", output_directory=Path("out/b"))
+a = macroforecast.run("recipe.yaml", output_directory=Path("out/a"))
+b = macroforecast.run("recipe.yaml", output_directory=Path("out/b"))
 
 # Every cell's sink hashes match (excluding path-dependent l1, l8).
 for left, right in zip(a.cells, b.cells):
@@ -174,17 +174,17 @@ recipe = """
   nodes:
     - {id: lag_x, type: step, op: lag, params: {n_lag: {sweep: [1, 2, 3, 4]}}, ...}
 """
-result = macrocast.run(recipe)
+result = macroforecast.run(recipe)
 # Cells get seeds 100, 101, 102, 103.
 ```
 
 ### Replicate the manifest
 
 ```python
-import macrocast
+import macroforecast
 
-primary = macrocast.run("paper_recipe.yaml", output_directory="paper_out/")
-replication = macrocast.replicate("paper_out/manifest.json")
+primary = macroforecast.run("paper_recipe.yaml", output_directory="paper_out/")
+replication = macroforecast.replicate("paper_out/manifest.json")
 assert replication.sink_hashes_match
 ```
 

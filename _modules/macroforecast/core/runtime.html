@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>macrocast.core.runtime &mdash; macrocast</title>
+  <title>macroforecast.core.runtime &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -61,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">macrocast</a>
+          <a href="../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -70,7 +70,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">macrocast.core.runtime</li>
+      <li class="breadcrumb-item active">macroforecast.core.runtime</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -79,7 +79,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for macrocast.core.runtime</h1><div class="highlight"><pre>
+  <h1>Source code for macroforecast.core.runtime</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
@@ -153,7 +153,7 @@
 
 
 <div class="viewcode-block" id="RuntimeResult">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.RuntimeResult">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.RuntimeResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RuntimeResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Materialized sink artifacts for a core-layer runtime pass.&quot;&quot;&quot;</span>
@@ -163,7 +163,7 @@
     <span class="n">runtime_durations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RuntimeResult.sink">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.RuntimeResult.sink">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.RuntimeResult.sink">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
 </div>
@@ -171,7 +171,7 @@
 
 
 <div class="viewcode-block" id="execute_l1_l2">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.execute_l1_l2">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.execute_l1_l2">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">execute_l1_l2</span><span class="p">(</span><span class="n">recipe_yaml_or_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RuntimeResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Materialize L1 and L2 sinks for custom-panel recipes.</span>
 
@@ -205,7 +205,7 @@
 
 
 <div class="viewcode-block" id="execute_minimal_forecast">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.execute_minimal_forecast">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.execute_minimal_forecast">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">execute_minimal_forecast</span><span class="p">(</span><span class="n">recipe_yaml_or_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">RuntimeResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the minimal L1-L5 runtime path for custom-panel ridge forecasts.&quot;&quot;&quot;</span>
 
@@ -294,7 +294,7 @@
 
 
 <div class="viewcode-block" id="materialize_l1">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l1">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l1">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l1</span><span class="p">(</span><span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">L1DataDefinitionArtifact</span><span class="p">,</span> <span class="n">L1RegimeMetadataArtifact</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">recipe_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;1_data&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">report</span> <span class="o">=</span> <span class="n">l1_layer</span><span class="o">.</span><span class="n">validate_layer</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
@@ -333,7 +333,7 @@
 
 
 <div class="viewcode-block" id="materialize_l2">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l2">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l2">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l2</span><span class="p">(</span><span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">L2CleanPanelArtifact</span><span class="p">,</span> <span class="n">l2_layer</span><span class="o">.</span><span class="n">L2ResolvedAxes</span><span class="p">]:</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">recipe_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;2_preprocessing&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">l1_context</span> <span class="o">=</span> <span class="n">_l1_context</span><span class="p">(</span><span class="n">l1_artifact</span><span class="p">)</span>
@@ -370,7 +370,7 @@
 
     <span class="c1"># Issue #251 -- post-pipeline custom L2 preprocessor hook.</span>
     <span class="c1"># ``leaf_config.custom_postprocessor`` accepts a name registered via</span>
-    <span class="c1"># ``macrocast.custom.register_preprocessor``. Runs *after* the</span>
+    <span class="c1"># ``macroforecast.custom.register_preprocessor``. Runs *after* the</span>
     <span class="c1"># builtin pipeline so its output is the L2 clean panel.</span>
     <span class="n">custom_name</span> <span class="o">=</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;custom_postprocessor&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">custom_name</span><span class="p">:</span>
@@ -404,7 +404,7 @@
 
 
 <div class="viewcode-block" id="materialize_l1_5_diagnostic">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l1_5_diagnostic">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l1_5_diagnostic">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l1_5_diagnostic</span><span class="p">(</span><span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DiagnosticArtifact</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">recipe_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;1_5_data_summary&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;regime_active&quot;</span><span class="p">:</span> <span class="n">l1_artifact</span><span class="o">.</span><span class="n">regime_definition</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">}</span>
@@ -650,7 +650,7 @@
 
 
 <div class="viewcode-block" id="materialize_l2_5_diagnostic">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l2_5_diagnostic">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l2_5_diagnostic">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l2_5_diagnostic</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="p">:</span> <span class="n">L2CleanPanelArtifact</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DiagnosticArtifact</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
@@ -734,7 +734,7 @@
 
 
 <div class="viewcode-block" id="materialize_l3_5_diagnostic">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l3_5_diagnostic">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l3_5_diagnostic">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l3_5_diagnostic</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">,</span>
@@ -800,7 +800,7 @@
 
 
 <div class="viewcode-block" id="materialize_l4_5_diagnostic">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l4_5_diagnostic">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l4_5_diagnostic">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l4_5_diagnostic</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">l3_features</span><span class="p">:</span> <span class="n">L3FeaturesArtifact</span><span class="p">,</span>
@@ -1174,7 +1174,7 @@
 
 
 <div class="viewcode-block" id="materialize_l3_minimal">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l3_minimal">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l3_minimal">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l3_minimal</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="p">:</span> <span class="n">L2CleanPanelArtifact</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">L3FeaturesArtifact</span><span class="p">,</span> <span class="n">L3MetadataArtifact</span><span class="p">]:</span>
@@ -1246,7 +1246,7 @@
 
 
 <div class="viewcode-block" id="materialize_l4_minimal">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l4_minimal">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l4_minimal">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l4_minimal</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">l3_features</span><span class="p">:</span> <span class="n">L3FeaturesArtifact</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">L4ForecastsArtifact</span><span class="p">,</span> <span class="n">L4ModelArtifactsArtifact</span><span class="p">,</span> <span class="n">L4TrainingMetadataArtifact</span><span class="p">]:</span>
@@ -1784,7 +1784,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xgb</span>  <span class="c1"># type: ignore</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dep</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;xgboost family requires `pip install macrocast[xgboost]`&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;xgboost family requires `pip install macroforecast[xgboost]`&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">return</span> <span class="n">xgb</span><span class="o">.</span><span class="n">XGBRegressor</span><span class="p">(</span>
             <span class="n">n_estimators</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)),</span>
             <span class="n">learning_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)),</span>
@@ -1797,7 +1797,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">lightgbm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">lgb</span>  <span class="c1"># type: ignore</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;lightgbm family requires `pip install macrocast[lightgbm]`&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;lightgbm family requires `pip install macroforecast[lightgbm]`&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">return</span> <span class="n">lgb</span><span class="o">.</span><span class="n">LGBMRegressor</span><span class="p">(</span>
             <span class="n">n_estimators</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)),</span>
             <span class="n">learning_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)),</span>
@@ -1809,7 +1809,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">catboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">CatBoostRegressor</span>  <span class="c1"># type: ignore</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;catboost family requires `pip install macrocast[catboost]`&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;catboost family requires `pip install macroforecast[catboost]`&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">return</span> <span class="n">CatBoostRegressor</span><span class="p">(</span>
             <span class="n">iterations</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)),</span>
             <span class="n">learning_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">)),</span>
@@ -1898,7 +1898,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_custom_model</span><span class="p">(</span><span class="n">family</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up ``macrocast.custom`` for a user-registered model factory; the</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up ``macroforecast.custom`` for a user-registered model factory; the</span>
 <span class="sd">    runtime then wraps it in a sklearn-compatible adapter (issue #216).&quot;&quot;&quot;</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -2642,7 +2642,7 @@
             <span class="c1"># cell, not a feed-forward network. Raise a clear actionable</span>
             <span class="c1"># error so the user can install the [deep] extra (or pick mlp).</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;family=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> requires torch; install with `pip install &#39;macrocast[deep]&#39;` &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;family=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> requires torch; install with `pip install &#39;macroforecast[deep]&#39;` &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;or pick family=&#39;mlp&#39; for a feed-forward network.&quot;</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="k">return</span> <span class="bp">self</span>
@@ -2651,7 +2651,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;family=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> predict() called before fit() succeeded; &quot;</span>
-                <span class="s2">&quot;install macrocast[deep] (torch) and re-run the recipe.&quot;</span>
+                <span class="s2">&quot;install macroforecast[deep] (torch) and re-run the recipe.&quot;</span>
             <span class="p">)</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
@@ -3206,7 +3206,7 @@
 
 
 <div class="viewcode-block" id="materialize_l5_minimal">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l5_minimal">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l5_minimal">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l5_minimal</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">,</span>
@@ -3314,7 +3314,7 @@
 
 
 <div class="viewcode-block" id="materialize_l6_runtime">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l6_runtime">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l6_runtime">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l6_runtime</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">l1_artifact</span><span class="p">:</span> <span class="n">L1DataDefinitionArtifact</span><span class="p">,</span>
@@ -3396,7 +3396,7 @@
 
 
 <div class="viewcode-block" id="materialize_l7_runtime">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l7_runtime">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l7_runtime">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l7_runtime</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">l3_features</span><span class="p">:</span> <span class="n">L3FeaturesArtifact</span><span class="p">,</span>
@@ -4066,7 +4066,7 @@
     <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">framework</span> <span class="o">!=</span> <span class="s2">&quot;torch&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fitted</span><span class="p">,</span> <span class="s2">&quot;_model&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;L7 op </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> requires a torch-backed model (lstm/gru/transformer). &quot;</span>
-            <span class="s2">&quot;Install macrocast[deep] and refit the recipe with a torch family, &quot;</span>
+            <span class="s2">&quot;Install macroforecast[deep] and refit the recipe with a torch family, &quot;</span>
             <span class="s2">&quot;or pick shap_kernel/permutation_importance for non-torch estimators.&quot;</span>
         <span class="p">)</span>
 
@@ -4076,7 +4076,7 @@
     <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;L7 op </span><span class="si">{</span><span class="n">kind</span><span class="si">!r}</span><span class="s2"> requires the [deep] extra (torch + captum). &quot;</span>
-            <span class="s2">&quot;Install with `pip install macrocast[deep]`.&quot;</span>
+            <span class="s2">&quot;Install with `pip install macroforecast[deep]`.&quot;</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
     <span class="n">torch_model</span> <span class="o">=</span> <span class="n">fitted</span><span class="o">.</span><span class="n">_model</span>
@@ -5486,7 +5486,7 @@
 
 
 <div class="viewcode-block" id="materialize_l8_runtime">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.core.runtime.materialize_l8_runtime">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.core.runtime.materialize_l8_runtime">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">materialize_l8_runtime</span><span class="p">(</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="n">upstream_artifacts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -5751,7 +5751,7 @@
 
     <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&#39;utf-8&#39;&gt;&quot;</span><span class="p">)</span>
-    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;title&gt;macrocast study report&lt;/title&gt;&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;title&gt;macroforecast study report&lt;/title&gt;&quot;</span><span class="p">)</span>
     <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
         <span class="s2">&quot;&lt;style&gt;body{font-family:system-ui,sans-serif;margin:2rem;max-width:90rem}&quot;</span>
         <span class="s2">&quot;h1,h2{border-bottom:1px solid #ccc;padding-bottom:.3rem}&quot;</span>
@@ -5761,7 +5761,7 @@
         <span class="s2">&quot;code{background:#f0f0f0;padding:.1rem .3rem;border-radius:.2rem}&quot;</span>
         <span class="s2">&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;</span>
     <span class="p">)</span>
-    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;macrocast study report&lt;/h1&gt;&quot;</span><span class="p">)</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&lt;h1&gt;macroforecast study report&lt;/h1&gt;&quot;</span><span class="p">)</span>
 
     <span class="c1"># Recipe digest -----------------------------------------------------</span>
     <span class="n">target</span> <span class="o">=</span> <span class="p">((</span><span class="n">recipe_root</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;1_data&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;leaf_config&quot;</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">)</span>
@@ -6406,7 +6406,7 @@
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="c1"># Both frequencies present -- harmonise to the dominant target</span>
-    <span class="c1"># frequency. We default to monthly (most macrocast recipes target</span>
+    <span class="c1"># frequency. We default to monthly (most macroforecast recipes target</span>
     <span class="c1"># monthly horizons); the inverse path (monthly_to_quarterly) runs when</span>
     <span class="c1"># the target&#39;s frequency is quarterly.</span>
     <span class="n">target_freq</span> <span class="o">=</span> <span class="p">(</span><span class="n">l1_artifact</span><span class="o">.</span><span class="n">frequency</span> <span class="ow">or</span> <span class="s2">&quot;monthly&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>

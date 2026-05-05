@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>macrocast.raw.datasets.custom_parquet &mdash; macrocast</title>
+  <title>macroforecast.raw.datasets.custom_csv &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -61,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../../index.html">macrocast</a>
+          <a href="../../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -70,7 +70,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">macrocast.raw.datasets.custom_parquet</li>
+      <li class="breadcrumb-item active">macroforecast.raw.datasets.custom_csv</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -79,17 +79,23 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for macrocast.raw.datasets.custom_parquet</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Custom Parquet loader — load a user-supplied Parquet file conforming to a FRED-family schema.</span>
+  <h1>Source code for macroforecast.raw.datasets.custom_csv</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Custom CSV loader — load a user-supplied CSV conforming to a FRED-family schema.</span>
 
-<span class="sd">Parquet-counterpart to :mod:`macrocast.raw.datasets.custom_csv`. Same</span>
-<span class="sd">contract: recipes choose an official ``dataset``, select</span>
-<span class="sd">``custom_source_policy``, and provide ``leaf_config.custom_source_path``.</span>
-<span class="sd">The compiler infers the parser from ``.parquet``/``.pq`` and infers the</span>
-<span class="sd">internal loader schema from the selected ``dataset``/``frequency`` route.</span>
+<span class="sd">The caller provides the CSV path via ``leaf_config.custom_source_path``.</span>
+<span class="sd">Recipes should choose an official ``dataset`` and select</span>
+<span class="sd">``custom_source_policy``. The compiler infers the parser from the ``.csv``</span>
+<span class="sd">extension and infers the internal loader schema from the selected</span>
+<span class="sd">``dataset``/``frequency`` route.</span>
 
-<span class="sd">Requires ``pyarrow`` or ``fastparquet`` to be installed (pandas picks</span>
-<span class="sd">whichever is available).</span>
+<span class="sd">Schema requirements:</span>
+
+<span class="sd">- First column is a date index (any parseable date format).</span>
+<span class="sd">- Remaining columns are numeric; column names are series IDs.</span>
+<span class="sd">- Optional first row may hold FRED-MD-style transformation codes — the</span>
+<span class="sd">  loader does NOT detect or consume this automatically. Users who need</span>
+<span class="sd">  T-code-aware preprocessing should pre-strip the T-code row from the</span>
+<span class="sd">  file OR rely on Layer 2 ``tcode_policy: raw_only`` (the default).</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -106,48 +112,47 @@
 <span class="n">_SUPPORTED_SCHEMAS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_qd&quot;</span><span class="p">,</span> <span class="s2">&quot;fred_sd&quot;</span><span class="p">}</span>
 
 
-<div class="viewcode-block" id="load_custom_parquet">
-<a class="viewcode-back" href="../../../../source/api.html#macrocast.load_custom_parquet">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_custom_parquet</span><span class="p">(</span>
+<div class="viewcode-block" id="load_custom_csv">
+<a class="viewcode-back" href="../../../../source/api.html#macroforecast.load_custom_csv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_custom_csv</span><span class="p">(</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">cache_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RawLoadResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load ``path`` as a Parquet file conforming to ``dataset``&#39;s schema.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load ``path`` as a CSV conforming to ``dataset``&#39;s schema.</span>
 
-<span class="sd">    See :func:`macrocast.raw.datasets.custom_csv.load_custom_csv` for the</span>
-<span class="sd">    shared schema contract.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        path: Filesystem path to the CSV.</span>
+<span class="sd">        dataset: Schema label (``fred_md`` / ``fred_qd`` / ``fred_sd``).</span>
+<span class="sd">            Determines how the loaded panel is labelled downstream.</span>
+<span class="sd">        cache_root: Ignored for custom loaders (no cache — user supplies</span>
+<span class="sd">            the file directly). Accepted to match the canonical FRED</span>
+<span class="sd">            loader signature.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">dataset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_SCHEMAS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;dataset=</span><span class="si">{</span><span class="n">dataset</span><span class="si">!r}</span><span class="s2"> is not a supported schema for custom_parquet; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;dataset=</span><span class="si">{</span><span class="n">dataset</span><span class="si">!r}</span><span class="s2"> is not a supported schema for custom_csv; &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;expected one of </span><span class="si">{</span><span class="n">_SUPPORTED_SCHEMAS</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-    <span class="n">pq_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">pq_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_parquet source path does not exist: </span><span class="si">{</span><span class="n">pq_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">csv_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">csv_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;custom_csv source path does not exist: </span><span class="si">{</span><span class="n">csv_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">pq_path</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">csv_path</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to parse custom Parquet at </span><span class="si">{</span><span class="n">pq_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to parse custom CSV at </span><span class="si">{</span><span class="n">csv_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-    <span class="c1"># Normalise to date-indexed numeric panel.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
-        <span class="c1"># Try to coerce the first column as the date index.</span>
-        <span class="n">date_col</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">df</span><span class="p">[</span><span class="n">date_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">date_col</span><span class="p">])</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">date_col</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;custom Parquet at </span><span class="si">{</span><span class="n">pq_path</span><span class="si">}</span><span class="s2"> must have a DatetimeIndex &quot;</span>
-                <span class="s2">&quot;or a parseable date as its first column&quot;</span>
-            <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RawParseError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;custom CSV at </span><span class="si">{</span><span class="n">csv_path</span><span class="si">}</span><span class="s2"> must have a parseable date index as its first column&quot;</span>
+        <span class="p">)</span>
 
+    <span class="c1"># Coerce all remaining columns to numeric, dropping any that are</span>
+    <span class="c1"># entirely non-numeric (matches FRED loader behaviour).</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;coerce&quot;</span><span class="p">)</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
     <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
@@ -156,20 +161,20 @@
     <span class="n">request</span> <span class="o">=</span> <span class="n">normalize_version_request</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">vintage</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">artifact</span> <span class="o">=</span> <span class="n">build_raw_artifact_record</span><span class="p">(</span>
         <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
-        <span class="n">source_url</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">pq_path</span><span class="p">),</span>
-        <span class="n">local_path</span><span class="o">=</span><span class="n">pq_path</span><span class="p">,</span>
-        <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
+        <span class="n">source_url</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">csv_path</span><span class="p">),</span>
+        <span class="n">local_path</span><span class="o">=</span><span class="n">csv_path</span><span class="p">,</span>
+        <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">,</span>
         <span class="n">cache_hit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">metadata</span> <span class="o">=</span> <span class="n">RawDatasetMetadata</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-        <span class="n">source_family</span><span class="o">=</span><span class="s2">&quot;custom-parquet&quot;</span><span class="p">,</span>
+        <span class="n">source_family</span><span class="o">=</span><span class="s2">&quot;custom-csv&quot;</span><span class="p">,</span>
         <span class="n">frequency</span><span class="o">=</span><span class="n">_frequency_for_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">),</span>
         <span class="n">version_mode</span><span class="o">=</span><span class="s2">&quot;current&quot;</span><span class="p">,</span>
         <span class="n">vintage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">data_through</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">support_tier</span><span class="o">=</span><span class="s2">&quot;provisional&quot;</span><span class="p">,</span>
-        <span class="n">parse_notes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user-supplied Parquet; no vintage tracking&quot;</span><span class="p">,),</span>
+        <span class="n">parse_notes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;user-supplied CSV; no vintage tracking&quot;</span><span class="p">,),</span>
     <span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">RawLoadResult</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">dataset_metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span> <span class="n">artifact</span><span class="o">=</span><span class="n">artifact</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">cache_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -186,7 +191,7 @@
     <span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;load_custom_parquet&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;load_custom_csv&quot;</span><span class="p">]</span>
 </pre></div>
 
            </div>

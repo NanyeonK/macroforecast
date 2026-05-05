@@ -27,11 +27,11 @@ Comprehensive reproducibility / sharing -- single run that covers every audience
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``csv``
 ^^^^^^^
@@ -47,11 +47,11 @@ Spreadsheet / R workflows; collaborators who avoid JSON.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``parquet``, ``json_csv``, ``json_parquet``, ``latex_tables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``html_report``
 ^^^^^^^^^^^^^^^
@@ -67,11 +67,11 @@ Stakeholder-shareable reports without LaTeX tooling.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``json``
 ^^^^^^^^
@@ -87,11 +87,11 @@ Default; round-trips cleanly into Python / JS / R.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``csv``, ``parquet``, ``json_csv``, ``json_parquet``, ``latex_tables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``json_csv``
 ^^^^^^^^^^^^
@@ -107,11 +107,11 @@ When downstream consumers vary across both Python and Excel / R.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``csv``, ``parquet``, ``json_parquet``, ``latex_tables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``json_parquet``
 ^^^^^^^^^^^^^^^^
@@ -127,12 +127,12 @@ Hybrid analytics + reproducibility setups.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 * Apache Parquet specification (apache/parquet-format). <https://parquet.apache.org/docs/file-format/>
 
 **Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``latex_tables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``latex_tables``
 ^^^^^^^^^^^^^^^^
@@ -148,12 +148,12 @@ Paper-draft pipelines. Selecting ``latex_tables`` on ``l8.export_format`` activa
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 * pandas DataFrame.to_latex documentation. <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_latex.html>
 
 **Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``markdown_report``
 ^^^^^^^^^^^^^^^^^^^
@@ -169,11 +169,11 @@ Lightweight Markdown / GitHub-rendered reports.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``csv``, ``parquet``, ``json_csv``, ``json_parquet``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``parquet``
 ^^^^^^^^^^^
@@ -189,12 +189,12 @@ Large-scale analytics; preserving dtypes; cross-language workflows (Spark, DuckD
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 * Apache Parquet specification (apache/parquet-format). <https://parquet.apache.org/docs/file-format/>
 
 **Related options**: ``json``, ``csv``, ``json_csv``, ``json_parquet``, ``latex_tables``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``compression``  (L8_A_export_format)
 ------------------------------------------
@@ -217,11 +217,11 @@ Reducing artifact size for archival; production sweeps.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``none``, ``zip``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``none``
 ^^^^^^^^
@@ -237,11 +237,11 @@ Default; cheapest write-time option.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``gzip``, ``zip``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``zip``
 ^^^^^^^
@@ -257,11 +257,11 @@ Packaging the run for transfer over email / file-sharing services.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``none``, ``gzip``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``saved_objects``  (L8_B_saved_objects)
 --------------------------------------------
@@ -284,11 +284,11 @@ When downstream re-runs without re-cleaning are needed.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``feature_metadata``, ``forecasts``, ``forecast_intervals``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``combination_weights``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -304,11 +304,11 @@ Active when ensemble combine ops are in the L4 DAG.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``decomposition``
 ^^^^^^^^^^^^^^^^^
@@ -324,11 +324,11 @@ Default-on when decomposition is active.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``diagnostics_all``
 ^^^^^^^^^^^^^^^^^^^
@@ -344,11 +344,11 @@ Default convenience option for full-diagnostic runs.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``diagnostics_l1_5``
 ^^^^^^^^^^^^^^^^^^^^
@@ -364,11 +364,11 @@ Active when L1.5 is enabled. Selecting ``diagnostics_l1_5`` on ``l8.saved_object
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``diagnostics_l2_5``
 ^^^^^^^^^^^^^^^^^^^^
@@ -386,11 +386,11 @@ Active when L2.5 is enabled. Selecting ``diagnostics_l2_5`` on ``l8.saved_object
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``diagnostics_l3_5``
 ^^^^^^^^^^^^^^^^^^^^
@@ -408,11 +408,11 @@ Active when L3.5 is enabled. Selecting ``diagnostics_l3_5`` on ``l8.saved_object
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``diagnostics_l4_5``
 ^^^^^^^^^^^^^^^^^^^^
@@ -430,11 +430,11 @@ Active when L4.5 is enabled. Selecting ``diagnostics_l4_5`` on ``l8.saved_object
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``feature_metadata``
 ^^^^^^^^^^^^^^^^^^^^
@@ -450,11 +450,11 @@ Default-on when L7 lineage / transformation_attribution is active.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``forecasts``, ``forecast_intervals``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``forecast_intervals``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -470,11 +470,11 @@ Default-on when forecast_object = quantile / density.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``forecasts``
 ^^^^^^^^^^^^^
@@ -490,11 +490,11 @@ Default-on; required for replication.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecast_intervals``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``importance``
 ^^^^^^^^^^^^^^
@@ -510,11 +510,11 @@ Default-on when L7 is active. Selecting ``importance`` on ``l8.saved_objects`` a
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``metrics``
 ^^^^^^^^^^^
@@ -530,11 +530,11 @@ Default-on. Selecting ``metrics`` on ``l8.saved_objects`` activates this branch 
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``model_artifacts``
 ^^^^^^^^^^^^^^^^^^^
@@ -550,11 +550,11 @@ When downstream prediction without re-fitting is needed.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``ranking``
 ^^^^^^^^^^^
@@ -570,11 +570,11 @@ Default-on when ranking is active.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``raw_panel``
 ^^^^^^^^^^^^^
@@ -590,11 +590,11 @@ Default-off for size; enable for fully self-contained runs.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``clean_panel``, ``feature_metadata``, ``forecasts``, ``forecast_intervals``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``regime_metrics``
 ^^^^^^^^^^^^^^^^^^
@@ -610,11 +610,11 @@ Active when L1.G regime is non-pooled.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``state_metrics``
 ^^^^^^^^^^^^^^^^^
@@ -630,11 +630,11 @@ Active when L1.D geography is state-level (FRED-SD).
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``tests``
 ^^^^^^^^^
@@ -650,11 +650,11 @@ Default-on when L6 sub-layers are active.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``transformation_attribution``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -670,11 +670,11 @@ Active when transformation_attribution op is in the L7 DAG.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``raw_panel``, ``clean_panel``, ``feature_metadata``, ``forecasts``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``model_artifacts_format``  (L8_B_saved_objects)
 -----------------------------------------------------
@@ -697,11 +697,11 @@ Default; broad compatibility across sklearn / xgboost / lightgbm.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``pickle``, ``onnx``, ``pmml``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``onnx``
 ^^^^^^^^
@@ -721,12 +721,12 @@ Models without ONNX support (BVAR, DFM, MRF, custom callables).
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 * ONNX specification. <https://onnx.ai/>
 
 **Related options**: ``joblib``, ``pmml``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``pickle``
 ^^^^^^^^^^
@@ -742,11 +742,11 @@ Compatibility with older toolchains.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``joblib``, ``onnx``, ``pmml``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``pmml``
 ^^^^^^^^
@@ -766,12 +766,12 @@ Modern ML deployment -- ONNX is more widely supported.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 * PMML 4.4 specification. <https://dmg.org/pmml/v4-4/GeneralStructure.html>
 
 **Related options**: ``joblib``, ``onnx``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``provenance_fields``  (L8_C_provenance)
 ---------------------------------------------
@@ -794,11 +794,11 @@ Default-on when sweeps are active.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``data_revision_tag``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -814,11 +814,11 @@ Default-on when raw data is FRED-MD / -QD / -SD.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``dependency_lockfile``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -834,11 +834,11 @@ Default-on; needed for environment replication.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``git_branch_name``
 ^^^^^^^^^^^^^^^^^^^
@@ -854,11 +854,11 @@ Default-on with git_commit_sha.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``git_commit_sha``
 ^^^^^^^^^^^^^^^^^^
@@ -874,11 +874,11 @@ Default-on when the run executes inside a git tree.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``julia_version``
 ^^^^^^^^^^^^^^^^^
@@ -894,19 +894,19 @@ Recipes that call Julia. Selecting ``julia_version`` on ``l8.provenance_fields``
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``package_version``
 ^^^^^^^^^^^^^^^^^^^
 
 
-macrocast version string.
+macroforecast version string.
 
-From ``macrocast.__version__``. Lets ``replicate()`` warn the user when the manifest was produced by a different package version.
+From ``macroforecast.__version__``. Lets ``replicate()`` warn the user when the manifest was produced by a different package version.
 
 **When to use**
 
@@ -914,11 +914,11 @@ Default-on. Selecting ``package_version`` on ``l8.provenance_fields`` activates 
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``python_version``, ``r_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``python_version``
 ^^^^^^^^^^^^^^^^^^
@@ -934,11 +934,11 @@ Default-on. Selecting ``python_version`` on ``l8.provenance_fields`` activates t
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``r_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``r_version``
 ^^^^^^^^^^^^^
@@ -954,11 +954,11 @@ Recipes that call R (e.g. for arima or robust statistics).
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``random_seed_used``
 ^^^^^^^^^^^^^^^^^^^^
@@ -974,11 +974,11 @@ Default-on; required for bit-exact replication.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``recipe_hash``
 ^^^^^^^^^^^^^^^
@@ -994,11 +994,11 @@ Default-on; cheap consistency check.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``package_version``, ``python_version``, ``r_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``recipe_yaml_full``
 ^^^^^^^^^^^^^^^^^^^^
@@ -1014,11 +1014,11 @@ Default-on; required for replication.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_hash``, ``package_version``, ``python_version``, ``r_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``runtime_duration``
 ^^^^^^^^^^^^^^^^^^^^
@@ -1036,11 +1036,11 @@ Default-on; useful for cost-tracking.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``runtime_environment``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1056,11 +1056,11 @@ Default-on. Selecting ``runtime_environment`` on ``l8.provenance_fields`` activa
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``recipe_yaml_full``, ``recipe_hash``, ``package_version``, ``python_version``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``manifest_format``  (L8_C_provenance)
 -------------------------------------------
@@ -1075,7 +1075,7 @@ axis ``manifest_format``  (L8_C_provenance)
 
 Manifest written as a single JSON document (default).
 
-Default. Round-trips cleanly into Python / JS / R; preserves nested structure. The natural choice for every consumer that uses ``macrocast.replicate``.
+Default. Round-trips cleanly into Python / JS / R; preserves nested structure. The natural choice for every consumer that uses ``macroforecast.replicate``.
 
 **When to use**
 
@@ -1083,11 +1083,11 @@ Default; round-trips cleanly. Selecting ``json`` on ``l8.manifest_format`` activ
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``yaml``, ``json_lines``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``json_lines``
 ^^^^^^^^^^^^^^
@@ -1103,11 +1103,11 @@ Sweep manifests with thousands of cells; streaming consumers.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``yaml``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``yaml``
 ^^^^^^^^
@@ -1123,11 +1123,11 @@ Hand-readable manifests; paper supplementary materials.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``json``, ``json_lines``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``artifact_granularity``  (L8_D_artifact_granularity)
 ----------------------------------------------------------
@@ -1150,11 +1150,11 @@ Sweeps with thousands of small artifacts.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``per_cell``, ``per_target``, ``per_horizon``, ``per_target_horizon``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``per_cell``
 ^^^^^^^^^^^^
@@ -1170,11 +1170,11 @@ Default; isolates each cell's artifacts.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``per_target``, ``per_horizon``, ``per_target_horizon``, ``flat``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``per_horizon``
 ^^^^^^^^^^^^^^^
@@ -1190,11 +1190,11 @@ Multi-horizon sweeps. Selecting ``per_horizon`` on ``l8.artifact_granularity`` a
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``per_cell``, ``per_target``, ``per_target_horizon``, ``flat``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``per_target``
 ^^^^^^^^^^^^^^
@@ -1210,11 +1210,11 @@ Multi-target studies where target-grouping aids browsing.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``per_cell``, ``per_horizon``, ``per_target_horizon``, ``flat``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``per_target_horizon``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -1230,11 +1230,11 @@ Studies sweeping across both target and horizon.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``per_cell``, ``per_target``, ``per_horizon``, ``flat``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``naming_convention``  (L8_D_artifact_granularity)
 -------------------------------------------------------
@@ -1257,11 +1257,11 @@ Default; stable, short. Selecting ``cell_id`` on ``l8.naming_convention`` activa
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``descriptive``, ``recipe_hash``, ``custom``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``custom``
 ^^^^^^^^^^
@@ -1277,11 +1277,11 @@ Bespoke directory layouts. Selecting ``custom`` on ``l8.naming_convention`` acti
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``descriptive``, ``cell_id``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``descriptive``
 ^^^^^^^^^^^^^^^
@@ -1301,11 +1301,11 @@ Wide sweeps with many axes -- names exceed filesystem limits.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``cell_id``, ``custom``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``recipe_hash``
 ^^^^^^^^^^^^^^^
@@ -1321,8 +1321,8 @@ Reproducibility-first naming; deterministic across runs.
 
 **References**
 
-* macrocast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
+* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
 
 **Related options**: ``cell_id``, ``descriptive``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.

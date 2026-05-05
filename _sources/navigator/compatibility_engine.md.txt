@@ -18,7 +18,7 @@ The CLI and static Navigator App share the same exported compatibility metadata.
 | `forecast_object=direction` | Recommends direction tests such as `pesaran_timmermann` and `binomial_hit`. |
 | `forecast_object=interval` or `density` | Recommends density/interval calibration tests on the `density_interval` axis. |
 | `model_family in {lstm, gru, tcn}` | Current runtime uses the univariate target-history sequence route. Full multivariate `feature_runtime=sequence_tensor` remains gated until the Layer 2 sequence representation handoff is opened. |
-| registered custom `model_family` | Enabled in the current Python process after `@mc.custom_model(...)` registration. Custom names are valid forecast generators, but YAML alone cannot register the callable. |
+| registered custom `model_family` | Enabled in the current Python process after `@mf.custom_model(...)` registration. Custom names are valid forecast generators, but YAML alone cannot register the callable. |
 | `fred_sd_mixed_frequency_representation=native_frequency_block_payload` | Requires `dataset` including `fred_sd`, `feature_builder=raw_feature_panel`, and `forecast_type=direct`. It enables FRED-SD native-frequency payloads for registered custom models and supported MIDAS routes. |
 | `fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter` | Requires the same FRED-SD raw-panel direct route and enables the adapter payload for registered custom models, `midas_almon`, `midasr`, and `midasr_nealmon`. |
 | `forecast_type=iterated` with raw-panel features | Requires an explicit `exogenous_x_path_policy`: `hold_last_observed`, `observed_future_x`, `scheduled_known_future_x`, or `recursive_x_model` with `recursive_x_model_family=ar1`. |

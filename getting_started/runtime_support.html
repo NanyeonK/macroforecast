@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Runtime Support Matrix &mdash; macrocast</title>
+  <title>Runtime Support Matrix &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,7 +71,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -82,7 +82,7 @@
           <li class="breadcrumb-item"><a href="index.html">Getting Started</a></li>
       <li class="breadcrumb-item active">Runtime Support Matrix</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/getting_started/runtime_support.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/getting_started/runtime_support.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -93,12 +93,12 @@
   <section id="runtime-support-matrix">
 <h1>Runtime Support Matrix<a class="headerlink" href="#runtime-support-matrix" title="Link to this heading"></a></h1>
 <p>This page describes what the current core runtime executes directly, and what is currently schema-validated but delegated to future specialized runtimes.</p>
-<p>macrocast has two execution surfaces:</p>
+<p>macroforecast has two execution surfaces:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code>: the legacy experiment engine used by older recipes and tests.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime</span></code>: the new layer-contract runtime used by L0-L8 and L1.5-L4.5 artifacts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution</span></code>: the legacy experiment engine used by older recipes and tests.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.core.runtime</span></code>: the new layer-contract runtime used by L0-L8 and L1.5-L4.5 artifacts.</p></li>
 </ul>
-<p>The support matrix below refers to <code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime.execute_minimal_forecast</span></code> unless stated otherwise.</p>
+<p>The support matrix below refers to <code class="docutils literal notranslate"><span class="pre">macroforecast.core.runtime.execute_minimal_forecast</span></code> unless stated otherwise.</p>
 <section id="end-to-end-supported-path">
 <h2>End-to-End Supported Path<a class="headerlink" href="#end-to-end-supported-path" title="Link to this heading"></a></h2>
 <p>The current core runtime executes one complete layer-contract path:</p>
@@ -213,7 +213,7 @@
 </section>
 <section id="minimal-core-runtime-example">
 <h2>Minimal Core Runtime Example<a class="headerlink" href="#minimal-core-runtime-example" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l4_minimal_ridge.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 

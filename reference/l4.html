@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>L4 – Forecasting model &mdash; macrocast</title>
+  <title>L4 – Forecasting model &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -79,7 +79,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -90,7 +90,7 @@
           <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
       <li class="breadcrumb-item active">L4  –  Forecasting model</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/reference/l4.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/reference/l4.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -129,13 +129,13 @@
 <p>Default benchmark in any forecasting horse race; replication of papers reporting AR baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Stock &amp; Watson (2007) ‘Why Has US Inflation Become Harder to Forecast?’, JMCB 39.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="ols">
@@ -148,13 +148,13 @@
 <p>High-dimensional panels (p ≈ n) – use ridge / lasso instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Greene (2018) ‘Econometric Analysis’, 8th ed., Pearson.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">ar_p</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="ridge">
@@ -166,13 +166,13 @@
 <p>High-dimensional macro panels with collinear predictors; standard benchmark.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Hoerl &amp; Kennard (1970) ‘Ridge regression: biased estimation for nonorthogonal problems’, Technometrics 12(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="lasso">
@@ -183,13 +183,13 @@
 <p>Variable selection; sparse forecasts on high-dimensional panels.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Tibshirani (1996) ‘Regression Shrinkage and Selection via the Lasso’, JRSS-B 58(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="elastic-net">
@@ -200,13 +200,13 @@
 <p>Correlated predictor blocks where lasso alone gives unstable selection.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Zou &amp; Hastie (2005) ‘Regularization and variable selection via the elastic net’, JRSS-B 67(2).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="lasso-path">
@@ -217,12 +217,12 @@
 <p>When the recipe wants automatic α selection without an explicit search_algorithm.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">ridge</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="bayesian-ridge">
@@ -233,12 +233,12 @@
 <p>Studies that need coefficient credible intervals; default-Bayesian baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="glmboost">
@@ -249,13 +249,13 @@
 <p>Transparent feature-selection pathways; alternative to lasso.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Bühlmann &amp; Hothorn (2007) ‘Boosting algorithms: Regularization, prediction and model fitting’, Statistical Science 22(4).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="huber">
@@ -266,13 +266,13 @@
 <p>Series with sporadic outliers that aren’t worth flagging in L2.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Huber (1964) ‘Robust Estimation of a Location Parameter’, Annals of Mathematical Statistics 35(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ols</span></code>, <code class="docutils literal notranslate"><span class="pre">ridge</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="var">
@@ -285,13 +285,13 @@
 <p>High-dimensional panels (VAR scales O(p²)); use BVAR shrinkage instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Sims (1980) ‘Macroeconomics and Reality’, Econometrica 48(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code>, <code class="docutils literal notranslate"><span class="pre">ar_p</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="factor-augmented-ar">
@@ -302,13 +302,13 @@
 <p>High-dimensional macro panels (FRED-MD/QD); diffusion-index baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Stock &amp; Watson (2002) ‘Forecasting Using Principal Components from a Large Number of Predictors’, JASA 97(460).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code>, <code class="docutils literal notranslate"><span class="pre">principal_component_regression</span></code>, <code class="docutils literal notranslate"><span class="pre">ar_p</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="principal-component-regression">
@@ -319,12 +319,12 @@
 <p>Diffusion-index forecasts where AR augmentation hurts performance.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="decision-tree">
@@ -335,13 +335,13 @@
 <p>Ablation studies; cheap non-linear baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Breiman, Friedman, Stone &amp; Olshen (1984) ‘Classification and Regression Trees’, CRC Press.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>, <code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="random-forest">
@@ -352,13 +352,13 @@
 <p>Default non-linear benchmark; non-stationary series where linear models fail.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Breiman (2001) ‘Random Forests’, Machine Learning 45(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>, <code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code>, <code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="extra-trees">
@@ -369,13 +369,13 @@
 <p>Quick non-linear baseline; large ensemble experiments.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Geurts, Ernst &amp; Wehenkel (2006) ‘Extremely randomized trees’, Machine Learning 63(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="gradient-boosting">
@@ -386,68 +386,68 @@
 <p>Default boosted baseline when xgboost / lightgbm are unavailable.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Friedman (2001) ‘Greedy function approximation: A gradient boosting machine’, Annals of Statistics 29(5).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>, <code class="docutils literal notranslate"><span class="pre">catboost</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="xgboost">
 <h3><code class="docutils literal notranslate"><span class="pre">xgboost</span></code><a class="headerlink" href="#xgboost" title="Link to this heading"></a></h3>
 <p>XGBoost gradient-boosted trees (optional dependency).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[xgboost]</span></code>. Histogram-based tree construction; native quantile loss; GPU support. Standard production-grade boosting library.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[xgboost]</span></code>. Histogram-based tree construction; native quantile loss; GPU support. Standard production-grade boosting library.</p>
 <p><strong>When to use</strong></p>
 <p>Production sweeps where xgboost’s speed matters; quantile forecasting (xgb 2.0+).</p>
 <p><strong>When NOT to use</strong></p>
 <p>Lightweight installs (no extra installed) – raises ImportError.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Chen &amp; Guestrin (2016) ‘XGBoost: A Scalable Tree Boosting System’, KDD.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code>, <code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>, <code class="docutils literal notranslate"><span class="pre">catboost</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="lightgbm">
 <h3><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code><a class="headerlink" href="#lightgbm" title="Link to this heading"></a></h3>
 <p>LightGBM gradient-boosted trees (optional dependency).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[lightgbm]</span></code>. Leaf-wise tree growth; fast on wide / categorical-heavy panels.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[lightgbm]</span></code>. Leaf-wise tree growth; fast on wide / categorical-heavy panels.</p>
 <p><strong>When to use</strong></p>
 <p>Wide categorical panels; production sweeps where lightgbm’s speed matters.</p>
 <p><strong>When NOT to use</strong></p>
 <p>Lightweight installs (no extra installed) – raises ImportError.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Ke et al. (2017) ‘LightGBM: A Highly Efficient Gradient Boosting Decision Tree’, NeurIPS.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="catboost">
 <h3><code class="docutils literal notranslate"><span class="pre">catboost</span></code><a class="headerlink" href="#catboost" title="Link to this heading"></a></h3>
 <p>CatBoost gradient-boosted trees (optional dependency).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[catboost]</span></code>. Ordered boosting + native categorical handling.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[catboost]</span></code>. Ordered boosting + native categorical handling.</p>
 <p><strong>When to use</strong></p>
 <p>Categorical-heavy panels; ordered-boosting research.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Prokhorenkova et al. (2018) ‘CatBoost: unbiased boosting with categorical features’, NeurIPS.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="svr-linear">
@@ -459,13 +459,13 @@
 <p>Robust linear baselines; comparison against ridge.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Drucker, Burges, Kaufman, Smola &amp; Vapnik (1997) ‘Support Vector Regression Machines’, NeurIPS.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code>, <code class="docutils literal notranslate"><span class="pre">svr_poly</span></code>, <code class="docutils literal notranslate"><span class="pre">ridge</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="svr-rbf">
@@ -477,12 +477,12 @@
 <p>Small / medium-dim non-linear regression; kernel-method ablations.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">svr_linear</span></code>, <code class="docutils literal notranslate"><span class="pre">svr_poly</span></code>, <code class="docutils literal notranslate"><span class="pre">random_forest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="svr-poly">
@@ -493,12 +493,12 @@
 <p>Polynomial-kernel ablations. Selecting <code class="docutils literal notranslate"><span class="pre">svr_poly</span></code> on <code class="docutils literal notranslate"><span class="pre">l4.family</span></code> activates this branch of the layer’s runtime.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code>, <code class="docutils literal notranslate"><span class="pre">svr_linear</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="mlp">
@@ -509,69 +509,69 @@
 <p>Non-linear regression baselines; ablations against deep NN.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">lstm</span></code>, <code class="docutils literal notranslate"><span class="pre">gru</span></code>, <code class="docutils literal notranslate"><span class="pre">transformer</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="lstm">
 <h3><code class="docutils literal notranslate"><span class="pre">lstm</span></code><a class="headerlink" href="#lstm" title="Link to this heading"></a></h3>
 <p>Long short-term memory recurrent NN (torch, optional).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[deep]</span></code>. Sequence-aware RNN with input/forget/output gates. Trains on sliding windows of the lagged feature panel.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[deep]</span></code>. Sequence-aware RNN with input/forget/output gates. Trains on sliding windows of the lagged feature panel.</p>
 <p><strong>When to use</strong></p>
 <p>Sequence-modelling studies; replication of deep-NN forecasting papers.</p>
 <p><strong>When NOT to use</strong></p>
 <p>Without [deep] installed – raises NotImplementedError.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Hochreiter &amp; Schmidhuber (1997) ‘Long short-term memory’, Neural Computation 9(8).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">gru</span></code>, <code class="docutils literal notranslate"><span class="pre">transformer</span></code>, <code class="docutils literal notranslate"><span class="pre">mlp</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="gru">
 <h3><code class="docutils literal notranslate"><span class="pre">gru</span></code><a class="headerlink" href="#gru" title="Link to this heading"></a></h3>
 <p>Gated recurrent unit RNN (torch, optional).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[deep]</span></code>. Simpler than LSTM (one fewer gate); often comparable on macro panels.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[deep]</span></code>. Simpler than LSTM (one fewer gate); often comparable on macro panels.</p>
 <p><strong>When to use</strong></p>
 <p>Sequence-modelling baselines; LSTM ablations.</p>
 <p><strong>When NOT to use</strong></p>
 <p>Without [deep] installed.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Cho et al. (2014) ‘Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation’, EMNLP.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">lstm</span></code>, <code class="docutils literal notranslate"><span class="pre">transformer</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="transformer">
 <h3><code class="docutils literal notranslate"><span class="pre">transformer</span></code><a class="headerlink" href="#transformer" title="Link to this heading"></a></h3>
 <p>Transformer encoder regressor (torch, optional).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[deep]</span></code>. Self-attention on the lagged feature panel. Single encoder layer; suitable as a non-linear sequence-attention baseline.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[deep]</span></code>. Self-attention on the lagged feature panel. Single encoder layer; suitable as a non-linear sequence-attention baseline.</p>
 <p><strong>When to use</strong></p>
 <p>Attention-based macro forecasting research; sequence-NN benchmark.</p>
 <p><strong>When NOT to use</strong></p>
 <p>Without [deep] installed.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Vaswani et al. (2017) ‘Attention is all you need’, NeurIPS.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">lstm</span></code>, <code class="docutils literal notranslate"><span class="pre">gru</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="knn">
@@ -582,13 +582,13 @@
 <p>Non-parametric baselines; sensitivity studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Cover &amp; Hart (1967) ‘Nearest neighbor pattern classification’, IEEE Trans. on Information Theory 13(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="bvar-minnesota">
@@ -600,13 +600,13 @@
 <p>Multi-series forecasting where standard VAR overfits; macro panels with strong unit-root behaviour.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Litterman (1986) ‘Forecasting With Bayesian Vector Autoregressions – Five Years of Experience’, JBES 4(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>, <code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="bvar-normal-inverse-wishart">
@@ -617,13 +617,13 @@
 <p>Studies preferring a fully-conjugate prior over Litterman’s hand-tuned shrinkage.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Kadiyala &amp; Karlsson (1997) ‘Numerical Methods for Estimation and Inference in Bayesian VAR-models’, Journal of Applied Econometrics 12(2).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>, <code class="docutils literal notranslate"><span class="pre">var</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="factor-augmented-var">
@@ -635,13 +635,13 @@
 <p>Monetary-policy / macro-state studies; diffusion-index VAR baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Bernanke, Boivin &amp; Eliasz (2005) ‘Measuring the Effects of Monetary Policy: A Factor-Augmented Vector Autoregressive Approach’, QJE 120(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="macroeconomic-random-forest">
@@ -652,13 +652,13 @@
 <p>Macro forecasting with non-stationary parameter dynamics; alternative to switching models.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Coulombe (2024) ‘A Neural Phillips Curve and a Deep Output Gap’, Journal of Monetary Economics, forthcoming.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="dfm-mixed-mariano-murasawa">
@@ -669,13 +669,13 @@
 <p>Mixed-frequency nowcasting (e.g., quarterly GDP from monthly indicators).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Mariano &amp; Murasawa (2010) ‘A coincident index, common factors, and monthly real GDP’, Oxford Bulletin of Economics and Statistics 72(1).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="quantile-regression-forest">
@@ -686,13 +686,13 @@
 <p>Growth-at-risk / VaR studies; density forecasting.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Meinshausen (2006) ‘Quantile Regression Forests’, JMLR 7.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">bagging</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="bagging">
@@ -703,13 +703,13 @@
 <p>Variance reduction on noisy series; quantile bands without quantile regression.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Breiman (1996) ‘Bagging Predictors’, Machine Learning 24(2).</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>, <code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -731,11 +731,11 @@
 <p>Default for most studies. Comparable across publications.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="iterated">
@@ -746,11 +746,11 @@
 <p>Speed-sensitive sweeps; replication of papers using iterated VAR.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="path-average">
@@ -761,11 +761,11 @@
 <p>Cumulative-growth forecasting (e.g., Stock-Watson 2002).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -787,11 +787,11 @@
 <p>Default. Comparable across publications.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="rolling">
@@ -802,11 +802,11 @@
 <p>Non-stationary series; structural-change studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="fixed">
@@ -817,11 +817,11 @@
 <p>Replication of papers with fixed training windows.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -843,11 +843,11 @@
 <p>Default. Standard walk-forward protocol.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="every-n-origins">
@@ -858,11 +858,11 @@
 <p>Long sweeps with slow estimators (e.g., LSTM / xgboost on large panels).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="single-fit">
@@ -873,11 +873,11 @@
 <p>In-sample studies; coefficient-stability pins.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -900,11 +900,11 @@
 <p>Default. Studies with hand-picked hyperparameters.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="cv-path">
@@ -915,11 +915,11 @@
 <p>Quick alpha selection; comparable to published cross-validated linear baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="grid-search">
@@ -930,11 +930,11 @@
 <p>Reproducible hyperparameter sweeps; comparison against published grid-tuned baselines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="random-search">
@@ -945,26 +945,26 @@
 <p>Larger search spaces; black-box hyperparameter exploration.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="bayesian-optimization">
 <h3><code class="docutils literal notranslate"><span class="pre">bayesian_optimization</span></code><a class="headerlink" href="#bayesian-optimization" title="Link to this heading"></a></h3>
 <p>Optuna TPE optimisation (optional dependency).</p>
-<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macrocast[tuning]</span></code> (optuna). Falls back to <code class="docutils literal notranslate"><span class="pre">random_search</span></code> when optuna isn’t installed.</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[tuning]</span></code> (optuna). Falls back to <code class="docutils literal notranslate"><span class="pre">random_search</span></code> when optuna isn’t installed.</p>
 <p><strong>When to use</strong></p>
 <p>Expensive estimators where each fit costs many seconds; hyperparameter spaces with smooth landscapes.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="genetic-algorithm">
@@ -975,11 +975,11 @@
 <p>Discrete / categorical hyperparameter spaces where TPE struggles.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>

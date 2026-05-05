@@ -31,13 +31,13 @@ Nested-model comparisons -- use Clark-West (L6.B) instead.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Diebold & Mariano (1995) 'Comparing Predictive Accuracy', JBES 13(3): 253-263.
 * Harvey, Leybourne & Newbold (1997) 'Testing the equality of prediction mean squared errors', IJF 13(2): 281-291.
 
 **Related options**: ``gw_giacomini_white``, ``dmp_multi_horizon``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``gw_giacomini_white``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -53,12 +53,12 @@ Conditional / regime-dependent forecast comparisons.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Giacomini & White (2006) 'Tests of Conditional Predictive Ability', Econometrica 74(6): 1545-1578.
 
 **Related options**: ``dm_diebold_mariano``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``dmp_multi_horizon``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -74,12 +74,12 @@ Joint significance across multiple horizons (avoids per-horizon p-value adjustme
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Pesaran & Timmermann (2007) 'Selection of estimation window in the presence of breaks', JoE 137(1): 134-161.
 
 **Related options**: ``dm_diebold_mariano``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -95,11 +95,11 @@ Comprehensive equal-predictive-ability audits.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 
 **Related options**: ``dm_diebold_mariano``, ``gw_giacomini_white``, ``dmp_multi_horizon``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``loss_function``  (L6_A_equal_predictive)
 -----------------------------------------------
@@ -171,12 +171,12 @@ Detecting whether predictive ability is stable across the OOS sample.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Giacomini & Rossi (2010) 'Forecast Comparisons in Unstable Environments', JAE 25(4): 595-620.
 
 **Related options**: ``rossi_sekhposyan``, ``multi``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``rossi_sekhposyan``
 ^^^^^^^^^^^^^^^^^^^^
@@ -192,12 +192,12 @@ Detecting one-off regime shifts in predictive ability.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Rossi & Sekhposyan (2016) 'Forecast Rationality Tests in the Presence of Instabilities', JAE 31(3): 507-532.
 
 **Related options**: ``giacomini_rossi_2010``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``multi``
 ^^^^^^^^^
@@ -215,11 +215,11 @@ Comprehensive CPA audits. Selecting ``multi`` on ``l6.cpa_test`` activates this 
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 
 **Related options**: ``giacomini_rossi_2010``, ``rossi_sekhposyan``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``cpa_window_type``  (L6_C_cpa)
 ------------------------------------
@@ -263,12 +263,12 @@ Identifying the small set of equally-best models out of many candidates.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Hansen, Lunde & Nason (2011) 'The Model Confidence Set', Econometrica 79(2): 453-497.
 
 **Related options**: ``spa_hansen``, ``reality_check_white``, ``step_m_romano_wolf``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``spa_hansen``
 ^^^^^^^^^^^^^^
@@ -284,12 +284,12 @@ Testing whether the best candidate beats a fixed benchmark.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Hansen (2005) 'A Test for Superior Predictive Ability', JBES 23(4): 365-380.
 
 **Related options**: ``mcs_hansen``, ``reality_check_white``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``reality_check_white``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -305,12 +305,12 @@ Foundational reality-check; compatibility with older studies.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * White (2000) 'A Reality Check for Data Snooping', Econometrica 68(5): 1097-1126.
 
 **Related options**: ``spa_hansen``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``step_m_romano_wolf``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -326,12 +326,12 @@ Identifying which specific models in a large pool beat the benchmark.
 
 **References**
 
-* macrocast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 * Romano & Wolf (2005) 'Stepwise Multiple Testing as Formalized Data Snooping', Econometrica 73(4): 1237-1282.
 
 **Related options**: ``mcs_hansen``, ``spa_hansen``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``mcs_alpha``  (L6_D_multiple_model)
 -----------------------------------------

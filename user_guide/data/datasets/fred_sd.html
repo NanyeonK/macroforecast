@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FRED-SD &mdash; macrocast</title>
+  <title>FRED-SD &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">macrocast</a>
+          <a href="../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">FRED-SD</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/datasets/fred_sd.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/user_guide/data/datasets/fred_sd.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -82,7 +82,7 @@
              
   <section id="fred-sd">
 <h1>FRED-SD<a class="headerlink" href="#fred-sd" title="Link to this heading"></a></h1>
-<p>Real-time U.S. state-level macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Provides per-state variables (labor market, production, housing) with vintage history, enabling real-time forecasting exercises at the state level. Loaded via <code class="docutils literal notranslate"><span class="pre">macrocast.load_fred_sd()</span></code> when <code class="docutils literal notranslate"><span class="pre">path.1_data_task.fixed_axes.dataset</span> <span class="pre">==</span> <span class="pre">&quot;fred_sd&quot;</span></code>.</p>
+<p>Real-time U.S. state-level macroeconomic panel maintained by the Federal Reserve Bank of St. Louis. Provides per-state variables (labor market, production, housing) with vintage history, enabling real-time forecasting exercises at the state level. Loaded via <code class="docutils literal notranslate"><span class="pre">macroforecast.load_fred_sd()</span></code> when <code class="docutils literal notranslate"><span class="pre">path.1_data_task.fixed_axes.dataset</span> <span class="pre">==</span> <span class="pre">&quot;fred_sd&quot;</span></code>.</p>
 <p>FRED-SD differs structurally from FRED-MD / FRED-QD: the file format is an Excel workbook, and the panel <strong>mixes monthly and quarterly series</strong> — a user-facing complication discussed in v1.0 limitations below.</p>
 <section id="citation-authoritative-source">
 <h2>Citation &amp; authoritative source<a class="headerlink" href="#citation-authoritative-source" title="Link to this heading"></a></h2>
@@ -97,7 +97,7 @@
 <a class="reference external" href="https://rdrr.io/cran/midasr/man/almonp.html"><code class="docutils literal notranslate"><span class="pre">almonp</span></code></a>,
 <a class="reference external" href="https://rdrr.io/cran/midasr/man/nbeta.html"><code class="docutils literal notranslate"><span class="pre">nbeta</span></code></a>,
 <a class="reference external" href="https://rdrr.io/cran/midasr/man/genexp.html"><code class="docutils literal notranslate"><span class="pre">genexp</span></code></a>, and
-<a class="reference external" href="https://rdrr.io/cran/midasr/man/harstep.html"><code class="docutils literal notranslate"><span class="pre">harstep</span></code></a>. macrocast’s
+<a class="reference external" href="https://rdrr.io/cran/midasr/man/harstep.html"><code class="docutils literal notranslate"><span class="pre">harstep</span></code></a>. macroforecast’s
 <code class="docutils literal notranslate"><span class="pre">model_family=midasr</span></code> route currently supports <code class="docutils literal notranslate"><span class="pre">midasr_weight_family</span></code> values
 <code class="docutils literal notranslate"><span class="pre">nealmon</span></code>, <code class="docutils literal notranslate"><span class="pre">almonp</span></code>, <code class="docutils literal notranslate"><span class="pre">nbeta</span></code>, <code class="docutils literal notranslate"><span class="pre">genexp</span></code>, and <code class="docutils literal notranslate"><span class="pre">harstep</span></code> for the FRED-SD direct
 raw-panel route. The legacy
@@ -106,19 +106,19 @@ raw-panel route. The legacy
 model classes.</p></li>
 </ul>
 </section>
-<section id="what-macrocast-downloads">
-<h2>What macrocast downloads<a class="headerlink" href="#what-macrocast-downloads" title="Link to this heading"></a></h2>
+<section id="what-macroforecast-downloads">
+<h2>What macroforecast downloads<a class="headerlink" href="#what-macroforecast-downloads" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>Current vintage</strong>: macrocast reads the official FRED-SD landing page and
+<li><p><strong>Current vintage</strong>: macroforecast reads the official FRED-SD landing page and
 selects the latest <strong>Data by Series</strong> workbook link, for example
 <code class="docutils literal notranslate"><span class="pre">.../fred-sd/series/series-YYYY-MM.xlsx</span></code>. This is the workbook layout the
 loader expects: tabs are variables, columns are states.</p></li>
-<li><p><strong>Historical vintage</strong>: macrocast first tries the direct <strong>Data by Series</strong>
+<li><p><strong>Historical vintage</strong>: macroforecast first tries the direct <strong>Data by Series</strong>
 workbook URL, <code class="docutils literal notranslate"><span class="pre">.../fred-sd/series/series-YYYY-MM.xlsx</span></code>. If a vintage is only
 distributed inside an official by-series archive, it falls back to the
 appropriate <code class="docutils literal notranslate"><span class="pre">fredsd_byseries_*.zip</span></code> file and extracts the requested workbook.</p></li>
 </ul>
-<p>The workbook is laid out with <strong>one sheet per variable</strong>; within each sheet, <strong>columns are states</strong> (50 states plus DC) and <strong>rows are observations</strong> indexed by date. The macrocast loader (<code class="docutils literal notranslate"><span class="pre">macrocast/raw/datasets/fred_sd.py</span></code>) accepts two selectors:</p>
+<p>The workbook is laid out with <strong>one sheet per variable</strong>; within each sheet, <strong>columns are states</strong> (50 states plus DC) and <strong>rows are observations</strong> indexed by date. The macroforecast loader (<code class="docutils literal notranslate"><span class="pre">macroforecast/raw/datasets/fred_sd.py</span></code>) accepts two selectors:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">load_fred_sd</span><span class="p">(</span>
     <span class="n">vintage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">states</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>     <span class="c1"># list of state abbreviations, e.g. [&quot;CA&quot;, &quot;TX&quot;, &quot;NY&quot;]</span>
@@ -136,7 +136,7 @@ appropriate <code class="docutils literal notranslate"><span class="pre">fredsd_
 <li><p><strong>Production / output</strong> — state personal income, coincident activity index, industrial production proxies where available.</p></li>
 <li><p><strong>Housing</strong> — housing starts, permits, house price indices.</p></li>
 </ol>
-<p>Exact variable list and state coverage at a given vintage: see the <a class="reference external" href="https://research.stlouisfed.org/data/owyang/fred-sd/">data appendix</a> on the St. Louis Fed site. macrocast does not redistribute the per-variable metadata.</p>
+<p>Exact variable list and state coverage at a given vintage: see the <a class="reference external" href="https://research.stlouisfed.org/data/owyang/fred-sd/">data appendix</a> on the St. Louis Fed site. macroforecast does not redistribute the per-variable metadata.</p>
 </section>
 <section id="mixed-frequency-the-core-structural-issue">
 <h2>Mixed frequency — the core structural issue<a class="headerlink" href="#mixed-frequency-the-core-structural-issue" title="Link to this heading"></a></h2>
@@ -145,7 +145,7 @@ appropriate <code class="docutils literal notranslate"><span class="pre">fredsd_
 <li><p><strong>Monthly series</strong>: labor market indicators (unemployment, payroll employment), housing starts / permits.</p></li>
 <li><p><strong>Quarterly series</strong>: state GDP, state personal income (only from certain BEA releases), some productivity measures.</p></li>
 </ul>
-<p>Within a single workbook, the monthly series have 12 observations per year while the quarterly series have 4. macrocast now separates this into two explicit decisions:</p>
+<p>Within a single workbook, the monthly series have 12 observations per year while the quarterly series have 4. macroforecast now separates this into two explicit decisions:</p>
 <ul class="simple">
 <li><p>Layer 1 reports and optionally gates the selected native-frequency mix through
 <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report_v1</span></code> and <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code>.</p></li>
@@ -171,15 +171,15 @@ likelihoods and regularized group MIDAS remain research-extension work.</p>
 <section id="state-and-variable-selection">
 <h2>State and variable selection<a class="headerlink" href="#state-and-variable-selection" title="Link to this heading"></a></h2>
 <p>The loader supports direct source selectors:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_fred_sd</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_fred_sd</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">load_fred_sd</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;TX&quot;</span><span class="p">,</span> <span class="s2">&quot;NY&quot;</span><span class="p">,</span> <span class="s2">&quot;FL&quot;</span><span class="p">],</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PAYEMS&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Recipe/runtime selection is available through Layer 1 and the simple API:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
 <span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -192,7 +192,7 @@ likelihoods and regularized group MIDAS remain research-extension work.</p>
 </div>
 <p>Built-in groups are also Layer 1 source-load selectors:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -317,7 +317,7 @@ Layer 2 can shape the panel with
 </table>
 <p>Simple API:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
@@ -408,9 +408,9 @@ a polynomial degree. <code class="docutils literal notranslate"><span class="pre
 Use Layer 2 state/variable/feature selection before this route when the raw
 panel is wide; the NLS slice is meant for explicit research
 specifications, not blind high-dimensional grids.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
-<span class="nd">@mc</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_fred_sd_mf_model&quot;</span><span class="p">)</span>
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_fred_sd_mf_model&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_fred_sd_mf_model</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="n">blocks</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;auxiliary_payloads&quot;</span><span class="p">][</span><span class="s2">&quot;fred_sd_native_frequency_block_payload&quot;</span><span class="p">]</span>
     <span class="n">monthly_columns</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="s2">&quot;blocks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="p">[])</span>
@@ -419,7 +419,7 @@ specifications, not blind high-dimensional grids.</p>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_train</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
 <span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;UR_CA&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2000-01&quot;</span><span class="p">,</span>
@@ -436,7 +436,7 @@ specifications, not blind high-dimensional grids.</p>
 </div>
 <p>Built-in MIDAS-style route:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;UR_CA&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2000-01&quot;</span><span class="p">,</span>
@@ -453,7 +453,7 @@ specifications, not blind high-dimensional grids.</p>
 </div>
 <p>R <code class="docutils literal notranslate"><span class="pre">midasr</span></code>-style weight-family route:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_sd&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;UR_CA&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2000-01&quot;</span><span class="p">,</span>
@@ -496,7 +496,7 @@ MIDAS remain future extensions.</p>
 <h2>Loader behaviour — things to know<a class="headerlink" href="#loader-behaviour-things-to-know" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><strong>Excel parsing</strong> via <code class="docutils literal notranslate"><span class="pre">openpyxl</span></code>. Each sheet is read independently; <code class="docutils literal notranslate"><span class="pre">pd.read_excel(...,</span> <span class="pre">sheet_name=None)</span></code> returns <code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">DataFrame]</span></code> and the loader concatenates wide-form.</p></li>
-<li><p><strong>Cache</strong>: same mechanism as FRED-MD / FRED-QD (<code class="docutils literal notranslate"><span class="pre">~/.cache/macrocast/raw/</span></code>).</p></li>
+<li><p><strong>Cache</strong>: same mechanism as FRED-MD / FRED-QD (<code class="docutils literal notranslate"><span class="pre">~/.cache/macroforecast/raw/</span></code>).</p></li>
 <li><p><strong>support_tier = “stable”</strong> on the returned <code class="docutils literal notranslate"><span class="pre">RawDatasetMetadata</span></code> — the live/vintage loader, selectors, metadata report, and FRED-SD t-code policy surface are package-owned. Mixed-frequency estimator families still report their own operational-narrow status.</p></li>
 <li><p><strong>Series metadata</strong> — runtime runs that include FRED-SD write <code class="docutils literal notranslate"><span class="pre">fred_sd_series_metadata.json</span></code>, which makes the selected state/variable panel and native-frequency mix auditable.</p></li>
 <li><p><strong>Frequency report</strong> — runtime also writes <code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_report.json</span></code>, which reduces the selected panel to a Layer 1 frequency-composition contract for downstream policy decisions.</p></li>
@@ -505,8 +505,8 @@ MIDAS remain future extensions.</p>
 <li><p><strong>T-code policy choices</strong> — state panels create a real choice between national-analog t-codes, one empirically selected code per SD variable, or independent state-by-series codes. The default is no FRED-SD t-code. The reviewed national-analog map is opt-in via <code class="docutils literal notranslate"><span class="pre">Experiment.use_sd_inferred_tcodes()</span></code>. The empirical variable-global map is opt-in via <code class="docutils literal notranslate"><span class="pre">Experiment.use_sd_empirical_tcodes(unit=&quot;variable_global&quot;)</span></code>. State-by-series empirical codes require an explicit column map via <code class="docutils literal notranslate"><span class="pre">Experiment.use_sd_empirical_tcodes(unit=&quot;state_series&quot;,</span> <span class="pre">code_map={...})</span></code>. All three record <code class="docutils literal notranslate"><span class="pre">official=false</span></code> in runtime reports.</p></li>
 </ul>
 </section>
-<section id="known-limitations-in-macrocast-v1-0">
-<h2>Known limitations in macrocast v1.0<a class="headerlink" href="#known-limitations-in-macrocast-v1-0" title="Link to this heading"></a></h2>
+<section id="known-limitations-in-macroforecast-v1-0">
+<h2>Known limitations in macroforecast v1.0<a class="headerlink" href="#known-limitations-in-macroforecast-v1-0" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
 <li><p><strong>Built-in mixed-frequency estimators are narrow</strong> — monthly-to-quarterly and quarterly-to-monthly conversion, strict same-frequency filtering, unknown-frequency filtering, native-frequency block payloads, custom adapter routes, the built-in <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code> direct Almon-lag baseline, <code class="docutils literal notranslate"><span class="pre">midasr</span></code> with <code class="docutils literal notranslate"><span class="pre">nealmon</span></code> / <code class="docutils literal notranslate"><span class="pre">almonp</span></code> / <code class="docutils literal notranslate"><span class="pre">nbeta</span></code> / <code class="docutils literal notranslate"><span class="pre">genexp</span></code> / <code class="docutils literal notranslate"><span class="pre">harstep</span></code>, and the compatibility <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code> restricted-NLS slice are available. Regularized group MIDAS and state-space nowcasting estimators remain future work.</p></li>
 <li><p><strong>State and SD-variable groups are recipe-level selectors</strong> —
@@ -514,7 +514,7 @@ MIDAS remain future extensions.</p>
 <code class="docutils literal notranslate"><span class="pre">sd_states</span></code> / <code class="docutils literal notranslate"><span class="pre">sd_variables</span></code> before loading. They are not post-load
 <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> filters.</p></li>
 <li><p><strong>Generic <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> is post-load</strong> — use <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> for workbook-sheet selection and <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> for loaded <code class="docutils literal notranslate"><span class="pre">VARIABLE_STATE</span></code> columns.</p></li>
-<li><p><strong>No official T-code row</strong> — <code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">apply_official_tcode</span></code> has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macrocast research metadata and must be opted into separately.</p></li>
+<li><p><strong>No official T-code row</strong> — <code class="docutils literal notranslate"><span class="pre">official_transform_policy:</span> <span class="pre">apply_official_tcode</span></code> has no FRED-SD workbook T-code row to consume. FRED-SD inferred T-codes are macroforecast research metadata and must be opted into separately.</p></li>
 <li><p><strong>Mixed-frequency estimator scope is narrow</strong> — <code class="docutils literal notranslate"><span class="pre">support_tier</span></code> is stable
 for FRED-SD loading and metadata, but advanced mixed-frequency estimators
 remain operational-narrow unless explicitly documented as built-in runtime

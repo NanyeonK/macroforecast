@@ -1,10 +1,10 @@
 # Execution Engine
 
-macrocast currently has two execution surfaces.
+macroforecast currently has two execution surfaces.
 
 ## Core Layer-Contract Runtime
 
-`macrocast.core.runtime.execute_minimal_forecast` executes the L1-L8 layer-contract path used by the new schema.
+`macroforecast.core.runtime.execute_minimal_forecast` executes the L1-L8 layer-contract path used by the new schema.
 
 Current responsibilities:
 
@@ -22,7 +22,7 @@ The core runtime is the preferred path for validating new layer specs and for re
 
 ## Legacy Experiment Engine
 
-`macrocast.compiler` and `macrocast.execution` continue to support older recipe surfaces and broader experiment tests. Some older docs and examples still refer to this path. Those outputs may use legacy filenames such as `predictions.csv`, `metrics.json`, or `artifact_manifest.json`.
+`macroforecast.compiler` and `macroforecast.execution` continue to support older recipe surfaces and broader experiment tests. Some older docs and examples still refer to this path. Those outputs may use legacy filenames such as `predictions.csv`, `metrics.json`, or `artifact_manifest.json`.
 
 ## Current Boundaries
 
@@ -45,4 +45,4 @@ Long term, runtime code should split into smaller modules:
 - diagnostic renderer
 - artifact and manifest writer
 
-The current `macrocast.core.runtime` file is a bridge: it keeps the layer-contract path executable while those module boundaries mature.
+The current `macroforecast.core.runtime` file is a bridge: it keeps the layer-contract path executable while those module boundaries mature.

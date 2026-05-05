@@ -12,7 +12,7 @@ not part of the default runtime until the validation report is reviewed.
 
 - FRED-SD raw values are source data.
 - FRED-MD and FRED-QD t-codes are official source metadata.
-- FRED-SD inferred t-codes are macrocast research artifacts.
+- FRED-SD inferred t-codes are macroforecast research artifacts.
 - Every inferred code must record its analog source, validation diagnostics, and
   confidence level.
 - Low-confidence variables must remain untransformed unless the user explicitly
@@ -31,7 +31,7 @@ Required manifest language:
 
 ## Candidate Table
 
-The candidate table lives in `macrocast/raw/sd_analog_candidates.py`. It records
+The candidate table lives in `macroforecast/raw/sd_analog_candidates.py`. It records
 human priors before statistical validation:
 
 - `sd_variable`: FRED-SD workbook sheet name.

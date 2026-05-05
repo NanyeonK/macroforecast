@@ -27,7 +27,7 @@ Declares **which observations count as training data, which count as OOS, and ho
 
 ## 1.3.1 `min_train_size`
 
-**Selects the rule for computing the minimum training window size.** Every value is operational in v1.0, wired via `macrocast.raw.windowing._resolve_min_train_obs`.
+**Selects the rule for computing the minimum training window size.** Every value is operational in v1.0, wired via `macroforecast.raw.windowing._resolve_min_train_obs`.
 
 ### Value catalog
 
@@ -41,8 +41,8 @@ Declares **which observations count as training data, which count as OOS, and ho
 
 ### Functions & features
 
-- `macrocast.raw.windowing._resolve_min_train_obs(spec, model_family, target, horizon)` — the dispatch implementation, re-used from the windowing module (previously dead code; live in v1.0).
-- `macrocast.execution.build._minimum_train_size(recipe, *, horizon=None)` — the execution-layer entry point. Falls back to the largest recipe horizon when an explicit horizon is not supplied (conservative).
+- `macroforecast.raw.windowing._resolve_min_train_obs(spec, model_family, target, horizon)` — the dispatch implementation, re-used from the windowing module (previously dead code; live in v1.0).
+- `macroforecast.execution.build._minimum_train_size(recipe, *, horizon=None)` — the execution-layer entry point. Falls back to the largest recipe horizon when an explicit horizon is not supplied (conservative).
 
 ### Recipe usage
 
@@ -77,8 +77,8 @@ path:
 
 ### Functions & features
 
-- Compiler-side validation in `macrocast.compiler.build`'s `_execution_status` emits the guard.
-- `macrocast.execution.build._build_predictions` resolves the date to an index floor via `target_series.index.searchsorted`, then applies it as a `max(base_start_idx, fixed_start_idx)` in `_rows_for_horizon`.
+- Compiler-side validation in `macroforecast.compiler.build`'s `_execution_status` emits the guard.
+- `macroforecast.execution.build._build_predictions` resolves the date to an index floor via `target_series.index.searchsorted`, then applies it as a `max(base_start_idx, fixed_start_idx)` in `_rows_for_horizon`.
 
 ### Dropped values
 
@@ -116,9 +116,9 @@ path:
 
 ### Functions & features
 
-- `macrocast.execution.nber.NBER_RECESSIONS` — frozen fixture of 12 recessions from 1948 to 2020 (NBER Business Cycle Dating Committee).
-- `macrocast.execution.nber.is_recession(date)` / `is_expansion(date)` — scalar membership helpers.
-- `macrocast.execution.nber.filter_origins_by_regime(origin_plan, index, regime)` — filters an `_rows_for_horizon` origin plan in place.
+- `macroforecast.execution.nber.NBER_RECESSIONS` — frozen fixture of 12 recessions from 1948 to 2020 (NBER Business Cycle Dating Committee).
+- `macroforecast.execution.nber.is_recession(date)` / `is_expansion(date)` — scalar membership helpers.
+- `macroforecast.execution.nber.filter_origins_by_regime(origin_plan, index, regime)` — filters an `_rows_for_horizon` origin plan in place.
 - The filter is applied after `origin_plan` is finalised and before per-origin computation, so refit_policy state is unaffected.
 
 ### Dropped values
@@ -157,8 +157,8 @@ path:
 
 ### Functions & features
 
-- Compiler-side guard in `macrocast.compiler.build._execution_status`.
-- Stat test HAC path already implemented in `macrocast.execution.build._compute_dm_hln_test` / `_compute_dm_modified_test` with `dependence_correction="nw_hac"`.
+- Compiler-side guard in `macroforecast.compiler.build._execution_status`.
+- Stat test HAC path already implemented in `macroforecast.execution.build._compute_dm_hln_test` / `_compute_dm_modified_test` with `dependence_correction="nw_hac"`.
 
 ### Dropped values
 

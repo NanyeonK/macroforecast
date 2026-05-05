@@ -50,7 +50,7 @@ Declares **which benchmark to compare against, which predictors the model sees, 
 
 ### Functions & features
 
-- `macrocast.execution.build._run_benchmark_executor` dispatches by `benchmark_family` value.
+- `macroforecast.execution.build._run_benchmark_executor` dispatches by `benchmark_family` value.
 - `factor_model_benchmark`: z-scored leading-factor regression; falls back to `historical_mean` for training windows < 6 rows.
 - `benchmark_suite`: inline dispatch over `leaf_config.benchmark_suite` members (allowed set: historical_mean, zero_change, autoregressive_bic, rolling_mean, autoregressive_fixed_lag, autoregressive_diffusion_index). Missing or unsupported members raise `CompileValidationError`.
 - `paper_specific_benchmark` / `survey_forecast`: look up the forecast at `train.index[-1] + horizon` months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.
@@ -92,7 +92,7 @@ path:
 
 ### Functions & features
 
-- `macrocast.execution.build._raw_panel_columns(frame, target, predictor_family, spec)` dispatches on the rule.
+- `macroforecast.execution.build._raw_panel_columns(frame, target, predictor_family, spec)` dispatches on the rule.
 - Target column is always excluded from the predictor set.
 - Compile guards: `explicit_variable_list` requires `leaf_config.handpicked_columns`; `category_based` requires `leaf_config.predictor_category_columns` and `leaf_config.predictor_category`.
 
@@ -137,7 +137,7 @@ path:
 
 ### Functions & features
 
-- `macrocast.execution.build._apply_variable_universe(raw_result, rule, spec, target)` is called during dataset loading in `execute_recipe`.
+- `macroforecast.execution.build._apply_variable_universe(raw_result, rule, spec, target)` is called during dataset loading in `execute_recipe`.
 - Target and date columns are always preserved after filtering.
 - Runtime discovery (stability / correlation) is out of scope — users supply the subset.
 - Compile guards: `explicit_variable_list` requires `leaf_config.variable_universe_columns`; `category_variables` requires `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category`; `target_specific_variables` requires `leaf_config.target_specific_columns` entries for the current target(s).
@@ -190,7 +190,7 @@ path:
 
 ### Functions & features
 
-- Module: `macrocast.execution.deterministic` — `augment_frame(df, component, *, index=None, break_dates=None)` + `augment_array(X, component, *, index, break_dates=None)`.
+- Module: `macroforecast.execution.deterministic` — `augment_frame(df, component, *, index=None, break_dates=None)` + `augment_array(X, component, *, index, break_dates=None)`.
 - Wired into `_build_raw_panel_training_data` after preprocessing. Both X_train and X_pred are augmented identically so the fitted coefficients apply at prediction time.
 - `monthly_seasonal` / `quarterly_seasonal` require a `DatetimeIndex`.
 - Compile guard: `break_dummies` requires non-empty `leaf_config.break_dates`.

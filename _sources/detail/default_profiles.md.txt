@@ -5,7 +5,7 @@ Defaults are part of the public contract. They must be named, versioned, and wri
 Draft profile:
 
 ```text
-macrocast-default-v1
+macroforecast-default-v1
 ```
 
 Current MVP profile:

@@ -4,7 +4,7 @@
 - Current dataset: FRED-MD
 
 FRED-MD is the monthly national macro panel used by `dataset=fred_md`.
-macrocast downloads the official current CSV from:
+macroforecast downloads the official current CSV from:
 
 `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv`
 

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting Started &mdash; macrocast</title>
+  <title>Getting Started &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Quickstart" href="quickstart.html" />
-    <link rel="prev" title="macrocast" href="../index.html" /> 
+    <link rel="prev" title="macroforecast" href="../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -71,7 +71,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -81,7 +81,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Getting Started</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/getting_started/index.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/getting_started/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -120,7 +120,7 @@
 <td><p><a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime Support Matrix</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Planned simple API</p></td>
-<td><p>You want to preview the upcoming high-level Python facade (<code class="docutils literal notranslate"><span class="pre">mc.forecast</span></code> / <code class="docutils literal notranslate"><span class="pre">mc.Experiment</span></code>). For v0.5.x use <code class="docutils literal notranslate"><span class="pre">macrocast.run</span></code> or Detail Docs.</p></td>
+<td><p>You want to preview the upcoming high-level Python facade (<code class="docutils literal notranslate"><span class="pre">mf.forecast</span></code> / <code class="docutils literal notranslate"><span class="pre">mf.Experiment</span></code>). For v0.5.x use <code class="docutils literal notranslate"><span class="pre">macroforecast.run</span></code> or Detail Docs.</p></td>
 <td><p><a class="reference internal" href="../simple/index.html"><span class="std std-doc">Simple Docs (planned)</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Contract detail</p></td>
@@ -132,7 +132,7 @@
 </section>
 <section id="minimal-runtime-call">
 <h2>Minimal Runtime Call<a class="headerlink" href="#minimal-runtime-call" title="Link to this heading"></a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_minimal_forecast</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_layer_recipe.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span><span class="p">)</span>
@@ -174,7 +174,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="macrocast" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../index.html" class="btn btn-neutral float-left" title="macroforecast" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="quickstart.html" class="btn btn-neutral float-right" title="Quickstart" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

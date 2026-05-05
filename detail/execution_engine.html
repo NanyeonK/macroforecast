@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Execution Engine &mdash; macrocast</title>
+  <title>Execution Engine &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Execution Engine</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/execution_engine.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/detail/execution_engine.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -82,10 +82,10 @@
              
   <section id="execution-engine">
 <h1>Execution Engine<a class="headerlink" href="#execution-engine" title="Link to this heading"></a></h1>
-<p>macrocast currently has two execution surfaces.</p>
+<p>macroforecast currently has two execution surfaces.</p>
 <section id="core-layer-contract-runtime">
 <h2>Core Layer-Contract Runtime<a class="headerlink" href="#core-layer-contract-runtime" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime.execute_minimal_forecast</span></code> executes the L1-L8 layer-contract path used by the new schema.</p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core.runtime.execute_minimal_forecast</span></code> executes the L1-L8 layer-contract path used by the new schema.</p>
 <p>Current responsibilities:</p>
 <ul class="simple">
 <li><p>L1 data materialization for custom panels and official FRED-MD/FRED-QD raw adapters</p></li>
@@ -102,7 +102,7 @@
 </section>
 <section id="legacy-experiment-engine">
 <h2>Legacy Experiment Engine<a class="headerlink" href="#legacy-experiment-engine" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast.compiler</span></code> and <code class="docutils literal notranslate"><span class="pre">macrocast.execution</span></code> continue to support older recipe surfaces and broader experiment tests. Some older docs and examples still refer to this path. Those outputs may use legacy filenames such as <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics.json</span></code>, or <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.compiler</span></code> and <code class="docutils literal notranslate"><span class="pre">macroforecast.execution</span></code> continue to support older recipe surfaces and broader experiment tests. Some older docs and examples still refer to this path. Those outputs may use legacy filenames such as <code class="docutils literal notranslate"><span class="pre">predictions.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics.json</span></code>, or <code class="docutils literal notranslate"><span class="pre">artifact_manifest.json</span></code>.</p>
 </section>
 <section id="current-boundaries">
 <h2>Current Boundaries<a class="headerlink" href="#current-boundaries" title="Link to this heading"></a></h2>
@@ -124,7 +124,7 @@
 <li><p>diagnostic renderer</p></li>
 <li><p>artifact and manifest writer</p></li>
 </ul>
-<p>The current <code class="docutils literal notranslate"><span class="pre">macrocast.core.runtime</span></code> file is a bridge: it keeps the layer-contract path executable while those module boundaries mature.</p>
+<p>The current <code class="docutils literal notranslate"><span class="pre">macroforecast.core.runtime</span></code> file is a bridge: it keeps the layer-contract path executable while those module boundaries mature.</p>
 </section>
 </section>
 

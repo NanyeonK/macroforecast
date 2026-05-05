@@ -5,7 +5,7 @@ YAML is the bridge between the docs navigator and runtime execution. A selected 
 ## Generate YAML
 
 ```bash
-macrocast-navigate replications synthetic-replication-roundtrip \
+macroforecast-navigate replications synthetic-replication-roundtrip \
   --write-yaml /tmp/synthetic-replication.yaml
 ```
 
@@ -16,21 +16,21 @@ navigator so the same route can be inspected again in the tree.
 ## Resolve YAML
 
 ```bash
-macrocast-navigate resolve /tmp/synthetic-replication.yaml
+macroforecast-navigate resolve /tmp/synthetic-replication.yaml
 ```
 
 Run only when `execution_status` is `executable`.
 
 The browser app is a path editor and YAML generator. It does not replace
-`macrocast-navigate resolve`, which remains the authoritative preflight before
+`macroforecast-navigate resolve`, which remains the authoritative preflight before
 execution.
 
 ## Run YAML
 
 ```bash
-macrocast-navigate run /tmp/synthetic-replication.yaml \
+macroforecast-navigate run /tmp/synthetic-replication.yaml \
   --local-raw-source tests/fixtures/fred_md_ar_sample.csv \
-  --output-root /tmp/macrocast-synthetic
+  --output-root /tmp/macroforecast-synthetic
 ```
 
 The command returns:
@@ -38,7 +38,7 @@ The command returns:
 ```json
 {
   "execution_status": "executed",
-  "artifact_dir": "/tmp/macrocast-synthetic/runs/...",
+  "artifact_dir": "/tmp/macroforecast-synthetic/runs/...",
   "run_id": "..."
 }
 ```
@@ -49,15 +49,15 @@ The command returns:
 from pathlib import Path
 import yaml
 
-from macrocast.navigator import replication_recipe_yaml
-from macrocast import compile_recipe_dict, run_compiled_recipe
+from macroforecast.navigator import replication_recipe_yaml
+from macroforecast import compile_recipe_dict, run_compiled_recipe
 
 recipe = yaml.safe_load(replication_recipe_yaml("synthetic-replication-roundtrip"))
 compiled = compile_recipe_dict(recipe)
 
 result = run_compiled_recipe(
     compiled.compiled,
-    output_root="/tmp/macrocast-synthetic",
+    output_root="/tmp/macroforecast-synthetic",
     local_raw_source=Path("tests/fixtures/fred_md_ar_sample.csv"),
 )
 ```

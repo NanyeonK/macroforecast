@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>macrocast.core.execution &mdash; macrocast</title>
+  <title>macroforecast.core.execution &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -61,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../../index.html">macrocast</a>
+          <a href="../../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -70,7 +70,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">macrocast.core.execution</li>
+      <li class="breadcrumb-item active">macroforecast.core.execution</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -79,10 +79,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for macrocast.core.execution</h1><div class="highlight"><pre>
+  <h1>Source code for macroforecast.core.execution</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;End-to-end recipe execution: cell loop, sweep expansion, replicate.</span>
 
-<span class="sd">Wraps :func:`macrocast.core.runtime.execute_minimal_forecast` with sweep</span>
+<span class="sd">Wraps :func:`macroforecast.core.runtime.execute_minimal_forecast` with sweep</span>
 <span class="sd">iteration, seed propagation, failure capture and bit-exact replication.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -437,7 +437,7 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="CellExecutionResult">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.CellExecutionResult">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.CellExecutionResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CellExecutionResult</span><span class="p">:</span>
     <span class="n">cell_id</span><span class="p">:</span> <span class="nb">str</span>
@@ -456,7 +456,7 @@
 
 
 <div class="viewcode-block" id="ManifestExecutionResult">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.ManifestExecutionResult">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.ManifestExecutionResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ManifestExecutionResult</span><span class="p">:</span>
     <span class="n">recipe_root</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
@@ -476,7 +476,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cell</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cells</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">cell</span><span class="o">.</span><span class="n">succeeded</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ManifestExecutionResult.to_manifest_dict">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.ManifestExecutionResult.to_manifest_dict">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.ManifestExecutionResult.to_manifest_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_manifest_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">_capture_data_revision_tag</span><span class="p">,</span>
@@ -535,7 +535,7 @@
 
 
 <div class="viewcode-block" id="ManifestExecutionResult.write_manifest">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.ManifestExecutionResult.write_manifest">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.ManifestExecutionResult.write_manifest">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">write_manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">json_lines</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
         <span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
         <span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -576,7 +576,7 @@
 
 
 <div class="viewcode-block" id="ReplicationResult">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.ReplicationResult">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.ReplicationResult">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReplicationResult</span><span class="p">:</span>
     <span class="n">manifest_path</span><span class="p">:</span> <span class="n">Path</span>
@@ -592,7 +592,7 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="execute_recipe">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.execute_recipe">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.execute_recipe">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">execute_recipe</span><span class="p">(</span>
     <span class="n">recipe</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -825,7 +825,7 @@
 
 
 <div class="viewcode-block" id="execute_recipe_file">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.execute_recipe_file">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.execute_recipe_file">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">execute_recipe_file</span><span class="p">(</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -845,7 +845,7 @@
 
 
 <div class="viewcode-block" id="replicate_recipe">
-<a class="viewcode-back" href="../../../source/api.html#macrocast.replicate_recipe">[docs]</a>
+<a class="viewcode-back" href="../../../source/api.html#macroforecast.replicate_recipe">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">replicate_recipe</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReplicationResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Re-execute the recipe stored in ``manifest_path`` and verify hashes match.</span>
 

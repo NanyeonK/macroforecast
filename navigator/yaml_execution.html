@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YAML And Execution &mdash; macrocast</title>
+  <title>YAML And Execution &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -72,7 +72,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -83,7 +83,7 @@
           <li class="breadcrumb-item"><a href="index.html">Navigator Docs</a></li>
       <li class="breadcrumb-item active">YAML And Execution</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/navigator/yaml_execution.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/navigator/yaml_execution.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -96,7 +96,7 @@
 <p>YAML is the bridge between the docs navigator and runtime execution. A selected tree path should be serializable, inspectable, editable, and executable.</p>
 <section id="generate-yaml">
 <h2>Generate YAML<a class="headerlink" href="#generate-yaml" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>replications<span class="w"> </span>synthetic-replication-roundtrip<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>replications<span class="w"> </span>synthetic-replication-roundtrip<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--write-yaml<span class="w"> </span>/tmp/synthetic-replication.yaml
 </pre></div>
 </div>
@@ -106,25 +106,25 @@ navigator so the same route can be inspected again in the tree.</p>
 </section>
 <section id="resolve-yaml">
 <h2>Resolve YAML<a class="headerlink" href="#resolve-yaml" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>resolve<span class="w"> </span>/tmp/synthetic-replication.yaml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>resolve<span class="w"> </span>/tmp/synthetic-replication.yaml
 </pre></div>
 </div>
 <p>Run only when <code class="docutils literal notranslate"><span class="pre">execution_status</span></code> is <code class="docutils literal notranslate"><span class="pre">executable</span></code>.</p>
 <p>The browser app is a path editor and YAML generator. It does not replace
-<code class="docutils literal notranslate"><span class="pre">macrocast-navigate</span> <span class="pre">resolve</span></code>, which remains the authoritative preflight before
+<code class="docutils literal notranslate"><span class="pre">macroforecast-navigate</span> <span class="pre">resolve</span></code>, which remains the authoritative preflight before
 execution.</p>
 </section>
 <section id="run-yaml">
 <h2>Run YAML<a class="headerlink" href="#run-yaml" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>run<span class="w"> </span>/tmp/synthetic-replication.yaml<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>run<span class="w"> </span>/tmp/synthetic-replication.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--local-raw-source<span class="w"> </span>tests/fixtures/fred_md_ar_sample.csv<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output-root<span class="w"> </span>/tmp/macrocast-synthetic
+<span class="w">  </span>--output-root<span class="w"> </span>/tmp/macroforecast-synthetic
 </pre></div>
 </div>
 <p>The command returns:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;execution_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;executed&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;artifact_dir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/tmp/macrocast-synthetic/runs/...&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;artifact_dir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/tmp/macroforecast-synthetic/runs/...&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;run_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
 <span class="p">}</span>
 </pre></div>
@@ -135,15 +135,15 @@ execution.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">macrocast.navigator</span><span class="w"> </span><span class="kn">import</span> <span class="n">replication_recipe_yaml</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_recipe_dict</span><span class="p">,</span> <span class="n">run_compiled_recipe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.navigator</span><span class="w"> </span><span class="kn">import</span> <span class="n">replication_recipe_yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_recipe_dict</span><span class="p">,</span> <span class="n">run_compiled_recipe</span>
 
 <span class="n">recipe</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">replication_recipe_yaml</span><span class="p">(</span><span class="s2">&quot;synthetic-replication-roundtrip&quot;</span><span class="p">))</span>
 <span class="n">compiled</span> <span class="o">=</span> <span class="n">compile_recipe_dict</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">run_compiled_recipe</span><span class="p">(</span>
     <span class="n">compiled</span><span class="o">.</span><span class="n">compiled</span><span class="p">,</span>
-    <span class="n">output_root</span><span class="o">=</span><span class="s2">&quot;/tmp/macrocast-synthetic&quot;</span><span class="p">,</span>
+    <span class="n">output_root</span><span class="o">=</span><span class="s2">&quot;/tmp/macroforecast-synthetic&quot;</span><span class="p">,</span>
     <span class="n">local_raw_source</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/fred_md_ar_sample.csv&quot;</span><span class="p">),</span>
 <span class="p">)</span>
 </pre></div>

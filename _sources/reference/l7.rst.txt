@@ -33,12 +33,12 @@ Paper-quality matrix-shaped reporting (use ``wide`` instead).
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Wickham (2014) 'Tidy Data', Journal of Statistical Software 59(10): 1-23. (doi:10.18637/jss.v059.i10)
 
 **Related options**: ``wide``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``wide``
 ^^^^^^^^
@@ -58,11 +58,11 @@ Downstream pandas analysis -- use ``long`` instead.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``long``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``figure_type``  (L7_B_output_shape_export)
 ------------------------------------------------
@@ -85,11 +85,11 @@ Default; lets each L7.A op choose the canonical figure for its output.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``bar``, ``boxplot``, ``heatmap``, ``lineplot``, ``scatter``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``bar``
 ^^^^^^^
@@ -105,11 +105,11 @@ Global importance rankings (linear coefficients, permutation, mean SHAP).
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``auto``, ``boxplot``, ``heatmap``, ``lineplot``, ``scatter``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``boxplot``
 ^^^^^^^^^^^
@@ -125,11 +125,11 @@ Stability-of-importance audits; ``bootstrap_jackknife`` / ``rolling_recompute`` 
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``auto``, ``bar``, ``heatmap``, ``lineplot``, ``scatter``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``heatmap``
 ^^^^^^^^^^^
@@ -145,11 +145,11 @@ Time-varying importance, FRED-SD state choropleth, group-aggregate matrices.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``auto``, ``bar``, ``boxplot``, ``lineplot``, ``scatter``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``lineplot``
 ^^^^^^^^^^^^
@@ -165,11 +165,11 @@ Tracking importance evolution across walk-forward origins.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``auto``, ``bar``, ``boxplot``, ``heatmap``, ``scatter``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``scatter``
 ^^^^^^^^^^^
@@ -185,11 +185,11 @@ PDP / ALE / SHAP dependence-plot family.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``auto``, ``bar``, ``boxplot``, ``heatmap``, ``lineplot``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``top_k_features_to_show``  (L7_B_output_shape_export)
 -----------------------------------------------------------
@@ -237,11 +237,11 @@ Web embedding -- prefer PNG or SVG.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``png``, ``svg``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``png``
 ^^^^^^^
@@ -257,11 +257,11 @@ Slide / web embedding where vector formats are unnecessary.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``pdf``, ``svg``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``svg``
 ^^^^^^^
@@ -277,11 +277,11 @@ Web embedding with selectable text; pre-publication editable figures.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``pdf``, ``png``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``latex_table_export``  (L7_B_output_shape_export)
 -------------------------------------------------------
@@ -304,11 +304,11 @@ When the recipe is feeding a paper draft.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``false``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``false``
 ^^^^^^^^^
@@ -324,11 +324,11 @@ Default; LaTeX adds tooling overhead that is wasted for non-paper runs.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``true``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``markdown_table_export``  (L7_B_output_shape_export)
 ----------------------------------------------------------
@@ -351,11 +351,11 @@ Generating GitHub README / wiki pages from runs.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``false``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``false``
 ^^^^^^^^^
@@ -371,11 +371,11 @@ Default; Markdown is opt-in. Selecting ``false`` on ``l7.markdown_table_export``
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``true``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 axis ``op``  (L7_A_importance_dag_body)
 ---------------------------------------
@@ -398,12 +398,12 @@ Correlated feature panels (FRED-MD / -QD) where PDPs are misleading.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Apley & Zhu (2020) 'Visualizing the Effects of Predictor Variables in Black Box Supervised Learning Models', JRSS Series B 82(4): 1059-1086.
 
 **Related options**: ``partial_dependence``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``bootstrap_jackknife``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -419,12 +419,12 @@ Reporting confidence-banded importance rankings.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Politis & White (2004) 'Automatic Block-Length Selection for the Dependent Bootstrap', Econometric Reviews 23(1): 53-70.
 
 **Related options**: ``rolling_recompute``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``bvar_pip``
 ^^^^^^^^^^^^
@@ -444,12 +444,12 @@ Frequentist models -- use ``lasso_inclusion_frequency`` for an analogous stabili
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Koop & Korobilis (2010) 'Bayesian Multivariate Time Series Methods for Empirical Macroeconomics', Foundations and Trends in Econometrics 3(4): 267-358.
 
 **Related options**: ``lasso_inclusion_frequency``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``cumulative_r2_contribution``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -469,12 +469,12 @@ Highly correlated features -- the order is sensitive to entry rules.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Stock & Watson (2012) 'Generalized Shrinkage Methods for Forecasting using Many Predictors', JBES 30(4): 481-493.
 
 **Related options**: ``lasso_inclusion_frequency``, ``lofo``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``deep_lift``
 ^^^^^^^^^^^^^
@@ -494,12 +494,12 @@ When the completeness / sensitivity axioms matter -- prefer integrated gradients
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Shrikumar, Greenside & Kundaje (2017) 'Learning Important Features Through Propagating Activation Differences', ICML.
 
 **Related options**: ``integrated_gradients``, ``gradient_shap``, ``saliency_map``, ``shap_deep``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``fevd``
 ^^^^^^^^
@@ -519,12 +519,12 @@ Non-VAR models -- use ``permutation_importance`` instead.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.
 
 **Related options**: ``historical_decomposition``, ``generalized_irf``, ``forecast_decomposition``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``forecast_decomposition``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -540,11 +540,11 @@ Reporting feature contributions for a specific forecast (e.g. 'why is the model 
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``shap_tree``, ``shap_linear``, ``shap_deep``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``friedman_h_interaction``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -564,12 +564,12 @@ Wide panels -- the M² PDP grid grows expensive.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Friedman & Popescu (2008) 'Predictive Learning via Rule Ensembles', Annals of Applied Statistics 2(3): 916-954.
 
 **Related options**: ``shap_interaction``, ``partial_dependence``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``generalized_irf``
 ^^^^^^^^^^^^^^^^^^^
@@ -589,12 +589,12 @@ When a structural identification scheme (Cholesky / sign / long-run) IS theoreti
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate models', Economics Letters 58(1): 17-29.
 
 **Related options**: ``fevd``, ``historical_decomposition``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``gradient_shap``
 ^^^^^^^^^^^^^^^^^
@@ -602,7 +602,7 @@ When a structural identification scheme (Cholesky / sign / long-run) IS theoreti
 
 Gradient SHAP -- expectation-of-gradient SHAP approximation (Lundberg-Lee 2017).
 
-Approximates SHAP values via expected gradients at random interpolations between input and a baseline distribution. Captum-backed; requires the ``macrocast[deep]`` extra.
+Approximates SHAP values via expected gradients at random interpolations between input and a baseline distribution. Captum-backed; requires the ``macroforecast[deep]`` extra.
 
 **When to use**
 
@@ -614,12 +614,12 @@ Non-NN models.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
 
 **Related options**: ``shap_deep``, ``integrated_gradients``, ``saliency_map``, ``deep_lift``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``group_aggregate``
 ^^^^^^^^^^^^^^^^^^^
@@ -641,12 +641,12 @@ Custom panels lacking a meaningful grouping.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4): 574-589.
 
 **Related options**: ``lineage_attribution``, ``transformation_attribution``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``historical_decomposition``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -666,12 +666,12 @@ Non-VAR models.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Burbidge & Harrison (1985) 'A historical decomposition of the great depression to determine the role of money', JME 16(1): 45-54.
 
 **Related options**: ``fevd``, ``generalized_irf``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``integrated_gradients``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -691,12 +691,12 @@ Non-NN models; pathological models where integration along the linear path is mi
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Sundararajan, Taly & Yan (2017) 'Axiomatic Attribution for Deep Networks', ICML.
 
 **Related options**: ``gradient_shap``, ``saliency_map``, ``deep_lift``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``lasso_inclusion_frequency``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -712,13 +712,13 @@ Feature-selection stability audit for Lasso / Lasso-Path / Elastic Net.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Bach (2008) 'Bolasso: model consistent Lasso estimation through the bootstrap', ICML.
 * Meinshausen & Bühlmann (2010) 'Stability selection', JRSS Series B 72(4): 417-473.
 
 **Related options**: ``model_native_linear_coef``, ``bootstrap_jackknife``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``lineage_attribution``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -740,11 +740,11 @@ Pipelines with only direct-input features (no L3 transforms).
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``group_aggregate``, ``transformation_attribution``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``lofo``
 ^^^^^^^^
@@ -766,12 +766,12 @@ Wide panels (n_features > 200) -- prohibitive runtime.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lemaître, Aridas & Nogueira (2018) 'imbalanced-learn', JMLR 18(17): 1-5 -- LOFO popularised; pre-dating refit-importance traditions in econometrics.
 
 **Related options**: ``permutation_importance``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``model_native_linear_coef``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -793,12 +793,12 @@ Non-linear models -- coefficients no longer summarise marginal effects.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Greene (2018) 'Econometric Analysis', 8th ed., Pearson, Chapter 4.
 
 **Related options**: ``model_native_tree_importance``, ``lasso_inclusion_frequency``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``model_native_tree_importance``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -820,13 +820,13 @@ High-cardinality continuous features dominate -- known MDI bias (Strobl et al. 2
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.
 * Strobl, Boulesteix, Zeileis & Hothorn (2007) 'Bias in random forest variable importance measures', BMC Bioinformatics 8: 25.
 
 **Related options**: ``permutation_importance``, ``permutation_importance_strobl``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``mrf_gtvp``
 ^^^^^^^^^^^^
@@ -846,12 +846,12 @@ Non-MRF models.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
 
 **Related options**: ``rolling_recompute``, ``model_native_tree_importance``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``partial_dependence``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -871,12 +871,12 @@ Highly correlated features -- PDP averages over impossible regions of feature sp
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Friedman (2001) 'Greedy Function Approximation: A Gradient Boosting Machine', Annals of Statistics 29(5): 1189-1232.
 
 **Related options**: ``accumulated_local_effect``, ``friedman_h_interaction``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``permutation_importance``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -898,13 +898,13 @@ Highly correlated predictors -- permutation breaks the dependence and inflates i
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Fisher, Rudin & Dominici (2019) 'All Models are Wrong, but Many are Useful: Learning a Variable's Importance by Studying an Entire Class of Prediction Models Simultaneously', JMLR 20(177): 1-81.
 * Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.
 
 **Related options**: ``permutation_importance_strobl``, ``lofo``, ``model_native_tree_importance``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``permutation_importance_strobl``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -924,12 +924,12 @@ When predictor correlations are negligible -- the cheaper plain permutation impo
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Strobl, Boulesteix, Kneib, Augustin & Zeileis (2008) 'Conditional variable importance for random forests', BMC Bioinformatics 9: 307.
 
 **Related options**: ``permutation_importance``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``rolling_recompute``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -945,11 +945,11 @@ Detecting time-varying feature importance; structural-stability audits.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 
 **Related options**: ``bootstrap_jackknife``, ``mrf_gtvp``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``saliency_map``
 ^^^^^^^^^^^^^^^^
@@ -969,12 +969,12 @@ Production attribution -- prefer integrated gradients or SHAP.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Simonyan, Vedaldi & Zisserman (2014) 'Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps', ICLR Workshops.
 
 **Related options**: ``integrated_gradients``, ``gradient_shap``, ``deep_lift``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``shap_deep``
 ^^^^^^^^^^^^^
@@ -982,7 +982,7 @@ Production attribution -- prefer integrated gradients or SHAP.
 
 Deep SHAP -- DeepLIFT-based SHAP for neural networks.
 
-DeepLIFT (Shrikumar 2017) interpreted as Shapley-value approximation. Compatible with the ``mlp`` / ``lstm`` / ``gru`` / ``transformer`` L4 families when the ``macrocast[deep]`` extra is installed (captum backend).
+DeepLIFT (Shrikumar 2017) interpreted as Shapley-value approximation. Compatible with the ``mlp`` / ``lstm`` / ``gru`` / ``transformer`` L4 families when the ``macroforecast[deep]`` extra is installed (captum backend).
 
 **When to use**
 
@@ -994,13 +994,13 @@ Non-NN models -- use ``shap_tree`` / ``shap_linear`` / ``shap_kernel`` instead.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
 * Shrikumar, Greenside & Kundaje (2017) 'Learning Important Features Through Propagating Activation Differences', ICML.
 
 **Related options**: ``shap_tree``, ``shap_kernel``, ``deep_lift``, ``gradient_shap``, ``integrated_gradients``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``shap_interaction``
 ^^^^^^^^^^^^^^^^^^^^
@@ -1022,13 +1022,13 @@ Wide feature panels -- the ``M²`` storage cost grows quickly.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
 * Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.
 
 **Related options**: ``shap_tree``, ``friedman_h_interaction``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``shap_kernel``
 ^^^^^^^^^^^^^^^
@@ -1048,12 +1048,12 @@ Trees (use ``shap_tree``) or linear models (use ``shap_linear``) -- both are dra
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
 
 **Related options**: ``shap_tree``, ``shap_linear``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``shap_linear``
 ^^^^^^^^^^^^^^^
@@ -1069,12 +1069,12 @@ Linear models when the SHAP per-row decomposition is needed (otherwise ``model_n
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
 
 **Related options**: ``model_native_linear_coef``, ``shap_tree``, ``shap_kernel``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``shap_tree``
 ^^^^^^^^^^^^^
@@ -1096,13 +1096,13 @@ Non-tree models -- use ``shap_kernel`` or ``shap_linear`` instead.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
 * Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.
 
 **Related options**: ``shap_kernel``, ``shap_linear``, ``shap_interaction``, ``shap_deep``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.
 
 ``transformation_attribution``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1122,9 +1122,9 @@ Single-pipeline studies; sweeps with fewer than 3 alternative pipelines.
 
 **References**
 
-* macrocast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Castro, Gómez & Tejada (2009) 'Polynomial calculation of the Shapley value based on sampling', Computers & Operations Research 36(5): 1726-1730.
 
 **Related options**: ``lineage_attribution``, ``group_aggregate``
 
-.. note:: Last reviewed 2026-05-05 by macrocast author.
+.. note:: Last reviewed 2026-05-05 by macroforecast author.

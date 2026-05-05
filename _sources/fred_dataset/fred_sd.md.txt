@@ -6,7 +6,7 @@
 FRED-SD is the state-level panel used by `dataset=fred_sd` and by composite
 routes such as `fred_md+fred_sd` or `fred_qd+fred_sd`.
 
-macrocast uses the official **Data by Series** workbook. The workbook vintage
+macroforecast uses the official **Data by Series** workbook. The workbook vintage
 used for this generated page is `2026-03`:
 
 `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-03.xlsx`
@@ -19,7 +19,7 @@ monthly: 861, quarterly: 546, unknown: 21.
 
 - Workbook sheets are FRED-SD variables.
 - Sheet columns are state abbreviations.
-- macrocast generated columns use `{sd_variable}_{state}`.
+- macroforecast generated columns use `{sd_variable}_{state}`.
 - Example: sheet `UR`, state `CA` becomes `UR_CA`.
 - Layer 1 owns state/series source selection. Layer 2 owns any mixed-frequency
   representation after the source frame exists.

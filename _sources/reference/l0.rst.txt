@@ -33,7 +33,7 @@ Long-running production sweeps where a transient failure on one cell (e.g., a me
 
 **References**
 
-* macrocast design Part 1, L0 §A: 'fail_fast vs continue_on_failure is the canonical execution-policy choice for any cell-loop study.'
+* macroforecast design Part 1, L0 §A: 'fail_fast vs continue_on_failure is the canonical execution-policy choice for any cell-loop study.'
 
 **Related options**: ``continue_on_failure``
 
@@ -45,7 +45,7 @@ Long-running production sweeps where a transient failure on one cell (e.g., a me
       fixed_axes:
         failure_policy: fail_fast
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``continue_on_failure``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -67,7 +67,7 @@ Authoring iteration -- failures are usually configuration problems that affect e
 
 **References**
 
-* macrocast design Part 1, L0 §A: 'continue_on_failure preserves partial coverage; the manifest carries enough context to diagnose each failed cell after the run.'
+* macroforecast design Part 1, L0 §A: 'continue_on_failure preserves partial coverage; the manifest carries enough context to diagnose each failed cell after the run.'
 
 **Related options**: ``fail_fast``
 
@@ -79,7 +79,7 @@ Authoring iteration -- failures are usually configuration problems that affect e
       fixed_axes:
         failure_policy: continue_on_failure
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``reproducibility_mode``  (l0_a)
 -------------------------------------
@@ -97,7 +97,7 @@ Fix a deterministic seed and propagate it through every RNG.
 
 The cell-loop reads ``leaf_config.random_seed`` (default ``0``) and applies it to ``random.seed``, ``numpy.random.seed``, ``torch.manual_seed`` (when torch is installed), and the ``PYTHONHASHSEED`` environment variable for the current process. Each L4 estimator inherits the seed via its ``params.random_state`` key (issue #215); per-fit-node ``random_state`` overrides the L0 seed when present.
 
-This is the only mode under which ``macrocast.replicate(manifest)`` can verify bit-exact sink hashes. Use it for every study you intend to publish, share, or compare against later.
+This is the only mode under which ``macroforecast.replicate(manifest)`` can verify bit-exact sink hashes. Use it for every study you intend to publish, share, or compare against later.
 
 **When to use**
 
@@ -110,7 +110,7 @@ Stochastic exploration where the explicit goal is to characterise the variabilit
 **References**
 
 * Stodden, McNutt, Bailey et al. (2016) 'Enhancing reproducibility for computational methods', Science 354(6317). (doi:10.1126/science.aah6168)
-* macrocast PR #215 -- L0 random_seed propagation into L4 random_state.
+* macroforecast PR #215 -- L0 random_seed propagation into L4 random_state.
 
 **Related options**: ``exploratory``
 
@@ -124,7 +124,7 @@ Stochastic exploration where the explicit goal is to characterise the variabilit
       leaf_config:
         random_seed: 42
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``exploratory``
 ^^^^^^^^^^^^^^^
@@ -146,7 +146,7 @@ Anything you intend to publish or share. The reviewer will not be able to reprod
 
 **References**
 
-* macrocast design Part 1, L0 §A: 'exploratory mode trades reproducibility for unbiased sampling of stochastic variability.'
+* macroforecast design Part 1, L0 §A: 'exploratory mode trades reproducibility for unbiased sampling of stochastic variability.'
 
 **Related options**: ``seeded_reproducible``
 
@@ -158,7 +158,7 @@ Anything you intend to publish or share. The reviewer will not be able to reprod
       fixed_axes:
         reproducibility_mode: exploratory
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``compute_mode``  (l0_a)
 -----------------------------
@@ -188,7 +188,7 @@ Multi-cell sweeps where each cell takes more than a minute and the machine has m
 
 **References**
 
-* macrocast design Part 1, L0 §A: 'compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.'
+* macroforecast design Part 1, L0 §A: 'compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.'
 
 **Related options**: ``parallel``
 
@@ -200,7 +200,7 @@ Multi-cell sweeps where each cell takes more than a minute and the machine has m
       fixed_axes:
         compute_mode: serial
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``parallel``
 ^^^^^^^^^^^^
@@ -227,9 +227,9 @@ Recipes that mutate global state (e.g., a custom L3 op that writes to a shared f
 
 **References**
 
-* macrocast PR #173 -- cell-level ProcessPoolExecutor.
-* macrocast PR #204 / #250 -- sub-cell ThreadPoolExecutor.
-* macrocast PR #279 -- deterministic per-origin seed propagation.
+* macroforecast PR #173 -- cell-level ProcessPoolExecutor.
+* macroforecast PR #204 / #250 -- sub-cell ThreadPoolExecutor.
+* macroforecast PR #279 -- deterministic per-origin seed propagation.
 
 **Related options**: ``serial``
 
@@ -253,4 +253,4 @@ Recipes that mutate global state (e.g., a custom L3 op that writes to a shared f
       leaf_config:
         n_workers_inner: 8
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.

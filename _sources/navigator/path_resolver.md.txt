@@ -7,7 +7,7 @@ Use it after inspecting the tree and before running a recipe.
 ## CLI
 
 ```bash
-macrocast-navigate resolve examples/recipes/model-benchmark.yaml
+macroforecast-navigate resolve examples/recipes/model-benchmark.yaml
 ```
 
 ## Output
@@ -45,7 +45,7 @@ Examples:
 ## Python
 
 ```python
-from macrocast.navigator.core import resolve_yaml_path
+from macroforecast.navigator.core import resolve_yaml_path
 
 resolved = resolve_yaml_path("examples/recipes/model-benchmark.yaml")
 print(resolved["execution_status"])

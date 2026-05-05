@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>macrocast.custom &mdash; macrocast</title>
+  <title>macroforecast.custom &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -13,7 +13,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -61,7 +61,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">macrocast</a>
+          <a href="../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -70,7 +70,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">macrocast.custom</li>
+      <li class="breadcrumb-item active">macroforecast.custom</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -79,8 +79,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for macrocast.custom</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Runtime registries for user-defined macrocast extensions.&quot;&quot;&quot;</span>
+  <h1>Source code for macroforecast.custom</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Runtime registries for user-defined macroforecast extensions.&quot;&quot;&quot;</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
@@ -112,7 +112,7 @@
 
 
 <div class="viewcode-block" id="CustomModelSpec">
-<a class="viewcode-back" href="../../source/api.html#macrocast.CustomModelSpec">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.CustomModelSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CustomModelSpec</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -122,7 +122,7 @@
 
 
 <div class="viewcode-block" id="CustomPreprocessorSpec">
-<a class="viewcode-back" href="../../source/api.html#macrocast.CustomPreprocessorSpec">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.CustomPreprocessorSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CustomPreprocessorSpec</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -132,7 +132,7 @@
 
 
 <div class="viewcode-block" id="TargetTransformerSpec">
-<a class="viewcode-back" href="../../source/api.html#macrocast.TargetTransformerSpec">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.TargetTransformerSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TargetTransformerSpec</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -145,7 +145,7 @@
 
 
 <div class="viewcode-block" id="CustomFeatureBlockSpec">
-<a class="viewcode-back" href="../../source/api.html#macrocast.CustomFeatureBlockSpec">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.CustomFeatureBlockSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CustomFeatureBlockSpec</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -156,7 +156,7 @@
 
 
 <div class="viewcode-block" id="CustomFeatureCombinerSpec">
-<a class="viewcode-back" href="../../source/api.html#macrocast.CustomFeatureCombinerSpec">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.CustomFeatureCombinerSpec">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CustomFeatureCombinerSpec</span><span class="p">:</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -173,7 +173,7 @@
 
 
 <div class="viewcode-block" id="custom_model_contract_metadata">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_model_contract_metadata">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_model_contract_metadata">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_model_contract_metadata</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="n">required_context_fields</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s2">&quot;contract_version&quot;</span><span class="p">,</span>
@@ -271,7 +271,7 @@
 
 
 <div class="viewcode-block" id="custom_preprocessor_contract_metadata">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_preprocessor_contract_metadata">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_preprocessor_contract_metadata">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_preprocessor_contract_metadata</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">CUSTOM_PREPROCESSOR_CONTRACT_VERSION</span><span class="p">,</span>
@@ -296,7 +296,7 @@
 
 
 <div class="viewcode-block" id="target_transformer_contract_metadata">
-<a class="viewcode-back" href="../../source/api.html#macrocast.target_transformer_contract_metadata">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.target_transformer_contract_metadata">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">target_transformer_contract_metadata</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;contract_version&quot;</span><span class="p">:</span> <span class="n">TARGET_TRANSFORMER_CONTRACT_VERSION</span><span class="p">,</span>
@@ -311,7 +311,7 @@
 
 
 <div class="viewcode-block" id="custom_method_extension_contracts">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_method_extension_contracts">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_method_extension_contracts">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_method_extension_contracts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;layer2_feature_block&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -342,7 +342,7 @@
 
 
 <div class="viewcode-block" id="register_model">
-<a class="viewcode-back" href="../../source/api.html#macrocast.register_model">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.register_model">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">function</span><span class="p">:</span> <span class="n">CustomModelFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -379,7 +379,7 @@
 
 
 <div class="viewcode-block" id="custom_model">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_model">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_model">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_model</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">function</span><span class="p">:</span> <span class="n">CustomModelFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -393,7 +393,7 @@
 
 
 <div class="viewcode-block" id="register_preprocessor">
-<a class="viewcode-back" href="../../source/api.html#macrocast.register_preprocessor">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.register_preprocessor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_preprocessor</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">function</span><span class="p">:</span> <span class="n">CustomPreprocessorFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -429,7 +429,7 @@
 
 
 <div class="viewcode-block" id="custom_preprocessor">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_preprocessor">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_preprocessor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">CustomPreprocessorFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_preprocessor`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">register_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -468,7 +468,7 @@
 
 
 <div class="viewcode-block" id="register_target_transformer">
-<a class="viewcode-back" href="../../source/api.html#macrocast.register_target_transformer">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.register_target_transformer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_target_transformer</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">transformer</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -507,7 +507,7 @@
 
 
 <div class="viewcode-block" id="target_transformer">
-<a class="viewcode-back" href="../../source/api.html#macrocast.target_transformer">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.target_transformer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transformer</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_target_transformer`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">register_target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -522,7 +522,7 @@
 
 
 <div class="viewcode-block" id="register_feature_block">
-<a class="viewcode-back" href="../../source/api.html#macrocast.register_feature_block">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.register_feature_block">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_feature_block</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureBlockFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -558,7 +558,7 @@
 
 
 <div class="viewcode-block" id="custom_feature_block">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_feature_block">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_feature_block">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureBlockFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_feature_block`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">register_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -566,7 +566,7 @@
 
 
 <div class="viewcode-block" id="register_feature_combiner">
-<a class="viewcode-back" href="../../source/api.html#macrocast.register_feature_combiner">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.register_feature_combiner">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">register_feature_combiner</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureCombinerFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -600,7 +600,7 @@
 
 
 <div class="viewcode-block" id="custom_feature_combiner">
-<a class="viewcode-back" href="../../source/api.html#macrocast.custom_feature_combiner">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.custom_feature_combiner">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">CustomFeatureCombinerFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator alias for :func:`register_feature_combiner`.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">register_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -608,7 +608,7 @@
 
 
 <div class="viewcode-block" id="is_custom_feature_block">
-<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_feature_block">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.is_custom_feature_block">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="n">block_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">block_kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -618,7 +618,7 @@
 
 
 <div class="viewcode-block" id="get_custom_feature_block">
-<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_feature_block">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.get_custom_feature_block">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomFeatureBlockSpec</span><span class="p">:</span>
     <span class="n">kind</span> <span class="o">=</span> <span class="n">_validate_feature_block_kind</span><span class="p">(</span><span class="n">block_kind</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
@@ -629,7 +629,7 @@
 
 
 <div class="viewcode-block" id="list_custom_feature_blocks">
-<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_feature_blocks">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.list_custom_feature_blocks">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_custom_feature_blocks</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">block_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">block_kind</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="p">))</span>
@@ -639,21 +639,21 @@
 
 
 <div class="viewcode-block" id="validate_custom_feature_block_result">
-<a class="viewcode-back" href="../../source/api.html#macrocast.validate_custom_feature_block_result">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.validate_custom_feature_block_result">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_custom_feature_block_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">FeatureBlockCallableResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">validate_feature_block_callable_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="is_custom_feature_combiner">
-<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_feature_combiner">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.is_custom_feature_combiner">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_FEATURE_COMBINERS</span></div>
 
 
 
 <div class="viewcode-block" id="get_custom_feature_combiner">
-<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_feature_combiner">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.get_custom_feature_combiner">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomFeatureCombinerSpec</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
@@ -663,28 +663,28 @@
 
 
 <div class="viewcode-block" id="list_custom_feature_combiners">
-<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_feature_combiners">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.list_custom_feature_combiners">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_custom_feature_combiners</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="p">))</span></div>
 
 
 
 <div class="viewcode-block" id="validate_custom_feature_combiner_result">
-<a class="viewcode-back" href="../../source/api.html#macrocast.validate_custom_feature_combiner_result">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.validate_custom_feature_combiner_result">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">validate_custom_feature_combiner_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">FeatureCombinerCallableResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">validate_feature_combiner_callable_result</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="is_custom_model">
-<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_model">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.is_custom_model">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_MODELS</span></div>
 
 
 
 <div class="viewcode-block" id="get_custom_model">
-<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_model">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.get_custom_model">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomModelSpec</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_CUSTOM_MODELS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
@@ -694,21 +694,21 @@
 
 
 <div class="viewcode-block" id="list_custom_models">
-<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_models">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.list_custom_models">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_custom_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_MODELS</span><span class="p">))</span></div>
 
 
 
 <div class="viewcode-block" id="is_custom_preprocessor">
-<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_preprocessor">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.is_custom_preprocessor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_CUSTOM_PREPROCESSORS</span></div>
 
 
 
 <div class="viewcode-block" id="get_custom_preprocessor">
-<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_preprocessor">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.get_custom_preprocessor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CustomPreprocessorSpec</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_CUSTOM_PREPROCESSORS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
@@ -718,21 +718,21 @@
 
 
 <div class="viewcode-block" id="list_custom_preprocessors">
-<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_preprocessors">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.list_custom_preprocessors">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_custom_preprocessors</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_CUSTOM_PREPROCESSORS</span><span class="p">))</span></div>
 
 
 
 <div class="viewcode-block" id="is_custom_target_transformer">
-<a class="viewcode-back" href="../../source/api.html#macrocast.is_custom_target_transformer">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.is_custom_target_transformer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_custom_target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_TARGET_TRANSFORMERS</span></div>
 
 
 
 <div class="viewcode-block" id="get_custom_target_transformer">
-<a class="viewcode-back" href="../../source/api.html#macrocast.get_custom_target_transformer">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.get_custom_target_transformer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_custom_target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TargetTransformerSpec</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_TARGET_TRANSFORMERS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
@@ -742,14 +742,14 @@
 
 
 <div class="viewcode-block" id="list_custom_target_transformers">
-<a class="viewcode-back" href="../../source/api.html#macrocast.list_custom_target_transformers">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.list_custom_target_transformers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">list_custom_target_transformers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_TARGET_TRANSFORMERS</span><span class="p">))</span></div>
 
 
 
 <div class="viewcode-block" id="clear_custom_models">
-<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_models">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.clear_custom_models">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_models</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom model registry.</span>
 
@@ -761,7 +761,7 @@
 
 
 <div class="viewcode-block" id="clear_custom_preprocessors">
-<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_preprocessors">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.clear_custom_preprocessors">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_preprocessors</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom preprocessor registry.&quot;&quot;&quot;</span>
     <span class="n">_CUSTOM_PREPROCESSORS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
@@ -769,7 +769,7 @@
 
 
 <div class="viewcode-block" id="clear_custom_target_transformers">
-<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_target_transformers">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.clear_custom_target_transformers">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_target_transformers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom target transformer registry.&quot;&quot;&quot;</span>
     <span class="n">_TARGET_TRANSFORMERS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
@@ -777,7 +777,7 @@
 
 
 <div class="viewcode-block" id="clear_custom_feature_blocks">
-<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_feature_blocks">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.clear_custom_feature_blocks">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_feature_blocks</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom feature block registry.&quot;&quot;&quot;</span>
     <span class="n">_CUSTOM_FEATURE_BLOCKS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
@@ -785,7 +785,7 @@
 
 
 <div class="viewcode-block" id="clear_custom_feature_combiners">
-<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_feature_combiners">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.clear_custom_feature_combiners">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_feature_combiners</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear custom feature combiner registry.&quot;&quot;&quot;</span>
     <span class="n">_CUSTOM_FEATURE_COMBINERS</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
@@ -793,7 +793,7 @@
 
 
 <div class="viewcode-block" id="clear_custom_extensions">
-<a class="viewcode-back" href="../../source/api.html#macrocast.clear_custom_extensions">[docs]</a>
+<a class="viewcode-back" href="../../source/api.html#macroforecast.clear_custom_extensions">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">clear_custom_extensions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear all runtime extension registries.&quot;&quot;&quot;</span>
     <span class="n">clear_custom_models</span><span class="p">()</span>

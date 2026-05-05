@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Foundation Core &mdash; macrocast</title>
+  <title>Foundation Core &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -64,7 +64,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">macrocast</a>
+          <a href="index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -74,7 +74,7 @@
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Foundation Core</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/foundation_core.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/foundation_core.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -84,18 +84,18 @@
              
   <section id="foundation-core">
 <h1>Foundation Core<a class="headerlink" href="#foundation-core" title="Link to this heading"></a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> is the Phase 0 foundation for the next DAG-based execution
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> is the Phase 0 foundation for the next DAG-based execution
 surface. It is intentionally introduced beside the current public runtime.</p>
 <section id="current-authority">
 <h2>Current Authority<a class="headerlink" href="#current-authority" title="Link to this heading"></a></h2>
 <p>The existing public recipe/compiler/runtime stack remains authoritative:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code> defines public axes used by Navigator and current YAML
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast/registry</span></code> defines public axes used by Navigator and current YAML
 recipes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/compiler</span></code> compiles current recipes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/execution</span></code> runs current forecasting studies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast/compiler</span></code> compiles current recipes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast/execution</span></code> runs current forecasting studies.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> does not replace these modules in this PR.</p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> does not replace these modules in this PR.</p>
 </section>
 <section id="new-core-contract">
 <h2>New Core Contract<a class="headerlink" href="#new-core-contract" title="Link to this heading"></a></h2>
@@ -112,23 +112,23 @@ manifest scaffolding.</p></li>
 </section>
 <section id="registry-migration-plan">
 <h2>Registry Migration Plan<a class="headerlink" href="#registry-migration-plan" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> is the source of truth for the new DAG execution system.
-<code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code> will be regenerated from <code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code> entries once
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> is the source of truth for the new DAG execution system.
+<code class="docutils literal notranslate"><span class="pre">macroforecast/registry</span></code> will be regenerated from <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> entries once
 L0-L8 coverage lands.</p>
-<p>Until that point, <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code> stays frozen for backward compatibility:</p>
+<p>Until that point, <code class="docutils literal notranslate"><span class="pre">macroforecast/registry</span></code> stays frozen for backward compatibility:</p>
 <ul class="simple">
-<li><p>DO NOT add new axes to <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code>.</p></li>
-<li><p>DO NOT modify existing axes in <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code>.</p></li>
-<li><p>DO NOT remove existing axes from <code class="docutils literal notranslate"><span class="pre">macrocast/registry</span></code>.</p></li>
+<li><p>DO NOT add new axes to <code class="docutils literal notranslate"><span class="pre">macroforecast/registry</span></code>.</p></li>
+<li><p>DO NOT modify existing axes in <code class="docutils literal notranslate"><span class="pre">macroforecast/registry</span></code>.</p></li>
+<li><p>DO NOT remove existing axes from <code class="docutils literal notranslate"><span class="pre">macroforecast/registry</span></code>.</p></li>
 </ul>
-<p>Phase 1 layer work adds new axes only to <code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code>. If current public
+<p>Phase 1 layer work adds new axes only to <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>. If current public
 recipes need backward-compatible behavior during the transition, implement an
 adapter at the boundary instead of changing legacy registry entries.</p>
 </section>
 <section id="capability-counts">
 <h2>Capability Counts<a class="headerlink" href="#capability-counts" title="Link to this heading"></a></h2>
 <p>README capability counts refer to the legacy registry runtime, not
-<code class="docutils literal notranslate"><span class="pre">macrocast.core</span></code>. Phase 0 Foundation work must not modify headline capability
+<code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>. Phase 0 Foundation work must not modify headline capability
 counts.</p>
 <p>The Foundation Core should not change runtime capability counts until it is
 wired to execution and a dedicated capability-audit test owns those numbers.</p>

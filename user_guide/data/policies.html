@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forecast-Time And Source-Frame Policies (1.5) &mdash; macrocast</title>
+  <title>Forecast-Time And Source-Frame Policies (1.5) &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">macrocast</a>
+          <a href="../../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Forecast-Time And Source-Frame Policies (1.5)</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/user_guide/data/policies.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/user_guide/data/policies.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -171,8 +171,8 @@ values.</p>
 <section id="functions-features">
 <h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Sample-period availability path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_sample_period_and_availability(raw_result,</span> <span class="pre">recipe,</span> <span class="pre">*,</span> <span class="pre">target)</span></code> implements <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code> and records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;availability&quot;]</span></code>.</p></li>
-<li><p>General missing policy path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_missing_availability(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">target,</span> <span class="pre">spec)</span></code>.</p></li>
+<li><p>Sample-period availability path: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_sample_period_and_availability(raw_result,</span> <span class="pre">recipe,</span> <span class="pre">*,</span> <span class="pre">target)</span></code> implements <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code> and records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;availability&quot;]</span></code>.</p></li>
+<li><p>General missing policy path: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_missing_availability(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">target,</span> <span class="pre">spec)</span></code>.</p></li>
 <li><p>Called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> after official transforms
 have produced the selected frame and before researcher preprocessing runs.</p></li>
 <li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code> without valid <code class="docutils literal notranslate"><span class="pre">leaf_config.x_imputation</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
@@ -233,8 +233,8 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <section id="id2">
 <h3>Functions &amp; features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Runtime path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_raw_missing_policy(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">target,</span> <span class="pre">spec)</span></code>.</p></li>
-<li><p>Called before <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_tcode_preprocessing(...)</span></code>, so any changes affect T-code construction.</p></li>
+<li><p>Runtime path: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_raw_missing_policy(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">target,</span> <span class="pre">spec)</span></code>.</p></li>
+<li><p>Called before <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_tcode_preprocessing(...)</span></code>, so any changes affect T-code construction.</p></li>
 <li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code> without valid <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_x_imputation</span></code> raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 <li><p>Provenance: runtime records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;raw_missing&quot;]</span></code> with <code class="docutils literal notranslate"><span class="pre">before_official_transform:</span> <span class="pre">true</span></code>.</p></li>
 </ul>
@@ -296,8 +296,8 @@ have produced the selected frame and before researcher preprocessing runs.</p></
 <section id="id5">
 <h3>Functions &amp; features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Runtime path: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_raw_outlier_policy(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">spec)</span></code>.</p></li>
-<li><p>Called before <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_tcode_preprocessing(...)</span></code>, so any changes affect T-code construction.</p></li>
+<li><p>Runtime path: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_raw_outlier_policy(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">spec)</span></code>.</p></li>
+<li><p>Called before <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_tcode_preprocessing(...)</span></code>, so any changes affect T-code construction.</p></li>
 <li><p>Optional column subset: <code class="docutils literal notranslate"><span class="pre">leaf_config.raw_outlier_columns</span></code>. If omitted, all raw numeric non-date columns are eligible.</p></li>
 <li><p>Provenance: runtime records <code class="docutils literal notranslate"><span class="pre">data_reports[&quot;raw_outliers&quot;]</span></code> with <code class="docutils literal notranslate"><span class="pre">before_official_transform:</span> <span class="pre">true</span></code>.</p></li>
 </ul>
@@ -348,7 +348,7 @@ Three operational values.</p>
 <section id="id8">
 <h3>Functions &amp; features<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Module: <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._apply_release_lag(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">spec)</span></code>.</p></li>
+<li><p>Module: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_release_lag(raw_result,</span> <span class="pre">rule,</span> <span class="pre">*,</span> <span class="pre">spec)</span></code>.</p></li>
 <li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">series_specific_lag</span></code> without a non-empty <code class="docutils literal notranslate"><span class="pre">leaf_config.release_lag_per_series</span></code> dict raises <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
 </ul>
 </section>
@@ -408,7 +408,7 @@ may enter the model. Two operational values.</p>
 <section id="id12">
 <h3>Functions &amp; features<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p>Wired inside <code class="docutils literal notranslate"><span class="pre">macrocast.execution.build._build_raw_panel_training_data</span></code> — the axis value selects how <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">X_pred</span></code> align with the target.</p></li>
+<li><p>Wired inside <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._build_raw_panel_training_data</span></code> — the axis value selects how <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">X_pred</span></code> align with the target.</p></li>
 <li><p>Applies to raw-panel recipes only (target_lag_features uses target lags, so the axis is irrelevant there).</p></li>
 </ul>
 </section>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>L1 – Data &mdash; macrocast</title>
+  <title>L1 – Data &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -79,7 +79,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -90,7 +90,7 @@
           <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
       <li class="breadcrumb-item active">L1  –  Data</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/reference/l1.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/reference/l1.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -124,7 +124,7 @@
 <section id="official-only">
 <h3><code class="docutils literal notranslate"><span class="pre">official_only</span></code><a class="headerlink" href="#official-only" title="Link to this heading"></a></h3>
 <p>Use the McCracken-Ng curated FRED-MD/QD/SD vintages.</p>
-<p>Loads the bundled FRED snapshot via macrocast’s raw adapter – no network access at runtime, no per-user data file. Vintages are pinned in <code class="docutils literal notranslate"><span class="pre">macrocast/raw/datasets/</span></code> so two users on the same package version see identical raw inputs.</p>
+<p>Loads the bundled FRED snapshot via macroforecast’s raw adapter – no network access at runtime, no per-user data file. Vintages are pinned in <code class="docutils literal notranslate"><span class="pre">macroforecast/raw/datasets/</span></code> so two users on the same package version see identical raw inputs.</p>
 <p>This is the canonical recipe path: every published replication script, every example in the gallery, and every CI check uses <code class="docutils literal notranslate"><span class="pre">official_only</span></code> so cross-user comparability is bit-exact.</p>
 <p><strong>When to use</strong></p>
 <p>Reproducing or extending published macro forecasting work; running benchmarks where readers need to repeat the study from the recipe alone; default for any FRED-based analysis.</p>
@@ -132,7 +132,7 @@
 <p>Forecasting on non-FRED panels (firm-level data, country-specific series); needs a vintage newer than the bundled snapshot.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
@@ -149,7 +149,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="custom-panel-only">
@@ -167,7 +167,7 @@
 <p>When McCracken-Ng’s curation (t-codes, group tags) is part of the study design – <code class="docutils literal notranslate"><span class="pre">official_only</span></code> or <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code> preserves it.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">official_only</span></code>, <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></p>
 <p><strong>Examples</strong></p>
@@ -185,7 +185,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="official-plus-custom">
@@ -199,7 +199,7 @@
 <p>Pure custom panels (use <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>); pure official panels (use <code class="docutils literal notranslate"><span class="pre">official_only</span></code>); mixing two FRED vintages (the merge rule expects one FRED + one custom).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">official_only</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code></p>
 <p><strong>Examples</strong></p>
@@ -216,7 +216,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -244,7 +244,7 @@
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="fred-qd">
@@ -261,7 +261,7 @@
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="fred-sd">
@@ -273,12 +273,12 @@
 <p>State-level employment / payroll / housing forecasting; geographic-importance studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="fred-md-fred-sd">
@@ -289,12 +289,12 @@
 <p>Studies where state-level targets need national-aggregate predictors.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="fred-qd-fred-sd">
@@ -305,12 +305,12 @@
 <p>Quarterly state-level studies (rare; use only when the target is quarterly state-level).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -328,17 +328,17 @@
 <h3><code class="docutils literal notranslate"><span class="pre">monthly</span></code><a class="headerlink" href="#monthly" title="Link to this heading"></a></h3>
 <p>Sample at monthly cadence; pairs with FRED-MD / monthly custom panels.</p>
 <p>Sets the canonical sampling frequency to monthly. Affects horizon resolution (1 = one month ahead), L2 frequency-alignment rules (only applicable when datasets mix), and the <code class="docutils literal notranslate"><span class="pre">standard_md</span></code> horizon set.</p>
-<p>The default is <code class="docutils literal notranslate"><span class="pre">derived</span></code>: macrocast infers the frequency from <code class="docutils literal notranslate"><span class="pre">dataset</span></code> (fred_md → monthly, fred_qd → quarterly). Setting frequency explicitly is required for custom panels.</p>
+<p>The default is <code class="docutils literal notranslate"><span class="pre">derived</span></code>: macroforecast infers the frequency from <code class="docutils literal notranslate"><span class="pre">dataset</span></code> (fred_md → monthly, fred_qd → quarterly). Setting frequency explicitly is required for custom panels.</p>
 <p><strong>When to use</strong></p>
 <p>Custom panels with monthly observations; explicit override of the FRED-MD default for clarity.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">quarterly</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="quarterly">
@@ -349,12 +349,12 @@
 <p>GDP / NIPA-style targets; quarterly custom panels; FRED-QD-based studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">monthly</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -377,12 +377,12 @@
 <p>Default for any benchmark study; comparable to published work.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code>, <code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="pseudo-oos-on-revised-data">
@@ -393,12 +393,12 @@
 <p>When the recipe wants to make the pseudo-OOS protocol explicit (e.g., for clarity in published replication scripts).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -423,12 +423,12 @@
 <p>Real-time forecasting evaluations – those need ALFRED vintages.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -450,12 +450,12 @@
 <p>Exploratory work where mixed-frequency status is informative but should not block execution.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">allow_mixed_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">reject_mixed_known_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">require_single_known_frequency</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="allow-mixed-frequency">
@@ -466,12 +466,12 @@
 <p>Standard FRED-SD pipelines that need both monthly and quarterly variables.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">report_only</span></code>, <code class="docutils literal notranslate"><span class="pre">reject_mixed_known_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">require_single_known_frequency</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="reject-mixed-known-frequency">
@@ -482,12 +482,12 @@
 <p>Defensive recipes that should fail loudly if FRED-SD upstream changes deliver mixed frequencies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">require_single_known_frequency</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="require-single-known-frequency">
@@ -498,12 +498,12 @@
 <p>Strictly mono-frequency studies (e.g. monthly-only).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">reject_mixed_known_frequency</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -526,7 +526,7 @@
 <p>Default. Any standard forecasting benchmark.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">multi_target</span></code></p>
 <p><strong>Examples</strong></p>
@@ -538,7 +538,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="multi-target">
@@ -552,12 +552,12 @@
 <p>Independent per-target studies – those are usually clearer as separate sweep cells.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">single_target</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -579,13 +579,13 @@
 <p>Default. Any high-dimensional benchmark following McCracken-Ng.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="core-variables">
@@ -596,13 +596,13 @@
 <p>Low-dimensional benchmark; comparison against published ‘core’ panel results.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="category-variables">
@@ -613,13 +613,13 @@
 <p>Within-category importance studies; testing whether one block alone is sufficient.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="target-specific-variables">
@@ -630,30 +630,30 @@
 <p>Domain-specific studies where each target has a known predictor block.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="explicit-variable-list">
 <h3><code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code><a class="headerlink" href="#explicit-variable-list" title="Link to this heading"></a></h3>
 <p>Use exactly the columns listed in leaf_config.variable_universe_columns.</p>
-<p>Most flexible option. The recipe author supplies the full predictor column list in leaf_config; macrocast filters the panel to that list verbatim. No grouping logic, no category lookup.</p>
+<p>Most flexible option. The recipe author supplies the full predictor column list in leaf_config; macroforecast filters the panel to that list verbatim. No grouping logic, no category lookup.</p>
 <p><strong>When to use</strong></p>
 <p>Replication scripts that need an exact predictor set; ablations.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -677,12 +677,12 @@
 <p>When the panel is sparsely observed – listwise deletion can leave too few rows.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="keep-available-rows">
@@ -693,12 +693,12 @@
 <p>Default for FRED-MD / -QD recipes where L2.D EM imputation is the canonical workflow.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="impute-predictors-only">
@@ -709,12 +709,12 @@
 <p>Recipes where the target should be the ground-truth signal and never imputed.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="zero-fill-leading-predictor-gaps">
@@ -727,12 +727,12 @@
 <p>When zero is a meaningful value for the predictor – choose <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code> instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -754,12 +754,12 @@
 <p>Default; required when L2.D will run EM-factor or similar global imputation.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_missing_before_tcode</span></code>, <code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="zero-fill-leading-predictor-missing-before-tcode">
@@ -772,12 +772,12 @@
 <p>When zero is a meaningful value for the predictor.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="impute-raw-predictors">
@@ -788,12 +788,12 @@
 <p>Pipelines that use <code class="docutils literal notranslate"><span class="pre">no_transform</span></code> t-codes and need cleaning at L1.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="drop-raw-missing-rows">
@@ -806,12 +806,12 @@
 <p>When the panel is small – you’ll lose a lot of rows.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -833,12 +833,12 @@
 <p>Default; the canonical workflow.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="winsorize-raw">
@@ -849,12 +849,12 @@
 <p>Heavy-tailed financial / macro series where extreme observations would dominate downstream estimates.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code>, <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="iqr-clip-raw">
@@ -865,12 +865,12 @@
 <p>Robust outlier handling on non-normal series.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="mad-clip-raw">
@@ -881,12 +881,12 @@
 <p>Highly non-Gaussian series with sparse outliers.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="zscore-clip-raw">
@@ -899,12 +899,12 @@
 <p>Heavy-tailed series – use <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code> or <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code>.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code>, <code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="set-raw-outliers-to-missing">
@@ -915,12 +915,12 @@
 <p>Pipelines where outliers should be re-imputed coherently with other missing data.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code>, <code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -942,12 +942,12 @@
 <p>Backtests where real-time vintage data is unavailable.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">fixed_lag_all_series</span></code>, <code class="docutils literal notranslate"><span class="pre">series_specific_lag</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="fixed-lag-all-series">
@@ -958,12 +958,12 @@
 <p>Coarse real-time approximations.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">series_specific_lag</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="series-specific-lag">
@@ -974,12 +974,12 @@
 <p>Real-time / nowcasting studies that respect publication delays.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">fixed_lag_all_series</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1001,12 +1001,12 @@
 <p>Default; standard fitting / nowcasting flow.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">forbid_same_period_predictors</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="forbid-same-period-predictors">
@@ -1017,12 +1017,12 @@
 <p>Pure forecasting setups where contemporaneous information would create look-ahead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">allow_same_period_predictors</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1047,13 +1047,13 @@
 <p>Studies that want to compare alternative transform schemes (use <code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code> and apply transforms in L2 manually).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="keep-official-raw-scale">
@@ -1064,12 +1064,12 @@
 <p>Tree / forest models that don’t require stationarity; alternative-transform studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1091,12 +1091,12 @@
 <p>When predictors are already pre-transformed.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="predictors-only">
@@ -1108,12 +1108,12 @@
 <p>When the target is pre-engineered (e.g. growth rate).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="target-and-predictors">
@@ -1125,12 +1125,12 @@
 <p>Default; FRED-MD / -QD recipes.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">target_only</span></code>, <code class="docutils literal notranslate"><span class="pre">predictors_only</span></code>, <code class="docutils literal notranslate"><span class="pre">none</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="none">
@@ -1141,12 +1141,12 @@
 <p>Custom panels with bespoke transforms.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1168,12 +1168,12 @@
 <p>State-level case studies (e.g., CA / TX / NY-specific forecasts).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_states</span></code>, <code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="all-states">
@@ -1185,12 +1185,12 @@
 <p>Geographic-importance studies; cross-state benchmark comparisons.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">single_state</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_states</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="selected-states">
@@ -1201,12 +1201,12 @@
 <p>Region-specific studies (Northeast vs. Midwest), Census-division comparisons.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1228,12 +1228,12 @@
 <p>Default for state-level forecasts.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_states</span></code>, <code class="docutils literal notranslate"><span class="pre">national_only</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="id1">
@@ -1244,12 +1244,12 @@
 <p>Spillover / cross-state interaction studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">match_target</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_states</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="id2">
@@ -1260,12 +1260,12 @@
 <p>Custom regional studies (e.g. neighbouring states).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">match_target</span></code>, <code class="docutils literal notranslate"><span class="pre">all_states</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="national-only">
@@ -1278,12 +1278,12 @@
 <p>State-level forecasts where regional predictors carry signal.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">match_target</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1306,14 +1306,14 @@
 <p>Default; comprehensive 51-jurisdiction panel.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_south</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-region-northeast">
@@ -1325,14 +1325,14 @@
 <p>Northeastern regional studies; comparing services-heavy economies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_south</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-region-midwest">
@@ -1344,14 +1344,14 @@
 <p>Manufacturing-belt and Plains regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_south</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-region-south">
@@ -1363,14 +1363,14 @@
 <p>Southern regional studies; Sun Belt vs Rust Belt comparisons.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-region-west">
@@ -1382,14 +1382,14 @@
 <p>Pacific Coast tech and Mountain West commodity studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-new-england">
@@ -1401,14 +1401,14 @@
 <p>Finance / education / biotech regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-middle-atlantic">
@@ -1420,14 +1420,14 @@
 <p>Financial-centre regional studies (NY metro).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-east-north-central">
@@ -1439,14 +1439,14 @@
 <p>Manufacturing / Rust Belt regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-west-north-central">
@@ -1458,14 +1458,14 @@
 <p>Agricultural / commodity regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-south-atlantic">
@@ -1477,14 +1477,14 @@
 <p>Atlantic Seaboard regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-east-south-central">
@@ -1496,14 +1496,14 @@
 <p>Tennessee Valley / Auto-Alley regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-west-south-central">
@@ -1515,14 +1515,14 @@
 <p>Energy-sector regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-mountain">
@@ -1534,14 +1534,14 @@
 <p>Mountain West regional studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="census-division-pacific">
@@ -1553,14 +1553,14 @@
 <p>Pacific Coast tech and non-contiguous-state studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="contiguous-48-plus-dc">
@@ -1572,14 +1572,14 @@
 <p>Continental US studies; spatial econometrics with adjacency matrices.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="custom-state-group">
@@ -1591,14 +1591,14 @@
 <p>Bespoke regional groupings not captured by Census definitions.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 <li><p>US Census Bureau (2020) ‘Geographic Levels: Regions and Divisions’, US Census Bureau Geography Division. &lt;<a class="reference external" href="https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html">https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code>, <code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1620,12 +1620,12 @@
 <p>Default; state-group already does the filtering.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">selected_states</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="id5">
@@ -1636,12 +1636,12 @@
 <p>Custom regional studies that need a non-standard state subset.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_states</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1664,13 +1664,13 @@
 <p>Default; broadest predictor block.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code>, <code class="docutils literal notranslate"><span class="pre">income</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="labor-market-core">
@@ -1682,13 +1682,13 @@
 <p>Labour-market focused studies; Sahm-rule recession analysis at state level.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code>, <code class="docutils literal notranslate"><span class="pre">income</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="employment-sector">
@@ -1700,13 +1700,13 @@
 <p>Industry-level employment studies; structural-transformation analysis.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">income</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="gsp-output">
@@ -1718,13 +1718,13 @@
 <p>Aggregate output studies; state-level GDP forecasting.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="housing">
@@ -1736,13 +1736,13 @@
 <p>Housing-cycle studies; foreclosure / mortgage-market analysis.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="trade">
@@ -1754,13 +1754,13 @@
 <p>Trade-flow studies; port-region economic analysis.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="income">
@@ -1772,13 +1772,13 @@
 <p>Consumer / household income studies; transfer-payment analysis.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="direct-analog-high-confidence">
@@ -1790,13 +1790,13 @@
 <p>Cross-frequency studies needing direct national-state mapping.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="provisional-analog-medium">
@@ -1808,13 +1808,13 @@
 <p>Sensitivity analyses on the analog mapping.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="semantic-review-outputs">
@@ -1826,13 +1826,13 @@
 <p>Audit-trail diagnostics for the FRED-SD construction process.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="no-reliable-analog">
@@ -1844,13 +1844,13 @@
 <p>State-only studies; spatial-econometric panels that ignore national aggregates.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="custom-sd-variable-group">
@@ -1862,13 +1862,13 @@
 <p>Bespoke variable selections not captured by built-in groupings.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>, <code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>, <code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1891,12 +1891,12 @@
 <p>Default broad-spectrum study. Selecting <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code> on <code class="docutils literal notranslate"><span class="pre">l1.sd_variable_selection</span></code> activates this branch of the layer’s runtime.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">selected_sd_variables</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="selected-sd-variables">
@@ -1907,12 +1907,12 @@
 <p>Targeted studies that focus on specific FRED-SD series.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1934,12 +1934,12 @@
 <p>Studies that want maximum sample length and trust L2 imputation to handle leading NaNs.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">max_balanced</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_date</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="fixed-date">
@@ -1950,12 +1950,12 @@
 <p>Replication scripts; ablation studies over alternative start dates.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">max_balanced</span></code>, <code class="docutils literal notranslate"><span class="pre">earliest_available</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="max-balanced">
@@ -1969,12 +1969,12 @@
 <p>Custom panels where every series shares the same start date (use <code class="docutils literal notranslate"><span class="pre">earliest_available</span></code> to keep all rows).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">earliest_available</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed_date</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -1997,12 +1997,12 @@
 <p>Default. Studies that want to use the full available history.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">fixed_date</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="id7">
@@ -2013,12 +2013,12 @@
 <p>Pre-COVID benchmark studies; matching a paper’s reported sample window.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">latest_available</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -2040,13 +2040,13 @@
 <p>Default for monthly studies. Comparable to published monthly benchmarks.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">standard_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">single</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_list</span></code>, <code class="docutils literal notranslate"><span class="pre">range_up_to_h</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="standard-qd">
@@ -2058,13 +2058,13 @@
 <p>Default for quarterly (FRED-QD) studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">standard_md</span></code>, <code class="docutils literal notranslate"><span class="pre">single</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_list</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="single">
@@ -2075,12 +2075,12 @@
 <p>One-shot studies (h=1 nowcasting, h=12 long-horizon ablation).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">standard_md</span></code>, <code class="docutils literal notranslate"><span class="pre">standard_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_list</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="custom-list">
@@ -2091,12 +2091,12 @@
 <p>Replication of papers with non-standard horizon sets; ablation studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">standard_md</span></code>, <code class="docutils literal notranslate"><span class="pre">standard_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">range_up_to_h</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="range-up-to-h">
@@ -2107,12 +2107,12 @@
 <p>Dense horizon studies with direct-h forecasting.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">custom_list</span></code>, <code class="docutils literal notranslate"><span class="pre">standard_md</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -2134,12 +2134,12 @@
 <p>Default for any study without an explicit regime structure.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">external_nber</span></code>, <code class="docutils literal notranslate"><span class="pre">external_user_provided</span></code>, <code class="docutils literal notranslate"><span class="pre">estimated_markov_switching</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="external-nber">
@@ -2151,7 +2151,7 @@
 <p>Standard recession-conditioning studies; comparing models’ performance during recessions vs expansions.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>National Bureau of Economic Research, ‘US Business Cycle Expansions and Contractions’. &lt;<a class="reference external" href="https://www.nber.org/research/business-cycle-dating">https://www.nber.org/research/business-cycle-dating</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">external_user_provided</span></code></p>
@@ -2164,7 +2164,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="external-user-provided">
@@ -2176,12 +2176,12 @@
 <p>Custom regime studies (monetary stance, fiscal stance, alternative recession-dating chronologies).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">external_nber</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="estimated-markov-switching">
@@ -2193,31 +2193,31 @@
 <p>Inflation-regime studies; recession-prediction; any study that wants endogenous regime estimation.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>Hamilton (1989) ‘A new approach to the economic analysis of nonstationary time series and the business cycle’, Econometrica 57(2). (doi:10.2307/1912559)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">estimated_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">estimated_structural_break</span></code>, <code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code>, <code class="docutils literal notranslate"><span class="pre">n_regimes</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="estimated-threshold">
 <h3><code class="docutils literal notranslate"><span class="pre">estimated_threshold</span></code><a class="headerlink" href="#estimated-threshold" title="Link to this heading"></a></h3>
 <p>Tong (1990) SETAR threshold model – regime by threshold variable.</p>
 <p>Estimates <code class="docutils literal notranslate"><span class="pre">n_regimes</span></code> regimes by grid-searching the threshold on a chosen <code class="docutils literal notranslate"><span class="pre">threshold_variable</span></code> (defaults to lagged target). The regime per observation is determined by which side of the threshold the variable falls on.</p>
-<p>Tong’s original SETAR uses AR(p) per regime; macrocast’s runtime fits AR(<code class="docutils literal notranslate"><span class="pre">threshold_ar_p</span></code>) per partition and selects the threshold minimising joint SSR.</p>
+<p>Tong’s original SETAR uses AR(p) per regime; macroforecast’s runtime fits AR(<code class="docutils literal notranslate"><span class="pre">threshold_ar_p</span></code>) per partition and selects the threshold minimising joint SSR.</p>
 <p><strong>When to use</strong></p>
 <p>Self-exciting threshold dynamics (e.g., interest-rate stance regimes); non-linear AR studies.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>Tong (1990) ‘Non-linear Time Series: A Dynamical System Approach’, Oxford University Press.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">estimated_markov_switching</span></code>, <code class="docutils literal notranslate"><span class="pre">estimated_structural_break</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 <section id="estimated-structural-break">
@@ -2228,13 +2228,13 @@
 <p>Studies hypothesising structural change (e.g., pre/post Volcker, pre/post Great Moderation).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>Bai &amp; Perron (1998) ‘Estimating and testing linear models with multiple structural changes’, Econometrica 66(1). (doi:10.2307/2998540)</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">estimated_markov_switching</span></code>, <code class="docutils literal notranslate"><span class="pre">estimated_threshold</span></code>, <code class="docutils literal notranslate"><span class="pre">max_breaks</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-04 by macrocast author.</p>
+<p>Last reviewed 2026-05-04 by macroforecast author.</p>
 </div>
 </section>
 </section>
@@ -2259,12 +2259,12 @@
 <p>Default; OOS-safe regime estimation.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">rolling_window_per_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">block_recompute</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="rolling-window-per-origin">
@@ -2275,12 +2275,12 @@
 <p>Drifting / non-stationary regime structure.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">expanding_window_per_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">block_recompute</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="block-recompute">
@@ -2291,12 +2291,12 @@
 <p>Long sweeps where per-origin regime re-fits are infeasible.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">expanding_window_per_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_window_per_origin</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>

@@ -31,11 +31,11 @@ When quarterly variables are central to the analysis.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``quarterly_only``, ``both``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``quarterly_only``
 ^^^^^^^^^^^^^^^^^^
@@ -51,11 +51,11 @@ Quarterly-target studies; FRED-QD style analyses on FRED-SD data.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``monthly_only``, ``both``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``both``
 ^^^^^^^^
@@ -71,11 +71,11 @@ Default for FRED-SD recipes; mixed-frequency panels.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``monthly_only``, ``quarterly_only``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``quarterly_to_monthly_rule``  (l2_a)
 ------------------------------------------
@@ -100,11 +100,11 @@ Studies with smooth quarterly series and per-origin alignment.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``step_backward``, ``chow_lin``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``step_backward``
 ^^^^^^^^^^^^^^^^^
@@ -112,7 +112,7 @@ Studies with smooth quarterly series and per-origin alignment.
 
 Step-function: each month inherits the most-recent published quarterly value.
 
-When a quarterly series needs to align with a monthly target, macrocast holds the quarterly observation constant for all three months of the quarter (with a 1-quarter publication lag where appropriate). Conservative: no smoothing, no extrapolation.
+When a quarterly series needs to align with a monthly target, macroforecast holds the quarterly observation constant for all three months of the quarter (with a 1-quarter publication lag where appropriate). Conservative: no smoothing, no extrapolation.
 
 **When to use**
 
@@ -120,11 +120,11 @@ Default for FRED-SD mixed-frequency studies.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``step_forward``, ``linear_interpolation``, ``chow_lin``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``step_forward``
 ^^^^^^^^^^^^^^^^
@@ -140,11 +140,11 @@ Hindsight-feasible studies (e.g., counterfactual nowcasts).
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``step_backward``, ``linear_interpolation``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``monthly_to_quarterly_rule``  (l2_a)
 ------------------------------------------
@@ -169,11 +169,11 @@ Default. Stock variables (interest rates, prices, employment levels).
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``quarterly_endpoint``, ``quarterly_sum``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``quarterly_endpoint``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -191,11 +191,11 @@ End-of-period stocks (M2 month-end, balance-sheet series).
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``quarterly_average``, ``quarterly_sum``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``quarterly_sum``
 ^^^^^^^^^^^^^^^^^
@@ -213,11 +213,11 @@ Flow variables; cumulative-quantity series.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``quarterly_average``, ``quarterly_endpoint``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``transform_policy``  (l2_b)
 ---------------------------------
@@ -250,12 +250,12 @@ Default for FRED-based studies. Canonical replication path.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``no_transform``, ``custom_tcode``, ``transform_scope``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``no_transform``
 ^^^^^^^^^^^^^^^^
@@ -271,11 +271,11 @@ Tree / forest models; alternative-transform studies; custom panels with already-
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``apply_official_tcode``, ``custom_tcode``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``custom_tcode``
 ^^^^^^^^^^^^^^^^
@@ -291,11 +291,11 @@ Custom panels with user-defined stationarity codes.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``apply_official_tcode``, ``no_transform``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``transform_scope``  (l2_b)
 --------------------------------
@@ -318,11 +318,11 @@ Default; matches McCracken-Ng's convention.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``predictors_only``
 ^^^^^^^^^^^^^^^^^^^
@@ -338,11 +338,11 @@ When the target enters the pipeline already cleaned.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``target_only``
 ^^^^^^^^^^^^^^^
@@ -358,11 +358,11 @@ Pre-engineered predictor panels.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``not_applicable``
 ^^^^^^^^^^^^^^^^^^
@@ -378,11 +378,11 @@ Pipelines that bypass this stage by construction.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``outlier_policy``  (l2_c)
 -------------------------------
@@ -407,12 +407,12 @@ Default for FRED-based studies. Canonical replication path.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``winsorize``, ``zscore_threshold``, ``none``, ``outlier_action``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``winsorize``
 ^^^^^^^^^^^^^
@@ -428,12 +428,12 @@ Studies that want a bounded but non-NaN outlier handler; alternative-rule compar
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * Tukey (1977) 'Exploratory Data Analysis', Addison-Wesley.
 
 **Related options**: ``mccracken_ng_iqr``, ``zscore_threshold``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``zscore_threshold``
 ^^^^^^^^^^^^^^^^^^^^
@@ -449,11 +449,11 @@ Approximately-Gaussian series; quick sanity-check sweeps.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``mccracken_ng_iqr``, ``winsorize``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``none``
 ^^^^^^^^
@@ -469,11 +469,11 @@ Custom panels already cleaned upstream; no-cleaning ablations.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``mccracken_ng_iqr``, ``winsorize``, ``zscore_threshold``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``outlier_action``  (l2_c)
 -------------------------------
@@ -496,12 +496,12 @@ Default. Pairs with em_factor / em_multivariate imputation.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
 
 **Related options**: ``replace_with_median``, ``replace_with_cap_value``, ``keep_with_indicator``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``replace_with_median``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -519,11 +519,11 @@ Studies that want a deterministic, no-imputation outlier handler.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``flag_as_nan``, ``replace_with_cap_value``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``replace_with_cap_value``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -539,11 +539,11 @@ Bounded-output studies; portfolios with hard limits on extreme values.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``flag_as_nan``, ``replace_with_median``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``outlier_scope``  (l2_c)
 ------------------------------
@@ -566,11 +566,11 @@ Default; matches McCracken-Ng's convention.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``predictors_only``
 ^^^^^^^^^^^^^^^^^^^
@@ -586,11 +586,11 @@ When the target enters the pipeline already cleaned.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``target_only``
 ^^^^^^^^^^^^^^^
@@ -606,11 +606,11 @@ Pre-engineered predictor panels.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``not_applicable``
 ^^^^^^^^^^^^^^^^^^
@@ -626,11 +626,11 @@ Pipelines that bypass this stage by construction.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``imputation_policy``  (l2_d)
 ----------------------------------
@@ -655,12 +655,12 @@ Default for FRED-MD/QD high-dimensional panels.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * Stock & Watson (2002) 'Macroeconomic Forecasting Using Diffusion Indexes', JBES 20(2).
 
 **Related options**: ``em_multivariate``, ``mean``, ``forward_fill``, ``linear_interpolation``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``em_multivariate``
 ^^^^^^^^^^^^^^^^^^^
@@ -676,11 +676,11 @@ Smaller panels (≤ 50 series) where the full covariance is tractable.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``em_factor``, ``mean``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``mean``
 ^^^^^^^^
@@ -696,11 +696,11 @@ Sparse missingness; quick smoke tests.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``em_factor``, ``forward_fill``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``forward_fill``
 ^^^^^^^^^^^^^^^^
@@ -716,11 +716,11 @@ Slowly-moving series (interest rates, ratios); release-lag handling.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``linear_interpolation``, ``em_factor``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``linear_interpolation``
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -736,12 +736,12 @@ Interior missing observations in well-behaved series.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * Chow & Lin (1971) 'Best Linear Unbiased Interpolation, Distribution, and Extrapolation of Time Series by Related Series', RES 53(4).
 
 **Related options**: ``forward_fill``, ``em_factor``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``none_propagate``
 ^^^^^^^^^^^^^^^^^^
@@ -757,11 +757,11 @@ Studies that treat missingness as informative; or panels with no missings.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``em_factor``, ``mean``, ``forward_fill``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``imputation_temporal_rule``  (l2_d)
 -----------------------------------------
@@ -788,11 +788,11 @@ When per-origin re-fits are too expensive -- consider ``block_recompute``.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``rolling_window_per_origin``, ``block_recompute``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``rolling_window_per_origin``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -812,11 +812,11 @@ When the panel is stationary -- expanding window uses more information.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``expanding_window_per_origin``, ``block_recompute``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``block_recompute``
 ^^^^^^^^^^^^^^^^^^^
@@ -836,11 +836,11 @@ When precise OOS-safe imputation is critical.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``expanding_window_per_origin``, ``rolling_window_per_origin``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``imputation_scope``  (l2_d)
 ---------------------------------
@@ -863,11 +863,11 @@ Default; matches McCracken-Ng's convention.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``predictors_only``
 ^^^^^^^^^^^^^^^^^^^
@@ -883,11 +883,11 @@ When the target enters the pipeline already cleaned.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``target_only``
 ^^^^^^^^^^^^^^^
@@ -903,11 +903,11 @@ Pre-engineered predictor panels.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``not_applicable``
 ^^^^^^^^^^^^^^^^^^
@@ -923,11 +923,11 @@ Pipelines that bypass this stage by construction.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``frame_edge_policy``  (l2_e)
 ----------------------------------
@@ -950,12 +950,12 @@ Default for high-dimensional studies; pairs with em_factor imputation for the in
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 * Stock & Watson (2002) 'Macroeconomic Forecasting Using Diffusion Indexes', JBES 20(2).
 
 **Related options**: ``drop_unbalanced_series``, ``keep_unbalanced``, ``zero_fill_leading``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``drop_unbalanced_series``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -971,11 +971,11 @@ Long-history studies (1959-) where late-introduction series should be excluded.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``truncate_to_balanced``, ``keep_unbalanced``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``keep_unbalanced``
 ^^^^^^^^^^^^^^^^^^^
@@ -991,11 +991,11 @@ Custom panels with intentional unbalanced structure; missing-data-robust models.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``truncate_to_balanced``, ``drop_unbalanced_series``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``zero_fill_leading``
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1011,11 +1011,11 @@ Studies that want the early sample but accept zero-fill on leading edges.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``truncate_to_balanced``, ``keep_unbalanced``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 axis ``frame_edge_scope``  (l2_e)
 ---------------------------------
@@ -1038,11 +1038,11 @@ Default; matches McCracken-Ng's convention.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``predictors_only``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``predictors_only``
 ^^^^^^^^^^^^^^^^^^^
@@ -1058,11 +1058,11 @@ When the target enters the pipeline already cleaned.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``target_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``target_only``
 ^^^^^^^^^^^^^^^
@@ -1078,11 +1078,11 @@ Pre-engineered predictor panels.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``not_applicable``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.
 
 ``not_applicable``
 ^^^^^^^^^^^^^^^^^^
@@ -1098,8 +1098,8 @@ Pipelines that bypass this stage by construction.
 
 **References**
 
-* macrocast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 **Related options**: ``target_and_predictors``, ``predictors_only``, ``target_only``
 
-.. note:: Last reviewed 2026-05-04 by macrocast author.
+.. note:: Last reviewed 2026-05-04 by macroforecast author.

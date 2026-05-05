@@ -1,18 +1,18 @@
 # Add A Custom Preprocessor
 
-> **API status note (v0.5.x)**: this page uses the planned mc.forecast / mc.Experiment Python facade
-> shape. Those are not yet exported from macrocast.__all__. For working v0.5.x code, use
-> macrocast.run("recipe.yaml"), macrocast.replicate("manifest.json"),
-> the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-> python -m macrocast scaffold. See [Simple Docs index](index.md) for the full status note.
+> **API status note (v0.5.x)**: this page uses the planned mf.forecast / mf.Experiment Python facade
+> shape. Those are not yet exported from macroforecast.__all__. For working v0.5.x code, use
+> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
+> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
 
 
 Custom preprocessors run inside the same split discipline as built-in preprocessing.
 
 ```python
-import macrocast as mc
+import macroforecast as mf
 
-@mc.custom_preprocessor("center_x")
+@mf.custom_preprocessor("center_x")
 def center_x(X_train, y_train, X_test, context):
     location = X_train.mean(axis=0)
     return X_train - location, X_test - location
@@ -22,7 +22,7 @@ Use the registered name in an experiment:
 
 ```python
 result = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md",
         target="INDPRO",
         start="1980-01",
@@ -53,7 +53,7 @@ Use a fixed custom preprocessor while comparing models:
 
 ```python
 result = (
-    mc.Experiment(
+    mf.Experiment(
         dataset="fred_md",
         target="INDPRO",
         start="1980-01",

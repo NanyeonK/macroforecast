@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contract Source of Truth &mdash; macrocast</title>
+  <title>Contract Source of Truth &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -62,7 +62,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -72,7 +72,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Contract Source of Truth</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/detail/contract_source_of_truth.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/detail/contract_source_of_truth.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -82,12 +82,12 @@
              
   <section id="contract-source-of-truth">
 <h1>Contract Source of Truth<a class="headerlink" href="#contract-source-of-truth" title="Link to this heading"></a></h1>
-<p>This page defines the canonical ownership rules for macrocast layer contracts.
+<p>This page defines the canonical ownership rules for macroforecast layer contracts.
 When code, docs, UI, or legacy compiler paths disagree, use this page to decide
 which side must change.</p>
 <section id="decision">
 <h2>Decision<a class="headerlink" href="#decision" title="Link to this heading"></a></h2>
-<p>macrocast has two canonical contract layers:</p>
+<p>macroforecast has two canonical contract layers:</p>
 <ol class="arabic simple">
 <li><p>Public layer shape and artifact boundaries are canonical in the current
 L0-L8 layer contract:</p>
@@ -103,7 +103,7 @@ L0-L8 layer contract:</p>
 </ul>
 </li>
 <li><p>Axis vocabulary is canonical in the machine-readable registry under
-<code class="docutils literal notranslate"><span class="pre">macrocast/registry/*/AXIS_DEFINITION</span></code>:</p>
+<code class="docutils literal notranslate"><span class="pre">macroforecast/registry/*/AXIS_DEFINITION</span></code>:</p>
 <ul class="simple">
 <li><p>axis IDs;</p></li>
 <li><p>allowed values;</p></li>
@@ -126,7 +126,7 @@ source of truth. Examples include:</p>
 <ul class="simple">
 <li><p>legacy layer names such as <code class="docutils literal notranslate"><span class="pre">1_data_task</span></code>, <code class="docutils literal notranslate"><span class="pre">3_training</span></code>,
 <code class="docutils literal notranslate"><span class="pre">4_evaluation</span></code>, <code class="docutils literal notranslate"><span class="pre">5_output_provenance</span></code>, <code class="docutils literal notranslate"><span class="pre">6_stat_tests</span></code>, and <code class="docutils literal notranslate"><span class="pre">7_importance</span></code>;</p></li>
-<li><p>legacy axis aliases preserved by <code class="docutils literal notranslate"><span class="pre">macrocast/registry/naming.py</span></code>;</p></li>
+<li><p>legacy axis aliases preserved by <code class="docutils literal notranslate"><span class="pre">macroforecast/registry/naming.py</span></code>;</p></li>
 <li><p>bridge axes kept for old recipes while current L0-L8 contracts migrate.</p></li>
 </ul>
 <p>Compatibility code may read these names and canonicalize them, but generated
@@ -137,9 +137,9 @@ keys and registry axis IDs.</p>
 <h2>Precedence<a class="headerlink" href="#precedence" title="Link to this heading"></a></h2>
 <p>When sources disagree, apply this order:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/registry/*/AXIS_DEFINITION</span></code> for axis name, value, support status,
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast/registry/*/AXIS_DEFINITION</span></code> for axis name, value, support status,
 and default policy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macrocast/core/layers/registry.py</span></code>, <a class="reference internal" href="recipe_layers.html"><span class="std std-doc">Recipe Layers</span></a>, and
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast/core/layers/registry.py</span></code>, <a class="reference internal" href="recipe_layers.html"><span class="std std-doc">Recipe Layers</span></a>, and
 <a class="reference internal" href="layer_boundary_contract.html"><span class="std std-doc">Layer Boundary Contract</span></a> for layer topology,
 YAML key, DAG/list/diagnostic shape, sink names, and artifact boundaries.</p></li>
 <li><p>Runtime layer parser/validator modules for executable validation behavior.
@@ -190,7 +190,7 @@ the Navigator defaults for evaluation metrics, statistical-test controls, and
 output/provenance artifact selections.</p></li>
 <li><p>Legacy recipe values such as <code class="docutils literal notranslate"><span class="pre">msfe</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_msfe</span></code>, <code class="docutils literal notranslate"><span class="pre">oos_r2</span></code>,
 <code class="docutils literal notranslate"><span class="pre">all_oos_data</span></code>, <code class="docutils literal notranslate"><span class="pre">nw_hac</span></code>, and <code class="docutils literal notranslate"><span class="pre">dm_hln</span></code> are canonicalized through
-<code class="docutils literal notranslate"><span class="pre">macrocast/registry/naming.py</span></code>; generated UI and new recipes should use
+<code class="docutils literal notranslate"><span class="pre">macroforecast/registry/naming.py</span></code>; generated UI and new recipes should use
 <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">full_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">newey_west</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code>.</p></li>
 </ul>
@@ -199,7 +199,7 @@ output/provenance artifact selections.</p></li>
 <li><p>Layer 2 docs/UI expose canonical representation axes such as
 <code class="docutils literal notranslate"><span class="pre">horizon_target_construction</span></code>, <code class="docutils literal notranslate"><span class="pre">target_transform</span></code>, <code class="docutils literal notranslate"><span class="pre">x_missing_policy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">feature_block_combination</span></code>, and <code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>, while
-<code class="docutils literal notranslate"><span class="pre">macrocast/core/layers/l2.py</span></code> still validates an older cleaning-only axis
+<code class="docutils literal notranslate"><span class="pre">macroforecast/core/layers/l2.py</span></code> still validates an older cleaning-only axis
 set.</p></li>
 <li><p>Full docs pages do not yet enumerate every registry value automatically, so
 docs coverage remains a separate generation task.</p></li>

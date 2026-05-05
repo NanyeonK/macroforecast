@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>L3 – Feature engineering &mdash; macrocast</title>
+  <title>L3 – Feature engineering &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -79,7 +79,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -90,7 +90,7 @@
           <li class="breadcrumb-item"><a href="index.html">Reference</a></li>
       <li class="breadcrumb-item active">L3  –  Feature engineering</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/reference/l3.rst" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/reference/l3.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -129,12 +129,12 @@
 <p>Building cumulative-impact features; recovering levels from differenced forecasts.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">level</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="dfm">
@@ -146,13 +146,13 @@
 <p>Smoothed factors with an explicit dynamic; mixed-frequency panels (FRED-SD).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Mariano &amp; Murasawa (2003) ‘A new coincident index of business cycles based on monthly and quarterly series’, JAE 18(4): 427-443.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="diff">
@@ -165,12 +165,12 @@
 <p>When the panel is already differenced by L2.B (avoids double-differencing).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">log_diff</span></code>, <code class="docutils literal notranslate"><span class="pre">pct_change</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="feature-selection">
@@ -188,12 +188,12 @@
 <p>Tree models – they handle irrelevant features natively.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">scale</span></code>, <code class="docutils literal notranslate"><span class="pre">pca</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="fourier">
@@ -204,12 +204,12 @@
 <p>Smooth seasonality (annual / weekly cycles) where dummies would over-fit.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>, <code class="docutils literal notranslate"><span class="pre">wavelet</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="hamilton-filter">
@@ -220,13 +220,13 @@
 <p>Real-time / one-sided detrending where HP’s two-sided smoothing is inappropriate.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Hamilton (2018) ‘Why You Should Never Use the Hodrick-Prescott Filter’, RES 100(5): 831-843.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">hp_filter</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="holiday">
@@ -239,12 +239,12 @@
 <p>Pure macro series at monthly+ frequency where holidays are absorbed by <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="hp-filter">
@@ -257,13 +257,13 @@
 <p>Real-time / one-sided forecasting – HP introduces look-ahead bias unless restricted to <code class="docutils literal notranslate"><span class="pre">expanding_window_per_origin</span></code>.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Hodrick &amp; Prescott (1997) ‘Postwar U.S. Business Cycles: An Empirical Investigation’, JMCB 29(1): 1-16.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="interaction">
@@ -274,12 +274,12 @@
 <p>Capturing predictor-pair complementarities in linear models.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">polynomial</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="kernel">
@@ -290,12 +290,12 @@
 <p>Kernel-augmented linear / SVM pipelines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code>, <code class="docutils literal notranslate"><span class="pre">nystroem</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="kernel-features">
@@ -308,13 +308,13 @@
 <p>Small-sample problems where exact kernel SVM is feasible.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Rahimi &amp; Recht (2007) ‘Random Features for Large-Scale Kernel Machines’, NeurIPS.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">kernel</span></code>, <code class="docutils literal notranslate"><span class="pre">nystroem</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="l3-feature-bundle">
@@ -326,12 +326,12 @@
 <p>Never authored directly – inserted by the cascade builder.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="l3-metadata-build">
@@ -342,12 +342,12 @@
 <p>Never authored directly – inserted by the cascade builder when L7 lineage hooks are active.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="level">
@@ -358,12 +358,12 @@
 <p>Authoring branches that need the level form alongside a transformed branch.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">log_diff</span></code>, <code class="docutils literal notranslate"><span class="pre">pct_change</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="log">
@@ -376,12 +376,12 @@
 <p>Series that can be negative or zero (rates, growth rates, balances).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">log_diff</span></code>, <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">pct_change</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="log-diff">
@@ -394,13 +394,13 @@
 <p>Series that take non-positive values.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, JBES 34(4): 574-589. &lt;<a class="reference external" href="https://doi.org/10.1080/07350015.2015.1086655">https://doi.org/10.1080/07350015.2015.1086655</a>&gt;</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">pct_change</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="ma-increasing-order">
@@ -412,13 +412,13 @@
 <p>Tree / RF models that benefit from multi-scale temporal features without manual lag selection.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Coulombe (2024) ‘The Macroeconomic Random Forest’, Journal of Applied Econometrics 39(7): 1190-1209.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ma_window</span></code>, <code class="docutils literal notranslate"><span class="pre">lag</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="ma-window">
@@ -429,12 +429,12 @@
 <p>Smoothing noisy series; building short / medium / long-term momentum features.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">scale</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="nystroem">
@@ -445,12 +445,12 @@
 <p>Non-RBF kernel-augmented linear models (poly / sigmoid).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="nystroem-features">
@@ -461,12 +461,12 @@
 <p>Multi-stage pipelines that separate kernel approximation from downstream linear fits.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">nystroem</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="partial-least-squares">
@@ -477,13 +477,13 @@
 <p>When a target-supervised reduction is preferable to PCA’s unsupervised projection.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Wold, Sjöström &amp; Eriksson (2001) ‘PLS-regression: a basic tool of chemometrics’, Chemometrics and Intelligent Laboratory Systems 58(2): 109-130.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="pca">
@@ -495,13 +495,13 @@
 <p>Reducing FRED-MD’s 100+ predictors to a handful of latent factors; factor-augmented forecasts.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Stock &amp; Watson (2002) ‘Forecasting Using Principal Components from a Large Number of Predictors’, JASA 97(460): 1167-1179.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">varimax</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm</span></code>, <code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="pct-change">
@@ -514,12 +514,12 @@
 <p>Trend-following analysis where log_diff’s symmetry is preferable.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">log_diff</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="polynomial">
@@ -532,12 +532,12 @@
 <p>High dimension (degree &gt; 3 with many predictors) – explodes the design matrix; use kernel methods instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">interaction</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code>, <code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="polynomial-expansion">
@@ -548,12 +548,12 @@
 <p>Pipelines that explicitly stage <cite>expand → reduce</cite> sequences.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">polynomial</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="random-projection">
@@ -564,12 +564,12 @@
 <p>Sweep baselines / sanity checks against PCA’s structured reduction.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="regime-indicator">
@@ -580,12 +580,12 @@
 <p>Regime-conditional forecasts where the model needs explicit access to the state.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>, <code class="docutils literal notranslate"><span class="pre">time_trend</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="scale">
@@ -598,12 +598,12 @@
 <p>Tree-based models (RF/XGBoost/LightGBM) – scale-invariant by construction.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="scaled-pca">
@@ -615,13 +615,13 @@
 <p>When standard PCA’s leading factor is dominated by predictively-irrelevant variance.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Huang, Jiang, Tu &amp; Zhou (2022) ‘Scaled PCA: A New Approach to Dimension Reduction’, Management Science 68(3): 1678-1695.</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="season-dummy">
@@ -632,12 +632,12 @@
 <p>Capturing calendar seasonality in linear models when a smooth Fourier basis would over-shrink discrete jumps.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">fourier</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="seasonal-lag">
@@ -650,12 +650,12 @@
 <p>When season_dummy or X-13 deseasonalisation is preferred over lag-based seasonality.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>, <code class="docutils literal notranslate"><span class="pre">ma_window</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="sparse-pca">
@@ -668,12 +668,12 @@
 <p>When pure variance maximisation is more important than interpretability – use plain <code class="docutils literal notranslate"><span class="pre">pca</span></code>.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="target-construction">
@@ -685,12 +685,12 @@
 <p>Always required – runtime auto-inserts when missing.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">diff</span></code>, <code class="docutils literal notranslate"><span class="pre">log_diff</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="time-trend">
@@ -703,12 +703,12 @@
 <p>Series with structural breaks – use <code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code> or stochastic detrending instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">hp_filter</span></code>, <code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="varimax">
@@ -719,12 +719,12 @@
 <p>Factor analysis where downstream interpretation requires distinct, well-named factors.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">pca</span></code>, <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="varimax-rotation">
@@ -735,12 +735,12 @@
 <p>Multi-stage pipelines that explicitly separate factor extraction from rotation.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">varimax</span></code>, <code class="docutils literal notranslate"><span class="pre">pca</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 <section id="wavelet">
@@ -753,12 +753,12 @@
 <p>Smooth seasonal patterns – use <code class="docutils literal notranslate"><span class="pre">fourier</span></code> instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macrocast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <code class="docutils literal notranslate"><span class="pre">fourier</span></code></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Last reviewed 2026-05-05 by macrocast author.</p>
+<p>Last reviewed 2026-05-05 by macroforecast author.</p>
 </div>
 </section>
 </section>

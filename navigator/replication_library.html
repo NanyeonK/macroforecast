@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Replication Library &mdash; macrocast</title>
+  <title>Replication Library &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -72,7 +72,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -83,7 +83,7 @@
           <li class="breadcrumb-item"><a href="index.html">Navigator Docs</a></li>
       <li class="breadcrumb-item active">Replication Library</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/navigator/replication_library.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/navigator/replication_library.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -98,11 +98,11 @@
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>
 <p>List entries:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>replications
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>replications
 </pre></div>
 </div>
 <p>Inspect and write one YAML:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>replications<span class="w"> </span>goulet-coulombe-2021-fred-md-ridge<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>replications<span class="w"> </span>goulet-coulombe-2021-fred-md-ridge<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--write-yaml<span class="w"> </span>recipes/gc2021-ridge.yaml
 </pre></div>
 </div>
@@ -186,7 +186,7 @@ execution.</p>
 <p>Replication entries are runnable from YAML alone. Custom model recipes are
 different: the YAML can select <code class="docutils literal notranslate"><span class="pre">model_family=my_registered_model</span></code>, but the
 callable must already be registered in the Python process with
-<code class="docutils literal notranslate"><span class="pre">&#64;mc.custom_model(...)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_model(...)</span></code>.</p>
 <p>Custom extension examples therefore live as templates rather than built-in
 replication entries. The current FRED-SD mixed-frequency template is:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>examples/custom_fred_sd_mixed_frequency_model.py
@@ -229,24 +229,24 @@ researcher-owned.</p>
 <p>It is a runtime recipe, not a paper-identical replication. Run it against the
 small fixture or replace <code class="docutils literal notranslate"><span class="pre">--local-raw-source</span></code> with an official FRED-SD
 workbook:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>replications<span class="w"> </span>fred-sd-midasr-almonp-direct<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>replications<span class="w"> </span>fred-sd-midasr-almonp-direct<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--write-yaml<span class="w"> </span>/tmp/fred-sd-midasr-almonp.yaml
 
-macrocast-navigate<span class="w"> </span>run<span class="w"> </span>/tmp/fred-sd-midasr-almonp.yaml<span class="w"> </span><span class="se">\</span>
+macroforecast-navigate<span class="w"> </span>run<span class="w"> </span>/tmp/fred-sd-midasr-almonp.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--local-raw-source<span class="w"> </span>tests/fixtures/fred_sd_sample.csv<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output-root<span class="w"> </span>/tmp/macrocast-fred-sd-midasr
+<span class="w">  </span>--output-root<span class="w"> </span>/tmp/macroforecast-fred-sd-midasr
 </pre></div>
 </div>
 </section>
 <section id="synthetic-round-trip">
 <h2>Synthetic Round Trip<a class="headerlink" href="#synthetic-round-trip" title="Link to this heading"></a></h2>
 <p>The synthetic entry is designed to run in the test fixture environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macrocast-navigate<span class="w"> </span>replications<span class="w"> </span>synthetic-replication-roundtrip<span class="w"> </span><span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast-navigate<span class="w"> </span>replications<span class="w"> </span>synthetic-replication-roundtrip<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--write-yaml<span class="w"> </span>/tmp/synthetic-replication.yaml
 
-macrocast-navigate<span class="w"> </span>run<span class="w"> </span>/tmp/synthetic-replication.yaml<span class="w"> </span><span class="se">\</span>
+macroforecast-navigate<span class="w"> </span>run<span class="w"> </span>/tmp/synthetic-replication.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--local-raw-source<span class="w"> </span>tests/fixtures/fred_md_ar_sample.csv<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output-root<span class="w"> </span>/tmp/macrocast-synthetic
+<span class="w">  </span>--output-root<span class="w"> </span>/tmp/macroforecast-synthetic
 </pre></div>
 </div>
 </section>

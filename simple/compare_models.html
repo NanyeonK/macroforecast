@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Compare Models &mdash; macrocast</title>
+  <title>Compare Models &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=2a2fe768"></script>
+      <script src="../_static/documentation_options.js?v=8fa8b3e9"></script>
       <script src="../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -35,7 +35,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            macrocast
+            macroforecast
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -74,7 +74,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">macrocast</a>
+          <a href="../index.html">macroforecast</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -85,7 +85,7 @@
           <li class="breadcrumb-item"><a href="index.html">Simple Docs</a></li>
       <li class="breadcrumb-item active">Compare Models</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macrocast/blob/main/docs/simple/compare_models.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/simple/compare_models.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -96,18 +96,18 @@
   <section id="compare-models">
 <h1>Compare Models<a class="headerlink" href="#compare-models" title="Link to this heading"></a></h1>
 <blockquote>
-<div><p><strong>API status note (v0.5.x)</strong>: this page uses the planned mc.forecast / mc.Experiment Python facade
-shape. Those are not yet exported from macrocast.<strong>all</strong>. For working v0.5.x code, use
-macrocast.run(“recipe.yaml”), macrocast.replicate(“manifest.json”),
-the RecipeBuilder (macrocast.scaffold.builder.RecipeBuilder), or
-python -m macrocast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
+<div><p><strong>API status note (v0.5.x)</strong>: this page uses the planned mf.forecast / mf.Experiment Python facade
+shape. Those are not yet exported from macroforecast.<strong>all</strong>. For working v0.5.x code, use
+macroforecast.run(“recipe.yaml”), macroforecast.replicate(“manifest.json”),
+the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+python -m macroforecast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
 </div></blockquote>
 <p>Model comparison is a first-class operation. Changing the model does not change the information set, sample split, benchmark, preprocessing defaults, or evaluation metric.</p>
 <p>In Layer 0 Simple, this call shape selects <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_compare_methods</span></code>. Failure handling, reproducibility, and compute layout keep their Simple defaults unless you move to the Full YAML path.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macrocast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mc</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
@@ -128,12 +128,12 @@ python -m macrocast scaffold. See <a class="reference internal" href="index.html
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">compare_models()</span></code> accepts built-in model names and registered custom model names.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mc</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_model</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="o">...</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">mc</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
         <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
         <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>

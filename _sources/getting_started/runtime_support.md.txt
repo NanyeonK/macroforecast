@@ -2,12 +2,12 @@
 
 This page describes what the current core runtime executes directly, and what is currently schema-validated but delegated to future specialized runtimes.
 
-macrocast has two execution surfaces:
+macroforecast has two execution surfaces:
 
-- `macrocast.execution`: the legacy experiment engine used by older recipes and tests.
-- `macrocast.core.runtime`: the new layer-contract runtime used by L0-L8 and L1.5-L4.5 artifacts.
+- `macroforecast.execution`: the legacy experiment engine used by older recipes and tests.
+- `macroforecast.core.runtime`: the new layer-contract runtime used by L0-L8 and L1.5-L4.5 artifacts.
 
-The support matrix below refers to `macrocast.core.runtime.execute_minimal_forecast` unless stated otherwise.
+The support matrix below refers to `macroforecast.core.runtime.execute_minimal_forecast` unless stated otherwise.
 
 ## End-to-End Supported Path
 
@@ -61,7 +61,7 @@ Use legacy execution APIs or future specialized execution paths for:
 ## Minimal Core Runtime Example
 
 ```python
-from macrocast.core import execute_minimal_forecast
+from macroforecast.core import execute_minimal_forecast
 
 result = execute_minimal_forecast(open("examples/recipes/l4_minimal_ridge.yaml").read())
 

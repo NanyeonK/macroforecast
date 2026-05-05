@@ -2,7 +2,7 @@
 
 This document records the first manual review of the `sd-analog-v0.1`
 validation output. FRED-SD does not provide official t-codes. All decisions here
-are therefore macrocast research judgments and must not be represented as
+are therefore macroforecast research judgments and must not be represented as
 source-provided metadata.
 
 Review date: 2026-04-21
