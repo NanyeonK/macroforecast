@@ -80,15 +80,18 @@ class OptionDoc:
     reviewer: str = ""
 
     def is_tier1_complete(self) -> bool:
-        """``True`` when summary / description / when_to_use are non-empty
-        and at least one reference is supplied. The completeness test pins
-        every operational option to this level for v1.0 release."""
+        """``True`` when summary / description / when_to_use are non-empty,
+        at least one reference is supplied, **and** ``last_reviewed`` is
+        non-empty (machine-generated placeholders leave ``last_reviewed``
+        blank so the v1.0 gate distinguishes reviewed from un-reviewed
+        entries)."""
 
         return bool(
             self.summary.strip()
             and self.description.strip()
             and self.when_to_use.strip()
             and self.references
+            and self.last_reviewed.strip()
         )
 
     def is_tier2_complete(self) -> bool:
