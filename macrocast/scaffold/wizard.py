@@ -198,15 +198,17 @@ def _intro(input_fn: Callable[[str], str]) -> str:
 
 
 _LAYER_KEYS: dict[str, str] = {
+    # Recipe-block keys must match the runtime's canonical names in
+    # ``macrocast.core.layers.l{0..8}`` and ``l{1,2,3,4}_5``.
     "l0": "0_meta",
     "l1": "1_data",
-    "l1_5": "1_5_data_diagnostics",
+    "l1_5": "1_5_data_summary",
     "l2": "2_preprocessing",
-    "l2_5": "2_5_preprocessing_diagnostics",
+    "l2_5": "2_5_pre_post_preprocessing",
     "l3": "3_feature_engineering",
     "l3_5": "3_5_feature_diagnostics",
     "l4": "4_forecasting_model",
-    "l4_5": "4_5_model_diagnostics",
+    "l4_5": "4_5_generator_diagnostics",
     "l5": "5_evaluation",
     "l6": "6_statistical_tests",
     "l7": "7_interpretation",

@@ -1,3 +1,31 @@
+# Three-way ensemble: AR(1) benchmark vs ridge + gradient_boosting
+# combined via DMSFE weighting. End-to-end runnable on the synthetic
+# 24-row panel using only sklearn-backed families (no xgboost extra
+# dependency required). To swap in xgboost / lightgbm / catboost change
+# the ``fit_xgb.params.family`` and install the corresponding extra.
+0_meta:
+  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  leaf_config: {random_seed: 42}
+1_data:
+  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  leaf_config:
+    target: y
+    target_horizons: [1]
+    custom_panel_inline:
+      date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01, 2018-11-01, 2018-12-01, 2019-01-01, 2019-02-01, 2019-03-01, 2019-04-01, 2019-05-01, 2019-06-01, 2019-07-01, 2019-08-01, 2019-09-01, 2019-10-01, 2019-11-01, 2019-12-01]
+      y:  [1.0, 2.1, 3.0, 3.8, 5.2, 6.1, 6.9, 8.1, 9.0, 10.2, 11.0, 11.9, 13.1, 14.0, 14.8, 16.2, 17.0, 17.9, 19.1, 20.0, 20.8, 22.2, 23.0, 23.9]
+      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0]
+2_preprocessing:
+  fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
+3_feature_engineering:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
+    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
+  sinks:
+    l3_features_v1: {X_final: lag_x, y_final: y_h}
+    l3_metadata_v1: auto
 4_forecasting_model:
   nodes:
     - id: src_X
@@ -9,7 +37,7 @@
     - id: fit_ar1
       type: step
       op: fit_model
-      params: {family: ar_p, n_lag: 1, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      params: {family: ar_p, n_lag: 1, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none, min_train_size: 10}
       is_benchmark: true
       inputs: [src_y]
     - id: predict_ar1
@@ -19,7 +47,7 @@
     - id: fit_ridge
       type: step
       op: fit_model
-      params: {family: ridge, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: cv_path}
+      params: {family: ridge, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none, alpha: 1.0, min_train_size: 10}
       inputs: [src_X, src_y]
     - id: predict_ridge
       type: step
@@ -28,7 +56,7 @@
     - id: fit_xgb
       type: step
       op: fit_model
-      params: {family: xgboost, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: bayesian_optimization, tuning_objective: cv_mse, validation_method: expanding_walk_forward}
+      params: {family: gradient_boosting, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none, n_estimators: 50, max_depth: 3, learning_rate: 0.1, min_train_size: 10}
       inputs: [src_X, src_y]
     - id: predict_xgb
       type: step
@@ -43,11 +71,3 @@
     l4_forecasts_v1: ensemble
     l4_model_artifacts_v1: [fit_ar1, fit_ridge, fit_xgb]
     l4_training_metadata_v1: auto
-  leaf_config:
-    cv_path_alphas: [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0]
-    tuning_distributions:
-      learning_rate: {dist: log_uniform, low: 0.001, high: 0.3}
-      max_depth: {dist: int_uniform, low: 3, high: 10}
-      n_estimators: {dist: int_uniform, low: 50, high: 500}
-    tuning_budget: 30
-    n_splits: 5

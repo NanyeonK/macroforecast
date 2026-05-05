@@ -1,6 +1,6 @@
 metadata:
   name: l1_with_regime
-  description: Layer 1 data definition examples with regime metadata.
+  description: Layer 1 data definition example with NBER recession regime metadata.
 
 0_meta:
   fixed_axes: {}
@@ -11,21 +11,3 @@ metadata:
     regime_definition: external_nber
   leaf_config:
     target: CPIAUCSL
-
----
-metadata:
-  name: l1_estimated_markov_switching
-  description: Layer 1 estimated regime schema example.
-
-0_meta:
-  fixed_axes: {}
-
-1_data:
-  fixed_axes:
-    dataset: fred_md
-    regime_definition: estimated_markov_switching
-    regime_estimation_temporal_rule: expanding_window_per_origin
-  leaf_config:
-    target: CPIAUCSL
-    n_regimes: 2
-    transition_variable: CPIAUCSL

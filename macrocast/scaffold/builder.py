@@ -311,12 +311,37 @@ class _L8(_LayerNamespace):
 # ---------------------------------------------------------------------------
 
 class RecipeBuilder:
-    """Programmatic recipe authoring entry. Each ``b.l<N>`` returns a
-    layer namespace; calling the namespace (or its ``.preset_name()`` /
-    ``.set_axis()`` methods) populates the recipe dict in place.
+    """Programmatic recipe authoring entry.
 
-    The dict is consumed by ``.build()`` (returns a deep copy) or
-    ``.run(output_directory)`` (forwards to ``macrocast.run``).
+    Each ``b.l<N>`` attribute returns a per-layer namespace object
+    (``_L0`` / ``_L1`` / ... / ``_L8``); calling the namespace --
+    either bare (``b.l0()`` to apply defaults) or via its
+    ``.preset_name()`` / ``.set_axis()`` methods -- populates the
+    underlying recipe dict in place. The dict is consumed by
+    ``.build()`` (returns a deep copy) or ``.run(output_directory)``
+    (forwards to :func:`macrocast.run`).
+
+    **Authoring pattern -- separate calls, not fluent chain**
+
+    The namespaces deliberately mutate the shared ``_recipe`` dict
+    rather than returning ``self``, so each layer is configured in its
+    own statement::
+
+        b = RecipeBuilder()
+        b.l0(failure_policy="fail_fast")
+        b.l1.fred_md(target="INDPRO", target_horizons=[1, 3, 6])
+        b.l2.standard()
+        b.l3.lag_only(n_lag=4)
+        b.l4.fit(family="ridge", alpha=1.0).is_benchmark()
+        b.l5.standard(primary_metric="mse_reduction")
+        recipe = b.build()
+        manifest = b.run("out/")
+
+    A jQuery-style chain like ``b.l0().l1.fred_md(...).l2.standard()``
+    is intentionally **not** supported -- ``b.l0()`` returns the ``_L0``
+    namespace object (so ``.set_axis()`` / ``.set_leaf()`` keep working
+    after the bare call), not the builder. Chain through ``b`` itself
+    instead.
     """
 
     def __init__(self) -> None:

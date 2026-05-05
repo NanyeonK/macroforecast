@@ -4510,6 +4510,7 @@ def _l6_nested_results(
     pairs = _l6_pair_list({"nested_pair_strategy": sub.get("nested_pair_strategy")}, leaf, model_ids, l4_models)
     tests = ["clark_west", "enc_new", "enc_t"] if sub.get("nested_test") == "multi" else [sub.get("nested_test")]
     apply_cw = bool(sub.get("cw_adjustment", True))
+    hac_kernel = leaf.get("dependence_correction", "newey_west")
     results: dict[tuple[Any, ...], Any] = {}
     for test_name in tests:
         for large_model, small_model in pairs:

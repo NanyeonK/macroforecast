@@ -1,3 +1,29 @@
+# Minimal ridge baseline -- end-to-end runnable example.
+# Synthetic 12-row custom panel, lag-1 features, ridge fit + direct h=1
+# forecast. Used by the CLAUDE.md Quick start.
+0_meta:
+  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  leaf_config: {random_seed: 42}
+1_data:
+  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  leaf_config:
+    target: y
+    target_horizons: [1]
+    custom_panel_inline:
+      date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01, 2018-11-01, 2018-12-01]
+      y:  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+2_preprocessing:
+  fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
+3_feature_engineering:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
+    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
+  sinks:
+    l3_features_v1: {X_final: lag_x, y_final: y_h}
+    l3_metadata_v1: auto
 4_forecasting_model:
   nodes:
     - id: src_X
@@ -16,6 +42,8 @@
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
+        min_train_size: 6
+      is_benchmark: true
       inputs: [src_X, src_y]
     - id: predict_ridge
       type: step

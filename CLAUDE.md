@@ -1,7 +1,7 @@
 # macrocast
 
 > Fair, reproducible macro forecasting benchmarking package.
-> Version 0.3.0 (12-layer canonical design — see `plans/design/part1-4`).
+> Version 0.5.0 (12-layer canonical design — see `plans/design/part1-4`).
 
 ## Quick start
 

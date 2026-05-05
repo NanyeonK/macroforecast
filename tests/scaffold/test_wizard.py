@@ -134,6 +134,46 @@ def test_cli_module_is_invokable():
     assert rc == 0
 
 
+def test_cli_run_subcommand(tmp_path):
+    """``macrocast run RECIPE -o DIR`` should execute the recipe and
+    write a manifest. Uses the minimal ridge recipe that
+    ``test_examples_smoke`` already proves runnable."""
+
+    from macrocast.scaffold.cli import main
+
+    repo_root = Path(__file__).resolve().parents[2]
+    recipe = repo_root / "examples" / "recipes" / "l4_minimal_ridge.yaml"
+    out = tmp_path / "out"
+    rc = main(["run", str(recipe), "-o", str(out)])
+    assert rc == 0
+    assert (out / "manifest.json").exists()
+
+
+def test_cli_replicate_subcommand(tmp_path):
+    """``macrocast replicate MANIFEST`` should re-execute and report
+    sink-hash match."""
+
+    from macrocast.scaffold.cli import main
+
+    repo_root = Path(__file__).resolve().parents[2]
+    recipe = repo_root / "examples" / "recipes" / "l4_minimal_ridge.yaml"
+    out = tmp_path / "out"
+    assert main(["run", str(recipe), "-o", str(out)]) == 0
+    rc = main(["replicate", str(out / "manifest.json")])
+    assert rc == 0
+
+
+def test_cli_validate_subcommand(tmp_path):
+    """``macrocast validate RECIPE`` should pass on a known-good recipe."""
+
+    from macrocast.scaffold.cli import main
+
+    repo_root = Path(__file__).resolve().parents[2]
+    recipe = repo_root / "examples" / "recipes" / "l4_minimal_ridge.yaml"
+    rc = main(["validate", str(recipe)])
+    assert rc == 0
+
+
 def test_wizard_walks_every_main_layer_when_default(tmp_path):
     """PR-INFRA-6: with the v1.0 default, the wizard walks every main
     layer L0..L8. The user can answer with empty strings to accept
@@ -196,7 +236,7 @@ def test_wizard_includes_diagnostic_layers_when_opt_in(tmp_path):
     )
     recipe = builder.build()
     for diag_key in (
-        "1_5_data_diagnostics", "2_5_preprocessing_diagnostics",
-        "3_5_feature_diagnostics", "4_5_model_diagnostics",
+        "1_5_data_summary", "2_5_pre_post_preprocessing",
+        "3_5_feature_diagnostics", "4_5_generator_diagnostics",
     ):
         assert diag_key in recipe, f"missing diagnostic block: {diag_key}"
