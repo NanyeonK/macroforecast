@@ -1,0 +1,976 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED-SD Inferred T-Code Review v0.1 &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Simple Docs" href="planned_simple_api/index.html" />
+    <link rel="prev" title="FRED-SD Inferred T-Codes" href="fred_sd_inferred_tcodes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">For researchers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fred_datasets/index.html">FRED datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_transform_policy.html">FRED-SD Transform Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FRED-SD Inferred T-Code Review v0.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="planned_simple_api/index.html">Simple Docs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">For researchers</a></li>
+      <li class="breadcrumb-item active">FRED-SD Inferred T-Code Review v0.1</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/fred_sd_inferred_tcode_review_v0_1.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fred-sd-inferred-t-code-review-v0-1">
+<h1>FRED-SD Inferred T-Code Review v0.1<a class="headerlink" href="#fred-sd-inferred-t-code-review-v0-1" title="Link to this heading"></a></h1>
+<p>This document records the first manual review of the <code class="docutils literal notranslate"><span class="pre">sd-analog-v0.1</span></code>
+validation output. FRED-SD does not provide official t-codes. All decisions here
+are therefore macroforecast research judgments and must not be represented as
+source-provided metadata.</p>
+<p>Review date: 2026-04-21</p>
+<p>Validation command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tools/research/build_sd_tcode_validation.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sd-workbook<span class="w"> </span>/tmp/fred_sd_series_2026_03_validation.xlsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--md-csv<span class="w"> </span>/tmp/fred_md_current_validation.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--qd-csv<span class="w"> </span>/tmp/fred_qd_current_validation.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>/tmp/macrocast_sd_tcode_validation_check<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sample-start<span class="w"> </span><span class="m">2005</span>-01<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sample-end<span class="w"> </span><span class="m">2025</span>-12
+</pre></div>
+</div>
+<p>Generated artifacts:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_check/sd_tcode_candidate_results.csv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_check/sd_tcode_selected_map.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_check/sd_tcode_report.md</span></code></p></li>
+</ul>
+<p>Diagnostic-complete rerun after this review:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tools/research/build_sd_tcode_validation.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sd-workbook<span class="w"> </span>/tmp/fred_sd_series_2026_03_validation.xlsx<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--md-csv<span class="w"> </span>/tmp/fred_md_current_validation.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--qd-csv<span class="w"> </span>/tmp/fred_qd_current_validation.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>/tmp/macrocast_sd_tcode_validation_rigorous<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sample-start<span class="w"> </span><span class="m">2005</span>-01<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sample-end<span class="w"> </span><span class="m">2025</span>-12
+</pre></div>
+</div>
+<p>Additional generated artifacts:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_rigorous/sd_tcode_candidate_results.csv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_rigorous/sd_tcode_selected_map.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_rigorous/sd_tcode_report.md</span></code></p></li>
+</ul>
+<p>The rigorous report now shows every computed diagnostic for both best candidates
+and all 66 candidate-code/analog rows. The CSV and selected-map JSON use the
+same diagnostic fields, so the Markdown report is no longer only a <code class="docutils literal notranslate"><span class="pre">corr/score</span></code>
+summary.</p>
+<section id="review-rules">
+<h2>Review Rules<a class="headerlink" href="#review-rules" title="Link to this heading"></a></h2>
+<p>The score is only a screening device. Manual review overrides the score when
+the analog is conceptually weak.</p>
+<p>Review labels:</p>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">tentative_accept</span></code></dt><dd><p>Evidence is strong enough to use in an opt-in inferred map after one more
+full-report pass.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">provisional_accept</span></code></dt><dd><p>Evidence favors the code, but the analog is not direct enough for a default
+or high-confidence label.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">manual_review</span></code></dt><dd><p>Diagnostics and analog priors conflict. Do not select without targeted
+variable-level investigation.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">frequency_specific</span></code></dt><dd><p>A single global SD t-code would hide a real MD/QD frequency conflict. Select
+the inferred code from the same-frequency MD/QD analog used by the experiment.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">frequency_specific_provisional</span></code></dt><dd><p>The frequency source is clear, but diagnostics still require an explicit
+caution in the inferred-map metadata.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">semantic_review</span></code></dt><dd><p>Statistics are acceptable but the analog changes economic object, typically
+employment analogs used for sector output/GSP variables.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reject</span></code></dt><dd><p>No reliable inferred t-code should be used in v0.1.</p>
+</dd>
+</dl>
+</section>
+<section id="pipeline-checks">
+<h2>Pipeline Checks<a class="headerlink" href="#pipeline-checks" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Parser integrity: fixed. FRED-QD current CSV contains a <code class="docutils literal notranslate"><span class="pre">factors</span></code> row before
+<code class="docutils literal notranslate"><span class="pre">transform</span></code>; parser now finds the explicit <code class="docutils literal notranslate"><span class="pre">transform</span></code> row and ignores
+<code class="docutils literal notranslate"><span class="pre">factors</span></code>.</p></li>
+<li><p>Frequency/date alignment: fixed for validation. QD comparisons use quarterly
+period alignment, so quarter-start SD dates and quarter-end QD dates overlap.</p></li>
+<li><p>Official status: unchanged. MD/QD t-codes are official source metadata;
+FRED-SD inferred t-codes are not official.</p></li>
+<li><p>Diagnostic visibility: fixed. The rigorous report includes aggregate
+Pearson/Spearman correlations and p-values, rolling correlations, state-level
+correlation distribution, state stationarity pass rates, aggregate and analog
+stationarity flags, ACF distance, low-frequency ratios, outlier rates,
+volatility ratio, missing rate, and state coverage.</p></li>
+</ol>
+</section>
+<section id="summary-decision-table">
+<h2>Summary Decision Table<a class="headerlink" href="#summary-decision-table" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>SD variable</p></th>
+<th class="head text-right"><p>reviewed code</p></th>
+<th class="head"><p>best analog</p></th>
+<th class="head"><p>prior</p></th>
+<th class="head text-right"><p>corr</p></th>
+<th class="head text-right"><p>score</p></th>
+<th class="head"><p>decision</p></th>
+<th class="head"><p>reason</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BPPRIVSA</span></code></p></td>
+<td class="text-right"><p>M:4, Q:5</p></td>
+<td><p>M <code class="docutils literal notranslate"><span class="pre">fred_md:PERMIT</span></code>; Q <code class="docutils literal notranslate"><span class="pre">fred_qd:PERMIT</span></code></p></td>
+<td><p>medium</p></td>
+<td class="text-right"><p>M 0.981; Q 0.727</p></td>
+<td class="text-right"><p>M 0.708; Q 0.842</p></td>
+<td><p>frequency_specific</p></td>
+<td><p>Follow the same-frequency permits analog: MD monthly permits are official code 4, QD quarterly permits are official code 5.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONS</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:USCONS</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.967</p></td>
+<td class="text-right"><p>0.894</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct construction employment analog; code agrees with MD/QD.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONSTNQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USCONS</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.786</p></td>
+<td class="text-right"><p>0.768</p></td>
+<td><p>semantic_review</p></td>
+<td><p>Code 5 is statistically favored, but GSP/output is compared to employment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EXPORTS</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:EXPGSC1</span></code></p></td>
+<td><p>medium</p></td>
+<td class="text-right"><p>0.427</p></td>
+<td class="text-right"><p>0.705</p></td>
+<td><p>provisional_accept</p></td>
+<td><p>Direct trade concept, but moderate correlation and QD-only analog.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FIRE</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USFIRE</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.913</p></td>
+<td class="text-right"><p>0.876</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct employment analog; MD and QD both support code 5.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FIRENQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:USFIRE</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.187</p></td>
+<td class="text-right"><p>0.636</p></td>
+<td><p>reject</p></td>
+<td><p>Output/GSP vs employment mismatch and weak correlation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GOVNQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USGOVT</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.803</p></td>
+<td class="text-right"><p>0.847</p></td>
+<td><p>semantic_review</p></td>
+<td><p>Strong diagnostics but output/GSP is compared to employment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GOVT</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:USGOVT</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.923</p></td>
+<td class="text-right"><p>0.945</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct government employment analog; MD/QD support code 5.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ICLAIMS</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:CLAIMSx</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.968</p></td>
+<td class="text-right"><p>0.964</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct claims analog; strong diagnostics after MD monthly alignment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IMPORTS</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:IMPGSC1</span></code></p></td>
+<td><p>medium</p></td>
+<td class="text-right"><p>0.591</p></td>
+<td class="text-right"><p>0.817</p></td>
+<td><p>provisional_accept</p></td>
+<td><p>Direct trade concept, but QD-only analog and moderate overlap/correlation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">INFO</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USINFO</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.927</p></td>
+<td class="text-right"><p>0.931</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct information employment analog.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INFONQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USINFO</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.351</p></td>
+<td class="text-right"><p>0.709</p></td>
+<td><p>reject</p></td>
+<td><p>Output/GSP vs employment mismatch and weak correlation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LF</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:CLF16OV</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.770</p></td>
+<td class="text-right"><p>0.877</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct labor-force analog; code agrees with MD.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MANNQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:MANEMP</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.698</p></td>
+<td class="text-right"><p>0.845</p></td>
+<td><p>semantic_review</p></td>
+<td><p>Manufacturing GSP/output compared to manufacturing employment.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MFG</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:MANEMP</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.983</p></td>
+<td class="text-right"><p>0.941</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct manufacturing employment analog.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFGHRS</span></code></p></td>
+<td class="text-right"><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:AWHMAN</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.931</p></td>
+<td class="text-right"><p>0.771</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct hours analog. Code 1 preserves hours level; code 2 improves stationarity but loses analog semantics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MINNG</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USMINE</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.865</p></td>
+<td class="text-right"><p>0.886</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct mining employment analog; some missingness but enough state coverage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NA</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:PAYEMS</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.995</p></td>
+<td class="text-right"><p>0.983</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct total nonfarm employment analog; strongest evidence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NATURNQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USMINE</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.374</p></td>
+<td class="text-right"><p>0.694</p></td>
+<td><p>reject</p></td>
+<td><p>Natural resources GSP has no direct national output analog; mining employment is too weak.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:GDPC1</span></code></p></td>
+<td><p>medium</p></td>
+<td class="text-right"><p>0.944</p></td>
+<td class="text-right"><p>0.918</p></td>
+<td><p>provisional_accept</p></td>
+<td><p>Strong state GSP to national GDP evidence; medium because state aggregate and national GDP are not identical objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OTOT</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:DPIC96</span></code></p></td>
+<td><p>medium</p></td>
+<td class="text-right"><p>0.911</p></td>
+<td class="text-right"><p>0.936</p></td>
+<td><p>provisional_accept</p></td>
+<td><p>Income concept is close and diagnostics are strong; definitions still differ.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PARTRATE</span></code></p></td>
+<td class="text-right"><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:CIVPART</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.849</p></td>
+<td class="text-right"><p>0.893</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct participation-rate analog; code 2 clearly beats level.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PSERV</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USPBS</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.948</p></td>
+<td class="text-right"><p>0.941</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct professional/business services employment analog.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PSERVNQGSP</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USSERV</span></code></p></td>
+<td><p>low</p></td>
+<td class="text-right"><p>0.921</p></td>
+<td class="text-right"><p>0.940</p></td>
+<td><p>semantic_review</p></td>
+<td><p>Very strong diagnostics, but sector GSP/output is compared to service employment.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RENTS</span></code></p></td>
+<td class="text-right"><p>none</p></td>
+<td><p>none</p></td>
+<td><p>reject</p></td>
+<td class="text-right"><p>none</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td><p>reject</p></td>
+<td><p>No sufficiently direct MD/QD analog.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">STHPI</span></code></p></td>
+<td class="text-right"><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_qd:USSTHPI</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.903</p></td>
+<td class="text-right"><p>0.694</p></td>
+<td><p>frequency_specific_provisional</p></td>
+<td><p>STHPI is a quarterly/source-frequency HPI object; use QD <code class="docutils literal notranslate"><span class="pre">USSTHPI</span></code> code 5 before any monthly interpolation, with stationarity caution.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UR</span></code></p></td>
+<td class="text-right"><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fred_md:UNRATE</span></code></p></td>
+<td><p>high</p></td>
+<td class="text-right"><p>0.983</p></td>
+<td class="text-right"><p>0.977</p></td>
+<td><p>tentative_accept</p></td>
+<td><p>Direct unemployment-rate analog; MD/QD both support code 2.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UTILNQGSP</span></code></p></td>
+<td class="text-right"><p>none</p></td>
+<td><p>none</p></td>
+<td><p>reject</p></td>
+<td class="text-right"><p>none</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td><p>reject</p></td>
+<td><p>No sufficiently direct MD/QD utility-sector output analog.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="targeted-diagnostic-audit">
+<h2>Targeted Diagnostic Audit<a class="headerlink" href="#targeted-diagnostic-audit" title="Link to this heading"></a></h2>
+<p>The rows below show every diagnostic field for the frequency-conflict variables
+that cannot be judged from <code class="docutils literal notranslate"><span class="pre">corr/score</span></code> alone. The full 66-row table is in
+<code class="docutils literal notranslate"><span class="pre">/tmp/macrocast_sd_tcode_validation_rigorous/sd_tcode_report.md</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>sd</p></th>
+<th class="head text-right"><p>code</p></th>
+<th class="head"><p>analog</p></th>
+<th class="head text-right"><p>analog code</p></th>
+<th class="head text-right"><p>score</p></th>
+<th class="head text-right"><p>n</p></th>
+<th class="head text-right"><p>pearson</p></th>
+<th class="head text-right"><p>pearson p</p></th>
+<th class="head text-right"><p>spearman</p></th>
+<th class="head text-right"><p>spearman p</p></th>
+<th class="head text-right"><p>roll mean</p></th>
+<th class="head text-right"><p>roll min</p></th>
+<th class="head text-right"><p>state med</p></th>
+<th class="head text-right"><p>state iqr</p></th>
+<th class="head text-right"><p>state pos</p></th>
+<th class="head text-right"><p>n state</p></th>
+<th class="head text-right"><p>adf rate</p></th>
+<th class="head text-right"><p>kpss rate</p></th>
+<th class="head"><p>sd adf</p></th>
+<th class="head"><p>sd kpss</p></th>
+<th class="head"><p>analog adf</p></th>
+<th class="head"><p>analog kpss</p></th>
+<th class="head text-right"><p>acf dist</p></th>
+<th class="head text-right"><p>sd lf</p></th>
+<th class="head text-right"><p>analog lf</p></th>
+<th class="head text-right"><p>lf gap</p></th>
+<th class="head text-right"><p>sd out</p></th>
+<th class="head text-right"><p>analog out</p></th>
+<th class="head text-right"><p>vol ratio</p></th>
+<th class="head text-right"><p>missing</p></th>
+<th class="head text-right"><p>states</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>4</p></td>
+<td><p>fred_md:HOUST</p></td>
+<td class="text-right"><p>4</p></td>
+<td class="text-right"><p>0.708</p></td>
+<td class="text-right"><p>248</p></td>
+<td class="text-right"><p>0.975</p></td>
+<td class="text-right"><p>2.53e-162</p></td>
+<td class="text-right"><p>0.961</p></td>
+<td class="text-right"><p>7.12e-140</p></td>
+<td class="text-right"><p>0.625</p></td>
+<td class="text-right"><p>-0.115</p></td>
+<td class="text-right"><p>0.806</p></td>
+<td class="text-right"><p>0.197</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.196</p></td>
+<td class="text-right"><p>0.431</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td class="text-right"><p>0.014</p></td>
+<td class="text-right"><p>0.953</p></td>
+<td class="text-right"><p>0.958</p></td>
+<td class="text-right"><p>0.004</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.871</p></td>
+<td class="text-right"><p>0.003</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-odd"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>4</p></td>
+<td><p>fred_md:PERMIT</p></td>
+<td class="text-right"><p>4</p></td>
+<td class="text-right"><p>0.708</p></td>
+<td class="text-right"><p>248</p></td>
+<td class="text-right"><p>0.981</p></td>
+<td class="text-right"><p>4.69e-178</p></td>
+<td class="text-right"><p>0.970</p></td>
+<td class="text-right"><p>3.42e-153</p></td>
+<td class="text-right"><p>0.735</p></td>
+<td class="text-right"><p>0.017</p></td>
+<td class="text-right"><p>0.801</p></td>
+<td class="text-right"><p>0.210</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.196</p></td>
+<td class="text-right"><p>0.431</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td class="text-right"><p>0.028</p></td>
+<td class="text-right"><p>0.953</p></td>
+<td class="text-right"><p>0.975</p></td>
+<td class="text-right"><p>0.022</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.859</p></td>
+<td class="text-right"><p>0.003</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-even"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>4</p></td>
+<td><p>fred_qd:HOUST</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0.278</p></td>
+<td class="text-right"><p>82</p></td>
+<td class="text-right"><p>0.051</p></td>
+<td class="text-right"><p>0.647</p></td>
+<td class="text-right"><p>-0.079</p></td>
+<td class="text-right"><p>0.483</p></td>
+<td class="text-right"><p>0.239</p></td>
+<td class="text-right"><p>-0.616</p></td>
+<td class="text-right"><p>0.043</p></td>
+<td class="text-right"><p>0.120</p></td>
+<td class="text-right"><p>0.608</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.196</p></td>
+<td class="text-right"><p>0.431</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>yes</p></td>
+<td class="text-right"><p>0.645</p></td>
+<td class="text-right"><p>0.823</p></td>
+<td class="text-right"><p>0.210</p></td>
+<td class="text-right"><p>0.613</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>3.560</p></td>
+<td class="text-right"><p>0.003</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-odd"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>4</p></td>
+<td><p>fred_qd:PERMIT</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0.281</p></td>
+<td class="text-right"><p>82</p></td>
+<td class="text-right"><p>0.033</p></td>
+<td class="text-right"><p>0.772</p></td>
+<td class="text-right"><p>-0.117</p></td>
+<td class="text-right"><p>0.295</p></td>
+<td class="text-right"><p>0.304</p></td>
+<td class="text-right"><p>-0.917</p></td>
+<td class="text-right"><p>0.024</p></td>
+<td class="text-right"><p>0.159</p></td>
+<td class="text-right"><p>0.549</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.196</p></td>
+<td class="text-right"><p>0.431</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>yes</p></td>
+<td class="text-right"><p>0.600</p></td>
+<td class="text-right"><p>0.823</p></td>
+<td class="text-right"><p>0.261</p></td>
+<td class="text-right"><p>0.562</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>3.926</p></td>
+<td class="text-right"><p>0.003</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-even"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>5</p></td>
+<td><p>fred_md:HOUST</p></td>
+<td class="text-right"><p>4</p></td>
+<td class="text-right"><p>0.446</p></td>
+<td class="text-right"><p>247</p></td>
+<td class="text-right"><p>0.017</p></td>
+<td class="text-right"><p>0.791</p></td>
+<td class="text-right"><p>0.004</p></td>
+<td class="text-right"><p>0.945</p></td>
+<td class="text-right"><p>0.066</p></td>
+<td class="text-right"><p>-0.324</p></td>
+<td class="text-right"><p>-0.001</p></td>
+<td class="text-right"><p>0.023</p></td>
+<td class="text-right"><p>0.490</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td class="text-right"><p>1.004</p></td>
+<td class="text-right"><p>0.043</p></td>
+<td class="text-right"><p>0.957</p></td>
+<td class="text-right"><p>0.915</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.233</p></td>
+<td class="text-right"><p>0.008</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-odd"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>5</p></td>
+<td><p>fred_md:PERMIT</p></td>
+<td class="text-right"><p>4</p></td>
+<td class="text-right"><p>0.449</p></td>
+<td class="text-right"><p>247</p></td>
+<td class="text-right"><p>0.027</p></td>
+<td class="text-right"><p>0.677</p></td>
+<td class="text-right"><p>0.012</p></td>
+<td class="text-right"><p>0.851</p></td>
+<td class="text-right"><p>0.109</p></td>
+<td class="text-right"><p>-0.304</p></td>
+<td class="text-right"><p>0.007</p></td>
+<td class="text-right"><p>0.015</p></td>
+<td class="text-right"><p>0.725</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td class="text-right"><p>1.020</p></td>
+<td class="text-right"><p>0.043</p></td>
+<td class="text-right"><p>0.975</p></td>
+<td class="text-right"><p>0.932</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.229</p></td>
+<td class="text-right"><p>0.008</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-even"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>5</p></td>
+<td><p>fred_qd:HOUST</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0.761</p></td>
+<td class="text-right"><p>82</p></td>
+<td class="text-right"><p>0.470</p></td>
+<td class="text-right"><p>8.56e-06</p></td>
+<td class="text-right"><p>0.370</p></td>
+<td class="text-right"><p>6.14e-04</p></td>
+<td class="text-right"><p>0.218</p></td>
+<td class="text-right"><p>-0.684</p></td>
+<td class="text-right"><p>0.180</p></td>
+<td class="text-right"><p>0.163</p></td>
+<td class="text-right"><p>0.922</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>yes</p></td>
+<td><p>yes</p></td>
+<td class="text-right"><p>0.130</p></td>
+<td class="text-right"><p>0.155</p></td>
+<td class="text-right"><p>0.210</p></td>
+<td class="text-right"><p>0.055</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.381</p></td>
+<td class="text-right"><p>0.008</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-odd"><td><p>BPPRIVSA</p></td>
+<td class="text-right"><p>5</p></td>
+<td><p>fred_qd:PERMIT</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0.842</p></td>
+<td class="text-right"><p>82</p></td>
+<td class="text-right"><p>0.727</p></td>
+<td class="text-right"><p>1.05e-14</p></td>
+<td class="text-right"><p>0.663</p></td>
+<td class="text-right"><p>1.19e-11</p></td>
+<td class="text-right"><p>0.573</p></td>
+<td class="text-right"><p>-0.826</p></td>
+<td class="text-right"><p>0.263</p></td>
+<td class="text-right"><p>0.201</p></td>
+<td class="text-right"><p>1.000</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td class="text-right"><p>0.980</p></td>
+<td><p>no</p></td>
+<td><p>yes</p></td>
+<td><p>yes</p></td>
+<td><p>yes</p></td>
+<td class="text-right"><p>0.177</p></td>
+<td class="text-right"><p>0.155</p></td>
+<td class="text-right"><p>0.261</p></td>
+<td class="text-right"><p>0.106</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.420</p></td>
+<td class="text-right"><p>0.008</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+<tr class="row-even"><td><p>STHPI</p></td>
+<td class="text-right"><p>5</p></td>
+<td><p>fred_qd:USSTHPI</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0.694</p></td>
+<td class="text-right"><p>81</p></td>
+<td class="text-right"><p>0.903</p></td>
+<td class="text-right"><p>8.44e-31</p></td>
+<td class="text-right"><p>0.752</p></td>
+<td class="text-right"><p>6.07e-16</p></td>
+<td class="text-right"><p>0.652</p></td>
+<td class="text-right"><p>-0.385</p></td>
+<td class="text-right"><p>0.804</p></td>
+<td class="text-right"><p>0.089</p></td>
+<td class="text-right"><p>1.000</p></td>
+<td class="text-right"><p>51</p></td>
+<td class="text-right"><p>0.137</p></td>
+<td class="text-right"><p>0.373</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td><p>no</p></td>
+<td class="text-right"><p>0.166</p></td>
+<td class="text-right"><p>0.598</p></td>
+<td class="text-right"><p>0.471</p></td>
+<td class="text-right"><p>0.127</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.000</p></td>
+<td class="text-right"><p>0.912</p></td>
+<td class="text-right"><p>0.012</p></td>
+<td class="text-right"><p>51</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="accepted-direct-analogs">
+<h2>Accepted Direct Analogs<a class="headerlink" href="#accepted-direct-analogs" title="Link to this heading"></a></h2>
+<p>These variables have direct national analogs and diagnostics consistent with the
+candidate code. They are candidates for an opt-in inferred map, pending one more
+review of the generated CSV:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CONS=5
+FIRE=5
+GOVT=5
+ICLAIMS=5
+INFO=5
+LF=5
+MFG=5
+MFGHRS=1
+MINNG=5
+NA=5
+PARTRATE=2
+PSERV=5
+UR=2
+</pre></div>
+</div>
+<p>Notes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MFGHRS=1</span></code> is accepted on analog semantics. Code 2 passes stationarity better,
+but the MD/QD official analog <code class="docutils literal notranslate"><span class="pre">AWHMAN</span></code> uses code 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PARTRATE=2</span></code> is accepted because code 2 dominates level and matches
+<code class="docutils literal notranslate"><span class="pre">CIVPART</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ICLAIMS=5</span></code> has shorter original state coverage, but after period alignment it
+has enough monthly overlap and very strong diagnostics.</p></li>
+</ul>
+</section>
+<section id="provisional-medium-analogs">
+<h2>Provisional Medium Analogs<a class="headerlink" href="#provisional-medium-analogs" title="Link to this heading"></a></h2>
+<p>These are plausible but should not be labeled high confidence:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>EXPORTS=5
+IMPORTS=5
+NQGSP=5
+OTOT=5
+</pre></div>
+</div>
+<p>Reasons:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">EXPORTS</span></code> and <code class="docutils literal notranslate"><span class="pre">IMPORTS</span></code> have direct national trade analogs, but the validation
+evidence is moderate and QD-only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NQGSP</span></code> has strong evidence against <code class="docutils literal notranslate"><span class="pre">GDPC1</span></code>, but state GSP aggregate and
+national GDP are not source-identical.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTOT</span></code> has strong evidence against income analogs, but state <code class="docutils literal notranslate"><span class="pre">OTOT</span></code>, RPI, and
+DPIC96 definitions are not identical.</p></li>
+</ul>
+</section>
+<section id="frequency-specific-decisions">
+<h2>Frequency-Specific Decisions<a class="headerlink" href="#frequency-specific-decisions" title="Link to this heading"></a></h2>
+<dl class="simple myst">
+<dt><code class="docutils literal notranslate"><span class="pre">BPPRIVSA</span></code></dt><dd><p>Use same-frequency analogs, not one global SD code.
+In a monthly experiment (<code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code> or SD monthly source use), follow
+MD monthly <code class="docutils literal notranslate"><span class="pre">PERMIT</span></code>/<code class="docutils literal notranslate"><span class="pre">HOUST</span></code>, whose official code is 4. This preserves the
+level/log-permits convention and has very high monthly co-movement
+(<code class="docutils literal notranslate"><span class="pre">PERMIT</span></code> Pearson 0.981, Spearman 0.970). In a quarterly experiment
+(<code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code>), follow QD <code class="docutils literal notranslate"><span class="pre">PERMIT</span></code>, whose official code is 5. The
+quarterly code-5 row is the best quarterly match and passes the stationarity
+screen (<code class="docutils literal notranslate"><span class="pre">adf_pass_rate=0.980</span></code>, <code class="docutils literal notranslate"><span class="pre">kpss_pass_rate=0.980</span></code>). The low rolling
+minimum warns that this is not a high-confidence economic identity; it is a
+frequency-policy decision anchored to same-frequency MD/QD metadata.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">STHPI</span></code></dt><dd><p>Use QD <code class="docutils literal notranslate"><span class="pre">USSTHPI</span></code> code 5 as the source-frequency analog. STHPI is a house
+price index object with a direct QD analog and no MD same-concept monthly
+analog in the current candidate set. If an experiment later interpolates SD
+STHPI to monthly, the inferred transform should still be justified by the
+quarterly source-frequency QD analog before interpolation. Diagnostics support
+the analog relation (<code class="docutils literal notranslate"><span class="pre">Pearson=0.903</span></code>, <code class="docutils literal notranslate"><span class="pre">Spearman=0.752</span></code>, state median
+correlation 0.804), but stationarity is weak (<code class="docutils literal notranslate"><span class="pre">adf_pass_rate=0.137</span></code>,
+<code class="docutils literal notranslate"><span class="pre">kpss_pass_rate=0.373</span></code>, aggregate ADF/KPSS both fail). Therefore mark this as
+<code class="docutils literal notranslate"><span class="pre">frequency_specific_provisional</span></code>, not high-confidence acceptance.</p>
+</dd>
+</dl>
+</section>
+<section id="semantic-review-group">
+<h2>Semantic Review Group<a class="headerlink" href="#semantic-review-group" title="Link to this heading"></a></h2>
+<p>These variables score well under code 5 but use employment analogs for GSP/output
+series:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CONSTNQGSP=5
+GOVNQGSP=5
+MANNQGSP=5
+PSERVNQGSP=5
+</pre></div>
+</div>
+<p>Interpretation:</p>
+<ul class="simple">
+<li><p>The statistics say code 5 often produces plausible transformed dynamics.</p></li>
+<li><p>The economic analog is not direct enough for a high-confidence t-code.</p></li>
+<li><p>These should be grouped under a separate <code class="docutils literal notranslate"><span class="pre">sector_output_inferred</span></code> rule if we
+keep them.</p></li>
+<li><p>They should not inherit employment confidence labels.</p></li>
+</ul>
+</section>
+<section id="rejected-for-v0-1">
+<h2>Rejected For v0.1<a class="headerlink" href="#rejected-for-v0-1" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>FIRENQGSP
+INFONQGSP
+NATURNQGSP
+RENTS
+UTILNQGSP
+</pre></div>
+</div>
+<p>Reasons:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">FIRENQGSP</span></code>, <code class="docutils literal notranslate"><span class="pre">INFONQGSP</span></code>, and <code class="docutils literal notranslate"><span class="pre">NATURNQGSP</span></code> have weak or conceptually poor
+analog evidence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RENTS</span></code> has no direct MD/QD analog even though code 5 improves stationarity.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UTILNQGSP</span></code> has no direct MD/QD utility-sector output analog.</p></li>
+</ul>
+</section>
+<section id="proposed-v0-1-output-map">
+<h2>Proposed v0.1 Output Map<a class="headerlink" href="#proposed-v0-1-output-map" title="Link to this heading"></a></h2>
+<p>The next selected-map artifact should separate decision status from selected
+code:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;map_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sd-analog-v0.1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;official&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;macrocast_inferred_from_md_qd_analogs&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;variables&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;NA&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tentative_accept&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;UR&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tentative_accept&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;NQGSP&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;provisional_accept&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;BPPRIVSA&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;code_by_frequency&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;M&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;Q&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;frequency_specific&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Follow same-frequency MD/QD permits analogs.&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;STHPI&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;frequency_specific_provisional&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source_frequency&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Q&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use QD USSTHPI code before any monthly interpolation.&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;RENTS&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;reject&quot;</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Runtime must not consume <code class="docutils literal notranslate"><span class="pre">manual_review</span></code>, <code class="docutils literal notranslate"><span class="pre">semantic_review</span></code>, or <code class="docutils literal notranslate"><span class="pre">reject</span></code>
+variables as if they were accepted. Runtime must also treat
+<code class="docutils literal notranslate"><span class="pre">frequency_specific</span></code> entries as context-dependent rules rather than scalar
+global t-codes.</p>
+</section>
+<section id="next-actions">
+<h2>Next Actions<a class="headerlink" href="#next-actions" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Add reviewed status metadata to the selected-map artifact, not only
+score-ranked candidates.</p></li>
+<li><p>Add runtime support for opt-in frequency-specific SD inferred maps.</p></li>
+<li><p>Add targeted plots for <code class="docutils literal notranslate"><span class="pre">STHPI</span></code>, including transformed aggregate, national
+analog, ACF, and rolling variance.</p></li>
+<li><p>Search for better national/industry output analogs for sector GSP variables.</p></li>
+<li><p>Keep default runtime unchanged: MD/QD official t-codes, SD source values.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fred_sd_inferred_tcodes.html" class="btn btn-neutral float-left" title="FRED-SD Inferred T-Codes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="planned_simple_api/index.html" class="btn btn-neutral float-right" title="Simple Docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

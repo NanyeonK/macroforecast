@@ -1,0 +1,158 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reproducibility &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Terminology" href="terminology.html" />
+    <link rel="prev" title="Artifacts And Manifest" href="artifacts_and_manifest.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Architecture</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="layer0/index.html">4.0 Layer 0: Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer8/index.html">Layer 8: Output / Provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="foundation.html">Foundation Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="recipe_layers.html">Recipe Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminology.html">Terminology</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Architecture</a></li>
+      <li class="breadcrumb-item active">Reproducibility</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/architecture/reproducibility.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="reproducibility">
+<h1>Reproducibility<a class="headerlink" href="#reproducibility" title="Link to this heading"></a></h1>
+<p>Reproducibility is a first-class package feature, not an afterthought.</p>
+<p>This page should eventually document:</p>
+<ul class="simple">
+<li><p>recipe export</p></li>
+<li><p>default profile versioning</p></li>
+<li><p>run identifiers</p></li>
+<li><p>sweep variant identifiers</p></li>
+<li><p>raw data cache and manifest behavior</p></li>
+<li><p>seeds and deterministic modes</p></li>
+<li><p>optional dependency versions</p></li>
+<li><p>custom extension provenance</p></li>
+</ul>
+<p>Design requirements:</p>
+<ul class="simple">
+<li><p>an <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> can be exported to a resolved recipe</p></li>
+<li><p>a run records the default profile and every override</p></li>
+<li><p>a sweep records every variant</p></li>
+<li><p>custom methods are named in the manifest</p></li>
+<li><p>artifacts are sufficient to audit what was compared</p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="artifacts_and_manifest.html" class="btn btn-neutral float-left" title="Artifacts And Manifest" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="terminology.html" class="btn btn-neutral float-right" title="Terminology" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Docs &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Quickstart" href="quickstart.html" />
+    <link rel="prev" title="FRED-SD Inferred T-Code Review v0.1" href="../fred_sd_inferred_tcode_review_v0_1.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">For researchers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_datasets/index.html">FRED datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_transform_policy.html">FRED-SD Transform Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Simple Docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="run_experiment.html">Run An Experiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compare_models.html">Compare Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd.html">FRED-SD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="read_results.html">Read Results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">For researchers</a></li>
+      <li class="breadcrumb-item active">Simple Docs</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/planned_simple_api/index.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="simple-docs">
+<h1>Simple Docs<a class="headerlink" href="#simple-docs" title="Link to this heading"></a></h1>
+<p>This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.</p>
+<blockquote>
+<div><p><strong>API status note (current)</strong>: the <code class="docutils literal notranslate"><span class="pre">mf.forecast(...)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mf.Experiment(...).compare_models([...]).run()</span></code> forms shown
+throughout this Simple track are the <strong>planned shape</strong> for v0.6+.
+They are not yet exported from <code class="docutils literal notranslate"><span class="pre">macroforecast.__all__</span></code>.</p>
+<p>The current canonical entry surface is:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.run(&quot;recipe.yaml&quot;)</span></code> – run a YAML recipe end-to-end.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(&quot;manifest.json&quot;)</span></code> – bit-exact replicate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.scaffold.builder.RecipeBuilder</span></code> – build recipes
+programmatically (<code class="docutils literal notranslate"><span class="pre">b.l0(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">b.l1(...)</span></code>, …, <code class="docutils literal notranslate"><span class="pre">b.to_yaml()</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">macroforecast</span> <span class="pre">scaffold</span></code> – interactive recipe wizard.</p></li>
+</ul>
+<p>See the <strong>Detail (code): Full</strong> track for working examples that
+match the current YAML runtime exactly. The Simple-track snippets below
+describe the intended look-and-feel; treat them as a design preview
+until the wrapper API ships.</p>
+</div></blockquote>
+<p>The simple API is organized around <code class="docutils literal notranslate"><span class="pre">forecast</span></code> and <code class="docutils literal notranslate"><span class="pre">Experiment</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+    <span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For comparisons and custom methods, use <code class="docutils literal notranslate"><span class="pre">Experiment</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The MVP contract is default-first: specify the forecasting question, then sweep only choices you care about. All resolved defaults are written to artifacts and manifests.</p>
+<p>At Layer 0, Simple exposes only <strong>Study Scope</strong>. The shape of the call picks it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">forecast()</span></code> or <code class="docutils literal notranslate"><span class="pre">Experiment.run()</span></code> with one target and one method path -&gt; <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_one_method</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Experiment.compare_models([...])</span></code> with one target -&gt; <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_compare_methods</span></code></p></li>
+</ul>
+<p>The other Layer 0 execution-policy axes are filled from defaults:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span> <span class="pre">=</span> <span class="pre">fail_fast</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span> <span class="pre">=</span> <span class="pre">seeded_reproducible</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">serial</span></code></p></li>
+</ul>
+<p>Use Detail (code): Full when those policies should be reviewed or changed directly.</p>
+<p>MVP public shapes:</p>
+<ul class="simple">
+<li><p>one default run</p></li>
+<li><p>one model-comparison run</p></li>
+<li><p>fixed custom model, custom preprocessor, target transformer, or FRED-SD inferred/empirical t-code policy inside those runs</p></li>
+</ul>
+<p>The simple API intentionally exposes only direct comparison-cell and model-comparison routes. Advanced Layer 0 routes are present in the full grammar, but are not surfaced here until their public result contracts are fixed:</p>
+<ul class="simple">
+<li><p>preprocessing sweeps</p></li>
+<li><p>model x feature or model x preprocessing grids</p></li>
+<li><p>ablations</p></li>
+<li><p>replications</p></li>
+<li><p>benchmark suites</p></li>
+<li><p>multi-target wrappers</p></li>
+</ul>
+<p>Those routes compile to explicit handoff contracts in the detailed docs instead of running through the simple <code class="docutils literal notranslate"><span class="pre">forecast()</span></code> path.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_experiment.html">Run An Experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare_models.html">Compare Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_sd.html">FRED-SD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="read_results.html">Read Results</a></li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../fred_sd_inferred_tcode_review_v0_1.html" class="btn btn-neutral float-left" title="FRED-SD Inferred T-Code Review v0.1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quickstart" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

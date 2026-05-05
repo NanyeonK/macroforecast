@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add A Custom Preprocessor &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Read Results" href="read_results.html" />
+    <link rel="prev" title="Add A Custom Model" href="add_custom_model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">For researchers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_datasets/index.html">FRED datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_transform_policy.html">FRED-SD Transform Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Simple Docs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="run_experiment.html">Run An Experiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compare_models.html">Compare Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd.html">FRED-SD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Add A Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="read_results.html">Read Results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">For researchers</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simple Docs</a></li>
+      <li class="breadcrumb-item active">Add A Custom Preprocessor</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/planned_simple_api/add_custom_preprocessor.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="add-a-custom-preprocessor">
+<h1>Add A Custom Preprocessor<a class="headerlink" href="#add-a-custom-preprocessor" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p><strong>API status note (current)</strong>: this page uses the planned mf.forecast / mf.Experiment Python facade
+shape. Those are not yet exported from macroforecast.<strong>all</strong>. For working v0.6+ code, use
+macroforecast.run(“recipe.yaml”), macroforecast.replicate(“manifest.json”),
+the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+python -m macroforecast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
+</div></blockquote>
+<p>Custom preprocessors run inside the same split discipline as built-in preprocessing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="s2">&quot;center_x&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">center_x</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X_train</span> <span class="o">-</span> <span class="n">location</span><span class="p">,</span> <span class="n">X_test</span> <span class="o">-</span> <span class="n">location</span>
+</pre></div>
+</div>
+<p>Use the registered name in an experiment:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+        <span class="n">model_family</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">use_preprocessor</span><span class="p">(</span><span class="s2">&quot;center_x&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>MVP contract:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fn</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">X_train_new</span><span class="p">,</span> <span class="n">X_test_new</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Rules:</p>
+<ul class="simple">
+<li><p>Fit preprocessing decisions on <code class="docutils literal notranslate"><span class="pre">X_train</span></code> only.</p></li>
+<li><p>Return transformed <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">X_test</span></code>.</p></li>
+<li><p>Do not transform <code class="docutils literal notranslate"><span class="pre">y_train</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">y_train</span></code> only as read-only context for target-aware feature preprocessing.</p></li>
+<li><p>Keep the number of training rows aligned with <code class="docutils literal notranslate"><span class="pre">y_train</span></code>.</p></li>
+</ul>
+<p>Use a fixed custom preprocessor while comparing models:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+        <span class="n">model_family</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">use_preprocessor</span><span class="p">(</span><span class="s2">&quot;center_x&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Preprocessor sweeps are blocked in the simple runtime until the preprocessing layer audit is complete. Target transformations are a separate contract. The MVP preprocessor API is predictor-only by design.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="add_custom_model.html" class="btn btn-neutral float-left" title="Add A Custom Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="read_results.html" class="btn btn-neutral float-right" title="Read Results" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

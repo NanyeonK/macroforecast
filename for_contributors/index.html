@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For contributors &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Reproducibility Policy" href="reproducibility_policy.html" />
+    <link rel="prev" title="Default Profiles" href="../for_recipe_authors/default_profiles.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">For contributors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reproducibility_policy.html">Reproducibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">For contributors</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_contributors/index.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="for-contributors">
+<h1>For contributors<a class="headerlink" href="#for-contributors" title="Link to this heading"></a></h1>
+<p>You want to modify the package source, add a layer / op / model, fix a bug, or
+ship a release. Start here.</p>
+<section id="if-you-want-to">
+<h2>If you want to …<a class="headerlink" href="#if-you-want-to" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Goal</p></th>
+<th class="head"><p>Page</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Understand the bit-exact replicate contract every change must preserve</p></td>
+<td><p><a class="reference internal" href="reproducibility_policy.html"><span class="std std-doc">Reproducibility policy</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Read the canonical 12-layer design before touching <code class="docutils literal notranslate"><span class="pre">core/</span></code></p></td>
+<td><p><a class="reference internal" href="../architecture/index.html"><span class="std std-doc">Architecture index</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Read the per-layer contract before touching one layer</p></td>
+<td><p><a class="reference internal" href="../architecture/index.html"><span class="std std-doc">Architecture: layer pages</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Run the test suite locally</p></td>
+<td><p>see <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code></span> at the repo root</p></td>
+</tr>
+<tr class="row-even"><td><p>Cut a release</p></td>
+<td><p><a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/.github/RELEASE_CHECKLIST.md"><code class="docutils literal notranslate"><span class="pre">.github/RELEASE_CHECKLIST.md</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Write an axis page that follows the docs convention</p></td>
+<td><p><a class="reference internal" href="../CONVENTIONS.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">docs/CONVENTIONS.md</span></code></span></a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="code-map">
+<h2>Code map<a class="headerlink" href="#code-map" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">/</span>
+  <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>             <span class="c1"># lazy-export top-level surface</span>
+  <span class="n">api</span><span class="o">.</span><span class="n">py</span>                  <span class="c1"># macroforecast.run / macroforecast.replicate</span>
+  <span class="n">core</span><span class="o">/</span>
+    <span class="n">execution</span><span class="o">.</span><span class="n">py</span>          <span class="c1"># cell loop + replicate_recipe (bit-exact)</span>
+    <span class="n">runtime</span><span class="o">.</span><span class="n">py</span>            <span class="c1"># per-layer materialize_l{1..8}_minimal helpers</span>
+    <span class="n">figures</span><span class="o">.</span><span class="n">py</span>            <span class="c1"># matplotlib backend + US choropleth</span>
+    <span class="n">layers</span><span class="o">/</span>               <span class="c1"># l0..l8 + l1_5/l2_5/l3_5/l4_5 schema definitions</span>
+    <span class="n">ops</span><span class="o">/</span>                  <span class="c1"># universal/l3/l4/l5/l6/l7/l8/diagnostic op registry</span>
+    <span class="n">cache</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">dag</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">sweep</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">manifest</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">validator</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">py</span>
+  <span class="n">raw</span><span class="o">/</span>                    <span class="c1"># FRED-MD/QD/SD adapters + vintage manager</span>
+  <span class="n">preprocessing</span><span class="o">/</span>          <span class="c1"># contract helpers (legacy support)</span>
+  <span class="n">custom</span><span class="o">.</span><span class="n">py</span>               <span class="c1"># register_model / register_preprocessor / ...</span>
+  <span class="n">scaffold</span><span class="o">/</span>               <span class="c1"># python -m macroforecast scaffold wizard</span>
+  <span class="n">defaults</span><span class="o">.</span><span class="n">py</span>             <span class="c1"># default profile dict template</span>
+  <span class="n">tuning</span><span class="o">/</span>                 <span class="c1"># HP search engines (optional, integrated via L4)</span>
+<span class="n">plans</span><span class="o">/</span><span class="n">design</span><span class="o">/</span>             <span class="c1"># 4-part canonical design (source of truth)</span>
+<span class="n">tests</span><span class="o">/</span>                    <span class="c1"># ~953 tests, runs in &lt;30s</span>
+<span class="n">examples</span><span class="o">/</span><span class="n">recipes</span><span class="o">/</span>         <span class="c1"># YAML recipe examples per layer</span>
+</pre></div>
+</div>
+</section>
+<section id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-x<span class="w"> </span>-q<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not deep&quot;</span>
+</pre></div>
+</div>
+<p>Expected: ~953 tests pass / ~12 skipped in &lt;30 seconds. The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra (and
+its tests) require torch.</p>
+</section>
+<section id="release">
+<h2>Release<a class="headerlink" href="#release" title="Link to this heading"></a></h2>
+<p>The release workflow (<code class="docutils literal notranslate"><span class="pre">release.yml</span></code>) publishes to PyPI on tag push. The
+checklist at <code class="docutils literal notranslate"><span class="pre">.github/RELEASE_CHECKLIST.md</span></code> enumerates the version-bump,
+CHANGELOG, README, docs/install.md, and tag-vs-CI steps. The <code class="docutils literal notranslate"><span class="pre">ci-core</span></code> workflow
+has stale-tag checks that will reject a release if <code class="docutils literal notranslate"><span class="pre">README.md</span></code> or
+<code class="docutils literal notranslate"><span class="pre">docs/install.md</span></code> still advertise an older <code class="docutils literal notranslate"><span class="pre">&#64;vN.N.N</span></code> tag.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../for_recipe_authors/default_profiles.html" class="btn btn-neutral float-left" title="Default Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reproducibility_policy.html" class="btn btn-neutral float-right" title="Reproducibility Policy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

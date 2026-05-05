@@ -1,0 +1,507 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmark &amp; Predictor Universe (1.4) &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="FRED-MD" href="datasets_fred_md.html" />
+    <link rel="prev" title="Horizon &amp; Evaluation Window (1.3)" href="horizon.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">For recipe authors</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../design.html">Layer Contract Design</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Data</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="source.html">Source, Frequency, And Forecast-Time Information (1.1)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_structure.html">Target (y) And Predictor (x) Definition (1.2)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizon.html">Horizon &amp; Evaluation Window (1.3)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Benchmark &amp; Predictor Universe (1.4)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets_fred_md.html">FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets_fred_qd.html">FRED-QD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets_fred_sd.html">FRED-SD</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../data_policies.html">Forecast-Time And Source-Frame Policies (1.5)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../custom_hooks.html">Custom Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../target_transformer.html">Target Transformer Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../default_profiles.html">Default Profiles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">For recipe authors</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data</a></li>
+      <li class="breadcrumb-item active">Benchmark &amp; Predictor Universe (1.4)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_recipe_authors/data/benchmark.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="benchmark-predictor-universe-1-4">
+<h1>Benchmark &amp; Predictor Universe (1.4)<a class="headerlink" href="#benchmark-predictor-universe-1-4" title="Link to this heading"></a></h1>
+<p>Declares <strong>which benchmark to compare against, which predictors the model sees, which raw variables are even in play, and which deterministic features augment the X panel</strong>. Four axes in v1.0 — every value operational via a leaf_config input channel or a simple in-code filter.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Section</p></th>
+<th class="head"><p>axis</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1.4.1</p></td>
+<td><p><a class="reference internal" href="#benchmark-family"><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code></a></p></td>
+<td><p>The reference forecast used for relative metrics</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.4.2</p></td>
+<td><p><a class="reference internal" href="#predictor-family"><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code></a></p></td>
+<td><p>Which columns of the raw panel are fed to the model</p></td>
+</tr>
+<tr class="row-even"><td><p>1.4.3</p></td>
+<td><p><a class="reference internal" href="#variable-universe"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></p></td>
+<td><p>Which columns of the raw panel are available in the first place</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.4.4</p></td>
+<td><p><a class="reference internal" href="#deterministic-components"><code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code></a></p></td>
+<td><p>Deterministic features appended to X (trend, seasonals, break dummies)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on dropped values:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_family.text_only</span></code> / <code class="docutils literal notranslate"><span class="pre">mixed_feature_blocks</span></code> — require NN/text embeddings stack (v2).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable_universe.feature_selection_dynamic_subset</span></code> — CV-in-training feature selection loop; deferred to v1.1 tuning-engine extension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components.trend_and_quadratic</span></code> — redundant with <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> + a future <code class="docutils literal notranslate"><span class="pre">leaf_config.trend_order</span></code> channel.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">target_family</span></code> (the old 1.4.1 axis) was dropped in PR #32 — subsumed by <code class="docutils literal notranslate"><span class="pre">target_structure</span></code>.
+<strong>At a glance (defaults):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> — no default; you always pick one (most studies start with <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> or <code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code> — feature-builder dynamic default. target_lag_features → <code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code>; raw_feature_panel → <code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code>. You rarely set it.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span> <span class="pre">=</span> <span class="pre">all_variables</span></code> — the full raw panel is available. Switch to a subset only when the recipe explicitly narrows the candidate variables.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components</span> <span class="pre">=</span> <span class="pre">none</span></code> — no X augmentation. Switch to <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> / seasonals / <code class="docutils literal notranslate"><span class="pre">break_dummies</span></code> when your target needs them.</p></li>
+</ul>
+<p><strong>Most research runs pick <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> and leave the other three at the default.</strong></p>
+<hr class="docutils" />
+<section id="benchmark-family">
+<h2>1.4.1 <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code><a class="headerlink" href="#benchmark-family" title="Link to this heading"></a></h2>
+<p><strong>Selects the reference forecast for relative metrics.</strong> All 12 kept values are operational in v1.0. Values that require user-supplied inputs are validated at compile time.</p>
+<section id="value-catalog">
+<h3>Value catalog<a class="headerlink" href="#value-catalog" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">historical_mean</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Training-set mean. Default.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zero_change</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Random-walk at <code class="docutils literal notranslate"><span class="pre">y_t</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_bic</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>AR model with BIC-selected lag order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_fixed_lag</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>AR model at a fixed lag <code class="docutils literal notranslate"><span class="pre">p</span></code> (<code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_fixed_p</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">autoregressive_diffusion_index</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>AR + Diffusion Index (factor) model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Rolling-window mean (<code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_window_len</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Arbitrary callable supplied in <code class="docutils literal notranslate"><span class="pre">benchmark_config.benchmark_callable</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">expert_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Callable supplied in <code class="docutils literal notranslate"><span class="pre">benchmark_config.expert_callable</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Single-factor OLS on the leading principal factor (v1.0 self-contained impl).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Runs each member in <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite:</span> <span class="pre">list[str]</span></code> and returns the arithmetic mean.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Pre-computed forecast series supplied via <code class="docutils literal notranslate"><span class="pre">leaf_config.paper_forecast_series:</span> <span class="pre">dict[target</span> <span class="pre">→</span> <span class="pre">Series]</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Same pattern, <code class="docutils literal notranslate"><span class="pre">leaf_config.survey_forecast_series</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-features">
+<h3>Functions &amp; features<a class="headerlink" href="#functions-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._run_benchmark_executor</span></code> dispatches by <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code>: z-scored leading-factor regression; falls back to <code class="docutils literal notranslate"><span class="pre">historical_mean</span></code> for training windows &lt; 6 rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>: inline dispatch over <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_suite</span></code> members (allowed set: historical_mean, zero_change, autoregressive_bic, rolling_mean, autoregressive_fixed_lag, autoregressive_diffusion_index). Missing or unsupported members raise <code class="docutils literal notranslate"><span class="pre">CompileValidationError</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code> / <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>: look up the forecast at <code class="docutils literal notranslate"><span class="pre">train.index[-1]</span> <span class="pre">+</span> <span class="pre">horizon</span></code> months (monthly freq); fall back to the most recent trailing value on miss. The required target-keyed series dict is checked at compile time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">expert_benchmark</span></code>: programmatic only; requires <code class="docutils literal notranslate"><span class="pre">leaf_config.benchmark_config.expert_callable</span></code>.</p></li>
+</ul>
+</section>
+<section id="recipe-usage">
+<h3>Recipe usage<a class="headerlink" href="#recipe-usage" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Paper-replication: compare against the paper&#39;s published forecast</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">paper_forecast_series</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">INDPRO</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w">   </span><span class="c1"># pd.Series keyed by date</span>
+<span class="w">  </span><span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">paper_benchmark</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">benchmark_forecast</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="nv">paper_specific_benchmark</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">paper_benchmark</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="predictor-family">
+<h2>1.4.2 <code class="docutils literal notranslate"><span class="pre">predictor_family</span></code><a class="headerlink" href="#predictor-family" title="Link to this heading"></a></h2>
+<p><strong>Selects which columns of the raw panel become model predictors.</strong> 6 operational values.</p>
+<section id="id1">
+<h3>Value catalog<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_lags_only</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Only the target’s own lags (forces <code class="docutils literal notranslate"><span class="pre">feature_builder=target_lag_features</span></code>). Default for autoreg recipes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">all_macro_vars</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Every column except the target. Default for raw-panel recipes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_based</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>User-supplied category mapping: <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns:</span> <span class="pre">dict[str,</span> <span class="pre">list[str]]</span></code> + <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">factor_only</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Columns whose name starts with <code class="docutils literal notranslate"><span class="pre">F_</span></code> (factor outputs).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>User-supplied column list: <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns:</span> <span class="pre">list[str]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id2">
+<h3>Functions &amp; features<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._raw_panel_columns(frame,</span> <span class="pre">target,</span> <span class="pre">predictor_family,</span> <span class="pre">spec)</span></code> dispatches on the rule.</p></li>
+<li><p>Target column is always excluded from the predictor set.</p></li>
+<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.handpicked_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_based</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.predictor_category</span></code>.</p></li>
+</ul>
+</section>
+<section id="dropped-values">
+<h3>Dropped values<a class="headerlink" href="#dropped-values" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">text_only</span></code>: requires text-embedding / NN domain stack — deferred to v2 (Transformer scope).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mixed_feature_blocks</span></code>: multi-block NN architecture — deferred to v2.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Recipe usage<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">predictor_family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explicit_variable_list</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">handpicked_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_x</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">predictors</span><span class="p p-Indicator">}}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">target</span><span class="p p-Indicator">}}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">target_construction</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">horizon</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_y</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">l3_features_v1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">X_final</span><span class="p">:</span><span class="w"> </span><span class="nv">src_x</span><span class="p p-Indicator">,</span><span class="nt"> y_final</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="variable-universe">
+<h2>1.4.3 <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code><a class="headerlink" href="#variable-universe" title="Link to this heading"></a></h2>
+<p><strong>Selects which columns of the raw panel survive dataset filtering before any training begins.</strong> 8 operational values.</p>
+<section id="id4">
+<h3>Value catalog<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">all_variables</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. No filter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">core_variables</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>FRED-MD core macro variables (<code class="docutils literal notranslate"><span class="pre">_PRESELECTED_CORE</span></code> set).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>User-supplied column list: <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns:</span> <span class="pre">list[str]</span></code>. Consolidates the former paper_replication / expert_curated / stability_filtered / correlation_screened subsets — all four had identical runtime semantics (drop_duplicate cleanup, 2026-04-21).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_variables</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns:</span> <span class="pre">dict[str,</span> <span class="pre">list[str]]</span></code> + <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code></p></td>
+<td><p>operational</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns:</span> <span class="pre">dict[target,</span> <span class="pre">list[str]]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id5">
+<h3>Functions &amp; features<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.execution.build._apply_variable_universe(raw_result,</span> <span class="pre">rule,</span> <span class="pre">spec,</span> <span class="pre">target)</span></code> is called during dataset loading in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></li>
+<li><p>Target and date columns are always preserved after filtering.</p></li>
+<li><p>Runtime discovery (stability / correlation) is out of scope — users supply the subset.</p></li>
+<li><p>Compile guards: <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns</span></code>; <code class="docutils literal notranslate"><span class="pre">category_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category_columns</span></code> and <code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_category</span></code>; <code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code> requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns</span></code> entries for the current target(s).</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Dropped values<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">feature_selection_dynamic_subset</span></code>: CV-in-training feature selection loop requires a tuning-engine extension — deferred to v1.1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paper_replication_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">expert_curated_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">stability_filtered_subset</span></code>, <code class="docutils literal notranslate"><span class="pre">correlation_screened_subset</span></code> (2026-04-21): four labels shared identical runtime semantics (single <code class="docutils literal notranslate"><span class="pre">list[str]</span></code> input + column filter). Consolidated into <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code>.</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>Recipe usage<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># target-specific subset</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_specific_variables</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target_specific_columns</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">INDPRO</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">PAYEMS</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">AWHMAN</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># hand-picked column list</span>
+<span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explicit_variable_list</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">variable_universe_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="deterministic-components">
+<h2>1.4.4 <code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code><a class="headerlink" href="#deterministic-components" title="Link to this heading"></a></h2>
+<p><strong>Appends deterministic feature columns to the X matrix.</strong> 6 operational values.</p>
+<section id="id8">
+<h3>Value catalog<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Default. No augmentation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">constant_only</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Explicit column of 1s (redundant with <code class="docutils literal notranslate"><span class="pre">fit_intercept=True</span></code> default, but records the intent).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">linear_trend</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Adds a <code class="docutils literal notranslate"><span class="pre">_dc_trend</span></code> column (0, 1, …, n-1).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">monthly_seasonal</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Adds 11 monthly dummies (<code class="docutils literal notranslate"><span class="pre">_dc_month_01</span></code> … <code class="docutils literal notranslate"><span class="pre">_dc_month_11</span></code>; December is the reference).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quarterly_seasonal</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>Adds 3 quarterly dummies (<code class="docutils literal notranslate"><span class="pre">_dc_q1</span></code> … <code class="docutils literal notranslate"><span class="pre">_dc_q3</span></code>; Q4 reference).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">break_dummies</span></code></p></td>
+<td><p>operational</p></td>
+<td><p>One 0/1 dummy per date in <code class="docutils literal notranslate"><span class="pre">leaf_config.break_dates</span></code>; value is 1 from the break onward.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id9">
+<h3>Functions &amp; features<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Module: <code class="docutils literal notranslate"><span class="pre">macroforecast.execution.deterministic</span></code> — <code class="docutils literal notranslate"><span class="pre">augment_frame(df,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index=None,</span> <span class="pre">break_dates=None)</span></code> + <code class="docutils literal notranslate"><span class="pre">augment_array(X,</span> <span class="pre">component,</span> <span class="pre">*,</span> <span class="pre">index,</span> <span class="pre">break_dates=None)</span></code>.</p></li>
+<li><p>Wired into <code class="docutils literal notranslate"><span class="pre">_build_raw_panel_training_data</span></code> after preprocessing. Both X_train and X_pred are augmented identically so the fitted coefficients apply at prediction time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">monthly_seasonal</span></code> / <code class="docutils literal notranslate"><span class="pre">quarterly_seasonal</span></code> require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></li>
+<li><p>Compile guard: <code class="docutils literal notranslate"><span class="pre">break_dummies</span></code> requires non-empty <code class="docutils literal notranslate"><span class="pre">leaf_config.break_dates</span></code>.</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>Dropped values<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">trend_and_quadratic</span></code>: redundant with <code class="docutils literal notranslate"><span class="pre">linear_trend</span></code> + a future <code class="docutils literal notranslate"><span class="pre">leaf_config.trend_order</span></code> channel. The quadratic / higher-order polynomial trend will re-enter as a trend-order parameter when needed rather than a separate axis value.</p></li>
+</ul>
+</section>
+<section id="id11">
+<h3>Recipe usage<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">deterministic_components</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">break_dummies</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">break_dates</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;2008-09-01&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;2020-03-01&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_x</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">predictors</span><span class="p p-Indicator">}}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">break_x</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">deterministic_components</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">break_dummies</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_x</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">l3_features_v1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">X_final</span><span class="p">:</span><span class="w"> </span><span class="nv">break_x</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="benchmark-predictor-universe-1-4-takeaways">
+<h2>Benchmark &amp; Predictor Universe (1.4) takeaways<a class="headerlink" href="#benchmark-predictor-universe-1-4-takeaways" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Every value in every 1.4 axis is operational in v1.0. Zero <code class="docutils literal notranslate"><span class="pre">registry_only</span></code> entries remain.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code> gains 4 formerly-metadata variants as real implementations: <code class="docutils literal notranslate"><span class="pre">factor_model_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_suite</span></code>, <code class="docutils literal notranslate"><span class="pre">paper_specific_benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">survey_forecast</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predictor_family</span></code> and <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code> use the same design pattern: the user provides a pre-computed column list (or category mapping) via <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>; runtime discovery is out of scope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deterministic_components</span></code> augments the raw-panel X with classical econometric terms (trend / seasonals / break dummies) via a dedicated module.</p></li>
+</ul>
+<p>Next group: 1.5 Data handling policies (coming).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizon.html" class="btn btn-neutral float-left" title="Horizon &amp; Evaluation Window (1.3)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="datasets_fred_md.html" class="btn btn-neutral float-right" title="FRED-MD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

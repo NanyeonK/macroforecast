@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reproducibility Policy &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Architecture" href="../architecture/index.html" />
+    <link rel="prev" title="For contributors" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">For contributors</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Reproducibility Policy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">For contributors</a></li>
+      <li class="breadcrumb-item active">Reproducibility Policy</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_contributors/reproducibility_policy.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="reproducibility-policy">
+<h1>Reproducibility Policy<a class="headerlink" href="#reproducibility-policy" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p>Closes phase-00 issue #7. Pinned by the regression batteries in
+<code class="docutils literal notranslate"><span class="pre">tests/core/test_seed_policy.py</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tests/core/test_deterministic_replay.py</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">tests/core/test_execution_cache.py</span></code>.</p>
+</div></blockquote>
+<p>macroforecast v0.1 promises that <strong>the same recipe produces the same artifacts
+bit-for-bit</strong>, on the same machine and across machines that share the
+package version + dependency lockfile. This page documents what
+“reproducible” means in practice, what knobs control it, and what is
+deliberately <em>out of scope</em>.</p>
+<section id="public-api">
+<h2>Public API<a class="headerlink" href="#public-api" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span>
+
+<span class="c1"># Run any recipe (inline YAML, dict, or Path).</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/&quot;</span><span class="p">)</span>
+
+<span class="c1"># Re-execute the stored manifest and verify per-cell sink hashes match.</span>
+<span class="n">replication</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;out/manifest.json&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">recipe_match</span>
+<span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">sink_hashes_match</span>
+</pre></div>
+</div>
+</section>
+<section id="seed-policy-modes-l0">
+<h2>Seed-policy modes (L0)<a class="headerlink" href="#seed-policy-modes-l0" title="Link to this heading"></a></h2>
+<p>The L0 layer’s <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> axis selects one of two regimes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>When</p></th>
+<th class="head"><p>Seed source</p></th>
+<th class="head"><p>Best for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> <em>(default)</em></p></td>
+<td><p>every run is a deterministic replay</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0_meta.leaf_config.random_seed</span></code> (default <code class="docutils literal notranslate"><span class="pre">0</span></code>)</p></td>
+<td><p>paper replication, regression tests, multi-cell sweeps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">exploratory</span></code></p></td>
+<td><p>seed is left to whatever process state happens to be</p></td>
+<td><p>none</p></td>
+<td><p>one-off interactive runs where determinism doesn’t matter</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">strict</span></code> and any other unknown value are rejected by the L0 schema
+validator. Pass <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> explicitly when you want a non-zero base.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">_resolve_seed(recipe_root)</span></code> returns:</p>
+<ul class="simple">
+<li><p>the explicit <code class="docutils literal notranslate"><span class="pre">leaf_config.random_seed</span></code> if present,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span></code> for the default <code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> mode,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code> for <code class="docutils literal notranslate"><span class="pre">exploratory</span></code> (or any other non-<code class="docutils literal notranslate"><span class="pre">seeded_reproducible</span></code> value).</p></li>
+</ul>
+</section>
+<section id="what-apply-seed-actually-seeds">
+<h2>What <code class="docutils literal notranslate"><span class="pre">_apply_seed</span></code> actually seeds<a class="headerlink" href="#what-apply-seed-actually-seeds" title="Link to this heading"></a></h2>
+<p>A best-effort propagation that covers every RNG macroforecast or its
+dependencies are likely to touch:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Library</p></th>
+<th class="head"><p>Call</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Python <code class="docutils literal notranslate"><span class="pre">random</span></code> module</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random.seed(seed)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>NumPy global state</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">np.random.seed(seed</span> <span class="pre">%</span> <span class="pre">2**32)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Process env (hash-seed-sensitive iteration)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">os.environ.setdefault(&quot;PYTHONHASHSEED&quot;,</span> <span class="pre">str(seed))</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>PyTorch (when installed)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">torch.manual_seed(seed)</span></code> + <code class="docutils literal notranslate"><span class="pre">torch.cuda.manual_seed_all(seed)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code> estimators receive <code class="docutils literal notranslate"><span class="pre">random_state=seed_int</span></code> from the L4
+recipe params (<code class="docutils literal notranslate"><span class="pre">_build_l4_model</span></code>) – the global numpy seed isn’t enough
+for sklearn because most estimators capture <code class="docutils literal notranslate"><span class="pre">random_state=None</span></code> and call
+<code class="docutils literal notranslate"><span class="pre">check_random_state</span></code> once. <strong>Pin <code class="docutils literal notranslate"><span class="pre">random_state</span></code> per estimator if you need
+deterministic ensembles.</strong></p>
+</section>
+<section id="cell-index-seed-schedule">
+<h2>Cell-index seed schedule<a class="headerlink" href="#cell-index-seed-schedule" title="Link to this heading"></a></h2>
+<p>A multi-cell sweep is <em>not</em> run with the same seed in every cell. The
+sweep loop applies <code class="docutils literal notranslate"><span class="pre">base_seed</span> <span class="pre">+</span> <span class="pre">(cell_index</span> <span class="pre">-</span> <span class="pre">1)</span></code> so:</p>
+<ul class="simple">
+<li><p>Cell 1 uses <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>.</p></li>
+<li><p>Cell 2 uses <code class="docutils literal notranslate"><span class="pre">random_seed</span> <span class="pre">+</span> <span class="pre">1</span></code>.</p></li>
+<li><p>… cell N uses <code class="docutils literal notranslate"><span class="pre">random_seed</span> <span class="pre">+</span> <span class="pre">N</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
+</ul>
+<p>This means two cells of the same recipe with different <code class="docutils literal notranslate"><span class="pre">{sweep:</span> <span class="pre">[...]}</span></code>
+values produce <em>different</em> RNG streams (bug-catching: see
+<code class="docutils literal notranslate"><span class="pre">test_distinct_cells_get_distinct_seeds</span></code>), but a re-run of the same
+sweep produces <em>identical</em> streams cell-by-cell.</p>
+</section>
+<section id="bit-exact-replicate">
+<h2>Bit-exact replicate<a class="headerlink" href="#bit-exact-replicate" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(manifest_path)</span></code> reads the stored manifest, expands
+the same sweep, and re-executes every cell. The returned
+<code class="docutils literal notranslate"><span class="pre">ReplicationResult</span></code> carries:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">recipe_match:</span> <span class="pre">bool</span></code> – the canonicalized recipe dict round-trips
+identically (key order, sweep marker placement, etc.).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sink_hashes_match:</span> <span class="pre">bool</span></code> – every cell’s per-sink SHA-256 matches
+the original.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">per_cell_match:</span> <span class="pre">dict[str,</span> <span class="pre">bool]</span></code> – per-cell breakdown.</p></li>
+</ul>
+<p>Two sinks are exempt from the strict equality check because they
+legitimately encode environmental data:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">l1_data_definition_v1</span></code> – carries <code class="docutils literal notranslate"><span class="pre">leaf_config.cache_root</span></code> which
+depends on the local filesystem layout.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l8_artifacts_v1</span></code> – records the absolute paths of exported files.</p></li>
+</ul>
+<p>The other eight sinks (L1 regime, L2, L3 features + metadata, L4
+forecasts + models + training, L5 evaluation, plus L6 / L7 / L8 outputs
+when produced) are byte-equal across runs.</p>
+</section>
+<section id="shared-raw-cache-cache-root">
+<h2>Shared raw cache (<code class="docutils literal notranslate"><span class="pre">cache_root</span></code>)<a class="headerlink" href="#shared-raw-cache-cache-root" title="Link to this heading"></a></h2>
+<p>Multi-cell sweeps that hit the same FRED vintage many times share the
+on-disk raw cache when you pass <code class="docutils literal notranslate"><span class="pre">cache_root=</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span>
+    <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/sweep_a&quot;</span><span class="p">,</span>
+    <span class="n">cache_root</span><span class="o">=</span><span class="s2">&quot;/var/macroforecast/raw_cache&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Resolution order (first non-None wins):</p>
+<ol class="arabic simple">
+<li><p>The explicit <code class="docutils literal notranslate"><span class="pre">cache_root=</span></code> argument.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recipe['1_data']['leaf_config']['cache_root']</span></code> (recipe-level
+override).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_directory</span> <span class="pre">/</span> <span class="pre">&quot;.raw_cache&quot;</span></code> (auto-derived).</p></li>
+<li><p>The raw loader’s package default.</p></li>
+</ol>
+<p>The effective value is recorded in <code class="docutils literal notranslate"><span class="pre">manifest.json[</span> <span class="pre">&quot;cache_root&quot;]</span></code> and on
+the <code class="docutils literal notranslate"><span class="pre">ManifestExecutionResult.cache_root</span></code> attribute, so a follow-up run
+or a downstream auditor can verify exactly which cache backed the
+artifacts.</p>
+</section>
+<section id="determinism-boundaries">
+<h2>Determinism boundaries<a class="headerlink" href="#determinism-boundaries" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Boundary</p></th>
+<th class="head"><p>Guarantee</p></th>
+<th class="head"><p>Caveats</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Two re-runs of the same recipe in the same Python session</p></td>
+<td><p>byte-identical sinks (excluding <code class="docutils literal notranslate"><span class="pre">l1_data_definition_v1</span></code> + <code class="docutils literal notranslate"><span class="pre">l8_artifacts_v1</span></code> when output paths differ)</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p>Two re-runs in <strong>different processes</strong> with the same package + lockfile</p></td>
+<td><p>byte-identical sinks (validated by <code class="docutils literal notranslate"><span class="pre">tests/core/test_v01_1_hot_patch.py::test_hash_sink_with_set_payload_is_stable_across_processes</span></code>, which rotates <code class="docutils literal notranslate"><span class="pre">PYTHONHASHSEED</span></code>)</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">parallel</span></code> cell loop</p></td>
+<td><p>byte-identical sinks vs. serial run for the same cells (validated by <code class="docutils literal notranslate"><span class="pre">tests/core/test_compute_mode_parallel.py::test_parallel_matches_serial_sink_hashes</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">l8_artifacts_v1</span></code> legitimately differs because of output paths</p></td>
+</tr>
+<tr class="row-odd"><td><p>Across machines with the same package version + lockfile</p></td>
+<td><p>numerical equality at machine epsilon</p></td>
+<td><p>floating-point summation order across BLAS implementations can drift on the last bit</p></td>
+</tr>
+<tr class="row-even"><td><p>Across <code class="docutils literal notranslate"><span class="pre">xgboost</span></code> / <code class="docutils literal notranslate"><span class="pre">lightgbm</span></code> / <code class="docutils literal notranslate"><span class="pre">catboost</span></code> versions</p></td>
+<td><p>best-effort</p></td>
+<td><p>C++ trees are sensitive to library upgrades; pin via the lockfile</p></td>
+</tr>
+<tr class="row-odd"><td><p>Deep-NN families (<code class="docutils literal notranslate"><span class="pre">lstm</span></code> / <code class="docutils literal notranslate"><span class="pre">gru</span></code> / <code class="docutils literal notranslate"><span class="pre">transformer</span></code>)</p></td>
+<td><p>seeded (we call <code class="docutils literal notranslate"><span class="pre">torch.manual_seed</span></code>) but <strong>not</strong> guaranteed bit-exact across torch versions or CUDA driver versions</p></td>
+<td><p>install <code class="docutils literal notranslate"><span class="pre">torch[cpu]</span></code> for tighter portability</p></td>
+</tr>
+<tr class="row-even"><td><p>Across <code class="docutils literal notranslate"><span class="pre">shap</span></code> versions or with <code class="docutils literal notranslate"><span class="pre">shap</span></code> not installed</p></td>
+<td><p>best-effort</p></td>
+<td><p>the L7 SHAP path falls back to a coefficient / permutation proxy when <code class="docutils literal notranslate"><span class="pre">shap</span></code> is missing; the proxy is itself deterministic</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="worked-examples">
+<h2>Worked examples<a class="headerlink" href="#worked-examples" title="Link to this heading"></a></h2>
+<section id="single-path-recipe-identical-artifacts-twice">
+<h3>Single-path recipe -&gt; identical artifacts twice<a class="headerlink" href="#single-path-recipe-identical-artifacts-twice" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;out/a&quot;</span><span class="p">))</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;out/b&quot;</span><span class="p">))</span>
+
+<span class="c1"># Every cell&#39;s sink hashes match (excluding path-dependent l1, l8).</span>
+<span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">cells</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">cells</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">sink_name</span> <span class="ow">in</span> <span class="n">left</span><span class="o">.</span><span class="n">sink_hashes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sink_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;l1_data_definition_v1&quot;</span><span class="p">,</span> <span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">}:</span>
+            <span class="k">continue</span>
+        <span class="k">assert</span> <span class="n">left</span><span class="o">.</span><span class="n">sink_hashes</span><span class="p">[</span><span class="n">sink_name</span><span class="p">]</span> <span class="o">==</span> <span class="n">right</span><span class="o">.</span><span class="n">sink_hashes</span><span class="p">[</span><span class="n">sink_name</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="sweep-variant-id-distinct-seed">
+<h3>Sweep variant ID -&gt; distinct seed<a class="headerlink" href="#sweep-variant-id-distinct-seed" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">0_meta:</span>
+<span class="s2">  fixed_axes: {reproducibility_mode: seeded_reproducible}</span>
+<span class="s2">  leaf_config: </span><span class="si">{random_seed: 100}</span>
+<span class="s2">3_feature_engineering:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: lag_x, type: step, op: lag, params: {n_lag: {sweep: [1, 2, 3, 4]}}, ...}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="c1"># Cells get seeds 100, 101, 102, 103.</span>
+</pre></div>
+</div>
+</section>
+<section id="replicate-the-manifest">
+<h3>Replicate the manifest<a class="headerlink" href="#replicate-the-manifest" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span>
+
+<span class="n">primary</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;paper_recipe.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;paper_out/&quot;</span><span class="p">)</span>
+<span class="n">replication</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;paper_out/manifest.json&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">sink_hashes_match</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="out-of-scope">
+<h2>Out of scope<a class="headerlink" href="#out-of-scope" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>GPU determinism beyond <code class="docutils literal notranslate"><span class="pre">torch.manual_seed</span></code>. Set
+<code class="docutils literal notranslate"><span class="pre">torch.use_deterministic_algorithms(True)</span></code> and the relevant cuDNN
+flags yourself if you need bit-exact CUDA output – that is a
+platform-specific decision.</p></li>
+<li><p>Reproducibility across BLAS implementations (OpenBLAS vs. MKL vs.
+Apple Accelerate). The L4 estimators are deterministic given fixed
+parameters, but floating-point reductions are not associative.</p></li>
+<li><p>Reproducibility across Python versions. The package targets
+<code class="docutils literal notranslate"><span class="pre">python&gt;=3.10</span></code>; minor versions are tested in CI but cross-version
+hash equality is not guaranteed.</p></li>
+</ul>
+</section>
+<section id="related-tests">
+<h2>Related tests<a class="headerlink" href="#related-tests" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Test file</p></th>
+<th class="head"><p>Pins</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_seed_policy.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_resolve_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">_apply_seed</span></code> contract</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_deterministic_replay.py</span></code></p></td>
+<td><p>identical recipe twice -&gt; identical sinks + byte-identical CSVs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_execution_cache.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cache_root</span></code> precedence + shared cache + independence</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_v01_1_hot_patch.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">set</span></code> hashing across <code class="docutils literal notranslate"><span class="pre">PYTHONHASHSEED</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_compute_mode_parallel.py</span></code></p></td>
+<td><p>parallel run matches serial run</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_execute_recipe_dispatch.py</span></code></p></td>
+<td><p>str-vs-Path dispatch + deprecation</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="related-issues">
+<h2>Related issues<a class="headerlink" href="#related-issues" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>#4 – <code class="docutils literal notranslate"><span class="pre">cache_root</span></code> parameter on <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code></p></li>
+<li><p>#6 – determinism regression battery</p></li>
+<li><p>#167 – L6/L7 numerical golden tests</p></li>
+<li><p>#169 – explicit dispatch in <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="For contributors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../architecture/index.html" class="btn btn-neutral float-right" title="Architecture" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

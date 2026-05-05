@@ -1,8 +1,25 @@
 # macroforecast
 
-macroforecast is a research-oriented macro forecasting package organized around explicit layer contracts and reproducible artifacts.
+> What you can do: run reproducible macro-forecasting experiments with custom
+> preprocessing DAGs, 35+ models, statistical tests, importance interpretation,
+> and FRED-SD geographic visualization. One YAML recipe → bit-exact replicable
+> manifest, replayable bit-for-bit by `macroforecast.replicate(...)`.
 
-## Canonical Architecture
+## Pick your path
+
+| If you want to ... | Start here |
+|---|---|
+| Run a forecast on FRED data and read the results | [Researchers](for_researchers/index.md) |
+| Write a custom recipe with your model / preprocessor | [Recipe authors](for_recipe_authors/index.md) |
+| Modify the package source / contribute | [Contributors](for_contributors/index.md) |
+| Look up a specific axis / option / Python symbol | [Reference](reference/index.md) |
+| See replication studies (bundled examples + 4 research walkthroughs) | [Replications](replications/index.md) |
+| Visually explore the layer / DAG topology | [Navigator](navigator/index.md) |
+
+## Architecture
+
+12-layer canonical design — see [architecture](architecture/index.md). The full
+4-part design lives under `plans/design/` in the repo.
 
 ```text
 L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
@@ -10,70 +27,29 @@ L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
        L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
 
-- `list` layers expose ordered sub-layers and axes.
-- `graph` layers expose DAG nodes, inputs, steps, and sinks.
-- diagnostic `.5` layers are default-off side branches.
-- L8 exports the reproducible output directory and manifest.
+## Install
 
-## Entry Points
+```bash
+pip install macroforecast
+```
 
-### Getting Started
+See [install](install.md) for extras and source install.
 
-Install macroforecast and choose between the Navigator, YAML runtime, or simple Python facade.
+## License
 
-[Open Getting Started](getting_started/index.md)
-
-### Navigator Docs
-
-Use the Navigator docs when you need to see the canonical layer/DAG map, diagnostic hooks, runtime support status, and compatibility rules.
-
-- [Open Navigator App](navigator_app/index.html)
-- [Navigator Docs](navigator/index.md)
-
-### Runtime Support
-
-Read this before relying on advanced layers in a paper workflow. It separates current runtime execution from schema-only surfaces.
-
-[Open Runtime Support Matrix](getting_started/runtime_support.md)
-
-### Simple Python API
-
-Use Simple docs when you want forecasting code without reading every layer contract first.
-
-[Open Simple Docs](simple/index.md)
-
-### Detail Docs
-
-Use Detail docs when you need exact layer control, YAML shape, runtime artifacts, or custom method hooks.
-
-[Open Detail Docs](detail/index.md)
-
-[Contract Source of Truth](detail/contract_source_of_truth.md)
-
-### FRED Dataset Docs
-
-Use FRED docs when you need FRED-MD, FRED-QD, or FRED-SD column references before writing target or predictor recipes.
-
-[Open FRED-Dataset Docs](fred_dataset/index.md)
-
-## Reference
-
-Use API Reference after you know which path you want.
-
-[Open API Reference](api/index.md)
+MIT
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
-getting_started/index
-philosophy
+install
+for_researchers/index
+for_recipe_authors/index
+for_contributors/index
+architecture/index
 navigator/index
-simple/index
-detail/index
-fred_dataset/index
-foundation_core
-api/index
+replications/index
 reference/index
 CONVENTIONS
 ```

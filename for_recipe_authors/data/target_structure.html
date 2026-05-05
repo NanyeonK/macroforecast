@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Target (y) And Predictor (x) Definition (1.2) &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Horizon &amp; Evaluation Window (1.3)" href="horizon.html" />
+    <link rel="prev" title="Source, Frequency, And Forecast-Time Information (1.1)" href="source.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">For recipe authors</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../design.html">Layer Contract Design</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Data</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="source.html">Source, Frequency, And Forecast-Time Information (1.1)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Target (y) And Predictor (x) Definition (1.2)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizon.html">Horizon &amp; Evaluation Window (1.3)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="benchmark.html">Benchmark &amp; Predictor Universe (1.4)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets_fred_md.html">FRED-MD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets_fred_qd.html">FRED-QD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets_fred_sd.html">FRED-SD</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../data_policies.html">Forecast-Time And Source-Frame Policies (1.5)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../custom_hooks.html">Custom Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../target_transformer.html">Target Transformer Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../default_profiles.html">Default Profiles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">For recipe authors</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Data</a></li>
+      <li class="breadcrumb-item active">Target (y) And Predictor (x) Definition (1.2)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_recipe_authors/data/target_structure.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="target-y-and-predictor-x-definition-1-2">
+<h1>Target (y) And Predictor (x) Definition (1.2)<a class="headerlink" href="#target-y-and-predictor-x-definition-1-2" title="Link to this heading"></a></h1>
+<p>Layer 1 declares which y series is forecast and which source columns are
+eligible as candidate predictors x. It does not choose y transformations,
+horizon target construction, x lags, factors, or model-ready feature blocks.</p>
+<section id="target-structure">
+<h2>1.2.1 <code class="docutils literal notranslate"><span class="pre">target_structure</span></code><a class="headerlink" href="#target-structure" title="Link to this heading"></a></h2>
+<p><strong>Target (y) Definition</strong> says whether the recipe has one y series or multiple y
+series.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Required payload</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">single_target</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.target</span></code></p></td>
+<td><p>One y series.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multi_target</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.targets</span></code></p></td>
+<td><p>Multiple y series.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Layer 0 connection:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">one_target_one_method</span></code> and <code class="docutils literal notranslate"><span class="pre">one_target_compare_methods</span></code> require
+<code class="docutils literal notranslate"><span class="pre">target_structure=single_target</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">multiple_targets_one_method</span></code> and <code class="docutils literal notranslate"><span class="pre">multiple_targets_compare_methods</span></code> require
+<code class="docutils literal notranslate"><span class="pre">target_structure=multi_target</span></code>.</p></li>
+</ul>
+</section>
+<section id="variable-universe">
+<h2>1.2.2 <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code><a class="headerlink" href="#variable-universe" title="Link to this heading"></a></h2>
+<p><strong>Predictor (x) Universe</strong> decides which source columns are eligible as x before
+Layer 2 representation construction.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Required payload</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">all_variables</span></code></p></td>
+<td><p>none</p></td>
+<td><p>Use all eligible non-date, non-target source columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">core_variables</span></code></p></td>
+<td><p>package metadata</p></td>
+<td><p>Use the package’s core macro subset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_variables</span></code></p></td>
+<td><p>category mapping payload</p></td>
+<td><p>Use columns mapped to a category.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.target_specific_columns</span></code></p></td>
+<td><p>Use different x sets by target y.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">leaf_config.variable_universe_columns</span></code></p></td>
+<td><p>Use an explicit x column list.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Custom data note:</p>
+<ul class="simple">
+<li><p>Custom-only files have no automatic FRED category metadata.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">all_variables</span></code> or <code class="docutils literal notranslate"><span class="pre">explicit_variable_list</span></code> unless the recipe provides
+category or target-specific mappings.</p></li>
+</ul>
+<p>Recipe usage:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">single_target</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">explicit_variable_list</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
+<span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">variable_universe_columns</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p>Multi-target usage:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">1_data_task</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">multi_target</span>
+<span class="w">      </span><span class="nt">variable_universe</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_specific_variables</span>
+<span class="w">    </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">targets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">INDPRO</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">target_specific_columns</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">INDPRO</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">RPI</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">UNRATE</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CPIAUCSL</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">UNRATE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">PAYEMS</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">CLAIMSx</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">INDPRO</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</section>
+<section id="boundary">
+<h2>Boundary<a class="headerlink" href="#boundary" title="Link to this heading"></a></h2>
+<p>These are not Layer 1 target/predictor-definition choices:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon_target_construction</span></code>: Layer 2 target representation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_transform</span></code> and <code class="docutils literal notranslate"><span class="pre">target_normalization</span></code>: Layer 2 target preprocessing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_lag_block</span></code>, <code class="docutils literal notranslate"><span class="pre">x_lag_feature_block</span></code>, <code class="docutils literal notranslate"><span class="pre">factor_feature_block</span></code>, and
+feature-block combinations: Layer 2 representation construction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forecast_type</span></code> and <code class="docutils literal notranslate"><span class="pre">forecast_object</span></code>: Layer 3 forecast-generation contract.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code> and <code class="docutils literal notranslate"><span class="pre">benchmark_family</span></code>: Layer 3 training choices.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="source.html" class="btn btn-neutral float-left" title="Source, Frequency, And Forecast-Time Information (1.1)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizon.html" class="btn btn-neutral float-right" title="Horizon &amp; Evaluation Window (1.3)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

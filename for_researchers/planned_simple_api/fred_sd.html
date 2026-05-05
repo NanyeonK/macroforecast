@@ -1,0 +1,332 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRED-SD &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Add A Custom Model" href="add_custom_model.html" />
+    <link rel="prev" title="Sweep Only What You Care About" href="sweep_only_what_you_care.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">For researchers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_datasets/index.html">FRED datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_transform_policy.html">FRED-SD Transform Policy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_inferred_tcodes.html">FRED-SD Inferred T-Codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fred_sd_inferred_tcode_review_v0_1.html">FRED-SD Inferred T-Code Review v0.1</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Simple Docs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="run_experiment.html">Run An Experiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="compare_models.html">Compare Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">FRED-SD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="add_custom_model.html">Add A Custom Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="read_results.html">Read Results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">For researchers</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simple Docs</a></li>
+      <li class="breadcrumb-item active">FRED-SD</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/planned_simple_api/fred_sd.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fred-sd">
+<h1>FRED-SD<a class="headerlink" href="#fred-sd" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p><strong>API status note (current)</strong>: this page uses the planned mf.forecast / mf.Experiment Python facade
+shape. Those are not yet exported from macroforecast.<strong>all</strong>. For working v0.6+ code, use
+macroforecast.run(“recipe.yaml”), macroforecast.replicate(“manifest.json”),
+the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
+python -m macroforecast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
+</div></blockquote>
+<p>FRED-SD can be used by itself or together with FRED-MD/FRED-QD.</p>
+<p>The important rule is simple:</p>
+<ul class="simple">
+<li><p>FRED-MD and FRED-QD publish official transformation codes.</p></li>
+<li><p>FRED-SD does not publish official transformation codes.</p></li>
+<li><p>macroforecast therefore leaves FRED-SD source values untransformed by default.</p></li>
+<li><p>Reviewed and empirical FRED-SD t-codes are available only when you opt in.</p></li>
+</ul>
+<section id="frequency">
+<h2>Frequency<a class="headerlink" href="#frequency" title="Link to this heading"></a></h2>
+<p>FRED-MD fixes the experiment to monthly frequency:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+    <span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>FRED-QD fixes the experiment to quarterly frequency:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+    <span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>FRED-SD alone requires <code class="docutils literal notranslate"><span class="pre">frequency</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+    <span class="s2">&quot;fred_sd&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;UR_CA&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">frequency</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="state-and-variable-selection">
+<h2>State And Variable Selection<a class="headerlink" href="#state-and-variable-selection" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">use_fred_sd_selection()</span></code> to restrict the FRED-SD component before the
+workbook is widened into <code class="docutils literal notranslate"><span class="pre">VARIABLE_STATE</span></code> columns:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">use_fred_sd_selection</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;TX&quot;</span><span class="p">],</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;UR&quot;</span><span class="p">,</span> <span class="s2">&quot;BPPRIVSA&quot;</span><span class="p">])</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This is different from <code class="docutils literal notranslate"><span class="pre">variable_universe</span></code>, which filters already-loaded
+columns.</p>
+</section>
+<section id="mixed-frequency-representation">
+<h2>Mixed-Frequency Representation<a class="headerlink" href="#mixed-frequency-representation" title="Link to this heading"></a></h2>
+<p>FRED-SD mixes monthly and quarterly state series. By default macroforecast keeps the
+selected FRED-SD columns on the experiment calendar and records the decision:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md+fred_sd&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">use_fred_sd_selection</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CA&quot;</span><span class="p">],</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;UR&quot;</span><span class="p">,</span> <span class="s2">&quot;NQGSP&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">use_fred_sd_mixed_frequency_representation</span><span class="p">(</span><span class="s2">&quot;drop_non_target_native_frequency&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Useful choices:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code>: default, keep selected FRED-SD columns.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drop_unknown_native_frequency</span></code>: drop columns whose native frequency could
+not be inferred.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drop_non_target_native_frequency</span></code>: keep only FRED-SD columns matching the
+experiment frequency.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">native_frequency_block_payload</span></code>: keep the panel and give a registered
+custom model, <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>, <code class="docutils literal notranslate"><span class="pre">midasr</span></code>, or <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code>
+monthly/quarterly/unknown block metadata.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mixed_frequency_model_adapter</span></code>: same block payload plus a mixed-frequency
+adapter contract.</p></li>
+</ul>
+<p>The last two choices require <code class="docutils literal notranslate"><span class="pre">feature_builder=&quot;raw_feature_panel&quot;</span></code>, a
+registered custom <code class="docutils literal notranslate"><span class="pre">model_family</span></code>, <code class="docutils literal notranslate"><span class="pre">model_family=&quot;midas_almon&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">model_family=&quot;midasr&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;midasr_nealmon&quot;</span></code>, and direct forecasts. Runtime writes
+<code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_representation.json</span></code>; block runs also write
+<code class="docutils literal notranslate"><span class="pre">fred_sd_native_frequency_block_payload.json</span></code>, and adapter runs write
+<code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_model_adapter.json</span></code>.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">model_family=&quot;midas_almon&quot;</span></code> for the built-in narrow MIDAS-style baseline.
+It constructs Almon distributed-lag basis features from the selected FRED-SD
+raw panel and fits a ridge direct forecast. Use
+<code class="docutils literal notranslate"><span class="pre">examples/custom_fred_sd_mixed_frequency_model.py</span></code> when the estimator is
+researcher-owned and should consume the native-frequency block payload.
+Regularized group MIDAS and state-space estimator families remain future work.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">model_family=&quot;midasr&quot;</span></code> when you want the package-owned Python slice
+aligned to the R <code class="docutils literal notranslate"><span class="pre">midasr</span></code> package’s restricted MIDAS surface. Set
+<code class="docutils literal notranslate"><span class="pre">midasr_weight_family</span></code> to <code class="docutils literal notranslate"><span class="pre">nealmon</span></code>, <code class="docutils literal notranslate"><span class="pre">almonp</span></code>, <code class="docutils literal notranslate"><span class="pre">nbeta</span></code>, <code class="docutils literal notranslate"><span class="pre">genexp</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">harstep</span></code>; <code class="docutils literal notranslate"><span class="pre">midasr_nealmon</span></code> is kept as a legacy alias for the <code class="docutils literal notranslate"><span class="pre">nealmon</span></code>
+branch. <code class="docutils literal notranslate"><span class="pre">harstep</span></code> uses the R <code class="docutils literal notranslate"><span class="pre">midasr</span></code> 20-lag HAR shape, so leave
+<code class="docutils literal notranslate"><span class="pre">midas_max_lag</span></code> unset or set it to <code class="docutils literal notranslate"><span class="pre">20</span></code>. This is still an operational-narrow
+research route, so keep the selected predictor set explicit.</p>
+</section>
+<section id="inferred-transforms">
+<h2>Inferred Transforms<a class="headerlink" href="#inferred-transforms" title="Link to this heading"></a></h2>
+<p>Use inferred SD t-codes only when you want the reviewed national-analog
+research layer:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">use_sd_inferred_tcodes</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The manifest records <code class="docutils literal notranslate"><span class="pre">data_reports.sd_inferred_tcodes</span></code> with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">official:</span> <span class="pre">false</span></code></p></li>
+<li><p>map version</p></li>
+<li><p>allowed review statuses</p></li>
+<li><p>columns that received inferred codes</p></li>
+<li><p>skipped columns and their review status</p></li>
+</ul>
+</section>
+<section id="empirical-transforms">
+<h2>Empirical Transforms<a class="headerlink" href="#empirical-transforms" title="Link to this heading"></a></h2>
+<p>Use the empirical variable-global policy when you want the 2026-04-26
+stationarity audit choice: one code per FRED-SD variable, shared across states.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_qd+fred_sd&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1985-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">use_sd_empirical_tcodes</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s2">&quot;variable_global&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Use the state-series policy only with an explicit audited column map:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">use_sd_empirical_tcodes</span><span class="p">(</span>
+    <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;state_series&quot;</span><span class="p">,</span>
+    <span class="n">code_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;UR_CA&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;UR_TX&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="n">audit_uri</span><span class="o">=</span><span class="s2">&quot;artifacts/sd_state_series_audit.csv&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Both policies record <code class="docutils literal notranslate"><span class="pre">official:</span> <span class="pre">false</span></code> and the map/audit source in
+<code class="docutils literal notranslate"><span class="pre">data_reports.sd_inferred_tcodes</span></code>.</p>
+</section>
+<section id="bpprivsa-and-sthpi">
+<h2>BPPRIVSA And STHPI<a class="headerlink" href="#bpprivsa-and-sthpi" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BPPRIVSA</span></code> is frequency-specific:</p>
+<ul class="simple">
+<li><p>monthly experiments use the MD permits/housing analog code <code class="docutils literal notranslate"><span class="pre">4</span></code></p></li>
+<li><p>quarterly experiments use the QD permits/housing analog code <code class="docutils literal notranslate"><span class="pre">5</span></code></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">STHPI</span></code> follows the quarterly QD <code class="docutils literal notranslate"><span class="pre">USSTHPI</span></code> analog code <code class="docutils literal notranslate"><span class="pre">5</span></code>. If a monthly
+experiment later interpolates STHPI, the transform is still justified from the
+quarterly source-frequency analog.</p>
+</section>
+<section id="defaults">
+<h2>Defaults<a class="headerlink" href="#defaults" title="Link to this heading"></a></h2>
+<p>For ordinary use, do nothing. The default profile uses official FRED-MD/QD
+t-codes and leaves FRED-SD inferred/empirical t-codes off.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sweep_only_what_you_care.html" class="btn btn-neutral float-left" title="Sweep Only What You Care About" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="add_custom_model.html" class="btn btn-neutral float-right" title="Add A Custom Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

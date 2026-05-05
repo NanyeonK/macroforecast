@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Layers &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Artifacts And Manifest" href="artifacts_and_manifest.html" />
+    <link rel="prev" title="Layer Boundary Contract" href="layer_boundary_contract.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Architecture</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="layer0/index.html">4.0 Layer 0: Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer1/index.html">4.1 Layer 1: Data Source, Target y, Predictor x</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer2/index.html">4.2 Layer 2: Representation / Research Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer8/index.html">Layer 8: Output / Provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="foundation.html">Foundation Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Recipe Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminology.html">Terminology</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Architecture</a></li>
+      <li class="breadcrumb-item active">Recipe Layers</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/architecture/recipe_layers.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="recipe-layers">
+<h1>Recipe Layers<a class="headerlink" href="#recipe-layers" title="Link to this heading"></a></h1>
+<p>Current layer-contract recipes use numeric YAML keys that map directly to layer IDs.</p>
+<section id="canonical-keys">
+<h2>Canonical Keys<a class="headerlink" href="#canonical-keys" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer ID</p></th>
+<th class="head"><p>YAML key</p></th>
+<th class="head"><p>Required in minimal path</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0_meta</span></code></p></td>
+<td><p>optional; defaults apply</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1_data</span></code></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2_preprocessing</span></code></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l3</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3_feature_engineering</span></code></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l4</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4_forecasting_model</span></code></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5_evaluation</span></code></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l6</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">6_statistical_tests</span></code></p></td>
+<td><p>no; default off</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l7</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">7_interpretation</span></code></p></td>
+<td><p>no; default off</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8_output</span></code></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1_5_data_summary</span></code></p></td>
+<td><p>no; default off</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l2_5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2_5_pre_post_preprocessing</span></code></p></td>
+<td><p>no; default off</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l3_5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3_5_feature_diagnostics</span></code></p></td>
+<td><p>no; default off</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l4_5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4_5_generator_diagnostics</span></code></p></td>
+<td><p>no; default off</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="shape-rules">
+<h2>Shape Rules<a class="headerlink" href="#shape-rules" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>List layers use <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> plus optional <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code>.</p></li>
+<li><p>Graph layers use <code class="docutils literal notranslate"><span class="pre">nodes</span></code> and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>.</p></li>
+<li><p>Diagnostics require <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">true</span></code> to produce a diagnostic sink.</p></li>
+<li><p>L8 derives default saved objects from active upstream layers unless <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> is explicit.</p></li>
+</ul>
+</section>
+<section id="minimal-skeleton">
+<h2>Minimal Skeleton<a class="headerlink" href="#minimal-skeleton" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+
+<span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+
+<span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+
+<span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+
+<span class="nt">5_evaluation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+
+<span class="nt">8_output</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</pre></div>
+</div>
+<p>The skeleton above shows structure only. A runnable recipe must provide valid L3 and L4 DAG nodes and required sinks.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="layer_boundary_contract.html" class="btn btn-neutral float-left" title="Layer Boundary Contract" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="artifacts_and_manifest.html" class="btn btn-neutral float-right" title="Artifacts And Manifest" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

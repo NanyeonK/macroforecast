@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1c28bd9a"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/reference/public_api.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<p>Curated reference for the public surface of the current public surface of macroforecast.</p>
+<section id="top-level-api">
+<h2>Top-level API<a class="headerlink" href="#top-level-api" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.run(recipe,</span> <span class="pre">output_directory=...)</span></code></p></td>
+<td><p>Execute a recipe end-to-end (L1-&gt;L8). Iterates every <code class="docutils literal notranslate"><span class="pre">{sweep:</span> <span class="pre">[...]}</span></code> cell, applies L0 failure_policy + seed, returns a <code class="docutils literal notranslate"><span class="pre">ManifestExecutionResult</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(manifest_path)</span></code></p></td>
+<td><p>Re-execute a stored recipe and verify per-cell sink hashes match bit-for-bit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.ManifestExecutionResult</span></code></p></td>
+<td><p>Per-cell <code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code> + <code class="docutils literal notranslate"><span class="pre">sink_hashes</span></code>; serializes to <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.ReplicationResult</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">recipe_match</span></code>, <code class="docutils literal notranslate"><span class="pre">sink_hashes_match</span></code>, <code class="docutils literal notranslate"><span class="pre">per_cell_match</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="submodule-surfaces">
+<h2>Submodule surfaces<a class="headerlink" href="#submodule-surfaces" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code></p></td>
+<td><p>12-layer DAG runtime (foundation, layers, ops, runtime, execution, figures)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.raw</span></code></p></td>
+<td><p>FRED-MD/QD/SD adapters, vintage manager, manifest</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></p></td>
+<td><p>Preprocessing contract helpers</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.tuning</span></code></p></td>
+<td><p>Hyperparameter search engines</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.custom</span></code></p></td>
+<td><p>User-defined model/preprocessor/feature registration</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.defaults</span></code></p></td>
+<td><p>Default profile dict template</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="layer-modules">
+<h2>Layer modules<a class="headerlink" href="#layer-modules" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core.layers.l{0..8}</span></code> (plus <code class="docutils literal notranslate"><span class="pre">l{1,2,3,4}_5</span></code> diagnostics) hold the
+canonical schema (<code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code>) for each layer. Runtime
+materialization helpers live in <code class="docutils literal notranslate"><span class="pre">macroforecast.core.runtime</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">materialize_l1</span></code>, <code class="docutils literal notranslate"><span class="pre">materialize_l2</span></code>, <code class="docutils literal notranslate"><span class="pre">materialize_l3_minimal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">materialize_l4_minimal</span></code>, <code class="docutils literal notranslate"><span class="pre">materialize_l5_minimal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">materialize_l6_runtime</span></code>, <code class="docutils literal notranslate"><span class="pre">materialize_l7_runtime</span></code>,
+<code class="docutils literal notranslate"><span class="pre">materialize_l8_runtime</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">materialize_l1_5_diagnostic</span></code> … <code class="docutils literal notranslate"><span class="pre">materialize_l4_5_diagnostic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">execute_minimal_forecast(recipe)</span></code> – single-cell convenience wrapper</p></li>
+</ul>
+<p>Sweep loop + bit-exact replicate are in <code class="docutils literal notranslate"><span class="pre">macroforecast.core.execution</span></code>:
+<code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>, <code class="docutils literal notranslate"><span class="pre">replicate_recipe</span></code>, <code class="docutils literal notranslate"><span class="pre">CellExecutionResult</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ManifestExecutionResult</span></code>, <code class="docutils literal notranslate"><span class="pre">ReplicationResult</span></code>.</p>
+<p>Figure rendering (matplotlib + stylized US state choropleth) is in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.core.figures</span></code>: <code class="docutils literal notranslate"><span class="pre">render_bar_global</span></code>, <code class="docutils literal notranslate"><span class="pre">render_heatmap</span></code>,
+<code class="docutils literal notranslate"><span class="pre">render_pdp_line</span></code>, <code class="docutils literal notranslate"><span class="pre">render_us_state_choropleth</span></code>,
+<code class="docutils literal notranslate"><span class="pre">render_default_for_op</span></code>.</p>
+</section>
+<section id="operational-coverage">
+<h2>Operational coverage<a class="headerlink" href="#operational-coverage" title="Link to this heading"></a></h2>
+<p>See <span class="xref myst"><code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code></span> at the repo root for the operational
+matrix: 30+ model families, 37 L3 ops, 7 L6 sub-layers, 29 L7 importance
+ops, FRED-SD US state choropleth, parquet/latex/markdown export.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
