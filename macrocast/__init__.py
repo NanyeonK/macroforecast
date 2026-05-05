@@ -2,19 +2,22 @@
 
 Horse race research benchmarking package for macro forecasting.
 
-Public surface (v0.1):
+**Public surface** (v0.5)
+
 - ``macrocast.run(recipe)`` -- execute a recipe end-to-end (L1->L8) and
   return a :class:`ManifestExecutionResult`. Iterates every sweep cell.
 - ``macrocast.replicate(manifest_path)`` -- re-execute a stored manifest
   and verify per-cell sink hashes match bit-for-bit.
 
-Importable submodule surface:
-- ``macrocast.custom``        - user-defined model / preprocessor / feature registration
-- ``macrocast.defaults``      - default profile dict template
-- ``macrocast.preprocessing`` - preprocessing contract helpers
-- ``macrocast.raw``           - FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
-- ``macrocast.core``          - 12-layer DAG runtime (foundation, layers, ops, runtime, execution)
-- ``macrocast.tuning``        - hyperparameter search engines
+**Importable submodule surface**
+
+- ``macrocast.custom`` -- user-defined model / preprocessor / feature registration
+- ``macrocast.defaults`` -- default profile dict template
+- ``macrocast.preprocessing`` -- preprocessing contract helpers
+- ``macrocast.raw`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
+- ``macrocast.core`` -- 12-layer DAG runtime (foundation, layers, ops, runtime, execution)
+- ``macrocast.scaffold`` -- recipe scaffold wizard + RecipeBuilder + OptionDoc
+- ``macrocast.tuning`` -- hyperparameter search engines
 """
 
 from __future__ import annotations
