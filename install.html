@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="_static/documentation_options.js?v=486e5634"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -104,7 +104,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;
 </pre></div>
 </div>
 <p>Or pin to a tagged GitHub release directly:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/NanyeonK/macroforecast.git@v0.7.0&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;git+https://github.com/NanyeonK/macroforecast.git@v0.8.0&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -172,20 +172,20 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <p>(<code class="docutils literal notranslate"><span class="pre">openpyxl</span></code> is now a core dependency in v0.6.3+ since FRED-SD Excel workbook
 loading is a baseline FRED-SD code path.)</p>
 <p>Install all optional dependencies at once:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[all] @ git+https://github.com/NanyeonK/macroforecast.git@v0.7.0&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[all] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.0&quot;</span>
 </pre></div>
 </div>
 <p>All optional dependencies are import-guarded. The package works without them, but the corresponding features will raise <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> with a clear message when invoked.</p>
 <section id="the-deep-extra">
 <h3>The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra<a class="headerlink" href="#the-deep-extra" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">lstm</span></code>, <code class="docutils literal notranslate"><span class="pre">gru</span></code>, and <code class="docutils literal notranslate"><span class="pre">tcn</span></code> model families ship behind an opt-in <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra so core installs stay free of a torch dependency:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.7.0&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.0&quot;</span>
 </pre></div>
 </div>
 <p>Without the extra, referencing <code class="docutils literal notranslate"><span class="pre">model_family</span></code> in {lstm, gru, tcn} at sweep time raises a clear <code class="docutils literal notranslate"><span class="pre">ExecutionError</span></code> with the install hint.</p>
 <p>For CPU-only torch (sufficient unless a GPU sweep is planned):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>torch
-pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.7.0&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.0&quot;</span>
 </pre></div>
 </div>
 </section>
