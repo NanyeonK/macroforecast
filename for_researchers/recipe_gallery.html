@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Gallery &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=279f42e0"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Simple Docs" href="simple_api/index.html" />
+    <link rel="prev" title="FRED-SD Inferred T-Code Review v0.1" href="fred_datasets/fred_sd/inferred_tcode_review_v0_1.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">For researchers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="first_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="understanding_output.html">Understanding Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fred_datasets/index.html">FRED datasets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Recipe Gallery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simple_api/index.html">Simple Docs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">For researchers</a></li>
+      <li class="breadcrumb-item active">Recipe Gallery</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/recipe_gallery.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="recipe-gallery">
+<h1>Recipe Gallery<a class="headerlink" href="#recipe-gallery" title="Link to this heading"></a></h1>
+<p>Curated index of every recipe under
+<a class="reference external" href="https://github.com/NanyeonK/macroforecast/tree/main/examples/recipes"><code class="docutils literal notranslate"><span class="pre">examples/recipes/</span></code></a>
+with one-line purpose, required extras, and smoke-test status.</p>
+<p><strong>38 recipes total</strong> — 32 run on a stock <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast</span></code>;
+6 require optional extras.</p>
+<section id="how-to-read-the-table">
+<h2>How to read the table<a class="headerlink" href="#how-to-read-the-table" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Stock install</strong> = <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast</span></code> (no extras). All
+recipes in this column run end-to-end on a fresh venv with only the
+baseline dependencies (pandas / numpy / scikit-learn / statsmodels /
+scipy / matplotlib / openpyxl / PyYAML).</p></li>
+<li><p><strong>Extras required</strong> = pin the relevant extra. e.g.
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;macroforecast[xgboost,shap]&quot;</span></code>.</p></li>
+<li><p><strong>Smoke-tested</strong> = covered by <code class="docutils literal notranslate"><span class="pre">tests/test_examples_smoke.py</span></code>. The
+smoke suite parses + canonical-schema-validates every recipe and
+end-to-end runs the curated runnable subset.</p></li>
+</ul>
+</section>
+<section id="l0-l1-l2-layer-fragments-5">
+<h2>L0 / L1 / L2 layer fragments (5)<a class="headerlink" href="#l0-l1-l2-layer-fragments-5" title="Link to this heading"></a></h2>
+<p>Recipes that exercise only one layer at a time. Useful for unit work;
+not standalone runnable (they expect upstream sinks).</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l0_minimal.yaml</span></code></p></td>
+<td><p>L0 study setup defaults</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_minimal.yaml</span></code></p></td>
+<td><p>L1 with custom panel</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l1_with_regime.yaml</span></code></p></td>
+<td><p>L1 + NBER regime</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_estimated_markov_switching.yaml</span></code></p></td>
+<td><p>L1 + Hamilton MS regime estimator</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l2_minimal.yaml</span></code></p></td>
+<td><p>L2 transform + outlier + impute pass-through</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l2_fred_sd_alignment.yaml</span></code></p></td>
+<td><p>L2 with FRED-SD frequency filter</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l3-feature-engineering-dag-5">
+<h2>L3 feature engineering DAG (5)<a class="headerlink" href="#l3-feature-engineering-dag-5" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l3_minimal_lag_only.yaml</span></code></p></td>
+<td><p>Single lag step</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l3_mccracken_ng_baseline.yaml</span></code></p></td>
+<td><p>McCracken-Ng PCA + lag baseline</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l3_cascade_pca_on_marx.yaml</span></code></p></td>
+<td><p>Cascade β: PCA over MARX (<code class="docutils literal notranslate"><span class="pre">pipeline_id</span></code> cascade)</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l3_multi_pipeline_F_MARX.yaml</span></code></p></td>
+<td><p>Multi-pipeline DAG: factors + MARX combine</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l4-forecasting-model-runnable-end-to-end-8">
+<h2>L4 forecasting model — runnable end-to-end (8)<a class="headerlink" href="#l4-forecasting-model-runnable-end-to-end-8" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+<th class="head"><p>Smoke</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l4_minimal_ridge.yaml</span></code></p></td>
+<td><p><strong>Quick start</strong> — minimal ridge on inline panel</p></td>
+<td><p>—</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l4_bagging.yaml</span></code></p></td>
+<td><p>Bagging meta-estimator (Breiman 1996)</p></td>
+<td><p>—</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l4_quantile_regression_forest.yaml</span></code></p></td>
+<td><p>QRF (Meinshausen 2006) with quantile bands</p></td>
+<td><p>—</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l4_regime_separate_fit.yaml</span></code></p></td>
+<td><p>Per-regime separate fit</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l4_mrf_placeholder.yaml</span></code></p></td>
+<td><p>Coulombe (2024) MRF GTVP</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l4_5_minimal.yaml</span></code></p></td>
+<td><p>L4 + L4.5 generator diagnostics</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l4_5_full.yaml</span></code></p></td>
+<td><p>L4.5 full diagnostic battery</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l4_ensemble_ridge_xgb_vs_ar1.yaml</span></code></p></td>
+<td><p>Horse race: AR(1) bench vs ridge + xgb / lightgbm / catboost</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[xgboost,lightgbm,catboost]</span></code></p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l5-evaluation-3">
+<h2>L5 evaluation (3)<a class="headerlink" href="#l5-evaluation-3" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l5_minimal.yaml</span></code></p></td>
+<td><p>MSE + RMSE + MAE table</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l5_full_reporting.yaml</span></code></p></td>
+<td><p>Full reporting: ranking + decomposition + per-target/horizon</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l5_latex_export.yaml</span></code></p></td>
+<td><p>LaTeX table emit for paper appendix</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l6-statistical-tests-2">
+<h2>L6 statistical tests (2)<a class="headerlink" href="#l6-statistical-tests-2" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+<th class="head"><p>Smoke</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l6_standard.yaml</span></code></p></td>
+<td><p>DM (HLN) + Clark-West + residual battery</p></td>
+<td><p>—</p></td>
+<td><p>✅</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l6_full_replication.yaml</span></code></p></td>
+<td><p>Full L6: DM/CW/GR/MCS/PT/residual; 3 L4 models</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[xgboost,lightgbm,catboost]</span></code></p></td>
+<td><p>✅</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l7-interpretation-5">
+<h2>L7 interpretation (5)<a class="headerlink" href="#l7-interpretation-5" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l7_minimal_shap.yaml</span></code></p></td>
+<td><p>SHAP TreeExplainer on tree model</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[shap,xgboost]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l7_multi_method.yaml</span></code></p></td>
+<td><p>SHAP + permutation + lasso_inclusion together</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[shap,xgboost]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l7_coulombe_groups.yaml</span></code></p></td>
+<td><p>McCracken-Ng group-aggregate SHAP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[shap,xgboost]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l7_temporal.yaml</span></code></p></td>
+<td><p>Rolling SHAP for time-varying importance</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[shap,xgboost]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l7_transformation_attribution.yaml</span></code></p></td>
+<td><p>Real Shapley over (cell × pipeline)</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l8-export-3">
+<h2>L8 export (3)<a class="headerlink" href="#l8-export-3" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l8_compact_mode.yaml</span></code></p></td>
+<td><p>Single-cell artifact (no per-cell directory)</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l8_latex_paper.yaml</span></code></p></td>
+<td><p>LaTeX table + figure export for paper appendix</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l8_paper_replication.yaml</span></code></p></td>
+<td><p>Full provenance manifest + lockfiles</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="diagnostics-l1-5-l2-5-l3-5-6">
+<h2>Diagnostics — L1.5 / L2.5 / L3.5 (6)<a class="headerlink" href="#diagnostics-l1-5-l2-5-l3-5-6" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l1_5_minimal.yaml</span></code></p></td>
+<td><p>L1.5 raw data summary, default views</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_5_full.yaml</span></code></p></td>
+<td><p>L1.5 full battery (ADF/PP/KPSS + correlation pre-cleaning)</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l2_5_minimal.yaml</span></code></p></td>
+<td><p>L2.5 pre-vs-post preprocessing comparison</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l2_5_full.yaml</span></code></p></td>
+<td><p>L2.5 full distribution shift + cleaning effect</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l3_5_minimal.yaml</span></code></p></td>
+<td><p>L3.5 feature comparison (cleaned vs features)</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l3_5_full.yaml</span></code></p></td>
+<td><p>L3.5 factor block + lag block + selection diagnostics</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="replications-1-more-in-replications">
+<h2>Replications (1, more in <code class="docutils literal notranslate"><span class="pre">replications/</span></code>)<a class="headerlink" href="#replications-1-more-in-replications" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Recipe</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Extras</p></th>
+<th class="head"><p>Smoke</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/goulet_coulombe_2021_replication.yaml"><code class="docutils literal notranslate"><span class="pre">goulet_coulombe_2021_replication.yaml</span></code></a></p></td>
+<td><p>Goulet-Coulombe (2021) “The Macroeconomy as a Random Forest” — ridge baseline (paper-ported from old 8-layer schema)</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="../replications/index.html"><span class="std std-doc">docs/replications/</span></a> for end-to-end
+walkthroughs and the maintainer’s research replications.</p>
+</section>
+<section id="run-any-recipe">
+<h2>Run any recipe<a class="headerlink" href="#run-any-recipe" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Stock install</span>
+pip<span class="w"> </span>install<span class="w"> </span>macroforecast
+
+<span class="c1"># Or with extras</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[xgboost,lightgbm,catboost,shap]&quot;</span>
+
+<span class="c1"># Run</span>
+macroforecast<span class="w"> </span>run<span class="w"> </span>examples/recipes/&lt;recipe&gt;.yaml<span class="w"> </span>-o<span class="w"> </span>out/
+macroforecast<span class="w"> </span>replicate<span class="w"> </span>out/manifest.json
+</pre></div>
+</div>
+<p>Or programmatic:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l4_minimal_ridge.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="browse-by-axis-option">
+<h2>Browse by axis / option<a class="headerlink" href="#browse-by-axis-option" title="Link to this heading"></a></h2>
+<p>To find recipes that exercise a specific axis or option, browse the
+<a class="reference internal" href="../encyclopedia/index.html"><span class="std std-doc">encyclopedia</span></a> and follow the “see also”
+cross-references back to example recipes.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fred_datasets/fred_sd/inferred_tcode_review_v0_1.html" class="btn btn-neutral float-left" title="FRED-SD Inferred T-Code Review v0.1" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="simple_api/index.html" class="btn btn-neutral float-right" title="Simple Docs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
