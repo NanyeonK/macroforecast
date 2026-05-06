@@ -54,6 +54,7 @@
 <li class="toctree-l2"><a class="reference internal" href="data_policies.html">Forecast-Time And Source-Frame Policies (1.5)</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Custom Extensions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="target_transformer.html">Target Transformer Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="partial_layer_execution.html">Partial Layer Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="default_profiles.html">Default Profiles</a></li>
 </ul>
 </li>
@@ -93,224 +94,907 @@
              
   <section id="custom-extensions">
 <h1>Custom Extensions<a class="headerlink" href="#custom-extensions" title="Link to this heading"></a></h1>
-<p>Custom extensions are first-class method research APIs. A researcher should be
-able to add a Layer 2 representation method, a Layer 3 prediction method, or
-both, then compare the custom method against built-in baselines under the same
-Layer 0 task, Layer 1 data treatment, split, benchmark, and evaluation path.</p>
+<p>Custom extensions are first-class method-research APIs. A researcher should be
+able to add a Layer 2 representation method, a Layer 3 model, a target-side
+transform, or a final-matrix preprocessor, then compare the custom method
+against built-in baselines under the same Layer 0 task, Layer 1 data
+treatment, split, benchmark, and evaluation path.</p>
+<blockquote>
+<div><p>See also: <a class="reference internal" href="partial_layer_execution.html"><span class="std std-doc">Partial layer execution</span></a> – when
+developing a custom hook the partial-layer helpers are the fastest way to
+iterate without re-running upstream every time.</p>
+</div></blockquote>
 <section id="extension-map">
-<h2>Extension Map<a class="headerlink" href="#extension-map" title="Link to this heading"></a></h2>
-<p>Implemented runtime extension points:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span> <span class="o">|</span> <span class="s2">&quot;rotation&quot;</span> <span class="o">|</span> <span class="s2">&quot;factor&quot;</span><span class="p">)</span>
+<h2>Extension map<a class="headerlink" href="#extension-map" title="Link to this heading"></a></h2>
+<p>Five runtime extension points; all are decorator APIs from
+<code class="docutils literal notranslate"><span class="pre">macroforecast.custom</span></code> (re-exported under the top-level <code class="docutils literal notranslate"><span class="pre">mf</span></code> namespace):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span> <span class="o">|</span> <span class="s2">&quot;rotation&quot;</span> <span class="o">|</span> <span class="s2">&quot;factor&quot;</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The public contract metadata is available from:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">custom_method_extension_contracts</span><span class="p">()</span>
+<p>Each section below documents that hook with: decorator usage, required
+signature, input contract, output contract, a runnable worked example, and
+the most common errors.</p>
+<p>The matching contract metadata (returned as plain dicts) is available from:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">custom_method_extension_contracts</span><span class="p">()</span>       <span class="c1"># all five at once</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">custom_model_contract_metadata</span><span class="p">()</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">custom_preprocessor_contract_metadata</span><span class="p">()</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">target_transformer_contract_metadata</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Custom benchmarks and custom metrics are not decorator APIs yet. Benchmark
-plugins are supported through benchmark configuration; metric plugins should be
-added as a separate evaluation-layer contract.</p>
+<p>Custom benchmarks and custom metrics are not decorator APIs yet – benchmark
+plugins go through benchmark configuration, metric plugins should be added as
+a separate evaluation-layer contract.</p>
 </section>
-<section id="layer-2-custom-feature-blocks">
-<h2>Layer 2: Custom Feature Blocks<a class="headerlink" href="#layer-2-custom-feature-blocks" title="Link to this heading"></a></h2>
-<p>Layer 2 owns the research representation <code class="docutils literal notranslate"><span class="pre">Z</span></code>. Custom feature blocks are the
-right hook when the method changes what predictors exist before the model is
-fit: temporal filters, lag-polynomial summaries, nonlinear transforms, factor
-construction, rotation, supervised feature construction, or other
-research-specific blocks.</p>
-<p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="s2">&quot;my_block&quot;</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">my_block</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
-    <span class="o">...</span>
-    <span class="k">return</span> <span class="n">FeatureBlockCallableResult</span><span class="p">(</span>
-        <span class="n">train_features</span><span class="o">=</span><span class="n">train_frame</span><span class="p">,</span>
-        <span class="n">pred_features</span><span class="o">=</span><span class="n">pred_frame</span><span class="p">,</span>
-        <span class="n">feature_names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;public_name&quot;</span><span class="p">,),</span>
-        <span class="n">runtime_feature_names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;runtime_column&quot;</span><span class="p">,),</span>
-        <span class="n">fit_state</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-        <span class="n">leakage_metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lookahead&quot;</span><span class="p">:</span> <span class="s2">&quot;forbidden&quot;</span><span class="p">},</span>
-        <span class="n">provenance</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-    <span class="p">)</span>
-</pre></div>
-</div>
-<p>The callable receives a <code class="docutils literal notranslate"><span class="pre">FeatureBlockCallableContext</span></code> with the aligned
-training matrix, prediction row, target history, forecast origin, horizon,
-train/pred indices, selected source frame, predictor names, fit scope, feature
-namespace, and metadata.</p>
-<p>Return rules:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">train_features</span></code> and <code class="docutils literal notranslate"><span class="pre">pred_features</span></code> must have matching columns and stable
-row alignment.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">feature_names</span></code> are public names recorded in manifests and model context.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">runtime_feature_names</span></code> are the concrete matrix column names.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">leakage_metadata[&quot;lookahead&quot;]</span></code> is required and should normally be
-<code class="docutils literal notranslate"><span class="pre">&quot;forbidden&quot;</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fit_state</span></code> and <code class="docutils literal notranslate"><span class="pre">provenance</span></code> should record fitted parameters, selected
-source columns, and any sweep-relevant options.</p></li>
-</ul>
-<p>Custom feature blocks can be selected through Layer 2 feature-block axes, for
-example <code class="docutils literal notranslate"><span class="pre">temporal_feature_block=custom_temporal_features</span></code> plus
-<code class="docutils literal notranslate"><span class="pre">custom_temporal_feature_block=&lt;registered</span> <span class="pre">name&gt;</span></code>.</p>
-</section>
-<section id="layer-2-custom-feature-combiners">
-<h2>Layer 2: Custom Feature Combiners<a class="headerlink" href="#layer-2-custom-feature-combiners" title="Link to this heading"></a></h2>
-<p>Feature combiners are broader than feature blocks. Use a combiner when the
-research method changes how already-built blocks become final <code class="docutils literal notranslate"><span class="pre">Z</span></code>: nonlinear
-interactions across blocks, supervised block weighting, residualized block
-composition, or a custom low-dimensional representation built from multiple
-blocks.</p>
-<p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="s2">&quot;my_combiner&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">my_combiner</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
-    <span class="n">train</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">blocks_train</span><span class="p">[</span><span class="s2">&quot;candidate_z&quot;</span><span class="p">]</span>
-    <span class="n">pred</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">blocks_pred</span><span class="p">[</span><span class="s2">&quot;candidate_z&quot;</span><span class="p">]</span>
-    <span class="o">...</span>
-    <span class="k">return</span> <span class="n">FeatureCombinerCallableResult</span><span class="p">(</span>
-        <span class="n">Z_train</span><span class="o">=</span><span class="n">Z_train</span><span class="p">,</span>
-        <span class="n">Z_pred</span><span class="o">=</span><span class="n">Z_pred</span><span class="p">,</span>
-        <span class="n">feature_names</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;custom_feature&quot;</span><span class="p">,),</span>
-        <span class="n">block_roles</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;custom_feature&quot;</span><span class="p">:</span> <span class="s2">&quot;custom&quot;</span><span class="p">},</span>
-        <span class="n">fit_state</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-        <span class="n">leakage_metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;lookahead&quot;</span><span class="p">:</span> <span class="s2">&quot;forbidden&quot;</span><span class="p">},</span>
-        <span class="n">provenance</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-    <span class="p">)</span>
-</pre></div>
-</div>
-<p>Select it with <code class="docutils literal notranslate"><span class="pre">feature_block_combination=custom_feature_combiner</span></code> plus
-<code class="docutils literal notranslate"><span class="pre">custom_feature_combiner=&lt;registered</span> <span class="pre">name&gt;</span></code> in the Layer 1 leaf config or
-<code class="docutils literal notranslate"><span class="pre">custom_feature_blocks.combiner=&lt;registered</span> <span class="pre">name&gt;</span></code>.</p>
-</section>
-<section id="layer-2-final-z-selection-after-custom-blocks">
-<h2>Layer 2: Final-Z Selection After Custom Blocks<a class="headerlink" href="#layer-2-final-z-selection-after-custom-blocks" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">feature_selection_semantics=select_after_custom_feature_blocks</span></code> applies an operational
-feature-selection policy after custom blocks or a custom combiner have produced
-final <code class="docutils literal notranslate"><span class="pre">Z</span></code> candidates. The runtime records <code class="docutils literal notranslate"><span class="pre">custom_final_z_selection_v1</span></code> with
-candidate names, selected names, dropped names, policy, fit state, and leakage
-metadata.</p>
-<p>Use this when custom representation columns should participate in the same
-selection sweep as built-in columns. The selector still fits only inside the
-current training window.</p>
-</section>
-<section id="layer-2-matrix-preprocessors">
-<h2>Layer 2: Matrix Preprocessors<a class="headerlink" href="#layer-2-matrix-preprocessors" title="Link to this heading"></a></h2>
-<p>Custom preprocessors are post-representation matrix hooks. Use them when the
-research method keeps the same conceptual Layer 2 representation but applies a
-final matrix operation before Layer 3, such as a user-defined scaler,
-winsorizer, shrinkage transform, residualization, or sparse screen.</p>
-<p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="s2">&quot;my_preprocess&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">my_preprocess</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-    <span class="o">...</span>
-    <span class="k">return</span> <span class="n">X_train_new</span><span class="p">,</span> <span class="n">X_test_new</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">y_train</span></code> is read-only context. This hook does not transform the target. If the
-target scale changes, use <code class="docutils literal notranslate"><span class="pre">target_transformer</span></code>.</p>
-</section>
-<section id="layer-2-target-transformers">
-<h2>Layer 2: Target Transformers<a class="headerlink" href="#layer-2-target-transformers" title="Link to this heading"></a></h2>
-<p>Target transformers support research designs where <code class="docutils literal notranslate"><span class="pre">y</span></code> itself is transformed
-and forecasts must be inverted to the raw target scale.</p>
-<p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="s2">&quot;my_target_transform&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MyTargetTransform</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_train</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span>
+<hr class="docutils" />
+<section id="layer-3-custom-model">
+<h2>1. Layer 3: <code class="docutils literal notranslate"><span class="pre">custom_model</span></code><a class="headerlink" href="#layer-3-custom-model" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">custom_model</span></code> when the method changes the estimator, loss, likelihood,
+optimization, recursive rule, or prediction function but should consume the
+same <code class="docutils literal notranslate"><span class="pre">X_train</span></code>, <code class="docutils literal notranslate"><span class="pre">y_train</span></code>, <code class="docutils literal notranslate"><span class="pre">X_test</span></code> interface as built-in models.</p>
+<section id="decorator-usage">
+<h3>Decorator usage<a class="headerlink" href="#decorator-usage" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">target_transformed</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_pred</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">target_pred_raw</span>
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_constant_model&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_constant_model</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
 </pre></div>
 </div>
-<p>Final forecasts and evaluation metrics must remain on the raw target scale.
-The transformer is executable for target-lag feature runtimes and supported
-raw-panel runtimes.</p>
 </section>
-<section id="layer-3-custom-models">
-<h2>Layer 3: Custom Models<a class="headerlink" href="#layer-3-custom-models" title="Link to this heading"></a></h2>
-<p>Layer 3 owns model fitting and prediction given the finalized Layer 2
-representation. Use <code class="docutils literal notranslate"><span class="pre">custom_model</span></code> when the method changes the estimator,
-loss, likelihood, optimization, recursive rule, or prediction function but
-should consume the same <code class="docutils literal notranslate"><span class="pre">Z_train</span></code>, <code class="docutils literal notranslate"><span class="pre">y_train</span></code>, and <code class="docutils literal notranslate"><span class="pre">Z_pred</span></code> interface as built-in
-models.</p>
-<p>Minimum contract:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">my_model</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<section id="required-signature">
+<h3>Required signature<a class="headerlink" href="#required-signature" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fn</span><span class="p">(</span>
+    <span class="n">X_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>   <span class="c1"># n_train x n_features</span>
+    <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>      <span class="c1"># n_train, aligned to X_train.index</span>
+    <span class="n">X_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>    <span class="c1"># 1 x n_features (one prediction row)</span>
+    <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
     <span class="o">...</span>
-    <span class="k">return</span> <span class="n">y_pred</span>
 </pre></div>
 </div>
-<p>Runtime contract:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code>: <code class="docutils literal notranslate"><span class="pre">n_train</span> <span class="pre">x</span> <span class="pre">n_features</span></code> matrix from Layer 2.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code>: aligned training target.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code>: one-row prediction matrix.</p></li>
-<li><p>return value: scalar or one-element sequence/array.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">context[&quot;contract_version&quot;]</span> <span class="pre">==</span> <span class="pre">&quot;custom_model_v1&quot;</span></code>.</p></li>
-</ul>
-<p>The required context fields are:</p>
+<p>The wrapper iterates row-by-row when L4 calls <code class="docutils literal notranslate"><span class="pre">predict</span></code> on multi-row
+matrices, so the callable always sees a one-row <code class="docutils literal notranslate"><span class="pre">X_test</span></code>.</p>
+</section>
+<section id="input-contract">
+<h3>Input contract<a class="headerlink" href="#input-contract" title="Link to this heading"></a></h3>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Shape / contents</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contract_version</span></code></p></td>
-<td><p>Custom model contract identifier; currently <code class="docutils literal notranslate"><span class="pre">custom_model_v1</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n_train</span> <span class="pre">x</span> <span class="pre">n_features</span></code>; columns = Layer 2 feature names; floats with no NaNs (L3 dropna ran upstream).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_name</span></code></p></td>
-<td><p>Registered model name selected through <code class="docutils literal notranslate"><span class="pre">model_family</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n_train</span></code>; index aligned with <code class="docutils literal notranslate"><span class="pre">X_train.index</span></code>; target column from the L3 <code class="docutils literal notranslate"><span class="pre">y_final</span></code> artifact.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
-<td><p>Current target series name.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">x</span> <span class="pre">n_features</span></code>; one prediction row.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
-<td><p>Current forecast horizon.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_names</span></code></p></td>
-<td><p>Public Layer 2 feature names.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_runtime_builder</span></code></p></td>
-<td><p>Runtime feature route used to build the current matrices.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">block_order</span></code></p></td>
-<td><p>Ordered Layer 2 block names that produced the final matrix.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">block_roles</span></code></p></td>
-<td><p>Feature/block role metadata used by manifests and diagnostics.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alignment</span></code></p></td>
-<td><p>Train/pred alignment contract for the current forecast origin.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">leakage_contract</span></code></p></td>
-<td><p>Runtime leakage policy and audit metadata.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
-<td><p>Execution mode, such as direct or recursive runtime.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">context</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p>Required keys: <code class="docutils literal notranslate"><span class="pre">contract_version</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;custom_model_v1&quot;</span></code>), <code class="docutils literal notranslate"><span class="pre">model_name</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_names</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code> (the recipe-supplied <code class="docutils literal notranslate"><span class="pre">params:</span></code> dict for the fit_model node).</p></td>
 </tr>
 </tbody>
 </table>
-<p>Optional context fields include compatibility aliases
-<code class="docutils literal notranslate"><span class="pre">feature_builder</span></code>, <code class="docutils literal notranslate"><span class="pre">legacy_feature_builder</span></code>, and <code class="docutils literal notranslate"><span class="pre">feature_dispatch_source</span></code>;
-runtime-specific fields such as <code class="docutils literal notranslate"><span class="pre">forecast_type</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_object</span></code>,
-<code class="docutils literal notranslate"><span class="pre">train_index</span></code>, and iterated raw-panel payload metadata; and
-<code class="docutils literal notranslate"><span class="pre">auxiliary_payloads</span></code> when a Layer 2 route emits an extra model-facing payload.</p>
-<p>Registered custom model names are accepted through the current <code class="docutils literal notranslate"><span class="pre">model_family</span></code>
-compatibility axis. Canonically, they are custom forecast generator families
-and can be compared with built-in generators through the normal execution and
-experiment APIs.</p>
+<p>Optional context fields appear in
+<code class="docutils literal notranslate"><span class="pre">mf.custom_model_contract_metadata()[&quot;optional_context_fields&quot;]</span></code> – e.g.
+<code class="docutils literal notranslate"><span class="pre">train_index</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_type</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_object</span></code>, <code class="docutils literal notranslate"><span class="pre">recursive_step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">auxiliary_payloads</span></code> (FRED-SD mixed-frequency payloads only).</p>
+</section>
+<section id="output-contract">
+<h3>Output contract<a class="headerlink" href="#output-contract" title="Link to this heading"></a></h3>
+<p>Return one of:</p>
+<ul class="simple">
+<li><p>a Python <code class="docutils literal notranslate"><span class="pre">float</span></code> – single forecast value, or</p></li>
+<li><p>a one-element sequence/array (<code class="docutils literal notranslate"><span class="pre">[value]</span></code>, <code class="docutils literal notranslate"><span class="pre">np.array([value])</span></code>, etc.).</p></li>
+</ul>
+<p>The wrapper coerces both forms via <code class="docutils literal notranslate"><span class="pre">float(...)</span></code>.</p>
+</section>
+<section id="worked-example">
+<h3>Worked example<a class="headerlink" href="#worked-example" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom</span>
+
+<span class="n">custom</span><span class="o">.</span><span class="n">clear_custom_models</span><span class="p">()</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;constant_train_mean&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">constant_train_mean</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+<span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">0_meta:</span>
+<span class="s2">  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}</span>
+<span class="s2">1_data:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    custom_source_policy: custom_panel_only</span>
+<span class="s2">    frequency: monthly</span>
+<span class="s2">    horizon_set: custom_list</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    target: y</span>
+<span class="s2">    target_horizons: [1]</span>
+<span class="s2">    custom_panel_inline:</span>
+<span class="s2">      date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01,</span>
+<span class="s2">             2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01]</span>
+<span class="s2">      y:  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]</span>
+<span class="s2">      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]</span>
+<span class="s2">2_preprocessing:</span>
+<span class="s2">  fixed_axes: {transform_policy: no_transform, outlier_policy: none,</span>
+<span class="s2">               imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}</span>
+<span class="s2">3_feature_engineering:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}</span>
+<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}</span>
+<span class="s2">    - {id: lag_x, type: step, op: lag, params: </span><span class="si">{n_lag: 1}</span><span class="s2">, inputs: [src_X]}</span>
+<span class="s2">    - {id: y_h,   type: step, op: target_construction,</span>
+<span class="s2">       params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}</span>
+<span class="s2">  sinks:</span>
+<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
+<span class="s2">    l3_metadata_v1: auto</span>
+<span class="s2">4_forecasting_model:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}</span>
+<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}</span>
+<span class="s2">    - id: fit_main</span>
+<span class="s2">      type: step</span>
+<span class="s2">      op: fit_model</span>
+<span class="s2">      params: {family: constant_train_mean, min_train_size: 4,</span>
+<span class="s2">               forecast_strategy: direct, training_start_rule: expanding,</span>
+<span class="s2">               refit_policy: every_origin, search_algorithm: none}</span>
+<span class="s2">      inputs: [src_X, src_y]</span>
+<span class="s2">    - {id: predict, type: step, op: predict, inputs: [fit_main, src_X]}</span>
+<span class="s2">  sinks:</span>
+<span class="s2">    l4_forecasts_v1: predict</span>
+<span class="s2">    l4_model_artifacts_v1: fit_main</span>
+<span class="s2">    l4_training_metadata_v1: auto</span>
+<span class="s2">5_evaluation:</span>
+<span class="s2">  fixed_axes: {primary_metric: mse, point_metrics: [mse]}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="n">forecasts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">forecasts</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;first three forecasts:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">forecasts</span><span class="o">.</span><span class="n">values</span><span class="p">())[:</span><span class="mi">3</span><span class="p">])</span>
+
+<span class="n">art</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l4_model_artifacts_v1&quot;</span><span class="p">]</span>
+<span class="n">fitted</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">art</span><span class="o">.</span><span class="n">artifacts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="k">assert</span> <span class="n">fitted</span><span class="o">.</span><span class="n">family</span> <span class="o">==</span> <span class="s2">&quot;constant_train_mean&quot;</span>
+<span class="k">assert</span> <span class="n">fitted</span><span class="o">.</span><span class="n">framework</span> <span class="o">==</span> <span class="s2">&quot;custom&quot;</span>
+</pre></div>
+</div>
+<p>The fitted <code class="docutils literal notranslate"><span class="pre">L4ModelArtifactsArtifact</span></code> records <code class="docutils literal notranslate"><span class="pre">family</span> <span class="pre">=</span> <span class="pre">&quot;constant_train_mean&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">framework</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;</span></code> – those two fields
+distinguish a custom model from a built-in family in the manifest.</p>
+</section>
+<section id="common-errors">
+<h3>Common errors<a class="headerlink" href="#common-errors" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">unknown</span> <span class="pre">model</span> <span class="pre">family</span> <span class="pre">'foo'</span></code> at validate time</p></td>
+<td><p>Recipe references <code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">foo</span></code> but the registered name is different, or the module that calls <code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_model(&quot;foo&quot;)</span></code> was never imported in this Python process.</p></td>
+<td><p>Import the module before <code class="docutils literal notranslate"><span class="pre">Experiment(...).run()</span></code>; YAML alone does not register Python callables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RuntimeError:</span> <span class="pre">custom</span> <span class="pre">model</span> <span class="pre">'foo'</span> <span class="pre">predict()</span> <span class="pre">called</span> <span class="pre">before</span> <span class="pre">fit()</span></code></p></td>
+<td><p>The runtime called <code class="docutils literal notranslate"><span class="pre">predict</span></code> on the adapter without <code class="docutils literal notranslate"><span class="pre">fit</span></code> – usually a custom L4 op short-circuiting the fit path.</p></td>
+<td><p>Use the canonical <code class="docutils literal notranslate"><span class="pre">fit_model</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">predict</span></code> node pair (the <code class="docutils literal notranslate"><span class="pre">examples/recipes/l4_minimal_ridge.yaml</span></code> shape).</p></td>
+</tr>
+<tr class="row-even"><td><p>Predictions are all NaN</p></td>
+<td><p>The custom callable returned <code class="docutils literal notranslate"><span class="pre">np.nan</span></code> or a non-numeric value; the wrapper’s <code class="docutils literal notranslate"><span class="pre">float(value)</span></code> keeps NaN as-is.</p></td>
+<td><p>Guard inside the callable; raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> on degenerate fit windows so <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> decides.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<hr class="docutils" />
+<section id="layer-2-custom-preprocessor">
+<h2>2. Layer 2: <code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code><a class="headerlink" href="#layer-2-custom-preprocessor" title="Link to this heading"></a></h2>
+<p>Custom preprocessors are matrix hooks that fit between the L1 raw panel and
+the L3 feature DAG. v0.8.6 routes the same registered name to two distinct
+points inside L2 depending on <code class="docutils literal notranslate"><span class="pre">applied_at</span></code>.</p>
+<section id="id1">
+<h3>Decorator usage<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="s2">&quot;clip_x1_at_2&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clip_x1_at_2</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">cleaned_train</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">cleaned_test</span> <span class="o">=</span> <span class="n">X_test</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">&quot;x1&quot;</span> <span class="ow">in</span> <span class="n">cleaned_train</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">cleaned_train</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cleaned_train</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">cleaned_test</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cleaned_test</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cleaned_train</span><span class="p">,</span> <span class="n">cleaned_test</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Required signature<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fn</span><span class="p">(</span>
+    <span class="n">X_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>           <span class="c1"># full L2 panel (or post-pipeline panel; see table below)</span>
+    <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>       <span class="c1"># None at the L2 boundary -- target is not yet split out</span>
+    <span class="n">X_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>            <span class="c1"># same frame as X_train at the L2 boundary</span>
+    <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>         <span class="c1"># the recipe&#39;s L2.leaf_config dict (read-only)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>At the L2 boundary the runtime substitutes <code class="docutils literal notranslate"><span class="pre">X_train</span> <span class="pre">=</span> <span class="pre">X_test</span> <span class="pre">=</span> <span class="pre">frame</span></code> so the
+callable can do a single-pass clean. Returning a single <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> is
+also accepted – the runtime treats it as both the train and pred output.</p>
+</section>
+<section id="id3">
+<h3>Input contract<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> index</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DatetimeIndex</span></code> of the panel rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> columns</p></td>
+<td><p>Predictor names + the target column (the target stays in the panel until L3 splits it out).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> dtypes</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float64</span></code> numeric columns; <code class="docutils literal notranslate"><span class="pre">pd.NA</span></code> for missing cells.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> at the L2 boundary – target lives inside <code class="docutils literal notranslate"><span class="pre">X_train</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">context</span></code></p></td>
+<td><p>Copy of <code class="docutils literal notranslate"><span class="pre">2_preprocessing.leaf_config</span></code> from the recipe; useful for reading user-supplied options.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id4">
+<h3>Output contract<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Same <code class="docutils literal notranslate"><span class="pre">pd.DatetimeIndex</span></code> as <code class="docutils literal notranslate"><span class="pre">X_train</span></code> (drop / re-index only when
+intentional and the target column drop is acceptable).</p></li>
+<li><p>May add or remove columns; <strong>must preserve the target column</strong> when
+<code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code> because the canonical pipeline (transform / outlier /
+impute / frame_edge) still needs to run on it.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">applied_at='l3'</span></code> the returned frame becomes the L2 clean panel
+directly – L3 reads it via the <code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1</span></code> selector.</p></li>
+</ul>
+</section>
+<section id="applied-at-l2-vs-applied-at-l3">
+<h3><code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code> vs <code class="docutils literal notranslate"><span class="pre">applied_at='l3'</span></code><a class="headerlink" href="#applied-at-l2-vs-applied-at-l3" title="Link to this heading"></a></h3>
+<p>The same registered callable can be wired in at two distinct timing points
+within L2. The choice is made by the recipe author through
+<code class="docutils literal notranslate"><span class="pre">Experiment.use_preprocessor(name,</span> <span class="pre">applied_at=...)</span></code> (or by setting the
+right L2 <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> key directly).</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Aspect</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code> (pre-pipeline)</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">applied_at='l3'</span></code> (post-pipeline)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Runs at</p></td>
+<td><p>Top of <code class="docutils literal notranslate"><span class="pre">materialize_l2</span></code>, before <code class="docutils literal notranslate"><span class="pre">transform</span></code> / <code class="docutils literal notranslate"><span class="pre">outlier</span></code> / <code class="docutils literal notranslate"><span class="pre">impute</span></code> / <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code></p></td>
+<td><p>Bottom of <code class="docutils literal notranslate"><span class="pre">materialize_l2</span></code>, output becomes the L2 clean panel that L3 reads</p></td>
+</tr>
+<tr class="row-odd"><td><p>Input</p></td>
+<td><p>Raw L1 panel (untransformed; contains official t-codes if a code map was applied at L1)</p></td>
+<td><p>L2 clean panel (post-canonical pipeline)</p></td>
+</tr>
+<tr class="row-even"><td><p>Output replaces</p></td>
+<td><p>The raw input feeding the canonical pipeline</p></td>
+<td><p>The clean panel that L3 reads</p></td>
+</tr>
+<tr class="row-odd"><td><p>Use when</p></td>
+<td><p>You need to clean / deflate / normalise <em>before</em> the McCracken-Ng pipeline</p></td>
+<td><p>You want to override or replace the canonical pipeline output entirely</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> key</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">custom_postprocessor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Cleaning-log entry</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;custom_preprocessor&quot;:</span> <span class="pre">&quot;&lt;name&gt;&quot;,</span> <span class="pre">&quot;applied&quot;:</span> <span class="pre">True}</span></code> (first step)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;custom_postprocessor&quot;:</span> <span class="pre">&quot;&lt;name&gt;&quot;,</span> <span class="pre">&quot;applied&quot;:</span> <span class="pre">True}</span></code> (last step)</p></td>
+</tr>
+<tr class="row-even"><td><p>Available since</p></td>
+<td><p>v0.8.6 (#PR-A)</p></td>
+<td><p>v0.2.5 (#251)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id5">
+<h3>Worked example<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom</span>
+
+<span class="n">custom</span><span class="o">.</span><span class="n">clear_custom_preprocessors</span><span class="p">()</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_preprocessor</span><span class="p">(</span><span class="s2">&quot;clip_x1_at_2&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clip_x1_at_2</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">out_train</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">out_test</span> <span class="o">=</span> <span class="n">X_test</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">&quot;x1&quot;</span> <span class="ow">in</span> <span class="n">out_train</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">out_train</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_train</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+        <span class="n">out_test</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">out_test</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out_train</span><span class="p">,</span> <span class="n">out_test</span>
+
+<span class="c1"># Set ``custom_postprocessor`` for ``applied_at=&#39;l3&#39;`` (post-pipeline);</span>
+<span class="c1"># set ``custom_preprocessor`` for ``applied_at=&#39;l2&#39;`` (pre-pipeline).</span>
+<span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">0_meta:</span>
+<span class="s2">  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}</span>
+<span class="s2">1_data:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    custom_source_policy: custom_panel_only</span>
+<span class="s2">    frequency: monthly</span>
+<span class="s2">    horizon_set: custom_list</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    target: y</span>
+<span class="s2">    target_horizons: [1]</span>
+<span class="s2">    custom_panel_inline:</span>
+<span class="s2">      date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01,</span>
+<span class="s2">             2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01]</span>
+<span class="s2">      y:  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]</span>
+<span class="s2">      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]</span>
+<span class="s2">2_preprocessing:</span>
+<span class="s2">  fixed_axes: {transform_policy: no_transform, outlier_policy: none,</span>
+<span class="s2">               imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    custom_postprocessor: clip_x1_at_2</span>
+<span class="s2">3_feature_engineering:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}</span>
+<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}</span>
+<span class="s2">    - {id: lag_x, type: step, op: lag, params: </span><span class="si">{n_lag: 1}</span><span class="s2">, inputs: [src_X]}</span>
+<span class="s2">    - {id: y_h,   type: step, op: target_construction,</span>
+<span class="s2">       params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}</span>
+<span class="s2">  sinks:</span>
+<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
+<span class="s2">    l3_metadata_v1: auto</span>
+<span class="s2">4_forecasting_model:</span>
+<span class="s2">  nodes:</span>
+<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}</span>
+<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}</span>
+<span class="s2">    - id: fit_main</span>
+<span class="s2">      type: step</span>
+<span class="s2">      op: fit_model</span>
+<span class="s2">      params: {family: ridge, alpha: 0.1, min_train_size: 4,</span>
+<span class="s2">               forecast_strategy: direct, training_start_rule: expanding,</span>
+<span class="s2">               refit_policy: every_origin, search_algorithm: none}</span>
+<span class="s2">      inputs: [src_X, src_y]</span>
+<span class="s2">    - {id: predict, type: step, op: predict, inputs: [fit_main, src_X]}</span>
+<span class="s2">  sinks:</span>
+<span class="s2">    l4_forecasts_v1: predict</span>
+<span class="s2">    l4_model_artifacts_v1: fit_main</span>
+<span class="s2">    l4_training_metadata_v1: auto</span>
+<span class="s2">5_evaluation:</span>
+<span class="s2">  fixed_axes: {primary_metric: mse}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="n">panel</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l2_clean_panel_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">panel</span><span class="o">.</span><span class="n">data</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;max(x1) after clip:&quot;</span><span class="p">,</span> <span class="n">panel</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="k">assert</span> <span class="n">panel</span><span class="p">[</span><span class="s2">&quot;x1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="mf">2.0</span>
+</pre></div>
+</div>
+<p>The same callable can be wired in as <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_preprocessor</span></code>
+(<code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code> – pre-pipeline) instead of <code class="docutils literal notranslate"><span class="pre">custom_postprocessor</span></code>
+(<code class="docutils literal notranslate"><span class="pre">applied_at='l3'</span></code> – post-pipeline). The cleaning-log entry that lands
+in <code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1.cleaning_log['steps']</span></code> records which timing point
+ran.</p>
+<p>If you prefer the high-level builder, the equivalent two lines are:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">use_preprocessor</span><span class="p">(</span><span class="s2">&quot;clip_x1_at_2&quot;</span><span class="p">,</span> <span class="n">applied_at</span><span class="o">=</span><span class="s2">&quot;l3&quot;</span><span class="p">)</span>  <span class="c1"># or &quot;l2&quot;</span>
+</pre></div>
+</div>
+<p>Note: <code class="docutils literal notranslate"><span class="pre">Experiment(...)</span></code> always wires the official FRED path; reach for
+the recipe-dict / YAML form whenever you need to drive a custom inline
+panel like the example above.</p>
+<p>Switch to <code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code> to run the same callable <em>before</em> the
+McCracken-Ng pipeline – useful when you want the official t-code map to
+operate on already-deflated columns, for example.</p>
+</section>
+<section id="id6">
+<h3>Common errors<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">minimal</span> <span class="pre">L3</span> <span class="pre">runtime</span> <span class="pre">requires</span> <span class="pre">target</span> <span class="pre">column</span> <span class="pre">in</span> <span class="pre">L2</span> <span class="pre">clean</span> <span class="pre">panel</span></code></p></td>
+<td><p>Returned a frame that dropped the target column under <code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code>.</p></td>
+<td><p>Preserve the target column; the L2 pipeline downstream still needs it.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Output ignored, no error</p></td>
+<td><p>Runtime saw an exception and silently fell back to identity (the dispatcher wraps the call in <code class="docutils literal notranslate"><span class="pre">try</span> <span class="pre">/</span> <span class="pre">except</span></code> for safety).</p></td>
+<td><p>Manually call <code class="docutils literal notranslate"><span class="pre">mf.custom.get_custom_preprocessor(name).function(...)</span></code> once during dev to surface the traceback.</p></td>
+</tr>
+<tr class="row-even"><td><p>Index drift (rows missing in <code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1</span></code>)</p></td>
+<td><p>Returned a smaller / re-indexed DataFrame and the canonical pipeline subsequently dropped more rows.</p></td>
+<td><p>Preserve the input <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code> unless drop is the explicit goal of the hook.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<hr class="docutils" />
+<section id="layer-2-target-transformer">
+<h2>3. Layer 2: <code class="docutils literal notranslate"><span class="pre">target_transformer</span></code><a class="headerlink" href="#layer-2-target-transformer" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">target_transformer</span></code> is the target-side extension. Use it when <code class="docutils literal notranslate"><span class="pre">y</span></code> itself
+must be transformed for fitting and forecasts must be inverted to the raw
+target scale before they reach L5 evaluation.</p>
+<section id="id7">
+<h3>Decorator usage<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="s2">&quot;scale_by_std&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScaleByStd</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_train</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">target_train</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">target</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_pred</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">target_pred</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_</span>
+</pre></div>
+</div>
+<p>The decorator accepts either a class (instantiated once per L3 run) or a
+factory <code class="docutils literal notranslate"><span class="pre">()</span> <span class="pre">-&gt;</span> <span class="pre">instance</span></code>.</p>
+</section>
+<section id="id8">
+<h3>Required signature<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<p>The registered object (or factory’s product) must implement three methods:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TargetTransformer</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span> <span class="o">|</span> <span class="s2">&quot;TargetTransformer&quot;</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform_prediction</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">target_pred</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="input-output-contract">
+<h3>Input / output contract<a class="headerlink" href="#input-output-contract" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_train</span></code>: <code class="docutils literal notranslate"><span class="pre">pd.Series</span></code> of training-window y values; <code class="docutils literal notranslate"><span class="pre">context</span></code>: dict (currently empty).</p></td>
+<td><p>Side-effects only; return value is ignored.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target</span></code>: <code class="docutils literal notranslate"><span class="pre">pd.Series</span></code> (training y or live y); <code class="docutils literal notranslate"><span class="pre">context</span></code>: dict.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code> on the transformed scale.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inverse_transform_prediction</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target_pred</span></code>: 1-D iterable of model predictions (transformed scale); <code class="docutils literal notranslate"><span class="pre">context</span></code>: dict.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> on the raw target scale.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Scale rule: model fits on the transformed scale, but every reported forecast
+and metric is on the raw target scale. The runtime applies
+<code class="docutils literal notranslate"><span class="pre">inverse_transform_prediction</span></code> between L4 and L5.</p>
+</section>
+<section id="id9">
+<h3>Worked example<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">custom</span><span class="o">.</span><span class="n">clear_custom_target_transformers</span><span class="p">()</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">target_transformer</span><span class="p">(</span><span class="s2">&quot;scale_by_std&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScaleByStd</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_train</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">target_train</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">target</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform_prediction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_pred</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">target_pred</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;custom_panel_only&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">recipe</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">to_recipe_dict</span><span class="p">()</span>
+<span class="n">recipe</span><span class="p">[</span><span class="s2">&quot;1_data&quot;</span><span class="p">][</span><span class="s2">&quot;leaf_config&quot;</span><span class="p">][</span><span class="s2">&quot;target_transformer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;scale_by_std&quot;</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+
+<span class="n">forecasts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">forecasts</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;raw-scale forecasts:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">forecasts</span><span class="o">.</span><span class="n">values</span><span class="p">())[:</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Final forecasts are on the raw target scale – the inverse step ran between
+L4 and L5.</p>
+</section>
+<section id="id10">
+<h3>Common errors<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TypeError:</span> <span class="pre">target</span> <span class="pre">transformer</span> <span class="pre">'foo'</span> <span class="pre">must</span> <span class="pre">provide</span> <span class="pre">callable</span> <span class="pre">methods:</span> <span class="pre">['fit',</span> <span class="pre">...]</span></code></p></td>
+<td><p>Registered object missing one of the three required methods.</p></td>
+<td><p>Implement all three; <code class="docutils literal notranslate"><span class="pre">fit</span></code> may be a no-op but must exist.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Forecast values look 1000x off</p></td>
+<td><p>Forgot to wire <code class="docutils literal notranslate"><span class="pre">inverse_transform_prediction</span></code> (returned the same value).</p></td>
+<td><p>Ensure <code class="docutils literal notranslate"><span class="pre">inverse_transform_prediction</span></code> undoes <code class="docutils literal notranslate"><span class="pre">transform</span></code> round-trip.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_runtime</span></code> rejection</p></td>
+<td><p>The feature runtime is not in the supported allowlist. See <a class="reference internal" href="target_transformer.html"><span class="std std-doc">Target transformer</span></a> for the gate.</p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">ols</span></code> / <code class="docutils literal notranslate"><span class="pre">ridge</span></code> / <code class="docutils literal notranslate"><span class="pre">lasso</span></code> / <code class="docutils literal notranslate"><span class="pre">elasticnet</span></code> / a registered <code class="docutils literal notranslate"><span class="pre">custom_model</span></code> with target-lag or raw-panel runtimes.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For deeper rules see <a class="reference internal" href="target_transformer.html"><span class="std std-doc">Target transformer</span></a>.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="layer-3-custom-feature-block">
+<h2>4. Layer 3: <code class="docutils literal notranslate"><span class="pre">custom_feature_block</span></code><a class="headerlink" href="#layer-3-custom-feature-block" title="Link to this heading"></a></h2>
+<p>Layer 3 builds the research representation. Use <code class="docutils literal notranslate"><span class="pre">custom_feature_block</span></code> when
+the method changes what predictors exist before the model is fit – e.g.
+temporal filters, lag-polynomial summaries, factor construction, rotation,
+research-specific transforms.</p>
+<p>A registered feature block is dispatched whenever an L3 step node’s <code class="docutils literal notranslate"><span class="pre">op</span></code>
+matches the registered name (the runtime checks the registry before falling
+through to built-in ops).</p>
+<section id="id11">
+<h3>Decorator usage<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="s2">&quot;double_it&quot;</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">double_it</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">frame</span> <span class="o">*</span> <span class="mf">2.0</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">block_kind</span></code> is one of <code class="docutils literal notranslate"><span class="pre">&quot;temporal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rotation&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;factor&quot;</span></code> and
+governs which Layer 2 axis exposes the registered name.</p>
+</section>
+<section id="id12">
+<h3>Required signature<a class="headerlink" href="#id12" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fn</span><span class="p">(</span>
+    <span class="n">frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>         <span class="c1"># the upstream L3 node&#39;s output (predictors)</span>
+    <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>      <span class="c1"># the recipe&#39;s params dict for this step node</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="id13">
+<h3>Input / output contract<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Aspect</p></th>
+<th class="head"><p>Contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> from the upstream node; index is the panel <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>. May contain <code class="docutils literal notranslate"><span class="pre">pd.NA</span></code> (drop / fill is the block’s responsibility).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<td><p>The L3 step node’s <code class="docutils literal notranslate"><span class="pre">params:</span></code> dict; <code class="docutils literal notranslate"><span class="pre">block_kind</span></code> is injected by the dispatcher when present.</p></td>
+</tr>
+<tr class="row-even"><td><p>Return</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> with the same index (or a deterministic subset). New columns are stable feature names.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id14">
+<h3>Worked example<a class="headerlink" href="#id14" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom</span>
+
+<span class="n">custom</span><span class="o">.</span><span class="n">clear_custom_feature_blocks</span><span class="p">()</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_block</span><span class="p">(</span><span class="s2">&quot;double_it&quot;</span><span class="p">,</span> <span class="n">block_kind</span><span class="o">=</span><span class="s2">&quot;temporal&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">double_it</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">frame</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">))</span>
+
+<span class="n">recipe</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;0_meta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;failure_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;fail_fast&quot;</span><span class="p">,</span> <span class="s2">&quot;reproducibility_mode&quot;</span><span class="p">:</span> <span class="s2">&quot;seeded_reproducible&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;1_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;custom_source_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_panel_only&quot;</span><span class="p">,</span> <span class="s2">&quot;frequency&quot;</span><span class="p">:</span> <span class="s2">&quot;monthly&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon_set&quot;</span><span class="p">:</span> <span class="s2">&quot;custom_list&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;leaf_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;target_horizons&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;custom_panel_inline&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;2018-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-02-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-03-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-04-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-05-01&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;2018-06-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-07-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-08-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-09-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2018-10-01&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;y&quot;</span><span class="p">:</span>  <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">],</span>
+                <span class="s2">&quot;x1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2_preprocessing&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;fixed_axes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;transform_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;no_transform&quot;</span><span class="p">,</span> <span class="s2">&quot;outlier_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;imputation_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;none_propagate&quot;</span><span class="p">,</span> <span class="s2">&quot;frame_edge_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;keep_unbalanced&quot;</span><span class="p">}},</span>
+    <span class="s2">&quot;3_feature_engineering&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;src_X&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;layer_ref&quot;</span><span class="p">:</span> <span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="s2">&quot;sink_name&quot;</span><span class="p">:</span> <span class="s2">&quot;l2_clean_panel_v1&quot;</span><span class="p">,</span> <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;predictors&quot;</span><span class="p">}}},</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;src_y&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;layer_ref&quot;</span><span class="p">:</span> <span class="s2">&quot;l2&quot;</span><span class="p">,</span> <span class="s2">&quot;sink_name&quot;</span><span class="p">:</span> <span class="s2">&quot;l2_clean_panel_v1&quot;</span><span class="p">,</span> <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;target&quot;</span><span class="p">}}},</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;scaled_x&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">:</span> <span class="s2">&quot;double_it&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;block_kind&quot;</span><span class="p">:</span> <span class="s2">&quot;temporal&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">},</span> <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;src_X&quot;</span><span class="p">]},</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;y_h&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">:</span> <span class="s2">&quot;target_construction&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;point_forecast&quot;</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;src_y&quot;</span><span class="p">]},</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;sinks&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;l3_features_v1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;X_final&quot;</span><span class="p">:</span> <span class="s2">&quot;scaled_x&quot;</span><span class="p">,</span> <span class="s2">&quot;y_final&quot;</span><span class="p">:</span> <span class="s2">&quot;y_h&quot;</span><span class="p">},</span> <span class="s2">&quot;l3_metadata_v1&quot;</span><span class="p">:</span> <span class="s2">&quot;auto&quot;</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;4_forecasting_model&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;src_X&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;layer_ref&quot;</span><span class="p">:</span> <span class="s2">&quot;l3&quot;</span><span class="p">,</span> <span class="s2">&quot;sink_name&quot;</span><span class="p">:</span> <span class="s2">&quot;l3_features_v1&quot;</span><span class="p">,</span> <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;component&quot;</span><span class="p">:</span> <span class="s2">&quot;X_final&quot;</span><span class="p">}}},</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;src_y&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;source&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;selector&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;layer_ref&quot;</span><span class="p">:</span> <span class="s2">&quot;l3&quot;</span><span class="p">,</span> <span class="s2">&quot;sink_name&quot;</span><span class="p">:</span> <span class="s2">&quot;l3_features_v1&quot;</span><span class="p">,</span> <span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;component&quot;</span><span class="p">:</span> <span class="s2">&quot;y_final&quot;</span><span class="p">}}},</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;fit_main&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">:</span> <span class="s2">&quot;fit_model&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;min_train_size&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                        <span class="s2">&quot;forecast_strategy&quot;</span><span class="p">:</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="s2">&quot;training_start_rule&quot;</span><span class="p">:</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;refit_policy&quot;</span><span class="p">:</span> <span class="s2">&quot;every_origin&quot;</span><span class="p">,</span> <span class="s2">&quot;search_algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;none&quot;</span><span class="p">},</span>
+             <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;src_X&quot;</span><span class="p">,</span> <span class="s2">&quot;src_y&quot;</span><span class="p">]},</span>
+            <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;predict&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;op&quot;</span><span class="p">:</span> <span class="s2">&quot;predict&quot;</span><span class="p">,</span> <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fit_main&quot;</span><span class="p">,</span> <span class="s2">&quot;src_X&quot;</span><span class="p">]},</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;sinks&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">:</span> <span class="s2">&quot;predict&quot;</span><span class="p">,</span> <span class="s2">&quot;l4_model_artifacts_v1&quot;</span><span class="p">:</span> <span class="s2">&quot;fit_main&quot;</span><span class="p">,</span> <span class="s2">&quot;l4_training_metadata_v1&quot;</span><span class="p">:</span> <span class="s2">&quot;auto&quot;</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;custom block applied:&quot;</span><span class="p">,</span> <span class="s2">&quot;scaled_x&quot;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l3_features_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">column_names</span> <span class="ow">or</span>
+      <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l3_features_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The L3 step node’s <code class="docutils literal notranslate"><span class="pre">op:</span> <span class="pre">double_it</span></code> triggers the registered callable; the
+output <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> becomes <code class="docutils literal notranslate"><span class="pre">scaled_x</span></code> and feeds the L4 fit node.</p>
+</section>
+<section id="id15">
+<h3>Common errors<a class="headerlink" href="#id15" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NotImplementedError:</span> <span class="pre">L3</span> <span class="pre">runtime</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">support</span> <span class="pre">op</span> <span class="pre">'foo'</span></code></p></td>
+<td><p>Step node references <code class="docutils literal notranslate"><span class="pre">op:</span> <span class="pre">foo</span></code> but no callable named <code class="docutils literal notranslate"><span class="pre">foo</span></code> is registered.</p></td>
+<td><p>Import the module that calls <code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_feature_block(&quot;foo&quot;,</span> <span class="pre">...)</span></code> before <code class="docutils literal notranslate"><span class="pre">mf.run(...)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Custom block silently ignored, fallback ran instead</p></td>
+<td><p>Registered callable raised inside the dispatcher (the dispatcher swallows exceptions for safety).</p></td>
+<td><p>Call <code class="docutils literal notranslate"><span class="pre">mf.custom.get_custom_feature_block(name,</span> <span class="pre">block_kind=...).function(frame,</span> <span class="pre">params)</span></code> directly during dev to surface the traceback.</p></td>
+</tr>
+<tr class="row-even"><td><p>Index drift in the L3 sink</p></td>
+<td><p>Block returned a smaller / re-indexed frame and the L3 <code class="docutils literal notranslate"><span class="pre">concat</span></code> later mis-aligned.</p></td>
+<td><p>Keep the input <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code> (or document the drop precisely).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<hr class="docutils" />
+<section id="layer-3-custom-feature-combiner">
+<h2>5. Layer 3: <code class="docutils literal notranslate"><span class="pre">custom_feature_combiner</span></code><a class="headerlink" href="#layer-3-custom-feature-combiner" title="Link to this heading"></a></h2>
+<p>Feature combiners are broader than feature blocks. Use a combiner when the
+method changes how already-built blocks become final <code class="docutils literal notranslate"><span class="pre">Z</span></code> – nonlinear
+interactions across blocks, supervised block weighting, residualized
+composition, custom low-dim representations.</p>
+<section id="id16">
+<h3>Decorator usage<a class="headerlink" href="#id16" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="s2">&quot;merge_concat&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_concat</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">inputs</span>
+</pre></div>
+</div>
+</section>
+<section id="id17">
+<h3>Required signature<a class="headerlink" href="#id17" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fn</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>   <span class="c1"># list of upstream block frames</span>
+    <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>       <span class="c1"># the recipe&#39;s params dict for this step node</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>The combiner receives the <strong>list</strong> of upstream frames (multi-frame merge
+contract). Always handle both the list form and – defensively – the single
+frame form, since the dispatcher only routes the list form when the
+upstream has multiple inputs.</p>
+</section>
+<section id="id18">
+<h3>Input / output contract<a class="headerlink" href="#id18" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Aspect</p></th>
+<th class="head"><p>Contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list[pd.DataFrame]</span></code>; each frame shares the panel <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<td><p>The L3 step node’s <code class="docutils literal notranslate"><span class="pre">params:</span></code> dict (e.g. weights, components).</p></td>
+</tr>
+<tr class="row-even"><td><p>Return</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> with the same index. Columns are the public feature names of the combined representation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id19">
+<h3>Worked example<a class="headerlink" href="#id19" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">custom</span><span class="o">.</span><span class="n">clear_custom_feature_combiners</span><span class="p">()</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">custom_feature_combiner</span><span class="p">(</span><span class="s2">&quot;merge_concat&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_concat</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Inside a recipe, an L3 step node like</span>
+<span class="c1">#   {id: combine, type: step, op: merge_concat, inputs: [block_a, block_b]}</span>
+<span class="c1"># triggers the combiner when both upstream blocks are pd.DataFrames.</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]})</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]})</span>
+
+<span class="c1"># Direct invocation for unit tests / debugging:</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">custom</span><span class="o">.</span><span class="n">get_custom_feature_combiner</span><span class="p">(</span><span class="s2">&quot;merge_concat&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">function</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="p">{}))</span>
+</pre></div>
+</div>
+<p>To wire it into a real recipe, define an L3 step node whose <code class="docutils literal notranslate"><span class="pre">op</span></code> matches
+the registered name and whose <code class="docutils literal notranslate"><span class="pre">inputs</span></code> list the upstream block ids – the
+dispatcher routes the list of upstream frames to the combiner.</p>
+</section>
+<section id="id20">
+<h3>Common errors<a class="headerlink" href="#id20" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KeyError</span></code> inside combiner</p></td>
+<td><p>Indexed into <code class="docutils literal notranslate"><span class="pre">inputs</span></code> as if it were always a list, but the dispatcher passed a single frame.</p></td>
+<td><p>Branch on <code class="docutils literal notranslate"><span class="pre">isinstance(inputs,</span> <span class="pre">list)</span></code> (the worked example does).</p></td>
+</tr>
+<tr class="row-odd"><td><p>Column collisions in the combined frame</p></td>
+<td><p>Two upstream blocks emit a column with the same name.</p></td>
+<td><p>Rename inside the combiner – <code class="docutils literal notranslate"><span class="pre">pd.concat([a,</span> <span class="pre">b.add_prefix(&quot;b_&quot;)],</span> <span class="pre">axis=1)</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<hr class="docutils" />
+<section id="method-comparison-sweeps">
+<h2>Method comparison sweeps<a class="headerlink" href="#method-comparison-sweeps" title="Link to this heading"></a></h2>
+<p>Method researchers often compare combinations:</p>
+<ul class="simple">
+<li><p>built-in Layer 2 representation with built-in Layer 4 generator;</p></li>
+<li><p>custom Layer 2 representation with built-in Layer 4 generator;</p></li>
+<li><p>built-in Layer 2 representation with custom Layer 4 generator;</p></li>
+<li><p>custom Layer 2 representation with custom Layer 4 generator.</p></li>
+</ul>
+<p>Use <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code> for registry axes and <code class="docutils literal notranslate"><span class="pre">leaf_sweep_axes</span></code> for
+variant-specific configuration names. <code class="docutils literal notranslate"><span class="pre">leaf_sweep_axes</span></code> materializes into
+<code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> before each variant is compiled, so registered custom names
+can vary across variants without editing package internals.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_compare_methods</span>
+<span class="w">      </span><span class="nt">failure_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">continue_on_failure</span>
+<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">sweep_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">temporal_feature_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">moving_average_features</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">custom_temporal_features</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">        </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_y</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">        </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_candidate</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
+<span class="w">        </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">        </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="nv">my_custom_generator</span><span class="p p-Indicator">}</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_candidate</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
+<span class="w">        </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict</span>
+<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_candidate</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_candidate</span>
+<span class="w">      </span><span class="nt">l4_model_artifacts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_candidate</span>
+<span class="w">      </span><span class="nt">l4_training_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</pre></div>
+</div>
+<p>If the custom name should apply only when the parent custom axis is
+selected, use <code class="docutils literal notranslate"><span class="pre">nested_sweep_axes</span></code> with a <code class="docutils literal notranslate"><span class="pre">leaf_config.&lt;key&gt;</span></code> child. This
+avoids duplicate built-in variants that differ only by an unused custom name.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nested_sweep_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">temporal_feature_block</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">moving_average_features</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">        </span><span class="nt">custom_temporal_features</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">leaf_config.custom_temporal_feature_block</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_temporal_block</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_second_temporal_block</span>
+</pre></div>
+</div>
+<p>For custom combiners, bind the combiner name the same way:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nested_sweep_axes</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">feature_block_combination</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">concatenate_named_blocks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">        </span><span class="nt">custom_feature_combiner</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">leaf_config.custom_feature_combiner</span><span class="p">:</span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_combiner</span>
+</pre></div>
+</div>
+<p>The compiler expands the grid first, then validates each variant. With
+<code class="docutils literal notranslate"><span class="pre">failure_policy=continue_on_failure</span></code>, unsupported cells remain visible in
+the manifest; supported built-in/custom cells run and appear in the same
+study manifest.</p>
+</section>
 <section id="fred-sd-mixed-frequency-payloads">
-<h3>FRED-SD Mixed-Frequency Payloads<a class="headerlink" href="#fred-sd-mixed-frequency-payloads" title="Link to this heading"></a></h3>
+<h2>FRED-SD mixed-frequency payloads<a class="headerlink" href="#fred-sd-mixed-frequency-payloads" title="Link to this heading"></a></h2>
 <p>FRED-SD can emit extra Layer 2 payloads for custom Layer 3 models:</p>
 <table class="docutils align-default">
 <thead>
@@ -331,122 +1015,37 @@ experiment APIs.</p>
 </tbody>
 </table>
 <p>The native-frequency payload includes <code class="docutils literal notranslate"><span class="pre">blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">block_order</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">column_to_native_frequency</span></code>. The adapter payload records the adapter route and
-the block-payload contract consumed by the model. This is the supported place
-to implement research-specific mixed-frequency likelihoods, weighting schemes,
-state updates, or direct forecast rules while leaving Layer 1 source/t-code
-policy and Layer 2 representation choices auditable.</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">examples/custom_fred_sd_mixed_frequency_model.py</span></code> as an executable Python
-template and
-<code class="docutils literal notranslate"><span class="pre">examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml</span></code> as the
-matching recipe skeleton. YAML can select the registered <code class="docutils literal notranslate"><span class="pre">model_family</span></code>, but it
-does not import Python code. Import the module that calls <code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_model(...)</span></code>
-before compiling or running the recipe.</p>
-</section>
-</section>
-<section id="method-comparison-sweeps">
-<h2>Method Comparison Sweeps<a class="headerlink" href="#method-comparison-sweeps" title="Link to this heading"></a></h2>
-<p>Method researchers often need to compare combinations such as:</p>
-<ul class="simple">
-<li><p>built-in Layer 2 representation with built-in Layer 4 generator;</p></li>
-<li><p>custom Layer 2 representation with built-in Layer 4 generator;</p></li>
-<li><p>built-in Layer 2 representation with custom Layer 4 generator;</p></li>
-<li><p>custom Layer 2 representation with custom Layer 4 generator.</p></li>
-</ul>
-<p>Use <code class="docutils literal notranslate"><span class="pre">sweep_axes</span></code> for registry axes and <code class="docutils literal notranslate"><span class="pre">leaf_sweep_axes</span></code> for variant-specific
-configuration names. <code class="docutils literal notranslate"><span class="pre">leaf_sweep_axes</span></code> materializes into <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> before
-each variant is compiled, so registered custom names can vary across variants
-without editing package internals.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">0_meta</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">study_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">one_target_compare_methods</span>
-<span class="w">      </span><span class="nt">failure_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">continue_on_failure</span>
-<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">sweep_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">temporal_feature_block</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">moving_average_features</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">custom_temporal_features</span><span class="p p-Indicator">]</span>
-<span class="w">  </span><span class="nt">4_forecasting_model</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
-<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="w">        </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_y</span>
-<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="w">        </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_candidate</span>
-<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">        </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
-<span class="w">        </span><span class="nt">params</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_generator</span>
-<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_candidate</span>
-<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">        </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict</span>
-<span class="w">        </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_candidate</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="nt">sinks</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_candidate</span>
-<span class="w">      </span><span class="nt">l4_model_artifacts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_candidate</span>
-<span class="w">      </span><span class="nt">l4_training_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
-</pre></div>
-</div>
-<p>If the custom name should apply only when the parent custom axis is selected,
-use <code class="docutils literal notranslate"><span class="pre">nested_sweep_axes</span></code> with a <code class="docutils literal notranslate"><span class="pre">leaf_config.&lt;key&gt;</span></code> child. This avoids duplicate
-built-in variants that differ only by an unused custom name.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nested_sweep_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">temporal_feature_block</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">moving_average_features</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
-<span class="w">        </span><span class="nt">custom_temporal_features</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">leaf_config.custom_temporal_feature_block</span><span class="p">:</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_temporal_block</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_second_temporal_block</span>
-<span class="w">  </span><span class="nt">4_forecasting_model</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nodes</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}}</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}}</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">fit_candidate</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">fit_model</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="nv">my_custom_generator</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]}</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">predict_candidate</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">predict</span><span class="p p-Indicator">,</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_candidate</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]}</span>
-<span class="w">    </span><span class="nt">sinks</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_candidate</span>
-<span class="w">      </span><span class="nt">l4_model_artifacts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_candidate</span>
-<span class="w">      </span><span class="nt">l4_training_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
-</pre></div>
-</div>
-<p>For custom combiners, bind the combiner name the same way:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">path</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">2_preprocessing</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">nested_sweep_axes</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">feature_block_combination</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">concatenate_named_blocks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
-<span class="w">        </span><span class="nt">custom_feature_combiner</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">leaf_config.custom_feature_combiner</span><span class="p">:</span>
-<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_combiner</span>
-</pre></div>
-</div>
-<p>The compiler expands the grid first, then validates each variant. With
-<code class="docutils literal notranslate"><span class="pre">failure_policy=continue_on_failure</span></code>, unsupported cells remain visible in the
-manifest; supported built-in/custom cells run and appear in the same study
-manifest.</p>
+<code class="docutils literal notranslate"><span class="pre">column_to_native_frequency</span></code>. The adapter payload records the adapter
+route and the block-payload contract consumed by the model. This is the
+supported place to implement research-specific mixed-frequency likelihoods,
+weighting schemes, state updates, or direct forecast rules while leaving
+Layer 1 source / t-code policy and Layer 2 representation choices auditable.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">examples/custom_fred_sd_mixed_frequency_model.py</span></code> as an executable
+Python template and
+<code class="docutils literal notranslate"><span class="pre">examples/recipes/templates/fred-sd-custom-mixed-frequency-model.yaml</span></code> as
+the matching recipe skeleton. YAML can select the registered
+<code class="docutils literal notranslate"><span class="pre">model_family</span></code>, but it does not import Python code – import the module
+that calls <code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_model(...)</span></code> before compiling or running the recipe.</p>
 </section>
 <section id="fair-comparison-checklist">
-<h2>Fair Comparison Checklist<a class="headerlink" href="#fair-comparison-checklist" title="Link to this heading"></a></h2>
-<p>For a custom method comparison to be valid:</p>
+<h2>Fair-comparison checklist<a class="headerlink" href="#fair-comparison-checklist" title="Link to this heading"></a></h2>
+<p>For a custom-method comparison to be valid:</p>
 <ul class="simple">
 <li><p>Keep Layer 0 task axes fixed unless task design is the object of comparison.</p></li>
-<li><p>Keep Layer 1 raw data treatment fixed unless raw missing/outlier policy is
+<li><p>Keep Layer 1 raw-data treatment fixed unless raw missing/outlier policy is
 the object of comparison.</p></li>
-<li><p>Put representation construction in Layer 2, not inside a model closure.</p></li>
+<li><p>Put representation construction in Layer 2/3, not inside a model closure.</p></li>
 <li><p>Put estimator changes in Layer 3, not inside a feature block.</p></li>
-<li><p>Record all fitted choices in <code class="docutils literal notranslate"><span class="pre">fit_state</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance</span></code>, or model tuning
-payload.</p></li>
+<li><p>Record all fitted choices in <code class="docutils literal notranslate"><span class="pre">fit_state</span></code>, <code class="docutils literal notranslate"><span class="pre">provenance</span></code>, or model
+tuning payload.</p></li>
 <li><p>Use identical split, horizon, benchmark, and evaluation settings across
 built-in and custom variants.</p></li>
 </ul>
-<p>This separation matters because most method papers compare combinations: a new
-representation with existing models, existing representations with a new
-model, or a custom representation and custom model together. Macrocast should
-make each of those comparisons executable without package-internal edits.</p>
+<p>This separation matters because most method papers compare combinations: a
+new representation with existing models, existing representations with a new
+model, or a custom representation and custom model together. macroforecast
+should make each of those comparisons executable without package-internal
+edits.</p>
 </section>
 </section>
 

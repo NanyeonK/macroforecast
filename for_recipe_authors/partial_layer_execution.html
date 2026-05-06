@@ -1,0 +1,747 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partial Layer Execution &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=279f42e0"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Default Profiles" href="default_profiles.html" />
+    <link rel="prev" title="Target Transformer Contract" href="target_transformer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">For recipe authors</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="design.html">Layer Contract Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data/index.html">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_policies.html">Forecast-Time And Source-Frame Policies (1.5)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_hooks.html">Custom Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="target_transformer.html">Target Transformer Contract</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Partial Layer Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="default_profiles.html">Default Profiles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">For recipe authors</a></li>
+      <li class="breadcrumb-item active">Partial Layer Execution</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_recipe_authors/partial_layer_execution.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="partial-layer-execution">
+<h1>Partial Layer Execution<a class="headerlink" href="#partial-layer-execution" title="Link to this heading"></a></h1>
+<p>Most recipe-author work is iterative: tweak one knob, rerun, inspect.
+<code class="docutils literal notranslate"><span class="pre">macroforecast.run(...)</span></code> executes the entire L1 → L8 cell loop, which is
+overkill when you only care about whether the L2 outlier policy actually
+flagged what you expected, or whether your new L3 op produces the right
+<code class="docutils literal notranslate"><span class="pre">X_final</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> runtime exposes per-layer materialization helpers
+that do exactly that. Each helper accepts the parsed recipe dict and the
+upstream artifacts, and returns the same artifact dataclasses that the full
+pipeline would have produced – so you can inspect intermediate sinks
+without invoking L4 / L5 / L6 / L7 / L8.</p>
+<blockquote>
+<div><p>See also: <a class="reference internal" href="custom_hooks.html"><span class="std std-doc">Custom hooks</span></a> – developing a custom hook
+almost always involves L1+L2 once and then iterating on the layer the
+hook is registered against.</p>
+</div></blockquote>
+<section id="why-this-exists">
+<h2>Why this exists<a class="headerlink" href="#why-this-exists" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Use case</p></th>
+<th class="head"><p>Helper(s)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>“Did L2 actually flag my outliers?”</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">materialize_l1</span></code> + <code class="docutils literal notranslate"><span class="pre">materialize_l2</span></code>, then read <code class="docutils literal notranslate"><span class="pre">L2CleanPanelArtifact.cleaning_log['steps']</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>“Does my new L3 op produce the X_final I expect?”</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">materialize_l1</span></code> + <code class="docutils literal notranslate"><span class="pre">materialize_l2</span></code> + <code class="docutils literal notranslate"><span class="pre">materialize_l3_minimal</span></code>; iterate on L3 only.</p></td>
+</tr>
+<tr class="row-even"><td><p>“Walk forward through L1 → L5 once, no L6/L7/L8”</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_minimal_forecast</span></code> – the same helper that the integration tests use.</p></td>
+</tr>
+<tr class="row-odd"><td><p>“Bridge from a custom-panel YAML straight to the L2 sink”</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_l1_l2</span></code> – L1 + L2 only, no L3+ overhead.</p></td>
+</tr>
+<tr class="row-even"><td><p>“Replay one DAG node from cache”</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">execute_node</span></code> – foundation primitive used by <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-api-surface">
+<h2>Public API surface<a class="headerlink" href="#public-api-surface" title="Link to this heading"></a></h2>
+<p>All six helpers live on <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">materialize_l1</span><span class="p">,</span>
+    <span class="n">materialize_l2</span><span class="p">,</span>
+    <span class="n">materialize_l3_minimal</span><span class="p">,</span>
+    <span class="n">materialize_l4_minimal</span><span class="p">,</span>
+    <span class="n">materialize_l5_minimal</span><span class="p">,</span>
+    <span class="n">execute_l1_l2</span><span class="p">,</span>
+    <span class="n">execute_minimal_forecast</span><span class="p">,</span>
+    <span class="n">execute_node</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Returns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">materialize_l1(recipe_root)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code> (parsed recipe)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(L1DataDefinitionArtifact,</span> <span class="pre">L1RegimeMetadataArtifact,</span> <span class="pre">dict[str,</span> <span class="pre">Any]</span> <span class="pre">resolved_axes)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">materialize_l2(recipe_root,</span> <span class="pre">l1_artifact)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code>, L1 artifact</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(L2CleanPanelArtifact,</span> <span class="pre">L2ResolvedAxes)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">materialize_l3_minimal(recipe_root,</span> <span class="pre">l1_artifact,</span> <span class="pre">l2_artifact)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code>, L1, L2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(L3FeaturesArtifact,</span> <span class="pre">L3MetadataArtifact)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">materialize_l4_minimal(recipe_root,</span> <span class="pre">l3_features)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code>, L3 features</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(L4ForecastsArtifact,</span> <span class="pre">L4ModelArtifactsArtifact,</span> <span class="pre">L4TrainingMetadataArtifact)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">materialize_l5_minimal(recipe_root,</span> <span class="pre">l1_artifact,</span> <span class="pre">l3_features,</span> <span class="pre">l4_forecasts,</span> <span class="pre">l4_models)</span></code></p></td>
+<td><p>as listed</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">L5EvaluationArtifact</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">execute_l1_l2(recipe)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code> or YAML <code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code> with <code class="docutils literal notranslate"><span class="pre">l1_data_definition_v1</span></code> + <code class="docutils literal notranslate"><span class="pre">l1_regime_metadata_v1</span></code> + <code class="docutils literal notranslate"><span class="pre">l2_clean_panel_v1</span></code> (plus L1.5 / L2.5 diagnostics if enabled).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">execute_minimal_forecast(recipe)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code> or YAML <code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code> with L1 → L5 sinks + any enabled L1.5 / L2.5 / L3.5 / L4.5 / L6 / L7 / L8 sinks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">execute_node(node,</span> <span class="pre">dag,</span> <span class="pre">runtime_context,</span> <span class="pre">cache_dir)</span></code></p></td>
+<td><p>one DAG <code class="docutils literal notranslate"><span class="pre">Node</span></code></p></td>
+<td><p>the materialized node value (cached on disk).</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code> (from <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>) is a frozen dataclass with
+<code class="docutils literal notranslate"><span class="pre">artifacts:</span> <span class="pre">dict[str,</span> <span class="pre">Any]</span></code> (sink_name → artifact),
+<code class="docutils literal notranslate"><span class="pre">resolved_axes:</span> <span class="pre">dict[str,</span> <span class="pre">dict]</span></code> (per-layer resolved axis values), and
+<code class="docutils literal notranslate"><span class="pre">runtime_durations:</span> <span class="pre">dict[str,</span> <span class="pre">float]</span></code> (L1 / L2 / L3 / … wall-clock
+seconds). Access a single sink with <code class="docutils literal notranslate"><span class="pre">rt.sink(&quot;l2_clean_panel_v1&quot;)</span></code>.</p>
+</section>
+<section id="worked-sequence">
+<h2>Worked sequence<a class="headerlink" href="#worked-sequence" title="Link to this heading"></a></h2>
+<p>The example below uses the same 10-row inline custom panel as
+<code class="docutils literal notranslate"><span class="pre">examples/recipes/l4_minimal_ridge.yaml</span></code> and walks through L1 → L3 by
+hand.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">materialize_l1</span><span class="p">,</span> <span class="n">materialize_l2</span><span class="p">,</span> <span class="n">materialize_l3_minimal</span><span class="p">,</span>
+    <span class="n">materialize_l4_minimal</span><span class="p">,</span> <span class="n">materialize_l5_minimal</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">recipe</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">parse_recipe_yaml</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l4_minimal_ridge.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+<span class="c1"># --- L1 ---------------------------------------------------------------</span>
+<span class="n">l1_artifact</span><span class="p">,</span> <span class="n">regime_artifact</span><span class="p">,</span> <span class="n">l1_axes</span> <span class="o">=</span> <span class="n">materialize_l1</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L1 frequency :&quot;</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="o">.</span><span class="n">frequency</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L1 target    :&quot;</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L1 raw_panel :&quot;</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="o">.</span><span class="n">raw_panel</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;rows x cols&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L1 axes keys :&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">l1_axes</span><span class="p">)[:</span><span class="mi">6</span><span class="p">])</span>
+
+<span class="c1"># --- L2 ---------------------------------------------------------------</span>
+<span class="n">l2_artifact</span><span class="p">,</span> <span class="n">l2_axes</span> <span class="o">=</span> <span class="n">materialize_l2</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L2 panel     :&quot;</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="o">.</span><span class="n">panel</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L2 cleaning_log steps:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">step</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">l2_artifact</span><span class="o">.</span><span class="n">cleaning_log</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L2 n_outliers:&quot;</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="o">.</span><span class="n">n_outliers_flagged</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L2 n_imputed :&quot;</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="o">.</span><span class="n">n_imputed_cells</span><span class="p">)</span>
+
+<span class="c1"># --- L3 ---------------------------------------------------------------</span>
+<span class="n">l3_features</span><span class="p">,</span> <span class="n">l3_metadata</span> <span class="o">=</span> <span class="n">materialize_l3_minimal</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L3 X_final   :&quot;</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L3 y_final   :&quot;</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">y_final</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">y_final</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L3 horizons  :&quot;</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">horizon_set</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L3 sample_ix :&quot;</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">sample_index</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Expected output (the inline panel is deterministic):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L1 frequency : monthly
+L1 target    : y
+L1 raw_panel : (12, 2) rows x cols
+L1 axes keys : [&#39;custom_source_policy&#39;, &#39;dataset&#39;, &#39;frequency&#39;, ...]
+L2 panel     : (12, 2)
+L2 cleaning_log steps: [{&#39;transform&#39;: &#39;no_transform&#39;}, {&#39;outlier&#39;: &#39;none&#39;}, ...]
+L2 n_outliers: 0
+L2 n_imputed : 0
+L3 X_final   : (10, 1)
+L3 y_final   : (10,) y
+L3 horizons  : (1,)
+L3 sample_ix : [Timestamp(&#39;2018-02-01 00:00:00&#39;), Timestamp(&#39;2018-03-01 00:00:00&#39;), ...]
+</pre></div>
+</div>
+<p>The L3 step drops the first two rows (lag 1 + h=1 target shift), giving 10
+rows of <code class="docutils literal notranslate"><span class="pre">X_final</span></code> / <code class="docutils literal notranslate"><span class="pre">y_final</span></code>. From here you could continue:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">l4_forecasts</span><span class="p">,</span> <span class="n">l4_models</span><span class="p">,</span> <span class="n">l4_training</span> <span class="o">=</span> <span class="n">materialize_l4_minimal</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l3_features</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L4 model_ids :&quot;</span><span class="p">,</span> <span class="n">l4_forecasts</span><span class="o">.</span><span class="n">model_ids</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L4 forecasts :&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">l4_forecasts</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">values</span><span class="p">())[:</span><span class="mi">3</span><span class="p">])</span>
+
+<span class="n">l5_eval</span> <span class="o">=</span> <span class="n">materialize_l5_minimal</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">,</span> <span class="n">l3_features</span><span class="p">,</span> <span class="n">l4_forecasts</span><span class="p">,</span> <span class="n">l4_models</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L5 metrics   :&quot;</span><span class="p">,</span> <span class="n">l5_eval</span><span class="o">.</span><span class="n">metrics_table</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="convenience-helpers">
+<h2>Convenience helpers<a class="headerlink" href="#convenience-helpers" title="Link to this heading"></a></h2>
+<p>When you do not need the artifact dataclasses directly, two helpers wrap the
+materialize calls and return a <code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">execute_l1_l2</span><span class="p">,</span> <span class="n">execute_minimal_forecast</span>
+
+<span class="c1"># L1 + L2 only -- no L3+ overhead. Good for &quot;did the cleaner do its job?&quot;</span>
+<span class="n">rt</span> <span class="o">=</span> <span class="n">execute_l1_l2</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l2_minimal.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;sinks       :&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rt</span><span class="o">.</span><span class="n">artifacts</span><span class="p">))</span>
+<span class="n">panel</span> <span class="o">=</span> <span class="n">rt</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l2_clean_panel_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">panel</span><span class="o">.</span><span class="n">data</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;panel shape :&quot;</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;L2 axes     :&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rt</span><span class="o">.</span><span class="n">resolved_axes</span><span class="p">[</span><span class="s2">&quot;l2&quot;</span><span class="p">])[:</span><span class="mi">6</span><span class="p">])</span>
+
+<span class="c1"># L1 → L5 (plus any enabled L1.5 / L2.5 / L3.5 / L4.5 / L6 / L7 / L8 sinks).</span>
+<span class="n">rt5</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l4_minimal_ridge.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;durations   :&quot;</span><span class="p">,</span> <span class="n">rt5</span><span class="o">.</span><span class="n">runtime_durations</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;forecasts   :&quot;</span><span class="p">,</span> <span class="n">rt5</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">model_ids</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">execute_l1_l2</span></code> while debugging L2 settings; use
+<code class="docutils literal notranslate"><span class="pre">execute_minimal_forecast</span></code> when you want a full minimal end-to-end pass
+without going through <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> (which writes a manifest and
+manages the cell loop).</p>
+<p>For the full multi-cell <code class="docutils literal notranslate"><span class="pre">run(...)</span></code> API see <code class="docutils literal notranslate"><span class="pre">macroforecast.core.execute_recipe</span></code>.</p>
+</section>
+<section id="schemas-of-the-intermediate-sinks">
+<h2>Schemas of the intermediate sinks<a class="headerlink" href="#schemas-of-the-intermediate-sinks" title="Link to this heading"></a></h2>
+<p>The artifacts are frozen dataclasses defined in <code class="docutils literal notranslate"><span class="pre">macroforecast/core/types.py</span></code>.</p>
+<section id="l1datadefinitionartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L1DataDefinitionArtifact</span></code><a class="headerlink" href="#l1datadefinitionartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;official_only&quot;,</span> <span class="pre">&quot;custom_panel_only&quot;,</span> <span class="pre">&quot;official_plus_custom&quot;]</span></code></p></td>
+<td><p>Resolved from L1 fixed_axes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;fred_md&quot;,</span> <span class="pre">&quot;fred_qd&quot;,</span> <span class="pre">&quot;fred_sd&quot;,</span> <span class="pre">&quot;fred_md+fred_sd&quot;,</span> <span class="pre">&quot;fred_qd+fred_sd&quot;]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>None for <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;monthly&quot;,</span> <span class="pre">&quot;quarterly&quot;]</span></code></p></td>
+<td><p>Resolved frequency.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;current_vintage&quot;,</span> <span class="pre">&quot;real_time_alfred&quot;]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>None for custom-panel runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;single_target&quot;,</span> <span class="pre">&quot;multi_series_target&quot;]</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>The single-target name (or first of <code class="docutils literal notranslate"><span class="pre">targets</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">targets</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tuple[str,</span> <span class="pre">...]</span></code></p></td>
+<td><p>The full list when <code class="docutils literal notranslate"><span class="pre">target_structure='multi_series_target'</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
+<td><p>enum or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_geography_scope</span></code> / <code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></p></td>
+<td><p>enums or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>FRED-SD only.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code> / <code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></p></td>
+<td><p>enums</p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code> / <code class="docutils literal notranslate"><span class="pre">target_horizons</span></code></p></td>
+<td><p>str / <code class="docutils literal notranslate"><span class="pre">tuple[int,</span> <span class="pre">...]</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> unless a regime axis is set.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Panel</span></code></p></td>
+<td><p>The materialized predictor + target frame. <code class="docutils literal notranslate"><span class="pre">raw_panel.data</span></code> is a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> indexed by <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>; <code class="docutils literal notranslate"><span class="pre">raw_panel.metadata.values</span></code> carries the <code class="docutils literal notranslate"><span class="pre">transform_codes</span></code> dict when official t-codes are loaded.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">leaf_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p>Echo of L1.leaf_config; useful for reading <code class="docutils literal notranslate"><span class="pre">custom_panel_inline</span></code>, <code class="docutils literal notranslate"><span class="pre">target_transformer</span></code>, etc.</p></td>
+</tr>
+</tbody>
+</table>
+<p>There is no separate <code class="docutils literal notranslate"><span class="pre">target_series</span></code> field; the target column lives inside
+<code class="docutils literal notranslate"><span class="pre">raw_panel.data[target]</span></code> until the L3 stage splits it out.</p>
+</section>
+<section id="l1regimemetadataartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L1RegimeMetadataArtifact</span></code><a class="headerlink" href="#l1regimemetadataartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>When <code class="docutils literal notranslate"><span class="pre">None</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">definition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;none&quot;,</span> <span class="pre">&quot;external_nber&quot;,</span> <span class="pre">&quot;external_user_provided&quot;,</span> <span class="pre">&quot;estimated_markov_switching&quot;,</span> <span class="pre">&quot;estimated_threshold&quot;,</span> <span class="pre">&quot;estimated_structural_break&quot;]</span></code></p></td>
+<td><p>Always set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_regimes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime_label_series</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Series</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when <code class="docutils literal notranslate"><span class="pre">definition='none'</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regime_probabilities</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Series</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> for non-MS regimes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transition_matrix</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> outside Markov-switching.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">estimation_temporal_rule</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> for external regimes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">estimation_metadata</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+<td><p>Empty for external regimes.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l2cleanpanelartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L2CleanPanelArtifact</span></code><a class="headerlink" href="#l2cleanpanelartifact" title="Link to this heading"></a></h3>
+<p>Inherits from <code class="docutils literal notranslate"><span class="pre">Panel</span></code>; therefore exposes <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">shape</span></code>, <code class="docutils literal notranslate"><span class="pre">column_names</span></code>, <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata</span></code> directly <strong>and</strong> repeats them through the <code class="docutils literal notranslate"><span class="pre">panel</span></code> field.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">panel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Panel</span></code></p></td>
+<td><p>The cleaned panel. <code class="docutils literal notranslate"><span class="pre">panel.data</span></code> is the post-pipeline DataFrame (<code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>, <code class="docutils literal notranslate"><span class="pre">float64</span></code> + <code class="docutils literal notranslate"><span class="pre">pd.NA</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">column_metadata</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p>Per-column dtype string and other column-level audit info.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cleaning_log</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;runtime&quot;:</span> <span class="pre">&quot;core_l1_l2_materialization&quot;,</span> <span class="pre">&quot;steps&quot;:</span> <span class="pre">[...]}</span></code>. Each step entry is a dict produced by the relevant stage (<code class="docutils literal notranslate"><span class="pre">transform</span></code>, <code class="docutils literal notranslate"><span class="pre">outlier</span></code>, <code class="docutils literal notranslate"><span class="pre">imputation</span></code>, <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code>, plus any <code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code> / <code class="docutils literal notranslate"><span class="pre">custom_postprocessor</span></code> entries).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_imputed_cells</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Total cells the imputer filled.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_outliers_flagged</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Total cells the outlier policy touched.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_truncated_obs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Rows the frame-edge policy dropped.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform_map_applied</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">int]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">column</span> <span class="pre">-&gt;</span> <span class="pre">applied</span> <span class="pre">tcode</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cleaning_temporal_rules</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
+<td><p>Records the per-stage temporal rule (<code class="docutils literal notranslate"><span class="pre">imputation</span></code>, <code class="docutils literal notranslate"><span class="pre">outlier</span></code>, <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
+<td><p>Populated by the cell loop only – empty in raw materialize calls.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l3featuresartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L3FeaturesArtifact</span></code><a class="headerlink" href="#l3featuresartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_final</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Panel</span> <span class="pre">|</span> <span class="pre">LaggedPanel</span> <span class="pre">|</span> <span class="pre">Factor</span></code></p></td>
+<td><p>The final predictor matrix. <code class="docutils literal notranslate"><span class="pre">X_final.data</span></code> is a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> with the post-DAG features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_final</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
+<td><p>The final target series; <code class="docutils literal notranslate"><span class="pre">y_final.name</span></code> is the target column, <code class="docutils literal notranslate"><span class="pre">y_final.metadata.values[&quot;data&quot;]</span></code> carries the raw <code class="docutils literal notranslate"><span class="pre">pd.Series</span></code> (and <code class="docutils literal notranslate"><span class="pre">[&quot;raw_data&quot;]</span></code> when a target transformer is active).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sample_index</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DatetimeIndex</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>The aligned index of <code class="docutils literal notranslate"><span class="pre">X_final</span></code> ∩ <code class="docutils literal notranslate"><span class="pre">y_final</span></code> after dropna.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tuple[int,</span> <span class="pre">...]</span></code></p></td>
+<td><p>Per-recipe target horizons.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
+<td><p>Populated by the cell loop only.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l3metadataartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L3MetadataArtifact</span></code><a class="headerlink" href="#l3metadataartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">column_lineage</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">ColumnLineage]</span></code></p></td>
+<td><p>column → <code class="docutils literal notranslate"><span class="pre">(source_variable_ids,</span> <span class="pre">step_chain,</span> <span class="pre">pipeline_id,</span> <span class="pre">cascade_depth,</span> <span class="pre">output_type)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pipeline_definitions</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">PipelineDefinition]</span></code></p></td>
+<td><p>One entry per L3 pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cascade_graph</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">tuple[str,</span> <span class="pre">...]]</span></code></p></td>
+<td><p>Cascade-DAG adjacency.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform_chain</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">tuple[StepRef,</span> <span class="pre">...]]</span></code></p></td>
+<td><p>Per-column step chain.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source_variables</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">tuple[str,</span> <span class="pre">...]]</span></code></p></td>
+<td><p>Per-column source variable ids.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l4forecastsartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L4ForecastsArtifact</span></code><a class="headerlink" href="#l4forecastsartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[tuple[str,</span> <span class="pre">str,</span> <span class="pre">int,</span> <span class="pre">Any],</span> <span class="pre">float]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(model_id,</span> <span class="pre">target,</span> <span class="pre">horizon,</span> <span class="pre">origin)</span> <span class="pre">-&gt;</span> <span class="pre">point</span> <span class="pre">forecast</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[tuple[str,</span> <span class="pre">str,</span> <span class="pre">int,</span> <span class="pre">Any,</span> <span class="pre">float],</span> <span class="pre">float]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(model_id,</span> <span class="pre">target,</span> <span class="pre">horizon,</span> <span class="pre">origin,</span> <span class="pre">alpha)</span> <span class="pre">-&gt;</span> <span class="pre">quantile</span></code>. Empty for point recipes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;point&quot;,</span> <span class="pre">&quot;quantile&quot;,</span> <span class="pre">&quot;density&quot;]</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sample_index</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DatetimeIndex</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>Sorted unique forecast origins.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">targets</span></code> / <code class="docutils literal notranslate"><span class="pre">horizons</span></code> / <code class="docutils literal notranslate"><span class="pre">model_ids</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tuple[str,</span> <span class="pre">...]</span></code> / <code class="docutils literal notranslate"><span class="pre">tuple[int,</span> <span class="pre">...]</span></code> / <code class="docutils literal notranslate"><span class="pre">tuple[str,</span> <span class="pre">...]</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
+<td><p>Populated by the cell loop only.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l4modelartifactsartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L4ModelArtifactsArtifact</span></code><a class="headerlink" href="#l4modelartifactsartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">ModelArtifact]</span></code></p></td>
+<td><p>model_id → fitted <code class="docutils literal notranslate"><span class="pre">ModelArtifact</span></code> (<code class="docutils literal notranslate"><span class="pre">family</span></code>, <code class="docutils literal notranslate"><span class="pre">framework</span></code>, <code class="docutils literal notranslate"><span class="pre">fitted_object</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_names</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">bool]</span></code></p></td>
+<td><p>model_id → <code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code> flag.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="l4trainingmetadataartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L4TrainingMetadataArtifact</span></code><a class="headerlink" href="#l4trainingmetadataartifact" title="Link to this heading"></a></h3>
+<p>Records <code class="docutils literal notranslate"><span class="pre">forecast_origins</span></code>, <code class="docutils literal notranslate"><span class="pre">refit_origins</span></code>, <code class="docutils literal notranslate"><span class="pre">training_window_per_origin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">runtime_per_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">cache_hits_per_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">tuning_log</span></code>,
+<code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code> – one row per <code class="docutils literal notranslate"><span class="pre">(model_id,</span> <span class="pre">origin)</span></code> walk-forward step.</p>
+</section>
+<section id="l5evaluationartifact">
+<h3><code class="docutils literal notranslate"><span class="pre">L5EvaluationArtifact</span></code><a class="headerlink" href="#l5evaluationartifact" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>When empty</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_table</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p>Per-(model, target, horizon) metric rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ranking_table</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p>Sorted by primary metric.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_relative_metrics</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">per_regime_metrics</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when <code class="docutils literal notranslate"><span class="pre">regime_definition='none'</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decomposition_results</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when no <code class="docutils literal notranslate"><span class="pre">decomposition</span></code> axis is set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">per_state_metrics</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p>FRED-SD only.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">report_artifacts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p>–</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">per_origin_loss_panel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p>Empty when L5 took the summary-only fallback path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l5_axis_resolved</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+<td><p>Resolved L5 axes.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="use-case-1-did-my-outlier-policy-actually-flag-values">
+<h2>Use case 1: Did my outlier policy actually flag values?<a class="headerlink" href="#use-case-1-did-my-outlier-policy-actually-flag-values" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">materialize_l1</span><span class="p">,</span> <span class="n">materialize_l2</span>
+
+<span class="n">recipe_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">0_meta:</span>
+<span class="s2">  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}</span>
+<span class="s2">1_data:</span>
+<span class="s2">  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    target: y</span>
+<span class="s2">    target_horizons: [1]</span>
+<span class="s2">    custom_panel_inline:</span>
+<span class="s2">      date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01,</span>
+<span class="s2">             2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01]</span>
+<span class="s2">      y:  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]</span>
+<span class="s2">      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 99.0]</span>
+<span class="s2">2_preprocessing:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    transform_policy: no_transform</span>
+<span class="s2">    outlier_policy: zscore_threshold</span>
+<span class="s2">    outlier_action: flag_as_nan</span>
+<span class="s2">    imputation_policy: none_propagate</span>
+<span class="s2">    frame_edge_policy: keep_unbalanced</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">recipe</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">parse_recipe_yaml</span><span class="p">(</span><span class="n">recipe_str</span><span class="p">)</span>
+<span class="n">l1_artifact</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">materialize_l1</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="n">l2_artifact</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">materialize_l2</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;flagged cells :&quot;</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="o">.</span><span class="n">n_outliers_flagged</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">l2_artifact</span><span class="o">.</span><span class="n">cleaning_log</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; -&quot;</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">cleaning_log['steps']</span></code> entry for the outlier stage tells you exactly
+which policy ran, what action it took, and how many cells it flagged.</p>
+</section>
+<section id="use-case-2-iterating-on-l3-only">
+<h2>Use case 2: Iterating on L3 only<a class="headerlink" href="#use-case-2-iterating-on-l3-only" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">materialize_l1</span><span class="p">,</span> <span class="n">materialize_l2</span><span class="p">,</span> <span class="n">materialize_l3_minimal</span>
+
+<span class="n">recipe</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">parse_recipe_yaml</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l3_minimal_lag_only.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+<span class="c1"># Run L1 + L2 once; cache the artifacts.</span>
+<span class="n">l1_artifact</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">materialize_l1</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="n">l2_artifact</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">materialize_l2</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">)</span>
+
+<span class="c1"># Iterate on L3 -- swap ops, change params, re-run only this step.</span>
+<span class="n">recipe</span><span class="p">[</span><span class="s2">&quot;3_feature_engineering&quot;</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="s2">&quot;params&quot;</span><span class="p">][</span><span class="s2">&quot;n_lag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">l3_features</span><span class="p">,</span> <span class="n">l3_metadata</span> <span class="o">=</span> <span class="n">materialize_l3_minimal</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X_final shape:&quot;</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="n">recipe</span><span class="p">[</span><span class="s2">&quot;3_feature_engineering&quot;</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="s2">&quot;params&quot;</span><span class="p">][</span><span class="s2">&quot;n_lag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">l3_features</span><span class="p">,</span> <span class="n">l3_metadata</span> <span class="o">=</span> <span class="n">materialize_l3_minimal</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1_artifact</span><span class="p">,</span> <span class="n">l2_artifact</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;X_final shape:&quot;</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each L3 iteration reuses the same <code class="docutils literal notranslate"><span class="pre">l1_artifact</span></code> and <code class="docutils literal notranslate"><span class="pre">l2_artifact</span></code>, so
+the experiment is bounded by L3 cost rather than full L1 → L8 cost.</p>
+<p>When developing a custom L3 <code class="docutils literal notranslate"><span class="pre">feature_block</span></code> or <code class="docutils literal notranslate"><span class="pre">feature_combiner</span></code>
+(<a class="reference internal" href="custom_hooks.html"><span class="std std-doc">Custom hooks</span></a>), this loop is the canonical inner cycle:
+register the callable once, then call <code class="docutils literal notranslate"><span class="pre">materialize_l3_minimal</span></code> repeatedly
+with different parameter values.</p>
+</section>
+<section id="execute-node-the-cache-aware-primitive">
+<h2><code class="docutils literal notranslate"><span class="pre">execute_node</span></code> – the cache-aware primitive<a class="headerlink" href="#execute-node-the-cache-aware-primitive" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">execute_node(node,</span> <span class="pre">dag,</span> <span class="pre">runtime_context,</span> <span class="pre">cache_dir)</span></code> is the foundation
+primitive that <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> calls per DAG node. It hashes the node +
+its inputs, checks the on-disk cache at
+<code class="docutils literal notranslate"><span class="pre">cache_dir/nodes/&lt;node_hash&gt;/result.pickle</span></code>, returns the cached value if
+present, and otherwise computes and caches the result. Most recipe authors
+do not need <code class="docutils literal notranslate"><span class="pre">execute_node</span></code> directly – the materialize helpers above cover
+inspection use cases. Reach for it only when you are writing a custom
+runtime layer (rare).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="target_transformer.html" class="btn btn-neutral float-left" title="Target Transformer Contract" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="default_profiles.html" class="btn btn-neutral float-right" title="Default Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -12,6 +12,7 @@ models / preprocessors / target transformers, or use the YAML grammar deeply.
 | Read the consolidated Layer 1 data-handling policies (axis-by-axis) | [Data policies](data_policies.md) |
 | Register a custom model / preprocessor / feature block / combiner / target transformer | [Custom hooks](custom_hooks.md) |
 | Author a custom target transformer (fit-window, inverse, leakage rules) | [Target transformer](target_transformer.md) |
+| Run L1 / L2 / L3 in isolation to debug a recipe or iterate on a layer | [Partial layer execution](partial_layer_execution.md) |
 | See default profile shape and override patterns | [Default profiles](default_profiles.md) |
 
 ## Working examples
@@ -41,5 +42,6 @@ data/index
 data_policies
 custom_hooks
 target_transformer
+partial_layer_execution
 default_profiles
 ```
