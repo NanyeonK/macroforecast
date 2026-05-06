@@ -10,7 +10,7 @@
 | If you want to ... | Start here |
 |---|---|
 | Run a forecast on FRED data and read the results | [Researchers](for_researchers/index.md) |
-| Write a custom recipe with your model / preprocessor | [Recipe authors](for_recipe_authors/index.md) |
+| Write a custom recipe with your model / preprocessor (incl. partial-layer debugging and custom hooks) | [Recipe authors](for_recipe_authors/index.md) |
 | Modify the package source / contribute | [Contributors](for_contributors/index.md) |
 | Look up a specific axis / option / Python symbol | [Encyclopedia](encyclopedia/index.md) (browse layer × sublayer × axis × option) |
 | See replication studies (bundled examples + 4 research walkthroughs) | [Replications](replications/index.md) |
