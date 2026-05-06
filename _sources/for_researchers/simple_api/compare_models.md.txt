@@ -25,9 +25,22 @@ The return value is an `ExperimentSweepResult`:
 ```python
 result.variants
 result.metrics
-result.compare("msfe")
+result.compare("mse")
 result.forecasts
 result.manifest
+```
+
+For follow-up parameter sweeps the L4 fit node has the stable id
+``fit_main``, so chaining is predictable independent of the original
+``model_family=``:
+
+```python
+result = (
+    mf.Experiment(dataset="fred_md", target="INDPRO", horizons=[1])
+    .compare_models(["ridge"])
+    .compare("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
+    .run()
+)
 ```
 
 `compare_models()` accepts built-in model names and registered custom model names.

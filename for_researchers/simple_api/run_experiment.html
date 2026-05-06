@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
+      <script src="../../_static/documentation_options.js?v=279f42e0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,7 +132,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code>: required when custom data is selected; parser/schema are inferred from the path extension and route frequency</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">vintage</span></code>: data vintage; if omitted, current/latest data is used</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">model_family</span></code>: default model, usually left as <code class="docutils literal notranslate"><span class="pre">ar</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code>: default <code class="docutils literal notranslate"><span class="pre">msfe</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code>: default <code class="docutils literal notranslate"><span class="pre">mse</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code>: default <code class="docutils literal notranslate"><span class="pre">42</span></code></p></li>
 </ul>
 <section id="layer-0-in-simple">
@@ -188,7 +188,7 @@
 <p>If <code class="docutils literal notranslate"><span class="pre">.compare_models()</span></code> or <code class="docutils literal notranslate"><span class="pre">.sweep()</span></code> creates multiple variants, <code class="docutils literal notranslate"><span class="pre">run()</span></code> returns <code class="docutils literal notranslate"><span class="pre">ExperimentSweepResult</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sweep</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">sweep</span><span class="o">.</span><span class="n">variants</span>
-<span class="n">sweep</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span>
+<span class="n">sweep</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

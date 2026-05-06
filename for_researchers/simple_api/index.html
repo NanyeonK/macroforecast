@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
+      <script src="../../_static/documentation_options.js?v=279f42e0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -104,14 +104,18 @@
 <h1>Simple Docs<a class="headerlink" href="#simple-docs" title="Link to this heading"></a></h1>
 <p>This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.</p>
 <blockquote>
-<div><p><strong>API status (v0.8.5)</strong>: every <code class="docutils literal notranslate"><span class="pre">mf.forecast</span></code> / <code class="docutils literal notranslate"><span class="pre">mf.Experiment</span></code> method
+<div><p><strong>API status (v0.8.6)</strong>: every <code class="docutils literal notranslate"><span class="pre">mf.forecast</span></code> / <code class="docutils literal notranslate"><span class="pre">mf.Experiment</span></code> method
 shown on these pages is implemented. The <code class="docutils literal notranslate"><span class="pre">Experiment.use_*</span></code> hooks
 (<code class="docutils literal notranslate"><span class="pre">use_fred_sd_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">use_fred_sd_state_group</span></code>,
 <code class="docutils literal notranslate"><span class="pre">use_fred_sd_variable_group</span></code>, <code class="docutils literal notranslate"><span class="pre">use_mixed_frequency_representation</span></code>,
 <code class="docutils literal notranslate"><span class="pre">use_sd_inferred_tcodes</span></code>, <code class="docutils literal notranslate"><span class="pre">use_sd_empirical_tcodes</span></code>,
-<code class="docutils literal notranslate"><span class="pre">use_preprocessor</span></code>), <code class="docutils literal notranslate"><span class="pre">Experiment.variant</span></code>, and the rich
-<code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> accessors (<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking</span></code>,
-<code class="docutils literal notranslate"><span class="pre">read_json</span></code>, <code class="docutils literal notranslate"><span class="pre">file_path</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">get</span></code>) all ship in this release.</p>
+<code class="docutils literal notranslate"><span class="pre">use_preprocessor</span></code> – now with both <code class="docutils literal notranslate"><span class="pre">applied_at='l2'</span></code> pre-pipeline
+and <code class="docutils literal notranslate"><span class="pre">applied_at='l3'</span></code> post-pipeline routing),
+<code class="docutils literal notranslate"><span class="pre">Experiment.variant</span></code>, and the rich <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> accessors
+(<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking</span></code>, <code class="docutils literal notranslate"><span class="pre">read_json</span></code>, <code class="docutils literal notranslate"><span class="pre">file_path</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">get</span></code>) all ship in this release. The L4 fit node carries
+the stable id <code class="docutils literal notranslate"><span class="pre">fit_main</span></code> so chained <code class="docutils literal notranslate"><span class="pre">.compare(...)</span></code> follow-ups can
+use a predictable dotted path.</p>
 <p>The Detail (code): Full track is still the canonical reference for the
 12-layer YAML recipe surface and bit-exact replication contract; use
 it whenever you need to step outside the simple-API defaults.</p>

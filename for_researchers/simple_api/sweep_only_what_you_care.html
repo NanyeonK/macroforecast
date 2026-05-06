@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
+      <script src="../../_static/documentation_options.js?v=279f42e0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -121,7 +121,7 @@
 </pre></div>
 </div>
 <p>Then rank the variants:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>MVP aliases:</p>
@@ -134,7 +134,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">4_forecasting_model.fit_model.params.family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4_forecasting_model.nodes.fit_main.params.family</span></code></p></td>
 <td><p>executable</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scaling</span></code>, <code class="docutils literal notranslate"><span class="pre">scaling_policy</span></code></p></td>

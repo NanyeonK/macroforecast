@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
+      <script src="../../_static/documentation_options.js?v=279f42e0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,9 +123,20 @@
 <p>The return value is an <code class="docutils literal notranslate"><span class="pre">ExperimentSweepResult</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">variants</span>
 <span class="n">result</span><span class="o">.</span><span class="n">metrics</span>
-<span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 <span class="n">result</span><span class="o">.</span><span class="n">forecasts</span>
 <span class="n">result</span><span class="o">.</span><span class="n">manifest</span>
+</pre></div>
+</div>
+<p>For follow-up parameter sweeps the L4 fit node has the stable id
+<code class="docutils literal notranslate"><span class="pre">fit_main</span></code>, so chaining is predictable independent of the original
+<code class="docutils literal notranslate"><span class="pre">model_family=</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;4_forecasting_model.nodes.fit_main.params.alpha&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">compare_models()</span></code> accepts built-in model names and registered custom model names.</p>

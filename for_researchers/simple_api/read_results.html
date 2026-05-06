@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
+      <script src="../../_static/documentation_options.js?v=279f42e0"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,7 +134,7 @@
     <span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="p">)</span>
 
-<span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span>
+<span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 <span class="n">forecasts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">forecasts</span>
 <span class="n">variants</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">variants</span>
 <span class="n">manifest</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">manifest</span>
@@ -159,7 +159,7 @@
 </div>
 <p>Sweep variant access:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">variants</span>
-<span class="n">best</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">variant</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="n">best</span><span class="p">[</span><span class="s2">&quot;variant_id&quot;</span><span class="p">])</span>
 <span class="n">variant</span><span class="o">.</span><span class="n">forecasts</span>
 <span class="n">variant</span><span class="o">.</span><span class="n">manifest</span>
