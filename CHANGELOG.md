@@ -3,7 +3,7 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
-## [0.7.0] -- 2026-05-02 -- "encyclopedia (replaces auto-emit reference)"
+## [0.7.0] -- 2026-05-06 -- "encyclopedia (replaces auto-emit reference)"
 
 ### Added
 * **`docs/encyclopedia/`** -- source-committed markdown tree, one page
