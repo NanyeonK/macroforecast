@@ -1,0 +1,662 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>family &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="forecast_strategy" href="forecast_strategy.html" />
+    <link rel="prev" title="Layer L4 – Forecasting model" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L4  –  Forecasting model</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">family</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="forecast_strategy.html"><code class="docutils literal notranslate"><span class="pre">forecast_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="training_start_rule.html"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="refit_policy.html"><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="search_algorithm.html"><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L4  –  Forecasting model</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">family</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l4/axes/family.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="family">
+<h1><code class="docutils literal notranslate"><span class="pre">family</span></code><a class="headerlink" href="#family" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L4</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">family</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L4_A_model_selection</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l4</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L4_A_model_selection</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'ridge'</span></code></p></li>
+<li><p>Sweepable: True</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 34 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="ar-p-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ar_p</span></code>  –  operational<a class="headerlink" href="#ar-p-operational" title="Link to this heading"></a></h3>
+<p>Autoregressive AR(p) on the target.</p>
+<p>Pure autoregression – predictor matrix is the lagged target (no exogenous regressors). <code class="docutils literal notranslate"><span class="pre">params.n_lag</span></code> sets p. Useful as a non-trivial benchmark in macro forecasting where the lagged target captures most of the predictability.</p>
+<p><strong>When to use</strong></p>
+<p>Default benchmark in any forecasting horse race; replication of papers reporting AR baselines.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Stock &amp; Watson (2007) ‘Why Has US Inflation Become Harder to Forecast?’, JMCB 39.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://www.statsmodels.org/stable/vector_ar.html#var" title="statsmodels 0.14.6 0.14.6"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a>, <a class="reference internal" href="#factor-augmented-ar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="ols-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ols</span></code>  –  operational<a class="headerlink" href="#ols-operational" title="Link to this heading"></a></h3>
+<p>Ordinary least squares – baseline linear regression.</p>
+<p>Closed-form linear regression with no regularisation. Cheapest linear estimator; appropriate when p &lt;&lt; n and predictors are well-conditioned. Returns NaN coefficients when the design matrix is rank-deficient (sklearn raises an error in that case).</p>
+<p><strong>When to use</strong></p>
+<p>Low-dimensional baselines; sanity-check sweeps.</p>
+<p><strong>When NOT to use</strong></p>
+<p>High-dimensional panels (p ≈ n) – use ridge / lasso instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Greene (2018) ‘Econometric Analysis’, 8th ed., Pearson.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/linear_model.html#lasso" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a>, <a class="reference internal" href="#elastic-net"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></span></a>, <a class="reference internal" href="#ar-p"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="ridge-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ridge</span></code>  –  operational<a class="headerlink" href="#ridge-operational" title="Link to this heading"></a></h3>
+<p>Ridge regression (L2-regularised OLS).</p>
+<p>Closed-form ridge: <code class="docutils literal notranslate"><span class="pre">β</span> <span class="pre">=</span> <span class="pre">(X'X</span> <span class="pre">+</span> <span class="pre">αI)⁻¹</span> <span class="pre">X'y</span></code>. Shrinks coefficients toward zero proportional to the regularisation strength α (<code class="docutils literal notranslate"><span class="pre">params.alpha</span></code>).</p>
+<p>Default α = 1.0. The <code class="docutils literal notranslate"><span class="pre">cv_path</span></code> search algorithm uses <code class="docutils literal notranslate"><span class="pre">RidgeCV</span></code> to pick α from a grid via leave-one-out CV; the <code class="docutils literal notranslate"><span class="pre">grid_search</span></code> / <code class="docutils literal notranslate"><span class="pre">random_search</span></code> algorithms can sweep over leaf_config.tuning_grid[‘alpha’].</p>
+<p><strong>When to use</strong></p>
+<p>High-dimensional macro panels with collinear predictors; standard benchmark.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Hoerl &amp; Kennard (1970) ‘Ridge regression: biased estimation for nonorthogonal problems’, Technometrics 12(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/linear_model.html#lasso" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a>, <a class="reference internal" href="#elastic-net"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></span></a>, <a class="reference internal" href="#lasso-path"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="lasso-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso</span></code>  –  operational<a class="headerlink" href="#lasso-operational" title="Link to this heading"></a></h3>
+<p>Lasso regression (L1-regularised OLS).</p>
+<p>Iterative coordinate descent: minimises <code class="docutils literal notranslate"><span class="pre">||y</span> <span class="pre">-</span> <span class="pre">Xβ||²</span> <span class="pre">+</span> <span class="pre">α||β||₁</span></code>. Forces a subset of coefficients to exactly zero, yielding a sparse solution. Uses sklearn’s <code class="docutils literal notranslate"><span class="pre">Lasso</span></code> with <code class="docutils literal notranslate"><span class="pre">max_iter=20000</span></code> for stability.</p>
+<p><strong>When to use</strong></p>
+<p>Variable selection; sparse forecasts on high-dimensional panels.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Tibshirani (1996) ‘Regression Shrinkage and Selection via the Lasso’, JRSS-B 58(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a>, <a class="reference internal" href="#elastic-net"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></span></a>, <a class="reference internal" href="#lasso-path"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="elastic-net-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>  –  operational<a class="headerlink" href="#elastic-net-operational" title="Link to this heading"></a></h3>
+<p>Elastic net (L1 + L2 hybrid).</p>
+<p>Combines ridge and lasso penalties via <code class="docutils literal notranslate"><span class="pre">params.l1_ratio</span></code> (0 = ridge, 1 = lasso). Useful when predictors are correlated and pure lasso struggles with the selection.</p>
+<p><strong>When to use</strong></p>
+<p>Correlated predictor blocks where lasso alone gives unstable selection.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Zou &amp; Hastie (2005) ‘Regularization and variable selection via the elastic net’, JRSS-B 67(2).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/linear_model.html#lasso" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="lasso-path-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code>  –  operational<a class="headerlink" href="#lasso-path-operational" title="Link to this heading"></a></h3>
+<p>Lasso with CV-selected alpha (LassoCV).</p>
+<p>Wraps sklearn’s <code class="docutils literal notranslate"><span class="pre">LassoCV</span></code>. Picks α automatically from a regularisation path via k-fold CV (<code class="docutils literal notranslate"><span class="pre">params.cv</span></code>). Equivalent to setting <code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">lasso,</span> <span class="pre">search_algorithm:</span> <span class="pre">cv_path</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>When the recipe wants automatic α selection without an explicit search_algorithm.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/linear_model.html#lasso" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a>, <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="bayesian-ridge-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code>  –  operational<a class="headerlink" href="#bayesian-ridge-operational" title="Link to this heading"></a></h3>
+<p>Bayesian ridge with empirical-Bayes prior.</p>
+<p>sklearn <code class="docutils literal notranslate"><span class="pre">BayesianRidge</span></code>: gamma priors on noise + coefficient precision; type-II ML estimates of both. Returns posterior mean coefficients + posterior variance. Useful when the user wants a coefficient credible interval without bootstrapping.</p>
+<p><strong>When to use</strong></p>
+<p>Studies that need coefficient credible intervals; default-Bayesian baselines.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a>, <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="glmboost-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">glmboost</span></code>  –  operational<a class="headerlink" href="#glmboost-operational" title="Link to this heading"></a></h3>
+<p>Componentwise L2-boosting with linear base learners.</p>
+<p>Bühlmann-Hothorn (2007) componentwise boosting: at each iteration picks the predictor most correlated with the residual and updates only its coefficient. Approximates lasso with a boosting interpretation.</p>
+<p><strong>When to use</strong></p>
+<p>Transparent feature-selection pathways; alternative to lasso.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Bühlmann &amp; Hothorn (2007) ‘Boosting algorithms: Regularization, prediction and model fitting’, Statistical Science 22(4).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/linear_model.html#lasso" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a>, <a class="reference internal" href="#elastic-net"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="huber-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">huber</span></code>  –  operational<a class="headerlink" href="#huber-operational" title="Link to this heading"></a></h3>
+<p>Huber regression (robust to outliers).</p>
+<p>Replaces squared loss with the Huber loss: quadratic for small residuals, linear for large ones. Down-weights outliers without removing them. <code class="docutils literal notranslate"><span class="pre">params.epsilon</span></code> (default 1.35) sets the transition point.</p>
+<p><strong>When to use</strong></p>
+<p>Series with sporadic outliers that aren’t worth flagging in L2.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Huber (1964) ‘Robust Estimation of a Location Parameter’, Annals of Mathematical Statistics 35(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ols"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ols</span></code></span></a>, <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="var-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">var</span></code>  –  operational<a class="headerlink" href="#var-operational" title="Link to this heading"></a></h3>
+<p>Vector autoregression VAR(p).</p>
+<p>Joint AR(p) over the target plus its predictors. Uses statsmodels’ <code class="docutils literal notranslate"><span class="pre">VAR</span></code> and forecasts the target component of the joint system. Captures cross-series dynamics that single-equation AR misses.</p>
+<p><strong>When to use</strong></p>
+<p>Multi-series joint forecasting; impulse-response decomposition (paired with L7 <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>).</p>
+<p><strong>When NOT to use</strong></p>
+<p>High-dimensional panels (VAR scales O(p²)); use BVAR shrinkage instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Sims (1980) ‘Macroeconomics and Reality’, Econometrica 48(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a>, <a class="reference internal" href="#factor-augmented-var"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code></span></a>, <a class="reference internal" href="#ar-p"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="factor-augmented-ar-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code>  –  operational<a class="headerlink" href="#factor-augmented-ar-operational" title="Link to this heading"></a></h3>
+<p>Factor-augmented AR (PCA factors + AR lags on target).</p>
+<p>Stock-Watson (2002) FAR: extract the first <code class="docutils literal notranslate"><span class="pre">params.n_factors</span></code> principal components from the predictor panel, augment with AR(<code class="docutils literal notranslate"><span class="pre">params.n_lag</span></code>) lags of the target, run OLS. Standard high-dimensional macro forecasting baseline.</p>
+<p><strong>When to use</strong></p>
+<p>High-dimensional macro panels (FRED-MD/QD); diffusion-index baselines.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Stock &amp; Watson (2002) ‘Forecasting Using Principal Components from a Large Number of Predictors’, JASA 97(460).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#factor-augmented-var"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code></span></a>, <a class="reference internal" href="#principal-component-regression"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">principal_component_regression</span></code></span></a>, <a class="reference internal" href="#ar-p"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="principal-component-regression-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">principal_component_regression</span></code>  –  operational<a class="headerlink" href="#principal-component-regression-operational" title="Link to this heading"></a></h3>
+<p>Principal component regression (PCA → OLS).</p>
+<p>Identical to <code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code> without the AR lags. Useful when the target’s own lags add noise (rare but happens for highly seasonal series).</p>
+<p><strong>When to use</strong></p>
+<p>Diffusion-index forecasts where AR augmentation hurts performance.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#factor-augmented-ar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="decision-tree-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code>  –  operational<a class="headerlink" href="#decision-tree-operational" title="Link to this heading"></a></h3>
+<p>Single decision tree (sklearn).</p>
+<p>Cheapest non-linear model. Useful as an ablation against random forests / boosting – if a single tree matches RF performance, the ensemble isn’t buying much.</p>
+<p><strong>When to use</strong></p>
+<p>Ablation studies; cheap non-linear baselines.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Breiman, Friedman, Stone &amp; Olshen (1984) ‘Classification and Regression Trees’, CRC Press.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="random-forest-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">random_forest</span></code>  –  operational<a class="headerlink" href="#random-forest-operational" title="Link to this heading"></a></h3>
+<p>Random forest (sklearn).</p>
+<p>Bagged collection of decorrelated trees. <code class="docutils literal notranslate"><span class="pre">params.n_estimators</span></code> (default 200) controls the ensemble size; <code class="docutils literal notranslate"><span class="pre">params.max_depth</span></code> controls tree complexity. Standard non-linear baseline.</p>
+<p><strong>When to use</strong></p>
+<p>Default non-linear benchmark; non-stationary series where linear models fail.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Breiman (2001) ‘Random Forests’, Machine Learning 45(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#xgboost" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></span></a>, <a class="reference internal" href="#macroeconomic-random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code></span></a>, <a class="reference internal" href="#quantile-regression-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="extra-trees-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>  –  operational<a class="headerlink" href="#extra-trees-operational" title="Link to this heading"></a></h3>
+<p>Extremely randomized trees (sklearn).</p>
+<p>Like RF but splits at random thresholds (no greedy search). Faster than RF; sometimes lower variance.</p>
+<p><strong>When to use</strong></p>
+<p>Quick non-linear baseline; large ensemble experiments.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Geurts, Ernst &amp; Wehenkel (2006) ‘Extremely randomized trees’, Machine Learning 63(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="gradient-boosting-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code>  –  operational<a class="headerlink" href="#gradient-boosting-operational" title="Link to this heading"></a></h3>
+<p>Gradient-boosted regression trees (sklearn).</p>
+<p>Sklearn <code class="docutils literal notranslate"><span class="pre">GradientBoostingRegressor</span></code>. Sequential boosting with shallow trees. <code class="docutils literal notranslate"><span class="pre">params.n_estimators</span></code> (default 200) and <code class="docutils literal notranslate"><span class="pre">params.learning_rate</span></code> (default 0.05) trade variance for bias.</p>
+<p><strong>When to use</strong></p>
+<p>Default boosted baseline when xgboost / lightgbm are unavailable.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Friedman (2001) ‘Greedy function approximation: A gradient boosting machine’, Annals of Statistics 29(5).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#xgboost" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#lightgbm" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></span></a>, <a class="reference internal" href="#catboost"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">catboost</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="xgboost-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">xgboost</span></code>  –  operational<a class="headerlink" href="#xgboost-operational" title="Link to this heading"></a></h3>
+<p>XGBoost gradient-boosted trees (optional dependency).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[xgboost]</span></code>. Histogram-based tree construction; native quantile loss; GPU support. Standard production-grade boosting library.</p>
+<p><strong>When to use</strong></p>
+<p>Production sweeps where xgboost’s speed matters; quantile forecasting (xgb 2.0+).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Lightweight installs (no extra installed) – raises ImportError.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Chen &amp; Guestrin (2016) ‘XGBoost: A Scalable Tree Boosting System’, KDD.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#lightgbm" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></span></a>, <a class="reference internal" href="#catboost"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">catboost</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="lightgbm-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>  –  operational<a class="headerlink" href="#lightgbm-operational" title="Link to this heading"></a></h3>
+<p>LightGBM gradient-boosted trees (optional dependency).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[lightgbm]</span></code>. Leaf-wise tree growth; fast on wide / categorical-heavy panels.</p>
+<p><strong>When to use</strong></p>
+<p>Wide categorical panels; production sweeps where lightgbm’s speed matters.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Lightweight installs (no extra installed) – raises ImportError.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Ke et al. (2017) ‘LightGBM: A Highly Efficient Gradient Boosting Decision Tree’, NeurIPS.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#xgboost" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="catboost-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">catboost</span></code>  –  operational<a class="headerlink" href="#catboost-operational" title="Link to this heading"></a></h3>
+<p>CatBoost gradient-boosted trees (optional dependency).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[catboost]</span></code>. Ordered boosting + native categorical handling.</p>
+<p><strong>When to use</strong></p>
+<p>Categorical-heavy panels; ordered-boosting research.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Prokhorenkova et al. (2018) ‘CatBoost: unbiased boosting with categorical features’, NeurIPS.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#xgboost" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#lightgbm" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="svr-linear-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code>  –  operational<a class="headerlink" href="#svr-linear-operational" title="Link to this heading"></a></h3>
+<p>Support vector regression with linear kernel.</p>
+<p>ε-insensitive loss + L2 regularisation. Sparse in support vectors.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">family</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L4_A_model_selection</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l4</span></code>); the <code class="docutils literal notranslate"><span class="pre">svr_linear</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Robust linear baselines; comparison against ridge.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Drucker, Burges, Kaufman, Smola &amp; Vapnik (1997) ‘Support Vector Regression Machines’, NeurIPS.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#svr-rbf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a>, <a class="reference internal" href="#svr-poly"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code></span></a>, <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="svr-rbf-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code>  –  operational<a class="headerlink" href="#svr-rbf-operational" title="Link to this heading"></a></h3>
+<p>Support vector regression with RBF kernel.</p>
+<p>Non-linear regression via kernel trick. Slow on large panels (O(n³)).</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">family</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L4_A_model_selection</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l4</span></code>); the <code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Small / medium-dim non-linear regression; kernel-method ablations.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#svr-linear"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code></span></a>, <a class="reference internal" href="#svr-poly"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code></span></a>, <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="svr-poly-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code>  –  operational<a class="headerlink" href="#svr-poly-operational" title="Link to this heading"></a></h3>
+<p>Support vector regression with polynomial kernel.</p>
+<p>Polynomial-kernel SVR. Useful for studies that want explicit polynomial features without manual expansion.</p>
+<p><strong>When to use</strong></p>
+<p>Polynomial-kernel ablations. Selecting <code class="docutils literal notranslate"><span class="pre">svr_poly</span></code> on <code class="docutils literal notranslate"><span class="pre">l4.family</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#svr-rbf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a>, <a class="reference internal" href="#svr-linear"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="mlp-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mlp</span></code>  –  operational<a class="headerlink" href="#mlp-operational" title="Link to this heading"></a></h3>
+<p>Multi-layer perceptron (sklearn).</p>
+<p>Feed-forward NN with ReLU activations. <code class="docutils literal notranslate"><span class="pre">params.hidden_layer_sizes</span></code> controls the architecture.</p>
+<p><strong>When to use</strong></p>
+<p>Non-linear regression baselines; ablations against deep NN.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#lstm"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></span></a>, <a class="reference internal" href="#gru"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gru</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/glossary.html#term-transformer" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">transformer</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="lstm-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lstm</span></code>  –  operational<a class="headerlink" href="#lstm-operational" title="Link to this heading"></a></h3>
+<p>Long short-term memory recurrent NN (torch, optional).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[deep]</span></code>. Sequence-aware RNN with input/forget/output gates. Trains on sliding windows of the lagged feature panel.</p>
+<p><strong>When to use</strong></p>
+<p>Sequence-modelling studies; replication of deep-NN forecasting papers.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without [deep] installed – raises NotImplementedError.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Hochreiter &amp; Schmidhuber (1997) ‘Long short-term memory’, Neural Computation 9(8).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#gru"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gru</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/glossary.html#term-transformer" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">transformer</span></code></span></a>, <a class="reference internal" href="#mlp"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mlp</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="gru-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">gru</span></code>  –  operational<a class="headerlink" href="#gru-operational" title="Link to this heading"></a></h3>
+<p>Gated recurrent unit RNN (torch, optional).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[deep]</span></code>. Simpler than LSTM (one fewer gate); often comparable on macro panels.</p>
+<p><strong>When to use</strong></p>
+<p>Sequence-modelling baselines; LSTM ablations.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without [deep] installed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Cho et al. (2014) ‘Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation’, EMNLP.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#lstm"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/glossary.html#term-transformer" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">transformer</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="transformer-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">transformer</span></code>  –  operational<a class="headerlink" href="#transformer-operational" title="Link to this heading"></a></h3>
+<p>Transformer encoder regressor (torch, optional).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[deep]</span></code>. Self-attention on the lagged feature panel. Single encoder layer; suitable as a non-linear sequence-attention baseline.</p>
+<p><strong>When to use</strong></p>
+<p>Attention-based macro forecasting research; sequence-NN benchmark.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without [deep] installed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Vaswani et al. (2017) ‘Attention is all you need’, NeurIPS.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#lstm"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></span></a>, <a class="reference internal" href="#gru"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gru</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="knn-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">knn</span></code>  –  operational<a class="headerlink" href="#knn-operational" title="Link to this heading"></a></h3>
+<p>k-nearest-neighbours regression.</p>
+<p>Memorises training data; predicts via nearest-neighbour averaging. Cheap, non-parametric.</p>
+<p><strong>When to use</strong></p>
+<p>Non-parametric baselines; sensitivity studies.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Cover &amp; Hart (1967) ‘Nearest neighbor pattern classification’, IEEE Trans. on Information Theory 13(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#svr-rbf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="bvar-minnesota-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>  –  operational<a class="headerlink" href="#bvar-minnesota-operational" title="Link to this heading"></a></h3>
+<p>Bayesian VAR with Minnesota prior shrinkage.</p>
+<p>Litterman (1986) Minnesota prior: shrinks each equation toward a univariate random walk. <code class="docutils literal notranslate"><span class="pre">params.minnesota_lambda1</span></code> controls overall tightness; <code class="docutils literal notranslate"><span class="pre">params.minnesota_lambda_decay</span></code> controls lag decay; <code class="docutils literal notranslate"><span class="pre">params.minnesota_lambda_cross</span></code> controls cross-equation shrinkage.</p>
+<p>Returns a closed-form posterior mean – no MCMC. Cheap and deterministic.</p>
+<p><strong>When to use</strong></p>
+<p>Multi-series forecasting where standard VAR overfits; macro panels with strong unit-root behaviour.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Litterman (1986) ‘Forecasting With Bayesian Vector Autoregressions – Five Years of Experience’, JBES 4(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#bvar-normal-inverse-wishart"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code></span></a>, <a class="reference external" href="https://www.statsmodels.org/stable/vector_ar.html#var" title="statsmodels 0.14.6 0.14.6"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a>, <a class="reference internal" href="#factor-augmented-var"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="bvar-normal-inverse-wishart-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>  –  operational<a class="headerlink" href="#bvar-normal-inverse-wishart-operational" title="Link to this heading"></a></h3>
+<p>Bayesian VAR with Normal-Inverse-Wishart prior.</p>
+<p>Conjugate Normal-IW prior on (β, Σ); the posterior mean of β has the same closed form as Minnesota but with the prior tightness scaled to reflect parameter-uncertainty inflation. Slightly less aggressive than the bare Minnesota prior.</p>
+<p><strong>When to use</strong></p>
+<p>Studies preferring a fully-conjugate prior over Litterman’s hand-tuned shrinkage.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Kadiyala &amp; Karlsson (1997) ‘Numerical Methods for Estimation and Inference in Bayesian VAR-models’, Journal of Applied Econometrics 12(2).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a>, <a class="reference external" href="https://www.statsmodels.org/stable/vector_ar.html#var" title="statsmodels 0.14.6 0.14.6"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="factor-augmented-var-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code>  –  operational<a class="headerlink" href="#factor-augmented-var-operational" title="Link to this heading"></a></h3>
+<p>Factor-augmented VAR (Bernanke-Boivin-Eliasz 2005).</p>
+<p>Two-stage estimator: PCA factors from the predictor panel + VAR(<code class="docutils literal notranslate"><span class="pre">params.n_lag</span></code>) on (factors, target). Captures dynamic interactions between latent factors and the target series.</p>
+<p>Useful for monetary-policy studies where the factors stand in for unobserved economic state.</p>
+<p><strong>When to use</strong></p>
+<p>Monetary-policy / macro-state studies; diffusion-index VAR baselines.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Bernanke, Boivin &amp; Eliasz (2005) ‘Measuring the Effects of Monetary Policy: A Factor-Augmented Vector Autoregressive Approach’, QJE 120(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://www.statsmodels.org/stable/vector_ar.html#var" title="statsmodels 0.14.6 0.14.6"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a>, <a class="reference internal" href="#factor-augmented-ar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code></span></a>, <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="macroeconomic-random-forest-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>  –  operational<a class="headerlink" href="#macroeconomic-random-forest-operational" title="Link to this heading"></a></h3>
+<p>Coulombe (2024) GTVP random forest (per-leaf local linear regression).</p>
+<p>Generalised Time-Varying Parameter random forest: each leaf fits a local linear regression of y on X. Forest prediction = average of leaf-local linear predictions. Captures regime-like non-linearities while preserving linear interpretability within each regime.</p>
+<p><strong>When to use</strong></p>
+<p>Macro forecasting with non-stationary parameter dynamics; alternative to switching models.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Coulombe (2024) ‘A Neural Phillips Curve and a Deep Output Gap’, Journal of Monetary Economics, forthcoming.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="dfm-mixed-mariano-murasawa-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>  –  operational<a class="headerlink" href="#dfm-mixed-mariano-murasawa-operational" title="Link to this heading"></a></h3>
+<p>Mariano-Murasawa-style mixed-frequency dynamic factor model.</p>
+<p>Linear-Gaussian state-space model with monthly-aggregator observation equation. Routes to <code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.statespace.dynamic_factor_mq.DynamicFactorMQ</span></code> when <code class="docutils literal notranslate"><span class="pre">params.mixed_frequency</span> <span class="pre">=</span> <span class="pre">True</span></code> and per-column frequency tags are supplied; otherwise falls back to the single-frequency <code class="docutils literal notranslate"><span class="pre">DynamicFactor</span></code> estimator (Kalman MLE).</p>
+<p><strong>When to use</strong></p>
+<p>Mixed-frequency nowcasting (e.g., quarterly GDP from monthly indicators).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Mariano &amp; Murasawa (2010) ‘A coincident index, common factors, and monthly real GDP’, Oxford Bulletin of Economics and Statistics 72(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#factor-augmented-ar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code></span></a>, <a class="reference internal" href="#factor-augmented-var"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="quantile-regression-forest-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code>  –  operational<a class="headerlink" href="#quantile-regression-forest-operational" title="Link to this heading"></a></h3>
+<p>Meinshausen (2006) quantile regression forest.</p>
+<p>Records the per-leaf empirical training-target distribution and forecasts arbitrary quantiles by averaging leaf-conditional CDFs. Surfaces <code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code> directly without a Gaussian shortcut. Pairs with <code class="docutils literal notranslate"><span class="pre">forecast_object:</span> <span class="pre">quantile</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Growth-at-risk / VaR studies; density forecasting.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Meinshausen (2006) ‘Quantile Regression Forests’, JMLR 7.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#bagging" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bagging</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="bagging-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bagging</span></code>  –  operational<a class="headerlink" href="#bagging-operational" title="Link to this heading"></a></h3>
+<p>Bootstrap-aggregating wrapper around any base family.</p>
+<p><code class="docutils literal notranslate"><span class="pre">params.base_family</span></code> selects the base estimator; <code class="docutils literal notranslate"><span class="pre">params.n_estimators</span></code> (default 50) bootstrap resamples are fit; predict averages. <code class="docutils literal notranslate"><span class="pre">predict_quantiles</span></code> surfaces empirical bag-quantiles.</p>
+<p><strong>When to use</strong></p>
+<p>Variance reduction on noisy series; quantile bands without quantile regression.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Breiman (1996) ‘Bagging Predictors’, Machine Learning 24(2).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#quantile-regression-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Layer L4 – Forecasting model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="forecast_strategy.html" class="btn btn-neutral float-right" title="forecast_strategy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

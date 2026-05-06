@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layer L5 – Evaluation &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="primary_metric" href="axes/primary_metric.html" />
+    <link rel="prev" title="latex_export" href="../l4_5/axes/latex_export.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Layer L5  –  Evaluation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="axes/primary_metric.html"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/density_metrics.html"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Encyclopedia</a></li>
+      <li class="breadcrumb-item active">Layer L5  –  Evaluation</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l5/index.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="layer-l5-evaluation">
+<h1>Layer L5  –  Evaluation<a class="headerlink" href="#layer-l5-evaluation" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to encyclopedia</span></a> | <a class="reference internal" href="../browse_by_layer.html"><span class="std std-doc">Browse layers</span></a> | <a class="reference internal" href="../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a></p>
+<ul class="simple">
+<li><p>Layer ID: <code class="docutils literal notranslate"><span class="pre">l5</span></code></p></li>
+<li><p>Category: <code class="docutils literal notranslate"><span class="pre">consumption</span></code></p></li>
+<li><p>Sub-layers: 5</p></li>
+<li><p>Axes: 18</p></li>
+<li><p>Options across axes: 30</p></li>
+</ul>
+<section id="sub-layers">
+<h2>Sub-layers<a class="headerlink" href="#sub-layers" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Sub-layer</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Gate</p></th>
+<th class="head"><p>Axes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">L5_A_metric_specification</span></code></p></td>
+<td><p>Metric specification</p></td>
+<td><p>always</p></td>
+<td><p><a class="reference internal" href="axes/primary_metric.html"><span class="std std-doc">primary_metric</span></a>, <a class="reference internal" href="axes/point_metrics.html"><span class="std std-doc">point_metrics</span></a>, <a class="reference internal" href="axes/density_metrics.html"><span class="std std-doc">density_metrics</span></a>, <a class="reference internal" href="axes/direction_metrics.html"><span class="std std-doc">direction_metrics</span></a>, <a class="reference internal" href="axes/relative_metrics.html"><span class="std std-doc">relative_metrics</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">L5_B_benchmark_comparison</span></code></p></td>
+<td><p>Benchmark comparison</p></td>
+<td><p>always</p></td>
+<td><p><a class="reference internal" href="axes/benchmark_window.html"><span class="std std-doc">benchmark_window</span></a>, <a class="reference internal" href="axes/benchmark_scope.html"><span class="std std-doc">benchmark_scope</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">L5_C_aggregation</span></code></p></td>
+<td><p>Aggregation</p></td>
+<td><p>always</p></td>
+<td><p><a class="reference internal" href="axes/agg_time.html"><span class="std std-doc">agg_time</span></a>, <a class="reference internal" href="axes/agg_horizon.html"><span class="std std-doc">agg_horizon</span></a>, <a class="reference internal" href="axes/agg_target.html"><span class="std std-doc">agg_target</span></a>, <a class="reference internal" href="axes/agg_state.html"><span class="std std-doc">agg_state</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">L5_D_sample_slicing_decomposition</span></code></p></td>
+<td><p>Sample slicing &amp; decomposition</p></td>
+<td><p>always</p></td>
+<td><p><a class="reference internal" href="axes/oos_period.html"><span class="std std-doc">oos_period</span></a>, <a class="reference internal" href="axes/regime_use.html"><span class="std std-doc">regime_use</span></a>, <a class="reference internal" href="axes/regime_metrics.html"><span class="std std-doc">regime_metrics</span></a>, <a class="reference internal" href="axes/decomposition_target.html"><span class="std std-doc">decomposition_target</span></a>, <a class="reference internal" href="axes/decomposition_order.html"><span class="std std-doc">decomposition_order</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">L5_E_ranking_reporting</span></code></p></td>
+<td><p>Ranking &amp; reporting</p></td>
+<td><p>always</p></td>
+<td><p><a class="reference internal" href="axes/ranking.html"><span class="std std-doc">ranking</span></a>, <a class="reference internal" href="axes/report_style.html"><span class="std std-doc">report_style</span></a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../l4_5/axes/latex_export.html" class="btn btn-neutral float-left" title="latex_export" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="axes/primary_metric.html" class="btn btn-neutral float-right" title="primary_metric" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

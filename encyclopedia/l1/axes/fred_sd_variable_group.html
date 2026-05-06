@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>fred_sd_variable_group &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="sd_variable_selection" href="sd_variable_selection.html" />
+    <link rel="prev" title="state_selection" href="state_selection.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L1  –  Data</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="custom_source_policy.html"><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">target_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="predictor_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L1  –  Data</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l1/axes/fred_sd_variable_group.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fred-sd-variable-group">
+<h1><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code><a class="headerlink" href="#fred-sd-variable-group" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L1</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">l1_d</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l1</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>l1_d</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'all_sd_variables'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 12 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="all-sd-variables-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code>  –  operational<a class="headerlink" href="#all-sd-variables-operational" title="Link to this heading"></a></h3>
+<p>All FRED-SD state-level variable categories.</p>
+<p>FRED-SD variable category: Default. Includes every variable category in the FRED-SD groups manifest. Use as the broadest possible predictor block; subset via sd_variable_selection if specific filtering is needed.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Default; broadest predictor block.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a>, <a class="reference internal" href="#income"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">income</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="labor-market-core-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code>  –  operational<a class="headerlink" href="#labor-market-core-operational" title="Link to this heading"></a></h3>
+<p>Core labour-market series (employment, unemployment, hours).</p>
+<p>FRED-SD variable category: Includes nonfarm employment, unemployment rate, labour-force participation, and average hours. Standard labour-market battery used in most state-level macroeconomic studies.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Labour-market focused studies; Sahm-rule recession analysis at state level.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a>, <a class="reference internal" href="#income"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">income</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="employment-sector-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code>  –  operational<a class="headerlink" href="#employment-sector-operational" title="Link to this heading"></a></h3>
+<p>Sectoral employment series (NAICS supersector breakdowns).</p>
+<p>FRED-SD variable category: Sectoral employment counts (manufacturing, construction, services, government, etc.). Useful when industry mix explains target variation.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Industry-level employment studies; structural-transformation analysis.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#income"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">income</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="gsp-output-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">gsp_output</span></code>  –  operational<a class="headerlink" href="#gsp-output-operational" title="Link to this heading"></a></h3>
+<p>Gross state product / output series.</p>
+<p>FRED-SD variable category: BEA gross state product (GSP), the state-level analogue of national GDP. Released quarterly with publication lag; main aggregate state-level output measure.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Aggregate output studies; state-level GDP forecasting.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="housing-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">housing</span></code>  –  operational<a class="headerlink" href="#housing-operational" title="Link to this heading"></a></h3>
+<p>State housing series (permits, prices, starts).</p>
+<p>FRED-SD variable category: Building permits, housing starts, house-price indices. Leading indicator of state economic activity; central to any housing-cycle analysis.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Housing-cycle studies; foreclosure / mortgage-market analysis.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="trade-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">trade</span></code>  –  operational<a class="headerlink" href="#trade-operational" title="Link to this heading"></a></h3>
+<p>Trade / commerce series.</p>
+<p>FRED-SD variable category: Retail sales, wholesale trade, port activity. State-level trade-flow indicators where available.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Trade-flow studies; port-region economic analysis.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="income-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">income</span></code>  –  operational<a class="headerlink" href="#income-operational" title="Link to this heading"></a></h3>
+<p>Personal income / earnings series.</p>
+<p>FRED-SD variable category: Includes per-capita personal income, total state income, and components (wages, transfers, dividends). Slow-moving but persistent predictor of state economic activity.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Consumer / household income studies; transfer-payment analysis.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="direct-analog-high-confidence-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">direct_analog_high_confidence</span></code>  –  operational<a class="headerlink" href="#direct-analog-high-confidence-operational" title="Link to this heading"></a></h3>
+<p>Variables with direct national analog (high-confidence cross-frequency join).</p>
+<p>FRED-SD variable category: FRED-SD variables that map directly onto a known FRED-MD / -QD national series at the same definition. The cleanest subset for cross-frequency studies that need national-state correspondence.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Cross-frequency studies needing direct national-state mapping.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="provisional-analog-medium-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">provisional_analog_medium</span></code>  –  operational<a class="headerlink" href="#provisional-analog-medium-operational" title="Link to this heading"></a></h3>
+<p>Variables with provisional national analog (medium-confidence join).</p>
+<p>FRED-SD variable category: FRED-SD variables that <em>approximately</em> map onto a national series but with some definition mismatch (coverage gap, methodology change, etc.). Use with caution; the join is provisional.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Sensitivity analyses on the analog mapping.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="semantic-review-outputs-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">semantic_review_outputs</span></code>  –  operational<a class="headerlink" href="#semantic-review-outputs-operational" title="Link to this heading"></a></h3>
+<p>Outputs of the FRED-SD semantic review process.</p>
+<p>FRED-SD variable category: Variables flagged through the FRED-SD semantic-review pipeline (audit-trail diagnostics produced by the FRED-SD construction process). Mostly used for diagnostic provenance, not as predictors.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Audit-trail diagnostics for the FRED-SD construction process.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="no-reliable-analog-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">no_reliable_analog</span></code>  –  operational<a class="headerlink" href="#no-reliable-analog-operational" title="Link to this heading"></a></h3>
+<p>Variables without a reliable national analog.</p>
+<p>FRED-SD variable category: FRED-SD-only series that have no clean correspondence to a FRED-MD / -QD national variable. Useful for state-only studies that exclude national benchmarks.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>State-only studies; spatial-econometric panels that ignore national aggregates.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="custom-sd-variable-group-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">custom_sd_variable_group</span></code>  –  operational<a class="headerlink" href="#custom-sd-variable-group-operational" title="Link to this heading"></a></h3>
+<p>User-supplied variable list (leaf_config.custom_sd_variables).</p>
+<p>FRED-SD variable category: Bespoke variable selections – e.g. ‘manufacturing + trade only’ or ‘a specific BLS series list’. Reads the explicit variable list from <code class="docutils literal notranslate"><span class="pre">leaf_config.custom_sd_variables</span></code>.</p>
+<p>Restricts the predictor block to series tagged with this category in the FRED-SD groups manifest. Combine with <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code> to control geography and with <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code> to restrict further within this category.</p>
+<p><strong>When to use</strong></p>
+<p>Bespoke variable selections not captured by built-in groupings.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#all-sd-variables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">all_sd_variables</span></code></span></a>, <a class="reference internal" href="#labor-market-core"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a>, <a class="reference internal" href="#employment-sector"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">employment_sector</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="state_selection.html" class="btn btn-neutral float-left" title="state_selection" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sd_variable_selection.html" class="btn btn-neutral float-right" title="sd_variable_selection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

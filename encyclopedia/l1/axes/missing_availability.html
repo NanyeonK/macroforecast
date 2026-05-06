@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>missing_availability &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="raw_missing_policy" href="raw_missing_policy.html" />
+    <link rel="prev" title="variable_universe" href="variable_universe.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L1  –  Data</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="custom_source_policy.html"><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">target_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="predictor_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L1  –  Data</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l1/axes/missing_availability.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="missing-availability">
+<h1><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code><a class="headerlink" href="#missing-availability" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L1</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">l1_c</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l1</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>l1_c</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'zero_fill_leading_predictor_gaps'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 4 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="require-complete-rows-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code>  –  operational<a class="headerlink" href="#require-complete-rows-operational" title="Link to this heading"></a></h3>
+<p>Drop any row containing a missing value.</p>
+<p>Strict listwise-deletion rule applied at L1 before L2 imputation. Useful when the recipe author prefers to lose rows rather than rely on imputation; produces a smaller, fully-observed panel.</p>
+<p><strong>When to use</strong></p>
+<p>Studies where imputation is methodologically inappropriate; sensitivity analyses against imputation effects.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When the panel is sparsely observed – listwise deletion can leave too few rows.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#keep-available-rows"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code></span></a>, <a class="reference internal" href="#impute-predictors-only"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="keep-available-rows-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code>  –  operational<a class="headerlink" href="#keep-available-rows-operational" title="Link to this heading"></a></h3>
+<p>Keep every row that has the target observed.</p>
+<p>Default; passes interior predictor NaNs through to L2.D for imputation. Ensures the maximum sample size while letting downstream imputation handle holes.</p>
+<p><strong>When to use</strong></p>
+<p>Default for FRED-MD / -QD recipes where L2.D EM imputation is the canonical workflow.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#require-complete-rows"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code></span></a>, <a class="reference internal" href="#impute-predictors-only"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="impute-predictors-only-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">impute_predictors_only</span></code>  –  operational<a class="headerlink" href="#impute-predictors-only-operational" title="Link to this heading"></a></h3>
+<p>Impute predictor missings at L1; never impute the target.</p>
+<p>Restricts imputation to the predictor block at L1 stage and forbids any target imputation in subsequent layers. Avoids accidentally back-filling the target via L2.D.</p>
+<p><strong>When to use</strong></p>
+<p>Recipes where the target should be the ground-truth signal and never imputed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#keep-available-rows"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">keep_available_rows</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="zero-fill-leading-predictor-gaps-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code>  –  operational<a class="headerlink" href="#zero-fill-leading-predictor-gaps-operational" title="Link to this heading"></a></h3>
+<p>Zero-fill leading predictor NaNs; preserve interior gaps.</p>
+<p>Replaces leading NaNs (before the predictor’s first observation) with zero so the panel has a uniform start date. Interior NaNs pass through to L2.D unchanged.</p>
+<p><strong>When to use</strong></p>
+<p>FRED-SD panels where some series start later but the user wants a balanced start date.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When zero is a meaningful value for the predictor – choose <code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code> instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#require-complete-rows"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">require_complete_rows</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="variable_universe.html" class="btn btn-neutral float-left" title="variable_universe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="raw_missing_policy.html" class="btn btn-neutral float-right" title="raw_missing_policy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

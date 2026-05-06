@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>density_metrics &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="direction_metrics" href="direction_metrics.html" />
+    <link rel="prev" title="point_metrics" href="point_metrics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L5  –  Evaluation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="primary_metric.html"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L5  –  Evaluation</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l5/axes/density_metrics.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="density-metrics">
+<h1><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code><a class="headerlink" href="#density-metrics" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L5</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">density_metrics</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L5_A_metric_specification</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l5</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L5_A_metric_specification</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">['log_score',</span> <span class="pre">'crps']</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 4 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="coverage-rate-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code>  –  operational<a class="headerlink" href="#coverage-rate-operational" title="Link to this heading"></a></h3>
+<p>Empirical coverage rate – share of OOS observations falling within the nominal-α interval.</p>
+<p>Density-forecast metric <code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code>. Should equal α (1 - α miscoverage) if the model is well-calibrated. Deviations indicate miscalibration: low coverage = intervals too narrow; high coverage = intervals too wide. Pair with <code class="docutils literal notranslate"><span class="pre">interval_score</span></code> to capture both calibration and sharpness.</p>
+<p><strong>When to use</strong></p>
+<p>Interval-calibration audits; reporting alongside interval_score.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Gneiting &amp; Raftery (2007) ‘Strictly Proper Scoring Rules, Prediction, and Estimation’, JASA 102(477): 359-378. (doi:10.1198/016214506000001437)</p></li>
+<li><p>Gneiting &amp; Katzfuss (2014) ‘Probabilistic Forecasting’, Annual Review of Statistics and Its Application 1: 125-151.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#log-score"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a>, <a class="reference internal" href="#crps"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a>, <a class="reference internal" href="#interval-score"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">interval_score</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="crps-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">crps</span></code>  –  operational<a class="headerlink" href="#crps-operational" title="Link to this heading"></a></h3>
+<p>Continuous ranked probability score – generalisation of MAE to densities.</p>
+<p>Density-forecast metric <code class="docutils literal notranslate"><span class="pre">crps</span></code>. <code class="docutils literal notranslate"><span class="pre">CRPS</span> <span class="pre">=</span> <span class="pre">∫</span> <span class="pre">(F̂(y)</span> <span class="pre">-</span> <span class="pre">1{y</span> <span class="pre">≥</span> <span class="pre">y_obs})²</span> <span class="pre">dy</span></code>. Strictly-proper, expressed in the same units as the target. Reduces to MAE when the predictive distribution is a point mass at the predicted value. Standard density-score in weather / macro forecasting (Gneiting-Katzfuss 2014).</p>
+<p><strong>When to use</strong></p>
+<p>Distributional forecasts; comparing point and density forecasts on a common scale.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Gneiting &amp; Raftery (2007) ‘Strictly Proper Scoring Rules, Prediction, and Estimation’, JASA 102(477): 359-378. (doi:10.1198/016214506000001437)</p></li>
+<li><p>Gneiting &amp; Katzfuss (2014) ‘Probabilistic Forecasting’, Annual Review of Statistics and Its Application 1: 125-151.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#log-score"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a>, <a class="reference internal" href="#interval-score"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">interval_score</span></code></span></a>, <a class="reference internal" href="#coverage-rate"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="interval-score-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">interval_score</span></code>  –  operational<a class="headerlink" href="#interval-score-operational" title="Link to this heading"></a></h3>
+<p>Winkler (1972) interval score – jointly penalises miscoverage + interval width.</p>
+<p>Density-forecast metric <code class="docutils literal notranslate"><span class="pre">interval_score</span></code>. For a nominal-α interval <code class="docutils literal notranslate"><span class="pre">[L,</span> <span class="pre">U]</span></code>: <code class="docutils literal notranslate"><span class="pre">IS_α</span> <span class="pre">=</span> <span class="pre">(U</span> <span class="pre">-</span> <span class="pre">L)</span> <span class="pre">+</span> <span class="pre">(2/α)(L</span> <span class="pre">-</span> <span class="pre">y)</span> <span class="pre">1{y</span> <span class="pre">&lt;</span> <span class="pre">L}</span> <span class="pre">+</span> <span class="pre">(2/α)(y</span> <span class="pre">-</span> <span class="pre">U)</span> <span class="pre">1{y</span> <span class="pre">&gt;</span> <span class="pre">U}</span></code>. Lower = better. Strictly-proper for the α-level prediction interval; the natural metric when L4 emits <code class="docutils literal notranslate"><span class="pre">forecast_object</span> <span class="pre">=</span> <span class="pre">interval</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Prediction-interval evaluation; balancing tightness against coverage.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Gneiting &amp; Raftery (2007) ‘Strictly Proper Scoring Rules, Prediction, and Estimation’, JASA 102(477): 359-378. (doi:10.1198/016214506000001437)</p></li>
+<li><p>Gneiting &amp; Katzfuss (2014) ‘Probabilistic Forecasting’, Annual Review of Statistics and Its Application 1: 125-151.</p></li>
+<li><p>Winkler (1972) ‘A Decision-Theoretic Approach to Interval Estimation’, JASA 67(337): 187-191.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#log-score"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a>, <a class="reference internal" href="#crps"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a>, <a class="reference internal" href="#coverage-rate"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="log-score-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">log_score</span></code>  –  operational<a class="headerlink" href="#log-score-operational" title="Link to this heading"></a></h3>
+<p>Logarithmic predictive density score – <code class="docutils literal notranslate"><span class="pre">log</span> <span class="pre">f̂(y_t)</span></code>.</p>
+<p>Density-forecast metric <code class="docutils literal notranslate"><span class="pre">log_score</span></code>. The strictly-proper scoring rule recommended by Gneiting &amp; Raftery (2007). Equivalent to the Bayesian predictive log-likelihood. Larger = better. Requires <code class="docutils literal notranslate"><span class="pre">forecast_object</span> <span class="pre">=</span> <span class="pre">density</span> <span class="pre">/</span> <span class="pre">quantile</span></code> from L4.</p>
+<p>When the predictive density is parametric (e.g. Gaussian) the score reduces to a closed-form involving the predictive mean / variance.</p>
+<p><strong>When to use</strong></p>
+<p>Default scoring rule for Bayesian forecasts; probabilistic horse-race ranking.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Gneiting &amp; Raftery (2007) ‘Strictly Proper Scoring Rules, Prediction, and Estimation’, JASA 102(477): 359-378. (doi:10.1198/016214506000001437)</p></li>
+<li><p>Gneiting &amp; Katzfuss (2014) ‘Probabilistic Forecasting’, Annual Review of Statistics and Its Application 1: 125-151.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#crps"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a>, <a class="reference internal" href="#interval-score"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">interval_score</span></code></span></a>, <a class="reference internal" href="#coverage-rate"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="point_metrics.html" class="btn btn-neutral float-left" title="point_metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="direction_metrics.html" class="btn btn-neutral float-right" title="direction_metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

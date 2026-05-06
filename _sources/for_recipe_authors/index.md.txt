@@ -28,7 +28,9 @@ For end-to-end replication walkthroughs see [Replications](../replications/index
 - For the **why** of each layer (boundary contracts, sink names, manifest
   fields) read the canonical [architecture pages](../architecture/index.md).
 - For the **public API** the recipe ultimately drives, see
-  [`reference/public_api.md`](../reference/public_api.md).
+  [`encyclopedia/public_api.md`](../encyclopedia/public_api.md).
+- To browse every recipe axis × option (with full OptionDoc prose)
+  see the [encyclopedia](../encyclopedia/index.md).
 
 ```{toctree}
 :hidden:

@@ -1,0 +1,202 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nested_pair_strategy &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="cw_adjustment" href="cw_adjustment.html" />
+    <link rel="prev" title="nested_test" href="nested_test.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L6  –  Statistical tests</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="equal_predictive_test.html"><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="loss_function.html"><code class="docutils literal notranslate"><span class="pre">loss_function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="model_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">model_pair_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hln_correction.html"><code class="docutils literal notranslate"><span class="pre">hln_correction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="nested_test.html"><code class="docutils literal notranslate"><span class="pre">nested_test</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cw_adjustment.html"><code class="docutils literal notranslate"><span class="pre">cw_adjustment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="enc_test_one_sided.html"><code class="docutils literal notranslate"><span class="pre">enc_test_one_sided</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cpa_test.html"><code class="docutils literal notranslate"><span class="pre">cpa_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cpa_window_type.html"><code class="docutils literal notranslate"><span class="pre">cpa_window_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cpa_conditioning_info.html"><code class="docutils literal notranslate"><span class="pre">cpa_conditioning_info</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="cpa_critical_value_method.html"><code class="docutils literal notranslate"><span class="pre">cpa_critical_value_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="multiple_model_test.html"><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mcs_alpha.html"><code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mmt_loss_function.html"><code class="docutils literal notranslate"><span class="pre">mmt_loss_function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bootstrap_method.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bootstrap_n_replications.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_n_replications</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="bootstrap_block_length.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_block_length</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mcs_t_statistic.html"><code class="docutils literal notranslate"><span class="pre">mcs_t_statistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spa_studentization.html"><code class="docutils literal notranslate"><span class="pre">spa_studentization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="stepm_alpha.html"><code class="docutils literal notranslate"><span class="pre">stepm_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="density_test.html"><code class="docutils literal notranslate"><span class="pre">density_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="interval_test.html"><code class="docutils literal notranslate"><span class="pre">interval_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="coverage_levels.html"><code class="docutils literal notranslate"><span class="pre">coverage_levels</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pit_n_bins.html"><code class="docutils literal notranslate"><span class="pre">pit_n_bins</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pit_test_horizon_dependence.html"><code class="docutils literal notranslate"><span class="pre">pit_test_horizon_dependence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="direction_test.html"><code class="docutils literal notranslate"><span class="pre">direction_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="direction_threshold.html"><code class="docutils literal notranslate"><span class="pre">direction_threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="direction_alpha.html"><code class="docutils literal notranslate"><span class="pre">direction_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="residual_test.html"><code class="docutils literal notranslate"><span class="pre">residual_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="residual_lag_count.html"><code class="docutils literal notranslate"><span class="pre">residual_lag_count</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="residual_test_scope.html"><code class="docutils literal notranslate"><span class="pre">residual_test_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="residual_alpha.html"><code class="docutils literal notranslate"><span class="pre">residual_alpha</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L6  –  Statistical tests</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l6/axes/nested_pair_strategy.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="nested-pair-strategy">
+<h1><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code><a class="headerlink" href="#nested-pair-strategy" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L6</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L6_B_nested</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l6</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L6_B_nested</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'vs_benchmark_auto'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 0 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<p><em>This axis takes a free-form value (numeric, list, or other non-enumerated leaf-config datum); see the layer architecture page for the accepted shape.</em></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nested_test.html" class="btn btn-neutral float-left" title="nested_test" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cw_adjustment.html" class="btn btn-neutral float-right" title="cw_adjustment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

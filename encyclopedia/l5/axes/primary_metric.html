@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>primary_metric &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="point_metrics" href="point_metrics.html" />
+    <link rel="prev" title="Layer L5 – Evaluation" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L5  –  Evaluation</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="density_metrics.html"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L5  –  Evaluation</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l5/axes/primary_metric.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="primary-metric">
+<h1><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code><a class="headerlink" href="#primary-metric" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L5</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">primary_metric</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L5_A_metric_specification</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l5</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L5_A_metric_specification</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'mse'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 13 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="crps-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">crps</span></code>  –  operational<a class="headerlink" href="#crps-operational" title="Link to this heading"></a></h3>
+<p>Continuous ranked probability score – generalisation of MAE to densities.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. <code class="docutils literal notranslate"><span class="pre">CRPS</span> <span class="pre">=</span> <span class="pre">∫</span> <span class="pre">(F̂(y)</span> <span class="pre">-</span> <span class="pre">1{y</span> <span class="pre">≥</span> <span class="pre">y_obs})²</span> <span class="pre">dy</span></code>. Strictly-proper, expressed in the same units as the target. Reduces to MAE when the predictive distribution is a point mass at the predicted value. Standard density-score in weather / macro forecasting (Gneiting-Katzfuss 2014).</p>
+<p><strong>When to use</strong></p>
+<p>Distributional forecasts; comparing point and density forecasts on a common scale.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Gneiting &amp; Raftery (2007) ‘Strictly Proper Scoring Rules, Prediction, and Estimation’, JASA 102(477): 359-378. (doi:10.1198/016214506000001437)</p></li>
+<li><p>Gneiting &amp; Katzfuss (2014) ‘Probabilistic Forecasting’, Annual Review of Statistics and Its Application 1: 125-151.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="log-score-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">log_score</span></code>  –  operational<a class="headerlink" href="#log-score-operational" title="Link to this heading"></a></h3>
+<p>Logarithmic predictive density score – <code class="docutils literal notranslate"><span class="pre">log</span> <span class="pre">f̂(y_t)</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. The strictly-proper scoring rule recommended by Gneiting &amp; Raftery (2007). Equivalent to the Bayesian predictive log-likelihood. Larger = better. Requires <code class="docutils literal notranslate"><span class="pre">forecast_object</span> <span class="pre">=</span> <span class="pre">density</span> <span class="pre">/</span> <span class="pre">quantile</span></code> from L4.</p>
+<p>When the predictive density is parametric (e.g. Gaussian) the score reduces to a closed-form involving the predictive mean / variance.</p>
+<p><strong>When to use</strong></p>
+<p>Default scoring rule for Bayesian forecasts; probabilistic horse-race ranking.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Gneiting &amp; Raftery (2007) ‘Strictly Proper Scoring Rules, Prediction, and Estimation’, JASA 102(477): 359-378. (doi:10.1198/016214506000001437)</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="mae-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mae</span></code>  –  operational<a class="headerlink" href="#mae-operational" title="Link to this heading"></a></h3>
+<p>Mean absolute error – <code class="docutils literal notranslate"><span class="pre">(1/N)</span> <span class="pre">Σ</span> <span class="pre">|y_t</span> <span class="pre">-</span> <span class="pre">ŷ_t|</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. L1 loss; robust alternative to MSE. Equally weighs every absolute residual rather than penalising large errors super-linearly. The implicit decision rule under MAE is the median of the predictive distribution (vs the mean for MSE).</p>
+<p><strong>When to use</strong></p>
+<p>Heavy-tailed targets where extreme errors should not dominate; reporting in target units.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When the squared-loss decision rule is what the user actually faces.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Diebold (2017) ‘Forecasting in Economics, Business, Finance and Beyond’, University of Pennsylvania (free online). <a class="reference external" href="https://www.sas.upenn.edu/~fdiebold/Textbooks.html">https://www.sas.upenn.edu/~fdiebold/Textbooks.html</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a>, <a class="reference internal" href="#mape"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mape</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="mape-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mape</span></code>  –  operational<a class="headerlink" href="#mape-operational" title="Link to this heading"></a></h3>
+<p>Mean absolute percentage error – <code class="docutils literal notranslate"><span class="pre">(100/N)</span> <span class="pre">Σ</span> <span class="pre">|y_t</span> <span class="pre">-</span> <span class="pre">ŷ_t|</span> <span class="pre">/</span> <span class="pre">|y_t|</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. Scale-free percentage version of MAE. Allows comparing forecasts for targets on different scales (US GDP vs Korean GDP). Pathological when targets can be zero or near-zero – the metric blows up. Hyndman &amp; Koehler (2006) recommend MASE / sMAPE in those cases.</p>
+<p><strong>When to use</strong></p>
+<p>Cross-target / cross-country comparisons; reporting forecast accuracy in percentage terms.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Targets that can be near zero (rates, growth rates) – division by tiny <code class="docutils literal notranslate"><span class="pre">|y_t|</span></code> makes the metric explode.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Hyndman &amp; Koehler (2006) ‘Another look at measures of forecast accuracy’, International Journal of Forecasting 22(4): 679-688. (doi:10.1016/j.ijforecast.2006.03.001)</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="medae-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">medae</span></code>  –  operational<a class="headerlink" href="#medae-operational" title="Link to this heading"></a></h3>
+<p>Median absolute error – <code class="docutils literal notranslate"><span class="pre">median</span> <span class="pre">|y_t</span> <span class="pre">-</span> <span class="pre">ŷ_t|</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. Maximally robust point-forecast metric: substitution by median completely insulates the score from a constant-share of extreme residuals. Common in robust-statistics papers; rarer in mainstream forecasting.</p>
+<p><strong>When to use</strong></p>
+<p>Pathologically heavy-tailed errors (financial crises, regime shifts).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Standard reporting – mean-based metrics are the convention.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#mape"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mape</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="mse-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mse</span></code>  –  operational<a class="headerlink" href="#mse-operational" title="Link to this heading"></a></h3>
+<p>Mean squared error – <code class="docutils literal notranslate"><span class="pre">(1/N)</span> <span class="pre">Σ</span> <span class="pre">(y_t</span> <span class="pre">-</span> <span class="pre">ŷ_t)²</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. The classical quadratic-loss metric. Optimal under Gaussian-residual / squared-loss decision theory; the L4 fit objective for OLS / ridge / elastic net is its in-sample version. MSE penalises large residuals super-linearly, so a single outlier in the OOS sample can dominate the score.</p>
+<p><strong>When to use</strong></p>
+<p>Default for Gaussian-residual problems; horse-race ranking under squared-loss decision rules.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Heavy-tailed forecast errors – a single outlier dominates the score; consider MAE or MedAE instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Diebold (2017) ‘Forecasting in Economics, Business, Finance and Beyond’, University of Pennsylvania (free online). <a class="reference external" href="https://www.sas.upenn.edu/~fdiebold/Textbooks.html">https://www.sas.upenn.edu/~fdiebold/Textbooks.html</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a>, <a class="reference internal" href="#mape"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mape</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="mse-reduction-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>  –  operational<a class="headerlink" href="#mse-reduction-operational" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">relative_mse</span></code> – positive means the candidate beats the benchmark.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. Convenience reformulation that flips the sign so positive numbers indicate improvement. Common in macro-forecasting papers (e.g. Stock-Watson 2002 reports MSE reduction in %). Equivalent to <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">MSE_model</span> <span class="pre">/</span> <span class="pre">MSE_benchmark</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Default reporting in horse-race tables when ‘positive = better’ is preferred.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Campbell &amp; Thompson (2008) ‘Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?’, Review of Financial Studies 21(4): 1509-1531. (doi:10.1093/rfs/hhm055)</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="r2-oos-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>  –  operational<a class="headerlink" href="#r2-oos-operational" title="Link to this heading"></a></h3>
+<p>Out-of-sample R² (Campbell-Thompson 2008) – <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">SSE_model</span> <span class="pre">/</span> <span class="pre">SSE_benchmark</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. Standard return-predictability metric in finance (and increasingly in macro). Identical formula to <code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code> when the benchmark is the historical mean. Campbell &amp; Thompson (2008) popularised the metric for the empirical-asset-pricing literature.</p>
+<p><strong>When to use</strong></p>
+<p>Macro / financial forecasting tradition; literature-compatibility with CT-2008-era papers.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Campbell &amp; Thompson (2008) ‘Predicting Excess Stock Returns Out of Sample: Can Anything Beat the Historical Average?’, Review of Financial Studies 21(4): 1509-1531. (doi:10.1093/rfs/hhm055)</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="relative-mae-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">relative_mae</span></code>  –  operational<a class="headerlink" href="#relative-mae-operational" title="Link to this heading"></a></h3>
+<p>Forecast MAE divided by the L4 <code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code> model’s MAE.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. L1-loss analogue of <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>. Below 1 means the candidate beats the benchmark on absolute-loss criterion. Robust to heavy-tailed forecast errors.</p>
+<p><strong>When to use</strong></p>
+<p>Heavy-tailed targets where MSE is too sensitive to outliers.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="relative-mse-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>  –  operational<a class="headerlink" href="#relative-mse-operational" title="Link to this heading"></a></h3>
+<p>Forecast MSE divided by the L4 <code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code> model’s MSE.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. <code class="docutils literal notranslate"><span class="pre">MSE_model</span> <span class="pre">/</span> <span class="pre">MSE_benchmark</span></code>. The standard horse-race ratio. Below 1 means the candidate beats the benchmark; the L5.E ranking tables surface this column by default. Requires exactly one L4 model with <code class="docutils literal notranslate"><span class="pre">is_benchmark</span> <span class="pre">=</span> <span class="pre">true</span></code> (validator hard-rejects 0 or &gt; 1 benchmarks).</p>
+<p><strong>When to use</strong></p>
+<p>Default reporting metric in horse-race tables; comparing candidate models against a fixed benchmark.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Diebold (2017) ‘Forecasting in Economics, Business, Finance and Beyond’, University of Pennsylvania (free online). <a class="reference external" href="https://www.sas.upenn.edu/~fdiebold/Textbooks.html">https://www.sas.upenn.edu/~fdiebold/Textbooks.html</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="rmse-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">rmse</span></code>  –  operational<a class="headerlink" href="#rmse-operational" title="Link to this heading"></a></h3>
+<p>Root mean squared error – <code class="docutils literal notranslate"><span class="pre">√MSE</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. Same ranking as MSE but expressed in target units (rather than squared target units). Standard reporting metric in macro / finance papers; pairs naturally with confidence-band charts since RMSE has the same units as the prediction interval.</p>
+<p><strong>When to use</strong></p>
+<p>Reporting forecast accuracy in target units.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Heavy-tailed errors – inherits MSE’s outlier sensitivity.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Diebold (2017) ‘Forecasting in Economics, Business, Finance and Beyond’, University of Pennsylvania (free online). <a class="reference external" href="https://www.sas.upenn.edu/~fdiebold/Textbooks.html">https://www.sas.upenn.edu/~fdiebold/Textbooks.html</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a>, <a class="reference internal" href="#mape"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mape</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="theil-u1-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">theil_u1</span></code>  –  operational<a class="headerlink" href="#theil-u1-operational" title="Link to this heading"></a></h3>
+<p>Theil’s U1 inequality coefficient – bounded in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. <code class="docutils literal notranslate"><span class="pre">U₁</span> <span class="pre">=</span> <span class="pre">√MSE</span> <span class="pre">/</span> <span class="pre">(√(1/N</span> <span class="pre">Σ</span> <span class="pre">y²)</span> <span class="pre">+</span> <span class="pre">√(1/N</span> <span class="pre">Σ</span> <span class="pre">ŷ²))</span></code>. Bounded between 0 (perfect forecast) and 1 (worst possible). Theil’s original 1966 metric; less commonly used today than U2 because the denominator’s interpretation is less intuitive.</p>
+<p><strong>When to use</strong></p>
+<p>Long-run macro forecasting tradition; comparability with Theil-1966-era papers.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Modern reporting – U2 is more interpretable as a ratio against the no-change benchmark.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Theil (1966) ‘Applied Economic Forecasting’, North-Holland (Chapter 2: Inequality coefficients).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="theil-u2-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code>  –  operational<a class="headerlink" href="#theil-u2-operational" title="Link to this heading"></a></h3>
+<p>Theil’s U2 inequality coefficient – ratio of forecast MSE to no-change MSE.</p>
+<p>Primary metric used for the L5.A summary table and the L5.E ranking. <code class="docutils literal notranslate"><span class="pre">U₂</span> <span class="pre">=</span> <span class="pre">√(Σ</span> <span class="pre">(ŷ_t</span> <span class="pre">-</span> <span class="pre">y_t)²</span> <span class="pre">/</span> <span class="pre">Σ</span> <span class="pre">(y_{t-1}</span> <span class="pre">-</span> <span class="pre">y_t)²)</span></code>. <code class="docutils literal notranslate"><span class="pre">U₂</span> <span class="pre">&lt;</span> <span class="pre">1</span></code> means the forecast beats the random-walk benchmark. Standard sanity-check ratio in macro forecasting – if <code class="docutils literal notranslate"><span class="pre">U₂</span> <span class="pre">≥</span> <span class="pre">1</span></code> the model is no better than ‘tomorrow looks like today’.</p>
+<p><strong>When to use</strong></p>
+<p>Sanity-checking against the random-walk benchmark; macro-forecasting tradition.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When a custom benchmark (not random walk) is preferred – use <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code> instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L5: ‘evaluation = (metric × benchmark × aggregation × decomposition × ranking).’</p></li>
+<li><p>Theil (1966) ‘Applied Economic Forecasting’, North-Holland (Chapter 2: Inequality coefficients).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mse</span></code></span></a>, <a class="reference internal" href="#rmse"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rmse</span></code></span></a>, <a class="reference internal" href="#mae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a>, <a class="reference internal" href="#medae"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">medae</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Layer L5 – Evaluation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="point_metrics.html" class="btn btn-neutral float-right" title="point_metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

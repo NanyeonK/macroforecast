@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>compute_mode &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Layer L1 – Data" href="../../l1/index.html" />
+    <link rel="prev" title="reproducibility_mode" href="reproducibility_mode.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L0  –  Study Setup</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="failure_policy.html"><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reproducibility_mode.html"><code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L0  –  Study Setup</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l0/axes/compute_mode.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="compute-mode">
+<h1><code class="docutils literal notranslate"><span class="pre">compute_mode</span></code><a class="headerlink" href="#compute-mode" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L0</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">compute_mode</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">l0_a</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l0</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>l0_a</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'serial'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+<li><p>Leaf-config keys: <code class="docutils literal notranslate"><span class="pre">parallel_unit</span></code>, <code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 2 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="serial-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">serial</span></code>  –  operational<a class="headerlink" href="#serial-operational" title="Link to this heading"></a></h3>
+<p>Run every sweep cell sequentially in the calling process.</p>
+<p>The cell loop iterates expanded cells one at a time. No worker pool, no extra processes, no thread pool. <code class="docutils literal notranslate"><span class="pre">parallel_unit</span></code> is ignored.</p>
+<p>This is the default because (a) most authoring sweeps are small enough that the cell loop dwarfs scheduling overhead, and (b) every parallel mode introduces an additional surface for scheduling-induced non-determinism that has to be ruled out explicitly. Pick <code class="docutils literal notranslate"><span class="pre">parallel</span></code> when wall-clock matters and the study has been validated under <code class="docutils literal notranslate"><span class="pre">serial</span></code> first.</p>
+<p><strong>When to use</strong></p>
+<p>Default. Authoring iteration, small sweeps, debugging, any case where a stack trace from a particular cell needs to be readable without thread / process noise.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Multi-cell sweeps where each cell takes more than a minute and the machine has multiple CPU cores. Switch to <code class="docutils literal notranslate"><span class="pre">parallel</span></code> and record the speed-up in the manifest.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L0 §A: ‘compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#parallel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parallel</span></code></span></a></p>
+<p><strong>Examples</strong></p>
+<p><em>Default serial study</em></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">compute_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">serial</span>
+</pre></div>
+</div>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="parallel-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">parallel</span></code>  –  operational<a class="headerlink" href="#parallel-operational" title="Link to this heading"></a></h3>
+<p>Distribute work over multiple workers; pick the unit via parallel_unit.</p>
+<p>Activates the parallel cell loop. The granularity is controlled by the <code class="docutils literal notranslate"><span class="pre">parallel_unit</span></code> sub-axis:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cells</span></code> – one process per sweep cell (<code class="docutils literal notranslate"><span class="pre">ProcessPoolExecutor</span></code>).   Cell-level parallelism is the safest path because cells are by   construction independent.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code> – threads over <code class="docutils literal notranslate"><span class="pre">fit_model</span></code> nodes inside a single   cell (issue #204). Sklearn-family estimators release the GIL; the   thread pool avoids the pickling overhead of processes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oos_dates</span></code> – threads over walk-forward origins inside a fit   node (issue #250). Per-origin RNG state is derived deterministically   from <code class="docutils literal notranslate"><span class="pre">base_seed</span> <span class="pre">+</span> <span class="pre">position</span></code> (issue #279) so thread scheduling   cannot affect the forecasts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizons</span></code> / <code class="docutils literal notranslate"><span class="pre">targets</span></code> – map to the same fan-out when L4   produces single-horizon / single-target output per fit node.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">leaf_config.n_workers</span></code> (cell-level) and <code class="docutils literal notranslate"><span class="pre">n_workers_inner</span></code> (sub-cell) cap the pool sizes.</p>
+<p><strong>When to use</strong></p>
+<p>Long sweeps on multi-core machines. Validate the manifest under <code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">serial</span></code> first to confirm the recipe is deterministic, then flip to <code class="docutils literal notranslate"><span class="pre">parallel</span></code> and verify <code class="docutils literal notranslate"><span class="pre">replicate()</span></code> still passes.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Recipes that mutate global state (e.g., a custom L3 op that writes to a shared file or a base estimator with a non-thread-safe C extension). Audit thread / process safety before flipping the switch.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast PR #173 – cell-level ProcessPoolExecutor.</p></li>
+<li><p>macroforecast PR #204 / #250 – sub-cell ThreadPoolExecutor.</p></li>
+<li><p>macroforecast PR #279 – deterministic per-origin seed propagation.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#serial"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">serial</span></code></span></a></p>
+<p><strong>Examples</strong></p>
+<p><em>Cell-level parallel sweep</em></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">compute_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parallel</span>
+<span class="w">    </span><span class="nt">parallel_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cells</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">n_workers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</pre></div>
+</div>
+<p><em>Sub-cell parallel over fit_model nodes</em></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">compute_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parallel</span>
+<span class="w">    </span><span class="nt">parallel_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">n_workers_inner</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</pre></div>
+</div>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reproducibility_mode.html" class="btn btn-neutral float-left" title="reproducibility_mode" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../l1/index.html" class="btn btn-neutral float-right" title="Layer L1 – Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

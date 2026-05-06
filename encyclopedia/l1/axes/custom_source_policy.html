@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>custom_source_policy &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="dataset" href="dataset.html" />
+    <link rel="prev" title="Layer L1 – Data" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L1  –  Data</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">target_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="predictor_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L1  –  Data</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l1/axes/custom_source_policy.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="custom-source-policy">
+<h1><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code><a class="headerlink" href="#custom-source-policy" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L1</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">l1_a</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l1</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>l1_a</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'official_only'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 3 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="official-only-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">official_only</span></code>  –  operational<a class="headerlink" href="#official-only-operational" title="Link to this heading"></a></h3>
+<p>Use the McCracken-Ng curated FRED-MD/QD/SD vintages.</p>
+<p>Loads the bundled FRED snapshot via macroforecast’s raw adapter – no network access at runtime, no per-user data file. Vintages are pinned in <code class="docutils literal notranslate"><span class="pre">macroforecast/raw/datasets/</span></code> so two users on the same package version see identical raw inputs.</p>
+<p>This is the canonical recipe path: every published replication script, every example in the gallery, and every CI check uses <code class="docutils literal notranslate"><span class="pre">official_only</span></code> so cross-user comparability is bit-exact.</p>
+<p><strong>When to use</strong></p>
+<p>Reproducing or extending published macro forecasting work; running benchmarks where readers need to repeat the study from the recipe alone; default for any FRED-based analysis.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Forecasting on non-FRED panels (firm-level data, country-specific series); needs a vintage newer than the bundled snapshot.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#custom-panel-only"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code></span></a>, <a class="reference internal" href="#official-plus-custom"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></span></a>, <a class="reference internal" href="dataset.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></span></a>, <a class="reference internal" href="#vintage-policy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></span></a></p>
+<p><strong>Examples</strong></p>
+<p><em>FRED-MD baseline</em></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_only</span>
+<span class="w">    </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CPIAUCSL</span>
+</pre></div>
+</div>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="custom-panel-only-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>  –  operational<a class="headerlink" href="#custom-panel-only-operational" title="Link to this heading"></a></h3>
+<p>Load a single user-supplied panel (CSV / Parquet / inline dict).</p>
+<p>Bypasses the FRED adapter entirely. The user provides:</p>
+<ul class="simple">
+<li><p>an inline <code class="docutils literal notranslate"><span class="pre">custom_panel_inline</span></code> dict (small synthetic panels), or</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code> pointing to a CSV / Parquet file.</p></li>
+</ul>
+<p>The L1 runtime applies no schema-level validation beyond ‘has a date column and at least the requested target series’. Variable metadata that the McCracken-Ng panel ships (group tags, t-codes, release dates) is unavailable, so axes that depend on it – <code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code>, etc. – are inactive.</p>
+<p><strong>When to use</strong></p>
+<p>Forecasting on proprietary firm panels, country-specific series, or any data not in FRED. Also the standard path for unit tests and tutorial recipes that ship deterministic synthetic data.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When McCracken-Ng’s curation (t-codes, group tags) is part of the study design – <code class="docutils literal notranslate"><span class="pre">official_only</span></code> or <code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code> preserves it.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#official-only"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_only</span></code></span></a>, <a class="reference internal" href="#official-plus-custom"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></span></a></p>
+<p><strong>Examples</strong></p>
+<p><em>Inline panel for a unit test</em></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">y</span>
+<span class="w">    </span><span class="nt">custom_panel_inline</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">date</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2020-01-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2020-02-01</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">y</span><span class="p">:</span><span class="w">    </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">x1</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">[</span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="official-plus-custom-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code>  –  operational<a class="headerlink" href="#official-plus-custom-operational" title="Link to this heading"></a></h3>
+<p>Merge the official FRED panel with a user-supplied auxiliary panel.</p>
+<p>Loads the FRED vintage (per <code class="docutils literal notranslate"><span class="pre">dataset</span></code>) and joins a user CSV / Parquet on the date index. Requires <code class="docutils literal notranslate"><span class="pre">custom_source_path</span></code> plus <code class="docutils literal notranslate"><span class="pre">custom_merge_rule</span></code> (one of <code class="docutils literal notranslate"><span class="pre">inner_join</span></code> / <code class="docutils literal notranslate"><span class="pre">left_join</span></code> / <code class="docutils literal notranslate"><span class="pre">outer_join</span></code>) so the merge contract is explicit.</p>
+<p>This is the canonical extension path for studies that want McCracken-Ng predictors plus a few additional series (e.g., proprietary survey indicators, alternative-data nowcast inputs).</p>
+<p><strong>When to use</strong></p>
+<p>Augmenting FRED-based studies with a small number of additional predictors that are not in the official panel.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Pure custom panels (use <code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code>); pure official panels (use <code class="docutils literal notranslate"><span class="pre">official_only</span></code>); mixing two FRED vintages (the merge rule expects one FRED + one custom).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#official-only"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_only</span></code></span></a>, <a class="reference internal" href="#custom-panel-only"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code></span></a></p>
+<p><strong>Examples</strong></p>
+<p><em>FRED-MD plus a single proprietary series</em></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_plus_custom</span>
+<span class="w">    </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CPIAUCSL</span>
+<span class="w">    </span><span class="nt">custom_source_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data/proprietary_indicator.parquet</span>
+<span class="w">    </span><span class="nt">custom_merge_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">left_join</span>
+</pre></div>
+</div>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Layer L1 – Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataset.html" class="btn btn-neutral float-right" title="dataset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

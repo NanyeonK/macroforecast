@@ -1,0 +1,255 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>figure_type &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="top_k_features_to_show" href="top_k_features_to_show.html" />
+    <link rel="prev" title="output_table_format" href="output_table_format.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L7  –  Interpretation / importance</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="output_table_format.html"><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="top_k_features_to_show.html"><code class="docutils literal notranslate"><span class="pre">top_k_features_to_show</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="precision_digits.html"><code class="docutils literal notranslate"><span class="pre">precision_digits</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="figure_format.html"><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="latex_table_export.html"><code class="docutils literal notranslate"><span class="pre">latex_table_export</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="markdown_table_export.html"><code class="docutils literal notranslate"><span class="pre">markdown_table_export</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L7  –  Interpretation / importance</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l7/axes/figure_type.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="figure-type">
+<h1><code class="docutils literal notranslate"><span class="pre">figure_type</span></code><a class="headerlink" href="#figure-type" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L7</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">figure_type</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L7_B_output_shape_export</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l7</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L7_B_output_shape_export</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'auto'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 6 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="auto-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">auto</span></code>  –  operational<a class="headerlink" href="#auto-operational" title="Link to this heading"></a></h3>
+<p>Pick the figure type matching the importance op’s default mapping.</p>
+<p>Each L7.A op declares its canonical figure type (<code class="docutils literal notranslate"><span class="pre">shap_*</span></code> → bar/beeswarm; <code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code> → lineplot; <code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code> → heatmap; <code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code> → heatmap; etc.). Setting <code class="docutils literal notranslate"><span class="pre">figure_type</span> <span class="pre">=</span> <span class="pre">auto</span></code> honours that default.</p>
+<p><strong>When to use</strong></p>
+<p>Default; lets each L7.A op choose the canonical figure for its output.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#bar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a>, <a class="reference internal" href="#boxplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a>, <a class="reference internal" href="#heatmap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">heatmap</span></code></span></a>, <a class="reference internal" href="#lineplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a>, <a class="reference internal" href="#scatter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="bar-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bar</span></code>  –  operational<a class="headerlink" href="#bar-operational" title="Link to this heading"></a></h3>
+<p>Horizontal bar chart – one bar per feature, length = importance score.</p>
+<p>The standard global-importance visualisation. Renders features sorted by mean-<code class="docutils literal notranslate"><span class="pre">|importance|</span></code> so the most important variables surface at the top of the chart. Pair with <code class="docutils literal notranslate"><span class="pre">output_table_format</span> <span class="pre">=</span> <span class="pre">wide</span></code> for direct table-figure cross-reference.</p>
+<p><strong>When to use</strong></p>
+<p>Global importance rankings (linear coefficients, permutation, mean SHAP).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#auto"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a>, <a class="reference internal" href="#boxplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a>, <a class="reference internal" href="#heatmap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">heatmap</span></code></span></a>, <a class="reference internal" href="#lineplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a>, <a class="reference internal" href="#scatter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="boxplot-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">boxplot</span></code>  –  operational<a class="headerlink" href="#boxplot-operational" title="Link to this heading"></a></h3>
+<p>Boxplot of per-fold / per-bootstrap importance distributions.</p>
+<p>Renders each feature as a box capturing the distribution of its importance score across folds (cross-validation, bootstrap, rolling windows). Reveals stability information that a single bar cannot convey.</p>
+<p><strong>When to use</strong></p>
+<p>Stability-of-importance audits; <code class="docutils literal notranslate"><span class="pre">bootstrap_jackknife</span></code> / <code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code> outputs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#auto"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a>, <a class="reference internal" href="#bar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a>, <a class="reference internal" href="#heatmap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">heatmap</span></code></span></a>, <a class="reference internal" href="#lineplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a>, <a class="reference internal" href="#scatter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="heatmap-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">heatmap</span></code>  –  operational<a class="headerlink" href="#heatmap-operational" title="Link to this heading"></a></h3>
+<p>Two-axis heatmap (feature × time / model / state).</p>
+<p>Visualises importance across an additional dimension. Used for time-varying importance (<code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code>), per-state aggregation (<code class="docutils literal notranslate"><span class="pre">group_aggregate</span></code> over FRED-SD blocks), and pairwise interaction strength (<code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code>). The <code class="docutils literal notranslate"><span class="pre">us_state_choropleth</span></code> figure is a specialised heatmap on the US state grid.</p>
+<p><strong>When to use</strong></p>
+<p>Time-varying importance, FRED-SD state choropleth, group-aggregate matrices.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#auto"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a>, <a class="reference internal" href="#bar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a>, <a class="reference internal" href="#boxplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a>, <a class="reference internal" href="#lineplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a>, <a class="reference internal" href="#scatter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="lineplot-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lineplot</span></code>  –  operational<a class="headerlink" href="#lineplot-operational" title="Link to this heading"></a></h3>
+<p>Line plot of importance over time / origin.</p>
+<p>Tracks importance evolution across walk-forward origins. Pair with <code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code> to surface trends in which features matter as new data arrives.</p>
+<p><strong>When to use</strong></p>
+<p>Tracking importance evolution across walk-forward origins.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#auto"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a>, <a class="reference internal" href="#bar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a>, <a class="reference internal" href="#boxplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a>, <a class="reference internal" href="#heatmap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">heatmap</span></code></span></a>, <a class="reference internal" href="#scatter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="scatter-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">scatter</span></code>  –  operational<a class="headerlink" href="#scatter-operational" title="Link to this heading"></a></h3>
+<p>Scatter plot (e.g. SHAP value vs feature value).</p>
+<p>PDP / ALE / SHAP dependence-plot family. Each point is a single observation; the x-axis is the feature value, the y-axis is the importance contribution. Reveals non-linearity in the model’s response.</p>
+<p><strong>When to use</strong></p>
+<p>PDP / ALE / SHAP dependence-plot family.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#auto"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a>, <a class="reference internal" href="#bar"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a>, <a class="reference internal" href="#boxplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a>, <a class="reference internal" href="#heatmap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">heatmap</span></code></span></a>, <a class="reference internal" href="#lineplot"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="output_table_format.html" class="btn btn-neutral float-left" title="output_table_format" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="top_k_features_to_show.html" class="btn btn-neutral float-right" title="top_k_features_to_show" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

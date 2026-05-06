@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>export_format &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="compression" href="compression.html" />
+    <link rel="prev" title="Layer L8 – Output / provenance" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L8  –  Output / provenance</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="compression.html"><code class="docutils literal notranslate"><span class="pre">compression</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="saved_objects.html"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="model_artifacts_format.html"><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="provenance_fields.html"><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="manifest_format.html"><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="artifact_granularity.html"><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="naming_convention.html"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L8  –  Output / provenance</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l8/axes/export_format.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="export-format">
+<h1><code class="docutils literal notranslate"><span class="pre">export_format</span></code><a class="headerlink" href="#export-format" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L8</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">export_format</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L8_A_export_format</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L8_A_export_format</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'json_csv'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 9 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="all-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">all</span></code>  –  operational<a class="headerlink" href="#all-operational" title="Link to this heading"></a></h3>
+<p>Emit every supported export format together.</p>
+<p>Comprehensive option emitting JSON + CSV + Parquet + LaTeX + Markdown + HTML for every applicable artifact. Largest disk footprint but covers every downstream consumer in one run.</p>
+<p><strong>When to use</strong></p>
+<p>Comprehensive reproducibility / sharing – single run that covers every audience.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="csv-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">csv</span></code>  –  operational<a class="headerlink" href="#csv-operational" title="Link to this heading"></a></h3>
+<p>CSV tables for tabular artifacts (forecasts, metrics, importance).</p>
+<p>Standard comma-separated values, UTF-8 encoded. The lowest-common-denominator format for spreadsheet / R workflows. Loses dtype information (everything becomes string on round-trip); for analytics workloads prefer <code class="docutils literal notranslate"><span class="pre">parquet</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Spreadsheet / R workflows; collaborators who avoid JSON.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a>, <a class="reference internal" href="#latex-tables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="html-report-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">html_report</span></code>  –  operational<a class="headerlink" href="#html-report-operational" title="Link to this heading"></a></h3>
+<p>Self-contained HTML report with embedded plots and tables.</p>
+<p>Renders a single <code class="docutils literal notranslate"><span class="pre">.html</span></code> file combining tables (via pandas’ <code class="docutils literal notranslate"><span class="pre">to_html</span></code>) and base64-embedded matplotlib figures. Opens in any browser without a server; ideal for stakeholder-shareable reports without LaTeX tooling.</p>
+<p><strong>When to use</strong></p>
+<p>Stakeholder-shareable reports without LaTeX tooling.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="json-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">json</span></code>  –  operational<a class="headerlink" href="#json-operational" title="Link to this heading"></a></h3>
+<p>JSON dump of every artifact (default).</p>
+<p>Default round-trip-safe format; native Python / JS / R support; preserves nested structure (dicts of dicts of DataFrames). All numeric values rendered as floats with full precision; date-like values rendered as ISO 8601 strings.</p>
+<p><strong>When to use</strong></p>
+<p>Default; round-trips cleanly into Python / JS / R.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a>, <a class="reference internal" href="#latex-tables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="json-csv-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">json_csv</span></code>  –  operational<a class="headerlink" href="#json-csv-operational" title="Link to this heading"></a></h3>
+<p>Both JSON and CSV for every applicable artifact.</p>
+<p>Convenience option emitting both formats. Used when downstream consumers vary – Python users want JSON round-trip, R / Excel users want CSV. Doubles the artifact-directory size.</p>
+<p><strong>When to use</strong></p>
+<p>When downstream consumers vary across both Python and Excel / R.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a>, <a class="reference internal" href="#latex-tables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="json-parquet-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code>  –  operational<a class="headerlink" href="#json-parquet-operational" title="Link to this heading"></a></h3>
+<p>Both JSON and Parquet for every applicable artifact.</p>
+<p>Hybrid option for runs that combine reproducibility (JSON for the manifest / small artifacts) with analytics (Parquet for large forecast tables). Recommended for production sweeps.</p>
+<p><strong>When to use</strong></p>
+<p>Hybrid analytics + reproducibility setups.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>Apache Parquet specification (apache/parquet-format). <a class="reference external" href="https://parquet.apache.org/docs/file-format/">https://parquet.apache.org/docs/file-format/</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#latex-tables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="latex-tables-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code>  –  operational<a class="headerlink" href="#latex-tables-operational" title="Link to this heading"></a></h3>
+<p>LaTeX <code class="docutils literal notranslate"><span class="pre">tabular</span></code> snippets ready to <code class="docutils literal notranslate"><span class="pre">\input</span></code> into a paper.</p>
+<p>Emits one <code class="docutils literal notranslate"><span class="pre">.tex</span></code> file per tabular artifact (forecasts, metrics, ranking). Booktabs-friendly column alignment and column-name escaping; uses pandas’ <code class="docutils literal notranslate"><span class="pre">to_latex</span></code> backend.</p>
+<p><strong>When to use</strong></p>
+<p>Paper-draft pipelines. Selecting <code class="docutils literal notranslate"><span class="pre">latex_tables</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.export_format</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>pandas DataFrame.to_latex documentation. <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_latex.html">https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_latex.html</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="markdown-report-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">markdown_report</span></code>  –  operational<a class="headerlink" href="#markdown-report-operational" title="Link to this heading"></a></h3>
+<p>Single Markdown report bundling tables and figure references.</p>
+<p>Renders a self-contained <code class="docutils literal notranslate"><span class="pre">.md</span></code> document with pipe-aligned tables and embedded image references. Intended as the human-readable summary for stakeholder reports and GitHub / wiki documentation.</p>
+<p><strong>When to use</strong></p>
+<p>Lightweight Markdown / GitHub-rendered reports.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="parquet-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">parquet</span></code>  –  operational<a class="headerlink" href="#parquet-operational" title="Link to this heading"></a></h3>
+<p>Apache Parquet (pyarrow); columnar binary tabular format.</p>
+<p>Columnar binary format with full dtype preservation, automatic dictionary encoding for low-cardinality columns, and per-column compression. 5-10× smaller than CSV for typical macro panels; an order of magnitude faster to read for column-subset queries. Requires <code class="docutils literal notranslate"><span class="pre">pyarrow</span></code> (already a transitive dependency).</p>
+<p><strong>When to use</strong></p>
+<p>Large-scale analytics; preserving dtypes; cross-language workflows (Spark, DuckDB, R arrow).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+<li><p>Apache Parquet specification (apache/parquet-format). <a class="reference external" href="https://parquet.apache.org/docs/file-format/">https://parquet.apache.org/docs/file-format/</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://docs.python.org/3/library/json.html#module-json" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json</span></code></span></a>, <a class="reference external" href="https://docs.python.org/3/library/csv.html#module-csv" title="Python 3.14"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a>, <a class="reference internal" href="#json-csv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_csv</span></code></span></a>, <a class="reference internal" href="#json-parquet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">json_parquet</span></code></span></a>, <a class="reference internal" href="#latex-tables"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Layer L8 – Output / provenance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="compression.html" class="btn btn-neutral float-right" title="compression" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

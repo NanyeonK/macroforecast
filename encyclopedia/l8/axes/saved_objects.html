@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>saved_objects &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="model_artifacts_format" href="model_artifacts_format.html" />
+    <link rel="prev" title="compression" href="compression.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L8  –  Output / provenance</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="export_format.html"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="compression.html"><code class="docutils literal notranslate"><span class="pre">compression</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="model_artifacts_format.html"><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="provenance_fields.html"><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="manifest_format.html"><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="artifact_granularity.html"><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="naming_convention.html"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L8  –  Output / provenance</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l8/axes/saved_objects.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="saved-objects">
+<h1><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code><a class="headerlink" href="#saved-objects" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L8</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L8_B_saved_objects</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">None</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 20 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="clean-panel-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>  –  operational<a class="headerlink" href="#clean-panel-operational" title="Link to this heading"></a></h3>
+<p>Cleaned L2 panel (post tcode / outlier / imputation / frame edge).</p>
+<p>The output of the L2 pipeline. Useful when downstream re-runs need to skip the (potentially expensive) cleaning stages.</p>
+<p><strong>When to use</strong></p>
+<p>When downstream re-runs without re-cleaning are needed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a>, <a class="reference internal" href="#forecast-intervals"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="combination-weights-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">combination_weights</span></code>  –  operational<a class="headerlink" href="#combination-weights-operational" title="Link to this heading"></a></h3>
+<p>Ensemble weights from L4 combine ops.</p>
+<p>Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 DAG.</p>
+<p><strong>When to use</strong></p>
+<p>Active when ensemble combine ops are in the L4 DAG.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="decomposition-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">decomposition</span></code>  –  operational<a class="headerlink" href="#decomposition-operational" title="Link to this heading"></a></h3>
+<p>L5.D decomposition tables (per-period / per-block / Shapley).</p>
+<p>Variance / loss decomposition outputs. Default-on when L5.D decomposition is active.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when decomposition is active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="diagnostics-all-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code>  –  operational<a class="headerlink" href="#diagnostics-all-operational" title="Link to this heading"></a></h3>
+<p>Every active diagnostic layer’s output (convenience option).</p>
+<p>Convenience flag: enables <code class="docutils literal notranslate"><span class="pre">diagnostics_l{1..4}_5</span></code> simultaneously when the corresponding diagnostic layer is active. Recommended default for first-time runs.</p>
+<p><strong>When to use</strong></p>
+<p>Default convenience option for full-diagnostic runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="diagnostics-l1-5-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code>  –  operational<a class="headerlink" href="#diagnostics-l1-5-operational" title="Link to this heading"></a></h3>
+<p>L1.5 diagnostic outputs (sample coverage / stationarity / outlier audit).</p>
+<p>JSON + figures from the L1.5 sub-layer. Active when L1.5 is enabled in the recipe.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L1.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="diagnostics-l2-5-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code>  –  operational<a class="headerlink" href="#diagnostics-l2-5-operational" title="Link to this heading"></a></h3>
+<p>L2.5 diagnostic outputs (cleaning effect summaries).</p>
+<p>JSON + figures from the L2.5 sub-layer. Active when L2.5 is enabled.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L2.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="diagnostics-l3-5-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code>  –  operational<a class="headerlink" href="#diagnostics-l3-5-operational" title="Link to this heading"></a></h3>
+<p>L3.5 diagnostic outputs (factor / lag / selection inspection).</p>
+<p>JSON + figures from the L3.5 sub-layer. Active when L3.5 is enabled.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L3.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="diagnostics-l4-5-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code>  –  operational<a class="headerlink" href="#diagnostics-l4-5-operational" title="Link to this heading"></a></h3>
+<p>L4.5 diagnostic outputs (in-sample fit / window stability / tuning history).</p>
+<p>JSON + figures from the L4.5 sub-layer. Active when L4.5 is enabled.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">saved_objects</span></code> axis on <code class="docutils literal notranslate"><span class="pre">L8_B_saved_objects</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l8</span></code>); the <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Active when L4.5 is enabled. Selecting <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="feature-metadata-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>  –  operational<a class="headerlink" href="#feature-metadata-operational" title="Link to this heading"></a></h3>
+<p>L3 column lineage + pipeline definitions.</p>
+<p>The L3 metadata sink containing per-feature lineage, transformation chain, and pipeline ID. Default-on when L7 <code class="docutils literal notranslate"><span class="pre">lineage_attribution</span></code> or <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> is active – those ops require this metadata to function.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when L7 lineage / transformation_attribution is active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a>, <a class="reference internal" href="#forecast-intervals"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="forecast-intervals-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code>  –  operational<a class="headerlink" href="#forecast-intervals-operational" title="Link to this heading"></a></h3>
+<p>Per-cell prediction intervals (when forecast_object = quantile / density).</p>
+<p>Quantile forecasts at the user-specified <code class="docutils literal notranslate"><span class="pre">α</span></code> levels (default 5% / 50% / 95%). Default-on when L4 emits <code class="docutils literal notranslate"><span class="pre">forecast_object</span> <span class="pre">=</span> <span class="pre">quantile</span></code> or <code class="docutils literal notranslate"><span class="pre">density</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when forecast_object = quantile / density.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="forecasts-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">forecasts</span></code>  –  operational<a class="headerlink" href="#forecasts-operational" title="Link to this heading"></a></h3>
+<p>Per-cell point forecasts.</p>
+<p>The headline output: per (cell, target, horizon, origin) forecast. Default-on; required for replication and for every downstream L5 / L6 / L7 op.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on; required for replication.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecast-intervals"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="importance-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">importance</span></code>  –  operational<a class="headerlink" href="#importance-operational" title="Link to this heading"></a></h3>
+<p>L7 importance outputs.</p>
+<p>Tables and figures from every L7.A op in the recipe’s interpretation DAG. Default-on when L7 is enabled.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when L7 is active. Selecting <code class="docutils literal notranslate"><span class="pre">importance</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="metrics-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">metrics</span></code>  –  operational<a class="headerlink" href="#metrics-operational" title="Link to this heading"></a></h3>
+<p>L5 metric tables.</p>
+<p>Per-cell per-metric scores aggregated by the L5.C configuration. Default-on; the standard headline output for every horse-race study.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on. Selecting <code class="docutils literal notranslate"><span class="pre">metrics</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="model-artifacts-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">model_artifacts</span></code>  –  operational<a class="headerlink" href="#model-artifacts-operational" title="Link to this heading"></a></h3>
+<p>Pickled / joblib model objects.</p>
+<p>Serialised fitted estimators (one per (model, origin) pair). Default-off because model objects can be large; enable for downstream prediction without re-fitting.</p>
+<p><strong>When to use</strong></p>
+<p>When downstream prediction without re-fitting is needed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="ranking-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ranking</span></code>  –  operational<a class="headerlink" href="#ranking-operational" title="Link to this heading"></a></h3>
+<p>L5.E ranking tables.</p>
+<p>Models ranked by primary metric / MCS inclusion / Borda count / etc. Default-on when L5.E ranking is active.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when ranking is active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="raw-panel-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>  –  operational<a class="headerlink" href="#raw-panel-operational" title="Link to this heading"></a></h3>
+<p>Raw L1 panel before any L2 cleaning.</p>
+<p>The original raw FRED-MD / -QD / -SD / custom panel. Default-off because raw FRED panels are large; enabling this makes the run fully self-contained – a downstream user can re-run the entire pipeline from the manifest alone without internet access.</p>
+<p><strong>When to use</strong></p>
+<p>Default-off for size; enable for fully self-contained runs.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a>, <a class="reference internal" href="#forecast-intervals"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="regime-metrics-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code>  –  operational<a class="headerlink" href="#regime-metrics-operational" title="Link to this heading"></a></h3>
+<p>Regime-conditional metrics.</p>
+<p>Metric breakdowns by L1.G regime classification. Default-on when L1.G regime is non-pooled (i.e. regime-conditional analysis is intended).</p>
+<p><strong>When to use</strong></p>
+<p>Active when L1.G regime is non-pooled.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="state-metrics-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">state_metrics</span></code>  –  operational<a class="headerlink" href="#state-metrics-operational" title="Link to this heading"></a></h3>
+<p>State-level metrics for FRED-SD geographic studies.</p>
+<p>Per-state metric breakdowns. Default-on when L1.D geography is state-level (FRED-SD pipelines).</p>
+<p><strong>When to use</strong></p>
+<p>Active when L1.D geography is state-level (FRED-SD).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="tests-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">tests</span></code>  –  operational<a class="headerlink" href="#tests-operational" title="Link to this heading"></a></h3>
+<p>L6 test outputs (DM / GW / MCS / SPA / RC / StepM / PT / residual / density).</p>
+<p>Test statistics, p-values, kernel choices, and lag-truncation parameters for every L6 sub-layer that is enabled. Default-on when any L6 sub-layer is active.</p>
+<p><strong>When to use</strong></p>
+<p>Default-on when L6 sub-layers are active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="transformation-attribution-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code>  –  operational<a class="headerlink" href="#transformation-attribution-operational" title="Link to this heading"></a></h3>
+<p>L7 transformation_attribution Shapley table.</p>
+<p>Per-pipeline Shapley contributions to forecast skill. Active when <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> is in the L7 DAG (typically alongside multi-cell sweeps over alternative L3 transforms).</p>
+<p><strong>When to use</strong></p>
+<p>Active when transformation_attribution op is in the L7 DAG.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#raw-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">raw_panel</span></code></span></a>, <a class="reference internal" href="#clean-panel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a>, <a class="reference internal" href="#feature-metadata"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code></span></a>, <a class="reference internal" href="#forecasts"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="compression.html" class="btn btn-neutral float-left" title="compression" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="model_artifacts_format.html" class="btn btn-neutral float-right" title="model_artifacts_format" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

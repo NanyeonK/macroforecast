@@ -1,0 +1,262 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizon_set &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="regime_definition" href="regime_definition.html" />
+    <link rel="prev" title="sample_end_rule" href="sample_end_rule.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L1  –  Data</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="custom_source_policy.html"><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="target_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">target_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="predictor_geography_scope.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L1  –  Data</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l1/axes/horizon_set.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizon-set">
+<h1><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code><a class="headerlink" href="#horizon-set" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L1</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">l1_f</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l1</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>l1_f</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'derived'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 5 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="standard-md-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">standard_md</span></code>  –  operational<a class="headerlink" href="#standard-md-operational" title="Link to this heading"></a></h3>
+<p>Standard FRED-MD horizons: {1, 3, 6, 9, 12, 18, 24} months.</p>
+<p>The canonical multi-horizon set used in the McCracken-Ng / Stock-Watson tradition for monthly forecasting. Models are fit per-horizon (when <code class="docutils literal notranslate"><span class="pre">forecast_strategy</span> <span class="pre">=</span> <span class="pre">direct</span></code>) and metrics report per-(model, horizon) rows.</p>
+<p><strong>When to use</strong></p>
+<p>Default for monthly studies. Comparable to published monthly benchmarks.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#standard-qd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_qd</span></code></span></a>, <a class="reference internal" href="#single"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">single</span></code></span></a>, <a class="reference internal" href="#custom-list"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">custom_list</span></code></span></a>, <a class="reference internal" href="#range-up-to-h"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">range_up_to_h</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="standard-qd-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">standard_qd</span></code>  –  operational<a class="headerlink" href="#standard-qd-operational" title="Link to this heading"></a></h3>
+<p>Standard FRED-QD horizons: {1, 2, 4, 8} quarters.</p>
+<p>Quarterly counterpart of <code class="docutils literal notranslate"><span class="pre">standard_md</span></code>.</p>
+<p>Configures the <code class="docutils literal notranslate"><span class="pre">horizon_set</span></code> axis on <code class="docutils literal notranslate"><span class="pre">l1_f</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l1</span></code>); the <code class="docutils literal notranslate"><span class="pre">standard_qd</span></code> value is materialised in the recipe’s <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> block under that sub-layer.</p>
+<p><strong>When to use</strong></p>
+<p>Default for quarterly (FRED-QD) studies.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+<li><p>McCracken &amp; Ng (2020) ‘FRED-QD: A Quarterly Database for Macroeconomic Research’, Federal Reserve Bank of St. Louis Review.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#standard-md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_md</span></code></span></a>, <a class="reference internal" href="#single"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">single</span></code></span></a>, <a class="reference internal" href="#custom-list"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">custom_list</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="single-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">single</span></code>  –  operational<a class="headerlink" href="#single-operational" title="Link to this heading"></a></h3>
+<p>A single horizon (defaults to h=1).</p>
+<p>Forecasts only one horizon per cell. Sets <code class="docutils literal notranslate"><span class="pre">leaf_config.target_horizons</span> <span class="pre">=</span> <span class="pre">[N]</span></code> to override the default of 1. Faster than multi-horizon studies and clearer metrics tables when the study’s question is single-horizon.</p>
+<p><strong>When to use</strong></p>
+<p>One-shot studies (h=1 nowcasting, h=12 long-horizon ablation).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#standard-md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_md</span></code></span></a>, <a class="reference internal" href="#standard-qd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_qd</span></code></span></a>, <a class="reference internal" href="#custom-list"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">custom_list</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="custom-list-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">custom_list</span></code>  –  operational<a class="headerlink" href="#custom-list-operational" title="Link to this heading"></a></h3>
+<p>User-supplied horizon list (any non-empty integer set).</p>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">leaf_config.target_horizons:</span> <span class="pre">[int...]</span></code>. Useful for non-standard horizon comparisons (e.g., {1, 2, 3, 6, 12} or {6, 12, 24, 36}).</p>
+<p><strong>When to use</strong></p>
+<p>Replication of papers with non-standard horizon sets; ablation studies.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#standard-md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_md</span></code></span></a>, <a class="reference internal" href="#standard-qd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_qd</span></code></span></a>, <a class="reference internal" href="#range-up-to-h"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">range_up_to_h</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="range-up-to-h-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">range_up_to_h</span></code>  –  operational<a class="headerlink" href="#range-up-to-h-operational" title="Link to this heading"></a></h3>
+<p>Every horizon from 1 to leaf_config.max_horizon (inclusive).</p>
+<p>Equivalent to <code class="docutils literal notranslate"><span class="pre">custom_list</span></code> with <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">...,</span> <span class="pre">max_horizon]</span></code>. Useful for direct-h forecasting where the study wants dense horizon coverage (e.g., 1-12 months).</p>
+<p><strong>When to use</strong></p>
+<p>Dense horizon studies with direct-h forecasting.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#custom-list"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">custom_list</span></code></span></a>, <a class="reference internal" href="#standard-md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">standard_md</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sample_end_rule.html" class="btn btn-neutral float-left" title="sample_end_rule" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="regime_definition.html" class="btn btn-neutral float-right" title="regime_definition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

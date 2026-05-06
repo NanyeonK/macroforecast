@@ -1,0 +1,698 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>op &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=fe7df9b0"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Layer L3.5 – Feature diagnostics" href="../../l3_5/index.html" />
+    <link rel="prev" title="Layer L3 – Feature engineering" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L3  –  Feature engineering</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L3  –  Feature engineering</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">op</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l3/axes/op.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="op">
+<h1><code class="docutils literal notranslate"><span class="pre">op</span></code><a class="headerlink" href="#op" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L3</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">op</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L3_A_step_op</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l3</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>L3_A_step_op</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'lag'</span></code></p></li>
+<li><p>Sweepable: False</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 37 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="cumsum-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">cumsum</span></code>  –  operational<a class="headerlink" href="#cumsum-operational" title="Link to this heading"></a></h3>
+<p>Cumulative sum of a series.</p>
+<p>Running total <code class="docutils literal notranslate"><span class="pre">Σ_{s</span> <span class="pre">≤</span> <span class="pre">t}</span> <span class="pre">y_s</span></code>. Inverts <code class="docutils literal notranslate"><span class="pre">diff</span></code> (modulo an initial constant). Used to recover level forecasts from differenced predictions or to build cumulative-shock features.</p>
+<p><strong>When to use</strong></p>
+<p>Building cumulative-impact features; recovering levels from differenced forecasts.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference internal" href="#level"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="dfm-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">dfm</span></code>  –  operational<a class="headerlink" href="#dfm-operational" title="Link to this heading"></a></h3>
+<p>Dynamic factor model – Kalman state-space factor extraction.</p>
+<p>statsmodels <code class="docutils literal notranslate"><span class="pre">DynamicFactor</span></code> MLE estimate of latent factors with idiosyncratic AR(1) errors. Differs from <code class="docutils literal notranslate"><span class="pre">pca</span></code> in that factors are smoothed via the Kalman filter and respect a factor-VAR transition.</p>
+<p>When the panel is mixed-frequency (FRED-SD), the runtime auto-routes to <code class="docutils literal notranslate"><span class="pre">DynamicFactorMQ</span></code> (Mariano-Murasawa 2003).</p>
+<p><strong>When to use</strong></p>
+<p>Smoothed factors with an explicit dynamic; mixed-frequency panels (FRED-SD).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Mariano &amp; Murasawa (2003) ‘A new coincident index of business cycles based on monthly and quarterly series’, JAE 18(4): 427-443.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="diff-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">diff</span></code>  –  operational<a class="headerlink" href="#diff-operational" title="Link to this heading"></a></h3>
+<p>First difference: <code class="docutils literal notranslate"><span class="pre">y_t</span> <span class="pre">-</span> <span class="pre">y_{t-1}</span></code>.</p>
+<p>Computes the simple first difference on the input column. The first observation becomes NaN. Combine with <code class="docutils literal notranslate"><span class="pre">lag</span></code> to recover level features when the L2 layer already differenced the panel.</p>
+<p><strong>When to use</strong></p>
+<p>I(1) variables that need a stationary representation in addition to the L2-applied tcode.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When the panel is already differenced by L2.B (avoids double-differencing).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#level"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a>, <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a>, <a class="reference internal" href="#pct-change"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="feature-selection-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">feature_selection</span></code>  –  operational<a class="headerlink" href="#feature-selection-operational" title="Link to this heading"></a></h3>
+<p>Filter columns by variance / correlation / lasso pre-screen.</p>
+<p>Drops columns failing one of three criteria configured via <code class="docutils literal notranslate"><span class="pre">params.method</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">variance</span></code> – drop columns with variance below <code class="docutils literal notranslate"><span class="pre">params.threshold</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">correlation</span></code> – drop columns with pairwise correlation above <code class="docutils literal notranslate"><span class="pre">params.threshold</span></code> (keeps the first).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lasso</span></code> – fit a Lasso pre-screen and keep columns with non-zero coefficients.</p></li>
+</ul>
+<p><strong>When to use</strong></p>
+<p>Trimming the panel before expensive downstream estimators (NN, SVM, kernel) when high-dim noise dominates.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Tree models – they handle irrelevant features natively.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://pandas.pydata.org/docs/user_guide/scale.html#scale" title="pandas 3.0.2"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scale</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="fourier-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">fourier</span></code>  –  operational<a class="headerlink" href="#fourier-operational" title="Link to this heading"></a></h3>
+<p>Fourier basis features – sin/cos at fixed harmonics.</p>
+<p>Generates sin/cos pairs at harmonic frequencies of the calendar period (<code class="docutils literal notranslate"><span class="pre">params.period</span></code>, <code class="docutils literal notranslate"><span class="pre">params.n_harmonics</span></code>). Captures smooth periodic patterns without the indicator-explosion of season_dummy.</p>
+<p><strong>When to use</strong></p>
+<p>Smooth seasonality (annual / weekly cycles) where dummies would over-fit.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#wavelet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">wavelet</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="hamilton-filter-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code>  –  operational<a class="headerlink" href="#hamilton-filter-operational" title="Link to this heading"></a></h3>
+<p>Hamilton (2018) regression-based detrend (HP-filter alternative).</p>
+<p>Regression-based two-sided alternative to the HP filter advocated by Hamilton (2018) for its better real-time properties. Default lookback h = 8 (quarterly) / 24 (monthly). Uses statsmodels <code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Real-time / one-sided detrending where HP’s two-sided smoothing is inappropriate.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Hamilton (2018) ‘Why You Should Never Use the Hodrick-Prescott Filter’, RES 100(5): 831-843.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#hp-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="holiday-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">holiday</span></code>  –  operational<a class="headerlink" href="#holiday-operational" title="Link to this heading"></a></h3>
+<p>Holiday / event dummy variables.</p>
+<p>0/1 indicators for calendar holidays (US federal by default; <code class="docutils literal notranslate"><span class="pre">params.country</span></code> selects locale via the <code class="docutils literal notranslate"><span class="pre">holidays</span></code> package). For business / financial macro series.</p>
+<p><strong>When to use</strong></p>
+<p>Daily / weekly business-cycle series where holidays create discrete level shifts.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Pure macro series at monthly+ frequency where holidays are absorbed by <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="hp-filter-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code>  –  operational<a class="headerlink" href="#hp-filter-operational" title="Link to this heading"></a></h3>
+<p>Hodrick-Prescott filter – trend / cycle decomposition.</p>
+<p>statsmodels <code class="docutils literal notranslate"><span class="pre">hpfilter</span></code> with smoothing parameter <code class="docutils literal notranslate"><span class="pre">params.lamb</span></code> (1600 for quarterly, 129600 for monthly per Ravn-Uhlig 2002). Returns the cyclical component by default; the trend can also be returned via <code class="docutils literal notranslate"><span class="pre">params.return</span> <span class="pre">=</span> <span class="pre">'trend'</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Extracting business-cycle gaps from trending series.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Real-time / one-sided forecasting – HP introduces look-ahead bias unless restricted to <code class="docutils literal notranslate"><span class="pre">expanding_window_per_origin</span></code>.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Hodrick &amp; Prescott (1997) ‘Postwar U.S. Business Cycles: An Empirical Investigation’, JMCB 29(1): 1-16.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#hamilton-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="interaction-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">interaction</span></code>  –  operational<a class="headerlink" href="#interaction-operational" title="Link to this heading"></a></h3>
+<p>Pairwise interaction terms only (no pure powers).</p>
+<p>Subset of polynomial degree-2 features that contains only pairwise products <code class="docutils literal notranslate"><span class="pre">x_i</span> <span class="pre">·</span> <span class="pre">x_j</span></code> for <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">≠</span> <span class="pre">j</span></code>. Cheaper than full polynomial expansion when interaction structure (not non-linearity in single inputs) is the target.</p>
+<p><strong>When to use</strong></p>
+<p>Capturing predictor-pair complementarities in linear models.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#polynomial"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">polynomial</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="kernel-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">kernel</span></code>  –  operational<a class="headerlink" href="#kernel-operational" title="Link to this heading"></a></h3>
+<p>Kernel-feature pre-step (Random Fourier / Nyström handle).</p>
+<p>Generic handle for an explicit kernel-feature embedding; concrete dispatch is determined by <code class="docutils literal notranslate"><span class="pre">params.kernel</span></code> (<code class="docutils literal notranslate"><span class="pre">rbf</span></code> / <code class="docutils literal notranslate"><span class="pre">poly</span></code> / <code class="docutils literal notranslate"><span class="pre">laplacian</span></code>). For named variants use <code class="docutils literal notranslate"><span class="pre">kernel_features</span></code> (RBF Random Fourier) or <code class="docutils literal notranslate"><span class="pre">nystroem</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Kernel-augmented linear / SVM pipelines.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a>, <a class="reference internal" href="#nystroem"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="kernel-features-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code>  –  operational<a class="headerlink" href="#kernel-features-operational" title="Link to this heading"></a></h3>
+<p>Random Fourier features – approximate RBF kernel via random projection.</p>
+<p>sklearn <code class="docutils literal notranslate"><span class="pre">RBFSampler</span></code>: maps inputs to <code class="docutils literal notranslate"><span class="pre">params.n_components</span></code> random Fourier features whose dot product approximates the RBF kernel. Enables linear models to fit RBF-kernelised responses at training-set-size linear cost.</p>
+<p><strong>When to use</strong></p>
+<p>Kernel-augmented ridge / SVM at scale (n &gt; 10k).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Small-sample problems where exact kernel SVM is feasible.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Rahimi &amp; Recht (2007) ‘Random Features for Large-Scale Kernel Machines’, NeurIPS.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/glossary.html#term-kernel" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel</span></code></span></a>, <a class="reference internal" href="#nystroem"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="l3-feature-bundle-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code>  –  operational<a class="headerlink" href="#l3-feature-bundle-operational" title="Link to this heading"></a></h3>
+<p>Internal sentinel: bundle column-producing children into the X matrix.</p>
+<p>Synthetic node emitted by the runtime to collect the outputs of all leaf transforms into a single <code class="docutils literal notranslate"><span class="pre">X</span></code> artifact consumed by L4. Authors do not write this node by hand; the cascade builder inserts it.</p>
+<p>Surfaced in <code class="docutils literal notranslate"><span class="pre">operational_options</span></code> so the schema completeness test stays consistent.</p>
+<p><strong>When to use</strong></p>
+<p>Never authored directly – inserted by the cascade builder.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#l3-metadata-build"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="l3-metadata-build-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code>  –  operational<a class="headerlink" href="#l3-metadata-build-operational" title="Link to this heading"></a></h3>
+<p>Internal sentinel: assemble L3 metadata sink (lineage / pipeline definitions).</p>
+<p>Synthetic node that produces the <code class="docutils literal notranslate"><span class="pre">column_lineage</span></code> and <code class="docutils literal notranslate"><span class="pre">pipeline_definitions</span></code> sinks from the cascade graph. Powers L7 <code class="docutils literal notranslate"><span class="pre">lineage_attribution</span></code> and <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> downstream.</p>
+<p><strong>When to use</strong></p>
+<p>Never authored directly – inserted by the cascade builder when L7 lineage hooks are active.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#l3-feature-bundle"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="level-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">level</span></code>  –  operational<a class="headerlink" href="#level-operational" title="Link to this heading"></a></h3>
+<p>Pass-through: keep the series at its original level.</p>
+<p>No-op transform; the column flows through unchanged. Used as an explicit anchor in the DAG so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both <code class="docutils literal notranslate"><span class="pre">level</span></code> and <code class="docutils literal notranslate"><span class="pre">diff</span></code> branches in the same recipe.</p>
+<p><strong>When to use</strong></p>
+<p>Authoring branches that need the level form alongside a transformed branch.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference internal" href="#log"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log</span></code></span></a>, <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a>, <a class="reference internal" href="#pct-change"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="log-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">log</span></code>  –  operational<a class="headerlink" href="#log-operational" title="Link to this heading"></a></h3>
+<p>Natural logarithm: <code class="docutils literal notranslate"><span class="pre">ln(y)</span></code>.</p>
+<p>Element-wise natural log. Strictly positive series only; raises if any input is non-positive. Often paired with <code class="docutils literal notranslate"><span class="pre">diff</span></code> to produce log-changes (which are approximately equal to percentage changes for small movements).</p>
+<p><strong>When to use</strong></p>
+<p>Strictly-positive macro series (price levels, employment counts, GDP) before differencing.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Series that can be negative or zero (rates, growth rates, balances).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a>, <a class="reference internal" href="#level"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a>, <a class="reference internal" href="#pct-change"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="log-diff-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">log_diff</span></code>  –  operational<a class="headerlink" href="#log-diff-operational" title="Link to this heading"></a></h3>
+<p>Log first difference: <code class="docutils literal notranslate"><span class="pre">ln(y_t)</span> <span class="pre">-</span> <span class="pre">ln(y_{t-1})</span></code>.</p>
+<p>Composite of <code class="docutils literal notranslate"><span class="pre">log</span></code> then <code class="docutils literal notranslate"><span class="pre">diff</span></code>. The standard FRED-MD transformation code 5/6 representation; produces a stationary approximation of the percentage change and is symmetric in expansions vs contractions.</p>
+<p><strong>When to use</strong></p>
+<p>Strictly-positive trending series (real GDP, employment, prices); FRED-MD tcode 5/6 default.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Series that take non-positive values.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, JBES 34(4): 574-589. <a class="reference external" href="https://doi.org/10.1080/07350015.2015.1086655">https://doi.org/10.1080/07350015.2015.1086655</a></p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#log"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference internal" href="#pct-change"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="ma-increasing-order-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code>  –  operational<a class="headerlink" href="#ma-increasing-order-operational" title="Link to this heading"></a></h3>
+<p>MARX – moving averages of increasing order (Coulombe 2024).</p>
+<p>Stacks moving averages with windows <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">8,</span> <span class="pre">...,</span> <span class="pre">w_max]</span></code> into a multi-column block. Captures multi-scale persistence in a single op; popular feature in macroeconomic random forest pipelines.</p>
+<p>Implements the MARX (Moving-Average-of-Random-eXogeneous) trick from Coulombe (2024).</p>
+<p><strong>When to use</strong></p>
+<p>Tree / RF models that benefit from multi-scale temporal features without manual lag selection.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Coulombe (2024) ‘The Macroeconomic Random Forest’, Journal of Applied Econometrics 39(7): 1190-1209.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a>, <a class="reference internal" href="#lag"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lag</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="ma-window-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ma_window</span></code>  –  operational<a class="headerlink" href="#ma-window-operational" title="Link to this heading"></a></h3>
+<p>Trailing moving average over a fixed window.</p>
+<p>Computes <code class="docutils literal notranslate"><span class="pre">mean(y_{t-w+1..t})</span></code> for a user-specified window <code class="docutils literal notranslate"><span class="pre">params.window</span></code>. <code class="docutils literal notranslate"><span class="pre">temporal_rule</span></code> controls expanding vs rolling vs block-wise refit semantics. The first <code class="docutils literal notranslate"><span class="pre">w-1</span></code> rows are NaN.</p>
+<p><strong>When to use</strong></p>
+<p>Smoothing noisy series; building short / medium / long-term momentum features.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ma-increasing-order"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference external" href="https://pandas.pydata.org/docs/user_guide/scale.html#scale" title="pandas 3.0.2"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scale</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="nystroem-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">nystroem</span></code>  –  operational<a class="headerlink" href="#nystroem-operational" title="Link to this heading"></a></h3>
+<p>Nyström kernel approximation – subset-based feature map.</p>
+<p>sklearn <code class="docutils literal notranslate"><span class="pre">Nystroem</span></code> constructs a low-rank approximation of an arbitrary kernel matrix using a random subsample of training points. More accurate than Random Fourier features for non-RBF kernels but with a larger memory footprint.</p>
+<p><strong>When to use</strong></p>
+<p>Non-RBF kernel-augmented linear models (poly / sigmoid).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/glossary.html#term-kernel" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="nystroem-features-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">nystroem_features</span></code>  –  operational<a class="headerlink" href="#nystroem-features-operational" title="Link to this heading"></a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">nystroem</span></code> – explicit feature-stage name.</p>
+<p>Identical to <code class="docutils literal notranslate"><span class="pre">nystroem</span></code>; preferred when a multi-stage pipeline names its kernel approximation explicitly in the lineage graph.</p>
+<p><strong>When to use</strong></p>
+<p>Multi-stage pipelines that separate kernel approximation from downstream linear fits.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#nystroem"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="partial-least-squares-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code>  –  operational<a class="headerlink" href="#partial-least-squares-operational" title="Link to this heading"></a></h3>
+<p>Partial least squares regression – supervised factor extraction.</p>
+<p>Computes orthogonal latent components that maximise the covariance with the target (not just predictor variance, as in PCA). sklearn’s <code class="docutils literal notranslate"><span class="pre">PLSRegression</span></code>; <code class="docutils literal notranslate"><span class="pre">params.n_components</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>When a target-supervised reduction is preferable to PCA’s unsupervised projection.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Wold, Sjöström &amp; Eriksson (2001) ‘PLS-regression: a basic tool of chemometrics’, Chemometrics and Intelligent Laboratory Systems 58(2): 109-130.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="pca-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">pca</span></code>  –  operational<a class="headerlink" href="#pca-operational" title="Link to this heading"></a></h3>
+<p>Principal component analysis – linear factor extraction.</p>
+<p>Eigendecomposition of the column covariance; returns the top <code class="docutils literal notranslate"><span class="pre">params.n_components</span></code> principal components. Implements the Stock-Watson (2002) diffusion-index workflow used throughout FRED-MD applications.</p>
+<p>Combine with <code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code> or <code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code> at L4 to build the diffusion-index forecaster. <code class="docutils literal notranslate"><span class="pre">temporal_rule</span></code> controls whether components are re-fit per origin (default: <code class="docutils literal notranslate"><span class="pre">expanding_window_per_origin</span></code>).</p>
+<p><strong>When to use</strong></p>
+<p>Reducing FRED-MD’s 100+ predictors to a handful of latent factors; factor-augmented forecasts.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Stock &amp; Watson (2002) ‘Forecasting Using Principal Components from a Large Number of Predictors’, JASA 97(460): 1167-1179.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#sparse-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a>, <a class="reference internal" href="#varimax"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">varimax</span></code></span></a>, <a class="reference internal" href="#dfm"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dfm</span></code></span></a>, <a class="reference internal" href="#partial-least-squares"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="pct-change-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">pct_change</span></code>  –  operational<a class="headerlink" href="#pct-change-operational" title="Link to this heading"></a></h3>
+<p>Period-over-period percentage change: <code class="docutils literal notranslate"><span class="pre">(y_t</span> <span class="pre">/</span> <span class="pre">y_{t-1})</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p>
+<p>Strict simple growth rate; not equivalent to log_diff for large movements. Returns NaN where the previous observation is zero or NaN.</p>
+<p><strong>When to use</strong></p>
+<p>When a literal percentage interpretation is required (returns, inflation rates).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Trend-following analysis where log_diff’s symmetry is preferable.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="polynomial-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">polynomial</span></code>  –  operational<a class="headerlink" href="#polynomial-operational" title="Link to this heading"></a></h3>
+<p>Polynomial basis expansion – degree-d powers of input.</p>
+<p>sklearn <code class="docutils literal notranslate"><span class="pre">PolynomialFeatures</span></code> of degree <code class="docutils literal notranslate"><span class="pre">params.degree</span></code>. Includes interaction terms by default; set <code class="docutils literal notranslate"><span class="pre">params.interaction_only=True</span></code> for products without pure powers.</p>
+<p><strong>When to use</strong></p>
+<p>Capturing low-order non-linearity for linear / kernel models.</p>
+<p><strong>When NOT to use</strong></p>
+<p>High dimension (degree &gt; 3 with many predictors) – explodes the design matrix; use kernel methods instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#interaction"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">interaction</span></code></span></a>, <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a>, <a class="reference internal" href="#polynomial-expansion"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="polynomial-expansion-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code>  –  operational<a class="headerlink" href="#polynomial-expansion-operational" title="Link to this heading"></a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">polynomial</span></code> – explicit expansion node in cascade pipelines.</p>
+<p>Identical to <code class="docutils literal notranslate"><span class="pre">polynomial</span></code> but with a name that reads more clearly as a stage in a multi-step expansion pipeline.</p>
+<p><strong>When to use</strong></p>
+<p>Pipelines that explicitly stage <code class="docutils literal notranslate"><span class="pre">expand</span> <span class="pre">→</span> <span class="pre">reduce</span></code> sequences.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#polynomial"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">polynomial</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="random-projection-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">random_projection</span></code>  –  operational<a class="headerlink" href="#random-projection-operational" title="Link to this heading"></a></h3>
+<p>Johnson-Lindenstrauss random Gaussian projection.</p>
+<p>Reduces dimensionality by multiplying with a random Gaussian matrix scaled to (approximately) preserve pairwise distances. Cheap baseline for dimensionality reduction; sklearn’s <code class="docutils literal notranslate"><span class="pre">GaussianRandomProjection</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Sweep baselines / sanity checks against PCA’s structured reduction.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="regime-indicator-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code>  –  operational<a class="headerlink" href="#regime-indicator-operational" title="Link to this heading"></a></h3>
+<p>Discrete regime / state indicator from L1.G.</p>
+<p>Lifts the L1.G regime sink (<code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code>) into the feature panel as a categorical column. Required when L4 is configured for <code class="docutils literal notranslate"><span class="pre">regime_use</span> <span class="pre">=</span> <span class="pre">predictor</span></code> or <code class="docutils literal notranslate"><span class="pre">conditional_intercept</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Regime-conditional forecasts where the model needs explicit access to the state.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#time-trend"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">time_trend</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="scale-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">scale</span></code>  –  operational<a class="headerlink" href="#scale-operational" title="Link to this heading"></a></h3>
+<p>Standardise to zero mean and unit variance.</p>
+<p>Computes <code class="docutils literal notranslate"><span class="pre">(y</span> <span class="pre">-</span> <span class="pre">μ)</span> <span class="pre">/</span> <span class="pre">σ</span></code> over the temporal_rule window (<code class="docutils literal notranslate"><span class="pre">expanding_window_per_origin</span></code> by default to avoid look-ahead). Required pre-step for distance-based learners (kNN, SVM, NN); ridge/lasso also benefit when columns are on different scales.</p>
+<p><strong>When to use</strong></p>
+<p>Pre-conditioning for distance-based or regularised learners; mandatory for SVM/NN.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Tree-based models (RF/XGBoost/LightGBM) – scale-invariant by construction.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="scaled-pca-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>  –  operational<a class="headerlink" href="#scaled-pca-operational" title="Link to this heading"></a></h3>
+<p>Scaled / weighted PCA (target-aware factor extraction).</p>
+<p>Weights each column by its predictive correlation with the target before performing PCA. Implements the Huang-Jiang-Tu-Zhou (2022) scaled PCA for forecasting macro variables.</p>
+<p>Reduces to plain PCA when all weights are equal.</p>
+<p><strong>When to use</strong></p>
+<p>When standard PCA’s leading factor is dominated by predictively-irrelevant variance.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Huang, Jiang, Tu &amp; Zhou (2022) ‘Scaled PCA: A New Approach to Dimension Reduction’, Management Science 68(3): 1678-1695.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#partial-least-squares"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="season-dummy-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>  –  operational<a class="headerlink" href="#season-dummy-operational" title="Link to this heading"></a></h3>
+<p>Calendar dummy variables (month-of-year, quarter-of-year).</p>
+<p>Generates <code class="docutils literal notranslate"><span class="pre">params.n</span> <span class="pre">-</span> <span class="pre">1</span></code> 0/1 indicators for the calendar period (drops one to avoid multicollinearity with intercept). Standard frequentist seasonality control.</p>
+<p><strong>When to use</strong></p>
+<p>Capturing calendar seasonality in linear models when a smooth Fourier basis would over-shrink discrete jumps.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#fourier"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fourier</span></code></span></a>, <a class="reference internal" href="#seasonal-lag"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="seasonal-lag-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code>  –  operational<a class="headerlink" href="#seasonal-lag-operational" title="Link to this heading"></a></h3>
+<p>Lag at a seasonal period (e.g. y_{t-12} for monthly data).</p>
+<p>Standard <code class="docutils literal notranslate"><span class="pre">lag</span></code> op restricted to the seasonal index (<code class="docutils literal notranslate"><span class="pre">params.lag</span> <span class="pre">=</span> <span class="pre">12</span></code> for monthly, <code class="docutils literal notranslate"><span class="pre">4</span></code> for quarterly). Useful for year-over-year features and seasonal AR terms.</p>
+<p><strong>When to use</strong></p>
+<p>Capturing year-over-year persistence; seasonal AR baselines.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When season_dummy or X-13 deseasonalisation is preferred over lag-based seasonality.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="sparse-pca-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>  –  operational<a class="headerlink" href="#sparse-pca-operational" title="Link to this heading"></a></h3>
+<p>Sparse PCA – L1-penalised factor loadings.</p>
+<p>Variant of PCA where loadings are pushed toward zero by an L1 penalty (<code class="docutils literal notranslate"><span class="pre">params.alpha</span></code>). Yields more interpretable factors at the cost of a small reconstruction loss; uses sklearn’s <code class="docutils literal notranslate"><span class="pre">SparsePCA</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>When you want factor loadings to map cleanly onto a small subset of original predictors (interpretability).</p>
+<p><strong>When NOT to use</strong></p>
+<p>When pure variance maximisation is more important than interpretability – use plain <code class="docutils literal notranslate"><span class="pre">pca</span></code>.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="target-construction-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">target_construction</span></code>  –  operational<a class="headerlink" href="#target-construction-operational" title="Link to this heading"></a></h3>
+<p>Build the supervised target (<code class="docutils literal notranslate"><span class="pre">y</span></code>) from the panel.</p>
+<p>Constructs the regression target according to <code class="docutils literal notranslate"><span class="pre">forecast_strategy</span></code> (direct / iterated / cumulative_average) and the L1.F horizon set. Outputs the <code class="docutils literal notranslate"><span class="pre">y</span></code> artifact that L4 fit_model nodes consume.</p>
+<p>Required as the leaf of every L3 DAG; the runtime auto-injects it when the user does not.</p>
+<p><strong>When to use</strong></p>
+<p>Always required – runtime auto-inserts when missing.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#level"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="time-trend-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">time_trend</span></code>  –  operational<a class="headerlink" href="#time-trend-operational" title="Link to this heading"></a></h3>
+<p>Deterministic linear time trend (<code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>).</p>
+<p>Adds a column <code class="docutils literal notranslate"><span class="pre">t</span></code> to the panel; with <code class="docutils literal notranslate"><span class="pre">params.degree</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> appends polynomial trends. Deterministic complement to stochastic detrending (HP / Hamilton).</p>
+<p><strong>When to use</strong></p>
+<p>Trend-stationary linear models where a deterministic trend is part of the DGP.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Series with structural breaks – use <code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code> or stochastic detrending instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#hp-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code></span></a>, <a class="reference internal" href="#hamilton-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="varimax-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">varimax</span></code>  –  operational<a class="headerlink" href="#varimax-operational" title="Link to this heading"></a></h3>
+<p>Varimax-rotated factors (orthogonal rotation for interpretability).</p>
+<p>Applies a varimax rotation to PCA loadings, maximising the variance of squared loadings within each factor. Produces factors that load heavily on a small subset of original predictors – useful for naming / labelling factors.</p>
+<p><strong>When to use</strong></p>
+<p>Factor analysis where downstream interpretation requires distinct, well-named factors.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#sparse-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="varimax-rotation-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">varimax_rotation</span></code>  –  operational<a class="headerlink" href="#varimax-rotation-operational" title="Link to this heading"></a></h3>
+<p>Alias for <code class="docutils literal notranslate"><span class="pre">varimax</span></code> – rotation step in a multi-stage factor pipeline.</p>
+<p>Identical operation to <code class="docutils literal notranslate"><span class="pre">varimax</span></code> but registered separately so a cascading L3 pipeline can declare <code class="docutils literal notranslate"><span class="pre">pca</span> <span class="pre">→</span> <span class="pre">varimax_rotation</span></code> as two visible nodes in its lineage.</p>
+<p><strong>When to use</strong></p>
+<p>Multi-stage pipelines that explicitly separate factor extraction from rotation.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#varimax"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">varimax</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="wavelet-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">wavelet</span></code>  –  operational<a class="headerlink" href="#wavelet-operational" title="Link to this heading"></a></h3>
+<p>Discrete wavelet transform – multi-scale time-frequency features.</p>
+<p>Decomposes the series into wavelet detail and approximation coefficients at several scales (<code class="docutils literal notranslate"><span class="pre">params.wavelet</span></code>, <code class="docutils literal notranslate"><span class="pre">params.level</span></code>). Captures localised time-frequency patterns that Fourier basis cannot.</p>
+<p><strong>When to use</strong></p>
+<p>Series with localised oscillations or non-stationary cycles (financial / climate macro).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Smooth seasonal patterns – use <code class="docutils literal notranslate"><span class="pre">fourier</span></code> instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#fourier"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fourier</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Layer L3 – Feature engineering" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../l3_5/index.html" class="btn btn-neutral float-right" title="Layer L3.5 – Feature diagnostics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
