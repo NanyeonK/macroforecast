@@ -1,6 +1,6 @@
 # Raw Source Cleaning
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: raw source cleaning
 
 These policies act on defects already present in the raw source panel before official transforms or FRED t-codes are applied.

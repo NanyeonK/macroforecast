@@ -1,6 +1,6 @@
 # Frame Availability
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Official transform / frame availability
 
 `missing_availability` decides how Layer 1 closes availability gaps after the

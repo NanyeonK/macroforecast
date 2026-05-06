@@ -1,8 +1,8 @@
 # Layer 0: Study Setup
 
-- Parent: [4. Detail (code): Full](../index.md)
+- Parent: [Architecture](../index.md)
 - Current: Layer 0
-- Next: [4.1 Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
+- Next: [Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
 
 Layer 0 defines the study-level contract before data, transformations,
 features, models, evaluation, or export are chosen. It answers four setup

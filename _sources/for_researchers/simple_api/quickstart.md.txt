@@ -14,7 +14,7 @@ result = mf.forecast(
 )
 ```
 
-The return value is an `ExperimentRunResult` facade over saved artifacts:
+The return value is an `ForecastResult` facade over saved artifacts:
 
 ```python
 forecasts = result.forecasts

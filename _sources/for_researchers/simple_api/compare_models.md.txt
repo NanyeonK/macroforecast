@@ -20,12 +20,12 @@ result = (
 )
 ```
 
-The return value is an `ExperimentSweepResult`:
+The return value is an `ForecastResult`:
 
 ```python
-result.variants
 result.metrics
-result.compare("mse")
+result.metrics
+result.ranking  # or result.mean(metric="mse")
 result.forecasts
 result.manifest
 ```

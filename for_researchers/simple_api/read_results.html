@@ -73,6 +73,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
 </ul>
 
@@ -135,9 +136,9 @@
     <span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="p">)</span>
 
-<span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
+<span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">ranking</span>  <span class="c1"># or result.mean(metric=&quot;mse&quot;)</span>
 <span class="n">forecasts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">forecasts</span>
-<span class="n">variants</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">variants</span>
+<span class="n">variants</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">metrics</span>
 <span class="n">manifest</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">manifest</span>
 </pre></div>
 </div>
@@ -159,8 +160,8 @@
 </pre></div>
 </div>
 <p>Sweep variant access:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">variants</span>
-<span class="n">best</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">metrics</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">ranking</span>  <span class="c1"># or result.mean(metric=&quot;mse&quot;).iloc[0]</span>
 <span class="n">variant</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">variant</span><span class="p">(</span><span class="n">best</span><span class="p">[</span><span class="s2">&quot;variant_id&quot;</span><span class="p">])</span>
 <span class="n">variant</span><span class="o">.</span><span class="n">forecasts</span>
 <span class="n">variant</span><span class="o">.</span><span class="n">manifest</span>

@@ -73,6 +73,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../replications/index.html">Replications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../CONVENTIONS.html">Docs Conventions</a></li>
 </ul>
 
@@ -179,14 +180,14 @@
 </section>
 <section id="single-run-or-sweep">
 <h2>Single Run Or Sweep<a class="headerlink" href="#single-run-or-sweep" title="Link to this heading"></a></h2>
-<p>If no sweep axes are present, <code class="docutils literal notranslate"><span class="pre">run()</span></code> returns <code class="docutils literal notranslate"><span class="pre">ExperimentRunResult</span></code>.</p>
+<p>If no sweep axes are present, <code class="docutils literal notranslate"><span class="pre">run()</span></code> returns <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">result</span><span class="o">.</span><span class="n">forecasts</span>
 <span class="n">result</span><span class="o">.</span><span class="n">metrics</span>
 <span class="n">result</span><span class="o">.</span><span class="n">manifest</span>
 </pre></div>
 </div>
-<p>If <code class="docutils literal notranslate"><span class="pre">.compare_models()</span></code> or <code class="docutils literal notranslate"><span class="pre">.sweep()</span></code> creates multiple variants, <code class="docutils literal notranslate"><span class="pre">run()</span></code> returns <code class="docutils literal notranslate"><span class="pre">ExperimentSweepResult</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">.compare_models()</span></code> or <code class="docutils literal notranslate"><span class="pre">.sweep()</span></code> creates multiple variants, <code class="docutils literal notranslate"><span class="pre">run()</span></code> returns <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sweep</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">sweep</span><span class="o">.</span><span class="n">variants</span>
 <span class="n">sweep</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>

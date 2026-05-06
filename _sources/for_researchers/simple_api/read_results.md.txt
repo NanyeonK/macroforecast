@@ -36,9 +36,9 @@ result = (
     .run()
 )
 
-ranking = result.compare("mse")
+ranking = result.ranking  # or result.mean(metric="mse")
 forecasts = result.forecasts
-variants = result.variants
+variants = result.metrics
 manifest = result.manifest
 ```
 
@@ -64,8 +64,8 @@ result.read_json("manifest.json")
 Sweep variant access:
 
 ```python
-table = result.variants
-best = result.compare("mse").iloc[0]
+table = result.metrics
+best = result.ranking  # or result.mean(metric="mse").iloc[0]
 variant = result.variant(best["variant_id"])
 variant.forecasts
 variant.manifest

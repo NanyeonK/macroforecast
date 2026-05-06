@@ -1,6 +1,6 @@
 # Forecast-Time Information
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Forecast-Time Information
 
 These policies define what information is available when a forecast is made.

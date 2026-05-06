@@ -1,6 +1,6 @@
 # Target (y) And Predictor (x) Definitions
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Target (y) and predictor (x) definitions
 
 This group names the forecasting target y and, for FRED-backed routes, the

@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting &amp; FAQ &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=279f42e0"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Docs Conventions" href="CONVENTIONS.html" />
+    <link rel="prev" title="Public Python API" href="encyclopedia/public_api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting &amp; FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting &amp; FAQ</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/troubleshooting.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting-faq">
+<h1>Troubleshooting &amp; FAQ<a class="headerlink" href="#troubleshooting-faq" title="Link to this heading"></a></h1>
+<p>When a macroforecast recipe / API call fails, walk through these
+checks before filing an issue. Most failures hit one of the patterns
+below.</p>
+<section id="recipe-fails-immediately-at-l1">
+<h2>Recipe fails immediately at L1<a class="headerlink" href="#recipe-fails-immediately-at-l1" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ne">RuntimeError</span><span class="p">:</span> <span class="n">cell</span> <span class="n">cell_001</span> <span class="n">failed</span><span class="p">:</span> <span class="n">single_target</span> <span class="n">requires</span> <span class="n">leaf_config</span><span class="o">.</span><span class="n">target</span> <span class="n">string</span>
+</pre></div>
+</div>
+<p><strong>Cause</strong>: L1 <code class="docutils literal notranslate"><span class="pre">target_structure=single_target</span></code> (the default) but
+<code class="docutils literal notranslate"><span class="pre">leaf_config.target</span></code> is missing.</p>
+<p><strong>Fix</strong>: add <code class="docutils literal notranslate"><span class="pre">leaf_config.target:</span> <span class="pre">&lt;column_name&gt;</span></code> under <code class="docutils literal notranslate"><span class="pre">1_data</span></code> in your
+recipe. For inline panels, the column name must exist in
+<code class="docutils literal notranslate"><span class="pre">custom_panel_inline</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">target_structure</span><span class="p">:</span><span class="w"> </span><span class="nv">single_target</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span><span class="w">              </span><span class="c1"># required</span>
+<span class="w">    </span><span class="nt">target_horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># required when horizon_set != standard_*</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="pip-install-macroforecast-installs-a-version-older-than-0-6">
+<h2><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast</span></code> installs a version older than 0.6<a class="headerlink" href="#pip-install-macroforecast-installs-a-version-older-than-0-6" title="Link to this heading"></a></h2>
+<p>You’re probably hitting the older <code class="docutils literal notranslate"><span class="pre">macroforecast</span> <span class="pre">0.1.0</span></code> artifact (a
+maintainer-uploaded placeholder before the v0.6 series). Upgrade:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>macroforecast
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import macroforecast; print(macroforecast.__version__)&quot;</span>
+</pre></div>
+</div>
+<p>Should print <code class="docutils literal notranslate"><span class="pre">0.8.6</span></code> or later. If it still shows <code class="docutils literal notranslate"><span class="pre">0.1.0</span></code>, you have a
+stale cached install — <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--force-reinstall</span> <span class="pre">macroforecast</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="compare-models-compare-doesnt-find-the-l4-fit-node">
+<h2><code class="docutils literal notranslate"><span class="pre">compare_models([...]).compare(...)</span></code> doesn’t find the L4 fit node<a class="headerlink" href="#compare-models-compare-doesnt-find-the-l4-fit-node" title="Link to this heading"></a></h2>
+<p>Symptom:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span><span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span>
+    <span class="s2">&quot;4_forecasting_model.nodes.fit_main.params.alpha&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>works on <strong>v0.8.6+</strong>. On v0.8.0 / v0.8.5 the L4 fit node had
+auto-generated id <code class="docutils literal notranslate"><span class="pre">fit_1_&lt;family&gt;</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">fit_1_ridge</span></code>), so chained
+<code class="docutils literal notranslate"><span class="pre">.compare()</span></code> calls broke.</p>
+<p><strong>Fix</strong>: upgrade to v0.8.6+ where <code class="docutils literal notranslate"><span class="pre">fit_main</span></code> is the stable id, OR use
+the auto-generated id explicitly. Verify with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">exp</span><span class="o">.</span><span class="n">to_recipe_dict</span><span class="p">()[</span><span class="s2">&quot;4_forecasting_model&quot;</span><span class="p">][</span><span class="s2">&quot;nodes&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="mf-replicate-manifest-path-sink-hashes-match-is-false">
+<h2><code class="docutils literal notranslate"><span class="pre">mf.replicate(manifest_path).sink_hashes_match</span></code> is False<a class="headerlink" href="#mf-replicate-manifest-path-sink-hashes-match-is-false" title="Link to this heading"></a></h2>
+<p>Bit-exact replication is guaranteed only when:</p>
+<ul class="simple">
+<li><p><strong>same package version</strong> (manifest carries the macroforecast version
+it was produced with).</p></li>
+<li><p><strong>same dependency versions</strong> (lockfile pinned: pandas / numpy /
+scikit-learn / statsmodels / scipy).</p></li>
+<li><p><strong>same recipe</strong> (the manifest stores the canonical-key-ordered
+recipe; replicate compares <code class="docutils literal notranslate"><span class="pre">recipe_match=True</span></code> first).</p></li>
+<li><p><strong>same raw data / cache</strong> (FRED data revisions break the contract; pin
+the cache via <code class="docutils literal notranslate"><span class="pre">cache_root=</span></code> and re-use across runs).</p></li>
+<li><p><strong>deterministic model families</strong> — torch / xgboost / lightgbm /
+catboost may introduce nondeterminism on GPU / threaded backends. CPU</p>
+<ul>
+<li><p>single-thread is the deterministic baseline.</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Debug</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">replication</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;out/manifest.json&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;recipe_match:&quot;</span><span class="p">,</span> <span class="n">replication</span><span class="o">.</span><span class="n">recipe_match</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">cell_id</span><span class="p">,</span> <span class="n">ok</span> <span class="ow">in</span> <span class="n">replication</span><span class="o">.</span><span class="n">per_cell_match</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">cell_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ok</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">recipe_match=False</span></code>, the recipe was edited after the manifest was
+written. If <code class="docutils literal notranslate"><span class="pre">per_cell_match[&lt;cell_id&gt;]=False</span></code>, that specific cell’s
+sink hashes drifted — check the original cell’s <code class="docutils literal notranslate"><span class="pre">sink_hashes</span></code> against
+the new run’s.</p>
+</section>
+<hr class="docutils" />
+<section id="custom-preprocessor-model-not-registered">
+<h2>Custom preprocessor / model not registered<a class="headerlink" href="#custom-preprocessor-model-not-registered" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ne">RuntimeError</span><span class="p">:</span> <span class="n">custom</span> <span class="nb">callable</span> <span class="s1">&#39;my_preproc&#39;</span> <span class="ow">not</span> <span class="n">registered</span>
+</pre></div>
+</div>
+<p><strong>Cause</strong>: the decorator (<code class="docutils literal notranslate"><span class="pre">&#64;mf.custom_preprocessor(&quot;my_preproc&quot;)</span></code>) ran
+in a Python process / session different from the one that calls
+<code class="docutils literal notranslate"><span class="pre">Experiment.run()</span></code>. macroforecast looks up callables by name in the
+in-process registry.</p>
+<p><strong>Fix</strong>: import the module that defines the callable in the same
+process before calling <code class="docutils literal notranslate"><span class="pre">run()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">my_methods</span>  <span class="c1"># the file with @mf.custom_preprocessor decorators</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">use_preprocessor</span><span class="p">(</span><span class="s2">&quot;my_preproc&quot;</span><span class="p">)</span>
+<span class="n">exp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>For batch / CI runs, ensure the recipe runner imports your method
+module before calling <code class="docutils literal notranslate"><span class="pre">mf.run(&quot;recipe.yaml&quot;)</span></code>. See
+<a class="reference internal" href="for_recipe_authors/custom_hooks.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">docs/for_recipe_authors/custom_hooks.md</span></code></span></a>
+for the full registration contract.</p>
+</section>
+<hr class="docutils" />
+<section id="mixed-frequency-representation-gate-doesnt-fire">
+<h2><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code> gate doesn’t fire<a class="headerlink" href="#mixed-frequency-representation-gate-doesnt-fire" title="Link to this heading"></a></h2>
+<p>The axis is gated: it is only active when L1 produces a mixed-frequency
+panel. Triggers:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code> includes <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>).</p></li>
+<li><p>A custom panel inlines mixed monthly + quarterly columns and L1 has
+detected it.</p></li>
+</ul>
+<p>If your <code class="docutils literal notranslate"><span class="pre">dataset=fred_md</span></code> and you set
+<code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation=...</span></code>, the validator emits a soft
+warning and the axis is ignored.</p>
+</section>
+<hr class="docutils" />
+<section id="a-bundled-example-recipe-fails-with-importerror-xgboost">
+<h2>A bundled example recipe fails with <code class="docutils literal notranslate"><span class="pre">ImportError:</span> <span class="pre">xgboost</span></code><a class="headerlink" href="#a-bundled-example-recipe-fails-with-importerror-xgboost" title="Link to this heading"></a></h2>
+<p>Some recipes need extras. Check the
+<a class="reference internal" href="for_researchers/recipe_gallery.html"><span class="std std-doc">Recipe gallery</span></a> “Extras required”
+column. To install everything:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[all]&quot;</span>
+</pre></div>
+</div>
+<p>Or specific extras:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[xgboost,lightgbm,catboost,shap]&quot;</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="sphinx-encyclopedia-drift-ci-fails-on-pr">
+<h2>Sphinx encyclopedia drift CI fails on PR<a class="headerlink" href="#sphinx-encyclopedia-drift-ci-fails-on-pr" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docs</span><span class="o">/</span><span class="n">encyclopedia</span><span class="o">/</span> <span class="ow">is</span> <span class="n">out</span> <span class="n">of</span> <span class="n">sync</span><span class="o">.</span> <span class="n">Run</span><span class="p">:</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">scaffold</span> <span class="n">encyclopedia</span> <span class="n">docs</span><span class="o">/</span><span class="n">encyclopedia</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>You edited a <code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code> axis or an <code class="docutils literal notranslate"><span class="pre">OPTION_DOCS</span></code> entry,
+and the encyclopedia source-committed tree no longer matches the
+generator output.</p>
+<p><strong>Fix</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>macroforecast.scaffold<span class="w"> </span>encyclopedia<span class="w"> </span>docs/encyclopedia/
+git<span class="w"> </span>add<span class="w"> </span>docs/encyclopedia/
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;docs(encyclopedia): regen after axis/OptionDoc edit&quot;</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/.github/RELEASE_CHECKLIST.md"><code class="docutils literal notranslate"><span class="pre">.github/RELEASE_CHECKLIST.md</span></code></a>.</p>
+</section>
+<hr class="docutils" />
+<section id="want-to-inspect-l1-l2-l3-outputs-without-running-l4-l8">
+<h2>Want to inspect L1 / L2 / L3 outputs without running L4-L8<a class="headerlink" href="#want-to-inspect-l1-l2-l3-outputs-without-running-l4-l8" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">materialize_l1</span><span class="p">,</span> <span class="n">materialize_l2</span><span class="p">,</span> <span class="n">materialize_l3_minimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core.yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_recipe_yaml</span>
+
+<span class="n">recipe</span> <span class="o">=</span> <span class="n">parse_recipe_yaml</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;recipe.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="n">l1</span> <span class="o">=</span> <span class="n">materialize_l1</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">l1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">raw_panel</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>                     <span class="c1"># raw L1 panel</span>
+
+<span class="n">l2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">materialize_l2</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">l2</span><span class="o">.</span><span class="n">cleaned_panel</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>                    <span class="c1"># post-McCracken-Ng panel</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">l2</span><span class="o">.</span><span class="n">cleaning_log</span><span class="p">[</span><span class="s2">&quot;steps&quot;</span><span class="p">])</span>                   <span class="c1"># which stages applied what</span>
+
+<span class="n">l3</span> <span class="o">=</span> <span class="n">materialize_l3_minimal</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">l1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">l2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">l3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>                       <span class="c1"># L3 features</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">l3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y_final</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>                       <span class="c1"># L3 target</span>
+</pre></div>
+</div>
+<p>Full guide:
+<a class="reference internal" href="#for_recipe_authors/partial_layer_execution.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">docs/for_recipe_authors/partial_layer_execution.md</span></code></span></a>.</p>
+</section>
+<hr class="docutils" />
+<section id="where-to-ask">
+<h2>Where to ask<a class="headerlink" href="#where-to-ask" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/NanyeonK/macroforecast/issues">GitHub issues</a> —
+bugs / feature requests</p></li>
+<li><p><a class="reference external" href="https://github.com/NanyeonK/macroforecast/discussions">GitHub discussions</a> —
+recipe / method questions</p></li>
+<li><p>Include in your report: macroforecast <code class="docutils literal notranslate"><span class="pre">__version__</span></code>, Python version,
+the recipe (or a minimal repro), the full traceback, and what you
+expected.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="encyclopedia/public_api.html" class="btn btn-neutral float-left" title="Public Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="CONVENTIONS.html" class="btn btn-neutral float-right" title="Docs Conventions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

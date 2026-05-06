@@ -1,6 +1,6 @@
 # Data Source Mode / Frequency
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Data Source Mode / Frequency
 
 This group starts the Layer 1 hierarchy. Choose the data source mode first:
