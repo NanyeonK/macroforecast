@@ -115,13 +115,27 @@ def test_experiment_compare_rejects_unknown_list_id():
 
 
 # ---------------------------------------------------------------------------
-# variant() -- not implemented in v0.8.0
+# variant() -- v0.8.5 implementation
 # ---------------------------------------------------------------------------
 
-def test_experiment_variant_raises_not_implemented():
+def test_experiment_variant_records_overrides():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
-    with pytest.raises(NotImplementedError, match="v0.8.1"):
-        exp.variant("alt", model_family="ols")
+    exp.variant("alt", model="ols")
+    recipe = exp.to_recipe_dict()
+    assert recipe["variants"] == {"alt": {"model_family": "ols"}}
+
+
+def test_experiment_variant_rejects_invalid_name():
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
+    with pytest.raises(ValueError, match="variant name"):
+        exp.variant("bad=name")
+
+
+def test_experiment_variant_chain_returns_self():
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
+    result = exp.variant("a", model="ridge").variant("b", model="lasso")
+    assert result is exp
+    assert set(exp.to_recipe_dict()["variants"]) == {"a", "b"}
 
 
 # ---------------------------------------------------------------------------

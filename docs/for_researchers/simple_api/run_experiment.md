@@ -1,12 +1,5 @@
 # Run An Experiment
 
-> **API status note (current)**: this page uses the planned mf.forecast / mf.Experiment Python facade
-> shape. Those are not yet exported from macroforecast.__all__. For working v0.6+ code, use
-> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
-> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
-> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
-
-
 `Experiment` is the public workspace for one forecasting question. It collects the few choices a researcher should specify, fills the rest from the default profile, then lowers to the internal recipe and execution engine.
 
 ```python

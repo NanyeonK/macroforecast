@@ -7,7 +7,7 @@
 | [`l0`](l0/index.md) | Study Setup | `setup` | 1 | 3 | 6 |
 | [`l1`](l1/index.md) | Data | `construction` | 7 | 26 | 108 |
 | [`l1_5`](l1_5/index.md) | Data summary | `diagnostic` | 6 | 13 | 50 |
-| [`l2`](l2/index.md) | Preprocessing | `construction` | 5 | 13 | 50 |
+| [`l2`](l2/index.md) | Preprocessing | `construction` | 5 | 15 | 58 |
 | [`l2_5`](l2_5/index.md) | Pre vs post preprocessing | `diagnostic` | 5 | 12 | 42 |
 | [`l3`](l3/index.md) | Feature engineering | `construction` | 4 | 1 | 37 |
 | [`l3_5`](l3_5/index.md) | Feature diagnostics | `diagnostic` | 6 | 15 | 49 |

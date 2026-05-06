@@ -3,6 +3,94 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.8.5] -- 2026-05-02 -- "simple API completed (PR 2 of 2): .use_* hooks, ForecastResult rich, variants, two new axes"
+
+### Added
+* **`Experiment.use_*` hooks** -- six chainable methods that lower
+  user-facing intent into the canonical recipe:
+  - ``use_fred_sd_selection(states=, variables=)`` -- writes
+    ``state_selection`` / ``sd_variable_selection`` axes (L1.D) plus
+    ``selected_states`` / ``selected_sd_variables`` leaf lists.
+  - ``use_fred_sd_state_group(group)`` -- L1.D ``fred_sd_state_group``
+    axis (16 options, validated).
+  - ``use_fred_sd_variable_group(group)`` -- L1.D
+    ``fred_sd_variable_group`` axis (12 options, validated).
+  - ``use_mixed_frequency_representation(mode)`` -- new L2.A
+    ``mixed_frequency_representation`` axis (5 options).
+  - ``use_sd_inferred_tcodes()`` -- new L2.B ``sd_tcode_policy=inferred``.
+  - ``use_sd_empirical_tcodes(unit, code_map=, audit_uri=)`` -- new
+    L2.B ``sd_tcode_policy=empirical`` plus its supporting leaf_config.
+  - ``use_preprocessor(name, applied_at='l3')`` -- dispatches a
+    ``mf.custom_preprocessor`` registration via the v0.2.5 #251
+    runtime hook (``leaf_config.custom_postprocessor``); ``applied_at='l2'``
+    raises ``NotImplementedError`` (reserved for v0.9 schema work).
+  All return ``self`` for chaining; bad inputs raise ``ValueError``
+  with the allowed-options list.
+* **`Experiment.variant(name, **overrides)`** -- branches a named
+  recipe variant. Variants land under ``recipe['variants'][name]``
+  and are expanded to one cell per variant by ``execute_recipe`` in
+  ``core/execution.py:_expand_variants``. Variants combine with
+  ``compare_models`` / ``compare`` / ``sweep`` axes via the existing
+  grid / zip combine modes; cell ids carry a ``__variant-<name>``
+  suffix when a variant is active.
+* **`ForecastResult` rich accessors** (replaces the v0.8.0 minimal shell):
+  - ``forecasts`` -> per-cell ``l4_forecasts_v1`` rows concatenated
+    with columns ``cell_id, model_id, target, horizon, origin,
+    y_pred, y_pred_lo, y_pred_hi``.
+  - ``metrics`` -> per-cell ``l5_evaluation_v1.metrics_table`` with a
+    ``cell_id`` column.
+  - ``ranking`` -> per-cell ``l5_evaluation_v1.ranking_table`` (empty
+    DataFrame when no L5 ranking emitted).
+  - ``mean(metric='mse')`` -> per-(model, target, horizon) average of
+    one metric; useful one-liner for horse-race summaries.
+  - ``read_json(name)`` / ``file_path(name)`` -- per-cell artifact
+    accessors, fall back to the manifest root.
+  - ``get(cell_id)`` -- pull one cell out by id, raise ``KeyError``
+    on miss.
+  All return empty DataFrames rather than raising when there is
+  nothing to aggregate.
+* **`mixed_frequency_representation` axis (L2.A)** -- 5 options:
+  ``calendar_aligned_frame`` (default), ``drop_unknown_native_frequency``,
+  ``drop_non_target_native_frequency``, ``native_frequency_block_payload``,
+  ``mixed_frequency_model_adapter``. Generalises the FRED-SD-specific
+  alignment rules to any mixed-frequency panel. Sub-layer L2.A renamed
+  from "FRED-SD frequency alignment" to "Mixed frequency alignment".
+  Gate: active when dataset includes FRED-SD (or a custom panel
+  declares mixed frequency).
+* **`sd_tcode_policy` axis (L2.B)** -- 3 options orthogonal to
+  ``transform_policy``: ``none`` (default; FRED-SD source values left
+  as published), ``inferred`` (national-analog research layer;
+  records ``official: false``), ``empirical`` (variable-global /
+  state-series stationarity audit map; requires ``sd_tcode_unit``,
+  ``sd_tcode_code_map`` when ``unit=state_series``,
+  ``sd_tcode_audit_uri``). Gate: active only when dataset includes
+  FRED-SD.
+* **OptionDoc entries** for each new axis option (8 total: 5 for
+  ``mixed_frequency_representation``, 3 for ``sd_tcode_policy``).
+* **Encyclopedia regenerated** -- 189 source-tree pages (was 187);
+  two new axis pages
+  (``docs/encyclopedia/l2/axes/mixed_frequency_representation.md``,
+  ``sd_tcode_policy.md``) plus the canonical browse / index updates.
+* **Design Part 2** -- ``plans/design/part2_l2_l3_l4.md`` documents
+  both new axes (renamed L2.A heading + per-axis sub-section + gate
+  table update).
+* **Docs**: ``docs/for_researchers/planned_simple_api/`` ->
+  ``docs/for_researchers/simple_api/``. Stripped the
+  "API status note (current)" planning banner from each page.
+  Replaced the index banner with an "every method documented here is
+  implemented in v0.8.5" callout. Updated cross-doc links in
+  ``docs/for_researchers/index.md`` (toctree + path table).
+* **Tests** -- new file ``tests/api/test_use_methods.py`` with
+  20 tests covering each ``.use_*`` validator path + variant() alone +
+  variant × compare_models × sweep cross-products. Eight rich
+  ForecastResult tests added to ``tests/api/test_forecast_result.py``.
+  Updated ``test_experiment.py`` variant tests to assert recipe
+  emission.
+
+### Changed
+* `pyproject.toml` + `macroforecast/__init__.py` -> 0.8.5.
+* README + ``docs/install.md`` git pin -> ``@v0.8.5``.
+
 ## [0.8.0] -- 2026-05-02 -- "core public API: forecast() + Experiment + ForecastResult (PR 1 of 2)"
 
 ### Added

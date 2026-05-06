@@ -18,9 +18,11 @@ class L2Preprocessing:
 
 L2_AXIS_NAMES: tuple[str, ...] = (
     "sd_series_frequency_filter",
+    "mixed_frequency_representation",
     "quarterly_to_monthly_rule",
     "monthly_to_quarterly_rule",
     "transform_policy",
+    "sd_tcode_policy",
     "transform_scope",
     "outlier_policy",
     "outlier_action",
@@ -37,9 +39,11 @@ ALL_SWEEPABLE_AXES = frozenset(L2_AXIS_NAMES)
 
 DEFAULT_AXES: dict[str, Any] = {
     "sd_series_frequency_filter": "both",
+    "mixed_frequency_representation": "calendar_aligned_frame",
     "quarterly_to_monthly_rule": "step_backward",
     "monthly_to_quarterly_rule": "quarterly_average",
     "transform_policy": "apply_official_tcode",
+    "sd_tcode_policy": "none",
     "outlier_policy": "mccracken_ng_iqr",
     "outlier_action": "flag_as_nan",
     "imputation_policy": "em_factor",
@@ -186,10 +190,19 @@ def resolve_axes_from_raw(
             values[axis_name] = DEFAULT_AXES[axis_name]
             source[axis_name] = "package_default"
     if not _l2a_active(l1_context):
-        for axis_name in ("sd_series_frequency_filter", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule"):
+        for axis_name in (
+            "sd_series_frequency_filter",
+            "mixed_frequency_representation",
+            "quarterly_to_monthly_rule",
+            "monthly_to_quarterly_rule",
+        ):
             if axis_name not in fixed_axes:
                 values.pop(axis_name, None)
                 source.pop(axis_name, None)
+        # sd_tcode_policy gate: also FRED-SD-only.
+        if "sd_tcode_policy" not in fixed_axes:
+            values.pop("sd_tcode_policy", None)
+            source.pop("sd_tcode_policy", None)
     return L2ResolvedAxes(values, source)
 
 
@@ -216,6 +229,7 @@ def validate_layer(layer: Any | dict[str, Any] | str, l1_context: dict[str, Any]
     issues.extend(_validate_options(fixed_axes, resolved))
     issues.extend(_validate_l2a_gates(fixed_axes, resolved, l1_context))
     issues.extend(_validate_transform(leaf_config, resolved, l1_context))
+    issues.extend(_validate_sd_tcode_policy(leaf_config, resolved))
     issues.extend(_validate_outlier(leaf_config, resolved))
     issues.extend(_validate_imputation(leaf_config, resolved, l1_context))
     issues.extend(_validate_frame_edge(leaf_config, resolved))
@@ -301,9 +315,17 @@ def execute_recipe(recipe: L2Recipe) -> L2Manifest:
 def _validate_options(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes) -> list[Any]:
     option_sets = {
         "sd_series_frequency_filter": {"monthly_only", "quarterly_only", "both"},
+        "mixed_frequency_representation": {
+            "calendar_aligned_frame",
+            "drop_unknown_native_frequency",
+            "drop_non_target_native_frequency",
+            "native_frequency_block_payload",
+            "mixed_frequency_model_adapter",
+        },
         "quarterly_to_monthly_rule": {"linear_interpolation", "step_backward", "step_forward", "chow_lin"},
         "monthly_to_quarterly_rule": {"quarterly_average", "quarterly_endpoint", "quarterly_sum"},
         "transform_policy": {"apply_official_tcode", "no_transform", "custom_tcode"},
+        "sd_tcode_policy": {"none", "inferred", "empirical"},
         "transform_scope": {"target_and_predictors", "predictors_only", "target_only", "not_applicable"},
         "outlier_policy": {"mccracken_ng_iqr", "winsorize", "zscore_threshold", "none"},
         "outlier_action": {"flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator"},
@@ -329,7 +351,13 @@ def _validate_l2a_gates(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes, l1
     if l1_context is None:
         return issues
     if not _l2a_active(l1_context):
-        for axis in ("sd_series_frequency_filter", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule"):
+        for axis in (
+            "sd_series_frequency_filter",
+            "mixed_frequency_representation",
+            "quarterly_to_monthly_rule",
+            "monthly_to_quarterly_rule",
+            "sd_tcode_policy",
+        ):
             if axis in fixed_axes:
                 issues.append(_issue(f"l2.{axis}", f"{axis} is inactive when L1 dataset has no FRED-SD"))
         return issues
@@ -358,6 +386,39 @@ def _validate_transform(leaf_config: dict[str, Any], resolved: L2ResolvedAxes, l
         if not l1_context.get("custom_has_tcode_column"):
             return [_issue("l2.transform_policy", "apply_official_tcode requires FRED-MD/QD metadata or documented custom tcode column")]
     return []
+
+
+def _validate_sd_tcode_policy(leaf_config: dict[str, Any], resolved: L2ResolvedAxes) -> list[Any]:
+    """Validate ``sd_tcode_policy`` axis + its leaf_config requirements.
+
+    Schema added in v0.8.5: orthogonal to ``transform_policy``. Three options:
+    ``none`` (default), ``inferred`` (national-analog research layer),
+    ``empirical`` (variable-global / state-series stationarity audit map).
+    The ``empirical`` mode requires a ``sd_tcode_unit`` leaf
+    (``variable_global`` or ``state_series``) and, for ``state_series``,
+    a ``sd_tcode_code_map`` and ``sd_tcode_audit_uri``.
+    """
+
+    policy = resolved.get("sd_tcode_policy")
+    if policy != "empirical":
+        return []
+    issues: list[Any] = []
+    unit = leaf_config.get("sd_tcode_unit")
+    if unit not in {"variable_global", "state_series"}:
+        issues.append(_issue(
+            "l2.sd_tcode_unit",
+            "sd_tcode_policy=empirical requires leaf_config.sd_tcode_unit "
+            "in {variable_global, state_series}",
+        ))
+    if unit == "state_series":
+        code_map = leaf_config.get("sd_tcode_code_map")
+        if not isinstance(code_map, dict) or not code_map:
+            issues.append(_issue(
+                "l2.sd_tcode_code_map",
+                "sd_tcode_policy=empirical with sd_tcode_unit=state_series "
+                "requires non-empty leaf_config.sd_tcode_code_map",
+            ))
+    return issues
 
 
 def _validate_outlier(leaf_config: dict[str, Any], resolved: L2ResolvedAxes) -> list[Any]:
@@ -525,8 +586,8 @@ L2_LAYER_SPEC = LayerImplementationSpec(
     ui_mode="list",
     layer_globals=(),
     sub_layers=(
-        SubLayerSpec(id="l2_a", name="FRED-SD frequency alignment", axes=("sd_series_frequency_filter", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule")),
-        SubLayerSpec(id="l2_b", name="Transform", axes=("transform_policy", "transform_scope")),
+        SubLayerSpec(id="l2_a", name="Mixed frequency alignment", axes=("sd_series_frequency_filter", "mixed_frequency_representation", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule")),
+        SubLayerSpec(id="l2_b", name="Transform", axes=("transform_policy", "sd_tcode_policy", "transform_scope")),
         SubLayerSpec(id="l2_c", name="Outlier handling", axes=("outlier_policy", "outlier_action", "outlier_scope")),
         SubLayerSpec(id="l2_d", name="Imputation", axes=("imputation_policy", "imputation_temporal_rule", "imputation_scope")),
         SubLayerSpec(id="l2_e", name="Frame edge", axes=("frame_edge_policy", "frame_edge_scope")),
@@ -534,11 +595,23 @@ L2_LAYER_SPEC = LayerImplementationSpec(
     axes={
         "l2_a": {
             "sd_series_frequency_filter": AxisSpec("sd_series_frequency_filter", _options(("monthly_only", "quarterly_only", "both")), "both"),
+            "mixed_frequency_representation": AxisSpec(
+                "mixed_frequency_representation",
+                _options((
+                    "calendar_aligned_frame",
+                    "drop_unknown_native_frequency",
+                    "drop_non_target_native_frequency",
+                    "native_frequency_block_payload",
+                    "mixed_frequency_model_adapter",
+                )),
+                "calendar_aligned_frame",
+            ),
             "quarterly_to_monthly_rule": AxisSpec("quarterly_to_monthly_rule", _options(("linear_interpolation", "step_backward", "step_forward", "chow_lin"), future=("chow_lin",)), "step_backward"),
             "monthly_to_quarterly_rule": AxisSpec("monthly_to_quarterly_rule", _options(("quarterly_average", "quarterly_endpoint", "quarterly_sum")), "quarterly_average"),
         },
         "l2_b": {
             "transform_policy": AxisSpec("transform_policy", _options(("apply_official_tcode", "no_transform", "custom_tcode")), "apply_official_tcode"),
+            "sd_tcode_policy": AxisSpec("sd_tcode_policy", _options(("none", "inferred", "empirical")), "none"),
             "transform_scope": AxisSpec("transform_scope", _options(("target_and_predictors", "predictors_only", "target_only", "not_applicable")), "derived"),
         },
         "l2_c": {

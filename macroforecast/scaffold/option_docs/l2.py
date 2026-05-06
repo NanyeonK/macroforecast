@@ -501,3 +501,170 @@ register(
     _L2A_QM_BACKWARD, _L2A_QM_LINEAR, _L2A_QM_FORWARD,
     _L2A_MQ_AVG, _L2A_MQ_END, _L2A_MQ_SUM,
 )
+
+
+# ---------------------------------------------------------------------------
+# v0.8.5: L2.A mixed_frequency_representation + L2.B sd_tcode_policy
+# ---------------------------------------------------------------------------
+# Generalises the FRED-SD-specific mixed-frequency rules to any panel that
+# carries mixed-frequency columns (either FRED-SD or a custom panel that
+# declares per-column native frequency). The two new axes are:
+#
+#   * ``mixed_frequency_representation`` (L2.A): five options ranging from
+#     the default ``calendar_aligned_frame`` to a model-adapter contract
+#     (``mixed_frequency_model_adapter``) that carries native-frequency
+#     block metadata to MIDAS-style downstream models.
+#   * ``sd_tcode_policy`` (L2.B): orthogonal to ``transform_policy``; lets
+#     the user opt into the FRED-SD inferred (national-analog) or
+#     empirical (stationarity-audit) t-code maps. Default ``none``
+#     leaves FRED-SD source values as published.
+
+_L2A_MFR_CALENDAR = _e(
+    "l2_a", "mixed_frequency_representation", "calendar_aligned_frame",
+    "Default: keep selected mixed-frequency columns on the experiment calendar.",
+    (
+        "When a panel mixes monthly and quarterly columns (FRED-SD by "
+        "default; any custom panel that declares per-column native "
+        "frequency in metadata), the default representation flattens all "
+        "columns to the experiment calendar via the L2.A "
+        "``quarterly_to_monthly_rule`` / ``monthly_to_quarterly_rule`` "
+        "alignment rules. The panel emerges as a single rectangular "
+        "frame; downstream layers see a uniform sampling grid."
+    ),
+    "Default for mixed-frequency studies; pairs with the canonical L2.A alignment rules.",
+    references=(_REF_DESIGN_L2,),
+    related_options=(
+        "drop_unknown_native_frequency",
+        "drop_non_target_native_frequency",
+        "native_frequency_block_payload",
+        "mixed_frequency_model_adapter",
+    ),
+)
+
+_L2A_MFR_DROP_UNKNOWN = _e(
+    "l2_a", "mixed_frequency_representation", "drop_unknown_native_frequency",
+    "Drop columns whose native frequency cannot be inferred.",
+    (
+        "Restricts the panel to columns whose native sampling rate is "
+        "either declared in the L1 metadata or detectable from the "
+        "FRED-SD workbook. Columns with unknown native frequency are "
+        "dropped before any frequency-alignment rule fires."
+    ),
+    "Studies that demand strict provenance over per-column native frequency.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("calendar_aligned_frame", "drop_non_target_native_frequency"),
+)
+
+_L2A_MFR_DROP_NON_TARGET = _e(
+    "l2_a", "mixed_frequency_representation", "drop_non_target_native_frequency",
+    "Keep only columns whose native frequency matches the experiment frequency.",
+    (
+        "Restricts the panel to columns whose native sampling rate "
+        "equals the L1 ``frequency``. For a monthly experiment the "
+        "quarterly columns are dropped (and vice versa). Useful when "
+        "the user wants a strict single-frequency panel without any "
+        "interpolation artifacts."
+    ),
+    "Strict monthly-only or quarterly-only panels; single-frequency benchmarks.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("calendar_aligned_frame", "drop_unknown_native_frequency"),
+)
+
+_L2A_MFR_BLOCK_PAYLOAD = _e(
+    "l2_a", "mixed_frequency_representation", "native_frequency_block_payload",
+    "Emit per-frequency block metadata for downstream models.",
+    (
+        "Keeps the panel intact (no alignment / drop) and instead "
+        "publishes a ``fred_sd_native_frequency_block_payload.json`` "
+        "manifest entry that lists each column's native frequency. "
+        "Models that consume mixed-frequency input directly (e.g. "
+        "MIDAS, mixed-frequency factor models) can read this metadata "
+        "from ``context['auxiliary_payloads']``."
+    ),
+    "Researcher-owned MIDAS / mixed-frequency factor model studies.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("mixed_frequency_model_adapter", "calendar_aligned_frame"),
+)
+
+_L2A_MFR_ADAPTER = _e(
+    "l2_a", "mixed_frequency_representation", "mixed_frequency_model_adapter",
+    "Block payload + a model-adapter contract for MIDAS-style fits.",
+    (
+        "Strictest option: emits the per-frequency block payload "
+        "(see ``native_frequency_block_payload``) plus a model-adapter "
+        "contract that the L4 model_family must honour. The adapter "
+        "validates that the registered ``model_family`` either declares "
+        "MIDAS-style mixed-frequency support or registers via "
+        "``mf.custom_model`` with the appropriate ``auxiliary_payloads`` "
+        "consumption. Runtime writes "
+        "``fred_sd_mixed_frequency_model_adapter.json`` with the "
+        "adapter contract details."
+    ),
+    "Built-in MIDAS families (``midas_almon``, ``midasr``) or registered custom mixed-frequency models.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("native_frequency_block_payload", "calendar_aligned_frame"),
+)
+
+# L2.B sd_tcode_policy
+_L2B_SDT_NONE = _e(
+    "l2_b", "sd_tcode_policy", "none",
+    "Default: no FRED-SD-specific t-code applied.",
+    (
+        "FRED-SD does not publish official transformation codes. The "
+        "default ``none`` policy leaves FRED-SD source values as "
+        "published and applies whatever ``transform_policy`` the user "
+        "selected (default ``apply_official_tcode`` only operates on "
+        "FRED-MD/QD columns; FRED-SD columns pass through). Use this "
+        "option whenever the study does not depend on a particular "
+        "FRED-SD stationarity transform."
+    ),
+    "Default for FRED-SD recipes; canonical baseline.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("inferred", "empirical"),
+)
+
+_L2B_SDT_INFERRED = _e(
+    "l2_b", "sd_tcode_policy", "inferred",
+    "Apply the inferred SD t-code map (national-analog research layer).",
+    (
+        "Opt-in: applies the package-shipped inferred t-code map for "
+        "FRED-SD columns. The map is derived by taking the FRED-MD/QD "
+        "national analog of each FRED-SD variable and inheriting that "
+        "analog's published t-code. The manifest records "
+        "``data_reports.sd_inferred_tcodes`` with ``official: false``, "
+        "the map version, and the allowed review statuses."
+    ),
+    "Studies that want a published (but non-official) t-code path; replication of national-analog research.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("none", "empirical"),
+)
+
+_L2B_SDT_EMPIRICAL = _e(
+    "l2_b", "sd_tcode_policy", "empirical",
+    "Apply the empirical stationarity-audit t-code map.",
+    (
+        "Opt-in: applies an empirical t-code map derived from a "
+        "stationarity audit of the FRED-SD panel. Two ``unit`` modes:\n\n"
+        "* ``variable_global`` -- one t-code per FRED-SD variable, "
+        "  shared across states\n"
+        "* ``state_series`` -- one t-code per (variable, state) pair; "
+        "  requires ``leaf_config.sd_tcode_code_map`` and "
+        "  ``sd_tcode_audit_uri``\n\n"
+        "The manifest records ``official: false`` plus the audit URI "
+        "and chosen unit."
+    ),
+    "Stationarity-audit driven research; per-state t-code policies.",
+    references=(_REF_DESIGN_L2,),
+    related_options=("none", "inferred"),
+)
+
+register(
+    _L2A_MFR_CALENDAR,
+    _L2A_MFR_DROP_UNKNOWN,
+    _L2A_MFR_DROP_NON_TARGET,
+    _L2A_MFR_BLOCK_PAYLOAD,
+    _L2A_MFR_ADAPTER,
+    _L2B_SDT_NONE,
+    _L2B_SDT_INFERRED,
+    _L2B_SDT_EMPIRICAL,
+)

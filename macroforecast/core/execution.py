@@ -70,10 +70,20 @@ def _expand_cells(recipe_root: dict[str, Any]) -> tuple[list[dict[str, Any]], li
     alternative subgraphs. For each group, the layer's ``nodes`` and
     ``sinks`` are replaced with the group's. The expansion combines with
     param-level sweeps via the existing grid / zip combine modes.
+
+    v0.8.5: a top-level ``variants`` block is treated as an extra
+    Cartesian dimension before sweep_groups / param sweeps. Each variant
+    overlays its overrides onto the recipe and the cell_id includes a
+    ``__variant=<name>`` suffix.
     """
 
-    # First, expand sweep_groups (subgraph alternatives) layer by layer.
-    base_recipes = _expand_sweep_groups(recipe_root)
+    # First, expand named variants (v0.8.5).
+    variant_recipes = _expand_variants(recipe_root)
+
+    # Then expand sweep_groups (subgraph alternatives) layer by layer.
+    base_recipes: list[dict[str, Any]] = []
+    for variant_recipe in variant_recipes:
+        base_recipes.extend(_expand_sweep_groups(variant_recipe))
 
     expanded_concrete: list[dict[str, Any]] = []
     expanded_paths: list[tuple[tuple[Any, ...], Any]] | None = None
@@ -140,6 +150,70 @@ def _expand_sweep_groups(recipe_root: dict[str, Any]) -> list[dict[str, Any]]:
             block["_sweep_group_id"] = group.get("id", "")
         concrete.append(cell)
     return concrete
+
+
+def _expand_variants(recipe_root: dict[str, Any]) -> list[dict[str, Any]]:
+    """v0.8.5: expand the top-level ``variants`` block into one recipe per
+    named variant. Each variant overlays its overrides onto the base
+    recipe. The variant name is recorded under
+    ``recipe['_variant_name']`` so cell-id generation can append it.
+
+    When ``variants`` is empty / absent the base recipe passes through
+    unchanged (a single-element list).
+    """
+
+    variants = recipe_root.get("variants")
+    if not isinstance(variants, dict) or not variants:
+        return [copy.deepcopy(recipe_root)]
+    expanded: list[dict[str, Any]] = []
+    for name, overrides in variants.items():
+        cell = copy.deepcopy(recipe_root)
+        cell.pop("variants", None)
+        cell["_variant_name"] = name
+        if isinstance(overrides, dict):
+            for key, value in overrides.items():
+                if key == "model_family":
+                    # Convenience alias: rewrite the L4 fit_model family
+                    # in-place rather than introducing a sweep marker.
+                    l4 = cell.setdefault("4_forecasting_model", {})
+                    nodes = l4.setdefault("nodes", [])
+                    fit_nodes = [
+                        n for n in nodes
+                        if isinstance(n, dict) and n.get("op") == "fit_model"
+                    ]
+                    for node in fit_nodes:
+                        node.setdefault("params", {})["family"] = value
+                    continue
+                # Treat the override key as a dotted path into the recipe.
+                _variant_set(cell, key, value)
+        expanded.append(cell)
+    return expanded
+
+
+def _split_dotted(key: str) -> tuple[Any, ...]:
+    """Split a dotted-or-already-tuple key for ``_set_at``."""
+
+    if isinstance(key, tuple):
+        return key
+    return tuple(part for part in key.split(".") if part)
+
+
+def _variant_set(root: dict[str, Any], dotted: str, value: Any) -> None:
+    """Walk ``dotted`` into ``root`` and assign ``value`` at the leaf,
+    auto-creating intermediate dicts. Used by :func:`_expand_variants`
+    to apply variant overrides addressed as dotted paths."""
+
+    parts = [part for part in str(dotted).split(".") if part]
+    if not parts:
+        return
+    cursor = root
+    for part in parts[:-1]:
+        nxt = cursor.get(part) if isinstance(cursor, dict) else None
+        if not isinstance(nxt, dict):
+            nxt = {}
+            cursor[part] = nxt
+        cursor = nxt
+    cursor[parts[-1]] = value
 
 
 def _generate_cell_id(index: int, sweep_values: dict[str, Any], naming: str = "descriptive", template: str | None = None) -> str:
@@ -595,7 +669,12 @@ def execute_recipe(
     cell_jobs: list[tuple[int, dict[str, Any], dict[str, Any], str, int | None]] = []
     for index, concrete in enumerate(concrete_roots, start=1):
         sweep_values = _extract_sweep_values(concrete, recipe_root, sweep_paths)
+        variant_name = concrete.pop("_variant_name", None)
+        if variant_name is not None:
+            sweep_values = {**sweep_values, "variant": str(variant_name)}
         cell_id = _generate_cell_id(index, sweep_values)
+        if variant_name is not None and "variant" not in cell_id:
+            cell_id = f"{cell_id}__variant-{variant_name}"
         seed_for_cell = base_seed if base_seed is None else int(base_seed) + (index - 1)
         cell_jobs.append((index, concrete, sweep_values, cell_id, seed_for_cell))
 

@@ -4,24 +4,28 @@ This module is the **simple façade** for macroforecast: a thin layer over the
 canonical recipe / execution engine that lets researchers write a forecasting
 study in a few lines of Python without authoring YAML.
 
-PR 1 of the v0.8 series ships:
+The v0.8 series ships in two PRs:
 
-* :func:`forecast` -- one-shot forecasting helper
-* :class:`Experiment` -- builder class with ``compare_models`` / ``compare`` /
-  ``sweep`` / ``variant`` / ``run`` / ``replicate`` / ``to_yaml`` / ``validate``
-* :class:`ForecastResult` -- minimal shell wrapping :class:`ManifestExecutionResult`
-
-PR 2 (v0.8.1) will add ``Experiment.use_*`` hooks (FRED-SD t-codes,
-preprocessor injection) and richer ``ForecastResult`` accessors
-(``.forecasts``, ``.metrics``, ``.ranking``, ``.read_json(...)``,
-``.file_path(...)``, ``.mean()``, ``.get(...)``).
+* PR 1 / v0.8.0 -- :func:`forecast`, :class:`Experiment` core
+  (``compare_models`` / ``compare`` / ``sweep`` / ``run`` / ``replicate`` /
+  ``to_yaml`` / ``validate``), :class:`ForecastResult` minimal shell.
+* PR 2 / v0.8.5 -- :class:`Experiment` ``.use_*`` hooks (FRED-SD selection,
+  state / variable groups, mixed-frequency representation, SD t-code
+  policies, custom preprocessor), :class:`Experiment.variant`, rich
+  :class:`ForecastResult` accessors (``forecasts`` / ``metrics`` /
+  ``ranking`` / ``read_json`` / ``file_path`` / ``mean`` / ``get``), plus
+  two new schema axes (``mixed_frequency_representation`` and
+  ``sd_tcode_policy``).
 """
 from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import TYPE_CHECKING, Any, Iterable, Sequence
+
+if TYPE_CHECKING:  # pragma: no cover
+    import pandas as pd
 
 from .core.execution import (
     CellExecutionResult,
@@ -33,6 +37,54 @@ from .core.execution import (
 from .scaffold.builder import RecipeBuilder
 
 __all__ = ["Experiment", "ForecastResult", "forecast"]
+
+# v0.8.5: option lists shared with the L1 / L2 schema. Kept in sync with
+# ``macroforecast.core.layers.l1`` (state / variable groups) and ``l2``
+# (mixed_frequency_representation). The .use_* validators consult these
+# tuples so a typo on the user side raises a clear ValueError.
+_FRED_SD_STATE_GROUP_OPTIONS: tuple[str, ...] = (
+    "all_states",
+    "census_region_northeast",
+    "census_region_midwest",
+    "census_region_south",
+    "census_region_west",
+    "census_division_new_england",
+    "census_division_middle_atlantic",
+    "census_division_east_north_central",
+    "census_division_west_north_central",
+    "census_division_south_atlantic",
+    "census_division_east_south_central",
+    "census_division_west_south_central",
+    "census_division_mountain",
+    "census_division_pacific",
+    "contiguous_48_plus_dc",
+    "custom_state_group",
+)
+
+_FRED_SD_VARIABLE_GROUP_OPTIONS: tuple[str, ...] = (
+    "all_sd_variables",
+    "labor_market_core",
+    "employment_sector",
+    "gsp_output",
+    "housing",
+    "trade",
+    "income",
+    "direct_analog_high_confidence",
+    "provisional_analog_medium",
+    "semantic_review_outputs",
+    "no_reliable_analog",
+    "custom_sd_variable_group",
+)
+
+_MIXED_FREQUENCY_REPRESENTATION_OPTIONS: tuple[str, ...] = (
+    "calendar_aligned_frame",
+    "drop_unknown_native_frequency",
+    "drop_non_target_native_frequency",
+    "native_frequency_block_payload",
+    "mixed_frequency_model_adapter",
+)
+
+_SD_TCODE_UNIT_OPTIONS: tuple[str, ...] = ("variable_global", "state_series")
 
 
 # ---------------------------------------------------------------------------
@@ -396,18 +448,202 @@ class Experiment:
         return self.compare(axis_path, values)
 
     def variant(self, name: str, **overrides: Any) -> "Experiment":
-        """Branch a named variant.
+        """Branch a named recipe variant.
 
-        **Not implemented in v0.8.0.** Lands in v0.8.1 (PR 2). For sweeps
-        over a single axis use :meth:`compare` / :meth:`sweep`; for
-        comparing model families use :meth:`compare_models`.
+        Each :meth:`variant` call records ``overrides`` under
+        ``recipe_root["variants"][name]``. At execution time the cell loop
+        treats the variants block as an extra dimension (one cell per
+        variant) and combines it with any explicit ``compare_models`` /
+        ``compare`` / ``sweep`` axes via the configured
+        ``sweep_combination.mode`` (default grid).
+
+        ``overrides`` may use either dotted ``axis_path=value`` keys or
+        the convenience aliases ``model`` / ``model_family``
+        (mapped to the L4 fit_node family).
+
+        Returns ``self`` so calls chain. Calling ``.variant`` twice with
+        the same name overwrites the previous record.
         """
 
-        raise NotImplementedError(
-            "Experiment.variant() lands in v0.8.1; in v0.8.0 use "
-            ".compare_models([...]) / .compare(axis_path, values) / "
-            ".sweep(axis_path, values)"
-        )
+        if not name or "=" in name or "/" in name:
+            raise ValueError(
+                f"variant name must be a non-empty token without '=' or '/'; got {name!r}"
+            )
+        recipe = self._builder._recipe
+        variants = recipe.setdefault("variants", {})
+        record: dict[str, Any] = {}
+        for key, value in overrides.items():
+            if key in {"model", "model_family"}:
+                record["model_family"] = value
+            else:
+                record[key] = value
+        variants[name] = record
+        return self
+
+    # -- .use_* hooks (v0.8.5) --------------------------------------------
+
+    def use_fred_sd_selection(
+        self,
+        states: Sequence[str] | None = None,
+        variables: Sequence[str] | None = None,
+    ) -> "Experiment":
+        """Restrict the FRED-SD component to specific states / variables.
+
+        Sets the L1.D ``state_selection`` / ``sd_variable_selection`` axes
+        to ``selected_states`` / ``selected_sd_variables`` and writes the
+        actual lists into the L1 ``leaf_config``.
+
+        Either or both of ``states`` and ``variables`` may be supplied;
+        omitted arguments leave the corresponding axis unchanged. Returns
+        ``self``.
+        """
+
+        if states is not None:
+            self._builder.l1.set_axis(state_selection="selected_states")
+            self._builder.l1.set_leaf(selected_states=list(states))
+        if variables is not None:
+            self._builder.l1.set_axis(sd_variable_selection="selected_sd_variables")
+            self._builder.l1.set_leaf(selected_sd_variables=list(variables))
+        return self
+
+    def use_fred_sd_state_group(self, group: str) -> "Experiment":
+        """Pick a FRED-SD state grouping (16 axis options).
+
+        Sets the L1.D ``fred_sd_state_group`` axis. Validates ``group``
+        against the published axis options and raises ``ValueError`` on a
+        bad value. Returns ``self``.
+        """
+
+        if group not in _FRED_SD_STATE_GROUP_OPTIONS:
+            raise ValueError(
+                f"fred_sd_state_group={group!r} is not a known option; "
+                f"choose from {sorted(_FRED_SD_STATE_GROUP_OPTIONS)}"
+            )
+        self._builder.l1.set_axis(fred_sd_state_group=group)
+        return self
+
+    def use_fred_sd_variable_group(self, group: str) -> "Experiment":
+        """Pick a FRED-SD variable grouping (12 axis options).
+
+        Sets the L1.D ``fred_sd_variable_group`` axis. Validates
+        ``group`` and raises ``ValueError`` on a bad value. Returns
+        ``self``.
+        """
+
+        if group not in _FRED_SD_VARIABLE_GROUP_OPTIONS:
+            raise ValueError(
+                f"fred_sd_variable_group={group!r} is not a known option; "
+                f"choose from {sorted(_FRED_SD_VARIABLE_GROUP_OPTIONS)}"
+            )
+        self._builder.l1.set_axis(fred_sd_variable_group=group)
+        return self
+
+    def use_mixed_frequency_representation(self, mode: str) -> "Experiment":
+        """Choose how mixed-frequency columns are rendered into L2.
+
+        Sets the L2.A ``mixed_frequency_representation`` axis (added in
+        v0.8.5). Five options:
+
+        * ``calendar_aligned_frame`` (default)
+        * ``drop_unknown_native_frequency``
+        * ``drop_non_target_native_frequency``
+        * ``native_frequency_block_payload``
+        * ``mixed_frequency_model_adapter``
+
+        Raises ``ValueError`` on a bad value. Returns ``self``.
+        """
+
+        if mode not in _MIXED_FREQUENCY_REPRESENTATION_OPTIONS:
+            raise ValueError(
+                f"mixed_frequency_representation={mode!r} is not valid; "
+                f"choose from {sorted(_MIXED_FREQUENCY_REPRESENTATION_OPTIONS)}"
+            )
+        self._builder.l2.set_axis(mixed_frequency_representation=mode)
+        return self
+
+    def use_sd_inferred_tcodes(self) -> "Experiment":
+        """Opt into the inferred (national-analog) FRED-SD t-code map.
+
+        Sets the L2.B ``sd_tcode_policy`` axis to ``inferred``. Returns
+        ``self``.
+        """
+
+        self._builder.l2.set_axis(sd_tcode_policy="inferred")
+        return self
+
+    def use_sd_empirical_tcodes(
+        self,
+        unit: str,
+        code_map: dict[str, int] | None = None,
+        audit_uri: str | None = None,
+    ) -> "Experiment":
+        """Opt into the empirical (stationarity-audit) FRED-SD t-code map.
+
+        Sets the L2.B ``sd_tcode_policy`` axis to ``empirical`` and
+        writes the supporting leaf_config keys:
+
+        * ``sd_tcode_unit`` -- ``variable_global`` or ``state_series``
+        * ``sd_tcode_code_map`` -- per-(variable, state) map; required
+          when ``unit='state_series'``
+        * ``sd_tcode_audit_uri`` -- pointer to the audit artifact
+
+        Raises ``ValueError`` when ``unit`` is unknown, or when
+        ``unit='state_series'`` but ``code_map`` is empty / missing.
+        Returns ``self``.
+        """
+
+        if unit not in _SD_TCODE_UNIT_OPTIONS:
+            raise ValueError(
+                f"sd_tcode_unit={unit!r} is not valid; "
+                f"choose from {sorted(_SD_TCODE_UNIT_OPTIONS)}"
+            )
+        if unit == "state_series" and not code_map:
+            raise ValueError(
+                "use_sd_empirical_tcodes(unit='state_series') requires a "
+                "non-empty code_map={'<VAR>_<STATE>': <tcode int>}"
+            )
+        self._builder.l2.set_axis(sd_tcode_policy="empirical")
+        leaf: dict[str, Any] = {"sd_tcode_unit": unit}
+        if code_map is not None:
+            leaf["sd_tcode_code_map"] = dict(code_map)
+        if audit_uri is not None:
+            leaf["sd_tcode_audit_uri"] = audit_uri
+        self._builder.l2.set_leaf(**leaf)
+        return self
+
+    def use_preprocessor(self, name: str, applied_at: str = "l3") -> "Experiment":
+        """Inject a registered custom preprocessor into the pipeline.
+
+        ``name`` must already be registered via
+        :func:`macroforecast.custom.register_preprocessor` (or the
+        ``@mf.custom_preprocessor`` decorator). The preprocessor is
+        dispatched through the v0.2.5 PR #251 hook -- the existing
+        runtime plumbing lives on the L2 ``leaf_config.custom_postprocessor``
+        slot (it runs *after* the McCracken-Ng pipeline so its output
+        becomes the L2 clean panel that L3 sees). The simple-API
+        keyword ``applied_at='l3'`` reflects the user-facing intent
+        (the preprocessor sees the panel right before L3); the runtime
+        wiring is the L2 hook, which is the only end-to-end-tested
+        dispatch path.
+
+        ``applied_at='l2'`` is reserved for a future v0.9 schema where
+        an explicit pre-pipeline preprocessor slot lands; until then it
+        raises ``NotImplementedError``.
+
+        Returns ``self``.
+        """
+
+        if applied_at != "l3":
+            raise NotImplementedError(
+                "only L3 dispatch is supported in v0.8.5; the L2 pre-pipeline "
+                "preprocessor hook is future work (tracked for v0.9). Use "
+                "applied_at='l3' (default)."
+            )
+        # v0.2.5 #251 wired this on L2.leaf_config.custom_postprocessor.
+        # We surface the user-friendly L3 framing in the docstring; the
+        # runtime hook lives at L2.
+        self._builder.l2.set_leaf(custom_postprocessor=str(name))
+        return self
 
     # -- inspection / serialization ---------------------------------------
 
@@ -466,12 +702,20 @@ class Experiment:
 
 @dataclass(frozen=True)
 class ForecastResult:
-    """Thin façade over :class:`ManifestExecutionResult`.
+    """Façade over :class:`ManifestExecutionResult`.
 
-    PR 1 ships only the **minimal shell** -- the underlying manifest is the
-    source of truth. Richer accessors (``forecasts`` / ``metrics`` /
-    ``ranking`` / ``read_json`` / ``file_path`` / ``mean`` / ``get``) land
-    in v0.8.1 (PR 2).
+    Wraps the underlying execution manifest and exposes rich research-time
+    accessors:
+
+    * :attr:`forecasts` -- aggregated predictions DataFrame
+    * :attr:`metrics` -- aggregated L5 metrics table
+    * :attr:`ranking` -- aggregated L5 ranking table
+    * :meth:`mean` -- per-(model, target, horizon) average of one metric
+    * :meth:`get` -- pull one cell out by ``cell_id``
+    * :meth:`read_json` / :meth:`file_path` -- per-cell artifact access
+
+    The minimal shell from v0.8.0 (``cells`` / ``succeeded`` /
+    ``manifest_path`` / ``replicate``) is preserved.
     """
 
     manifest: ManifestExecutionResult
@@ -512,3 +756,211 @@ class ForecastResult:
                 "disk; run with output_directory=..."
             )
         return replicate_recipe(path)
+
+    # -- rich accessors (v0.8.5) ------------------------------------------
+
+    @property
+    def forecasts(self) -> "pd.DataFrame":
+        """Concatenate per-cell ``l4_forecasts_v1`` rows.
+
+        Columns: ``cell_id, model_id, target, horizon, origin, y_pred,
+        y_pred_lo, y_pred_hi``. The two interval columns are NaN when the
+        L4 forecast object is point-only.
+
+        Returns an empty DataFrame (with the canonical columns) when no
+        cells produced forecasts.
+        """
+
+        import pandas as pd
+
+        rows: list[dict[str, Any]] = []
+        for cell in self.cells:
+            artifact = self._cell_artifact(cell, "l4_forecasts_v1")
+            if artifact is None:
+                continue
+            forecasts = getattr(artifact, "forecasts", None) or {}
+            intervals = getattr(artifact, "forecast_intervals", None) or {}
+            # interval_lookup: (model, target, horizon, origin) -> (lo, hi)
+            interval_lookup: dict[tuple[Any, Any, Any, Any], tuple[float, float]] = {}
+            for key, value in intervals.items():
+                if not isinstance(key, tuple) or len(key) != 5:
+                    continue
+                model_id, target, horizon, origin, quantile = key
+                slot = interval_lookup.get((model_id, target, horizon, origin), (float("nan"), float("nan")))
+                lo, hi = slot
+                try:
+                    qf = float(quantile)
+                except (TypeError, ValueError):
+                    continue
+                if qf <= 0.5:
+                    lo = float(value)
+                else:
+                    hi = float(value)
+                interval_lookup[(model_id, target, horizon, origin)] = (lo, hi)
+            for key, value in forecasts.items():
+                if not isinstance(key, tuple) or len(key) != 4:
+                    continue
+                model_id, target, horizon, origin = key
+                lo, hi = interval_lookup.get((model_id, target, horizon, origin), (float("nan"), float("nan")))
+                rows.append({
+                    "cell_id": cell.cell_id,
+                    "model_id": model_id,
+                    "target": target,
+                    "horizon": horizon,
+                    "origin": origin,
+                    "y_pred": value,
+                    "y_pred_lo": lo,
+                    "y_pred_hi": hi,
+                })
+        if not rows:
+            return pd.DataFrame(
+                columns=[
+                    "cell_id", "model_id", "target", "horizon", "origin",
+                    "y_pred", "y_pred_lo", "y_pred_hi",
+                ]
+            )
+        return pd.DataFrame(rows)
+
+    @property
+    def metrics(self) -> "pd.DataFrame":
+        """Concatenate per-cell ``l5_evaluation_v1.metrics_table``.
+
+        Adds a ``cell_id`` column to identify the source cell. Returns an
+        empty DataFrame when no cells produced an L5 evaluation artifact.
+        """
+
+        import pandas as pd
+
+        frames: list[pd.DataFrame] = []
+        for cell in self.cells:
+            artifact = self._cell_artifact(cell, "l5_evaluation_v1")
+            if artifact is None:
+                continue
+            table = getattr(artifact, "metrics_table", None)
+            if table is None or not isinstance(table, pd.DataFrame) or table.empty:
+                continue
+            with_cell = table.copy()
+            with_cell.insert(0, "cell_id", cell.cell_id)
+            frames.append(with_cell)
+        if not frames:
+            return pd.DataFrame()
+        return pd.concat(frames, ignore_index=True)
+
+    @property
+    def ranking(self) -> "pd.DataFrame":
+        """Concatenate per-cell ``l5_evaluation_v1.ranking_table``.
+
+        Adds a ``cell_id`` column. Returns an empty DataFrame when no
+        cell emitted a ranking table.
+        """
+
+        import pandas as pd
+
+        frames: list[pd.DataFrame] = []
+        for cell in self.cells:
+            artifact = self._cell_artifact(cell, "l5_evaluation_v1")
+            if artifact is None:
+                continue
+            table = getattr(artifact, "ranking_table", None)
+            if table is None or not isinstance(table, pd.DataFrame) or table.empty:
+                continue
+            with_cell = table.copy()
+            with_cell.insert(0, "cell_id", cell.cell_id)
+            frames.append(with_cell)
+        if not frames:
+            return pd.DataFrame()
+        return pd.concat(frames, ignore_index=True)
+
+    def mean(self, metric: str = "mse") -> "pd.DataFrame":
+        """Per-(model, target, horizon) mean of one metric across cells.
+
+        Convenience one-liner around :attr:`metrics`; useful for
+        horse-race summaries.
+        """
+
+        import pandas as pd
+
+        table = self.metrics
+        if table.empty or metric not in table.columns:
+            return pd.DataFrame(
+                columns=["model_id", "target", "horizon", metric]
+            )
+        group_cols = [
+            col for col in ("model_id", "target", "horizon") if col in table.columns
+        ]
+        if not group_cols:
+            return pd.DataFrame({metric: [table[metric].mean()]})
+        return (
+            table.groupby(group_cols, dropna=False)[metric]
+            .mean()
+            .reset_index()
+        )
+
+    def get(self, cell_id: str) -> CellExecutionResult:
+        """Look one cell up by id; raise ``KeyError`` if missing."""
+
+        for cell in self.cells:
+            if cell.cell_id == cell_id:
+                return cell
+        raise KeyError(f"no cell with cell_id={cell_id!r}")
+
+    def read_json(self, name: str) -> dict[str, Any]:
+        """Read a JSON artifact from any per-cell directory.
+
+        Searches every ``output_directory/<cell_id>/`` directory for
+        ``name`` (e.g. ``read_json('provenance.json')``) and returns the
+        parsed dict from the first match. Raises ``RuntimeError`` if
+        ``output_directory`` was not set, and ``FileNotFoundError`` if
+        no cell carries the file.
+        """
+
+        import json
+
+        if self.output_directory is None:
+            raise RuntimeError(
+                "ForecastResult.read_json() requires output_directory=..."
+            )
+        for cell in self.cells:
+            candidate = self.output_directory / cell.cell_id / name
+            if candidate.exists():
+                return json.loads(candidate.read_text(encoding="utf-8"))
+        # fall back to the manifest root
+        candidate = self.output_directory / name
+        if candidate.exists():
+            return json.loads(candidate.read_text(encoding="utf-8"))
+        raise FileNotFoundError(
+            f"no artifact named {name!r} in any per-cell directory under {self.output_directory}"
+        )
+
+    def file_path(self, name: str) -> Path | None:
+        """Locate a file ``name`` under any per-cell directory.
+
+        Returns the first match (or ``None`` if no cell holds it).
+        Raises ``RuntimeError`` when ``output_directory`` is None.
+        """
+
+        if self.output_directory is None:
+            raise RuntimeError(
+                "ForecastResult.file_path() requires output_directory=..."
+            )
+        for cell in self.cells:
+            candidate = self.output_directory / cell.cell_id / name
+            if candidate.exists():
+                return candidate
+        candidate = self.output_directory / name
+        if candidate.exists():
+            return candidate
+        return None
+
+    @staticmethod
+    def _cell_artifact(cell: CellExecutionResult, sink_name: str) -> Any:
+        """Pull ``sink_name`` from ``cell.runtime_result.artifacts``.
+
+        Returns ``None`` when the cell failed or the sink is missing.
+        """
+
+        rt = cell.runtime_result
+        if rt is None:
+            return None
+        artifacts = getattr(rt, "artifacts", None) or {}
+        return artifacts.get(sink_name)
