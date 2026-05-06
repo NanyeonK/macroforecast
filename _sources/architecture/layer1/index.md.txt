@@ -1,4 +1,4 @@
-# 4.1 Layer 1: Data Source, Target y, Predictor x
+# Layer 1: Data Source, Target y, Predictor x
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Previous: [4.0 Layer 0: Study Scope](../layer0/index.md)

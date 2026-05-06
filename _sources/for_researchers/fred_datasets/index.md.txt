@@ -38,5 +38,5 @@ the current FRED-SD by-series workbook.
 
 fred_md
 fred_qd
-fred_sd
+fred_sd/index
 ```

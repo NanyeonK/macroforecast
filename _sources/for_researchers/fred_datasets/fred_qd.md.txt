@@ -1,6 +1,6 @@
-# 5.2 FRED-QD
+# FRED-QD
 
-- Parent: [5. FRED-Dataset](index.md)
+- Parent: [FRED datasets](index.md)
 - Current dataset: FRED-QD
 
 FRED-QD is the quarterly national macro panel used by `dataset=fred_qd`.

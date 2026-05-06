@@ -1,6 +1,6 @@
-# 5.3 FRED-SD
+# FRED-SD
 
-- Parent: [5. FRED-Dataset](index.md)
+- Parent: [FRED datasets](../index.md)
 - Current dataset: FRED-SD
 
 FRED-SD is the state-level panel used by `dataset=fred_sd` and by composite
@@ -1543,3 +1543,16 @@ monthly: 861, quarterly: 546, unknown: 21.
 | `UTILNQGSP_WI` | `UTILNQGSP` | `WI` (Wisconsin) | quarterly | 2005-01-01 to 2025-07-01 | 83 |
 | `UTILNQGSP_WV` | `UTILNQGSP` | `WV` (West Virginia) | quarterly | 2005-01-01 to 2025-07-01 | 83 |
 | `UTILNQGSP_WY` | `UTILNQGSP` | `WY` (Wyoming) | quarterly | 2005-01-01 to 2025-07-01 | 75 |
+
+## FRED-SD T-code Policy
+
+The default macroforecast policy is to leave FRED-SD source values
+**untransformed**; reviewed and empirical t-codes are opt-in.
+
+```{toctree}
+:maxdepth: 1
+
+transform_policy
+inferred_tcodes
+inferred_tcode_review_v0_1
+```

@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python 3.10 or later
-- pandas, numpy, scikit-learn, statsmodels, scipy, matplotlib, PyYAML
+- pandas, numpy, scikit-learn, statsmodels, scipy, matplotlib, openpyxl, PyYAML
 
 ## Install from PyPI
 
@@ -24,7 +24,7 @@ pip install 'macroforecast[all]'
 Or pin to a tagged GitHub release directly:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.6.2"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.6.3"
 ```
 
 ## Install from source (development)
@@ -62,13 +62,15 @@ macroforecast has several optional dependencies for specific features. Install o
 | `xgboost` | XGBoost model family | `pip install xgboost` |
 | `lightgbm` | LightGBM model family | `pip install lightgbm` |
 | `catboost` | CatBoost model family | `pip install catboost` |
-| `openpyxl` | FRED-SD Excel workbook loading | `pip install openpyxl` |
 | `deep` extra (`torch`) | LSTM / GRU / TCN model families | see `[deep]` section below |
+
+(``openpyxl`` is now a core dependency in v0.6.3+ since FRED-SD Excel workbook
+loading is a baseline FRED-SD code path.)
 
 Install all optional dependencies at once:
 
 ```bash
-pip install "macroforecast[all] @ git+https://github.com/NanyeonK/macroforecast.git@v0.6.2"
+pip install "macroforecast[all] @ git+https://github.com/NanyeonK/macroforecast.git@v0.6.3"
 ```
 
 All optional dependencies are import-guarded. The package works without them, but the corresponding features will raise `ImportError` with a clear message when invoked.
@@ -78,7 +80,7 @@ All optional dependencies are import-guarded. The package works without them, bu
 The `lstm`, `gru`, and `tcn` model families ship behind an opt-in `[deep]` extra so core installs stay free of a torch dependency:
 
 ```bash
-pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.6.2"
+pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.6.3"
 ```
 
 Without the extra, referencing `model_family` in {lstm, gru, tcn} at sweep time raises a clear `ExecutionError` with the install hint.
@@ -87,7 +89,7 @@ For CPU-only torch (sufficient unless a GPU sweep is planned):
 
 ```bash
 pip install --index-url https://download.pytorch.org/whl/cpu torch
-pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.6.2"
+pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.6.3"
 ```
 
 
@@ -101,6 +103,7 @@ pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast
 | `statsmodels` | AR models, statistical tests |
 | `scipy` | Statistical routines and numerical utilities |
 | `matplotlib` | L7 figure rendering (bar / heatmap / pdp / US choropleth) |
+| `openpyxl` | FRED-SD Excel workbook loading |
 | `PyYAML` | Recipe YAML parsing |
 
 **See also:** [Researchers: Quickstart](for_researchers/quickstart.md)

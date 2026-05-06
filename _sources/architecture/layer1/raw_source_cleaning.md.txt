@@ -1,4 +1,4 @@
-# 4.1.5 Raw Source Cleaning
+# Raw Source Cleaning
 
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: raw source cleaning

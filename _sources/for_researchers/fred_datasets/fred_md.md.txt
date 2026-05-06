@@ -1,6 +1,6 @@
-# 5.1 FRED-MD
+# FRED-MD
 
-- Parent: [5. FRED-Dataset](index.md)
+- Parent: [FRED datasets](index.md)
 - Current dataset: FRED-MD
 
 FRED-MD is the monthly national macro panel used by `dataset=fred_md`.
