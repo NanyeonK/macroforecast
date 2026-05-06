@@ -5,6 +5,15 @@ hand artifacts to each other**. Read these when you want to understand
 the canonical contracts before authoring recipes, extending the runtime,
 or auditing manifests.
 
+> **Looking for option definitions instead?** Use the
+> [Encyclopedia](../encyclopedia/index.md) — that's where each axis
+> has its own page listing every option (description, when to use,
+> when NOT, references, related options). Architecture pages here are
+> **prose narrative** explaining the *why* and *how* of the layer
+> contracts; Encyclopedia pages are **auto-generated lookup** for the
+> *what* of each option. Both are kept in sync against the same
+> `LayerImplementationSpec` registry.
+
 ## Canonical layer flow
 
 ```text

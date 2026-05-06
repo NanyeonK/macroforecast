@@ -107,23 +107,36 @@ manifest, replayable bit-for-bit by <code class="docutils literal notranslate"><
 <tr class="row-even"><td><p>Modify the package source / contribute</p></td>
 <td><p><a class="reference internal" href="for_contributors/index.html"><span class="std std-doc">Contributors</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Look up a specific axis / option / Python symbol</p></td>
-<td><p><a class="reference internal" href="encyclopedia/index.html"><span class="std std-doc">Encyclopedia</span></a> (browse layer × sublayer × axis × option)</p></td>
+<tr class="row-odd"><td><p><strong>Understand the design</strong> — why layers / sub-layers / contracts are split this way (read top-to-bottom)</p></td>
+<td><p><a class="reference internal" href="architecture/index.html"><span class="std std-doc">Architecture</span></a> — design narrative, ~18 prose pages</p></td>
 </tr>
-<tr class="row-even"><td><p>See replication studies (bundled examples + 4 research walkthroughs)</p></td>
+<tr class="row-even"><td><p><strong>Look up an option</strong> — what does <code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code> do, what models are L7 <code class="docutils literal notranslate"><span class="pre">shap_tree</span></code> compatible with, etc. (search / browse)</p></td>
+<td><p><a class="reference internal" href="encyclopedia/index.html"><span class="std std-doc">Encyclopedia</span></a> — auto-generated reference, 189 pages</p></td>
+</tr>
+<tr class="row-odd"><td><p>See replication studies (bundled examples + 4 research walkthroughs)</p></td>
 <td><p><a class="reference internal" href="replications/index.html"><span class="std std-doc">Replications</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Visually explore the layer / DAG topology</p></td>
+<tr class="row-even"><td><p>Visually explore the layer / DAG topology</p></td>
 <td><p><a class="reference internal" href="navigator/index.html"><span class="std std-doc">Navigator</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p>Hit an error or something doesn’t work</p></td>
+<tr class="row-odd"><td><p>Hit an error or something doesn’t work</p></td>
 <td><p><a class="reference internal" href="troubleshooting.html"><span class="std std-doc">Troubleshooting &amp; FAQ</span></a></p></td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<div><p><strong>Architecture vs Encyclopedia</strong>: same 12-layer system, two angles.
+Architecture is <strong>prose</strong> — “why is L2 separated from L3”, “how does
+L7 read L4 sinks”, “what are the cross-layer references”. Encyclopedia
+is <strong>lookup</strong> — one page per axis with every option’s definition,
+when to use, when NOT, references, related options. Architecture is
+hand-written; encyclopedia is auto-generated from
+<code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code> + <code class="docutils literal notranslate"><span class="pre">OPTION_DOCS</span></code> and locked by the ci-docs
+drift gate.</p>
+</div></blockquote>
 </section>
-<section id="architecture">
-<h2>Architecture<a class="headerlink" href="#architecture" title="Link to this heading"></a></h2>
+<section id="architecture-overview">
+<h2>Architecture overview<a class="headerlink" href="#architecture-overview" title="Link to this heading"></a></h2>
 <p>12-layer canonical design — see <a class="reference internal" href="architecture/index.html"><span class="std std-doc">architecture</span></a>. The full
 4-part design lives under <code class="docutils literal notranslate"><span class="pre">plans/design/</span></code> in the repo.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(DAG) -&gt; L4(DAG) -&gt; L5 -&gt; L6 -&gt; L7(DAG) -&gt; L8
