@@ -1,4 +1,4 @@
-# 4.0 Layer 0: Study Setup
+# Layer 0: Study Setup
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Current: Layer 0

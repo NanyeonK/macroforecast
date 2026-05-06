@@ -1,4 +1,4 @@
-# 4.1.7 Frame Availability
+# Frame Availability
 
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Official transform / frame availability

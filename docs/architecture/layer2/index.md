@@ -1,4 +1,4 @@
-# 4.2 Layer 2: Representation / Research Preprocessing
+# Layer 2: Representation / Research Preprocessing
 
 - Parent: [4. Detail (code): Full](../index.md)
 - Previous: [4.1 Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)

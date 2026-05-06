@@ -13,7 +13,7 @@ source. Start here.
 | See what the runtime executes today vs. what is schema-only | [Runtime support matrix](runtime_support.md) |
 | Understand the output directory and manifest layout | [Understanding output](understanding_output.md) |
 | Look up FRED-MD / FRED-QD / FRED-SD column dictionaries | [FRED datasets](fred_datasets/index.md) |
-| Check FRED-SD T-code policy (transform-code defaults for state series) | [FRED-SD transform policy](fred_sd_transform_policy.md), [inferred T-codes](fred_sd_inferred_tcodes.md), [v0.1 review](fred_sd_inferred_tcode_review_v0_1.md) |
+| Check FRED-SD T-code policy (transform-code defaults for state series) | [FRED-SD transform policy](fred_datasets/fred_sd/transform_policy.md), [inferred T-codes](fred_datasets/fred_sd/inferred_tcodes.md), [v0.1 review](fred_datasets/fred_sd/inferred_tcode_review_v0_1.md) |
 | Preview the upcoming high-level Python facade (`mf.forecast` / `mf.Experiment`) | [Planned simple API](planned_simple_api/index.md) |
 
 ## Public API at a glance
@@ -42,8 +42,5 @@ first_study
 runtime_support
 understanding_output
 fred_datasets/index
-fred_sd_transform_policy
-fred_sd_inferred_tcodes
-fred_sd_inferred_tcode_review_v0_1
 planned_simple_api/index
 ```

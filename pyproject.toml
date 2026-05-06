@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "macroforecast"
-version = "0.6.2"
+version = "0.6.3"
 description = "Fair, reproducible macro forecasting benchmarking package"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,6 +17,7 @@ dependencies = [
     "PyYAML>=6.0",
     "scipy>=1.11",
     "matplotlib>=3.7",
+    "openpyxl>=3.1",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +27,6 @@ lime = ["lime>=0.2"]
 xgboost = ["xgboost>=3.0,<3.1"]
 lightgbm = ["lightgbm>=4.0"]
 catboost = ["catboost>=1.2"]
-excel = ["openpyxl>=3.1"]
 parquet = ["pyarrow>=14.0"]
 deep = ["torch>=2.0"]
 docs = [
@@ -35,7 +35,7 @@ docs = [
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
 ]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,excel,parquet,deep]"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]

@@ -3,6 +3,43 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.6.3] -- 2026-05-06 -- "openpyxl baseline + FRED-SD docs subdir + architecture number prefix cleanup"
+
+### Changed
+* **``openpyxl`` is now a core dependency**, not an optional extra.
+  FRED-SD Excel workbook loading is a baseline code path; gating it
+  behind ``[excel]`` made the user-visible "first FRED-SD recipe"
+  story confusing for negligible install savings (the package itself
+  is small). The ``[excel]`` extra is removed from
+  ``[project.optional-dependencies]`` and from the ``[all]`` aggregate.
+
+### Fixed (docs)
+* **FRED-SD t-code policy pages moved under FRED-SD**:
+  ``docs/for_researchers/{fred_sd_transform_policy,
+  fred_sd_inferred_tcodes, fred_sd_inferred_tcode_review_v0_1}.md``
+  ->
+  ``docs/for_researchers/fred_datasets/fred_sd/{transform_policy,
+  inferred_tcodes, inferred_tcode_review_v0_1}.md``.
+  The flat ``fred_sd.md`` page also moved to
+  ``fred_datasets/fred_sd/index.md`` so the SD subtree groups under a
+  single page. The toctree at the top of ``fred_datasets/`` keeps
+  ``fred_md`` / ``fred_qd`` flat (they have no sub-pages) and points
+  at ``fred_sd`` (now a directory).
+* **Number prefixes removed from headings**:
+  - ``docs/for_researchers/fred_datasets/fred_md.md`` ``# 5.1 FRED-MD``
+    -> ``# FRED-MD``; same for QD/SD.
+  - ``docs/architecture/layer{0,1,2}/`` headings ``# 4.0 Layer 0`` /
+    ``# 4.1 Layer 1`` / ``# 4.1.5 Raw Source Cleaning`` etc. ->
+    ``# Layer 0`` / ``# Layer 1`` / ``# Raw Source Cleaning``. The
+    folder hierarchy already encodes ordering; the text prefix was
+    stale carryover from the pre-reorg flat ``detail/`` tree.
+  - Parent links such as ``[5. FRED-Dataset](index.md)`` -> ``[FRED
+    datasets](index.md)`` (or ``../index.md`` from ``fred_sd/``).
+
+### Notes
+* No code/test changes; same 953 tests, same recipe schema, same
+  bit-exact replicate contract. Documentation hygiene release.
+
 ## [0.6.2] -- 2026-05-05 -- "docs reorganization (4 audiences + replications track)"
 
 ### Changed (docs only)

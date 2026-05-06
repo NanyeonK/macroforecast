@@ -1,4 +1,4 @@
-# 4.1.1 Data Source Mode / Frequency
+# Data Source Mode / Frequency
 
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Data Source Mode / Frequency

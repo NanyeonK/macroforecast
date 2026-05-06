@@ -1,4 +1,4 @@
-# 4.1.2 Forecast-Time Information
+# Forecast-Time Information
 
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Forecast-Time Information

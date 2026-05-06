@@ -1,4 +1,4 @@
-# 4.1.3 Target (y) And Predictor (x) Definitions
+# Target (y) And Predictor (x) Definitions
 
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: Target (y) and predictor (x) definitions

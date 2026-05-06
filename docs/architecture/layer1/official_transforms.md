@@ -1,4 +1,4 @@
-# 4.1.6 Official Transforms
+# Official Transforms
 
 - Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: official transforms
