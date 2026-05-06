@@ -1,12 +1,5 @@
 # Quickstart
 
-> **API status note (current)**: this page uses the planned mf.forecast / mf.Experiment Python facade
-> shape. Those are not yet exported from macroforecast.__all__. For working v0.6+ code, use
-> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
-> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
-> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
-
-
 Run one default macroeconomic forecasting experiment with explicit data, target, sample period, and horizons.
 
 ```python

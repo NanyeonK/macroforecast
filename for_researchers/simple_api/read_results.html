@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=486e5634"></script>
+      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -93,7 +93,7 @@
           <li class="breadcrumb-item"><a href="index.html">Simple Docs</a></li>
       <li class="breadcrumb-item active">Read Results</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/planned_simple_api/read_results.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/simple_api/read_results.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -103,13 +103,6 @@
              
   <section id="read-results">
 <h1>Read Results<a class="headerlink" href="#read-results" title="Link to this heading"></a></h1>
-<blockquote>
-<div><p><strong>API status note (current)</strong>: this page uses the planned mf.forecast / mf.Experiment Python facade
-shape. Those are not yet exported from macroforecast.<strong>all</strong>. For working v0.6+ code, use
-macroforecast.run(“recipe.yaml”), macroforecast.replicate(“manifest.json”),
-the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
-python -m macroforecast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
-</div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">Experiment.run()</span></code> returns a facade over saved artifacts. Use the facade for normal analysis, and use artifact paths when exact files are needed.</p>
 <p>Single run:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>

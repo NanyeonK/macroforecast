@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mixed_frequency_representation &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1067c88a"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="quarterly_to_monthly_rule" href="quarterly_to_monthly_rule.html" />
+    <link rel="prev" title="sd_series_frequency_filter" href="sd_series_frequency_filter.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../replications/index.html">Replications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Encyclopedia</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Layer L2  –  Preprocessing</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="sd_series_frequency_filter.html"><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="quarterly_to_monthly_rule.html"><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="monthly_to_quarterly_rule.html"><code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="transform_policy.html"><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sd_tcode_policy.html"><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="transform_scope.html"><code class="docutils literal notranslate"><span class="pre">transform_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="outlier_action.html"><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="outlier_scope.html"><code class="docutils literal notranslate"><span class="pre">outlier_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="imputation_policy.html"><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="imputation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">imputation_temporal_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="imputation_scope.html"><code class="docutils literal notranslate"><span class="pre">imputation_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="frame_edge_policy.html"><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="frame_edge_scope.html"><code class="docutils literal notranslate"><span class="pre">frame_edge_scope</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4/index.html">Layer L4  –  Forecasting model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Encyclopedia</a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Layer L2  –  Preprocessing</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/encyclopedia/l2/axes/mixed_frequency_representation.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mixed-frequency-representation">
+<h1><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code><a class="headerlink" href="#mixed-frequency-representation" title="Link to this heading"></a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L2</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">l2_a</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l2</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading"></a></h2>
+<p><strong>l2_a</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'calendar_aligned_frame'</span></code></p></li>
+<li><p>Sweepable: True</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Operational: 5 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="calendar-aligned-frame-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code>  –  operational<a class="headerlink" href="#calendar-aligned-frame-operational" title="Link to this heading"></a></h3>
+<p>Default: keep selected mixed-frequency columns on the experiment calendar.</p>
+<p>When a panel mixes monthly and quarterly columns (FRED-SD by default; any custom panel that declares per-column native frequency in metadata), the default representation flattens all columns to the experiment calendar via the L2.A <code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_rule</span></code> / <code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_rule</span></code> alignment rules. The panel emerges as a single rectangular frame; downstream layers see a uniform sampling grid.</p>
+<p><strong>When to use</strong></p>
+<p>Default for mixed-frequency studies; pairs with the canonical L2.A alignment rules.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L2: ‘preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#drop-unknown-native-frequency"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">drop_unknown_native_frequency</span></code></span></a>, <a class="reference internal" href="#drop-non-target-native-frequency"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">drop_non_target_native_frequency</span></code></span></a>, <a class="reference internal" href="#native-frequency-block-payload"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">native_frequency_block_payload</span></code></span></a>, <a class="reference internal" href="#mixed-frequency-model-adapter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_model_adapter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="drop-unknown-native-frequency-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">drop_unknown_native_frequency</span></code>  –  operational<a class="headerlink" href="#drop-unknown-native-frequency-operational" title="Link to this heading"></a></h3>
+<p>Drop columns whose native frequency cannot be inferred.</p>
+<p>Restricts the panel to columns whose native sampling rate is either declared in the L1 metadata or detectable from the FRED-SD workbook. Columns with unknown native frequency are dropped before any frequency-alignment rule fires.</p>
+<p><strong>When to use</strong></p>
+<p>Studies that demand strict provenance over per-column native frequency.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L2: ‘preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#calendar-aligned-frame"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code></span></a>, <a class="reference internal" href="#drop-non-target-native-frequency"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">drop_non_target_native_frequency</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="drop-non-target-native-frequency-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">drop_non_target_native_frequency</span></code>  –  operational<a class="headerlink" href="#drop-non-target-native-frequency-operational" title="Link to this heading"></a></h3>
+<p>Keep only columns whose native frequency matches the experiment frequency.</p>
+<p>Restricts the panel to columns whose native sampling rate equals the L1 <code class="docutils literal notranslate"><span class="pre">frequency</span></code>. For a monthly experiment the quarterly columns are dropped (and vice versa). Useful when the user wants a strict single-frequency panel without any interpolation artifacts.</p>
+<p><strong>When to use</strong></p>
+<p>Strict monthly-only or quarterly-only panels; single-frequency benchmarks.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L2: ‘preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#calendar-aligned-frame"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code></span></a>, <a class="reference internal" href="#drop-unknown-native-frequency"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">drop_unknown_native_frequency</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="native-frequency-block-payload-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">native_frequency_block_payload</span></code>  –  operational<a class="headerlink" href="#native-frequency-block-payload-operational" title="Link to this heading"></a></h3>
+<p>Emit per-frequency block metadata for downstream models.</p>
+<p>Keeps the panel intact (no alignment / drop) and instead publishes a <code class="docutils literal notranslate"><span class="pre">fred_sd_native_frequency_block_payload.json</span></code> manifest entry that lists each column’s native frequency. Models that consume mixed-frequency input directly (e.g. MIDAS, mixed-frequency factor models) can read this metadata from <code class="docutils literal notranslate"><span class="pre">context['auxiliary_payloads']</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Researcher-owned MIDAS / mixed-frequency factor model studies.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L2: ‘preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#mixed-frequency-model-adapter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_model_adapter</span></code></span></a>, <a class="reference internal" href="#calendar-aligned-frame"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="mixed-frequency-model-adapter-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mixed_frequency_model_adapter</span></code>  –  operational<a class="headerlink" href="#mixed-frequency-model-adapter-operational" title="Link to this heading"></a></h3>
+<p>Block payload + a model-adapter contract for MIDAS-style fits.</p>
+<p>Strictest option: emits the per-frequency block payload (see <code class="docutils literal notranslate"><span class="pre">native_frequency_block_payload</span></code>) plus a model-adapter contract that the L4 model_family must honour. The adapter validates that the registered <code class="docutils literal notranslate"><span class="pre">model_family</span></code> either declares MIDAS-style mixed-frequency support or registers via <code class="docutils literal notranslate"><span class="pre">mf.custom_model</span></code> with the appropriate <code class="docutils literal notranslate"><span class="pre">auxiliary_payloads</span></code> consumption. Runtime writes <code class="docutils literal notranslate"><span class="pre">fred_sd_mixed_frequency_model_adapter.json</span></code> with the adapter contract details.</p>
+<p><strong>When to use</strong></p>
+<p>Built-in MIDAS families (<code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>, <code class="docutils literal notranslate"><span class="pre">midasr</span></code>) or registered custom mixed-frequency models.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L2: ‘preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#native-frequency-block-payload"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">native_frequency_block_payload</span></code></span></a>, <a class="reference internal" href="#calendar-aligned-frame"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sd_series_frequency_filter.html" class="btn btn-neutral float-left" title="sd_series_frequency_filter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quarterly_to_monthly_rule.html" class="btn btn-neutral float-right" title="quarterly_to_monthly_rule" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

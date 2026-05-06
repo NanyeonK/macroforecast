@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sweep Only What You Care About &mdash; macroforecast</title>
+  <title>Compare Models &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=486e5634"></script>
+      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -22,8 +22,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="FRED-SD" href="fred_sd.html" />
-    <link rel="prev" title="Compare Models" href="compare_models.html" /> 
+    <link rel="next" title="Sweep Only What You Care About" href="sweep_only_what_you_care.html" />
+    <link rel="prev" title="Run An Experiment" href="run_experiment.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -56,8 +56,8 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Simple Docs</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l3"><a class="reference internal" href="run_experiment.html">Run An Experiment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="compare_models.html">Compare Models</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Sweep Only What You Care About</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Compare Models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sweep_only_what_you_care.html">Sweep Only What You Care About</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fred_sd.html">FRED-SD</a></li>
 <li class="toctree-l3"><a class="reference internal" href="add_custom_model.html">Add A Custom Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="add_custom_preprocessor.html">Add A Custom Preprocessor</a></li>
@@ -91,9 +91,9 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">For researchers</a></li>
           <li class="breadcrumb-item"><a href="index.html">Simple Docs</a></li>
-      <li class="breadcrumb-item active">Sweep Only What You Care About</li>
+      <li class="breadcrumb-item active">Compare Models</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/planned_simple_api/sweep_only_what_you_care.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/simple_api/compare_models.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -101,17 +101,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="sweep-only-what-you-care-about">
-<h1>Sweep Only What You Care About<a class="headerlink" href="#sweep-only-what-you-care-about" title="Link to this heading"></a></h1>
-<blockquote>
-<div><p><strong>API status note (current)</strong>: this page uses the planned mf.forecast / mf.Experiment Python facade
-shape. Those are not yet exported from macroforecast.<strong>all</strong>. For working v0.6+ code, use
-macroforecast.run(“recipe.yaml”), macroforecast.replicate(“manifest.json”),
-the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
-python -m macroforecast scaffold. See <a class="reference internal" href="index.html"><span class="std std-doc">Simple Docs index</span></a> for the full status note.</p>
-</div></blockquote>
-<p>Use <code class="docutils literal notranslate"><span class="pre">.sweep()</span></code> when one part of the design should vary and everything else should stay on the default profile.</p>
-<p>The executable MVP sweep is model comparison:</p>
+  <section id="compare-models">
+<h1>Compare Models<a class="headerlink" href="#compare-models" title="Link to this heading"></a></h1>
+<p>Model comparison is a first-class operation. Changing the model does not change the information set, sample split, benchmark, preprocessing defaults, or evaluation metric.</p>
+<p>In Layer 0 Simple, this call shape selects <code class="docutils literal notranslate"><span class="pre">study_scope</span> <span class="pre">=</span> <span class="pre">one_target_compare_methods</span></code>. Failure handling, reproducibility, and compute layout keep their Simple defaults unless you move to the Full YAML path.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
@@ -122,70 +115,45 @@ python -m macroforecast scaffold. See <a class="reference internal" href="index.
         <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
         <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
     <span class="p">)</span>
-    <span class="o">.</span><span class="n">sweep</span><span class="p">({</span><span class="s2">&quot;models&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">]})</span>
+    <span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">])</span>
     <span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Then rank the variants:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span>
+<p>The return value is an <code class="docutils literal notranslate"><span class="pre">ExperimentSweepResult</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">variants</span>
+<span class="n">result</span><span class="o">.</span><span class="n">metrics</span>
+<span class="n">result</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="s2">&quot;msfe&quot;</span><span class="p">)</span>
+<span class="n">result</span><span class="o">.</span><span class="n">forecasts</span>
+<span class="n">result</span><span class="o">.</span><span class="n">manifest</span>
 </pre></div>
 </div>
-<p>MVP aliases:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Alias</p></th>
-<th class="head"><p>Internal axis</p></th>
-<th class="head"><p>Runtime status</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">model_family</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">4_forecasting_model.fit_model.params.family</span></code></p></td>
-<td><p>executable</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scaling</span></code>, <code class="docutils literal notranslate"><span class="pre">scaling_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">2_preprocessing.scaling_policy</span></code></p></td>
-<td><p>full-route executable; simple exposure pending result-contract docs</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">missing</span></code>, <code class="docutils literal notranslate"><span class="pre">x_missing</span></code>, <code class="docutils literal notranslate"><span class="pre">x_missing_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">2_preprocessing.x_missing_policy</span></code></p></td>
-<td><p>full-route executable; simple exposure pending result-contract docs</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocessor</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">2_preprocessing.custom_preprocessor</span></code></p></td>
-<td><p>fixed custom preprocessor executable; sweep blocked</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_transformer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">3_feature_engineering.target_construction</span></code></p></td>
-<td><p>fixed transformer executable for autoreg path; sweep blocked</p></td>
-</tr>
-</tbody>
-</table>
-<p>A single-value choice becomes a fixed axis. A multi-value choice becomes a sweep axis.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">exp</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
-    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
-    <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">sweep</span><span class="p">({</span><span class="s2">&quot;models&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">]})</span>
+<p><code class="docutils literal notranslate"><span class="pre">compare_models()</span></code> accepts built-in model names and registered custom model names.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_model</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="o">...</span>
 
-<span class="n">recipe</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">to_recipe_dict</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+        <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span>
+        <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2019-12&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;my_model&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>Representation and preprocessing sweeps are a full-route feature first. The
-full layer contract can route Layer 2 x Layer 3 x Layer 4 grids to the sweep runner.
-The simple API will expose this only after the public naming and result-summary
-contract is stable.</p>
-<p>Full grids, ablations, replications, benchmark suites, and multi-target wrappers follow the same rule: they are internal/full routes first, simple routes later.</p>
+<p>Each variant writes its own artifacts. The sweep root writes one manifest that records the axes that changed and the status of every variant.</p>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="compare_models.html" class="btn btn-neutral float-left" title="Compare Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="fred_sd.html" class="btn btn-neutral float-right" title="FRED-SD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="run_experiment.html" class="btn btn-neutral float-left" title="Run An Experiment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sweep_only_what_you_care.html" class="btn btn-neutral float-right" title="Sweep Only What You Care About" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

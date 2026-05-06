@@ -2,23 +2,18 @@
 
 This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.
 
-> **API status note (current)**: the `mf.forecast(...)` and
-> `mf.Experiment(...).compare_models([...]).run()` forms shown
-> throughout this Simple track are the **planned shape** for v0.6+.
-> They are not yet exported from `macroforecast.__all__`.
+> **API status (v0.8.5)**: every `mf.forecast` / `mf.Experiment` method
+> shown on these pages is implemented. The `Experiment.use_*` hooks
+> (`use_fred_sd_selection`, `use_fred_sd_state_group`,
+> `use_fred_sd_variable_group`, `use_mixed_frequency_representation`,
+> `use_sd_inferred_tcodes`, `use_sd_empirical_tcodes`,
+> `use_preprocessor`), `Experiment.variant`, and the rich
+> `ForecastResult` accessors (`forecasts`, `metrics`, `ranking`,
+> `read_json`, `file_path`, `mean`, `get`) all ship in this release.
 >
-> The current canonical entry surface is:
->
-> * `macroforecast.run("recipe.yaml")` -- run a YAML recipe end-to-end.
-> * `macroforecast.replicate("manifest.json")` -- bit-exact replicate.
-> * `macroforecast.scaffold.builder.RecipeBuilder` -- build recipes
->   programmatically (`b.l0(...)`, `b.l1(...)`, ..., `b.to_yaml()`).
-> * `python -m macroforecast scaffold` -- interactive recipe wizard.
->
-> See the **Detail (code): Full** track for working examples that
-> match the current YAML runtime exactly. The Simple-track snippets below
-> describe the intended look-and-feel; treat them as a design preview
-> until the wrapper API ships.
+> The Detail (code): Full track is still the canonical reference for the
+> 12-layer YAML recipe surface and bit-exact replication contract; use
+> it whenever you need to step outside the simple-API defaults.
 
 The simple API is organized around `forecast` and `Experiment`.
 

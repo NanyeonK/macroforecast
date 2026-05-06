@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=486e5634"></script>
+      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,9 +59,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../l1_5/index.html">Layer L1.5  –  Data summary</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Layer L2  –  Preprocessing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="axes/sd_series_frequency_filter.html"><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/mixed_frequency_representation.html"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/quarterly_to_monthly_rule.html"><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/monthly_to_quarterly_rule.html"><code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/transform_policy.html"><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="axes/sd_tcode_policy.html"><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/transform_scope.html"><code class="docutils literal notranslate"><span class="pre">transform_scope</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/outlier_action.html"><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></a></li>
@@ -123,8 +125,8 @@
 <li><p>Layer ID: <code class="docutils literal notranslate"><span class="pre">l2</span></code></p></li>
 <li><p>Category: <code class="docutils literal notranslate"><span class="pre">construction</span></code></p></li>
 <li><p>Sub-layers: 5</p></li>
-<li><p>Axes: 13</p></li>
-<li><p>Options across axes: 50</p></li>
+<li><p>Axes: 15</p></li>
+<li><p>Options across axes: 58</p></li>
 </ul>
 <section id="sub-layers">
 <h2>Sub-layers<a class="headerlink" href="#sub-layers" title="Link to this heading"></a></h2>
@@ -138,14 +140,14 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l2_a</span></code></p></td>
-<td><p>FRED-SD frequency alignment</p></td>
+<td><p>Mixed frequency alignment</p></td>
 <td><p>always</p></td>
-<td><p><a class="reference internal" href="axes/sd_series_frequency_filter.html"><span class="std std-doc">sd_series_frequency_filter</span></a>, <a class="reference internal" href="axes/quarterly_to_monthly_rule.html"><span class="std std-doc">quarterly_to_monthly_rule</span></a>, <a class="reference internal" href="axes/monthly_to_quarterly_rule.html"><span class="std std-doc">monthly_to_quarterly_rule</span></a></p></td>
+<td><p><a class="reference internal" href="axes/sd_series_frequency_filter.html"><span class="std std-doc">sd_series_frequency_filter</span></a>, <a class="reference internal" href="axes/mixed_frequency_representation.html"><span class="std std-doc">mixed_frequency_representation</span></a>, <a class="reference internal" href="axes/quarterly_to_monthly_rule.html"><span class="std std-doc">quarterly_to_monthly_rule</span></a>, <a class="reference internal" href="axes/monthly_to_quarterly_rule.html"><span class="std std-doc">monthly_to_quarterly_rule</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l2_b</span></code></p></td>
 <td><p>Transform</p></td>
 <td><p>always</p></td>
-<td><p><a class="reference internal" href="axes/transform_policy.html"><span class="std std-doc">transform_policy</span></a>, <a class="reference internal" href="axes/transform_scope.html"><span class="std std-doc">transform_scope</span></a></p></td>
+<td><p><a class="reference internal" href="axes/transform_policy.html"><span class="std std-doc">transform_policy</span></a>, <a class="reference internal" href="axes/sd_tcode_policy.html"><span class="std std-doc">sd_tcode_policy</span></a>, <a class="reference internal" href="axes/transform_scope.html"><span class="std std-doc">transform_scope</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l2_c</span></code></p></td>
 <td><p>Outlier handling</p></td>

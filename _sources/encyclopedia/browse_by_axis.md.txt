@@ -106,6 +106,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`mcs_t_statistic`](l6/axes/mcs_t_statistic.md) | L6 | `L6_D_multiple_model` | operational | no | 0 |
 | [`missing_availability`](l1/axes/missing_availability.md) | L1 | `l1_c` | operational | no | 4 |
 | [`missing_view`](l1_5/axes/missing_view.md) | L1.5 | `L1_5_D_missing_outlier_audit` | operational | no | 4 |
+| [`mixed_frequency_representation`](l2/axes/mixed_frequency_representation.md) | L2 | `l2_a` | operational | yes | 5 |
 | [`mmt_loss_function`](l6/axes/mmt_loss_function.md) | L6 | `L6_D_multiple_model` | operational | no | 0 |
 | [`model_artifacts_format`](l8/axes/model_artifacts_format.md) | L8 | `L8_B_saved_objects` | operational | no | 4 |
 | [`model_pair_strategy`](l6/axes/model_pair_strategy.md) | L6 | `L6_A_equal_predictive` | operational | no | 0 |
@@ -152,6 +153,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`sample_start_rule`](l1/axes/sample_start_rule.md) | L1 | `l1_e` | operational | no | 3 |
 | [`saved_objects`](l8/axes/saved_objects.md) | L8 | `L8_B_saved_objects` | operational | no | 20 |
 | [`sd_series_frequency_filter`](l2/axes/sd_series_frequency_filter.md) | L2 | `l2_a` | operational | yes | 3 |
+| [`sd_tcode_policy`](l2/axes/sd_tcode_policy.md) | L2 | `l2_b` | operational | yes | 3 |
 | [`sd_variable_selection`](l1/axes/sd_variable_selection.md) | L1 | `l1_d` | operational | no | 2 |
 | [`search_algorithm`](l4/axes/search_algorithm.md) | L4 | `L4_D_tuning` | operational | yes | 6 |
 | [`selection_view`](l3_5/axes/selection_view.md) | L3.5 | `L3_5_E_selected_features_post_selection` | operational | no | 4 |

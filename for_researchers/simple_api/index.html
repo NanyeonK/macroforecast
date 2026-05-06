@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=486e5634"></script>
+      <script src="../../_static/documentation_options.js?v=1067c88a"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -92,7 +92,7 @@
           <li class="breadcrumb-item"><a href="../index.html">For researchers</a></li>
       <li class="breadcrumb-item active">Simple Docs</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/planned_simple_api/index.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/for_researchers/simple_api/index.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -104,22 +104,17 @@
 <h1>Simple Docs<a class="headerlink" href="#simple-docs" title="Link to this heading"></a></h1>
 <p>This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.</p>
 <blockquote>
-<div><p><strong>API status note (current)</strong>: the <code class="docutils literal notranslate"><span class="pre">mf.forecast(...)</span></code> and
-<code class="docutils literal notranslate"><span class="pre">mf.Experiment(...).compare_models([...]).run()</span></code> forms shown
-throughout this Simple track are the <strong>planned shape</strong> for v0.6+.
-They are not yet exported from <code class="docutils literal notranslate"><span class="pre">macroforecast.__all__</span></code>.</p>
-<p>The current canonical entry surface is:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.run(&quot;recipe.yaml&quot;)</span></code> – run a YAML recipe end-to-end.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(&quot;manifest.json&quot;)</span></code> – bit-exact replicate.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.scaffold.builder.RecipeBuilder</span></code> – build recipes
-programmatically (<code class="docutils literal notranslate"><span class="pre">b.l0(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">b.l1(...)</span></code>, …, <code class="docutils literal notranslate"><span class="pre">b.to_yaml()</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">macroforecast</span> <span class="pre">scaffold</span></code> – interactive recipe wizard.</p></li>
-</ul>
-<p>See the <strong>Detail (code): Full</strong> track for working examples that
-match the current YAML runtime exactly. The Simple-track snippets below
-describe the intended look-and-feel; treat them as a design preview
-until the wrapper API ships.</p>
+<div><p><strong>API status (v0.8.5)</strong>: every <code class="docutils literal notranslate"><span class="pre">mf.forecast</span></code> / <code class="docutils literal notranslate"><span class="pre">mf.Experiment</span></code> method
+shown on these pages is implemented. The <code class="docutils literal notranslate"><span class="pre">Experiment.use_*</span></code> hooks
+(<code class="docutils literal notranslate"><span class="pre">use_fred_sd_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">use_fred_sd_state_group</span></code>,
+<code class="docutils literal notranslate"><span class="pre">use_fred_sd_variable_group</span></code>, <code class="docutils literal notranslate"><span class="pre">use_mixed_frequency_representation</span></code>,
+<code class="docutils literal notranslate"><span class="pre">use_sd_inferred_tcodes</span></code>, <code class="docutils literal notranslate"><span class="pre">use_sd_empirical_tcodes</span></code>,
+<code class="docutils literal notranslate"><span class="pre">use_preprocessor</span></code>), <code class="docutils literal notranslate"><span class="pre">Experiment.variant</span></code>, and the rich
+<code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> accessors (<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking</span></code>,
+<code class="docutils literal notranslate"><span class="pre">read_json</span></code>, <code class="docutils literal notranslate"><span class="pre">file_path</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">get</span></code>) all ship in this release.</p>
+<p>The Detail (code): Full track is still the canonical reference for the
+12-layer YAML recipe surface and bit-exact replication contract; use
+it whenever you need to step outside the simple-API defaults.</p>
 </div></blockquote>
 <p>The simple API is organized around <code class="docutils literal notranslate"><span class="pre">forecast</span></code> and <code class="docutils literal notranslate"><span class="pre">Experiment</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>

@@ -1,12 +1,5 @@
 # Add A Custom Preprocessor
 
-> **API status note (current)**: this page uses the planned mf.forecast / mf.Experiment Python facade
-> shape. Those are not yet exported from macroforecast.__all__. For working v0.6+ code, use
-> macroforecast.run("recipe.yaml"), macroforecast.replicate("manifest.json"),
-> the RecipeBuilder (macroforecast.scaffold.builder.RecipeBuilder), or
-> python -m macroforecast scaffold. See [Simple Docs index](index.md) for the full status note.
-
-
 Custom preprocessors run inside the same split discipline as built-in preprocessing.
 
 ```python
