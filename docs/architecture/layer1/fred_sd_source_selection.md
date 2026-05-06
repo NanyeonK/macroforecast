@@ -1,6 +1,6 @@
 # FRED-SD Predictor Scope
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: FRED-SD predictor scope
 
 This conditional group is shown only when the selected FRED source panel

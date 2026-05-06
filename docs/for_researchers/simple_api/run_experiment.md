@@ -67,7 +67,7 @@ The simple API is a facade. It does not bypass recipes, manifests, or provenance
 
 ## Single Run Or Sweep
 
-If no sweep axes are present, `run()` returns `ExperimentRunResult`.
+If no sweep axes are present, `run()` returns `ForecastResult`.
 
 ```python
 result = exp.run()
@@ -76,7 +76,7 @@ result.metrics
 result.manifest
 ```
 
-If `.compare_models()` or `.sweep()` creates multiple variants, `run()` returns `ExperimentSweepResult`.
+If `.compare_models()` or `.sweep()` creates multiple variants, `run()` returns `ForecastResult`.
 
 ```python
 sweep = exp.compare_models(["ridge", "lasso"]).run()

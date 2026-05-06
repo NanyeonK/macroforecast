@@ -23,7 +23,7 @@ result = (
 Then rank the variants:
 
 ```python
-ranking = result.compare("mse")
+ranking = result.ranking  # or result.mean(metric="mse")
 ```
 
 MVP aliases:

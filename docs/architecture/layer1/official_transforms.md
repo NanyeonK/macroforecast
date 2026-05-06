@@ -1,6 +1,6 @@
 # Official Transforms
 
-- Parent: [4.1 Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
 - Current group: official transforms
 
 This group decides whether FRED-provided transform codes are applied while

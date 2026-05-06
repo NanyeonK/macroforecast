@@ -15,6 +15,7 @@
 | Look up a specific axis / option / Python symbol | [Encyclopedia](encyclopedia/index.md) (browse layer × sublayer × axis × option) |
 | See replication studies (bundled examples + 4 research walkthroughs) | [Replications](replications/index.md) |
 | Visually explore the layer / DAG topology | [Navigator](navigator/index.md) |
+| Hit an error or something doesn't work | [Troubleshooting & FAQ](troubleshooting.md) |
 
 ## Architecture
 
@@ -51,5 +52,6 @@ architecture/index
 navigator/index
 replications/index
 encyclopedia/index
+troubleshooting
 CONVENTIONS
 ```

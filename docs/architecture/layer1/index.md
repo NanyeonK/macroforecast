@@ -1,9 +1,9 @@
 # Layer 1: Data Source, Target y, Predictor x
 
-- Parent: [4. Detail (code): Full](../index.md)
-- Previous: [4.0 Layer 0: Study Scope](../layer0/index.md)
+- Parent: [Architecture](../index.md)
+- Previous: [Layer 0: Study Scope](../layer0/index.md)
 - Current: Layer 1
-- Next: [4.2 Layer 2: Representation / Research Preprocessing](../layer2/index.md)
+- Next: [Layer 2: Representation / Research Preprocessing](../layer2/index.md)
 
 Layer 1 owns the source-frame contract for a macro forecasting study. It decides
 which source data define the panel, the analysis frequency, what information is
