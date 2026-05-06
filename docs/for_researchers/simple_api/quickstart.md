@@ -32,7 +32,7 @@ The default profile is `macroforecast-default-v1`. It uses a conservative baseli
 - expanding-window point forecast
 - `ar` model
 - `zero_change` benchmark
-- `msfe` primary metric
+- `mse` primary metric
 - official FRED-MD/FRED-QD transformation codes when available
 - no extra scaling, imputation, outlier handling, feature selection, or dimensionality reduction
 

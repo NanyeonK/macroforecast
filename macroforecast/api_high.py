@@ -249,6 +249,11 @@ def forecast(
         model_family=model_family,
         random_seed=random_seed,
     )
+    # v0.8.6 Gap 2: normalize the lone L4 fit node id for the one-shot
+    # path too -- there is no chained .compare() follow-up here, but we
+    # keep the id stable so ``forecast()`` and ``Experiment().run()``
+    # produce identical recipe blocks for the same inputs.
+    _normalize_fit_main_id(builder._recipe)
     recipe = builder.build()
     manifest = execute_recipe(
         recipe,
@@ -341,6 +346,63 @@ def _set_at(root: dict[str, Any], dotted: str, value: Any) -> None:
         )
 
 
+def _normalize_fit_main_id(recipe: dict[str, Any]) -> None:
+    """Rename the lone L4 fit_model node to the stable id ``fit_main``.
+
+    v0.8.6 Gap 2: ``RecipeBuilder.l4.fit(family)`` auto-names the node
+    ``fit_<n>_<family>``. That id leaks the family name (and the fit
+    counter), which makes chained ``.compare(...)`` follow-ups brittle:
+    after ``compare_models([...])`` the auto-name still reflects the
+    *first* family the user passed to ``Experiment(model_family=...)``,
+    so users had to memorise the auto-generated id (``fit_1_ridge`` etc.).
+
+    This helper walks the L4 nodes and renames the lone fit_model node
+    to ``fit_main``. All references in the ``predict`` step inputs and
+    in the L4 ``sinks`` (``l4_forecasts_v1`` / ``l4_model_artifacts_v1``)
+    are updated atomically.
+
+    Edge cases:
+
+    * If the node id is already ``fit_main`` -- no-op.
+    * If the L4 block already contains a node literally named
+      ``fit_main`` *and* a different fit_model node -- skip (the user
+      hand-rolled this layout via ``to_recipe_dict()`` round-trip).
+    * If there are multiple fit_model nodes (ensemble / horse-race
+      authored manually) -- skip; the user must use the explicit ids.
+    """
+
+    l4 = recipe.get("4_forecasting_model")
+    if not isinstance(l4, dict):
+        return
+    nodes = l4.get("nodes")
+    if not isinstance(nodes, list):
+        return
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    if len(fit_nodes) != 1:
+        return
+    fit_node = fit_nodes[0]
+    old_id = fit_node.get("id")
+    if old_id == "fit_main":
+        return
+    # Guard: don't collide with a pre-existing "fit_main" node.
+    if any(isinstance(n, dict) and n.get("id") == "fit_main" for n in nodes):
+        return
+    fit_node["id"] = "fit_main"
+    # Update predict node inputs that reference the old id.
+    for n in nodes:
+        if not isinstance(n, dict):
+            continue
+        inputs = n.get("inputs")
+        if isinstance(inputs, list):
+            n["inputs"] = ["fit_main" if x == old_id else x for x in inputs]
+    # Update sinks that reference the old id.
+    sinks = l4.get("sinks")
+    if isinstance(sinks, dict):
+        for key, value in list(sinks.items()):
+            if value == old_id:
+                sinks[key] = "fit_main"
+
+
 class Experiment:
     """Builder for one forecasting study.
 
@@ -356,9 +418,16 @@ class Experiment:
         exp = (
             mf.Experiment(...)
             .compare_models(["ar_p", "ridge"])
-            .compare("4_forecasting_model.nodes.fit_1_ridge.params.alpha",
+            .compare("4_forecasting_model.nodes.fit_main.params.alpha",
                      [0.1, 1.0])
         )
+
+    The L4 fit node is normalized to the stable id ``fit_main`` whenever
+    there is exactly one fit node (default Experiment construction and
+    ``compare_models([...])``); chained ``.compare(...)`` follow-ups can
+    therefore address it via the predictable dotted path
+    ``4_forecasting_model.nodes.fit_main....`` instead of the
+    auto-generated ``fit_1_<family>``.
 
     PR 1 implements the basic constructor + sweep methods + run / to_yaml /
     replicate / validate. ``.use_fred_sd_inferred_tcodes()``,
@@ -400,6 +469,10 @@ class Experiment:
             model_family=model_family,
             random_seed=self._random_seed,
         )
+        # v0.8.6 Gap 2: normalize the lone L4 fit node id to ``fit_main``
+        # so chained ``.compare(...)`` follow-ups can use a stable dotted
+        # path instead of the family-specific auto-name.
+        _normalize_fit_main_id(self._builder._recipe)
 
     # -- sweep methods -----------------------------------------------------
 
@@ -426,6 +499,11 @@ class Experiment:
         # In PR 1 we always have exactly one fit_model node. Sweep its family.
         fit_node = fit_nodes[0]
         fit_node.setdefault("params", {})["family"] = {"sweep": list(families_list)}
+        # v0.8.6 Gap 2: normalize the swept fit node to ``fit_main`` so
+        # ``.compare("4_forecasting_model.nodes.fit_main.params.alpha", ...)``
+        # follow-ups have a stable dotted path independent of the
+        # auto-generated ``fit_<n>_<initial_family>`` name.
+        _normalize_fit_main_id(self._builder._recipe)
         return self
 
     def compare(self, axis_path: str, values: Sequence[Any]) -> "Experiment":
@@ -616,34 +694,43 @@ class Experiment:
 
         ``name`` must already be registered via
         :func:`macroforecast.custom.register_preprocessor` (or the
-        ``@mf.custom_preprocessor`` decorator). The preprocessor is
-        dispatched through the v0.2.5 PR #251 hook -- the existing
-        runtime plumbing lives on the L2 ``leaf_config.custom_postprocessor``
-        slot (it runs *after* the McCracken-Ng pipeline so its output
-        becomes the L2 clean panel that L3 sees). The simple-API
-        keyword ``applied_at='l3'`` reflects the user-facing intent
-        (the preprocessor sees the panel right before L3); the runtime
-        wiring is the L2 hook, which is the only end-to-end-tested
-        dispatch path.
+        ``@mf.custom_preprocessor`` decorator). Two dispatch points:
 
-        ``applied_at='l2'`` is reserved for a future v0.9 schema where
-        an explicit pre-pipeline preprocessor slot lands; until then it
-        raises ``NotImplementedError``.
+        * ``applied_at='l3'`` (default) -- v0.2.5 PR #251 post-pipeline
+          hook. The callable receives the L2 clean panel *after* the
+          McCracken-Ng pipeline (transform / outlier / impute /
+          frame_edge) has run; its output becomes the L2 clean panel
+          that L3 reads. Useful for "the cleaned panel, plus my one
+          extra step" workflows.
+        * ``applied_at='l2'`` (v0.8.6 Gap 1) -- pre-pipeline hook. The
+          callable receives the *raw* L1 panel and returns a panel that
+          the canonical L2 pipeline then transforms / cleans. Useful
+          for upstream cleanup (drop bad columns, deflation,
+          normalisation, custom resampling) before the official t-codes
+          apply.
+
+        Both hooks dispatch to ``macroforecast.custom`` registrations
+        through the same contract; only the timing within L2 differs.
+        Routing the same name to both points is allowed and emits two
+        distinct cleaning_log entries.
 
         Returns ``self``.
         """
 
-        if applied_at != "l3":
-            raise NotImplementedError(
-                "only L3 dispatch is supported in v0.8.5; the L2 pre-pipeline "
-                "preprocessor hook is future work (tracked for v0.9). Use "
-                "applied_at='l3' (default)."
-            )
-        # v0.2.5 #251 wired this on L2.leaf_config.custom_postprocessor.
-        # We surface the user-friendly L3 framing in the docstring; the
-        # runtime hook lives at L2.
-        self._builder.l2.set_leaf(custom_postprocessor=str(name))
-        return self
+        if applied_at == "l3":
+            # v0.2.5 #251 wired this on L2.leaf_config.custom_postprocessor.
+            self._builder.l2.set_leaf(custom_postprocessor=str(name))
+            return self
+        if applied_at == "l2":
+            # v0.8.6 Gap 1: pre-pipeline hook on
+            # L2.leaf_config.custom_preprocessor.
+            self._builder.l2.set_leaf(custom_preprocessor=str(name))
+            return self
+        raise ValueError(
+            f"applied_at={applied_at!r} is not valid; choose from "
+            "{'l2', 'l3'} (l2 = pre-pipeline raw-panel hook, "
+            "l3 = post-pipeline clean-panel hook)"
+        )
 
     # -- inspection / serialization ---------------------------------------
 

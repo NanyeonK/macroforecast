@@ -84,7 +84,7 @@ The package-native route uses:
 3_feature_engineering.op=source/raw-panel-plus-target-construction
 4_forecasting_model.fit_model.family=ridge
 4_forecasting_model.benchmark_forecast.family=autoregressive_bic
-5_evaluation.primary_metric=msfe
+5_evaluation.primary_metric=mse
 6_stat_tests.equal_predictive=dm
 ```
 

@@ -18,7 +18,7 @@ Current MVP profile:
 | `benchmark_family` | `zero_change` |
 | `feature_builder` | `target_lag_features` |
 | `model_family` | `ar` |
-| `primary_metric` | `msfe` |
+| `primary_metric` | `mse` |
 | `stat_test` | `none` |
 | `importance_method` | `none` |
 | preprocessing | dataset t-code transforms only, no extra preprocessing |

@@ -36,7 +36,7 @@ result = (
     .run()
 )
 
-ranking = result.compare("msfe")
+ranking = result.compare("mse")
 forecasts = result.forecasts
 variants = result.variants
 manifest = result.manifest
@@ -65,7 +65,7 @@ Sweep variant access:
 
 ```python
 table = result.variants
-best = result.compare("msfe").iloc[0]
+best = result.compare("mse").iloc[0]
 variant = result.variant(best["variant_id"])
 variant.forecasts
 variant.manifest

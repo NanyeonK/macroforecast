@@ -154,10 +154,66 @@ def test_use_preprocessor_sets_l2_leaf():
     assert recipe["2_preprocessing"]["leaf_config"]["custom_postprocessor"] == "custom_x_demean"
 
 
-def test_use_preprocessor_l2_raises_not_implemented():
+def test_use_preprocessor_l2_writes_pre_pipeline_leaf():
+    """v0.8.6 Gap 1 -- ``applied_at='l2'`` writes
+    ``leaf_config.custom_preprocessor`` (pre-pipeline hook), distinct
+    from the post-pipeline ``custom_postprocessor`` slot."""
+
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
-    with pytest.raises(NotImplementedError, match="v0.9"):
-        exp.use_preprocessor("foo", applied_at="l2")
+    exp.use_preprocessor("custom_x_demean", applied_at="l2")
+    leaf = exp.to_recipe_dict()["2_preprocessing"]["leaf_config"]
+    assert leaf["custom_preprocessor"] == "custom_x_demean"
+    # The post-pipeline slot stays empty unless the user opts in too.
+    assert "custom_postprocessor" not in leaf
+
+
+def test_use_preprocessor_rejects_unknown_applied_at():
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
+    with pytest.raises(ValueError, match="applied_at"):
+        exp.use_preprocessor("foo", applied_at="l4")
+
+
+def test_use_preprocessor_l2_e2e_doubles_a_column(tmp_path):
+    """End-to-end: a registered preprocessor that doubles ``x1`` runs
+    via the pre-pipeline hook, and the L2 clean panel reflects the
+    doubled values."""
+
+    import macroforecast as _mf
+    from macroforecast.core.runtime import materialize_l1, materialize_l2
+
+    # Register a tiny preprocessor that doubles every numeric column.
+    @_mf.custom_preprocessor("v086_double_columns")
+    def _double(X_train, y_train, X_test, context):
+        # Single-pass clean: substitute X_train == X_test == frame.
+        cleaned = X_test.copy()
+        for col in cleaned.columns:
+            cleaned[col] = cleaned[col].astype(float) * 2.0
+        return cleaned, cleaned
+
+    try:
+        exp = _mf.Experiment(dataset="fred_md", target="y", horizons=[1])
+        install_custom_panel(exp)
+        exp.use_preprocessor("v086_double_columns", applied_at="l2")
+
+        recipe = exp.to_recipe_dict()
+        l1_artifact, _regime, _axes = materialize_l1(recipe)
+        # Snapshot the raw L1 value at the first index.
+        raw_x1_first = float(l1_artifact.raw_panel.data["x1"].iloc[0])
+        l2_artifact, _ = materialize_l2(recipe, l1_artifact)
+        # The pre-pipeline hook doubled every column before the
+        # transform / outlier / impute / frame_edge stages saw it. With
+        # the no_op L2 preset (no transform, keep_unbalanced) the
+        # doubled values flow through to the L2 sink unchanged.
+        l2_x1_first = float(l2_artifact.panel.data["x1"].iloc[0])
+        assert l2_x1_first == pytest.approx(raw_x1_first * 2.0)
+        # cleaning_log records the hook firing.
+        steps = l2_artifact.cleaning_log.get("steps", [])
+        assert any(
+            isinstance(s, dict) and s.get("custom_preprocessor") == "v086_double_columns"
+            for s in steps
+        )
+    finally:
+        _mf.clear_custom_preprocessors()
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +282,7 @@ def test_variant_plus_sweep_grid(tmp_path):
     install_custom_panel(exp)
     exp.variant("v1", **{"0_meta.leaf_config.random_seed": 0})
     exp.variant("v2", **{"0_meta.leaf_config.random_seed": 1})
-    exp.sweep("4_forecasting_model.nodes.fit_1_ridge.params.alpha", [0.1, 1.0])
+    exp.sweep("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
     result = exp.run(output_directory=tmp_path)
     # 2 variants × 2 alpha = 4 cells.
     assert len(result.cells) == 4

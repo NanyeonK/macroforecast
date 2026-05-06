@@ -250,6 +250,24 @@ def materialize_l2(recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArt
         raise ValueError("L1 raw_panel is empty; L2 materialization requires custom panel data")
 
     cleaning_log: dict[str, Any] = {"runtime": "core_l1_l2_materialization", "steps": []}
+
+    # v0.8.6 Gap 1 -- pre-pipeline custom L2 preprocessor hook.
+    # ``leaf_config.custom_preprocessor`` accepts a name registered via
+    # ``macroforecast.custom.register_preprocessor``. Runs *before* the
+    # transform / outlier / impute / frame_edge stages so users can
+    # tweak the raw L1 panel (drop bad columns, deflation, normalisation,
+    # etc.) before the canonical McCracken-Ng pipeline applies official
+    # t-codes. Distinct from the post-pipeline ``custom_postprocessor``
+    # hook (issue #251 / v0.2.5) which receives the already-cleaned
+    # panel and produces the L3-ready clean panel.
+    pre_name = leaf_config.get("custom_preprocessor")
+    if pre_name:
+        pre_result = _try_custom_l2_preprocessor(str(pre_name), df, leaf_config)
+        if pre_result is not None:
+            df = pre_result
+            cleaning_log["steps"].append(
+                {"custom_preprocessor": str(pre_name), "applied": True}
+            )
     transform_map: dict[str, int] = {}
     n_outliers = 0
     n_imputed = 0

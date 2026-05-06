@@ -75,9 +75,10 @@ def test_experiment_compare_generic_axis(tmp_path):
         model_family="ridge",
     )
     install_custom_panel(exp)
-    # The L4 fit node id is "fit_1_ridge" by RecipeBuilder convention.
+    # v0.8.6: the L4 fit node is normalized to the stable id "fit_main"
+    # by Experiment.__init__ regardless of the original ``model_family=``.
     exp.compare(
-        "4_forecasting_model.nodes.fit_1_ridge.params.alpha",
+        "4_forecasting_model.nodes.fit_main.params.alpha",
         [0.1, 1.0],
     )
     result = exp.run(output_directory=tmp_path)
@@ -88,15 +89,15 @@ def test_experiment_compare_generic_axis(tmp_path):
 def test_experiment_sweep_is_alias_for_compare():
     exp1 = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
     exp2 = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
-    exp1.compare("4_forecasting_model.nodes.fit_1_ridge.params.alpha", [0.1, 1.0])
-    exp2.sweep("4_forecasting_model.nodes.fit_1_ridge.params.alpha", [0.1, 1.0])
+    exp1.compare("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
+    exp2.sweep("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
     assert exp1.to_recipe_dict() == exp2.to_recipe_dict()
 
 
 def test_experiment_compare_rejects_empty_values():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
     with pytest.raises(ValueError, match="at least one"):
-        exp.compare("4_forecasting_model.nodes.fit_1_ridge.params.alpha", [])
+        exp.compare("4_forecasting_model.nodes.fit_main.params.alpha", [])
 
 
 def test_experiment_compare_rejects_empty_path():
@@ -230,3 +231,53 @@ def test_set_at_rejects_traversal_into_scalar():
     # detect the non-collection and refuse with a clear message.
     with pytest.raises(ValueError):
         _set_at(root, "a.b", 2)
+
+
+# ---------------------------------------------------------------------------
+# v0.8.6 Gap 2 -- stable ``fit_main`` L4 fit-node id
+# ---------------------------------------------------------------------------
+
+def test_experiment_init_normalizes_lone_fit_node_to_fit_main():
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    assert len(fit_nodes) == 1
+    assert fit_nodes[0]["id"] == "fit_main"
+    # And the predict node now references fit_main, not fit_1_ridge.
+    predict = next(n for n in nodes if isinstance(n, dict) and n.get("op") == "predict")
+    assert "fit_main" in predict["inputs"]
+    # And l4_model_artifacts_v1 sink (rewired by .is_benchmark()) maps to fit_main.
+    sinks = exp.to_recipe_dict()["4_forecasting_model"]["sinks"]
+    assert sinks["l4_model_artifacts_v1"] == "fit_main"
+
+
+def test_experiment_compare_models_emits_fit_main_id():
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp.compare_models(["ridge", "lasso", "ols"])
+    nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    assert len(fit_nodes) == 1
+    assert fit_nodes[0]["id"] == "fit_main"
+    assert fit_nodes[0]["params"]["family"] == {"sweep": ["ridge", "lasso", "ols"]}
+
+
+def test_experiment_compare_models_then_compare_alpha_chains_via_fit_main(tmp_path):
+    exp = mf.Experiment(
+        dataset="fred_md", target="y", horizons=[1], model_family="ridge",
+    )
+    install_custom_panel(exp)
+    # End-to-end chain: compare_models followed by compare on fit_main.
+    exp.compare_models(["ridge"]).compare(
+        "4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0],
+    )
+    result = exp.run(output_directory=tmp_path)
+    assert len(result.cells) == 2
+    assert all(cell.succeeded for cell in result.cells)
+
+
+def test_experiment_init_with_ar_p_also_normalizes_to_fit_main():
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
+    # Default model_family="ar_p" -- still normalize.
+    nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    assert fit_nodes[0]["id"] == "fit_main"

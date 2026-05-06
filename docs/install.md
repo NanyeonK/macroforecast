@@ -24,7 +24,7 @@ pip install 'macroforecast[all]'
 Or pin to a tagged GitHub release directly:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.8.5"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.8.6"
 ```
 
 ## Install from source (development)
@@ -70,7 +70,7 @@ loading is a baseline FRED-SD code path.)
 Install all optional dependencies at once:
 
 ```bash
-pip install "macroforecast[all] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.5"
+pip install "macroforecast[all] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.6"
 ```
 
 All optional dependencies are import-guarded. The package works without them, but the corresponding features will raise `ImportError` with a clear message when invoked.
@@ -80,7 +80,7 @@ All optional dependencies are import-guarded. The package works without them, bu
 The `lstm`, `gru`, and `tcn` model families ship behind an opt-in `[deep]` extra so core installs stay free of a torch dependency:
 
 ```bash
-pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.5"
+pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.6"
 ```
 
 Without the extra, referencing `model_family` in {lstm, gru, tcn} at sweep time raises a clear `ExecutionError` with the install hint.
@@ -89,7 +89,7 @@ For CPU-only torch (sufficient unless a GPU sweep is planned):
 
 ```bash
 pip install --index-url https://download.pytorch.org/whl/cpu torch
-pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.5"
+pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast.git@v0.8.6"
 ```
 
 

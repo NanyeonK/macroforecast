@@ -23,14 +23,14 @@ result = (
 Then rank the variants:
 
 ```python
-ranking = result.compare("msfe")
+ranking = result.compare("mse")
 ```
 
 MVP aliases:
 
 | Alias | Internal axis | Runtime status |
 |-------|---------------|----------------|
-| `model`, `models`, `model_family` | `4_forecasting_model.fit_model.params.family` | executable |
+| `model`, `models`, `model_family` | `4_forecasting_model.nodes.fit_main.params.family` | executable |
 | `scaling`, `scaling_policy` | `2_preprocessing.scaling_policy` | full-route executable; simple exposure pending result-contract docs |
 | `missing`, `x_missing`, `x_missing_policy` | `2_preprocessing.x_missing_policy` | full-route executable; simple exposure pending result-contract docs |
 | `preprocessor`, `custom_preprocessor` | `2_preprocessing.custom_preprocessor` | fixed custom preprocessor executable; sweep blocked |

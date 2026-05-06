@@ -31,7 +31,7 @@ Common optional arguments:
 - `custom_source_path`: required when custom data is selected; parser/schema are inferred from the path extension and route frequency
 - `vintage`: data vintage; if omitted, current/latest data is used
 - `model_family`: default model, usually left as `ar`
-- `primary_metric`: default `msfe`
+- `primary_metric`: default `mse`
 - `random_seed`: default `42`
 
 ## Layer 0 In Simple
@@ -81,5 +81,5 @@ If `.compare_models()` or `.sweep()` creates multiple variants, `run()` returns 
 ```python
 sweep = exp.compare_models(["ridge", "lasso"]).run()
 sweep.variants
-sweep.compare("msfe")
+sweep.compare("mse")
 ```
