@@ -3,7 +3,82 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
-## [0.8.6] -- 2026-05-02 -- "spec gap fixes: L2 pre-pipeline hook + fit_main + combined-dataset smoke + msfe→mse"
+## [0.8.8] -- 2026-05-06 -- "user-friendliness pass (docs only)"
+
+Single docs-only release that bundles five documentation upgrades. No
+code changes; same 1035 tests; bit-exact replicate contract unchanged.
+
+### Added
+* **`docs/for_recipe_authors/custom_hooks.md` deep dive** -- every one
+  of the five extension points (`custom_model`, `custom_preprocessor`,
+  `target_transformer`, `custom_feature_block`,
+  `custom_feature_combiner`) gets seven sections: decorator usage,
+  required signature with type hints, input contract, output contract,
+  worked example, common errors, and (for `custom_preprocessor`) a
+  table comparing `applied_at='l2'` (pre-pipeline) vs `'l3'`
+  (post-pipeline) covering leaf_config keys, runtime stages,
+  cleaning_log entries, since-versions.
+* **`docs/for_recipe_authors/partial_layer_execution.md` (new)** --
+  user guide for running L1 / L2 / L3 / L4 / L5 in isolation via
+  `materialize_l1` / `materialize_l2` / `materialize_l3_minimal` /
+  `materialize_l4_minimal` / `materialize_l5_minimal` /
+  `execute_l1_l2` / `execute_minimal_forecast` / `execute_node`. 9
+  runnable snippets + schema tables for nine intermediate artifacts
+  (L1DataDefinitionArtifact through L5EvaluationArtifact), with
+  debugging use cases (outlier-policy inspection, L3 method-dev
+  iteration).
+* **`docs/troubleshooting.md` (new)** -- 10 common error scenarios
+  with fixes: missing `leaf_config.target`, stale `pip install
+  macroforecast` cache, `compare_models().compare()` chain on
+  pre-`fit_main` versions, `replicate().sink_hashes_match=False`
+  debugging, custom callable not registered,
+  `mixed_frequency_representation` gate, missing extras,
+  Encyclopedia drift CI failures, partial-layer inspection,
+  where-to-ask. Linked from `docs/index.md` "Pick your path".
+
+### Fixed (Simple Docs accuracy)
+* **`ExperimentRunResult` / `ExperimentSweepResult` -> `ForecastResult`**
+  across 5 simple_api/ pages (the v0.8.0+ rename was incomplete).
+* **`result.variants` -> `result.metrics`** and
+  **`result.compare("mse")` -> `result.ranking` /
+  `result.mean(metric="mse")`** in 4 pages -- aligned with the actual
+  v0.8.5 rich-accessor API.
+
+### Fixed (Architecture page drift)
+* **`docs/architecture/layer2/index.md`** -- the "Decision order"
+  table listed 13 axis names from the pre-0.0-restart 8-layer
+  registry (`tcode_policy`, `target_lag_block`,
+  `factor_feature_block`, `level_feature_block`,
+  `temporal_feature_block`, `rotation_feature_block`,
+  `feature_block_combination`, `feature_selection_policy`,
+  `feature_selection_semantics`, `feature_builder`,
+  `x_lag_feature_block`, `target_normalization`,
+  `horizon_target_construction`) that no longer exist in the L2
+  `LayerImplementationSpec`. Rewritten as the actual 5 sub-layer ×
+  15 axis table (`mixed_frequency_representation`,
+  `sd_tcode_policy`, etc.) with an L2 custom-hook section pointing
+  at `for_recipe_authors/custom_hooks.md`.
+* **Stale numbered parent links** (`Parent: [4. Detail (code): Full]`
+  / `Previous: [4.0 Layer 0: ...]` / `Next: [4.2 Layer 2: ...]`) on
+  L0 / L1 / L2 / L1.* sub-pages collapsed to plain
+  `[Architecture]` / `[Layer N: ...]` (the v0.6.3 number-prefix
+  cleanup missed the parent-link strings).
+
+### Notes
+* No code, test, or schema changes; encyclopedia tree unchanged
+  (drift CI green).
+* The agent dispatch contracts for `custom_feature_block` and
+  `custom_feature_combiner` documented here are the *actual* runtime
+  contracts (`fn(frame, params)` / `fn(inputs, params)`), which
+  replace the v0.1-era `FeatureBlockCallableContext` /
+  `FeatureCombinerCallableContext` framing that was inaccurate after
+  the 0.0 restart.
+* `Experiment(...)` constructor today only drives official FRED
+  datasets; custom inline panels still need to use
+  `mf.run(yaml_recipe)`. This is documented in the worked examples
+  and is a follow-up for a future minor.
+
+## [0.8.6] -- 2026-05-06 -- "spec gap fixes: L2 pre-pipeline hook + fit_main + combined-dataset smoke + msfe→mse"
 
 ### Added
 * **L2 pre-pipeline custom preprocessor hook** (Gap 1) -- new
