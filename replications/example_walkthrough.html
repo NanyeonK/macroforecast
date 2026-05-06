@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Example Walkthrough – minimal ridge on FRED-MD &mdash; macroforecast</title>
+  <title>Example Walkthrough — minimal ridge &mdash; macroforecast</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -53,7 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Replications</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Example Walkthrough – minimal ridge on FRED-MD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Example Walkthrough — minimal ridge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="study_1.html">Study 1 – TBD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="study_2.html">Study 2 – TBD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="study_3.html">Study 3 – TBD</a></li>
@@ -79,7 +79,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Replications</a></li>
-      <li class="breadcrumb-item active">Example Walkthrough – minimal ridge on FRED-MD</li>
+      <li class="breadcrumb-item active">Example Walkthrough — minimal ridge</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/replications/example_walkthrough.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -89,48 +89,230 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="example-walkthrough-minimal-ridge-on-fred-md">
-<h1>Example Walkthrough – minimal ridge on FRED-MD<a class="headerlink" href="#example-walkthrough-minimal-ridge-on-fred-md" title="Link to this heading"></a></h1>
-<blockquote>
-<div><p>Status: placeholder. Filled in alongside the bundled
-<code class="docutils literal notranslate"><span class="pre">examples/recipes/l4_minimal_ridge.yaml</span></code>.</p>
-</div></blockquote>
-<p>This walkthrough takes one of the smallest bundled recipes and
-explains every layer choice end-to-end:</p>
-<section id="layer-0-study-setup">
-<h2>Layer 0 – study setup<a class="headerlink" href="#layer-0-study-setup" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="layer-1-data">
-<h2>Layer 1 – data<a class="headerlink" href="#layer-1-data" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="layer-2-preprocessing">
-<h2>Layer 2 – preprocessing<a class="headerlink" href="#layer-2-preprocessing" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="layer-3-feature-engineering">
-<h2>Layer 3 – feature engineering<a class="headerlink" href="#layer-3-feature-engineering" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="layer-4-model">
-<h2>Layer 4 – model<a class="headerlink" href="#layer-4-model" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="layer-5-evaluation">
-<h2>Layer 5 – evaluation<a class="headerlink" href="#layer-5-evaluation" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="layer-8-output">
-<h2>Layer 8 – output<a class="headerlink" href="#layer-8-output" title="Link to this heading"></a></h2>
-<p>TBD</p>
-</section>
-<section id="reproduce">
-<h2>Reproduce<a class="headerlink" href="#reproduce" title="Link to this heading"></a></h2>
+  <section id="example-walkthrough-minimal-ridge">
+<h1>Example Walkthrough — minimal ridge<a class="headerlink" href="#example-walkthrough-minimal-ridge" title="Link to this heading"></a></h1>
+<p>This walkthrough opens the smallest bundled recipe
+<a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/l4_minimal_ridge.yaml"><code class="docutils literal notranslate"><span class="pre">examples/recipes/l4_minimal_ridge.yaml</span></code></a>
+and explains every layer choice end-to-end. Use it as a <strong>template</strong> when
+writing your own replication page (see <a class="reference internal" href="study_1.html"><span class="std std-doc">study_1.md</span></a> etc.).</p>
+<section id="reproduce-in-two-commands">
+<h2>Reproduce in two commands<a class="headerlink" href="#reproduce-in-two-commands" title="Link to this heading"></a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast<span class="w"> </span>run<span class="w"> </span>examples/recipes/l4_minimal_ridge.yaml<span class="w"> </span>-o<span class="w"> </span>out/walkthrough
 macroforecast<span class="w"> </span>replicate<span class="w"> </span>out/walkthrough/manifest.json
 </pre></div>
 </div>
+<p>The first command writes per-cell artifacts and <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> to
+<code class="docutils literal notranslate"><span class="pre">out/walkthrough/</span></code>. The second re-runs from the manifest and verifies every
+sink hash matches bit-for-bit.</p>
+</section>
+<section id="layer-0-study-setup">
+<h2>Layer 0 — study setup<a class="headerlink" href="#layer-0-study-setup" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">failure_policy</span><span class="p">:</span><span class="w"> </span><span class="nv">fail_fast</span><span class="p p-Indicator">,</span><span class="nt"> reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="nv">seeded_reproducible</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="nv">42</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">failure_policy:</span> <span class="pre">fail_fast</span></code> — abort the sweep on first cell failure
+(default while developing a recipe; switch to <code class="docutils literal notranslate"><span class="pre">continue_on_failure</span></code>
+for large unsupervised sweeps).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reproducibility_mode:</span> <span class="pre">seeded_reproducible</span></code> + <code class="docutils literal notranslate"><span class="pre">random_seed:</span> <span class="pre">42</span></code> — every
+stochastic step receives a deterministic seed derived from the L0 seed
+plus the cell index. This is what makes
+<code class="docutils literal notranslate"><span class="pre">macroforecast.replicate(manifest_path)</span></code> bit-exact.</p></li>
+</ul>
+</section>
+<section id="layer-1-data">
+<h2>Layer 1 — data<a class="headerlink" href="#layer-1-data" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="nv">custom_panel_only</span><span class="p p-Indicator">,</span><span class="nt"> frequency</span><span class="p">:</span><span class="w"> </span><span class="nv">monthly</span><span class="p p-Indicator">,</span><span class="nt"> horizon_set</span><span class="p">:</span><span class="w"> </span><span class="nv">custom_list</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">y</span>
+<span class="w">    </span><span class="nt">target_horizons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">custom_panel_inline</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">date</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2018-01-01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2018-12-01</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">y</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">7</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">8</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">9</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">11</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">12</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">x1</span><span class="p">:</span><span class="w">  </span><span class="p p-Indicator">[</span><span class="nv">0.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">...</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">6.0</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy:</span> <span class="pre">custom_panel_only</span></code> — bypass the FRED loaders;
+use the inline panel. Real recipes use <code class="docutils literal notranslate"><span class="pre">dataset:</span> <span class="pre">fred_md</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md+fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd+fred_sd</span></code>) plus
+<code class="docutils literal notranslate"><span class="pre">start</span></code> / <code class="docutils literal notranslate"><span class="pre">end</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">frequency:</span> <span class="pre">monthly</span></code> — the panel calendar; required when not derivable
+from the dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">horizon_set:</span> <span class="pre">custom_list</span></code> + <code class="docutils literal notranslate"><span class="pre">target_horizons:</span> <span class="pre">[1]</span></code> — predict h=1 only.
+Multi-horizon recipes use <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">3,</span> <span class="pre">6,</span> <span class="pre">12]</span></code> (monthly) or <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">8]</span></code>
+(quarterly).</p></li>
+</ul>
+</section>
+<section id="layer-2-preprocessing">
+<h2>Layer 2 — preprocessing<a class="headerlink" href="#layer-2-preprocessing" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no_transform</span>
+<span class="w">    </span><span class="nt">outlier_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">    </span><span class="nt">imputation_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none_propagate</span>
+<span class="w">    </span><span class="nt">frame_edge_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keep_unbalanced</span>
+</pre></div>
+</div>
+<p>The minimal recipe disables every L2 stage (panel is already clean). A
+realistic FRED-MD recipe would use:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">transform_policy:</span> <span class="pre">apply_official_tcode</span></code> — apply McCracken-Ng codes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">outlier_policy:</span> <span class="pre">mccracken_ng_iqr</span></code> + <code class="docutils literal notranslate"><span class="pre">outlier_action:</span> <span class="pre">flag_as_nan</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">imputation_policy:</span> <span class="pre">em_factor</span></code> — McCracken-Ng PCA-EM imputation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">frame_edge_policy:</span> <span class="pre">truncate_to_balanced</span></code>.</p></li>
+</ul>
+<p>For FRED-SD / mixed-frequency studies see
+<a class="reference internal" href="../encyclopedia/l2/axes/mixed_frequency_representation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></span></a>.</p>
+</section>
+<section id="layer-3-feature-engineering-dag">
+<h2>Layer 3 — feature engineering DAG<a class="headerlink" href="#layer-3-feature-engineering-dag" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">3_feature_engineering</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">predictors</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">target</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">lag_x</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">lag</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">n_lag</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">]}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">target_construction</span><span class="p p-Indicator">,</span><span class="nt"> params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="nv">point_forecast</span><span class="p p-Indicator">,</span><span class="nt"> method</span><span class="p">:</span><span class="w"> </span><span class="nv">direct</span><span class="p p-Indicator">,</span><span class="nt"> horizon</span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">},</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_y</span><span class="p p-Indicator">]}</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l3_features_v1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">X_final</span><span class="p">:</span><span class="w"> </span><span class="nv">lag_x</span><span class="p p-Indicator">,</span><span class="nt"> y_final</span><span class="p">:</span><span class="w"> </span><span class="nv">y_h</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">l3_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>L3 is a DAG. <code class="docutils literal notranslate"><span class="pre">src_X</span></code> / <code class="docutils literal notranslate"><span class="pre">src_y</span></code> pull predictors / target from the L2
+clean panel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lag_x</span></code> step: a single 1-period lag of every predictor column.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_h</span></code> step: build the L3 target as a direct h=1 forecast (no lead /
+cumulative).</p></li>
+<li><p>Sinks: the DAG terminates at <code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code> (an <code class="docutils literal notranslate"><span class="pre">(X_final,</span> <span class="pre">y_final)</span></code> pair) plus <code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code> (lineage for L7 attribution).</p></li>
+</ul>
+<p>Real recipes compose richer DAGs: <code class="docutils literal notranslate"><span class="pre">pca</span></code> reduction,
+<code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code> (MARX), <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_selection</span></code>, etc.
+See the <a class="reference internal" href="../encyclopedia/l3/index.html"><span class="std std-doc">encyclopedia L3 page</span></a> for the 37
+operational ops.</p>
+</section>
+<section id="layer-4-forecasting-model">
+<h2>Layer 4 — forecasting model<a class="headerlink" href="#layer-4-forecasting-model" title="Link to this heading"></a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+<span class="w">        </span><span class="nt">alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">        </span><span class="nt">forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
+<span class="w">        </span><span class="nt">training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expanding</span>
+<span class="w">        </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
+<span class="w">        </span><span class="nt">search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">        </span><span class="nt">min_train_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">      </span><span class="nt">is_benchmark</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">predict_ridge</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">step</span><span class="p p-Indicator">,</span><span class="nt"> op</span><span class="p">:</span><span class="w"> </span><span class="nv">predict</span><span class="p p-Indicator">,</span><span class="nt"> inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_ridge</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]}</span>
+<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_ridge</span>
+<span class="w">    </span><span class="nt">l4_model_artifacts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
+<span class="w">    </span><span class="nt">l4_training_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">ridge</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha:</span> <span class="pre">1.0</span></code> — standard L2-regularised OLS.
+Replace with <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">ar_p</span></code>, <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>,
+<code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>,
+<code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>, … see
+the <a class="reference internal" href="../encyclopedia/l4/index.html"><span class="std std-doc">encyclopedia L4 page</span></a> for all 35+.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">forecast_strategy:</span> <span class="pre">direct</span></code> — train one model per horizon (vs.
+<code class="docutils literal notranslate"><span class="pre">iterated</span></code> which recursively rolls h=1 forecasts).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">training_start_rule:</span> <span class="pre">expanding</span></code> + <code class="docutils literal notranslate"><span class="pre">refit_policy:</span> <span class="pre">every_origin</span></code> —
+expanding-window walk-forward, refit at every OOS origin.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">search_algorithm:</span> <span class="pre">none</span></code> — no hyperparameter tuning. Set to
+<code class="docutils literal notranslate"><span class="pre">bayesian_optimization</span></code> or <code class="docutils literal notranslate"><span class="pre">cv_path</span></code> for tuning.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code> — flags this model as the L5 / L6 reference.
+Required when comparing models via <code class="docutils literal notranslate"><span class="pre">compare_models([...])</span></code>.</p></li>
+</ul>
+</section>
+<section id="layer-5-evaluation">
+<h2>Layer 5 — evaluation<a class="headerlink" href="#layer-5-evaluation" title="Link to this heading"></a></h2>
+<p>The minimal recipe defaults to <code class="docutils literal notranslate"><span class="pre">primary_metric:</span> <span class="pre">mse</span></code>. Realistic
+recipes add:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">5_evaluation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">primary_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mse</span>
+<span class="w">    </span><span class="nt">point_metrics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">mse</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">rmse</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">mae</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">relative_metrics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">relative_mse</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">r2_oos</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">benchmark_scope</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">per_target_horizon</span>
+<span class="w">    </span><span class="nt">ranking</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">by_relative_metric</span>
+</pre></div>
+</div>
+<p>For statistical inference (DM / MCS / SPA / Reality Check), enable
+L6 — see the <a class="reference internal" href="../encyclopedia/l6/index.html"><span class="std std-doc">encyclopedia L6 page</span></a>.</p>
+</section>
+<section id="output-layer-8">
+<h2>Output (Layer 8)<a class="headerlink" href="#output-layer-8" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> records the canonical-key-ordered recipe, per-cell
+sink hashes, and provenance (Python / package versions, lockfile, git
+SHA, OS, CPU). <code class="docutils literal notranslate"><span class="pre">out/walkthrough/cell_001/</span></code> carries:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">forecasts.csv</span></code> — y_true / y_pred per origin</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">metrics.json</span></code> — point / relative metrics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cell_manifest.json</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">figures/</span></code> — when L7 importance is enabled</p></li>
+</ul>
+</section>
+<section id="replication-contract">
+<h2>Replication contract<a class="headerlink" href="#replication-contract" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast<span class="w"> </span>replicate<span class="w"> </span>out/walkthrough/manifest.json
+</pre></div>
+</div>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">ReplicationResult</span></code> with <code class="docutils literal notranslate"><span class="pre">recipe_match=True</span></code> and
+<code class="docutils literal notranslate"><span class="pre">sink_hashes_match=True</span></code> when every artifact reproduces bit-for-bit.
+This is the package’s core promise; if it fails, file an issue.</p>
+</section>
+<section id="programmatic-equivalent-mf-experiment">
+<h2>Programmatic equivalent (<code class="docutils literal notranslate"><span class="pre">mf.Experiment</span></code>)<a class="headerlink" href="#programmatic-equivalent-mf-experiment" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="c1"># One-shot</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecast</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+    <span class="n">model_family</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/quickstart&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+
+<span class="c1"># Builder (multi-cell horse race)</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;fred_md&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+      <span class="o">.</span><span class="n">compare_models</span><span class="p">([</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;ar_p&quot;</span><span class="p">])</span>
+<span class="p">)</span>
+<span class="n">horse_race</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/horse_race&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">horse_race</span><span class="o">.</span><span class="n">ranking</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">horse_race</span><span class="o">.</span><span class="n">replicate</span><span class="p">()</span><span class="o">.</span><span class="n">sink_hashes_match</span><span class="p">)</span>  <span class="c1"># True</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-write-your-own-replication-page">
+<h2>How to write your own replication page<a class="headerlink" href="#how-to-write-your-own-replication-page" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Copy this file’s structure into <code class="docutils literal notranslate"><span class="pre">study_&lt;n&gt;.md</span></code>.</p></li>
+<li><p>Fill <strong>Paper / Year / Source</strong> in the page header.</p></li>
+<li><p>Drop the recipe YAML into
+<code class="docutils literal notranslate"><span class="pre">examples/recipes/replications/study_&lt;n&gt;.yaml</span></code> and commit it.</p></li>
+<li><p>Run the recipe + replicate; capture the per-cell metrics in the
+“Expected artifacts” section.</p></li>
+<li><p>Note which axes are paper-faithful vs simplified (e.g. an
+approximation of the published method).</p></li>
+</ol>
+<p>See <a class="reference internal" href="study_1.html"><span class="std std-doc">study_1.md</span></a>, <a class="reference internal" href="study_2.html"><span class="std std-doc">study_2.md</span></a>,
+<a class="reference internal" href="study_3.html"><span class="std std-doc">study_3.md</span></a>, <a class="reference internal" href="study_4.html"><span class="std std-doc">study_4.md</span></a> for the four
+maintainer replications (filled in as each study runs).</p>
 </section>
 </section>
 
