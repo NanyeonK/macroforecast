@@ -14,6 +14,7 @@ source. Start here.
 | Understand the output directory and manifest layout | [Understanding output](understanding_output.md) |
 | Look up FRED-MD / FRED-QD / FRED-SD column dictionaries | [FRED datasets](fred_datasets/index.md) |
 | Check FRED-SD T-code policy (transform-code defaults for state series) | [FRED-SD transform policy](fred_datasets/fred_sd/transform_policy.md), [inferred T-codes](fred_datasets/fred_sd/inferred_tcodes.md), [v0.1 review](fred_datasets/fred_sd/inferred_tcode_review_v0_1.md) |
+| Browse the 38 bundled recipes (with extras + smoke-test status) | [Recipe gallery](recipe_gallery.md) |
 | Use the high-level Python facade (`mf.forecast` / `mf.Experiment`) | [Simple API](simple_api/index.md) |
 
 ## Public API at a glance
@@ -42,5 +43,6 @@ first_study
 runtime_support
 understanding_output
 fred_datasets/index
+recipe_gallery
 simple_api/index
 ```
