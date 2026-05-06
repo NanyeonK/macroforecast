@@ -3,6 +3,62 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.8.0] -- 2026-05-02 -- "core public API: forecast() + Experiment + ForecastResult (PR 1 of 2)"
+
+### Added
+* **`mf.forecast(...)`** -- one-shot forecasting helper. Assembles the
+  canonical default recipe (L0 fail_fast/seeded_reproducible/serial,
+  L1 official-source path with target / horizons / sample window,
+  L2 no-transform pass-through, L3 lag1 + target_construction,
+  L4 single fit_model node with the requested family, L5 standard mse)
+  via ``RecipeBuilder``, runs it through ``execute_recipe``, and wraps
+  the result in a :class:`ForecastResult`. Supports ``fred_md``,
+  ``fred_qd``, ``fred_sd`` (with explicit ``frequency=``),
+  ``fred_md+fred_sd``, ``fred_qd+fred_sd``.
+* **`mf.Experiment(...)`** -- builder class for one forecasting study.
+  Methods: ``compare_models([f1, f2, ...])``, ``compare(axis_path, values)``,
+  ``sweep(axis_path, values)`` (alias of ``compare``),
+  ``to_recipe_dict()``, ``to_yaml()``, ``validate()``,
+  ``run(output_directory=...)``, ``replicate(manifest_path)``.
+  ``compare()`` walks dotted paths into the in-progress recipe dict
+  (auto-creates intermediate dicts; addresses L3/L4 ``nodes`` lists by
+  the entry's ``id`` field) and replaces the leaf with a
+  ``{"sweep": [...]}`` marker.
+* **`mf.ForecastResult`** (minimal shell) -- ``cells`` / ``succeeded`` /
+  ``manifest_path`` / ``replicate()`` proxies over the underlying
+  :class:`ManifestExecutionResult`.
+* `tests/api/` -- 32 new tests across ``test_forecast.py``,
+  ``test_experiment.py``, ``test_forecast_result.py`` covering: the
+  default recipe wiring (L0 / L1 / L4 / L5 axes + start / end +
+  horizons), dataset-frequency conflict detection, ``compare_models``
+  expansion + ``sweep_values`` recording, generic ``compare()`` /
+  ``sweep()`` axis paths, ``to_yaml`` round-trip through
+  ``execute_recipe``, ``replicate()`` sink-hash match, ``_set_at``
+  edge cases (empty path, traversal into scalar, list-by-id walk,
+  sweep-marker overwrite).
+
+### Deferred to v0.8.1 (PR 2 of 2)
+* ``Experiment.use_fred_sd_inferred_tcodes()`` /
+  ``.use_sd_empirical_tcodes()`` / ``.use_preprocessor()`` /
+  ``.use_*`` family of one-call hooks.
+* ``Experiment.variant(name, **overrides)`` -- currently raises
+  ``NotImplementedError("variant() lands in v0.8.1")``.
+* ``ForecastResult`` rich accessors: ``.forecasts`` / ``.metrics`` /
+  ``.ranking`` / ``.read_json(...)`` / ``.file_path(...)`` / ``.mean()`` /
+  ``.get(...)``.
+* Docs migration: drop the ``planned_`` prefix on
+  ``docs/for_researchers/planned_simple_api/`` and remove the
+  per-page "API status note (current)" banners now that the API
+  is real.
+
+### Migration notes
+* The new ``mf.forecast()`` / ``mf.Experiment`` surface is **additive** --
+  ``mf.run("recipe.yaml")`` / ``mf.replicate(...)`` and the
+  ``RecipeBuilder`` continue to work unchanged.
+* The exclamation mark in the commit subject (``feat(api)!``) flags the
+  new public surface for SemVer awareness; nothing existing is removed
+  in v0.8.0.
+
 ## [0.7.0] -- 2026-05-06 -- "encyclopedia (replaces auto-emit reference)"
 
 ### Added

@@ -4,6 +4,13 @@ Horse race research benchmarking package for macro forecasting.
 
 **Public surface**
 
+- ``macroforecast.forecast(...)`` -- one-shot helper (v0.8.0); assembles a
+  default recipe and runs it.
+- ``macroforecast.Experiment(...)`` -- builder class (v0.8.0) with
+  ``compare_models`` / ``compare`` / ``sweep`` / ``run`` /
+  ``replicate`` / ``to_yaml`` / ``validate``.
+- ``macroforecast.ForecastResult`` -- thin façade over
+  :class:`ManifestExecutionResult` returned by both.
 - ``macroforecast.run(recipe)`` -- execute a recipe end-to-end (L1->L8) and
   return a :class:`ManifestExecutionResult`. Iterates every sweep cell.
 - ``macroforecast.replicate(manifest_path)`` -- re-execute a stored manifest
@@ -25,7 +32,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 _LAZY_EXPORTS = {
     # public top-level API
@@ -34,6 +41,10 @@ _LAZY_EXPORTS = {
     "replicate": ".api",
     "ManifestExecutionResult": ".api",
     "ReplicationResult": ".api",
+    # high-level façade (v0.8.0)
+    "forecast": ".api_high",
+    "Experiment": ".api_high",
+    "ForecastResult": ".api_high",
     # defaults
     "DEFAULT_PROFILE": ".defaults",
     "DEFAULT_PROFILE_NAME": ".defaults",
