@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goulet-Coulombe (2021) — bundled paper baseline &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=279f42e0"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Study 1 – TBD" href="study_1.html" />
+    <link rel="prev" title="Example Walkthrough — minimal ridge" href="example_walkthrough.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Replications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="example_walkthrough.html">Example Walkthrough — minimal ridge</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Goulet-Coulombe (2021) — bundled paper baseline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="study_1.html">Study 1 – TBD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="study_2.html">Study 2 – TBD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="study_3.html">Study 3 – TBD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="study_4.html">Study 4 – TBD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Replications</a></li>
+      <li class="breadcrumb-item active">Goulet-Coulombe (2021) — bundled paper baseline</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/replications/goulet_coulombe_2021.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="goulet-coulombe-2021-bundled-paper-baseline">
+<h1>Goulet-Coulombe (2021) — bundled paper baseline<a class="headerlink" href="#goulet-coulombe-2021-bundled-paper-baseline" title="Link to this heading"></a></h1>
+<blockquote>
+<div><p>Status: bundled paper-baseline replication. The recipe runs end-to-end
+on a stock install with bit-exact replicate. Real FRED-MD figure
+replication requires swapping the bundled 36-month sample panel for
+the official 1960-onwards FRED-MD vintage (one-line edit in the
+recipe; see “Real FRED-MD” section).</p>
+</div></blockquote>
+<p>This page documents what the bundled
+<a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/goulet_coulombe_2021_replication.yaml"><code class="docutils literal notranslate"><span class="pre">examples/recipes/goulet_coulombe_2021_replication.yaml</span></code></a>
+recipe does today. It is <strong>not</strong> a full paper replication on its own —
+the bundled panel is a 36-month sample (1960-1962) for smoke
+testing — but the recipe shape, layer choices, and replicate contract
+are paper-faithful.</p>
+<section id="paper">
+<h2>Paper<a class="headerlink" href="#paper" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Title</strong>: “The Macroeconomy as a Random Forest”</p></li>
+<li><p><strong>Author</strong>: Goulet-Coulombe, P. (2021)</p></li>
+<li><p><strong>Source</strong>: Working paper / JAE 2024</p></li>
+<li><p><strong>Recipe ports the ridge baseline</strong> of the paper’s FRED-MD INDPRO
+forecasting horse race. The full MRF / GTVP route lives at
+<a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/l4_mrf_placeholder.yaml"><code class="docutils literal notranslate"><span class="pre">examples/recipes/l4_mrf_placeholder.yaml</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="recipe-shape">
+<h2>Recipe shape<a class="headerlink" href="#recipe-shape" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Layer</p></th>
+<th class="head"><p>Choice</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">failure_policy=fail_fast</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode=seeded_reproducible</span></code>, <code class="docutils literal notranslate"><span class="pre">random_seed=42</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target=INDPRO</span></code>, <code class="docutils literal notranslate"><span class="pre">target_horizons=[1,</span> <span class="pre">3,</span> <span class="pre">6,</span> <span class="pre">12]</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type=final_revised_data</span></code>, custom_panel_inline (smoke; see below)</p></td>
+</tr>
+<tr class="row-even"><td><p>L2</p></td>
+<td><p>McCracken-Ng official tcodes (<code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>L3</p></td>
+<td><p>Lag features + <code class="docutils literal notranslate"><span class="pre">target_construction(direct,</span> <span class="pre">h)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>L4</p></td>
+<td><p>Ridge (<code class="docutils literal notranslate"><span class="pre">alpha=1.0</span></code>) + AR(BIC) benchmark, expanding-window walk-forward, <code class="docutils literal notranslate"><span class="pre">refit_policy=every_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_strategy=direct</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L5</p></td>
+<td><p>MSE primary + relative metrics (vs AR benchmark)</p></td>
+</tr>
+<tr class="row-even"><td><p>L6</p></td>
+<td><p>DM (HLN-corrected) horse-race test, <code class="docutils literal notranslate"><span class="pre">dependence_correction=newey_west</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>L8</p></td>
+<td><p>Manifest + per-cell artifacts</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="todays-reproduce-replicate">
+<h2>Today’s reproduce + replicate<a class="headerlink" href="#todays-reproduce-replicate" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>macroforecast<span class="w"> </span>run<span class="w"> </span>examples/recipes/goulet_coulombe_2021_replication.yaml<span class="w"> </span>-o<span class="w"> </span>out/gc2021
+macroforecast<span class="w"> </span>replicate<span class="w"> </span>out/gc2021/manifest.json
+</pre></div>
+</div>
+<p><strong>Verified on v0.8.6</strong> (server1, 2026-05-06):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">run</span><span class="p">:</span>        <span class="mf">1.40</span><span class="n">s</span><span class="p">,</span> <span class="n">cells</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">all_ok</span><span class="o">=</span><span class="kc">True</span>
+<span class="n">replicate</span><span class="p">:</span>  <span class="n">recipe_match</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sink_hashes_match</span><span class="o">=</span><span class="kc">True</span>
+
+<span class="n">cell</span> <span class="n">sink</span> <span class="n">hashes</span> <span class="p">(</span><span class="n">deterministic</span> <span class="n">across</span> <span class="n">runs</span><span class="p">):</span>
+  <span class="n">l1_data_definition_v1</span><span class="p">:</span>   <span class="n">d164d15be5b3135c</span>
+  <span class="n">l1_regime_metadata_v1</span><span class="p">:</span>   <span class="mi">41</span><span class="n">cb7c29ec77d7c1</span>
+  <span class="n">l2_clean_panel_v1</span><span class="p">:</span>       <span class="n">effec065444a0ac4</span>
+  <span class="n">l3_features_v1</span><span class="p">:</span>          <span class="mi">139853</span><span class="n">d1515cab8a</span>
+  <span class="n">l3_metadata_v1</span><span class="p">:</span>          <span class="mi">7</span><span class="n">c2368d756c4a66a</span>
+  <span class="n">l4_forecasts_v1</span><span class="p">:</span>         <span class="mi">395</span><span class="n">df3d0f5979dac</span>
+  <span class="n">l4_model_artifacts_v1</span><span class="p">:</span>   <span class="mi">0</span><span class="n">a2b7f63e1df2a31</span>
+  <span class="n">l4_training_metadata_v1</span><span class="p">:</span> <span class="mi">62</span><span class="n">abd040e502ebdd</span>
+  <span class="n">l5_evaluation_v1</span><span class="p">:</span>        <span class="n">f5ac78c21ae68f7e</span>
+  <span class="n">l6_tests_v1</span><span class="p">:</span>             <span class="n">bc383c20f93143dd</span>
+</pre></div>
+</div>
+<p>Smoke regression: covered by
+<a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/tests/test_examples_smoke.py"><code class="docutils literal notranslate"><span class="pre">tests/test_examples_smoke.py::test_recipe_runs_end_to_end[goulet_coulombe_2021_replication.yaml]</span></code></a>.</p>
+</section>
+<section id="real-fred-md-full-paper-replication">
+<h2>Real FRED-MD (full paper replication)<a class="headerlink" href="#real-fred-md-full-paper-replication" title="Link to this heading"></a></h2>
+<p>To replicate the actual paper figures (1960-onwards walk-forward over
+the full FRED-MD vintage), swap two YAML keys:</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w"> </span>1_data:
+<span class="w"> </span>  fixed_axes:
+<span class="gd">-    custom_source_policy: custom_panel_only</span>
+<span class="gi">+    custom_source_policy: official_only</span>
+<span class="gi">+    dataset: fred_md</span>
+<span class="w"> </span>    frequency: monthly
+<span class="w"> </span>    horizon_set: custom_list
+<span class="w"> </span>    ...
+<span class="w"> </span>  leaf_config:
+<span class="w"> </span>    target: INDPRO
+<span class="w"> </span>    target_horizons: [1, 3, 6, 12]
+<span class="gd">-    custom_panel_inline:</span>
+<span class="gd">-      ...  # 36-month smoke sample</span>
+<span class="gi">+    sample_start_rule: max_balanced</span>
+<span class="gi">+    sample_end_rule: latest_available</span>
+</pre></div>
+</div>
+<p>After the swap, the L1 loader pulls real FRED-MD via the vintage
+manager (see
+<a class="reference internal" href="../architecture/layer1/index.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">docs/architecture/layer1/index.md</span></code></span></a>
+for vintage configuration) and the recipe runs the actual paper
+horse race.</p>
+<p>To extend to MRF (the paper’s headline result), add another L4 fit
+node with <code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">macroeconomic_random_forest</span></code> alongside the ridge
+(<code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code>). See
+<a class="reference internal" href="../encyclopedia/l4/index.html"><span class="std std-doc">encyclopedia L4</span></a> for the full family
+list.</p>
+</section>
+<section id="what-this-page-proves-vs-what-is-still-tbd">
+<h2>What this page proves vs. what is still TBD<a class="headerlink" href="#what-this-page-proves-vs-what-is-still-tbd" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>✅ Recipe shape is paper-faithful at the schema level (L0/L1/L2/L3/L4/L5/L6 axes match the paper’s experimental design).</p></li>
+<li><p>✅ End-to-end runtime is wired: every layer materialises, every sink hashes deterministically, replicate bit-exact succeeds.</p></li>
+<li><p>✅ Stock-install runnable: no extras (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast</span></code> is enough).</p></li>
+<li><p>⏳ Full paper figures from real FRED-MD: requires the one-line swap above plus a real vintage configured. Not gated by this page; the user runs it.</p></li>
+<li><p>⏳ Numerical match against the paper’s reported MSEs: requires the real-FRED run plus access to the paper’s appendix tables for cross-check.</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="example_walkthrough.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">example_walkthrough.md</span></code></span></a> — line-by-line
+layer reading using the smaller <code class="docutils literal notranslate"><span class="pre">l4_minimal_ridge.yaml</span></code>.</p></li>
+<li><p><a class="reference internal" href="../for_researchers/recipe_gallery.html"><span class="std std-doc">Recipe gallery</span></a> — full
+list of bundled recipes including GC2021.</p></li>
+<li><p><a class="reference internal" href="../encyclopedia/l4/axes/family.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">encyclopedia/l4/axes/family.md</span></code></span></a>
+— every L4 model family available for horse-race extension.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="example_walkthrough.html" class="btn btn-neutral float-left" title="Example Walkthrough — minimal ridge" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="study_1.html" class="btn btn-neutral float-right" title="Study 1 – TBD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

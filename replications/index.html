@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Replications</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="example_walkthrough.html">Example Walkthrough — minimal ridge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="goulet_coulombe_2021.html">Goulet-Coulombe (2021) — bundled paper baseline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="study_1.html">Study 1 – TBD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="study_2.html">Study 2 – TBD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="study_3.html">Study 3 – TBD</a></li>
@@ -92,11 +93,16 @@
 <h1>Replications<a class="headerlink" href="#replications" title="Link to this heading"></a></h1>
 <p>This track shows end-to-end examples of running a research-grade
 macroforecast study from raw FRED data through bit-exact replicable
-manifest. Two layers:</p>
+manifest. Three layers:</p>
 <ol class="arabic simple">
 <li><p><strong>Bundled example walkthroughs</strong> – detailed walk through one of
 <code class="docutils literal notranslate"><span class="pre">examples/recipes/*.yaml</span></code>, explaining every layer choice and the
 resulting artifact tree.</p></li>
+<li><p><strong>Bundled paper baselines</strong> – a published paper’s ridge / model
+horse-race ported to macroforecast schema. Recipe ships in the
+repo, runs end-to-end, replicates bit-exact. The user swaps the
+bundled smoke panel for real FRED data when reproducing the
+paper’s figures.</p></li>
 <li><p><strong>Research replications</strong> – four studies the project maintainer
 conducted with macroforecast. Each replication includes the exact
 recipe YAML, command line, expected artifacts, and pointers back to
@@ -107,7 +113,13 @@ publication-grade replication study.</p>
 <section id="walkthroughs">
 <h2>Walkthroughs<a class="headerlink" href="#walkthroughs" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="example_walkthrough.html"><span class="std std-doc">Example walkthrough – minimal ridge on FRED-MD</span></a></p></li>
+<li><p><a class="reference internal" href="example_walkthrough.html"><span class="std std-doc">Example walkthrough – minimal ridge</span></a></p></li>
+</ul>
+</section>
+<section id="bundled-paper-baselines">
+<h2>Bundled paper baselines<a class="headerlink" href="#bundled-paper-baselines" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="goulet_coulombe_2021.html"><span class="std std-doc">Goulet-Coulombe (2021) – The Macroeconomy as a Random Forest</span></a></p></li>
 </ul>
 </section>
 <section id="research-replications">
