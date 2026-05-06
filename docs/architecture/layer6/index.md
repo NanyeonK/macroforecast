@@ -67,3 +67,7 @@ Output:
         multiple_model_test: mcs_hansen
         mcs_alpha: 0.10
 ```
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l6/`](../../encyclopedia/l6/index.md).

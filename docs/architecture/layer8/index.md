@@ -73,3 +73,7 @@ When `saved_objects` is omitted, L8 derives it from the active recipe:
     output_directory: ./paper_replication/main/
     descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}_{combine_method}"
 ```
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l8/`](../../encyclopedia/l8/index.md).

@@ -2,7 +2,7 @@
 
 - Architecture: [layer contracts](../../architecture/index.md)
 - This page: FRED-MD / FRED-QD / FRED-SD column dictionary
-- API: [public API reference](../../reference/public_api.md)
+- API: [public API reference](../../encyclopedia/public_api.md)
 
 This section is the dataset dictionary for macroforecast's official FRED-backed
 source panels. It is separate from Layer 1 because Layer 1 should decide the

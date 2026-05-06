@@ -26,7 +26,7 @@ pip install 'macroforecast[shap]'            # + shap package for richer L7 figu
 Or pin to a tagged release directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.6.3"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.7.0"
 ```
 
 For development:
@@ -142,6 +142,10 @@ See `plans/design/part1-4` for the canonical design tables.
 
 A replication script for Coulombe (2024) MRF on FRED-MD lives at
 `examples/replication/coulombe_2024_mrf_fred_md.py`.
+
+Browse the full encyclopedia (every layer × sublayer × axis × option, with
+OptionDoc summaries / when-to-use / references) at
+[`docs/encyclopedia/`](docs/encyclopedia/index.md).
 
 ## Status levels
 

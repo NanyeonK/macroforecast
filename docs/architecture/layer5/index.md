@@ -62,3 +62,7 @@ Output:
     ranking: by_relative_metric
     report_style: per_target_horizon_panel
 ```
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l5/`](../../encyclopedia/l5/index.md).

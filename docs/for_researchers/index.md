@@ -31,7 +31,7 @@ replication = mf.replicate("out/manifest.json")
 assert replication.sink_hashes_match
 ```
 
-For the full curated reference see [`reference/public_api.md`](../reference/public_api.md).
+For the full curated reference see [`encyclopedia/public_api.md`](../encyclopedia/public_api.md). Browse every recipe axis / option in the [encyclopedia](../encyclopedia/index.md).
 
 ```{toctree}
 :hidden:

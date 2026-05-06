@@ -27,6 +27,24 @@ def _cmd_scaffold(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_encyclopedia(args: argparse.Namespace) -> int:
+    """Emit the source-committed encyclopedia tree under ``out_dir``.
+
+    Lives under ``scaffold`` because the encyclopedia is the schema
+    catalogue (every layer / sub-layer / axis / option) -- the same
+    introspection surface the wizard walks at recipe-authoring time."""
+
+    from . import render_encyclopedia
+
+    written = render_encyclopedia.write_all(Path(args.output))
+    print(
+        f"[macroforecast scaffold encyclopedia] wrote "
+        f"{len(written)} pages to {args.output}",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
     import macroforecast
 
@@ -146,6 +164,20 @@ def main(argv: list[str] | None = None) -> int:
         help="Also walk the L1.5/L2.5/L3.5/L4.5 diagnostic layers.",
     )
     scaffold.set_defaults(func=_cmd_scaffold)
+
+    encyc_p = sub.add_parser(
+        "encyclopedia",
+        help=(
+            "Emit the source-committed encyclopedia tree under <output>. "
+            "Used to refresh ``docs/encyclopedia/`` after editing the "
+            "OptionDoc registry; CI diffs the output to enforce sync."
+        ),
+    )
+    encyc_p.add_argument(
+        "output",
+        help="Output directory (e.g. ``docs/encyclopedia``).",
+    )
+    encyc_p.set_defaults(func=_cmd_encyclopedia)
 
     run_p = sub.add_parser("run", help="Execute a recipe end-to-end.")
     run_p.add_argument("recipe", help="Path to the recipe YAML.")

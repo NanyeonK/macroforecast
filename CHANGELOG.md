@@ -3,6 +3,62 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.7.0] -- 2026-05-02 -- "encyclopedia (replaces auto-emit reference)"
+
+### Added
+* **`docs/encyclopedia/`** -- source-committed markdown tree, one page
+  per layer / sub-layer / axis (and per-option sections under each axis
+  page), with three browse views: by layer, by axis (A-Z), by option
+  *value* (A-Z). Generated from the live `LayerImplementationSpec`
+  registry plus the `OPTION_DOCS` documentation registry under
+  `macroforecast/scaffold/option_docs/`. 187 pages on first emit.
+* `macroforecast/scaffold/render_encyclopedia.py` and
+  `macroforecast/scaffold/__main__.py` -- the encyclopedia renderer plus
+  a `python -m macroforecast.scaffold encyclopedia <out>` entry point.
+* `macroforecast scaffold encyclopedia <out>` CLI subcommand on the
+  top-level `macroforecast` console script.
+* `tests/scaffold/test_render_encyclopedia.py` -- 11 tests covering
+  page-count floor, per-layer index + axis pages, browse-by-option
+  >= 30 model families, missing-OptionDoc TBD fallback, both CLI
+  smoke routes.
+* New section in [`docs/encyclopedia/public_api.md`](docs/encyclopedia/public_api.md)
+  preserves the curated public Python API table that previously lived
+  under `docs/reference/public_api.md`. Linked from
+  `for_researchers/index.md` and `for_recipe_authors/index.md`.
+* `ci-docs.yml`: new "Encyclopedia drift check" step. Re-emits the
+  encyclopedia into a scratch dir and diffs against
+  `docs/encyclopedia/`; the build fails if a contributor edits the
+  schema or OptionDoc without re-running
+  `python -m macroforecast.scaffold encyclopedia docs/encyclopedia/`.
+* RELEASE_CHECKLIST.md gains an explicit reminder to regenerate the
+  encyclopedia after any OptionDoc / LayerImplementationSpec edit.
+
+### Changed
+* `docs/index.md` "Pick your path" row now points at the encyclopedia
+  rather than the removed reference index.
+* Each `docs/architecture/layer{0..8}/index.md` gained a "See
+  encyclopedia" footer cross-link to the matching
+  `../../encyclopedia/l{N}/index.md`.
+* README.md has a new "Browse the full encyclopedia at
+  `docs/encyclopedia/`" pointer in the recipe-gallery section.
+
+### Removed
+* `docs/reference/` directory (the previous auto-emitted reference
+  tree, including `public_api.md` and the per-build `lN.rst` files
+  written by `_emit_optiondoc_reference()` in `docs/conf.py`). The
+  curated `public_api.md` content is preserved at
+  `docs/encyclopedia/public_api.md`.
+* `_emit_optiondoc_reference()` build-time hook in `docs/conf.py`. The
+  sphinx build no longer mutates the docs tree -- the encyclopedia is
+  now source-committed and CI enforces sync.
+
+### Migration notes
+* If you had a local link to `docs/reference/<layer>.rst`, replace it
+  with `docs/encyclopedia/<layer_id>/index.md` (per-layer landing) or
+  `docs/encyclopedia/<layer_id>/axes/<axis>.md` (per-axis page).
+* Bookmarks for `reference/public_api.md` should redirect to
+  `encyclopedia/public_api.md`.
+
 ## [0.6.3] -- 2026-05-06 -- "openpyxl baseline + FRED-SD docs subdir + architecture number prefix cleanup"
 
 ### Changed

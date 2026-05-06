@@ -67,3 +67,7 @@ Forecast combination belongs in L4 and consumes forecast artifacts:
 ## Related Reference
 
 - [Artifacts and Manifest](../artifacts_and_manifest.md)
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l4/`](../../encyclopedia/l4/index.md).

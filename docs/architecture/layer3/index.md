@@ -70,3 +70,7 @@ Compatibility aliases remain available where older recipes used them: `varimax_r
 ## Related Reference
 
 - [Layer Boundary Contract](../layer_boundary_contract.md)
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l3/`](../../encyclopedia/l3/index.md).

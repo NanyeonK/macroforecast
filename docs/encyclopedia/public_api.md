@@ -1,6 +1,8 @@
-# API Reference
+# Public Python API
 
-Curated reference for the public surface of the current public surface of macroforecast.
+[Back to encyclopedia](index.md)
+
+Curated reference for the public surface of the macroforecast package. The encyclopedia tree above documents the YAML *recipe* surface (axes / options); this page documents the Python *package* surface (importable symbols).
 
 ## Top-level API
 
@@ -46,6 +48,6 @@ Figure rendering (matplotlib + stylized US state choropleth) is in
 
 ## Operational coverage
 
-See [`CLAUDE.md`](../../CLAUDE.md) at the repo root for the operational
+See [`CLAUDE.md`](https://github.com/NanyeonK/macroforecast/blob/main/CLAUDE.md) at the repo root for the operational
 matrix: 30+ model families, 37 L3 ops, 7 L6 sub-layers, 29 L7 importance
 ops, FRED-SD US state choropleth, parquet/latex/markdown export.

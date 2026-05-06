@@ -222,3 +222,7 @@ reproducibility_mode
 compute_mode
 axis_type
 ```
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l0/`](../../encyclopedia/l0/index.md).

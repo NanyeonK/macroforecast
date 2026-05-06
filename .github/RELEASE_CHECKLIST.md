@@ -17,6 +17,15 @@ Run before tagging a new release. The version-consistency CI step in
       ```bash
       python -m pytest tests/ -x -q -m "not deep"
       ```
+- [ ] If you edited any ``OptionDoc`` content or any
+      ``LayerImplementationSpec`` (axes / options / sub-layers),
+      regenerate the encyclopedia and stage the diff:
+      ```bash
+      python -m macroforecast.scaffold encyclopedia docs/encyclopedia/
+      git add docs/encyclopedia/
+      ```
+      The ``ci-docs`` Encyclopedia drift check fails the build if this
+      step is skipped.
 
 ## Tag and push
 

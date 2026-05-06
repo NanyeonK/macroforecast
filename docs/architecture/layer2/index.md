@@ -33,3 +33,7 @@ Output:
 - auxiliary payloads for narrow advanced routes.
 
 ## Related reference
+
+## See encyclopedia
+
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l2/`](../../encyclopedia/l2/index.md).

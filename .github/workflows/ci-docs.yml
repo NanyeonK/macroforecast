@@ -38,6 +38,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
+      - name: Encyclopedia drift check
+        run: |
+          # The encyclopedia tree is source-committed but generated from the
+          # OptionDoc + LayerImplementationSpec registries. Re-emit into a
+          # scratch directory and diff against the committed tree; any
+          # divergence means a contributor edited the schema or OptionDoc
+          # without re-running the renderer.
+          python -m macroforecast.scaffold encyclopedia /tmp/encyc_check
+          if ! diff -r docs/encyclopedia/ /tmp/encyc_check/ >/dev/null; then
+              echo "docs/encyclopedia/ is out of sync with the registries."
+              echo "Run: python -m macroforecast.scaffold encyclopedia docs/encyclopedia/"
+              echo "Then commit the resulting changes."
+              diff -r docs/encyclopedia/ /tmp/encyc_check/ | head -80 || true
+              exit 1
+          fi
+          echo "encyclopedia is in sync"
+
       - name: Check navigator app assets exist
         run: |
           test -f docs/_html_extra/navigator_app/index.html
