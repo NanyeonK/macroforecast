@@ -350,6 +350,20 @@ def _render_top_index(stats: dict[str, int]) -> str:
         "documentation registry under `macroforecast/scaffold/option_docs/`."
     )
     parts.append("")
+    parts.append(
+        "> **Looking for the design narrative instead?** Use "
+        "[Architecture](../architecture/index.md) -- that's where the "
+        "prose \"why is L2 separated from L3\" / \"how does L7 read L4 "
+        "sinks\" / cross-layer reference explanations live. Encyclopedia "
+        "pages here are **auto-generated lookup** for individual option "
+        "values (description, when to use, when NOT, references, related "
+        "options); Architecture pages there are **hand-written narrative** "
+        "for the design contracts. Both are sourced from the same "
+        "`LayerImplementationSpec` registry -- encyclopedia is the "
+        "machine-locked option dictionary, architecture is the "
+        "human-edited design guide."
+    )
+    parts.append("")
     parts.append("## Counts")
     parts.append("")
     parts.append(f"- Layers: {stats['n_layers']}")
