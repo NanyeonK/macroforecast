@@ -32,7 +32,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-__version__ = "0.8.8"
+__version__ = "0.9.0a0"
 
 _LAZY_EXPORTS = {
     # public top-level API
@@ -130,7 +130,7 @@ _LAZY_EXPORTS = {
     "EvaluationScale": ".preprocessing",
 }
 
-_LAZY_MODULES: tuple[str, ...] = ("scaffold",)
+_LAZY_MODULES: tuple[str, ...] = ("scaffold", "recipes")
 """Submodules exposed as ``macroforecast.<name>`` via lazy import."""
 
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))

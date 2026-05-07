@@ -31,6 +31,10 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "svr_linear",
     "svr_rbf",
     "svr_poly",
+    # Promoted in v0.9.1 dev-stage v0.9.0F (audit-fix for paper 16,
+    # Coulombe et al. 2022 JAE): closed-form non-linear ridge in the
+    # dual via sklearn ``KernelRidge``.
+    "kernel_ridge",
     "mlp",
     "lstm",
     "gru",
@@ -57,6 +61,14 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     #   intervals.
     "quantile_regression_forest",
     "bagging",
+    # New in v0.9 (Phase 2 paper-coverage pass):
+    # - mars: Multivariate Adaptive Regression Splines (Friedman 1991).
+    #   Atomic non-linear basis-function regression with no sklearn
+    #   analogue. Runtime wraps ``pyearth`` as an optional dep
+    #   (``pip install macroforecast[mars]``); raises NotImplementedError
+    #   with a clear hint when the extra is missing -- mirrors the
+    #   xgboost / lightgbm / catboost / deep optional-dep pattern.
+    "mars",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -70,9 +82,15 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # - bvar_minnesota / bvar_normal_inverse_wishart: ``_BayesianVAR`` wrapper
 #   delegates to plain ``_VARWrapper`` and does *not* apply Minnesota /
 #   normal-inverse-Wishart prior shrinkage.
-# - macroeconomic_random_forest: ``_MRFWrapper`` is a plain
-#   ``RandomForestRegressor`` augmented with a time_trend column, not the
-#   Coulombe (2024) GTVP local-linear forest with asymmetric loss.
+# - macroeconomic_random_forest: re-anchored in v0.8.9 to
+#   ``_MRFExternalWrapper``, which delegates to Ryan Lucas's reference
+#   implementation of Goulet Coulombe 2024 MRF, vendored under
+#   ``macroforecast/_vendor/macro_random_forest/`` with surgical
+#   numpy 2.x / pandas 2.x compatibility patches. The previous in-house
+#   ``_MRFWrapper`` only implemented the per-leaf linear piece and was
+#   missing both the random-walk regularisation and the Block Bayesian
+#   Bootstrap forecast ensembles. Upstream:
+#   https://github.com/RyanLucas3/MacroRandomForest.
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
@@ -98,7 +116,29 @@ MODEL_FAMILY_STATUS: dict[str, ItemStatus] = {
 }
 
 
-SEARCH_ALGORITHMS = ("none", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm", "cv_path")
+SEARCH_ALGORITHMS = (
+    "none",
+    "grid_search",
+    "random_search",
+    "bayesian_optimization",
+    "genetic_algorithm",
+    "cv_path",
+    # Coulombe-Surprenant-Leroux-Stevanovic (2022 JAE) Feature 3 schemes.
+    # v0.9.0a0 audit-fix: previously these strings were silently dropped
+    # because the validator's options enum did not list them, so the
+    # paper's Feature-3 treatment effect was structurally identifiable
+    # as zero by construction. ``_resolve_l4_tuning`` now branches on
+    # each one for alpha-tunable linear families.
+    "kfold",
+    "poos",
+    "aic",
+    "bic",
+    # Goulet Coulombe / Klieber / Barrette / Goebel (2024) Albacore §3.
+    # Non-overlapping block CV: split T into K contiguous non-shuffled
+    # blocks, hold each out in turn. Distinct from ``kfold`` (random
+    # shuffle) and from ``TimeSeriesSplit`` (expanding sequential).
+    "block_cv",
+)
 FORECAST_STRATEGIES = ("direct", "iterated", "path_average")
 TRAINING_START_RULES = ("expanding", "rolling", "fixed")
 REFIT_POLICIES = ("every_origin", "every_n_origins", "single_fit")

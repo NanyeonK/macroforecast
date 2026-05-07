@@ -81,7 +81,9 @@ def test_l7_gradient_methods_reject_tree_model():
 
 
 def test_l7_var_specific_ops_reject_non_var():
-    for op in ["fevd", "historical_decomposition", "generalized_irf"]:
+    # ``generalized_irf`` is now future-gated (v0.8.9 honesty pass V2.3);
+    # ``orthogonalised_irf`` replaces it as the operational Cholesky variant.
+    for op in ["fevd", "historical_decomposition", "orthogonalised_irf"]:
         assert validate_layer(parse_layer_yaml(make_l7_yaml(op=op, model_family="ridge"), "l7")).has_hard_errors
 
 

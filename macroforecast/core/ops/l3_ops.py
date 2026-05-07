@@ -7,7 +7,15 @@ from ..types import Factor, L3FeaturesArtifact, L3MetadataArtifact, LaggedPanel,
 
 
 def _positive_param(name: str, default: int = 1):
-    return lambda dag, nref: dag.node(nref.node_id).params.get(name, default) >= 1
+    def check(dag, nref):
+        value = dag.node(nref.node_id).params.get(name, default)
+        # Phase A3 fix: ``n_components="all"`` sentinel passes the
+        # positive-int gate (the runtime resolves "all" → min(T, N) at
+        # PCA fit time, which is always >= 1).
+        if isinstance(value, str) and value == "all":
+            return True
+        return value >= 1
+    return check
 
 
 def _not_full_sample(param: str = "temporal_rule"):
@@ -20,7 +28,12 @@ def _temporal_present(dag, nref) -> bool:
 
 
 def _n_components_reasonable(dag, nref) -> bool:
-    return dag.node(nref.node_id).params.get("n_components", 1) < 10000
+    value = dag.node(nref.node_id).params.get("n_components", 1)
+    # Phase A3 fix: ``n_components="all"`` sentinel is always reasonable
+    # (runtime caps at min(T, N)).
+    if isinstance(value, str) and value == "all":
+        return True
+    return value < 10000
 
 
 def _has_target_signal_input(dag, nref) -> bool:
@@ -152,7 +165,10 @@ def _factor_op(name: str, input_type=Panel, output_type=Factor, extra_rules=()):
         input_types={"default": input_type},
         output_type=output_type,
         params_schema={
-            "n_components": {"type": int, "default": 4, "sweepable": True},
+            # Phase A3 fix: ``n_components`` accepts ``int | Literal["all"]``.
+            # The literal sentinel ``"all"`` is resolved to ``min(T, N)``
+            # at PCA fit time (see ``_pca_factors`` in ``core/runtime.py``).
+            "n_components": {"type": (int, str), "default": 4, "sweepable": True},
             "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
         },
         hard_rules=(
@@ -172,6 +188,25 @@ def pca(inputs, params):
 
 @_factor_op("sparse_pca")
 def sparse_pca(inputs, params):
+    _stub(inputs, params)
+
+
+@_factor_op("sparse_pca_chen_rohe")
+def sparse_pca_chen_rohe(inputs, params):
+    """Chen-Rohe (2023) Sparse Component Analysis -- non-diagonal D
+    variant used by Rapach & Zhou (2025) Sparse Macro-Finance Factors.
+    Distinct from ``sparse_pca`` (sklearn / Zou-Hastie-Tibshirani 2006).
+    Operational v0.9.1 dev-stage v0.9.0C-3."""
+
+    _stub(inputs, params)
+
+
+@_factor_op("supervised_pca", extra_rules=(Rule("hard", _has_target_signal_input, "supervised_pca requires target_signal input port"),))
+def supervised_pca(inputs, params):
+    """Supervised PCA (Giglio-Xiu-Zhang 2025): screen panel columns by
+    univariate correlation with the target, retain top ``q · N``, run
+    PCA on the screened sub-panel. Operational v0.9.1 dev-stage v0.9.0C-4."""
+
     _stub(inputs, params)
 
 
@@ -354,6 +389,97 @@ for _future_name in (
         output_type=Panel,
         status="future",
     )(_future_selection_op(_future_name))
+
+
+# ---------------------------------------------------------------------------
+# v0.9 Phase 2 paper-coverage atomic primitives.
+#
+# Decomposition discipline: each entry below is *atomic* -- it cannot be
+# expressed as a recipe over existing ops. Decomposable paper methods
+# (MARX = ma + rotation, PRF = extra_trees(max_features=1), etc.) live
+# in the recipe gallery instead.
+# ---------------------------------------------------------------------------
+
+
+@register_op(
+    name="savitzky_golay_filter",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    params_schema={
+        "window_length": {"type": int, "default": 5, "sweepable": True},
+        "polyorder": {"type": int, "default": 2, "sweepable": True},
+    },
+)
+def savitzky_golay_filter(inputs, params):
+    """Savitzky-Golay polynomial smoothing filter (Savitzky & Golay 1964).
+
+    Operational baseline for AlbaMA replication (Coulombe 2025
+    'Adaptive Moving Average for Macroeconomic Monitoring'). Runtime
+    delegates to ``scipy.signal.savgol_filter``.
+    """
+
+    _stub(inputs, params)
+
+
+@register_op(
+    name="adaptive_ma_rf",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    params_schema={
+        "n_estimators": {"type": int, "default": 500, "sweepable": True},
+        "min_samples_leaf": {"type": int, "default": 40, "sweepable": True},
+        "sided": {"type": str, "default": "two", "options": ("one", "two"), "sweepable": True},
+        "random_state": {"type": int, "default": 0},
+    },
+)
+def adaptive_ma_rf(inputs, params):
+    """AlbaMA (Goulet Coulombe & Klieber 2025, arXiv:2501.13222) --
+    adaptive moving average via a Random Forest with K=1 regressor
+    (time index). Each leaf is a contiguous window of observations;
+    ``min_samples_leaf`` lower-bounds the realised window length.
+    Operational v0.9.1 dev-stage v0.9.0C-1.
+
+    Modes (``params.sided``):
+      * ``"two"`` (default) -- fit the forest once on the full sample;
+        each leaf may span past *and* future. Standard smoother.
+      * ``"one"`` -- expanding-window per-t fit; real-time / nowcasting
+        variant. Per-t cost is ``O(B · log T)``.
+    """
+
+    _stub(inputs, params)
+
+
+@register_op(
+    name="asymmetric_trim",
+    layer_scope=("l2", "l3"),
+    input_types={"default": Panel},
+    output_type=Panel,
+    params_schema={
+        "smooth_window": {"type": int, "default": 0, "sweepable": True},
+    },
+)
+def asymmetric_trim(inputs, params):
+    """Albacore-family rank-space transformation
+    (Goulet Coulombe / Klieber / Barrette / Goebel 2024).
+
+    Per-period sort: panel ``Π`` of shape ``(T, K)`` is mapped to
+    ``O`` where ``O[t, r] = sort(Π[t, :])[r]`` (ascending). Asymmetric
+    trimming emerges in the *downstream* nonneg ridge that learns
+    weights on each rank position; this op does the rank-space
+    transformation only.
+
+    Optional ``smooth_window > 0`` applies a centred moving average to
+    each rank-position time series (paper §3 mentions a 3-month MA
+    smoothing for noisy components -- delegated rather than baked-in
+    so users can chain ``ma_window`` explicitly when desired).
+
+    Operational from v0.8.9 (B-6). Runtime function:
+    :func:`macroforecast.core.runtime._asymmetric_trim`.
+    """
+
+    _stub(inputs, params)
 
 
 @register_op(name="chow_lin_disaggregation", layer_scope=("l2",), input_types={"default": Panel}, output_type=Panel, status="future")

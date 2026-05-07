@@ -6,7 +6,7 @@
 - Category: `construction`
 - Sub-layers: 4
 - Axes: 5
-- Options across axes: 49
+- Options across axes: 55
 
 ## Sub-layers
 

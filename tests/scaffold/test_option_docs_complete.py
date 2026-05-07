@@ -62,14 +62,22 @@ def test_layer_option_docs_complete_when_required(layer_id, required):
 
 def test_registry_has_no_orphan_entries():
     """Every entry in OPTION_DOCS must point at a real (layer, sub-layer,
-    axis, option) tuple in the schema. Catches stale docs lingering after
-    a schema change removes an option."""
+    axis, option) tuple in the schema -- operational *or* future. Catches
+    stale docs lingering after a schema change removes an option.
+
+    v0.9 (Phase 2 paper-coverage pass) widened this from
+    :func:`operational_options` to :func:`all_options` so future-status
+    families registered for forthcoming runtime promotion can carry
+    OPTION_DOCS prose. The encyclopedia surfaces them with a
+    'pre-promotion' caveat so users discover roadmap items in the same
+    place they look up working axes.
+    """
 
     orphans: list[tuple[str, str, str, str]] = []
     for key in OPTION_DOCS:
         layer_id, sublayer_id, axis_name, option_value = key
-        operational = set(introspect.operational_options(layer_id))
-        if key not in operational:
+        registered = set(introspect.all_options(layer_id))
+        if key not in registered:
             orphans.append(key)
     assert not orphans, f"OptionDoc registry has orphans: {orphans}"
 

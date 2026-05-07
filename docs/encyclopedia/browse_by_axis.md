@@ -66,7 +66,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`export_format`](l8/axes/export_format.md) | L8 | `L8_A_export_format` | operational | no | 9 |
 | [`factor_view`](l3_5/axes/factor_view.md) | L3.5 | `L3_5_B_factor_block_inspection` | operational | no | 5 |
 | [`failure_policy`](l0/axes/failure_policy.md) | L0 | `l0_a` | operational | no | 2 |
-| [`family`](l4/axes/family.md) | L4 | `L4_A_model_selection` | operational | yes | 34 |
+| [`family`](l4/axes/family.md) | L4 | `L4_A_model_selection` | operational | yes | 40 |
 | [`feature_correlation`](l3_5/axes/feature_correlation.md) | L3.5 | `L3_5_C_feature_correlation` | operational | no | 5 |
 | [`figure_dpi`](l1_5/axes/figure_dpi.md) | L1.5 | `L1_5_Z_export` | operational | no | 0 |
 | [`figure_dpi`](l2_5/axes/figure_dpi.md) | L2.5 | `L2_5_Z_export` | operational | no | 0 |
@@ -118,8 +118,8 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`official_transform_policy`](l1/axes/official_transform_policy.md) | L1 | `l1_c` | operational | no | 2 |
 | [`official_transform_scope`](l1/axes/official_transform_scope.md) | L1 | `l1_c` | operational | no | 4 |
 | [`oos_period`](l5/axes/oos_period.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |
-| [`op`](l3/axes/op.md) | L3 | `L3_A_step_op` | operational | no | 37 |
-| [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 30 |
+| [`op`](l3/axes/op.md) | L3 | `L3_A_step_op` | operational | no | 47 |
+| [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 40 |
 | [`outlier_action`](l2/axes/outlier_action.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_policy`](l2/axes/outlier_policy.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_scope`](l2/axes/outlier_scope.md) | L2 | `l2_c` | operational | yes | 4 |

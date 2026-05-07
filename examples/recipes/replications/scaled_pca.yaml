@@ -1,0 +1,80 @@
+# Status: operational
+# 
+# Huang/Jiang/Li/Tong/Zhou (2022) -- scaled PCA = supervised slope-weighted scaling + PCA, feeding a downstream ridge.
+# 
+# Decomposition: scaled_pca op (already operational since v0.1).
+# Reference: Huang, Jiang, Li, Tong & Zhou (2022) 'Scaled PCA: A New Approach to Dimension Reduction', Management Science.
+# 
+# Generated from macroforecast.recipes.paper_methods (v0.9 Phase 2).
+# Helper docstring is the canonical decomposition note; this YAML
+# is the hand-readable mirror.
+0_meta:
+  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  leaf_config: {random_seed: 42}
+1_data:
+  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  leaf_config:
+    target: y
+    target_horizons: [1]
+    custom_panel_inline:
+      date: ['2018-01-01', '2018-02-01', '2018-03-01', '2018-04-01', '2018-05-01',
+        '2018-06-01', '2018-07-01', '2018-08-01', '2018-09-01', '2018-10-01', '2018-11-01',
+        '2018-12-01']
+      y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+2_preprocessing:
+  fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate,
+    frame_edge_policy: keep_unbalanced}
+3_feature_engineering:
+  nodes:
+  - id: src_X
+    type: source
+    selector:
+      layer_ref: l2
+      sink_name: l2_clean_panel_v1
+      subset: {role: predictors}
+  - id: src_y
+    type: source
+    selector:
+      layer_ref: l2
+      sink_name: l2_clean_panel_v1
+      subset: {role: target}
+  - id: spca
+    type: step
+    op: scaled_pca
+    params: {n_components: 4}
+    inputs: [src_X, src_y]
+  - id: y_h
+    type: step
+    op: target_construction
+    params: {mode: point_forecast, method: direct, horizon: 1}
+    inputs: [src_y]
+  sinks:
+    l3_features_v1: {X_final: spca, y_final: y_h}
+    l3_metadata_v1: auto
+4_forecasting_model:
+  nodes:
+  - id: src_X
+    type: source
+    selector:
+      layer_ref: l3
+      sink_name: l3_features_v1
+      subset: {component: X_final}
+  - id: src_y
+    type: source
+    selector:
+      layer_ref: l3
+      sink_name: l3_features_v1
+      subset: {component: y_final}
+  - id: fit
+    type: step
+    op: fit_model
+    params: {family: ridge, forecast_strategy: direct, training_start_rule: expanding,
+      refit_policy: every_origin, search_algorithm: none, min_train_size: 6, alpha: 1.0}
+    inputs: [src_X, src_y]
+  - id: predict
+    type: step
+    op: predict
+    inputs: [fit, src_X]
+  sinks: {l4_forecasts_v1: predict, l4_model_artifacts_v1: fit, l4_training_metadata_v1: auto}
+

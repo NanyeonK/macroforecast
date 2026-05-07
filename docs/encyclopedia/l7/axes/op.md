@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 30 option(s)
-- Future: 0 option(s)
+- Operational: 33 option(s)
+- Future: 7 option(s)
 
 ## Options
 
@@ -40,6 +40,12 @@ Correlated feature panels (FRED-MD / -QD) where PDPs are misleading.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `attention_weights`  --  future
+
+_(no schema description for `attention_weights`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
+
 ### `bootstrap_jackknife`  --  operational
 
 Bootstrap / jackknife confidence bands around any importance score.
@@ -58,6 +64,12 @@ Reporting confidence-banded importance rankings.
 **Related options**: [`rolling_recompute`](#rolling-recompute)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `boruta_selection`  --  future
+
+_(no schema description for `boruta_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `bvar_pip`  --  operational
 
@@ -128,6 +140,42 @@ When the completeness / sensitivity axioms matter -- prefer integrated gradients
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `dual_decomposition`  --  operational
+
+Forecast-as-weighted-training-targets via the representer theorem (Coulombe et al. 2024); equivalently a restricted attention module (Goulet Coulombe 2026).
+
+Goulet Coulombe / Goebel / Klieber (2024) 'Dual Interpretation of ML Forecasts'. Surfaces each prediction as a weighted combination of historical training targets; weights recovered through the representer theorem applied to the fitted model. Atomic L7 primitive: SHAP-family ops decompose by feature contribution, this op decomposes by training-row contribution, the natively interpretable view for small-sample temporally-ordered macro panels.
+
+**Linear families** (operational v0.8.9): ridge / OLS / lasso via closed-form ``w(xₜ) = X(X'X + αI)⁻¹xₜ``.
+
+**Tree-bagging ensembles** (operational v0.9.1 dev-stage v0.9.0B-5): RandomForestRegressor / ExtraTreesRegressor via the leaf-co-occurrence kernel ``wⱼ(xₜ) = (1/B) Σ_b 1[j ∈ B_b] · 1[leaf_b(xₜ) == leaf_b(xⱼ)] / leaf_size_b(xⱼ)`` where ``B_b`` is tree b's bootstrap subset (sklearn ``estimators_samples_``). Reproduces ``forest.predict`` to machine precision (~4e-16). Helper ``_rf_leaf_cooccurrence_weights`` in core/runtime.py.
+
+Output frame layout: rows = training row labels, columns = ``mean_weight``, ``abs_mean_weight``, ``max_abs_weight``. Full ``(n_test × n_train)`` weight matrix attached as ``frame.attrs['dual_weights']``; ``frame.attrs['method']`` carries ``'linear_closed_form'`` or ``'rf_leaf_cooccurrence_kernel'`` for downstream renderers.
+
+**Inline portfolio diagnostics.** The output artifact also carries the four portfolio metrics from the same paper (HHI = ``Σwⱼ²``, short = ``Σ max(0,-wⱼ)``, turnover = ``‖wₜ - wₜ₋₁‖₁``, leverage = ``‖w‖₁``) at ``frame.attrs['portfolio_metrics']``. These are trivial numpy reductions on the primary dual weights and do not warrant their own L7 op (decomposition discipline).
+
+**OLS-as-attention equivalence.** Goulet Coulombe (2026) 'Ordinary Least Squares as an Attention Mechanism' (SSRN 5200864) shows that the same dual representation ``ŷ_test = F_test F_train' y_train`` (eq. 7) coincides with a *restricted attention module*: queries ``Q = X_test W``, keys ``K = X_train W`` with ``W = U Λ^{-½}``, values ``V = y``, and the softmax replaced by the identity (eqs. 17-19). The training-row weights ``ωⱼᵢ = ⟨Fⱼ, Fᵢ⟩`` surfaced by this op are exactly the (restricted) attention weights of that paper. Same compute, different vocabulary -- no separate runtime needed.
+
+Boosted-tree (gradient_boosting / xgboost / lightgbm) and NN extensions are deferred: residual-bagging and learned non-linear models do not admit a clean sum-of-training-targets dual representation.
+
+**When to use**
+
+Decomposing macro forecasts into training-target contributions; explaining ML predictions to econometric audiences; bridging classical OLS to transformer-attention literature; per-prediction provenance for tree ensembles.
+
+**When NOT to use**
+
+Boosted-tree / NN families (gradient_boosting, xgboost, lightgbm, mlp, lstm, etc.) -- raises NotImplementedError; the residual-bagging structure does not factor into a sum-of-training-targets representation.
+
+**References**
+
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* Goulet Coulombe, Goebel & Klieber (2024) 'Dual Interpretation of Machine Learning Forecasts', arXiv:2412.13076.
+* Goulet Coulombe (2026) 'Ordinary Least Squares as an Attention Mechanism', SSRN 5200864 -- shows OLS predictions ŷ_test = F_test F_train' y_train (eq. 7) coincide with a restricted attention module (eqs. 17-19, identity activation, tied W_Q W_K' = (X_train' X_train)^{-1}). The dual_decomposition op already implements the same compute via the closed-form ridge representer; no separate runtime needed.
+
+**Related options**: [`permutation_importance`](#permutation-importance), [`shap_kernel`](#shap-kernel)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
 ### `fevd`  --  operational
 
 Forecast error variance decomposition (Sims 1980).
@@ -192,26 +240,26 @@ Wide panels -- the M² PDP grid grows expensive.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
-### `generalized_irf`  --  operational
+### `generalized_irf`  --  future
 
-Pesaran-Shin (1998) generalized impulse-response function.
+Pesaran-Shin (1998) generalized impulse-response function (future, v0.9.x).
 
-Order-invariant alternative to Cholesky IRFs: shocks are treated as already orthogonalised by the variance-covariance structure of the residuals. Avoids the arbitrary-ordering issue of standard VAR IRFs.
+Order-invariant IRF where each shock is constructed as the multivariate-normal projection of all residuals onto the j-th canonical direction. Distinct from Cholesky orthogonalised IRFs (which use a recursive lower-triangular rotation). **Future** -- the runtime currently raises NotImplementedError. For the Cholesky variant operational since v0.2, use ``orthogonalised_irf``.
 
 **When to use**
 
-VAR analysis where the variable ordering is not theoretically motivated.
+VAR analysis where the variable ordering has no theoretical motivation -- order-invariance is the desired property.
 
 **When NOT to use**
 
-When a structural identification scheme (Cholesky / sign / long-run) IS theoretically motivated -- use the structural IRF instead.
+When a recursive identification IS theoretically motivated -- use ``orthogonalised_irf`` instead.
 
 **References**
 
 * macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate models', Economics Letters 58(1): 17-29.
 
-**Related options**: [`fevd`](#fevd), [`historical_decomposition`](#historical-decomposition)
+**Related options**: [`fevd`](#fevd), [`historical_decomposition`](#historical-decomposition), [`orthogonalised_irf`](#orthogonalised-irf)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -265,9 +313,9 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `historical_decomposition`  --  operational
 
-Historical decomposition of observed series into structural shocks.
+Historical decomposition (Burbidge-Harrison 1985) of the realised series into structural shocks.
 
-Reconstructs the realised path of each variable as the sum of contributions from each orthogonalised shock + initial conditions. Standard VAR diagnostic complementing FEVD; statsmodels-backed.
+Reconstructs each variable's realised path as the convolution of orthogonalised IRF coefficients (Cholesky-rotated structural form) with the time series of structural shocks recovered from the reduced-form residuals. Returns the per-shock cumulative absolute contribution to the target variable's realised fluctuations; the row labels match the VAR variable ordering.
 
 **When to use**
 
@@ -282,7 +330,7 @@ Non-VAR models.
 * macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
 * Burbidge & Harrison (1985) 'A historical decomposition of the great depression to determine the role of money', JME 16(1): 45-54.
 
-**Related options**: [`fevd`](#fevd), [`generalized_irf`](#generalized-irf)
+**Related options**: [`fevd`](#fevd), [`orthogonalised_irf`](#orthogonalised-irf)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -328,6 +376,12 @@ Feature-selection stability audit for Lasso / Lasso-Path / Elastic Net.
 **Related options**: [`model_native_linear_coef`](#model-native-linear-coef), [`bootstrap_jackknife`](#bootstrap-jackknife)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `lasso_path_selection`  --  future
+
+_(no schema description for `lasso_path_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `lineage_attribution`  --  operational
 
@@ -377,6 +431,12 @@ Wide panels (n_features > 200) -- prohibitive runtime.
 **Related options**: [`permutation_importance`](#permutation-importance)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `lstm_hidden_state`  --  future
+
+_(no schema description for `lstm_hidden_state`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `model_native_linear_coef`  --  operational
 
@@ -452,6 +512,54 @@ Non-MRF models.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `orthogonalised_irf`  --  operational
+
+Cholesky-orthogonalised impulse-response function (Sims 1980).
+
+Standard structural-VAR IRF: residual covariance Σᵤ is Cholesky-decomposed P P' = Σᵤ; the structural shocks P⁻¹ u_t are orthogonalised by construction. ``orth_irfs[s, i, j]`` is the response of variable ``i`` at horizon ``s`` to a unit structural shock to variable ``j`` at time 0. **Order-dependent**: the variable ordering in the recipe determines the recursive causal scheme imposed.
+
+**When to use**
+
+VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).
+
+**When NOT to use**
+
+When the variable ordering is arbitrary -- file a v0.9.x request for ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, currently future-gated).
+
+**References**
+
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.
+
+**Related options**: [`fevd`](#fevd), [`historical_decomposition`](#historical-decomposition)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `oshapley_vi`  --  operational
+
+Out-of-sample SHAP-style variable importance (Borup et al. 2022) [schema; runtime via anatomy package].
+
+Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy'. Recomputes Shapley-style feature contributions on the *out-of-sample* loss rather than in-sample fit, addressing the distribution-shift mismatch where in-sample SHAP misranks features that matter for OOS accuracy.
+
+Atomic primitive -- existing in-sample ``shap_*`` ops do not compose into oShapley-VI. Runtime delegates to the Borup et al. ``anatomy`` Python package as an optional dep (``pip install macroforecast[anatomy]``). Schema-only in v0.9.0; operational promotion lands once the anatomy integration is wired.
+
+**When to use**
+
+OOS-aware variable importance for macro forecast audits; replicating Borup et al. (2022).
+
+**When NOT to use**
+
+Pre-promotion. Without the anatomy extra installed.
+
+**References**
+
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745.
+
+**Related options**: [`shap_kernel`](#shap-kernel), [`shap_tree`](#shap-tree), [`permutation_importance`](#permutation-importance), [`pbsv`](#pbsv)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
 ### `partial_dependence`  --  operational
 
 Friedman (2001) partial dependence plot.
@@ -472,6 +580,31 @@ Highly correlated features -- PDP averages over impossible regions of feature sp
 * Friedman (2001) 'Greedy Function Approximation: A Gradient Boosting Machine', Annals of Statistics 29(5): 1189-1232.
 
 **Related options**: [`accumulated_local_effect`](#accumulated-local-effect), [`friedman_h_interaction`](#friedman-h-interaction)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `pbsv`  --  operational
+
+Performance-Based Shapley Value (Borup et al. 2022) [schema; runtime via anatomy package].
+
+OOS accuracy decomposition: Shapley-attributes the forecast performance improvement over a benchmark to each feature coalition's contribution. Differs from ``oshapley_vi`` in decomposing the *accuracy gain* rather than the OOS loss; they are companion ops covering the two faces of OOS Shapley.
+
+Runtime delegates to ``anatomy`` package. Schema-only in v0.9.0.
+
+**When to use**
+
+Decomposing OOS forecast skill by feature; benchmark-relative interpretation studies.
+
+**When NOT to use**
+
+Pre-promotion. Without the anatomy extra installed.
+
+**References**
+
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745.
+
+**Related options**: [`oshapley_vi`](#oshapley-vi), [`permutation_importance`](#permutation-importance)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -523,6 +656,12 @@ When predictor correlations are negligible -- the cheaper plain permutation impo
 **Related options**: [`permutation_importance`](#permutation-importance)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `recursive_feature_elimination`  --  future
+
+_(no schema description for `recursive_feature_elimination`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `rolling_recompute`  --  operational
 
@@ -682,6 +821,12 @@ Non-tree models -- use ``shap_kernel`` or ``shap_linear`` instead.
 **Related options**: [`shap_kernel`](#shap-kernel), [`shap_linear`](#shap-linear), [`shap_interaction`](#shap-interaction), [`shap_deep`](#shap-deep)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `stability_selection`  --  future
+
+_(no schema description for `stability_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `transformation_attribution`  --  operational
 

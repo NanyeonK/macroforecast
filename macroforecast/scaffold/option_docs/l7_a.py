@@ -491,36 +491,70 @@ _FEVD = _o(
 
 _HISTORICAL_DECOMPOSITION = _o(
     "historical_decomposition",
-    "Historical decomposition of observed series into structural shocks.",
+    "Historical decomposition (Burbidge-Harrison 1985) of the realised series into structural shocks.",
     (
-        "Reconstructs the realised path of each variable as the sum of "
-        "contributions from each orthogonalised shock + initial "
-        "conditions. Standard VAR diagnostic complementing FEVD; "
-        "statsmodels-backed."
+        "Reconstructs each variable's realised path as the convolution "
+        "of orthogonalised IRF coefficients (Cholesky-rotated structural "
+        "form) with the time series of structural shocks recovered from "
+        "the reduced-form residuals. Returns the per-shock cumulative "
+        "absolute contribution to the target variable's realised "
+        "fluctuations; the row labels match the VAR variable ordering."
     ),
     "Telling the historical narrative -- which shocks drove specific recessions / expansions.",
     when_not_to_use="Non-VAR models.",
     references=(_REF_DESIGN_L7, Reference(
         citation="Burbidge & Harrison (1985) 'A historical decomposition of the great depression to determine the role of money', JME 16(1): 45-54.",
     )),
-    related=("fevd", "generalized_irf"),
+    related=("fevd", "orthogonalised_irf"),
 )
 
+_ORTHOGONALISED_IRF = _o(
+    "orthogonalised_irf",
+    "Cholesky-orthogonalised impulse-response function (Sims 1980).",
+    (
+        "Standard structural-VAR IRF: residual covariance Σᵤ is "
+        "Cholesky-decomposed P P' = Σᵤ; the structural shocks "
+        "P⁻¹ u_t are orthogonalised by construction. ``orth_irfs[s, i, j]`` "
+        "is the response of variable ``i`` at horizon ``s`` to a unit "
+        "structural shock to variable ``j`` at time 0. **Order-dependent**: "
+        "the variable ordering in the recipe determines the recursive "
+        "causal scheme imposed."
+    ),
+    "VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).",
+    when_not_to_use="When the variable ordering is arbitrary -- file a v0.9.x request for ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, currently future-gated).",
+    references=(_REF_DESIGN_L7, Reference(
+        citation="Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.",
+    )),
+    related=("fevd", "historical_decomposition"),
+)
+
+# ``generalized_irf`` (Pesaran-Shin 1998) is registered as a *future* op.
+# v0.2 #189 promoted an op named ``generalized_irf`` that actually shipped
+# Cholesky orthogonalised IRFs (statsmodels ``irf.orth_irfs``); the
+# v0.8.9 honesty pass renamed the operational variant to
+# ``orthogonalised_irf`` and reserved ``generalized_irf`` for the
+# Pesaran-Shin order-invariant procedure (v0.9.x roadmap). The two
+# methods differ -- Cholesky is order-dependent; Pesaran-Shin computes
+# each shock as the multivariate-normal projection of all residuals
+# onto the j-th canonical direction, yielding an order-invariant table.
 _GENERALIZED_IRF = _o(
     "generalized_irf",
-    "Pesaran-Shin (1998) generalized impulse-response function.",
+    "Pesaran-Shin (1998) generalized impulse-response function (future, v0.9.x).",
     (
-        "Order-invariant alternative to Cholesky IRFs: shocks are "
-        "treated as already orthogonalised by the variance-covariance "
-        "structure of the residuals. Avoids the arbitrary-ordering "
-        "issue of standard VAR IRFs."
+        "Order-invariant IRF where each shock is constructed as the "
+        "multivariate-normal projection of all residuals onto the j-th "
+        "canonical direction. Distinct from Cholesky orthogonalised "
+        "IRFs (which use a recursive lower-triangular rotation). "
+        "**Future** -- the runtime currently raises NotImplementedError. "
+        "For the Cholesky variant operational since v0.2, use "
+        "``orthogonalised_irf``."
     ),
-    "VAR analysis where the variable ordering is not theoretically motivated.",
-    when_not_to_use="When a structural identification scheme (Cholesky / sign / long-run) IS theoretically motivated -- use the structural IRF instead.",
+    "VAR analysis where the variable ordering has no theoretical motivation -- order-invariance is the desired property.",
+    when_not_to_use="When a recursive identification IS theoretically motivated -- use ``orthogonalised_irf`` instead.",
     references=(_REF_DESIGN_L7, Reference(
         citation="Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate models', Economics Letters 58(1): 17-29.",
     )),
-    related=("fevd", "historical_decomposition"),
+    related=("fevd", "historical_decomposition", "orthogonalised_irf"),
 )
 
 
@@ -626,6 +660,111 @@ _MRF_GTVP = _o(
 )
 
 
+# ---------------------------------------------------------------------------
+# v0.9 Phase 2 paper-coverage atomic primitives.
+# ---------------------------------------------------------------------------
+
+_DUAL_DECOMPOSITION = _o(
+    "dual_decomposition",
+    "Forecast-as-weighted-training-targets via the representer theorem (Coulombe et al. 2024); equivalently a restricted attention module (Goulet Coulombe 2026).",
+    (
+        "Goulet Coulombe / Goebel / Klieber (2024) 'Dual Interpretation "
+        "of ML Forecasts'. Surfaces each prediction as a weighted "
+        "combination of historical training targets; weights recovered "
+        "through the representer theorem applied to the fitted model. "
+        "Atomic L7 primitive: SHAP-family ops decompose by feature "
+        "contribution, this op decomposes by training-row contribution, "
+        "the natively interpretable view for small-sample temporally-"
+        "ordered macro panels.\n\n"
+        "**Linear families** (operational v0.8.9): ridge / OLS / lasso "
+        "via closed-form ``w(xₜ) = X(X'X + αI)⁻¹xₜ``.\n\n"
+        "**Tree-bagging ensembles** (operational v0.9.1 dev-stage "
+        "v0.9.0B-5): RandomForestRegressor / ExtraTreesRegressor via "
+        "the leaf-co-occurrence kernel ``wⱼ(xₜ) = (1/B) Σ_b 1[j ∈ B_b] "
+        "· 1[leaf_b(xₜ) == leaf_b(xⱼ)] / leaf_size_b(xⱼ)`` where "
+        "``B_b`` is tree b's bootstrap subset (sklearn "
+        "``estimators_samples_``). Reproduces ``forest.predict`` to "
+        "machine precision (~4e-16). Helper "
+        "``_rf_leaf_cooccurrence_weights`` in core/runtime.py.\n\n"
+        "Output frame layout: rows = training row labels, columns = "
+        "``mean_weight``, ``abs_mean_weight``, ``max_abs_weight``. "
+        "Full ``(n_test × n_train)`` weight matrix attached as "
+        "``frame.attrs['dual_weights']``; ``frame.attrs['method']`` "
+        "carries ``'linear_closed_form'`` or "
+        "``'rf_leaf_cooccurrence_kernel'`` for downstream renderers.\n\n"
+        "**Inline portfolio diagnostics.** The output artifact also "
+        "carries the four portfolio metrics from the same paper (HHI "
+        "= ``Σwⱼ²``, short = ``Σ max(0,-wⱼ)``, turnover = "
+        "``‖wₜ - wₜ₋₁‖₁``, leverage = ``‖w‖₁``) at "
+        "``frame.attrs['portfolio_metrics']``. These are trivial "
+        "numpy reductions on the primary dual weights and do not "
+        "warrant their own L7 op (decomposition discipline).\n\n"
+        "**OLS-as-attention equivalence.** Goulet Coulombe (2026) "
+        "'Ordinary Least Squares as an Attention Mechanism' (SSRN "
+        "5200864) shows that the same dual representation "
+        "``ŷ_test = F_test F_train' y_train`` (eq. 7) coincides with a "
+        "*restricted attention module*: queries ``Q = X_test W``, keys "
+        "``K = X_train W`` with ``W = U Λ^{-½}``, values ``V = y``, and "
+        "the softmax replaced by the identity (eqs. 17-19). The "
+        "training-row weights ``ωⱼᵢ = ⟨Fⱼ, Fᵢ⟩`` surfaced by this op "
+        "are exactly the (restricted) attention weights of that paper. "
+        "Same compute, different vocabulary -- no separate runtime "
+        "needed.\n\n"
+        "Boosted-tree (gradient_boosting / xgboost / lightgbm) and NN "
+        "extensions are deferred: residual-bagging and learned non-linear "
+        "models do not admit a clean sum-of-training-targets dual "
+        "representation."
+    ),
+    "Decomposing macro forecasts into training-target contributions; explaining ML predictions to econometric audiences; bridging classical OLS to transformer-attention literature; per-prediction provenance for tree ensembles.",
+    when_not_to_use="Boosted-tree / NN families (gradient_boosting, xgboost, lightgbm, mlp, lstm, etc.) -- raises NotImplementedError; the residual-bagging structure does not factor into a sum-of-training-targets representation.",
+    references=(
+        _REF_DESIGN_L7,
+        Reference(citation="Goulet Coulombe, Goebel & Klieber (2024) 'Dual Interpretation of Machine Learning Forecasts', arXiv:2412.13076."),
+        Reference(citation="Goulet Coulombe (2026) 'Ordinary Least Squares as an Attention Mechanism', SSRN 5200864 -- shows OLS predictions ŷ_test = F_test F_train' y_train (eq. 7) coincide with a restricted attention module (eqs. 17-19, identity activation, tied W_Q W_K' = (X_train' X_train)^{-1}). The dual_decomposition op already implements the same compute via the closed-form ridge representer; no separate runtime needed."),
+    ),
+    related=("permutation_importance", "shap_kernel"),
+)
+
+_OSHAPLEY_VI = _o(
+    "oshapley_vi",
+    "Out-of-sample SHAP-style variable importance (Borup et al. 2022) [schema; runtime via anatomy package].",
+    (
+        "Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) "
+        "'Anatomy of Out-of-Sample Forecasting Accuracy'. Recomputes "
+        "Shapley-style feature contributions on the *out-of-sample* "
+        "loss rather than in-sample fit, addressing the distribution-"
+        "shift mismatch where in-sample SHAP misranks features that "
+        "matter for OOS accuracy.\n\n"
+        "Atomic primitive -- existing in-sample ``shap_*`` ops do not "
+        "compose into oShapley-VI. Runtime delegates to the Borup et "
+        "al. ``anatomy`` Python package as an optional dep "
+        "(``pip install macroforecast[anatomy]``). Schema-only in v0.9.0; "
+        "operational promotion lands once the anatomy integration is wired."
+    ),
+    "OOS-aware variable importance for macro forecast audits; replicating Borup et al. (2022).",
+    when_not_to_use="Pre-promotion. Without the anatomy extra installed.",
+    references=(_REF_DESIGN_L7, Reference(citation="Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745.")),
+    related=("shap_kernel", "shap_tree", "permutation_importance", "pbsv"),
+)
+
+_PBSV = _o(
+    "pbsv",
+    "Performance-Based Shapley Value (Borup et al. 2022) [schema; runtime via anatomy package].",
+    (
+        "OOS accuracy decomposition: Shapley-attributes the forecast "
+        "performance improvement over a benchmark to each feature "
+        "coalition's contribution. Differs from ``oshapley_vi`` in "
+        "decomposing the *accuracy gain* rather than the OOS loss; "
+        "they are companion ops covering the two faces of OOS Shapley.\n\n"
+        "Runtime delegates to ``anatomy`` package. Schema-only in v0.9.0."
+    ),
+    "Decomposing OOS forecast skill by feature; benchmark-relative interpretation studies.",
+    when_not_to_use="Pre-promotion. Without the anatomy extra installed.",
+    references=(_REF_DESIGN_L7, Reference(citation="Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745.")),
+    related=("oshapley_vi", "permutation_importance"),
+)
+
+
 register(
     _MODEL_NATIVE_LINEAR_COEF, _MODEL_NATIVE_TREE_IMPORTANCE,
     _PERMUTATION_IMPORTANCE, _PERMUTATION_IMPORTANCE_STROBL, _LOFO,
@@ -634,8 +773,10 @@ register(
     _PARTIAL_DEPENDENCE, _ACCUMULATED_LOCAL_EFFECT, _FRIEDMAN_H_INTERACTION,
     _LASSO_INCLUSION_FREQUENCY, _BVAR_PIP, _CUMULATIVE_R2_CONTRIBUTION,
     _BOOTSTRAP_JACKKNIFE, _ROLLING_RECOMPUTE,
-    _FEVD, _HISTORICAL_DECOMPOSITION, _GENERALIZED_IRF,
+    _FEVD, _HISTORICAL_DECOMPOSITION, _ORTHOGONALISED_IRF, _GENERALIZED_IRF,
     _FORECAST_DECOMPOSITION,
     _GROUP_AGGREGATE, _LINEAGE_ATTRIBUTION, _TRANSFORMATION_ATTRIBUTION,
     _MRF_GTVP,
+    # v0.9 Phase 2 paper-coverage atomic primitives
+    _DUAL_DECOMPOSITION, _OSHAPLEY_VI, _PBSV,
 )

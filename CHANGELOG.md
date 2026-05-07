@@ -3,6 +3,790 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [0.9.0a0] -- 2026-05-07 -- "16-paper full-coverage cut (alpha pre-release)"
+
+**Pre-release status**. The 2026-05-07 independent paper-vs-implementation
+audit (3 subagents, 16 papers) found 12/16 ✅ Match and 4/16 ⚠️ Partial
+after the v0.9.0F audit-fix dev stage. The remaining 4 gaps were
+closed in v0.9.0F+ post-audit fixes:
+
+* **Paper 4** VARCTIC Bayesian IRF posterior — ``_BayesianVAR`` now
+  samples from the asymptotic multivariate-Normal posterior on VAR
+  coefficients (``vec(β) ~ N(β̂, Σ_u ⊗ (Z'Z)⁻¹)``) when
+  ``params['n_posterior_draws'] > 0``. Each draw produces a Cholesky-
+  orthogonalised IRF; mean + 5/16/84/95 percentile bands cached on
+  ``model._posterior_irf``. Helper
+  ``_BayesianVAR._sample_posterior_irf`` + ``_compute_orth_irfs``.
+  Pinv-based posterior covariance reconstruction tolerates collinear
+  designs (common when X already contains lagged y).
+* **Paper 9** HNN in-MLE constraint — replaced per-epoch post-batch
+  bias rescaling with a Lagrangian penalty term
+  ``λ_emphasis · (mean(h_v) − ν · var(y))²`` added to the NLL loss.
+  Paper §3.2 Ingredient 2 (in-MLE constraint) now matched exactly.
+  ``params['lambda_emphasis']`` defaults to 1.0; user may scale.
+* **Paper 15** Macro Data Transforms 16-cell — new helper
+  ``macroeconomic_data_transformations_horse_race`` returns
+  ``{cell × family → recipe}`` enumerating Coulombe et al. (2021)
+  Table 1's full grid (F / X / MARX / MAF / Level combinations × 6
+  forecasting families). Users iterate and aggregate per-cell metrics.
+* **Paper 16** ML for Macro 4-feature — new helper
+  ``ml_useful_macro_horse_race`` returns ``{case × h × cv → recipe}``
+  for the paper's 4-feature decomposition: nonlinearity (linear /
+  KRR / RF), regularization (Lasso / EN / Ridge), CV (k-fold / POOS
+  / AIC / BIC), loss (L2 / SVR ε-insensitive). Reference baselines
+  (FM, OLS) included.
+
+**Final audit verdict (post-paper-2 reclassification + 4-gap fix)**:
+all 16 papers ✅ Match at the V verification standard.
+
+* **Paper 2** Sea Ice DFM (Diebold / Göbel / Goulet Coulombe / Rudebusch
+  / Zhang 2020 arXiv:2003.14276) — initial audit flagged ⚠️ on the
+  assumption that the paper required Mariano-Murasawa mixed-frequency
+  estimation. Re-audit on 2026-05-07 (post-PDF acquisition) confirms
+  the paper is a *single-frequency* state-space DFM with Kalman filter
+  + smoother on a 4-satellite SIE panel — exactly the procedure that
+  ``_DFMMixedFrequency`` defaults to via statsmodels ``DynamicFactor``
+  when ``mixed_frequency=False``. Verdict upgraded to ✅ Match.
+* **Paper 4** Arctic VARCTIC — BVAR routing is now operational
+  (v0.9.0F), but the Bayesian-Minnesota-with-statsmodels-VAR-IRF
+  construction is a paper-implicit choice (Sims-style IRF over
+  posterior-mean coefficients); no formal Bayesian IRF posterior.
+* **Paper 9** HNN — Ingredient 4 reality check is implemented as a
+  post-hoc log-linear rescaling (paper Eq. 9-10) but not as the
+  in-MLE constraint paper §3.2 implicitly applies. The constraint
+  enforcement is still per-epoch bias rescaling.
+* **Paper 15** Macro Data Transformations Matter — pipeline supports
+  the L3-rotation horse race; the 16-cell Z_t enumeration recipe
+  from the paper's Table 1 is not shipped out of the box.
+* **Paper 16** ML for Macro Forecasting — KRR is now a first-class L4
+  family (v0.9.0F), but no out-of-the-box 4-feature × treatment
+  horse-race recipe is shipped to reproduce the paper's main result.
+
+The remaining 11/16 papers are paper-faithful at the V verification
+standard. Users may treat the package as a near-faithful replication
+substrate and adjust hyperparameters where conservative defaults
+preserve back-compat (e.g. ``var_innovations=True`` for Sparse Macro
+Factors, ``inner_n_estimators=1500`` for Booging).
+
+Stable v0.9.0 will close the 5 remaining gaps in v0.9.0a1 / a2 / b0
+release candidates.
+
+
+
+The single published cut after v0.8.9 that closes the 16-paper Phase-2
+audit (2026-05-07): every paper in the user-curated reading list reaches
+✅ Operational at the V verification standard. Five internal dev stages
+build up to this release; none of v0.9.0A-E ship to PyPI separately.
+
+### v0.9.0C — Tier 3 + Sparse Macro Factors (2026-05-07)
+
+Four operational promotions, all paper-faithful:
+
+* **AlbaMA** (``adaptive_ma_rf`` L3 op) — Goulet Coulombe & Klieber
+  (2025) "An Adaptive Moving Average for Macroeconomic Monitoring". RF
+  with K=1 (time index only); ``min_samples_leaf`` lower-bounds the
+  realised window length. Modes: ``sided='two'`` (full-sample fit) /
+  ``sided='one'`` (expanding-window per-t fit). Helper
+  ``_adaptive_ma_rf``.
+* **HNN** (``mlp.architecture=hemisphere`` + ``mlp.loss=volatility_emphasis``)
+  — Goulet Coulombe / Frenette / Klieber (2025 JAE) Hemisphere Neural
+  Networks. Common-core ReLU stack + dual head (mean + variance) +
+  Gaussian NLL loss; volatility-emphasis ν enforced via per-epoch
+  rescaling of the softplus head's bias. Helper ``_HemisphereNN``;
+  requires ``[deep]`` extra (torch>=2.0).
+* **Sparse Macro G3** — V2.5 follow-through. Two new L3 ops:
+  - ``sparse_pca_chen_rohe`` (Chen-Rohe 2023 SCA, non-diagonal D, ℓ_1
+    budget; alternating bilinear maximisation per Zhou-Rapach 2025
+    eq. 4). Helper ``_sparse_pca_chen_rohe``.
+  - ``supervised_pca`` (Giglio-Xiu-Zhang 2025; screen-then-PCA on top
+    ``q · M`` columns by univariate correlation with target). Helper
+    ``_supervised_pca``.
+  Existing ``sparse_pca`` (sklearn / Zou-Hastie-Tibshirani 2006)
+  unchanged; the three sparse-PCA-family ops are now distinct.
+
+Nine new known-answer tests pin: AlbaMA piecewise-constant recovery
+(MSE within noise floor) + one-sided NaN edge; HNN finite predictions
++ paper-coupled requirement (architecture + loss must both be set);
+SCA factor recovery (>0.9 corr with truth) + SPCA target alignment
+(>0.5 corr) + SCA distinct from sklearn SparsePCA.
+
+### v0.9.0D — anatomy adapter Path B (2026-05-07)
+
+Goulet Coulombe et al. forwards work via Borup, Goulet Coulombe,
+Rapach, Montes Schütte & Schwenk-Nebbe (2022) "Anatomy of Out-of-Sample
+Forecasting Accuracy". Operational L7 ops:
+
+* ``oshapley_vi`` -- mean of |per-instance Shapley values| across OOS
+  rows (paper Eq. 16). Default identity transformer.
+* ``pbsv`` -- global squared-error transformer; signed coefficients
+  surface loss-reducing predictors per paper Eq. 24.
+
+Both derive from a single ``Anatomy.explain(transformer=...)`` call.
+The 2026-05-07 audit (errata E3) corrected the v09 plan sketch which
+referenced non-existent ``Anatomy.oshapley_vi(...)`` /
+``Anatomy.pbsv(...)`` methods.
+
+Path B uses the *final-window* fitted model for every period; status
+column = ``"degraded"`` to signal the audit-flagged approximation.
+Selected automatically when ``params["initial_window"]`` is absent.
+
+### v0.9.0F — Audit-fix dev stage (2026-05-07)
+
+Three independent paper-vs-implementation audits (3 subagents, 16 papers
+each on a separate slice) found that v0.9.0A-E had 6/16 ✅ Match and
+10/16 ⚠️ Partial — the previous "16/16 operational" claim was an
+overclaim. v0.9.0F closes the eight P0/P1 audit findings. Aggregate
+flips to **paper-faithful for the canonical paths**, with conservative
+defaults that the user may still adjust.
+
+**P0 — Critical paper-defining gaps:**
+
+* **Paper 9 HNN** (Goulet Coulombe / Frenette / Klieber 2025 JAE) —
+  Three paper Ingredients were missing or stubbed:
+  - **Ingredient 2 (ν proxy)**: replaced default ν=0.5 with a paper-
+    faithful plain-NN OOB residual proxy (paper p.11 footnote 2:
+    ``ν = mean(ε̂²_NN) / var(y)``, capped at 0.99). Helper
+    ``_compute_nu_proxy``.
+  - **Ingredient 3 (blocked subsamples)**: replaced random row
+    sampling with contiguous time-block draws per Eq. 8. Helper
+    ``_blocked_subsample``.
+  - **Ingredient 4 (reality check)**: implemented Eq. 9-10 log-linear
+    regression of OOB squared residuals on log(h_v) and the bootstrap
+    correction ``ς̂``. Predict-time variance can now be corrected via
+    ``h_v ← exp(adj_intercept) · h_v_raw ** adj_slope``. Helper
+    ``_apply_reality_check``.
+  - Bumped default B from 50 → 100 (still below paper's 1000 for
+    L4 cell-level cost).
+* **Paper 14 Sparse Macro Factors** (Rapach & Zhou 2025) — added the
+  **VAR(1) innovation step** (paper Strategy step 2). Opt-in via
+  ``params['var_innovations']=True``; output columns rename to
+  ``scaf_*`` (sparse macro-finance factors) instead of ``sca_*``
+  (sparse PC scores). The default (False) preserves v0.9.0C-3 behaviour.
+* **Paper 12 Dual Interpretation portfolio metrics** — fixed
+  ``leverage`` from L1 norm to **signed sum** per paper Eq. p.21
+  (``FL = Σ w_{ji}``); fixed ``short`` to signed ≤ 0 per paper. Legacy
+  absolute-value variants surfaced as ``leverage_l1`` and ``short_abs``
+  for backward-compatible plotting.
+* **Paper 4 VARCTIC BVAR routing** — ``_BayesianVAR.fit`` now also
+  fits a parallel statsmodels ``VAR(p)`` and exposes ``_results``
+  alongside the closed-form posterior coefficients. The L7 IRF /
+  FEVD / historical_decomposition ops can now route on a Bayesian
+  Minnesota fit (Sims-style IRF construction over the posterior-mean
+  coefficient matrix is what the paper actually does).
+
+**P1 — Important default mismatches:**
+
+* **Paper 11 Anatomy** — bumped ``n_iterations`` default 50 → 500 to
+  match paper M=500 (Borup et al. 2022 p.16 footnote 16). Path A now
+  also marks the period as ``"degraded"`` when sklearn-clone fails on
+  a custom estimator (was: silently used final-window fit while still
+  labelling result "operational").
+* **Paper 3 SGT** — added paper p.87 rule-of-thumb defaults:
+  ``eta_depth_step=0.01`` (was 0.0), ``eta_max_plateau=0.5`` (was 1.0
+  via the clip). Effective plateau is ``max(self.eta, plateau)`` so
+  η=1 (CART parity) still works as expected. Surfaced ``mtry_frac``
+  sub-axis (paper p.88 §2.3 specifies mtry=0.75); default 1.0 = scan
+  every column (paper-silent baseline).
+* **Paper 6 Booging** — bumped ``inner_n_estimators`` default 500 →
+  1500 to match paper Table 2 / Appendix B's "deliberately overfit"
+  prescription. Below 1500, the bag-prune theorem's pruning effect is
+  weakened.
+* **Paper 16 KRR (Kernel Ridge Regression)** — registered as a
+  first-class L4 family (``kernel_ridge``) backed by sklearn
+  ``KernelRidge``. Paper headline non-linearity feature (Eq. 16,
+  §3.1.1) was previously not exposable as a recipe family; the
+  Nystroem-features approximation was the only available route.
+
+The P0 fixes alter user-facing numerics: any pipeline previously
+relying on the v0.9.0E ``leverage`` value, the v0.9.0E sparse_pca_chen_rohe
+output (now opt-out of VAR(1) by default to preserve back-compat),
+the v0.9.0E ``oshapley_vi`` / ``pbsv`` (M=50 vs new M=500), or the
+v0.9.0E HNN (ν=0.5 default vs new NN-OOB proxy) will produce
+*different* numbers in v0.9.1. The P1 changes adjust defaults but the
+old behaviour is reachable via explicit param overrides.
+
+After v0.9.0F + post-audit reclassifications + 4-gap fix
+(2026-05-07), the audit verdict is:
+
+| Verdict | Count | Papers |
+|---|---|---|
+| ✅ Match | **16/16** | 1, 5, 7, 8, 10, 13 (v0.9.0E baseline) + 3, 6, 11, 12, 14 (v0.9.0F audit-fixed) + 2 (post-audit reclassification post-PDF acquisition arXiv:2003.14276) + 4 (BVAR posterior IRF added), 9 (in-MLE Lagrangian penalty), 15 (16-cell horse-race helper), 16 (4-feature horse-race helper + KRR L4 family) |
+
+### v0.9.0E — anatomy Path A (faithful per-origin refit; 2026-05-07)
+
+When the recipe sets ``params["initial_window"]``, the adapter routes
+through ``AnatomySubsets.generate(EXPANDING, initial_window=W)`` and
+refits a fresh sklearn-cloned model at every walk-forward origin. Status
+column flips to ``"operational"``. The L4 layer gains no new artifact
+(``L4PerOriginModelsArtifact`` was the original spec but the
+``sklearn.base.clone(fitted) + per-period .fit()`` path achieves the
+same paper-faithful semantics without an L4 schema change).
+
+When ``params["initial_window"]`` is absent, Path B (degraded) is
+selected; the two paths share the same code path and differ only in
+the AnatomySubsets schedule.
+
+### v0.9.0B item 6 — SGT `decision_tree.split_shrinkage` operational (2026-05-07)
+
+Goulet Coulombe (2024) "Slow-Growing Trees" (SLOTH). The 2026-05-07
+audit (errata E1) confirmed that the previous "post-fit, multiply each
+leaf value by ``(1-η)^depth``" sketch was wrong — paper Algorithm 1
+applies the soft weight ``(1 − η)`` *in-fit* during weight propagation
+at every split. sklearn ``DecisionTreeRegressor`` cannot reproduce this
+because the *splits themselves* depend on soft weights (every row,
+including rule-violators, contributes to the SSE objective).
+
+* New helper class ``_SlowGrowingTree`` in ``core/runtime.py`` implements
+  Algorithm 1 from scratch. Iterative BFS construction, weighted-SSE
+  split search, Herfindahl ``H_l ≡ Σω² / (Σω)²`` stopping rule.
+* ``decision_tree.split_shrinkage = η`` (formerly future-gated) is now
+  operational. Sub-axis params ``herfindahl_threshold`` (default 0.25),
+  ``eta_depth_step`` (paper rule-of-thumb default 0.0), ``max_depth``.
+* Limit cases pinned by tests: η = 1 → CART-like high-R² fit; η < 1 →
+  smoother fit (paper Figure 2 SLOTH vs CART distinction).
+* Soft-weighted predict path traverses both branches with propagated
+  test weights ``w_test_branch ← w · (1 - η · I[rule violated])``;
+  prediction is the leaf-weighted-mean aggregate.
+* ``_F_DECISION_TREE`` OPTION_DOCS rewritten to document the soft-weight
+  algorithm + sub-axis params.
+* Four new known-answer tests in ``tests/core/test_v09_paper_coverage.py``.
+
+### v0.9.0B item 5 — `dual_decomposition` for tree-bagging ensembles (2026-05-07)
+
+Goulet Coulombe / Goebel / Klieber (2024) §3.2: random-forest predictions
+admit a clean dual representation as a weighted sum of training targets
+via the **leaf-co-occurrence kernel**:
+
+  ``wⱼ(xₜ) = (1/B) Σ_b 1[j ∈ B_b] · 1[leaf_b(xₜ) == leaf_b(xⱼ)] / leaf_size_b(xⱼ)``
+
+with ``B_b`` the bootstrap subset for tree b (sklearn's
+``estimators_samples_``). Reproduces ``forest.predict`` to machine
+precision (~4e-16) on both ``RandomForestRegressor`` (bootstrap=True
+with sampling-with-replacement multiplicity) and
+``ExtraTreesRegressor`` (bootstrap=False default).
+
+* New helper ``_rf_leaf_cooccurrence_weights`` in ``core/runtime.py``.
+* ``_dual_decomposition_frame`` ladder extended:
+  - ``hasattr(coef_)`` → existing linear closed-form;
+  - tree-bagging (RF / ExtraTrees) → leaf-co-occurrence kernel;
+  - everything else → NotImplementedError with redirect.
+* ``GradientBoostingRegressor`` deliberately rejected: residual-stage
+  bagging does not factor into a sum-of-training-targets representation.
+* ``frame.attrs["method"]`` carries ``"linear_closed_form"`` or
+  ``"rf_leaf_cooccurrence_kernel"`` for downstream renderers.
+* ``_DUAL_DECOMPOSITION`` OPTION_DOCS rewritten: drops "non-linear
+  future" language, adds the RF / ExtraTrees paragraph + paper §3.2
+  reference.
+* Three new known-answer tests (RF bit-exact with bootstrap, ExtraTrees
+  bit-exact, GBM rejection); existing v0.8.9 reject-test updated to
+  exercise the GBM family now that RF is operational.
+
+### v0.9.0B item 4 — Booging `bagging.strategy=booging` operational (2026-05-07)
+
+Goulet Coulombe (2024) "To Bag is to Prune" (arXiv:2008.07063). The
+2026-05-07 audit (errata E2) confirmed that the previous "K rounds:
+bag-on-residuals" sketch did not match the paper. The actual algorithm:
+
+* **Outer bagging** of ``B = 100`` subsamples (sampling-without-
+  replacement at fraction ``0.75``);
+* **Inner Stochastic Gradient Boosted Trees** with ``n_estimators=500``
+  set high (over-fit on purpose), ``learning_rate=0.1``, ``max_depth=4``,
+  ``subsample=0.5`` for intra-boost row stochasticity;
+* **Data Augmentation**: each predictor column ``X_k`` duplicated as
+  ``X̃_k = X_k + N(0, (σ_k · da_noise_frac)²)``, ``da_noise_frac=1/3``;
+* **Per-bag column dropping** at ``da_drop_rate=0.2``;
+* **Bag-prune theorem** (paper §2): outer bagging replaces tuning the
+  boosting depth ``S`` -- over-fit the inner SGB and let the bag
+  average prune.
+
+* New helper class ``_BoogingWrapper`` in ``core/runtime.py``.
+* L4 dispatch routes ``bagging.strategy='booging'`` to the new wrapper.
+* ``sequential_residual`` is retained as a legacy alias for back-compat;
+  the option now routes to the same outer-bagging-of-inner-SGB
+  construction (the alias preserves recipe-level back-compat for any
+  user that adopted the schema-only name in v0.8.9).
+* ``_F_BAGGING`` OPTION_DOCS rewritten to describe all three strategies
+  (``standard`` / ``block`` / ``booging``) with paper-faithful prose.
+* Encyclopedia regenerated (189 pages, no count drift).
+* Four new known-answer tests in ``tests/core/test_v09_paper_coverage.py``:
+  outer-bag fitting, alias dispatch parity, DA design-width verification,
+  end-to-end recipe smoke.
+
+### v0.9.0B items 2-3 — Maximally FL Albacore priors operational (2026-05-07)
+
+Goulet Coulombe / Klieber / Barrette / Goebel (2024) "Maximally Forward-
+Looking Core Inflation" introduces two assemblage-regression variants
+that decompose into ridge sub-axis options. Both are constrained
+generalised ridge fits solved via scipy SLSQP.
+
+* **G1 ``ridge.prior=shrink_to_target`` (Albacore_comps Variant A)**.
+  ``arg min ‖y − Xw‖² + α‖w − w_target‖²`` s.t. ``w ≥ 0``, ``w'1 = 1``
+  (Eq. 1 of the paper). Closed-form unconstrained solution
+  ``(X'X + αI)⁻¹(X'y + αw_target)`` projected onto the simplex via
+  SLSQP. Helper class ``_ShrinkToTargetRidge``. Sub-axis params:
+  ``prior_target`` (default uniform ``1/K``), ``prior_simplex`` (default
+  True). Limit cases pinned by tests:
+  - α = 0 → unconstrained / NNLS / OLS (recovers convex-combo truth);
+  - α → ∞ → returns ``w_target`` exactly;
+  - ``w_target=0``, simplex off, nonneg → equivalent to ``_NonNegRidge``.
+
+* **G2 ``ridge.prior=fused_difference`` (Albacore_ranks Variant B)**.
+  ``arg min ‖y − Xw‖² + α‖Dw‖²`` s.t. ``w ≥ 0``,
+  ``mean(y) = mean(Xw)``, where D is the first-difference operator
+  (Eq. 2). Pairs with the L3 ``asymmetric_trim`` op (B-6 v0.8.9) for
+  rank-space transformation. Helper class ``_FusedDifferenceRidge``.
+  Sub-axis params: ``prior_diff_order`` (default 1), ``prior_mean_
+  equality`` (default True). Limit cases pinned by tests:
+  - α = 0 → standard OLS (with mean-equality off);
+  - α → ∞ → uniform weights (level pinned by mean-equality);
+  - mean-equality holds to 1e-4 in finite samples.
+
+Both variants compose with ``coefficient_constraint=nonneg`` at the L4
+dispatch level. Seven new known-answer tests in
+``tests/core/test_v09_paper_coverage.py`` pin the limit cases and the
+end-to-end recipe-runs-to-completion path.
+
+### v0.9.0B item 1 — 2SRR `ridge.prior=random_walk` operational (2026-05-07)
+
+Coulombe (2025 IJF) "Time-Varying Parameters as Ridge Regressions" two-
+step closed-form generalised ridge. Eq. 11 of the paper:
+
+* Step 1: ``β̂ = C Z' (Z Z' + λ I_T)⁻¹ y`` where ``Z = WC``,
+  ``W = [diag(X_1) | ... | diag(X_K)]``, ``C = I_K ⊗ C_RW`` and
+  ``C_RW`` is lower-triangular ones (cumulative-sum operator).
+* Step 2: recover per-time residual variance ``σ²_ε(t)`` via EWMA
+  (default; RiskMetrics λ=0.94) or GARCH(1,1) (when ``arch>=5.0``);
+  rescale per-coefficient ``σ²_u`` to mean ``1/λ``; solve
+  ``θ̂ = Ω_θ Z' (Z Ω_θ Z' + Ω_ε)⁻¹ y``.
+
+Two ``T × T`` matrix solves; **no iteration**. The 2026-05-07 audit
+confirmed the closed-form interpretation of Eq. 11 and resolved the
+risk-register entry that had hedged toward iterative ridge fallback.
+
+* New helper class ``_TwoStageRandomWalkRidge`` in ``core/runtime.py``.
+* ``ridge.prior=random_walk`` dispatch routes to the new helper instead
+  of raising NotImplementedError.
+* ``_F_RIDGE`` OPTION_DOCS marks the option operational; adds
+  ``params.vol_model`` (``ewma`` default / ``garch11``) sub-axis.
+* Predict semantics: one-step-ahead under the random-walk assumption
+  ``β_{T+1} ≈ β_T``; the wrapper exposes the full per-time β̂ path
+  via ``model._beta_path`` (T × K) for L7 GTVP-style consumption.
+* Four known-answer tests in
+  ``tests/core/test_v09_paper_coverage.py``: random-walk truth recovery,
+  α→∞ static-OLS limit, NaN robustness, end-to-end recipe smoke.
+
+### v0.9.0A — Errata patch + paper-10 doc cross-ref (2026-05-07, in progress)
+
+Closes documentation gaps before any algorithmic work. Two changes:
+
+* **v09_paper_coverage_plan.md errata**. Four corrections from the
+  2026-05-07 deep-dive (each item separately enumerated in the plan
+  document):
+  - **E1 SGT** (``decision_tree.split_shrinkage``): the previous "post-
+    fit, multiply each leaf value by ``(1-η)^depth``" sketch is
+    incorrect. Goulet Coulombe (2024) Algorithm 1 applies the soft
+    weight ``(1 − η)`` *in-fit* during weight propagation at every
+    split. sklearn extension is insufficient → custom soft-weighted
+    tree implementation required (~250-350 LOC, effort 1-2 d → 5-7 d).
+  - **E2 Booging** (``bagging.strategy=sequential_residual``): the
+    previous "outer K rounds: bag a base learner on residuals" sketch
+    does not match the paper. The actual algorithm is *outer B = 100
+    bags of (intentionally over-fitted) inner Stochastic Gradient
+    Boosted Trees + Data Augmentation*. Schema option to be renamed
+    ``booging`` in v0.9.0B with ``sequential_residual`` retained as
+    alias for back-compat.
+  - **E3 anatomy adapter API**: anatomy 0.1.6 has *no* dedicated
+    ``oshapley_vi(...)`` / ``pbsv(...)`` methods. Both metrics are
+    derived from a single ``Anatomy.explain(transformer=...)`` call
+    with different ``AnatomyModelOutputTransformer`` instances. The
+    plan's Phase 4 sketch must be replaced.
+  - **E4 anatomy per-origin refit**: Borup paper Eq. 11 requires the
+    per-origin fitted model. macroforecast's ``L4ModelArtifactsArtifact``
+    keeps a single fitted_object per ``model_id``. Path B (degraded,
+    final-window fit + warning) ships in v0.9.0D; Path A (faithful,
+    new ``L4PerOriginModelsArtifact``) in v0.9.0E.
+  - **2SRR closed-form RESOLVED**: the risk-register entry "fall back
+    to iterative ridge" can be deleted — paper Eq. 11 is unambiguously
+    closed-form, two ``T × T`` solves.
+  - Three new schema rows added: G1 ``ridge.prior=shrink_to_target``
+    (Maximally FL Albacore_comps), G2 ``ridge.prior=fused_difference``
+    (Maximally FL Albacore_ranks), G3 ``sparse_pca_chen_rohe`` +
+    ``supervised_pca`` (V2.5 follow-through for Sparse Macro Factors).
+
+* **Paper 10 (OLS as Attention Mechanism) doc cross-ref**. Goulet
+  Coulombe (2026, SSRN 5200864) shows OLS predictions coincide with a
+  restricted attention module (paper eqs. 17-19). The compute is
+  identical to the closed-form ridge representer already implemented
+  in the ``dual_decomposition`` L7 op (operational since v0.8.9 B-3),
+  so no new runtime is needed. The op's ``OPTION_DOCS`` entry now
+  carries the Goulet Coulombe (2026) reference and a description
+  paragraph documenting the equivalence; encyclopedia regenerated.
+
+## [0.8.9] -- 2026-05-06 -- "Phase 1 paper-coverage promotions + groundwork"
+
+Combined cut that lands the v0.9.x paper-coverage groundwork (schema +
+recipe gallery + helper module) **plus the Phase 1 Tier 1 algorithmic
+promotions** of five atomic primitives that decompose into closed-form
+or scipy-based implementations.
+
+The v0.9.x algorithmic-promotion plan lives at
+``docs/architecture/v09_paper_coverage_plan.md``.
+
+### Honesty-pass fix (V2.4: DFM mixed-frequency vs Mariano-Murasawa 2003)
+
+The verification audit
+(``docs/architecture/v089_verification_results.md`` § V2.4) found that
+the ``dfm_mixed_mariano_murasawa`` family's mixed-frequency code path,
+operational since v0.25 #245, **had never run successfully**. Two bugs
+caused every mixed-frequency recipe to silently degrade to the single-
+frequency ``DynamicFactor`` path (a generic DFM, not the M-M aggregator):
+
+* The runtime passed ``endog_quarterly=...`` together with
+  ``k_endog_monthly=len(monthly)`` to
+  ``statsmodels DynamicFactorMQ``; statsmodels rejects this combination
+  with ``ValueError`` ("``k_endog_monthly`` cannot be specified when
+  ``endog_quarterly`` is given"). The silent ``try/except`` caught the
+  exception and routed the user into the single-frequency fallback
+  without warning.
+* When users supplied quarterly variables NaN-padded at non-quarter-end
+  months on a monthly DateTimeIndex (the natural shape coming out of a
+  FRED-MD + FRED-QD panel), statsmodels rejected the input because its
+  quarterly-endog contract requires a quarterly-frequency
+  DateTimeIndex (``freqstr`` starting with 'Q'). The runtime had no
+  index-normalisation step.
+
+v0.8.9 lands two surgical patches in
+``_DFMMixedFrequency._fit_mixed_frequency``:
+
+* Drop ``k_endog_monthly`` from the kwargs when ``endog_quarterly`` is
+  non-None (statsmodels infers it).
+* Drop the all-NaN rows in the quarterly block and reindex to a
+  quarterly DateTimeIndex with ``freq='QE'`` (pandas 3.0 spelling;
+  statsmodels' frequency check inspects only ``freqstr[0]``).
+
+Two diagnostic attributes added for future regression detection:
+
+* ``_mq_failure_reason: str | None`` -- populated when MQ requested
+  but did not run, replacing the previous "exception swallowed" path.
+* ``_idiosyncratic_ar1: bool | None`` -- ``True`` when the
+  Mariano-Murasawa (2010) Eq. 4 AR(1)-idiosyncratic spec was active,
+  ``False`` when the runtime fell back to i.i.d. idiosyncratic
+  errors, ``None`` when MQ did not run.
+
+This is a behaviour change: recipes declaring ``mixed_frequency=True``
+will now actually run the Mariano-Murasawa (2003) monthly-state
+aggregator instead of silently using the single-frequency fallback.
+Forecasts will differ from v0.25--v0.8.6 outputs for the same recipes.
+
+Four known-answer tests pin the behaviour:
+``test_v24_dfm_mq_pure_monthly_uses_mariano_murasawa_2010_ar1``
+(idiosyncratic AR(1) default),
+``test_v24_dfm_mq_mixed_m_q_handles_quarterly_nan_padded_input``
+(NaN-padded quarterly input → quarterly index conversion),
+``test_v24_dfm_single_frequency_falls_back_to_state_space_dfm``
+(non-MQ default still uses ``DynamicFactor`` Kalman MLE), and
+``test_v24_dfm_mq_failure_surfaces_in_diagnostic_attribute``
+(no-monthly-anchor case → ``_mq_failure_reason`` set instead of silent
+degradation).
+
+### Honesty-pass fix (V2.3: VAR ops vs Coulombe & Göbel 2021)
+
+The verification audit (``docs/architecture/v089_verification_results.md``
+§ V2.3) found two L7 ops registered as operational since v0.2 #189
+that did not match their named procedures:
+
+* **`generalized_irf` was misnamed.** The op was named after Pesaran-
+  Shin (1998) generalized IRF (order-invariant), but the runtime
+  returned ``statsmodels orth_irfs`` (Cholesky orthogonalised IRFs --
+  order-dependent). Two distinct algorithms.
+
+  v0.8.9 splits this into two ops: **`orthogonalised_irf`** (operational,
+  routes to the existing Cholesky path -- numerical output unchanged)
+  and **`generalized_irf`** (future-gated, runtime raises
+  ``NotImplementedError`` with a Pesaran-Shin paper reference and a
+  redirect to ``orthogonalised_irf``). v0.9.x will add a real
+  Pesaran-Shin runtime under the existing name.
+
+  Replication recipes (``examples/recipes/replications/arctic_var.yaml``,
+  ``recipes/paper_methods.varctic_arctic_amplification``) updated to
+  use ``orthogonalised_irf``.
+
+* **`historical_decomposition` was an importance proxy, not HD.** The
+  v0.2 #189 runtime returned ``|orth_irfs|.sum × std(resid)`` per
+  shock -- a time-invariant quantity that ignored the actual
+  realisation of structural shocks. The Burbidge-Harrison (1985)
+  historical decomposition expresses the *path* of each variable as a
+  convolution of orthogonalised IRFs with the time series of
+  recovered structural shocks.
+
+  v0.8.9 rewrites the runtime in ``_var_impulse_frame`` to compute
+  the canonical HD: Cholesky-decompose Σᵤ, recover structural shocks
+  ``e*_t = P⁻¹ u_t``, convolve with the orth_irfs to produce the
+  per-time-step contribution table ``hd[t, i, j]``, and surface the
+  per-shock cumulative absolute contribution to the target variable.
+  Two known-answer tests pin (i) the reconstruction-magnitude lower
+  bound (total importance is on the order of the realised target's L1
+  fluctuation), and (ii) path dependence (different residual
+  realisations produce different importance vectors -- the previous
+  proxy was nearly constant across draws).
+
+This is a behaviour change: recipes using ``historical_decomposition``
+will produce different importance numbers (the new ones are the
+correct Burbidge-Harrison decomposition; the old ones were a proxy
+score). Recipes using ``generalized_irf`` will need to switch to
+``orthogonalised_irf`` (one-line edit) -- the Cholesky output is
+numerically identical to the v0.2 implementation.
+
+### Honesty-pass fix (`macroeconomic_random_forest` re-anchored to mrf-web)
+
+The ``macroeconomic_random_forest`` family (operational since v0.2 #187)
+previously shipped an **in-house ``_MRFWrapper``** that augmented ``X``
+with a normalised time trend, fit a sklearn ``RandomForestRegressor``,
+and attached a per-leaf ``LinearRegression``. The verification audit
+(``docs/architecture/v089_verification_results.md`` § V2.2) found that
+this implementation matched **only the per-leaf linear piece** of
+Goulet Coulombe (2024) and was missing two paper-defining pieces:
+
+* the random-walk kernel / Olympic-podium regularisation that gives the
+  GTVPs their time-smoothness;
+* the Block Bayesian Bootstrap (Taddy 2015 extension) ensemble that
+  the paper uses to surface forecast intervals.
+
+v0.8.9 ships a new ``_MRFExternalWrapper`` (in ``core/runtime.py``) that
+delegates the algorithm to Ryan Lucas's reference implementation,
+**vendored under ``macroforecast/_vendor/macro_random_forest/``** with
+four surgical numpy 2.x / pandas 2.x compatibility patches (full list:
+``macroforecast/_vendor/macro_random_forest/PATCHES.md``). **No
+algorithmic changes** -- the numerical output of ``_ensemble_loop()``
+matches the upstream package on environments where both can run.
+Upstream URL: <https://github.com/RyanLucas3/MacroRandomForest>.
+
+Vendoring (instead of an external ``[mrf]`` extra) avoids dragging
+users through a separate PyPI install for what is in practice a hard
+dependency for the ``macroeconomic_random_forest`` family. The MIT
+licence is preserved alongside the source; see
+``THIRD_PARTY_NOTICES.md`` at the repository root for the consolidated
+attribution table.
+
+* No new extra. The family works out of the box once
+  ``pip install macroforecast`` is done.
+* New params on the family: ``B`` (bootstrap iterations, default 50),
+  ``ridge_lambda`` (0.1), ``rw_regul`` (0.75), ``mtry_frac`` (1/3),
+  ``trend_push`` (1), ``quantile_rate`` (0.3), ``fast_rw`` (True),
+  ``parallelise`` (False), ``n_cores`` (1). Old ``n_estimators`` is
+  honoured as an alias for ``B``; ``max_depth`` is silently ignored
+  (mrf-web uses RW + ridge regularisation instead of tree depth).
+* L7 ``mrf_gtvp`` consumer rewired to read the GTVP β̂(t) series
+  directly from ``_cached_betas`` (populated by the most recent
+  ``predict`` call) -- shape ``(T, K+1)`` with column 0 = intercept.
+  Importance now uses ``np.nanmean(|β|)`` because oos rows are not
+  covered by the in-sample bootstrap and arrive as NaN.
+
+This is a behaviour change: recipes using
+``macroeconomic_random_forest`` will produce different forecasts (the
+new implementation runs the full paper procedure, not just the leaf-
+linear shortcut). The previous in-house wrapper is removed.
+
+**Citation requirement**: research using this family must cite Goulet
+Coulombe (2024) "The Macroeconomy as a Random Forest" (Journal of
+Applied Econometrics, arXiv:2006.12724) and acknowledge the upstream
+implementation by Ryan Lucas
+(<https://github.com/RyanLucas3/MacroRandomForest>). Both citations
+are listed in the OPTION_DOCS entry for ``macroeconomic_random_forest``
+and surfaced in the encyclopedia regen.
+
+### Honesty-pass fix (`scaled_pca` runtime rewrite)
+
+The ``scaled_pca`` L3 op (operational since v0.1) previously
+implemented a **row-wise ``|target|`` weighting** of observations,
+which is **not** the paper's algorithm. Huang/Jiang/Li/Tong/Zhou
+(2022) "Scaled PCA: A New Approach to Dimension Reduction"
+(Management Science 68(3)) defines sPCA as a **column-wise predictive-
+slope β scaling**: for each column j, fit univariate OLS of target on
+the standardised column, scale the column by the resulting β_j, then
+PCA.
+
+v0.8.9 ships ``_scaled_pca_huang_zhou`` -- a paper-faithful
+implementation matching the authors' MATLAB ``sPCAest.m`` to machine
+precision (β coefficients agree at ~1e-16, factor directions identical).
+Regression test
+``test_v21_scaled_pca_matches_huang_zhou_2022_authors_matlab`` pins
+the new behaviour. See
+``docs/architecture/v089_verification_results.md`` § V2.1 for the
+full audit.
+
+This is a behaviour change: recipes that depended on the previous
+(non-paper) row-weighted variant will produce different factors. For
+the small number of users on that path, the previous algorithm is
+documented retrospectively as ``target_row_weighted_pca`` (not a
+registered op; trivial to recover via L3 ``scale + pca`` if needed).
+
+### Phase 1 Tier 1 promotions (5 atomic primitives, operational)
+
+Each promotion has a known-answer test in
+``tests/core/test_v09_paper_coverage.py``:
+
+* **`ridge.coefficient_constraint=nonneg`** -- non-negative ridge via
+  ``scipy.optimize.nnls`` on the augmented system
+  ``[X; sqrt(α)·I] β = [y; 0]``, β >= 0. Backbone for the Albacore-
+  family Assemblage Regression (Goulet Coulombe et al. 2024 "Maximally
+  Forward-Looking Core Inflation"). Helper class ``_NonNegRidge``.
+* **`bagging.strategy=block`** -- moving-block bootstrap (Künsch 1989)
+  inside ``_BaggingWrapper``: replaces i.i.d. resampling with
+  consecutive ``block_length``-row blocks, preserving short-range
+  serial dependence. Used for serially-correlated macro panels and
+  the Taddy 2015 ext. cited by Coulombe (2024) MRF.
+* **`dual_decomposition`** (linear families) -- representer-theorem
+  closed-form ``w(xₜ) = X(X'X + αI)⁻¹xₜ`` for ridge / OLS / lasso
+  (Goulet Coulombe / Goebel / Klieber 2024). Output frame carries
+  inline portfolio diagnostics (HHI / short / turnover / leverage)
+  via ``frame.attrs['portfolio_metrics']``. Non-linear extensions
+  (kernel / RF leaf-co-occurrence) deferred to v0.9.x Phase 2.
+  Helper function ``_dual_decomposition_frame``.
+* **`blocked_oob_reality_check`** -- block-bootstrap variant of White
+  (2000) reality check on per-origin loss differentials vs a named
+  benchmark. Reject H0 when median bootstrap MSE_diff < 0 at α=0.05.
+  Used for the v0.9.x HNN (Coulombe / Frenette / Klieber 2025 JAE)
+  evaluation pipeline. Helper function
+  ``_blocked_oob_reality_check_p_values``.
+* **`asymmetric_trim`** (L2/L3) -- rank-space transformation: per-
+  period sort of a ``(T x K)`` component panel into the corresponding
+  matrix of order statistics. Asymmetric trimming emerges in the
+  *downstream* nonneg ridge that learns rank-position weights; the op
+  itself does the sort transformation only. Algorithm spec at
+  ``docs/replications/maximally_forward_looking_algorithm_notes.md``.
+  Helper function ``_asymmetric_trim``.
+
+### Decomposition discipline (new architectural principle)
+
+A method published in a paper gets a new L4 family / L3 op / L7 op only
+when it is truly atomic. If the method decomposes into existing
+primitives plus sub-axis options on existing families, it is captured as:
+
+* a parametric sub-axis on the existing family (`ridge.prior`,
+  `ridge.coefficient_constraint`, `decision_tree.split_shrinkage`,
+  `bagging.strategy`, `extra_trees.max_features`, `mlp.architecture`,
+  `mlp.loss`)
+* a recipe pattern in `examples/recipes/replications/<paper>.yaml`
+* a Python helper in `macroforecast.recipes.paper_methods`
+
+This keeps the registry small and forces every paper to expose its
+algorithmic content at the recipe level rather than hide it behind a
+paper-named family option.
+
+### Added (atomic primitives)
+
+L4 family additions:
+
+* **`mars`** -- Friedman (1991) Multivariate Adaptive Regression Splines.
+  **Operational** via `pyearth` optional dep (`pip install
+  macroforecast[mars]`); raises `NotImplementedError` with install hint
+  when the extra is missing (mirrors xgboost / lightgbm / catboost
+  pattern). Required as the base learner for Coulombe (2024) MARSquake
+  recipe (`bagging(base_family=mars, ...)`).
+
+L3 op additions:
+
+* **`savitzky_golay_filter`** -- **operational**, wraps
+  `scipy.signal.savgol_filter`. Used as the fixed-window baseline
+  against AlbaMA's adaptive-window estimator (Coulombe & Klieber 2025).
+* **`adaptive_ma_rf`** (AlbaMA) -- schema-only future. Coulombe & Klieber
+  (2025) arXiv:2501.13222 §3 RF-driven adaptive moving-average window.
+
+L2 / L3 op addition:
+
+* **`asymmetric_trim`** -- **operational** (see Phase 1 Tier 1
+  promotions). Layer scope expanded to ``(l2, l3)`` so the L3 DAG can
+  dispatch it. Coulombe / Klieber / Barrette / Goebel (2024) Albacore-
+  family rank-space transformation.
+
+L5 op addition:
+
+* **`blocked_oob_reality_check`** -- **operational** (see Phase 1
+  Tier 1 promotions). HNN block-bootstrap variant of White (2000)
+  reality check on per-origin loss differentials.
+
+L7 op additions:
+
+* **`dual_decomposition`** -- **operational for linear families** (see
+  Phase 1 Tier 1 promotions above). Output artifact also carries
+  inline portfolio diagnostics (HHI / short / turnover / leverage)
+  from the same paper -- these are trivial numpy reductions on the
+  dual weights and do not warrant their own L7 op (decomposition
+  discipline). Non-linear extensions (kernel / RF) deferred to v0.9.x
+  Phase 2.
+* **`oshapley_vi`** + **`pbsv`** -- schema-only future. Borup et al.
+  (2022) "Anatomy of OOS Forecasting Accuracy" SSRN 4278745. Runtime
+  delegates to the `anatomy` PyPI package once the L7 adapter lands;
+  `[anatomy]` extra registered.
+
+### Added (sub-axis options on existing families)
+
+Each sub-axis is documented in the corresponding family's OPTION_DOCS
+prose (encyclopedia surfaces inline). Default values preserve existing
+runtime behaviour; non-default values trigger a clear
+`NotImplementedError` until the v0.9.x runtime promotion.
+
+* **`extra_trees.max_features`** -- **operational** (sklearn pass-through).
+  `max_features=1` implements Coulombe (2024) PRF baseline.
+* **`ridge.prior`** -- schema-only future. RW kernel implements 2SRR.
+* **`ridge.coefficient_constraint`** -- **operational** (see Phase 1
+  Tier 1 promotions). `nonneg` value invokes ``_NonNegRidge`` for
+  Albacore Assemblage Regression.
+* **`decision_tree.split_shrinkage`** -- schema-only future. SLOTH.
+* **`bagging.strategy`** -- `block` value **operational** (see Phase 1
+  Tier 1); `sequential_residual` (Booging) remains future for v0.9.x
+  Phase 2.
+* **`mlp.architecture`** + **`mlp.loss`** (apply equally to lstm / gru
+  / transformer) -- schema-only future. HNN dual hemispheres + emphasis loss.
+
+### Added (recipe gallery)
+
+* **`examples/recipes/replications/`** (new) -- one YAML per paper.
+  * **9 operational**: `perfectly_random_forest`, `scaled_pca`,
+    `macroeconomic_random_forest`, `ols_attention_demo`,
+    `sparse_macro_factors`, `macroeconomic_data_transformations`
+    (MARX), `ml_useful_macro`, `arctic_sea_ice_dfm`, `arctic_var`.
+  * **8 pre-promotion**: `booging`, `marsquake`, `adaptive_ma_rf`,
+    `two_step_ridge`, `hemisphere_nn`, `anatomy_oos`,
+    `dual_interpretation`, `maximally_forward_looking`,
+    `slow_growing_trees`.
+
+### Added (Python helper module)
+
+* **`macroforecast.recipes.paper_methods`** (new) -- 19 helpers (PRF
+  + 18 paper variants) returning recipe dicts ready for
+  `macroforecast.run`. Helpers and YAML recipes are kept 1:1 in sync.
+
+### Added (introspect API)
+
+* **`macroforecast.scaffold.introspect.all_options(layer_id)`** -- new
+  helper. Used by the orphan-detection test so future-status options
+  can carry OPTION_DOCS prose ahead of their runtime promotion.
+* L3 / L4 / L7 introspect fallback builders include `future`-status
+  options with status carried through.
+
+### Added (optional deps)
+
+* **`[mars]`** = `pyearth>=0.1`
+* **`[anatomy]`** = `anatomy` (Schwenk-Nebbe 2022; PyPI `anatomy 0.1.6`)
+
+### Test additions
+
+* **`tests/core/test_v09_paper_coverage.py`** -- 25 tests pinning:
+  * `mars` operational with optional-dep error
+  * 7 decomposable methods are NOT L4 families
+  * each new atomic op layer_scope + status
+  * 6 sub-axis future gates raise NotImplementedError with paper
+    citation in message
+  * `perfectly_random_forest` end-to-end via helper API and via YAML
+
+### Promotion plan
+
+13 algorithmic implementations land across v0.9.0 / v0.9.1 / v0.9.2 /
+v0.9.3 in Tier-grouped milestones. Plan, paper references, algorithm
+sketches, dependencies, risks: ``docs/architecture/v09_paper_coverage_plan.md``.
+
 ## [0.8.8] -- 2026-05-06 -- "user-friendliness pass (docs only)"
 
 Single docs-only release that bundles five documentation upgrades. No

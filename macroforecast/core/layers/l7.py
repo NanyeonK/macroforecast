@@ -283,7 +283,7 @@ def _validate_nodes(raw: dict[str, Any], context: dict[str, Any]) -> list[Any]:
             issues.append(_issue(f"l7.{node.get('id')}", f"{op} requires neural-network model"))
         if op == "mrf_gtvp" and model_family != "macroeconomic_random_forest":
             issues.append(_issue(f"l7.{node.get('id')}", "mrf_gtvp requires macroeconomic_random_forest"))
-        if op in {"fevd", "historical_decomposition", "generalized_irf"} and model_family not in VAR_SET:
+        if op in {"fevd", "historical_decomposition", "orthogonalised_irf", "generalized_irf"} and model_family not in VAR_SET:
             issues.append(_issue(f"l7.{node.get('id')}", f"{op} requires VAR/BVAR model"))
         if op == "lasso_inclusion_frequency" and model_family not in {"lasso", "elastic_net"}:
             issues.append(_issue(f"l7.{node.get('id')}", "lasso_inclusion_frequency requires lasso or elastic_net"))

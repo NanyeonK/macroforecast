@@ -1,13 +1,20 @@
-"""Issue #187 -- macroeconomic_random_forest implements Coulombe (2024)
-GTVP via per-leaf local linear regressions.
+"""macroeconomic_random_forest family backed by Ryan Lucas's MRF
+reference implementation, vendored under
+``macroforecast/_vendor/macro_random_forest/`` with surgical numpy 2.x /
+pandas 2.x compatibility patches. Reference: Goulet Coulombe (2024)
+"The Macroeconomy as a Random Forest" (arXiv:2006.12724); upstream:
+https://github.com/RyanLucas3/MacroRandomForest.
+
+Re-anchored from the in-house ``_MRFWrapper`` to ``_MRFExternalWrapper``
+in v0.8.9 (see CHANGELOG honesty-pass entry and
+``docs/architecture/v089_verification_results.md`` § V2.2).
 """
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 
-from macroforecast.core.runtime import _MRFWrapper
+from macroforecast.core.runtime import _MRFExternalWrapper
 from macroforecast.core.ops.l4_ops import (
     OPERATIONAL_MODEL_FAMILIES,
     FUTURE_MODEL_FAMILIES,
@@ -28,50 +35,79 @@ def _toy_panel(n: int = 80, seed: int = 0):
             "x1": rng.normal(size=n),
             "x2": rng.normal(size=n),
             "x3": rng.normal(size=n),
-        }
+        },
+        index=pd.RangeIndex(n),
     )
-    y = pd.Series(0.5 * X["x1"] + 0.3 * X["x2"] - 0.2 * X["x3"] + rng.normal(scale=0.1, size=n))
+    y = pd.Series(
+        0.5 * X["x1"] + 0.3 * X["x2"] - 0.2 * X["x3"] + rng.normal(scale=0.1, size=n),
+        index=X.index,
+    )
     return X, y
 
 
-def test_mrf_per_leaf_models_populated():
+def _fit_and_predict(model, X, y, n_train=60):
+    train_X, test_X = X.iloc[:n_train], X.iloc[n_train:]
+    train_y = y.iloc[:n_train]
+    model.fit(train_X, train_y)
+    return model.predict(test_X), train_X, test_X
+
+
+def test_mrf_cached_betas_populated_after_predict():
+    """``_MRFExternalWrapper`` caches the GTVP β series after predict so
+    L7 ``mrf_gtvp`` can read them. Shape = (n_train + n_test, K + 1)."""
+
     X, y = _toy_panel()
-    model = _MRFWrapper(n_estimators=10, max_depth=3, random_state=0).fit(X, y)
-    # Every tree should have at least one leaf with a fitted local LinearRegression.
-    assert len(model._leaf_models) == 10
-    has_linear_leaf = any(
-        any(isinstance(v, LinearRegression) for v in tree.values())
-        for tree in model._leaf_models
-    )
-    assert has_linear_leaf, "expected at least one leaf with a local LinearRegression"
+    model = _MRFExternalWrapper(B=8, parallelise=False, n_cores=1, random_state=0)
+    preds, _, test_X = _fit_and_predict(model, X, y, n_train=60)
+    assert preds.shape == (len(test_X),)
+    assert model._cached_betas is not None
+    # 60 train + 20 test = 80 rows; intercept + 3 features = 4 cols.
+    assert model._cached_betas.shape == (len(X), X.shape[1] + 1)
+    # B bootstrap × n_oos forecast ensemble.
+    assert model._cached_pred_ensemble is not None
+    assert model._cached_pred_ensemble.shape == (8, len(test_X))
 
 
 def test_mrf_predicts_finite_values_and_correct_shape():
     X, y = _toy_panel()
-    model = _MRFWrapper(n_estimators=15, max_depth=4, random_state=0).fit(X, y)
-    preds = model.predict(X)
-    assert preds.shape == (len(X),)
+    model = _MRFExternalWrapper(B=10, parallelise=False, n_cores=1, random_state=0)
+    preds, _, test_X = _fit_and_predict(model, X, y, n_train=60)
+    assert preds.shape == (len(test_X),)
     assert np.all(np.isfinite(preds))
 
 
 def test_mrf_seed_makes_predictions_deterministic():
+    """``random_state`` propagates via ``np.random.seed`` before each
+    construction (mrf-web does not expose a seed kwarg). Two wrappers
+    with matching seeds produce matching forecasts."""
+
     X, y = _toy_panel()
-    a = _MRFWrapper(n_estimators=10, max_depth=3, random_state=0).fit(X, y)
-    b = _MRFWrapper(n_estimators=10, max_depth=3, random_state=0).fit(X, y)
-    np.testing.assert_allclose(a.predict(X), b.predict(X))
+    a = _MRFExternalWrapper(B=10, parallelise=False, n_cores=1, random_state=0)
+    b = _MRFExternalWrapper(B=10, parallelise=False, n_cores=1, random_state=0)
+    preds_a, _, _ = _fit_and_predict(a, X, y, n_train=60)
+    preds_b, _, _ = _fit_and_predict(b, X, y, n_train=60)
+    np.testing.assert_allclose(preds_a, preds_b, rtol=1e-12, atol=1e-12)
 
 
-def test_mrf_distinct_seeds_produce_distinct_forests():
+def test_mrf_distinct_seeds_produce_distinct_forecasts():
     X, y = _toy_panel()
-    a = _MRFWrapper(n_estimators=10, max_depth=3, random_state=0).fit(X, y)
-    b = _MRFWrapper(n_estimators=10, max_depth=3, random_state=42).fit(X, y)
-    assert not np.allclose(a.predict(X), b.predict(X))
+    a = _MRFExternalWrapper(B=10, parallelise=False, n_cores=1, random_state=0)
+    b = _MRFExternalWrapper(B=10, parallelise=False, n_cores=1, random_state=42)
+    preds_a, _, _ = _fit_and_predict(a, X, y, n_train=60)
+    preds_b, _, _ = _fit_and_predict(b, X, y, n_train=60)
+    assert not np.allclose(preds_a, preds_b)
 
 
 def test_mrf_handles_missing_columns_at_predict_time():
+    """Test panel may drop a feature seen at fit; the wrapper aligns to
+    the training column order and fills missing columns with 0."""
+
     X, y = _toy_panel()
-    model = _MRFWrapper(n_estimators=10, max_depth=3, random_state=0).fit(X, y)
-    X_partial = X.drop(columns=["x3"])
-    preds = model.predict(X_partial)
-    assert preds.shape == (len(X_partial),)
+    model = _MRFExternalWrapper(B=8, parallelise=False, n_cores=1, random_state=0)
+    train_X = X.iloc[:60]
+    train_y = y.iloc[:60]
+    model.fit(train_X, train_y)
+    test_X_partial = X.iloc[60:].drop(columns=["x3"])
+    preds = model.predict(test_X_partial)
+    assert preds.shape == (len(test_X_partial),)
     assert np.all(np.isfinite(preds))

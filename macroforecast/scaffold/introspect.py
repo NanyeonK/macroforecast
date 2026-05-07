@@ -217,11 +217,14 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
     / ``refit_policy`` / ``search_algorithm`` here so the wizard + sphinx
     docs can iterate them."""
 
-    from ..core.ops.l4_ops import OPERATIONAL_MODEL_FAMILIES
+    from ..core.ops.l4_ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES
 
     family_options = tuple(
-        OptionInfo(value=fam, label=fam.replace("_", " ").title(), description="")
+        OptionInfo(value=fam, label=fam.replace("_", " ").title(), description="", status="operational")
         for fam in OPERATIONAL_MODEL_FAMILIES
+    ) + tuple(
+        OptionInfo(value=fam, label=fam.replace("_", " ").title(), description="", status="future")
+        for fam in FUTURE_MODEL_FAMILIES
     )
     return (
         AxisInfo(
@@ -299,7 +302,12 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
 def _build_l3_fallback() -> tuple[AxisInfo, ...]:
     """L3 declares ops via the universal/l3 ops registry rather than as
     AxisSpec options. We surface a single ``op`` axis so docs + wizard
-    can iterate the available L3 step ops."""
+    can iterate the available L3 step ops.
+
+    v0.9: include future-status ops too (with status carried through to
+    OptionInfo) so they are documentable in OPTION_DOCS and surfaced in
+    the encyclopedia with a 'pre-promotion' caveat.
+    """
 
     try:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
@@ -308,9 +316,14 @@ def _build_l3_fallback() -> tuple[AxisInfo, ...]:
     options = tuple(
         sorted(
             (
-                OptionInfo(value=name, label=name, description=getattr(spec, "description", "") or "")
+                OptionInfo(
+                    value=name,
+                    label=name,
+                    description=getattr(spec, "description", "") or "",
+                    status=spec.status,
+                )
                 for name, spec in _OPS_REGISTRY.items()
-                if "l3" in (spec.layer_scope or ()) and spec.status == "operational"
+                if "l3" in (spec.layer_scope or ()) and spec.status in ("operational", "future")
             ),
             key=lambda o: o.value,
         )
@@ -385,6 +398,9 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
         return ()
+    # v0.9: include future-status ops so paper-coverage atomic primitives
+    # registered for forthcoming runtime promotion can be documented in
+    # OPTION_DOCS / encyclopedia ahead of time.
     options = tuple(
         sorted(
             (
@@ -392,9 +408,10 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
                     value=name,
                     label=name,
                     description=getattr(spec, "description", "") or "",
+                    status=spec.status,
                 )
                 for name, spec in _OPS_REGISTRY.items()
-                if "l7" in (spec.layer_scope or ()) and spec.status == "operational"
+                if "l7" in (spec.layer_scope or ()) and spec.status in ("operational", "future")
             ),
             key=lambda o: o.value,
         )
@@ -445,11 +462,33 @@ def operational_options(layer_id: str) -> tuple[tuple[str, str, str, str], ...]:
     return tuple(out)
 
 
+def all_options(layer_id: str) -> tuple[tuple[str, str, str, str], ...]:
+    """Return ``(layer, sublayer, axis, option)`` tuples for every option
+    on every operational axis -- both operational and future statuses.
+
+    Introduced in v0.9 (Phase 2 paper-coverage pass) so that future-status
+    options registered in the schema for forthcoming runtime promotion can
+    still carry user-facing OPTION_DOCS prose. The orphan-detection test
+    in :mod:`tests.scaffold.test_option_docs_complete` uses this helper
+    instead of :func:`operational_options` so future families can be
+    documented (with a 'pre-promotion' caveat) before their runtime lands.
+    """
+
+    out: list[tuple[str, str, str, str]] = []
+    for axis_info in axes(layer_id):
+        if axis_info.status != "operational":
+            continue
+        for option in axis_info.options:
+            out.append((layer_id, axis_info.sublayer, axis_info.name, option.value))
+    return tuple(out)
+
+
 __all__ = [
     "AxisInfo",
     "LayerInfo",
     "OptionInfo",
     "SubLayerInfo",
+    "all_options",
     "axes",
     "layer",
     "list_layers",

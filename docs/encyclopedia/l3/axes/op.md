@@ -16,10 +16,68 @@
 
 ## Operational status summary
 
-- Operational: 37 option(s)
-- Future: 0 option(s)
+- Operational: 42 option(s)
+- Future: 5 option(s)
 
 ## Options
+
+### `adaptive_ma_rf`  --  operational
+
+AlbaMA -- RF-driven adaptive moving average [schema; runtime in v0.9.x].
+
+Goulet Coulombe & Klieber (2025) 'Adaptive Moving Average for Macroeconomic Monitoring'. A random forest decides the per-observation moving-average window length from the predictor panel, so the smoother adapts to local volatility / regime. Atomic primitive: existing ``ma_window`` uses a fixed length; ``hamilton_filter`` is a regression on lags rather than a moving average; neither composes into AlbaMA without a learned window selector.
+
+Schema-only in v0.9.0. Runtime promotion blocks on PDF readthrough of the RF-split-to-window mapping (arXiv:2501.13222).
+
+**When to use**
+
+Replicating AlbaMA recipes; macro indicator monitoring under regime shifts.
+
+**When NOT to use**
+
+Pre-promotion -- validator hard-rejects until runtime lands.
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for Macroeconomic Monitoring', arXiv:2501.13222.
+
+**Related options**: [`savitzky_golay_filter`](#savitzky-golay-filter), [`hamilton_filter`](#hamilton-filter), [`hp_filter`](#hp-filter), [`ma_window`](#ma-window)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `asymmetric_trim`  --  operational
+
+Albacore-family rank-space transformation (Goulet Coulombe et al. 2024).
+
+Per-period sort: panel ``Π`` of shape ``(T, K)`` is mapped to ``O`` where ``O[t, r] = sort(Π[t, :])[r]`` (ascending). Asymmetric trimming emerges in the *downstream* nonneg ridge (``ridge(coefficient_constraint=nonneg)``) that learns rank-position weights -- this op does the rank-space transformation only.
+
+Optional ``smooth_window > 0`` applies a centred moving average to each rank-position time series (paper §3 mentions 3-month MA for noisy components; users can chain ``ma_window`` explicitly when they want a different window).
+
+Operational from v0.8.9 (B-6). Layer scope ``(l2, l3)`` so the L3 DAG can dispatch it at recipe time. Algorithm spec: ``docs/replications/maximally_forward_looking_algorithm_notes.md``.
+
+**When to use**
+
+Building Albacore_ranks-style core inflation indicators; supervised asymmetric trimming where the band is learned from data.
+
+**When NOT to use**
+
+Symmetric trimmed-mean targets (use a fixed-window ``ma_window`` instead).
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Goulet Coulombe, Klieber, Barrette & Goebel (2024) 'Maximally Forward-Looking Core Inflation', technical report (R package: assemblage).
+
+**Related options**: [`ma_window`](#ma-window), [`ma_increasing_order`](#ma-increasing-order), [`scaled_pca`](#scaled-pca)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `boruta_selection`  --  future
+
+_(no schema description for `boruta_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
 
 ### `cumsum`  --  operational
 
@@ -125,6 +183,12 @@ Smooth seasonality (annual / weekly cycles) where dummies would over-fit.
 **Related options**: [`season_dummy`](#season-dummy), [`wavelet`](#wavelet)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `genetic_algorithm_selection`  --  future
+
+_(no schema description for `genetic_algorithm_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
 
 ### `hamilton_filter`  --  operational
 
@@ -286,6 +350,12 @@ Never authored directly -- inserted by the cascade builder when L7 lineage hooks
 **Related options**: [`l3_feature_bundle`](#l3-feature-bundle)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `lasso_path_selection`  --  future
+
+_(no schema description for `lasso_path_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
 
 ### `level`  --  operational
 
@@ -545,6 +615,12 @@ Sweep baselines / sanity checks against PCA's structured reduction.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `recursive_feature_elimination`  --  future
+
+_(no schema description for `recursive_feature_elimination`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+
 ### `regime_indicator`  --  operational
 
 Discrete regime / state indicator from L1.G.
@@ -560,6 +636,31 @@ Regime-conditional forecasts where the model needs explicit access to the state.
 * macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`season_dummy`](#season-dummy), [`time_trend`](#time-trend)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `savitzky_golay_filter`  --  operational
+
+Polynomial-fit smoothing filter (Savitzky & Golay 1964).
+
+Local polynomial regression smoothing: each output value is the polynomial-fit centre value of a moving window. ``window_length`` (default 5) and ``polyorder`` (default 2) parameterise the kernel. Operational: runtime delegates to ``scipy.signal.savgol_filter`` (scipy is a hard dependency).
+
+Used as the fixed-window baseline against which Goulet Coulombe & Klieber (2025) AlbaMA's adaptive-window estimator is compared in the v0.9.x replication recipe.
+
+**When to use**
+
+Smoothing macro indicator series for monitoring; AlbaMA replication baseline.
+
+**When NOT to use**
+
+Series with strong non-linear trends -- the polynomial fit smooths them out.
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by Simplified Least Squares Procedures', Analytical Chemistry 36(8).
+
+**Related options**: [`hp_filter`](#hp-filter), [`hamilton_filter`](#hamilton-filter), [`ma_window`](#ma-window), [`adaptive_ma_rf`](#adaptive-ma-rf)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -648,7 +749,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `sparse_pca`  --  operational
 
-Sparse PCA -- L1-penalised factor loadings.
+Sparse PCA -- L1-penalised factor loadings (sklearn / Zou-Hastie-Tibshirani 2006).
 
 Variant of PCA where loadings are pushed toward zero by an L1 penalty (``params.alpha``). Yields more interpretable factors at the cost of a small reconstruction loss; uses sklearn's ``SparsePCA``.
 
@@ -658,13 +759,78 @@ When you want factor loadings to map cleanly onto a small subset of original pre
 
 **When NOT to use**
 
-When pure variance maximisation is more important than interpretability -- use plain ``pca``.
+When pure variance maximisation is more important than interpretability -- use plain ``pca``. For the Chen-Rohe (2023) SCA variant used in Zhou-Rapach (2025) Sparse Macro-Finance Factors, use ``sparse_pca_chen_rohe`` instead.
 
 **References**
 
 * macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
-**Related options**: [`pca`](#pca), [`scaled_pca`](#scaled-pca)
+**Related options**: [`pca`](#pca), [`scaled_pca`](#scaled-pca), [`sparse_pca_chen_rohe`](#sparse-pca-chen-rohe), [`supervised_pca`](#supervised-pca)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `sparse_pca_chen_rohe`  --  operational
+
+Chen-Rohe (2023) Sparse Component Analysis -- non-diagonal D variant.
+
+Sparse component analysis solving ``min_{Z,D,Θ} ‖X − Z D Θ'‖_F`` s.t. ``Z ∈ S(T,J)``, ``Θ ∈ S(M,J)``, ``‖Θ‖_1 ≤ ζ`` (Chen-Rohe 2023; Rapach & Zhou 2025 eq. 3). Differs from ``sparse_pca`` (sklearn / Zou-Hastie-Tibshirani 2006) in two ways: (1) the central matrix D is *not* restricted to be diagonal, which lets SCA explain more total variation for a given sparsity budget; (2) the single hyperparameter ``ζ ∈ [J, J√M]`` enters as an ℓ_1 budget *constraint* rather than a Lagrangian penalty.
+
+Implementation: alternating maximisation of the equivalent bilinear convex-hull form ``max_{Z,Θ} ‖Z' X Θ‖_F`` over ``H(T,J) × H(M,J)`` (Zhou-Rapach 2025 eq. 4), iterating SVD-projection of Z and L1-budget projection of Θ. Used as the macro-side stage in Rapach & Zhou (2025) Sparse Macro-Finance Factors. Operational v0.9.1 dev-stage v0.9.0C-3.
+
+Hyperparams: ``n_components`` (= J; default 4), ``zeta`` (= L1 budget; ``0.0`` defaults to J = most-binding boundary the paper finds optimal in CV), ``max_iter`` (default 200), ``random_state``.
+
+**When to use**
+
+Sparse macro-finance factor extraction with non-diagonal D; the Rapach-Zhou (2025) macro-side procedure.
+
+**When NOT to use**
+
+When sklearn-style L1-penalised loadings are sufficient -- prefer the cheaper ``sparse_pca``.
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Chen & Rohe (2023) 'A New Basis for Sparse Principal Component Analysis', Journal of Computational and Graphical Statistics. arXiv:2007.00596.
+* Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.1 eqs. (3)-(4).
+
+**Related options**: [`sparse_pca`](#sparse-pca), [`supervised_pca`](#supervised-pca), [`scaled_pca`](#scaled-pca), [`pca`](#pca)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `stability_selection`  --  future
+
+_(no schema description for `stability_selection`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+
+### `supervised_pca`  --  operational
+
+Supervised PCA (Giglio-Xiu-Zhang 2025) -- screen-then-PCA on a target panel.
+
+Two-stage supervised reduction:
+  1. For each target column ``g``, rank panel columns by univariate correlation with ``g`` and keep the top ``⌊q · M⌋`` (q ∈ (0, 1] hyperparameter; default 0.5);
+  2. Run PCA on the screened sub-panel, returning P supervised components.
+
+Refinement of Giglio-Xiu (2021) three-pass: screening makes the construction robust to weak factors and omitted-variable bias. Used as the asset-side stage of Rapach & Zhou (2025) Sparse Macro-Finance Factors for risk-premium estimation. Distinct from ``partial_least_squares`` (PLS uses covariance-maximising NIPALS over all columns; SPCA uses correlation-screened PCA on a sub-panel) and from ``scaled_pca`` (Huang-Jiang-Tu-Zhou 2022 weights every column; SPCA hard-screens).
+
+Operational v0.9.1 dev-stage v0.9.0C-4. Hyperparams: ``n_components`` (= P; default 4), ``q`` (screening rate; default 0.5).
+
+**When to use**
+
+Cross-sectional asset-pricing factor extraction; weak-factor-robust supervised reduction; Rapach-Zhou (2025) replication.
+
+**When NOT to use**
+
+When the supervisory signal is dense (every panel column matters) -- prefer ``scaled_pca`` or ``partial_least_squares``.
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Giglio, Xiu & Zhang (2025) 'Test Assets and Weak Factors', Journal of Finance, forthcoming.
+* Giglio & Xiu (2021) 'Asset Pricing with Omitted Factors', Journal of Political Economy 129(7): 1947-1990.
+* Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.2 eqs. (5)-(8).
+
+**Related options**: [`partial_least_squares`](#partial-least-squares), [`scaled_pca`](#scaled-pca), [`sparse_pca_chen_rohe`](#sparse-pca-chen-rohe), [`pca`](#pca)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 

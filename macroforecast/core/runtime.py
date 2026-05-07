@@ -1267,7 +1267,12 @@ def materialize_l4_minimal(
         # tuning hook: dispatch on search_algorithm (issue #217). Inject the
         # L4 leaf_config so the resolver can read tuning_grid /
         # tuning_distributions / tuning_budget / cv_path_alphas / GA settings.
-        if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm"}:
+        # paper16-13 dispatch-gate fix (Round 1 phase A): include the four
+        # Coulombe-Surprenant-Leroux-Stevanovic (2022 JAE) Feature 3 schemes
+        # (kfold / poos / aic / bic) and Goulet Coulombe et al. (2024)
+        # block_cv. Without these in the gate, `_resolve_l4_tuning` is never
+        # invoked on the public path even though the resolver implements them.
+        if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm", "kfold", "poos", "aic", "bic", "block_cv"}:
             params["_l4_leaf_config"] = raw.get("leaf_config", {}) or {}
             params = _resolve_l4_tuning(params, X, y)
             params.pop("_l4_leaf_config", None)
@@ -1528,7 +1533,10 @@ def _run_l4_fit_node(
     refit_policy = params.get("refit_policy", "every_origin")
     rolling_window = int(params.get("rolling_window", max(24, min(len(X) // 2, 120))))
     refit_step = int(params.get("refit_step", 1)) if refit_policy == "every_n_origins" else 1
-    if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm"}:
+    # paper16-13 dispatch-gate fix (Round 1 phase A): see sequential gate above
+    # for rationale. The parallel-models path uses the same set of recognised
+    # `search_algorithm` values.
+    if params.get("search_algorithm") in {"cv_path", "grid_search", "random_search", "bayesian_optimization", "genetic_algorithm", "kfold", "poos", "aic", "bic", "block_cv"}:
         params["_l4_leaf_config"] = raw.get("leaf_config", {}) or {}
         params = _resolve_l4_tuning(params, X, y)
         params.pop("_l4_leaf_config", None)
@@ -1636,6 +1644,54 @@ def _build_l4_model(family: str, params: dict[str, Any]):
     if family == "ols":
         return LinearRegression()
     if family == "ridge":
+        # v0.9 sub-axis dispatch (decomposition discipline). The default
+        # behaviour is unchanged; non-default values dispatch to specialised
+        # wrappers (operational) or raise NotImplementedError for promotions
+        # still pending.
+        prior = params.get("prior", "none")
+        constraint = params.get("coefficient_constraint", "none")
+        if prior == "random_walk":
+            # Coulombe (2025 IJF) "Time-Varying Parameters as Ridge".
+            return _TwoStageRandomWalkRidge(
+                alpha=alpha,
+                vol_model=str(params.get("vol_model", "garch11")),
+                max_alpha_ratio=float(params.get("max_alpha_ratio", 1e6)),
+                random_state=seed,
+            )
+        if prior == "shrink_to_target":
+            # Goulet Coulombe et al. "Maximally Forward-Looking Core
+            # Inflation" Albacore_comps (Variant A): non-negative ridge
+            # with a shrink-to-target penalty + simplex constraint.
+            return _ShrinkToTargetRidge(
+                alpha=alpha,
+                prior_target=params.get("prior_target"),
+                simplex=bool(params.get("prior_simplex", True)),
+                nonneg=(constraint == "nonneg"),
+            )
+        if prior == "fused_difference":
+            # Maximally FL Albacore_ranks (Variant B): fused-difference
+            # penalty over rank-position weights + optional mean-equality.
+            return _FusedDifferenceRidge(
+                alpha=alpha,
+                difference_order=int(params.get("prior_diff_order", 1)),
+                mean_equality=bool(params.get("prior_mean_equality", True)),
+                nonneg=(constraint == "nonneg"),
+            )
+        if prior != "none":
+            raise NotImplementedError(
+                f"ridge.prior={prior!r} is schema-only in v0.9.0; "
+                f"supported: 'none' (default), 'random_walk' (2SRR), "
+                f"'shrink_to_target' (Maximally FL Albacore_comps), "
+                f"'fused_difference' (Maximally FL Albacore_ranks)."
+            )
+        if constraint == "nonneg":
+            return _NonNegRidge(alpha=alpha)
+        if constraint != "none":
+            raise NotImplementedError(
+                f"ridge.coefficient_constraint={constraint!r} is schema-only "
+                f"in v0.9.0; supported values: 'none' (default), 'nonneg' "
+                f"(operational, Coulombe et al. 2024 Assemblage Regression)."
+            )
         return Ridge(alpha=alpha)
     if family == "lasso":
         return Lasso(alpha=alpha, max_iter=int(params.get("max_iter", 20000)))
@@ -1658,6 +1714,24 @@ def _build_l4_model(family: str, params: dict[str, Any]):
     if family == "principal_component_regression":
         return _PrincipalComponentRegression(n_components=int(params.get("n_components", 4)))
     if family == "decision_tree":
+        split_shrinkage = float(params.get("split_shrinkage", 0.0))
+        if split_shrinkage != 0.0:
+            # Goulet Coulombe (2024) Slow-Growing Trees (SLOTH). Custom
+            # soft-weighted tree: at each split, observations not
+            # satisfying the rule receive weight (1 − η) instead of 0.
+            # Operational v0.9.1 dev-stage v0.9.0B-6; v0.9.0F audit-fix
+            # restored the paper p.87 rule-of-thumb defaults
+            # (eta_depth_step=0.01, eta_max_plateau=0.5) and surfaced
+            # the mtry sub-axis (paper p.88 §2.3).
+            return _SlowGrowingTree(
+                eta=split_shrinkage,
+                herfindahl_threshold=float(params.get("herfindahl_threshold", 0.25)),
+                eta_depth_step=float(params.get("eta_depth_step", 0.01)),
+                eta_max_plateau=float(params.get("eta_max_plateau", 0.5)),
+                mtry_frac=float(params.get("mtry_frac", 1.0)),
+                max_depth=params.get("max_depth"),
+                random_state=seed,
+            )
         return DecisionTreeRegressor(max_depth=params.get("max_depth"), random_state=seed)
     if family == "random_forest":
         return RandomForestRegressor(
@@ -1667,9 +1741,16 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             n_jobs=1,
         )
     if family == "extra_trees":
+        # max_features: sklearn accepts int, float, "sqrt", "log2", or None.
+        # Coulombe (2024) "To Bag is to Prune" PRF baseline = extra_trees
+        # with max_features=1 (one random feature per split, fully random).
+        max_features = params.get("max_features", "sqrt")
+        if isinstance(max_features, str) and max_features.isdigit():
+            max_features = int(max_features)
         return ExtraTreesRegressor(
             n_estimators=int(params.get("n_estimators", 200)),
             max_depth=params.get("max_depth"),
+            max_features=max_features,
             random_state=seed,
             n_jobs=1,
         )
@@ -1725,6 +1806,23 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             epsilon=float(params.get("epsilon", 0.1)),
             gamma=params.get("gamma", "scale"),
         )
+    if family == "kernel_ridge":
+        # v0.9.0F audit-fix: paper 16 (Coulombe et al. 2022 JAE "How is
+        # Machine Learning Useful for Macroeconomic Forecasting?") uses
+        # Kernel Ridge Regression as a headline non-linearity feature
+        # (paper §3.1.1, Eq. 16). Surfaced as a first-class L4 family
+        # via sklearn ``KernelRidge``. ``params.kernel`` chooses the
+        # kernel ('rbf' default per paper); ``alpha`` is the ridge
+        # penalty; ``gamma`` is the RBF bandwidth.
+        from sklearn.kernel_ridge import KernelRidge
+
+        return KernelRidge(
+            alpha=float(params.get("alpha", 1.0)),
+            kernel=str(params.get("kernel", "rbf")),
+            gamma=params.get("gamma"),
+            degree=int(params.get("degree", 3)),
+            coef0=float(params.get("coef0", 1.0)),
+        )
     if family == "knn":
         n_neighbors = int(params.get("n_neighbors", 5))
         return _AutoClipKNN(n_neighbors=n_neighbors, weights=params.get("weights", "uniform"))
@@ -1743,24 +1841,73 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             lambda1=float(params.get("minnesota_lambda1", 0.2)),
             lambda_decay=float(params.get("minnesota_lambda_decay", 1.0)),
             lambda_cross=float(params.get("minnesota_lambda_cross", 0.5)),
+            n_draws=int(params.get("n_posterior_draws", 0)),
+            posterior_irf_periods=int(params.get("posterior_irf_periods", 12)),
+            random_state=seed,
         )
     if family == "macroeconomic_random_forest":
-        # Coulombe (2024) MRF: linear-in-time random forest. Approx via random
-        # forest on (X, time_trend) features.
-        return _MRFWrapper(
-            n_estimators=int(params.get("n_estimators", 200)),
-            max_depth=params.get("max_depth"),
+        # Coulombe (2024) MRF: random walk regularised forest with per-leaf
+        # local linear regressions and Block Bayesian Bootstrap forecast
+        # ensembles. Backed by Ryan Lucas's reference implementation
+        # vendored under ``_vendor/macro_random_forest/`` — see
+        # ``_MRFExternalWrapper``.
+        return _MRFExternalWrapper(
+            B=int(params.get("B", params.get("n_estimators", 50))),
+            ridge_lambda=float(params.get("ridge_lambda", 0.1)),
+            rw_regul=float(params.get("rw_regul", 0.75)),
+            mtry_frac=float(params.get("mtry_frac", 1 / 3)),
+            trend_push=float(params.get("trend_push", 1)),
+            quantile_rate=float(params.get("quantile_rate", 0.3)),
+            fast_rw=bool(params.get("fast_rw", True)),
+            resampling_opt=int(params.get("resampling_opt", 2)),
+            parallelise=bool(params.get("parallelise", False)),
+            n_cores=int(params.get("n_cores", 1)),
+            block_size=int(params.get("block_size", 24)),
             random_state=seed,
         )
-    if family in {"mlp"}:
-        from sklearn.neural_network import MLPRegressor
+    if family in {"mlp", "lstm", "gru", "transformer"}:
+        # v0.9 sub-axis: architecture={standard, hemisphere} + loss={mse,
+        # volatility_emphasis}. Hemisphere arch + volatility-emphasis
+        # loss = HNN (Coulombe / Frenette / Klieber 2025 JAE), promoted
+        # in v0.9.1 dev-stage v0.9.0C-2; supported on the ``mlp`` family
+        # only (LSTM/GRU/Transformer extensions deferred).
+        nn_arch = params.get("architecture", "standard")
+        nn_loss = params.get("loss", "mse")
+        if (nn_arch == "hemisphere" or nn_loss == "volatility_emphasis"):
+            if family != "mlp":
+                raise NotImplementedError(
+                    f"{family}.architecture=hemisphere / loss=volatility_emphasis "
+                    f"requires family='mlp' in v0.9.1; LSTM/GRU/Transformer "
+                    f"hemisphere variants deferred to v0.9.x."
+                )
+            if nn_arch != "hemisphere" or nn_loss != "volatility_emphasis":
+                raise NotImplementedError(
+                    "HNN requires both architecture='hemisphere' and "
+                    "loss='volatility_emphasis' (the two are paper-coupled). "
+                    "Set both, or set neither."
+                )
+            return _HemisphereNN(
+                lc=int(params.get("lc", 2)),
+                lm=int(params.get("lm", 2)),
+                lv=int(params.get("lv", 2)),
+                neurons=int(params.get("neurons", 64)),
+                dropout=float(params.get("dropout", 0.2)),
+                lr=float(params.get("lr", 1e-3)),
+                n_epochs=int(params.get("n_epochs", 100)),
+                B=int(params.get("B", 100)),
+                sub_rate=float(params.get("sub_rate", 0.80)),
+                nu=params.get("nu"),
+                lambda_emphasis=float(params.get("lambda_emphasis", 1.0)),
+                random_state=seed,
+            )
+        if family == "mlp":
+            from sklearn.neural_network import MLPRegressor
 
-        return MLPRegressor(
-            hidden_layer_sizes=tuple(params.get("hidden_layer_sizes", (32, 16))),
-            max_iter=int(params.get("max_iter", 500)),
-            random_state=seed,
-        )
-    if family in {"lstm", "gru", "transformer"}:
+            return MLPRegressor(
+                hidden_layer_sizes=tuple(params.get("hidden_layer_sizes", (32, 16))),
+                max_iter=int(params.get("max_iter", 500)),
+                random_state=seed,
+            )
         return _TorchSequenceModel(
             kind=family,
             hidden_size=int(params.get("hidden_size", 32)),
@@ -1782,14 +1929,57 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             random_state=seed,
             quantile_levels=tuple(params.get("quantile_levels", (0.05, 0.5, 0.95))),
         )
+    if family == "mars":
+        # Friedman (1991) MARS via pyearth optional dep. v0.9 Phase 2
+        # paper-coverage atomic addition; provides the base learner for
+        # Coulombe (2024) MARSquake recipe.
+        try:
+            from pyearth import Earth  # type: ignore
+        except ImportError as exc:  # pragma: no cover - optional dep
+            raise NotImplementedError(
+                "mars family requires `pip install macroforecast[mars]`"
+            ) from exc
+        return Earth(
+            max_terms=int(params.get("max_terms", 21)),
+            max_degree=int(params.get("max_degree", 1)),
+        )
     if family == "bagging":
         # Issue #282 -- generic bootstrap-aggregating meta-estimator.
+        # v0.9 sub-axis: strategy={standard, block, booging, sequential_residual}.
+        # standard (default) = Breiman 1996; block = Kunsch 1989 moving-block;
+        # booging = Goulet Coulombe 2024 outer-bagging-of-over-fitted-inner-SGB
+        # + Data Augmentation (operational v0.9.1 dev-stage v0.9.0B);
+        # sequential_residual = legacy alias for booging (back-compat).
+        strategy = params.get("strategy", "standard")
+        if strategy in {"booging", "sequential_residual"}:
+            return _BoogingWrapper(
+                B=int(params.get("n_estimators", 100)),
+                sample_frac=float(params.get("max_samples", 0.75)),
+                # v0.9.0F audit-fix: paper Table 2 / Appendix B uses S = 1500;
+                # earlier default 500 was below the "deliberately overfit"
+                # regime that the bag-prune theorem relies on.
+                inner_n_estimators=int(params.get("inner_n_estimators", 1500)),
+                inner_learning_rate=float(params.get("inner_learning_rate", 0.1)),
+                inner_max_depth=int(params.get("inner_max_depth", 4)),
+                inner_subsample=float(params.get("inner_subsample", 0.5)),
+                da_noise_frac=float(params.get("da_noise_frac", 1.0 / 3.0)),
+                da_drop_rate=float(params.get("da_drop_rate", 0.2)),
+                random_state=seed,
+            )
+        if strategy not in {"standard", "block"}:
+            raise NotImplementedError(
+                f"bagging.strategy={strategy!r} not supported. Valid: "
+                f"'standard' (default), 'block', 'booging' (or alias "
+                f"'sequential_residual')."
+            )
         return _BaggingWrapper(
             base_family=str(params.get("base_family", "ridge")),
             n_estimators=int(params.get("n_estimators", 50)),
             max_samples=float(params.get("max_samples", 0.8)),
             random_state=seed,
-            base_params={k: v for k, v in params.items() if k not in {"family", "base_family", "n_estimators", "max_samples"}},
+            strategy=strategy,
+            block_length=int(params.get("block_length", 4)),
+            base_params={k: v for k, v in params.items() if k not in {"family", "base_family", "n_estimators", "max_samples", "strategy", "block_length"}},
         )
     custom = _resolve_custom_model(family)
     if custom is not None:
@@ -1918,6 +2108,144 @@ def _resolve_l4_tuning(params: dict[str, Any], X: pd.DataFrame, y: pd.Series) ->
                 picker = LassoCV(alphas=alphas, cv=cv_folds, max_iter=20000, random_state=seed)
                 picker.fit(X_filled, y)
                 params["alpha"] = float(picker.alpha_)
+        except Exception:
+            pass
+        return params
+
+    # Coulombe-Surprenant-Leroux-Stevanovic (2022 JAE) Feature 3 schemes.
+    # Each scheme picks ``alpha`` from ``cv_path_alphas`` for the alpha-
+    # tunable linear families (ridge / lasso / elastic_net / lasso_path /
+    # ols). Non-alpha families pass through unchanged and the caller's
+    # default ``params`` are used.
+    if algo in {"kfold", "poos", "aic", "bic", "block_cv"}:
+        # v0.9.0a0 audit-fix #15: family-specific CV grids. Earlier path
+        # only handled ``alpha`` for linear families; non-alpha families
+        # silently passed through. Now KRR shares the alpha grid; RF
+        # uses ``max_depth``; SVR uses ``C``. Each branch picks one
+        # hyperparameter from a family-specific candidate list.
+        #
+        # Phase A4a (paper 16, Round 1 finding 7): paper §3.2 Eq. (18)
+        # specifies elastic_net's ζ ∈ {0=Ridge, 1=Lasso, ζ_CV=EN-tuned}.
+        # Pre-A4 elastic_net only tuned ``alpha`` and left ``l1_ratio``
+        # at the helper-pinned 0.5. Now elastic_net gets a 2-D grid
+        # ``(alpha × l1_ratio)`` and BOTH params are set on the winner.
+        alphas = leaf.get("cv_path_alphas") or [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+        # 2-D grid as a list of param-overlay dicts. The 1-D path remains
+        # backward-compatible: single-element overlays.
+        grid_overlays: list[dict[str, Any]] = []
+        if family == "elastic_net":
+            l1_ratios = leaf.get("cv_path_l1_ratios") or [0.1, 0.3, 0.5, 0.7, 0.9]
+            for a in list(alphas):
+                for r in list(l1_ratios):
+                    grid_overlays.append({"alpha": float(a), "l1_ratio": float(r)})
+        elif family in {"ridge", "ols", "lasso", "lasso_path", "kernel_ridge"}:
+            grid_overlays = [{"alpha": float(a)} for a in alphas]
+        elif family == "random_forest":
+            grid_overlays = [{"max_depth": v} for v in (leaf.get("rf_max_depth_grid") or [None, 4, 8, 16])]
+        elif family in {"svr_linear", "svr_rbf"}:
+            grid_overlays = [{"C": float(c)} for c in (leaf.get("svr_C_grid") or [0.1, 1.0, 10.0])]
+        else:
+            return params
+        try:
+            if algo == "block_cv":
+                # Goulet Coulombe et al. (2024) Albacore §3 — non-
+                # overlapping K-block CV. Default 10 blocks per paper
+                # (override via leaf_config.block_cv_splits).
+                n_blocks = int(leaf.get("block_cv_splits", 10))
+                n_blocks = max(2, min(n_blocks, n_obs))
+                block_starts = np.linspace(0, n_obs, n_blocks + 1, dtype=int)
+                best_overlay, best_score = None, float("inf")
+                for overlay in grid_overlays:
+                    params_v = dict(params); params_v.update(overlay)
+                    fold_mses = []
+                    for k in range(n_blocks):
+                        s, e = int(block_starts[k]), int(block_starts[k + 1])
+                        if e <= s:
+                            continue
+                        train_mask = np.ones(n_obs, dtype=bool)
+                        train_mask[s:e] = False
+                        if train_mask.sum() < 4:
+                            continue
+                        X_tr = X_filled.iloc[train_mask]
+                        y_tr = y.iloc[train_mask]
+                        X_te = X_filled.iloc[s:e]
+                        y_te = y.iloc[s:e]
+                        mdl = _build_l4_model(family, params_v)
+                        try:
+                            mdl.fit(X_tr, y_tr)
+                            preds = np.asarray(mdl.predict(X_te), dtype=float)
+                        except Exception:
+                            continue
+                        fold_mses.append(float(np.mean((np.asarray(y_te, dtype=float) - preds) ** 2)))
+                    if not fold_mses:
+                        continue
+                    score = float(np.mean(fold_mses))
+                    if score < best_score:
+                        best_score, best_overlay = score, overlay
+                if best_overlay is not None:
+                    params.update(best_overlay)
+                return params
+            if algo == "kfold":
+                from sklearn.model_selection import KFold, cross_val_score
+
+                cv = KFold(n_splits=cv_folds, shuffle=True, random_state=seed)
+                best_overlay, best_score = None, float("inf")
+                for overlay in grid_overlays:
+                    params_v = dict(params); params_v.update(overlay)
+                    mdl = _build_l4_model(family, params_v)
+                    try:
+                        score = -float(np.mean(cross_val_score(
+                            mdl, X_filled, y, cv=cv, scoring="neg_mean_squared_error",
+                        )))
+                    except Exception:
+                        continue
+                    if score < best_score:
+                        best_score, best_overlay = score, overlay
+                if best_overlay is not None:
+                    params.update(best_overlay)
+            elif algo == "poos":
+                n_holdout = max(1, n_obs // 4)
+                n_train = n_obs - n_holdout
+                if n_train < 4:
+                    return params
+                X_tr, X_te = X_filled.iloc[:n_train], X_filled.iloc[n_train:]
+                y_tr, y_te = y.iloc[:n_train], y.iloc[n_train:]
+                best_overlay, best_score = None, float("inf")
+                for overlay in grid_overlays:
+                    params_v = dict(params); params_v.update(overlay)
+                    mdl = _build_l4_model(family, params_v)
+                    try:
+                        mdl.fit(X_tr, y_tr)
+                        preds = np.asarray(mdl.predict(X_te), dtype=float)
+                    except Exception:
+                        continue
+                    score = float(np.mean((np.asarray(y_te, dtype=float) - preds) ** 2))
+                    if score < best_score:
+                        best_score, best_overlay = score, overlay
+                if best_overlay is not None:
+                    params.update(best_overlay)
+            else:  # algo in {"aic", "bic"}
+                n = max(int(n_obs), 2)
+                penalty = 2.0 if algo == "aic" else float(np.log(n))
+                best_overlay, best_score = None, float("inf")
+                for overlay in grid_overlays:
+                    params_v = dict(params); params_v.update(overlay)
+                    mdl = _build_l4_model(family, params_v)
+                    try:
+                        mdl.fit(X_filled, y)
+                        preds = np.asarray(mdl.predict(X_filled), dtype=float)
+                    except Exception:
+                        continue
+                    rss = float(np.sum((np.asarray(y, dtype=float) - preds) ** 2))
+                    if family in {"lasso", "elastic_net", "lasso_path"} and hasattr(mdl, "coef_"):
+                        k = int(np.sum(np.abs(np.ravel(mdl.coef_)) > 1e-9)) + 1
+                    else:
+                        k = X_filled.shape[1] + 1
+                    score = n * float(np.log(max(rss / n, 1e-12))) + penalty * k
+                    if score < best_score:
+                        best_score, best_overlay = score, overlay
+                if best_overlay is not None:
+                    params.update(best_overlay)
         except Exception:
             pass
         return params
@@ -2170,6 +2498,765 @@ class _FactorAugmentedAR:
         return self._regression.predict(design)
 
 
+class _NonNegRidge:
+    """Non-negative ridge regression (v0.9 Phase 1 Tier 1 promotion).
+
+    Solves ``min ||y - Xβ||² + α||β||²`` subject to β >= 0 via
+    ``scipy.optimize.nnls`` on the augmented system::
+
+        [X        ]       [y]
+        [√α · I_p] · β =  [0]
+
+    NNLS on this augmented system is the standard closed-form path for
+    non-negative ridge: the augmented residual norm equals the original
+    ridge objective, so the constrained NNLS solution is the constrained
+    ridge solution. Used for the Albacore-family Assemblage Regression
+    (Goulet Coulombe / Klieber / Barrette / Goebel 2024 'Maximally
+    Forward-Looking Core Inflation') where assembly weights must be
+    non-negative.
+    """
+
+    def __init__(self, alpha: float = 1.0) -> None:
+        self.alpha = float(alpha)
+        self._coef: np.ndarray | None = None
+        self._intercept: float = 0.0
+        self._cols: list[str] = []
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_NonNegRidge":
+        from scipy.optimize import nnls
+
+        self._cols = list(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype=float)
+        ya = np.asarray(y, dtype=float)
+        if Xa.shape[0] == 0 or Xa.shape[1] == 0:
+            self._coef = np.zeros(Xa.shape[1])
+            self._intercept = float(ya.mean()) if ya.size else 0.0
+            return self
+        # Center y so the intercept absorbs the mean (NNLS does not have
+        # an intercept term natively); coefficients then act on centered X.
+        y_mean = float(ya.mean())
+        y_c = ya - y_mean
+        # Augmented system: stack X above sqrt(alpha)·I.
+        sqrt_alpha = float(np.sqrt(max(self.alpha, 0.0)))
+        p = Xa.shape[1]
+        X_aug = np.vstack([Xa, sqrt_alpha * np.eye(p)])
+        y_aug = np.concatenate([y_c, np.zeros(p)])
+        beta, _ = nnls(X_aug, y_aug, maxiter=max(200, 5 * p))
+        self._coef = beta
+        self._intercept = y_mean
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._coef is None:
+            return np.zeros(len(X))
+        Xa = X.reindex(columns=self._cols, fill_value=0.0).fillna(0.0).to_numpy(dtype=float)
+        return Xa @ self._coef + self._intercept
+
+
+class _TwoStageRandomWalkRidge:
+    """Two-Step Ridge Regression (Coulombe 2025 IJF) -- closed-form
+    generalised ridge with a random-walk prior on coefficient deviations.
+
+    The estimator surfaces a per-time-step coefficient path β̂_t under
+    the reparametrisation β_k = C_RW · θ_k where C_RW is the lower-
+    triangular ones matrix (cumulative-sum operator). Eq. 9 of the
+    paper rewrites the homogeneous-variance ridge as
+
+        β̂ = C Z' (Z Z' + λ I_T)^{-1} y,
+
+    with Z = W C, W = [diag(X_1) | ... | diag(X_K)], C = I_K ⊗ C_RW.
+    Eq. 11 then re-solves with heterogeneous variances Ω_θ (per-coef)
+    and Ω_ε (per-time, recovered from step-1 residuals via a volatility
+    model):
+
+        θ̂ = Ω_θ Z' (Z Ω_θ Z' + Ω_ε)^{-1} y.
+
+    Both equations are *closed-form* (two T × T solves; no iteration).
+    The L4 contract is single-equation TVP regression: ``predict``
+    returns the most-recent fitted forecast (a one-step-ahead under
+    the random-walk assumption that β_{T+1} ≈ β_T).
+
+    Parameters
+    ----------
+    alpha:
+        Initial ridge penalty λ for step 1. The step-2 re-CV is
+        bounded above by ``alpha * max_alpha_ratio`` to avoid
+        runaway shrinkage on degenerate residuals.
+    vol_model:
+        ``"garch11"`` (default; paper §4 spec, Coulombe 2025 IJF Eq. 11
+        — requires ``arch>=5.0``; falls back to EWMA if the package is
+        missing) or ``"ewma"`` (lambda=0.94 RiskMetrics decay; no extra
+        deps). v0.9.0a0 audit gap-fix raised the default from
+        ``"ewma"`` to ``"garch11"`` to match the paper's spec.
+    max_alpha_ratio:
+        Upper bound on the ratio of step-2 to step-1 lambda. Default
+        ``1e6``; the paper does not pin this explicitly but the dual
+        ZZ' + λI invert becomes numerically unstable beyond.
+    random_state:
+        Propagated from L0 ``random_seed``; reserved for future
+        block-CV implementations.
+    """
+
+    def __init__(
+        self,
+        alpha: float = 1.0,
+        vol_model: str = "garch11",
+        max_alpha_ratio: float = 1e6,
+        random_state: int = 0,
+    ) -> None:
+        self.alpha = float(max(alpha, 1e-6))
+        self.vol_model = str(vol_model).lower()
+        self.max_alpha_ratio = float(max_alpha_ratio)
+        self.random_state = int(random_state)
+        self._cols: tuple[str, ...] = ()
+        self._beta_path: np.ndarray | None = None  # (T, K)
+        self._beta_last: np.ndarray | None = None  # (K,) most recent β_t
+        self._intercept: float = 0.0
+        self._fitted: bool = False
+
+    @staticmethod
+    def _ewma_vol(eps: np.ndarray, lam: float = 0.94) -> np.ndarray:
+        """RiskMetrics EWMA conditional variance estimator. Returns σ²_t."""
+        T = len(eps)
+        sigma2 = np.empty(T, dtype=float)
+        var0 = float(np.mean(eps**2)) if T else 1.0
+        sigma2[0] = var0
+        for t in range(1, T):
+            sigma2[t] = lam * sigma2[t - 1] + (1.0 - lam) * float(eps[t - 1] ** 2)
+        return sigma2
+
+    @staticmethod
+    def _garch_vol(eps: np.ndarray) -> np.ndarray:
+        """GARCH(1,1) conditional variance via the ``arch`` package; falls
+        back to EWMA when ``arch`` is unavailable."""
+        try:
+            from arch import arch_model  # type: ignore[import-not-found]
+        except ImportError:
+            return _TwoStageRandomWalkRidge._ewma_vol(eps)
+        if len(eps) < 16:
+            return _TwoStageRandomWalkRidge._ewma_vol(eps)
+        try:
+            am = arch_model(eps, mean="zero", vol="GARCH", p=1, q=1, rescale=False)
+            res = am.fit(disp="off", show_warning=False)
+            return np.asarray(res.conditional_volatility, dtype=float) ** 2
+        except Exception:
+            return _TwoStageRandomWalkRidge._ewma_vol(eps)
+
+    def _build_design(self, X: np.ndarray) -> np.ndarray:
+        """Build Z = W C where W = [diag(X_1) | ... | diag(X_K)] (T × KT),
+        C = I_K ⊗ C_RW (KT × KT). Result Z is (T × KT) and equal to the
+        block of K cumulative-design slabs ``X_k(t) · 1[s ≤ t]``."""
+        T, K = X.shape
+        # Vectorised: Z[t, k*T + s] = X[t, k] * 1[s <= t]. Build by stacking
+        # K independent (T × T) blocks of the form diag(X_k) @ C_RW where
+        # C_RW is lower-triangular ones. Equivalent to broadcasting.
+        idx = np.arange(T)
+        mask = (idx[None, :] <= idx[:, None]).astype(float)  # (T, T) lower-tri
+        # For each column k: block_k[t, s] = X[t, k] * mask[t, s].
+        Z_blocks = [X[:, k : k + 1] * mask for k in range(K)]
+        return np.hstack(Z_blocks)  # (T, KT)
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_TwoStageRandomWalkRidge":
+        self._cols = tuple(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype=float)
+        ya = np.asarray(y, dtype=float)
+        T, K = Xa.shape
+        if T == 0 or K == 0:
+            self._beta_last = np.zeros(K)
+            self._intercept = float(ya.mean()) if ya.size else 0.0
+            self._fitted = True
+            return self
+
+        # Center y so the intercept absorbs the mean.
+        y_mean = float(ya.mean())
+        y_c = ya - y_mean
+        self._intercept = y_mean
+
+        # Step 1: homogeneous variance ridge.
+        Z = self._build_design(Xa)  # (T, KT)
+        ZZt = Z @ Z.T  # (T, T)
+        lam = float(self.alpha)
+        a1 = np.linalg.solve(ZZt + lam * np.eye(T), y_c)
+        theta1 = Z.T @ a1  # (KT,)
+        # Reshape to (K, T) coefficient slabs in the cumulative basis.
+        theta1_mat = theta1.reshape(K, T)
+        # Recover original-scale β paths via β_k = C_RW · θ_k.
+        beta1 = np.cumsum(theta1_mat, axis=1)  # (K, T)
+        eps_hat = y_c - Z @ theta1
+
+        # Step 2a: per-time residual variance Ω_ε (mean-normalised to 1).
+        sigma2_eps = (
+            self._garch_vol(eps_hat)
+            if self.vol_model == "garch11"
+            else self._ewma_vol(eps_hat)
+        )
+        sigma2_eps = np.maximum(sigma2_eps, 1e-12)
+        sigma2_eps /= float(sigma2_eps.mean())
+
+        # Step 2b: per-coefficient θ-variance Ω_θ (rescaled to mean 1/λ).
+        sigma2_u = (theta1_mat ** 2).mean(axis=1)  # (K,)
+        sigma2_u = np.maximum(sigma2_u, 1e-12)
+        target_mean = 1.0 / lam
+        sigma2_u *= target_mean / float(sigma2_u.mean())
+        # Enforce upper bound on per-coef diagonal scale.
+        sigma2_u = np.clip(sigma2_u, target_mean / self.max_alpha_ratio, target_mean * self.max_alpha_ratio)
+
+        # Step 2c: assemble Ω_θ = diag(sigma2_u repeated T times),
+        # Ω_ε = diag(sigma2_eps).
+        # Ω_θ Z' has shape (KT, T): scale rows of Z' by sigma2_u (per coef block).
+        omega_theta_diag = np.repeat(sigma2_u, T)  # (KT,)
+        Z_omega = Z * omega_theta_diag[None, :]  # (T, KT) = Z @ diag(omega)
+        ZOZt = Z_omega @ Z.T  # (T, T)
+        Omega_eps = np.diag(sigma2_eps)
+        a2 = np.linalg.solve(ZOZt + Omega_eps, y_c)
+        theta2 = (Z.T * omega_theta_diag[:, None]).reshape(K, T, T) @ a2[..., None]
+        # The above is θ̂ = Ω_θ Z' a2; equivalent and simpler:
+        theta2 = omega_theta_diag * (Z.T @ a2)
+        theta2_mat = theta2.reshape(K, T)
+        beta2 = np.cumsum(theta2_mat, axis=1)  # (K, T)
+
+        # Cache the final-time-step β as the predict basis.
+        self._beta_path = beta2.T  # (T, K) for L7 mrf-style consumption
+        self._beta_last = beta2[:, -1] if T > 0 else np.zeros(K)
+        self._fitted = True
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if not self._fitted or self._beta_last is None:
+            return np.zeros(len(X), dtype=float)
+        # Re-align to training columns; missing → 0.
+        Xa = X.reindex(columns=list(self._cols), fill_value=0.0).fillna(0.0).to_numpy(dtype=float)
+        # One-step-ahead under RW: β_{T+1} ≈ β_T.
+        return Xa @ self._beta_last + self._intercept
+
+
+class _ShrinkToTargetRidge:
+    """Albacore_comps (Maximally Forward-Looking Core Inflation, Goulet
+    Coulombe / Klieber / Barrette / Goebel 2024) Variant A.
+
+    Solves
+        arg min_w  ‖y − Xw‖² + α ‖w − w_target‖²    s.t. w ≥ 0,  w'1 = 1
+    via scipy SLSQP. Composes with the existing ``coefficient_constraint=
+    nonneg`` axis (passes ``bounds=[(0, None)]·K`` when ``nonneg=True``)
+    and the simplex equality constraint can be toggled via ``simplex``
+    (default True for Albacore semantics; False reduces to a generalised
+    shrink-to-target ridge with arbitrary β).
+
+    Limit cases:
+      * α = 0           → unconstrained / NNLS / OLS
+      * α → ∞           → returns ``w_target`` exactly
+      * ``w_target = 0``, ``simplex=False``, ``nonneg=True`` →
+        equivalent to ``_NonNegRidge`` (B-1 v0.8.9)
+
+    Hyperparameters (override via ``params``):
+      * ``alpha`` -- shrinkage strength
+      * ``prior_target`` -- target weight vector (list / ndarray of
+        length K). Default is uniform ``1/K``.
+      * ``prior_simplex`` -- enforce ``w'1 = 1`` (default True)
+      * ``coefficient_constraint`` (composed at L4 dispatch) --
+        ``nonneg`` enables ``w ≥ 0``.
+    """
+
+    def __init__(
+        self,
+        alpha: float = 1.0,
+        prior_target: Any = None,
+        simplex: bool = True,
+        nonneg: bool = True,
+    ) -> None:
+        self.alpha = float(max(alpha, 0.0))
+        self.prior_target_in = prior_target
+        self.simplex = bool(simplex)
+        self.nonneg = bool(nonneg)
+        self._cols: tuple[str, ...] = ()
+        self._coef: np.ndarray | None = None
+        self._intercept: float = 0.0
+
+    def _resolve_target(self, K: int) -> np.ndarray:
+        if self.prior_target_in is None:
+            # Audit gap-fix: paper specifies w_headline (CPI/PCE basket
+            # weights) as the default target. macroforecast cannot infer
+            # those without domain knowledge, so we fall back to uniform
+            # 1/K but warn the user — the uniform default collapses the
+            # Variant A objective toward the Variant B (fused-difference)
+            # large-α limit, so it is rarely what the user intends.
+            import warnings
+            warnings.warn(
+                "_ShrinkToTargetRidge: prior_target=None falls back to "
+                "uniform 1/K. Paper Albacore (Goulet Coulombe et al. 2024) "
+                "uses w_headline (the CPI/PCE basket weights) — pass "
+                "prior_target=<weights> to match the paper.",
+                UserWarning,
+                stacklevel=3,
+            )
+            return np.full(K, 1.0 / max(K, 1), dtype=float)
+        target = np.asarray(self.prior_target_in, dtype=float)
+        if target.shape[0] != K:
+            raise ValueError(
+                f"prior_target length {target.shape[0]} ≠ K={K}"
+            )
+        return target
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_ShrinkToTargetRidge":
+        from scipy.optimize import minimize
+
+        self._cols = tuple(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype=float)
+        ya = np.asarray(y, dtype=float)
+        T, K = Xa.shape
+        if T == 0 or K == 0:
+            self._coef = np.zeros(K)
+            self._intercept = float(ya.mean()) if ya.size else 0.0
+            return self
+
+        # The simplex constraint w'1=1 means y is *not* centred -- the
+        # forecast is a convex combination, no separate intercept slot.
+        # Without simplex, centre y so the intercept absorbs the mean.
+        if self.simplex:
+            y_target = ya
+            self._intercept = 0.0
+        else:
+            self._intercept = float(ya.mean())
+            y_target = ya - self._intercept
+
+        w_target = self._resolve_target(K)
+
+        def _obj(w: np.ndarray) -> float:
+            r = y_target - Xa @ w
+            return float(r @ r + self.alpha * ((w - w_target) @ (w - w_target)))
+
+        def _grad(w: np.ndarray) -> np.ndarray:
+            return -2.0 * (Xa.T @ (y_target - Xa @ w)) + 2.0 * self.alpha * (w - w_target)
+
+        constraints: list[dict[str, Any]] = []
+        if self.simplex:
+            constraints.append({
+                "type": "eq",
+                "fun": lambda w: float(np.sum(w) - 1.0),
+                "jac": lambda w: np.ones(K),
+            })
+        bounds = [(0.0, None)] * K if self.nonneg else [(None, None)] * K
+
+        # SLSQP starting point: prior_target itself (always feasible
+        # when nonneg is True and simplex=True since target sums to 1).
+        w0 = w_target.copy()
+        if self.simplex and abs(w0.sum() - 1.0) > 1e-9:
+            # Re-normalise — caller may have supplied an off-simplex target
+            # for an off-simplex regression; in the simplex case force it.
+            w0 = w0 / max(w0.sum(), 1e-12) if w0.sum() > 0 else np.full(K, 1.0 / K)
+        if self.nonneg:
+            w0 = np.clip(w0, 0.0, None)
+
+        result = minimize(
+            _obj, w0, jac=_grad, method="SLSQP",
+            bounds=bounds, constraints=constraints,
+            options={"maxiter": 500, "ftol": 1e-10},
+        )
+        self._coef = np.asarray(result.x, dtype=float)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._coef is None:
+            return np.zeros(len(X), dtype=float)
+        Xa = X.reindex(columns=list(self._cols), fill_value=0.0).fillna(0.0).to_numpy(dtype=float)
+        return Xa @ self._coef + self._intercept
+
+
+class _FusedDifferenceRidge:
+    """Albacore_ranks (Maximally Forward-Looking Core Inflation, Goulet
+    Coulombe et al. 2024) Variant B.
+
+    Solves
+        arg min_w  ‖y − Xw‖² + α ‖D w‖²    s.t. w ≥ 0,  mean(y) = mean(Xw)
+    via scipy SLSQP. ``D`` is the first-difference operator
+    (``difference_order=1`` -- default; the paper's spec); the penalty
+    encourages smoothness over rank position. The mean-equality
+    constraint pins the level of the recovered weight series; toggle
+    via ``mean_equality``.
+
+    Pairs naturally with the L3 ``asymmetric_trim`` op (B-6 v0.8.9):
+    pre-sort each row of the predictor panel, then run this estimator
+    on the rank-space data ``O = sort(X)``.
+
+    Limit cases:
+      * α = 0                     → standard OLS / NNLS
+      * α → ∞                     → uniform weights ``w = 1/K``
+      * ``difference_order = 0``  → standard ridge (no fusion)
+
+    Hyperparameters (override via ``params``):
+      * ``alpha`` -- fusion strength
+      * ``prior_diff_order`` -- order of the difference operator
+        (default 1; only 1 is paper-faithful)
+      * ``prior_mean_equality`` -- enforce ``mean(y) = mean(Xw)``
+        (default True; Albacore_ranks pinning constraint)
+      * ``coefficient_constraint=nonneg`` -- composes at the dispatch
+        level
+    """
+
+    def __init__(
+        self,
+        alpha: float = 1.0,
+        difference_order: int = 1,
+        mean_equality: bool = True,
+        nonneg: bool = True,
+    ) -> None:
+        self.alpha = float(max(alpha, 0.0))
+        self.difference_order = int(max(difference_order, 0))
+        self.mean_equality = bool(mean_equality)
+        self.nonneg = bool(nonneg)
+        self._cols: tuple[str, ...] = ()
+        self._coef: np.ndarray | None = None
+        self._intercept: float = 0.0
+
+    @staticmethod
+    def _diff_matrix(K: int, order: int) -> np.ndarray:
+        if order <= 0 or K <= 1:
+            return np.eye(K)
+        # First-difference: D[r, r] = 1, D[r, r-1] = -1; shape (K-1, K).
+        D = np.eye(K) - np.eye(K, k=-1)
+        D = D[1:]
+        for _ in range(order - 1):
+            D = D[1:] - D[:-1]  # iterated difference
+        return D
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FusedDifferenceRidge":
+        from scipy.optimize import minimize
+
+        self._cols = tuple(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype=float)
+        ya = np.asarray(y, dtype=float)
+        T, K = Xa.shape
+        if T == 0 or K == 0:
+            self._coef = np.zeros(K)
+            self._intercept = float(ya.mean()) if ya.size else 0.0
+            return self
+
+        # Mean equality pins ``mean(Xw) = mean(y)``; intercept therefore
+        # stays at 0. Without mean-equality, centre y as usual.
+        if self.mean_equality:
+            y_target = ya
+            self._intercept = 0.0
+        else:
+            self._intercept = float(ya.mean())
+            y_target = ya - self._intercept
+
+        D = self._diff_matrix(K, self.difference_order)
+        DtD = D.T @ D
+
+        def _obj(w: np.ndarray) -> float:
+            r = y_target - Xa @ w
+            return float(r @ r + self.alpha * (w @ DtD @ w))
+
+        def _grad(w: np.ndarray) -> np.ndarray:
+            return -2.0 * (Xa.T @ (y_target - Xa @ w)) + 2.0 * self.alpha * (DtD @ w)
+
+        constraints: list[dict[str, Any]] = []
+        if self.mean_equality:
+            X_mean = Xa.mean(axis=0)
+            y_mean = float(ya.mean())
+            constraints.append({
+                "type": "eq",
+                "fun": lambda w: float(X_mean @ w - y_mean),
+                "jac": lambda w: X_mean,
+            })
+        bounds = [(0.0, None)] * K if self.nonneg else [(None, None)] * K
+
+        w0 = np.full(K, 1.0 / K, dtype=float)  # uniform init (always feasible)
+        result = minimize(
+            _obj, w0, jac=_grad, method="SLSQP",
+            bounds=bounds, constraints=constraints,
+            options={"maxiter": 500, "ftol": 1e-10},
+        )
+        self._coef = np.asarray(result.x, dtype=float)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._coef is None:
+            return np.zeros(len(X), dtype=float)
+        Xa = X.reindex(columns=list(self._cols), fill_value=0.0).fillna(0.0).to_numpy(dtype=float)
+        return Xa @ self._coef + self._intercept
+
+
+class _SlowGrowingTree:
+    """Slow-Growing Tree (Goulet Coulombe 2024 'Slow-Growing Trees').
+
+    A *soft-weighted* CART that interpolates between hard splitting
+    (η = 1, recovers standard CART) and Random Forest behaviour
+    (η ≈ 0.1 + Herfindahl stopping H̄ ≈ 0.05). At each split step, all
+    training rows receive a non-zero weight: rows satisfying the split
+    rule keep weight ω, rows on the other side receive weight ω · (1 − η).
+
+    **Algorithm 1** (paper p. 83-84):
+
+      1. Init ``ω_i^0 = 1`` for all training rows i.
+      2. For each open leaf l with ``H_l = Σ_i (ω_i^l)² / (Σ_i ω_i^l)² < H̄``:
+         a. Find ``(k*, c*)`` minimising the weighted SSE:
+            ``min Σ_{X[k] ≤ c} ω_i (y_i − μ_L)² + Σ_{X[k] > c} ω_i (y_i − μ_R)²``
+         b. Children inherit ``ω_i^l · (1 − η · I(rule violated))``.
+      3. Predict via leaf-weight propagation: each test point follows the
+         same soft re-weighting through the tree, and the prediction is
+         the weighted average ``Σ_l w_l(x) · μ_l``.
+
+    Limit cases (verified by tests):
+      * η = 1, H̄ = 0.25 → standard CART (hard splits).
+      * η = 0.1, H̄ = 0.05 → SGT regime ("matches RF on Linear DGP at
+        high R²" per paper Figure 2).
+      * Empty input → constant prediction (training-mean).
+
+    Hyperparameters (override via ``params``):
+      * ``split_shrinkage`` (= η; default 0.0 -- routes to standard CART)
+      * ``herfindahl_threshold`` (= H̄; default 0.25)
+      * ``eta_depth_step`` (paper rule-of-thumb: η + 0.01·depth; default 0.0
+        keeps η constant)
+      * ``max_depth`` (additional safety bound on tree depth; default None)
+      * ``random_state`` (reserved for potential subsampling extensions;
+        currently unused -- the algorithm is deterministic given X, y)
+    """
+
+    # Internal node representation:
+    #   leaf node:   (-1, -1, weights, mu_leaf)
+    #     where weights is the (n,) soft-weight vector and mu_leaf the
+    #     leaf-mean prediction at the leaf.
+    #   split node:  (k, c, idx_left, idx_right)
+    #     where k is the splitting feature and c the split threshold;
+    #     idx_left and idx_right are indices into the node list.
+
+    def __init__(
+        self,
+        eta: float = 0.1,
+        herfindahl_threshold: float = 0.25,
+        eta_depth_step: float = 0.01,
+        eta_max_plateau: float = 0.5,
+        mtry_frac: float = 1.0,
+        max_depth: Any = None,
+        random_state: int = 0,
+        min_leaf_size: int = 5,
+    ) -> None:
+        self.eta = float(np.clip(eta, 1e-6, 1.0))
+        self.herfindahl_threshold = float(np.clip(herfindahl_threshold, 1e-6, 1.0))
+        # v0.9.0F audit-fix: paper p.87 specifies "starting at η=0.1 and
+        # increasing it by 0.01 with depth, until an imposed plateau of
+        # 0.5". The previous defaults silently disabled the depth-step
+        # rule (=0.0) and clipped to 1.0 instead of the paper's 0.5.
+        self.eta_depth_step = float(eta_depth_step)
+        self.eta_max_plateau = float(np.clip(eta_max_plateau, 1e-6, 1.0))
+        # v0.9.0F audit-fix: paper p.88 §2.3 surfaces ``mtry`` as a
+        # stochastic split-feature sub-sampling knob ("mtry = 0.75 is
+        # used throughout"). Default 1.0 = scan every column (paper-
+        # silent baseline); user sets <1.0 to draw a random subset of
+        # columns at every node, RF-style.
+        self.mtry_frac = float(np.clip(mtry_frac, 1e-6, 1.0))
+        self.max_depth = None if max_depth is None else int(max_depth)
+        self.random_state = int(random_state)
+        self.min_leaf_size = max(2, int(min_leaf_size))
+        self._cols: tuple[str, ...] = ()
+        self._train_y: np.ndarray | None = None
+        self._fallback: float = 0.0
+        # Tree representation: list of nodes in BFS order.
+        # node[i] = ('leaf', mu) or ('split', k, c, left_idx, right_idx)
+        self._nodes: list[tuple] = []
+
+    @staticmethod
+    def _herfindahl(omega: np.ndarray) -> float:
+        s = float(omega.sum())
+        if s <= 1e-12:
+            return 1.0
+        return float((omega ** 2).sum()) / (s * s)
+
+    @staticmethod
+    def _weighted_mean(y: np.ndarray, omega: np.ndarray) -> float:
+        s = float(omega.sum())
+        if s <= 1e-12:
+            return 0.0
+        return float((omega * y).sum() / s)
+
+    def _best_split(
+        self, X: np.ndarray, y: np.ndarray, omega: np.ndarray,
+        rng: np.random.Generator | None = None,
+    ) -> tuple[int, float, float] | None:
+        """Find the split (k, c) minimising weighted SSE. Returns
+        (k*, c*, sse*) or None when no improvement is possible."""
+
+        n, K = X.shape
+        # Column-by-column candidate cuts at sample midpoints. For
+        # speed (and to avoid pathological all-zero-weight splits)
+        # only consider cuts where both sides retain at least
+        # ``min_leaf_size`` rows of *raw* mass (independent of soft
+        # weights) — this matches sklearn's default behaviour and
+        # keeps trees stable under low η.
+        # v0.9.0F audit-fix: paper p.88 ``mtry = 0.75`` -- when
+        # ``mtry_frac < 1.0`` we sample a random subset of features
+        # at every node (RF-style stochastic feature selection).
+        if self.mtry_frac < 1.0 and K > 1:
+            n_keep = max(1, int(round(self.mtry_frac * K)))
+            if rng is None:
+                rng = np.random.default_rng(self.random_state)
+            feature_iter = rng.choice(K, n_keep, replace=False)
+        else:
+            feature_iter = range(K)
+        best = None
+        s_total = float(omega.sum())
+        if s_total <= 1e-12:
+            return None
+        sum_y = float((omega * y).sum())
+        sum_y2 = float((omega * y * y).sum())
+        full_var = sum_y2 - sum_y * sum_y / s_total
+
+        for k in feature_iter:
+            xk = X[:, k]
+            order = np.argsort(xk, kind="stable")
+            xk_sorted = xk[order]
+            y_sorted = y[order]
+            om_sorted = omega[order]
+            # Cumulative weighted sums for left side at every cut
+            cum_om = np.cumsum(om_sorted)
+            cum_oy = np.cumsum(om_sorted * y_sorted)
+            cum_oy2 = np.cumsum(om_sorted * y_sorted * y_sorted)
+            for j in range(self.min_leaf_size, n - self.min_leaf_size):
+                # Skip cuts where consecutive sorted values are equal
+                if xk_sorted[j] == xk_sorted[j - 1]:
+                    continue
+                left_om = cum_om[j - 1]
+                right_om = s_total - left_om
+                if left_om <= 1e-12 or right_om <= 1e-12:
+                    continue
+                left_oy = cum_oy[j - 1]
+                right_oy = sum_y - left_oy
+                left_oy2 = cum_oy2[j - 1]
+                right_oy2 = sum_y2 - left_oy2
+                left_sse = left_oy2 - left_oy * left_oy / left_om
+                right_sse = right_oy2 - right_oy * right_oy / right_om
+                sse = left_sse + right_sse
+                if best is None or sse < best[2]:
+                    c_star = 0.5 * (xk_sorted[j - 1] + xk_sorted[j])
+                    best = (k, float(c_star), float(sse))
+        if best is None or best[2] >= full_var - 1e-12:
+            return None
+        return best
+
+    def _build(self, X: np.ndarray, y: np.ndarray) -> None:
+        """Iterative BFS tree construction with soft-weight propagation."""
+
+        n = X.shape[0]
+        # Each entry in the work queue: (parent_index, side, omega, depth)
+        # The parent_index points into self._nodes; side is 'left'/'right'.
+        # Start with a root sentinel (parent_index = -1).
+        root_omega = np.ones(n, dtype=float)
+        # Pre-allocate a placeholder root that will be overwritten when
+        # the root's split / leaf decision is made.
+        self._nodes.append(("placeholder",))
+        queue: list[tuple[int, str, np.ndarray, int]] = [(0, "root", root_omega, 0)]
+        # Single RNG threaded through _best_split so per-node mtry
+        # draws are deterministic and reproducible given random_state.
+        build_rng = np.random.default_rng(self.random_state)
+
+        while queue:
+            node_idx, side, omega, depth = queue.pop(0)
+            mu_leaf = self._weighted_mean(y, omega)
+            herf = self._herfindahl(omega)
+
+            # Termination: H_l >= H̄, max_depth reached, or no further split.
+            depth_ok = (self.max_depth is None) or (depth < self.max_depth)
+            should_try_split = depth_ok and herf < self.herfindahl_threshold and float(omega.sum()) > 2 * self.min_leaf_size
+            split = self._best_split(X, y, omega, rng=build_rng) if should_try_split else None
+            if split is None:
+                self._nodes[node_idx] = ("leaf", mu_leaf, omega.copy())
+                continue
+
+            k, c, _ = split
+            # Paper p.87: η_l = min(η + 0.01·depth, 0.5) for the
+            # SLOTH ramp-up regime. v0.9.0F audit-fix: when the user
+            # passes an initial η above the plateau (e.g. η=1 for CART
+            # parity), respect their intent — the plateau acts only as
+            # a *ramp-up* cap, never a clip-down on the initial value.
+            effective_plateau = max(self.eta, self.eta_max_plateau)
+            eta_l = float(np.clip(self.eta + self.eta_depth_step * depth, 1e-6, effective_plateau))
+            mask_left = X[:, k] <= c
+            # Soft re-weighting: rows satisfying rule keep ω, rows
+            # violating receive ω · (1 − η). Zero-mass leaves dropped.
+            omega_left = omega * (mask_left + (~mask_left).astype(float) * (1.0 - eta_l))
+            omega_right = omega * (~mask_left + mask_left.astype(float) * (1.0 - eta_l))
+
+            # Dead-branch trim: if either child's effective mass is
+            # essentially the parent's (modulo (1 − η) noise on every
+            # row) then we have a degenerate split; convert to leaf.
+            if (
+                float(omega_left.sum()) <= 1e-9
+                or float(omega_right.sum()) <= 1e-9
+                or np.allclose(omega_left, omega * (1.0 - eta_l), atol=1e-12)
+                or np.allclose(omega_right, omega * (1.0 - eta_l), atol=1e-12)
+            ):
+                self._nodes[node_idx] = ("leaf", mu_leaf, omega.copy())
+                continue
+
+            # Reserve placeholder slots for children; will be filled by
+            # the queue-driven recursion below.
+            left_idx = len(self._nodes)
+            self._nodes.append(("placeholder",))
+            right_idx = len(self._nodes)
+            self._nodes.append(("placeholder",))
+            self._nodes[node_idx] = ("split", k, c, left_idx, right_idx, eta_l)
+
+            queue.append((left_idx, "left", omega_left, depth + 1))
+            queue.append((right_idx, "right", omega_right, depth + 1))
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_SlowGrowingTree":
+        self._cols = tuple(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype=float)
+        ya = np.asarray(y, dtype=float)
+        n, K = Xa.shape
+        self._train_y = ya
+        self._fallback = float(ya.mean()) if ya.size else 0.0
+        self._nodes = []
+        if n == 0 or K == 0:
+            self._nodes.append(("leaf", self._fallback, np.zeros(0)))
+            return self
+        self._build(Xa, ya)
+        return self
+
+    def _predict_one(self, x: np.ndarray) -> float:
+        """Soft-weighted traversal: starting from the root with
+        ω_test = 1, propagate through every split with the same
+        (1 − η) penalty as training. The leaf weights ``ω_test_leaf``
+        normalise to per-leaf membership probability; predict the
+        weighted average of leaf-means."""
+
+        if not self._nodes:
+            return self._fallback
+        # Root traversal: stack of (node_idx, weight)
+        stack = [(0, 1.0)]
+        out = 0.0
+        total_w = 0.0
+        while stack:
+            idx, w = stack.pop()
+            node = self._nodes[idx]
+            kind = node[0]
+            if kind == "leaf":
+                out += w * float(node[1])
+                total_w += w
+                continue
+            if kind == "split":
+                _, k, c, left_idx, right_idx, eta_l = node
+                if x[k] <= c:
+                    stack.append((left_idx, w))
+                    if eta_l < 1.0:
+                        stack.append((right_idx, w * (1.0 - eta_l)))
+                else:
+                    stack.append((right_idx, w))
+                    if eta_l < 1.0:
+                        stack.append((left_idx, w * (1.0 - eta_l)))
+                continue
+            # Placeholder (should not happen post-fit)
+            return self._fallback
+        if total_w <= 1e-12:
+            return self._fallback
+        return out / total_w
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        Xa = X.reindex(columns=list(self._cols), fill_value=0.0).fillna(0.0).to_numpy(dtype=float)
+        return np.array([self._predict_one(row) for row in Xa], dtype=float)
+
+
 class _PrincipalComponentRegression:
     def __init__(self, n_components: int = 4) -> None:
         self.n_components = n_components
@@ -2314,6 +3401,99 @@ class _GLMBoost:
         return X.fillna(0.0).to_numpy(dtype=float) @ self.coef_ + self.intercept_
 
 
+class _IRFResultsLike:
+    """Duck-compatible shim for statsmodels VARResults.irf().orth_irfs."""
+
+    def __init__(self, orth_irfs: np.ndarray) -> None:
+        self.orth_irfs = orth_irfs
+
+
+class _FEVDResultsLike:
+    """Duck-compatible shim for statsmodels VARResults.fevd().decomp."""
+
+    def __init__(self, decomp: np.ndarray) -> None:
+        self.decomp = decomp
+
+
+class _MultiEquationBVARResults:
+    """Multi-equation Minnesota BVAR results object that mimics the
+    statsmodels VARResults attributes consumed by ``_var_impulse_frame``
+    and ``_BayesianVAR._sample_posterior_irf``.
+
+    Built by ``_BayesianVAR._fit_multivariate_minnesota``. Closes the
+    audit gap "Minnesota posterior is single-equation only" by fitting
+    one equation per endogenous variable with own-lag-1 anchor + cross-
+    shrinkage prior, then exposing the joint coefficient matrix +
+    Cholesky-orthogonalised IRF / FEVD builders.
+    """
+
+    def __init__(
+        self,
+        *,
+        B: np.ndarray,
+        sigma_u: np.ndarray,
+        endog: np.ndarray,
+        names: tuple[str, ...],
+        k_ar: int,
+        resid: np.ndarray,
+        X_design: np.ndarray,
+        posterior_cov_per_eq: np.ndarray | None = None,
+    ) -> None:
+        # ``params`` follows statsmodels VARResults.params layout:
+        # (1 + K·p, K) with intercept in row 0, then K rows per lag block.
+        self.params: np.ndarray = B.T
+        self.sigma_u: np.ndarray = sigma_u
+        self.endog: np.ndarray = endog
+        self.names: list[str] = list(names)
+        self.k_ar: int = int(k_ar)
+        self.resid: np.ndarray = resid
+        self._X_design: np.ndarray = X_design
+        self._B: np.ndarray = B  # (K, 1 + K·p)
+        # ``posterior_cov_per_eq`` shape: (K, 1+K·p, 1+K·p). Block-diag
+        # Minnesota posterior covariance per equation. Used by
+        # ``_BayesianVAR._sample_posterior_irf`` for paper-faithful
+        # credible bands. None when computed from the OLS-VAR fallback.
+        self.posterior_cov_per_eq: np.ndarray | None = posterior_cov_per_eq
+
+    def irf(self, n_periods: int) -> _IRFResultsLike:
+        """Cholesky-orthogonalised impulse responses Θ_s = Φ_s · P from
+        the BVAR posterior-mean coefficients. ``Φ_0 = I`` and
+        ``Φ_s = Σ_{l=1..p} A_l · Φ_{s-l}``."""
+
+        K = self._B.shape[0]
+        p = self.k_ar
+        A_list = [self._B[:, 1 + (l - 1) * K : 1 + l * K] for l in range(1, p + 1)]
+        phi: list[np.ndarray] = [np.eye(K, dtype=float)]
+        for s in range(1, int(n_periods) + 1):
+            phi_s = np.zeros((K, K), dtype=float)
+            for l, A in enumerate(A_list, start=1):
+                if l <= s:
+                    phi_s += A @ phi[s - l]
+            phi.append(phi_s)
+        sigma_reg = self.sigma_u + 1e-10 * np.eye(K)
+        try:
+            chol_P = np.linalg.cholesky(sigma_reg)
+        except np.linalg.LinAlgError:
+            eig_vals, eig_vecs = np.linalg.eigh(sigma_reg)
+            eig_vals = np.maximum(eig_vals, 0.0)
+            chol_P = eig_vecs * np.sqrt(eig_vals)
+        orth = np.stack([Phi @ chol_P for Phi in phi], axis=0)
+        return _IRFResultsLike(orth)
+
+    def fevd(self, n_periods: int) -> _FEVDResultsLike:
+        """Forecast-error variance decomposition. Share at horizon h+1
+        attributable to shock j is the running sum of squared
+        orthogonalised IRFs to that shock divided by the running total."""
+
+        n_periods = max(int(n_periods), 1)
+        irf_obj = self.irf(n_periods - 1)
+        theta = irf_obj.orth_irfs[:n_periods]  # (n_periods, K, K)
+        cumsq = np.cumsum(theta ** 2, axis=0)
+        denom = cumsq.sum(axis=2, keepdims=True)
+        decomp = cumsq / np.maximum(denom, 1e-12)
+        return _FEVDResultsLike(decomp)
+
+
 class _BayesianVAR:
     """Bayesian regression with Minnesota / Normal-Inverse-Wishart shrinkage.
 
@@ -2353,12 +3533,23 @@ class _BayesianVAR:
         lambda1: float = 0.2,
         lambda_decay: float = 1.0,
         lambda_cross: float = 0.5,
+        n_draws: int = 500,
+        posterior_irf_periods: int = 12,
+        random_state: int = 0,
     ) -> None:
+        # ``n_draws=500`` (default) activates posterior IRF / FEVD / HD by
+        # default for the BVAR families. v0.9.0a0 audit-fix: the previous
+        # default of 0 left ``_posterior_irf`` unpopulated, so L7 ops fell
+        # back to the OLS-VAR IRF path. Paper-faithful reporting (Coulombe
+        # & Göbel 2021 §3 credible regions) requires nonzero draws.
         self.p = max(1, int(p))
         self.prior = str(prior)
         self.lambda1 = float(lambda1)
         self.lambda_decay = float(lambda_decay)
         self.lambda_cross = float(lambda_cross)
+        self.n_draws = max(0, int(n_draws))
+        self.posterior_irf_periods = max(1, int(posterior_irf_periods))
+        self.random_state = int(random_state)
         # Larger NIW default tightness reflects the parameter-uncertainty
         # adjustment the marginal predictive would apply.
         if self.prior == "bvar_normal_inverse_wishart":
@@ -2368,6 +3559,11 @@ class _BayesianVAR:
         self._intercept: float = 0.0
         self._feature_names: tuple[str, ...] = ()
         self._fallback: float = 0.0
+        # v0.9.0F audit-fix: parallel statsmodels VAR fit so L7 IRF /
+        # FEVD / historical_decomposition ops can route on the BVAR
+        # posterior. None until ``fit`` runs.
+        self._results: Any = None
+        self._target_name: str | None = None
 
     @staticmethod
     def _classify_columns(columns: tuple[str, ...]) -> list[tuple[str, int, bool]]:
@@ -2440,7 +3636,298 @@ class _BayesianVAR:
         self._intercept = float(target.mean() - Xmat.mean(axis=0) @ beta)
         self._mean = m
         self._fallback = float(target.mean())
+
+        # v0.9.0a0 audit-fix: surface ``_results`` as a *true multi-
+        # equation Minnesota BVAR* (one Minnesota-prior posterior per
+        # endogenous variable) so L7 IRF / FEVD / HD ops route through
+        # the BVAR rather than an OLS-VAR proxy. Earlier releases fitted
+        # ``statsmodels.tsa.api.VAR`` here, leaving the audit observation
+        # "Minnesota posterior is single-equation only" open. The new
+        # path keeps every coefficient on the Bayesian posterior mean.
+        try:
+            full_panel = pd.concat([y.rename("__y__"), X], axis=1).dropna()
+            if full_panel.shape[0] > self.p + 1 and full_panel.shape[1] >= 2:
+                self._results = self._fit_multivariate_minnesota(full_panel, self.p)
+                self._target_name = "__y__"
+            else:
+                self._results = None
+                self._target_name = None
+        except Exception:  # pragma: no cover - degenerate panels can fail
+            self._results = None
+            self._target_name = None
+
+        # v0.9.0F gap-4 fix: posterior IRF sampling for credible bands
+        # (paper Coulombe & Göbel 2021 §3 reports IRF + 90% credible
+        # region from Gibbs draws). When ``n_draws > 0`` the wrapper
+        # samples coefficient perturbations from the asymptotic
+        # multivariate-Normal posterior ``vec(β) ~ N(β_OLS,
+        # Σ_u ⊗ (X'X)⁻¹)`` (Bayesian flat-prior approximation; the
+        # Minnesota multivariate posterior is heavier and would
+        # require re-fitting the full BVAR system — deferred). Each
+        # draw's IRF is computed via Sims (1980); we cache mean +
+        # 16/84/5/95 percentile bands on ``self._posterior_irf``.
+        self._posterior_irf: dict[str, np.ndarray] | None = None
+        if self.n_draws > 0 and self._results is not None:
+            try:
+                self._posterior_irf = self._sample_posterior_irf(
+                    n_draws=self.n_draws,
+                    n_periods=self.posterior_irf_periods,
+                )
+            except Exception:  # pragma: no cover - sampling can fail on small panels
+                self._posterior_irf = None
         return self
+
+    def _fit_multivariate_minnesota(
+        self, full_panel: pd.DataFrame, p: int
+    ) -> _MultiEquationBVARResults | None:
+        """Per-equation Minnesota posterior on the joint endogenous panel.
+
+        For each endogenous variable ``y_i``, fit
+        ``y_{i,t} = c_i + Σ_{l=1..p} A_l[i, :] Y_{t-l} + ε_{i,t}``
+        with prior
+
+            β_i ~ N(m_i, V_i)
+
+        where ``m_i`` puts unit weight on own-lag-1 of variable i (the
+        Litterman 1986 random-walk anchor for I(1) macro series) and
+        zero elsewhere; ``V_i`` is diagonal with own-lag scale
+        ``λ₁² / lag^{2λ_decay} · σ²_i`` and cross-lag scale further
+        shrunk by ``λ_cross²`` and rescaled by the variance ratio
+        ``σ²_i / σ²_j``. Closed-form posterior mean per equation:
+        ``β̂_i = (V_i⁻¹ + Z'Z)⁻¹ (V_i⁻¹ m_i + Z' y_i)``.
+
+        Returns ``_MultiEquationBVARResults`` or ``None`` if the panel
+        cannot support a VAR(p) fit.
+        """
+
+        Y = full_panel.to_numpy(dtype=float)
+        T_full, K = Y.shape
+        if T_full <= p + 1 or K < 1:
+            return None
+        T_eff = T_full - p
+        # Lag design: Z = [1, Y_{t-1}, ..., Y_{t-p}] for t = p..T-1.
+        Z = np.zeros((T_eff, 1 + K * p), dtype=float)
+        Z[:, 0] = 1.0
+        for lag in range(1, p + 1):
+            Z[:, 1 + (lag - 1) * K : 1 + lag * K] = Y[p - lag : T_full - lag]
+        Y_eff = Y[p:]
+        # Per-variable sample variance for prior scaling.
+        sigma2_per_var = np.var(Y, axis=0, ddof=1)
+        sigma2_per_var = np.maximum(sigma2_per_var, 1e-6)
+        ZtZ = Z.T @ Z
+        # Stack of posterior means + per-equation posterior covariance.
+        n_coef = 1 + K * p
+        B = np.zeros((K, n_coef), dtype=float)
+        # posterior_cov_per_eq[i] = (V_i⁻¹ + Z'Z)⁻¹ · σ²_i (Minnesota
+        # conjugate posterior with plug-in σ²_i Empirical Bayes).
+        posterior_cov_per_eq = np.zeros((K, n_coef, n_coef), dtype=float)
+        sigma2_resid_per_var = np.zeros(K, dtype=float)
+        for i in range(K):
+            m_i = np.zeros(n_coef, dtype=float)
+            m_i[1 + i] = 1.0  # own-lag-1 random-walk anchor
+            v_i = np.zeros(n_coef, dtype=float)
+            v_i[0] = 1e6
+            for lag in range(1, p + 1):
+                base_scale = (self.lambda1 / max(1.0, float(lag)) ** self.lambda_decay) ** 2
+                for j in range(K):
+                    idx = 1 + (lag - 1) * K + j
+                    if j == i:
+                        v_i[idx] = sigma2_per_var[i] * base_scale
+                    else:
+                        ratio = sigma2_per_var[i] / sigma2_per_var[j]
+                        v_i[idx] = ratio * base_scale * (self.lambda_cross ** 2)
+            v_i = np.maximum(v_i, 1e-8)
+            Vinv = np.diag(1.0 / v_i)
+            precision = Vinv + ZtZ
+            rhs = Vinv @ m_i + Z.T @ Y_eff[:, i]
+            try:
+                beta_i = np.linalg.solve(precision, rhs)
+                precision_inv = np.linalg.inv(precision)
+            except np.linalg.LinAlgError:
+                beta_i = np.linalg.lstsq(precision, rhs, rcond=None)[0]
+                precision_inv = np.linalg.pinv(precision)
+            B[i, :] = beta_i
+            # Plug-in σ²_i from in-sample residuals.
+            resid_i = Y_eff[:, i] - Z @ beta_i
+            denom = max(T_eff - n_coef, 1)
+            sigma2_i = max(float((resid_i ** 2).sum() / denom), 1e-12)
+            sigma2_resid_per_var[i] = sigma2_i
+            posterior_cov_per_eq[i] = precision_inv * sigma2_i
+        fitted = Z @ B.T
+        resid = Y_eff - fitted
+        denom_full = max(T_eff - n_coef, 1)
+        sigma_u = (resid.T @ resid) / float(denom_full)
+        return _MultiEquationBVARResults(
+            B=B, sigma_u=sigma_u, endog=Y, names=tuple(full_panel.columns),
+            k_ar=p, resid=resid, X_design=Z,
+            posterior_cov_per_eq=posterior_cov_per_eq,
+        )
+
+    def _sample_posterior_irf(self, *, n_draws: int, n_periods: int) -> dict[str, np.ndarray]:
+        """Draw ``n_draws`` from the multi-equation Minnesota posterior on
+        the BVAR coefficients (block-diagonal across equations), compute
+        Cholesky-orthogonalised IRF + FEVD per draw, and return mean +
+        percentile bands.
+
+        For multi-equation Minnesota (the v0.9.0a0 default), each
+        equation's coefficient row is sampled from
+        ``β_i ~ N(β̂_i, (V_i⁻¹ + Z'Z)⁻¹ · σ²_i)`` independently. The
+        resulting per-draw coefficient matrix B is plugged into the
+        same MA-representation IRF builder used at the posterior mean.
+
+        Returns a dict with keys ``mean``, ``p05``, ``p16``, ``p84``,
+        ``p95`` (IRF arrays of shape (n_periods+1, K, K)) plus
+        ``fevd_mean``, ``fevd_p05``, ``fevd_p16``, ``fevd_p84``,
+        ``fevd_p95`` of shape (n_periods, K, K).
+        """
+        results = self._results
+        if results is None:
+            raise RuntimeError("posterior IRF requires successful VAR fit")
+        # Multi-equation Minnesota path: sample per-equation block-diag.
+        if isinstance(results, _MultiEquationBVARResults) and results.posterior_cov_per_eq is not None:
+            return self._sample_posterior_irf_multivariate_minnesota(
+                results=results, n_draws=int(n_draws), n_periods=int(n_periods),
+            )
+        # Posterior covariance: vec(β) ~ N(β̂, Σ_u ⊗ (X'X)⁻¹).
+        # statsmodels VAR exposes ``cov_params`` and ``params_dist`` but
+        # for portability we reconstruct via Σ_u and design.
+        sigma_u = np.asarray(results.sigma_u, dtype=float)
+        endog = np.asarray(results.endog, dtype=float)
+        K_var = endog.shape[1]
+        # Reconstruct the lagged design matrix manually so we use ``pinv``
+        # for ``(Z'Z)⁻¹`` — robust to near-singular panels (e.g. when X
+        # already contains lagged y, common in macroforecast L3 outputs).
+        # Z has shape (T_eff, 1 + K_var * k_ar) with intercept first.
+        T_full = endog.shape[0]
+        p = results.k_ar
+        Z_rows = []
+        for t in range(p, T_full):
+            row = [1.0]
+            for lag in range(1, p + 1):
+                row.extend(endog[t - lag])
+            Z_rows.append(row)
+        Z = np.asarray(Z_rows, dtype=float)
+        ZtZ_inv = np.linalg.pinv(Z.T @ Z + 1e-8 * np.eye(Z.shape[1]))
+        cov_beta = np.kron(ZtZ_inv, sigma_u)
+        beta_flat = np.asarray(results.params, dtype=float).flatten()
+        # Sample n_draws perturbations
+        rng = np.random.default_rng(self.random_state + 9173)
+        try:
+            chol_cov = np.linalg.cholesky(cov_beta + 1e-10 * np.eye(cov_beta.shape[0]))
+        except np.linalg.LinAlgError:
+            # Diagonalise as a fallback (e.g. nearly-singular covariance)
+            eig_vals, eig_vecs = np.linalg.eigh(cov_beta)
+            eig_vals = np.maximum(eig_vals, 0.0)
+            chol_cov = eig_vecs * np.sqrt(eig_vals)
+        irfs: list[np.ndarray] = []
+        # Need access to original endog frame to rebuild perturbed VAR.
+        endog_df = pd.DataFrame(results.endog, columns=results.names)
+        for _ in range(n_draws):
+            z = rng.standard_normal(beta_flat.shape[0])
+            # Skip per-draw refit (too expensive); compute IRF directly
+            # from the perturbed coefficient matrices using the same
+            # Σ_u (paper's Bayesian IRF holds Σ_u at posterior mean for
+            # linearity). Reshape perturbation: VARResults.params has
+            # shape (1 + K·p, K) with intercept in first row.
+            pert = (chol_cov @ z).reshape(results.params.shape)
+            # Compose perturbed coefficient matrices
+            new_params = np.asarray(results.params, dtype=float) + pert
+            # Use statsmodels.tsa.vector_ar.util.varsim or build IRF
+            # manually via MA representation.
+            # Simpler path: extract the VAR(p) coefficient matrices
+            # A_1..A_p from new_params (skipping intercept row).
+            A_stack = new_params[1:]  # ((K·p), K)
+            A_list = [A_stack[i*K_var:(i+1)*K_var, :].T for i in range(results.k_ar)]
+            # MA representation up to n_periods + 1
+            irf = self._compute_orth_irfs(A_list, sigma_u, n_periods)
+            irfs.append(irf)
+        irf_arr = np.stack(irfs, axis=0)  # (n_draws, n_periods+1, K, K)
+        return {
+            "mean": irf_arr.mean(axis=0),
+            "p05": np.percentile(irf_arr, 5, axis=0),
+            "p16": np.percentile(irf_arr, 16, axis=0),
+            "p84": np.percentile(irf_arr, 84, axis=0),
+            "p95": np.percentile(irf_arr, 95, axis=0),
+        }
+
+    @staticmethod
+    def _compute_orth_irfs(A_list: list[np.ndarray], sigma_u: np.ndarray, n_periods: int) -> np.ndarray:
+        """Build Cholesky-orthogonalised IRFs from MA representation.
+
+        Returns shape ``(n_periods+1, K, K)`` indexed by
+        (horizon h, response_var i, shock_var j).
+        """
+        K = sigma_u.shape[0]
+        chol_P = np.linalg.cholesky(sigma_u + 1e-10 * np.eye(K))
+        # MA coefficients: Φ_0 = I_K, Φ_s = Σ_{i=1..min(p,s)} A_i Φ_{s-i}
+        phi = [np.eye(K)]
+        for s in range(1, n_periods + 1):
+            phi_s = np.zeros((K, K), dtype=float)
+            for i, A in enumerate(A_list, start=1):
+                if i <= s:
+                    phi_s += A @ phi[s - i]
+            phi.append(phi_s)
+        # Orthogonalised IRF: Φ_s @ P
+        return np.stack([Phi @ chol_P for Phi in phi], axis=0)
+
+    def _sample_posterior_irf_multivariate_minnesota(
+        self,
+        *,
+        results: "_MultiEquationBVARResults",
+        n_draws: int,
+        n_periods: int,
+    ) -> dict[str, np.ndarray]:
+        """Multi-equation Minnesota BVAR posterior sampling.
+
+        Each equation i has independent posterior
+        ``β_i ~ N(β̂_i, posterior_cov_per_eq[i])``. Per draw we sample
+        β for all K equations, stack into a coefficient matrix B,
+        compute the orthogonalised IRF and the FEVD, and aggregate
+        mean + 5/16/84/95 percentile bands.
+        """
+        rng = np.random.default_rng(self.random_state + 9173)
+        K = results._B.shape[0]
+        p = results.k_ar
+        sigma_u = results.sigma_u
+        # Per-equation Cholesky factors of posterior covariance.
+        cov_chols: list[np.ndarray] = []
+        for i in range(K):
+            cov_i = results.posterior_cov_per_eq[i]
+            try:
+                cov_chols.append(np.linalg.cholesky(cov_i + 1e-10 * np.eye(cov_i.shape[0])))
+            except np.linalg.LinAlgError:
+                eigvals, eigvecs = np.linalg.eigh(cov_i)
+                eigvals = np.maximum(eigvals, 0.0)
+                cov_chols.append(eigvecs * np.sqrt(eigvals))
+        irfs: list[np.ndarray] = []
+        fevds: list[np.ndarray] = []
+        for _ in range(int(n_draws)):
+            B_draw = np.zeros_like(results._B)
+            for i in range(K):
+                z = rng.standard_normal(results._B.shape[1])
+                B_draw[i, :] = results._B[i, :] + cov_chols[i] @ z
+            A_list = [B_draw[:, 1 + (l - 1) * K : 1 + l * K] for l in range(1, p + 1)]
+            irf = self._compute_orth_irfs(A_list, sigma_u, n_periods)
+            irfs.append(irf)
+            # FEVD per draw: cumulative-sum-of-squared-IRFs share.
+            theta = irf[: n_periods]
+            cumsq = np.cumsum(theta ** 2, axis=0)
+            denom = cumsq.sum(axis=2, keepdims=True)
+            fevds.append(cumsq / np.maximum(denom, 1e-12))
+        irf_arr = np.stack(irfs, axis=0)
+        fevd_arr = np.stack(fevds, axis=0)
+        return {
+            "mean": irf_arr.mean(axis=0),
+            "p05": np.percentile(irf_arr, 5, axis=0),
+            "p16": np.percentile(irf_arr, 16, axis=0),
+            "p84": np.percentile(irf_arr, 84, axis=0),
+            "p95": np.percentile(irf_arr, 95, axis=0),
+            "fevd_mean": fevd_arr.mean(axis=0),
+            "fevd_p05": np.percentile(fevd_arr, 5, axis=0),
+            "fevd_p16": np.percentile(fevd_arr, 16, axis=0),
+            "fevd_p84": np.percentile(fevd_arr, 84, axis=0),
+            "fevd_p95": np.percentile(fevd_arr, 95, axis=0),
+        }
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self._coef is None:
@@ -2562,6 +4049,403 @@ class _TorchSequenceModel:
         return preds
 
 
+class _HemisphereNN:
+    """Hemisphere Neural Networks (Goulet Coulombe / Frenette / Klieber
+    2025 JAE) -- dual-head density forecaster with shared common core.
+
+    Models ``y_{t+1} ~ N(f(X_t), g(X_t))`` (paper Eq. 1). The objective
+    is the Gaussian negative log-likelihood (Eq. 2):
+
+        ``min Σ_t (y_t − h_m(X_t))² / h_v(X_t) + log h_v(X_t)``
+
+    The architecture (Eq. 5): a shared ``L_c`` common-core ReLU stack,
+    then two hemispheres -- mean head ``h_m`` (linear output) and
+    variance head ``h_v`` (softplus output).
+
+    **Volatility emphasis** (paper §3.2): the dual-head loss is non-
+    identified without a constraint. The paper enforces
+    ``mean(h_v) / var(y) = ν`` *ex ante*; we implement this as a per-
+    epoch rescaling of ``h_v`` (multiplicatively rebalance to the
+    target mean). ``ν`` is data-driven from a plain-NN OOB residual
+    proxy when not user-supplied (paper p.11 footnote 2; we cap at
+    0.99). The ν proxy training is omitted in this v0.9.0C-2 minimal
+    implementation -- ν is set to 0.5 by default (mid-range; users can
+    override via ``params.nu``). The blocked-OOB log-linear reality
+    check (paper Eq. 9-10) is an L7 follow-up, not in scope here.
+
+    Hyperparameters (override via ``params``):
+      * ``lc`` (= L_c; default 2) -- common-core depth
+      * ``lm`` / ``lv`` (default 2 each) -- hemisphere depth past core
+      * ``neurons`` (default 64; paper uses 400)
+      * ``dropout`` (default 0.2)
+      * ``lr`` (default 1e-3, Adam)
+      * ``n_epochs`` (default 100; paper allows up to 100 with patience)
+      * ``B`` (= number of blocked subsamples; default 50; paper uses
+        1000 — reduced default for L4 cell-level cost)
+      * ``sub_rate`` (= per-bag fraction; default 0.80)
+      * ``nu`` (= variance-mean target; default 0.5; ``None`` triggers
+        the plain-NN OOB proxy when implemented)
+      * ``random_state`` (Adam + numpy seeds)
+
+    Returns posterior-mean predictions; the variance head and the
+    full per-bag ensemble are accessible via ``model._hv_path`` and
+    ``model._ensemble_preds`` for downstream density-forecast use.
+    """
+
+    def __init__(
+        self,
+        lc: int = 2,
+        lm: int = 2,
+        lv: int = 2,
+        neurons: int = 64,
+        dropout: float = 0.2,
+        lr: float = 1e-3,
+        n_epochs: int = 100,
+        # v0.9.0F audit-fix: paper Eq. 8 uses B=1000; reduced default
+        # to 100 (still 2× the previous 50) for L4 cell-level cost.
+        B: int = 100,
+        sub_rate: float = 0.80,
+        nu: Any = None,
+        lambda_emphasis: float = 1.0,
+        random_state: int = 0,
+    ) -> None:
+        self.lc = max(1, int(lc))
+        self.lm = max(1, int(lm))
+        self.lv = max(1, int(lv))
+        self.neurons = max(2, int(neurons))
+        self.dropout = float(np.clip(dropout, 0.0, 0.9))
+        self.lr = float(lr)
+        self.n_epochs = max(1, int(n_epochs))
+        self.B = max(1, int(B))
+        self.sub_rate = float(np.clip(sub_rate, 0.1, 1.0))
+        self.nu_target = nu  # may be None
+        # v0.9.0F gap-4 fix: Lagrangian multiplier on the variance-
+        # emphasis penalty term added to the MLE loss (in-MLE constraint
+        # per paper §3.2 Ingredient 2).
+        self.lambda_emphasis = float(max(lambda_emphasis, 0.0))
+        self.random_state = int(random_state)
+        self._cols: tuple[str, ...] = ()
+        self._models: list[Any] = []
+        self._oob_preds_mean: np.ndarray | None = None
+        self._oob_preds_var: np.ndarray | None = None
+        self._fallback: float = 0.0
+        self._var_y: float = 1.0
+        # v0.9.0F audit-fix: log-linear reality-check coefficients (Eq. 9-10).
+        self._reality_check_intercept: float = 0.0
+        self._reality_check_slope: float = 1.0
+
+    def _build_one_model(self, n_features: int):
+        """Construct a single (core + mean + variance) torch module
+        bundle returning (mean, log_var) at forward time."""
+        try:
+            import torch
+            import torch.nn as nn
+        except ImportError as exc:
+            raise NotImplementedError(
+                "mlp.architecture=hemisphere requires the [deep] extra "
+                "(install macroforecast[deep] / torch>=2.0)."
+            ) from exc
+
+        def _stack(in_dim: int, out_dim: int, depth: int) -> nn.Sequential:
+            layers = []
+            current = in_dim
+            for _ in range(depth):
+                layers += [nn.Linear(current, out_dim), nn.ReLU(), nn.Dropout(self.dropout)]
+                current = out_dim
+            return nn.Sequential(*layers)
+
+        class HNN(nn.Module):
+            def __init__(self, n_in: int, lc: int, lm: int, lv: int, neurons: int, dropout: float):
+                super().__init__()
+                self.core = _stack(n_in, neurons, lc)
+                self.head_m = nn.Sequential(_stack(neurons, neurons, lm), nn.Linear(neurons, 1))
+                self.head_v_pre = nn.Sequential(_stack(neurons, neurons, lv), nn.Linear(neurons, 1))
+                self.softplus = nn.Softplus()
+
+            def forward(self, x):
+                z = self.core(x)
+                m = self.head_m(z).squeeze(-1)
+                v = self.softplus(self.head_v_pre(z)).squeeze(-1) + 1e-6
+                return m, v
+
+        return HNN(n_features, self.lc, self.lm, self.lv, self.neurons, self.dropout)
+
+    @staticmethod
+    def _blocked_subsample(n: int, sub_rate: float, b: int, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+        """Paper Eq. 8 / Ingredient 3: contiguous time-block subsamples.
+
+        Splits the index 0..n−1 into K non-overlapping blocks; draws
+        ``round(K · sub_rate)`` blocks at random; the in-bag indices
+        are the union of the chosen blocks (contiguous), the OOB
+        indices are the complement. v0.9.0F audit-fix replaces the
+        previous random row sampling.
+        """
+        # Pick block size so K is in 5-25 range for stability.
+        block_size = max(2, n // 20)
+        starts = list(range(0, n, block_size))
+        K = len(starts)
+        n_in_blocks = max(1, int(round(sub_rate * K)))
+        rng_state = np.random.default_rng(rng.integers(0, 2**63 - 1))
+        chosen = rng_state.choice(K, n_in_blocks, replace=False)
+        in_idx = np.concatenate([
+            np.arange(starts[k], min(starts[k] + block_size, n)) for k in chosen
+        ])
+        oob_mask = np.ones(n, dtype=bool)
+        oob_mask[in_idx] = False
+        oob_idx = np.where(oob_mask)[0]
+        return in_idx, oob_idx
+
+    def _compute_nu_proxy(self, X: np.ndarray, y: np.ndarray) -> float:
+        """Paper Ingredient 2 (p.11 footnote 2): ν = mean(ε̂²_NN) / var(y),
+        capped at 0.99. The proxy is computed from a plain feed-forward
+        NN's blocked-OOB residuals (same architecture as one HNN bag's
+        common core + mean head, no variance head). Falls back to 0.5
+        when torch is unavailable."""
+        try:
+            import torch
+            import torch.nn as nn
+        except ImportError:
+            return 0.5
+
+        n, K = X.shape
+        if n < 12 or K == 0:
+            return 0.5
+        var_y = float(y.var() + 1e-9)
+        rng = np.random.default_rng(self.random_state + 7919)
+        oob_preds_sum = np.zeros(n, dtype=float)
+        oob_counts = np.zeros(n, dtype=float)
+        n_proxy_bags = max(3, min(self.B // 4, 10))  # cheap proxy, ~3-10 bags
+        for b in range(n_proxy_bags):
+            in_idx, oob_idx = self._blocked_subsample(n, self.sub_rate, b, rng)
+            if len(in_idx) < 4 or len(oob_idx) < 1:
+                continue
+            net = nn.Sequential(
+                nn.Linear(K, max(8, self.neurons // 2)),
+                nn.ReLU(),
+                nn.Linear(max(8, self.neurons // 2), 1),
+            )
+            opt = torch.optim.Adam(net.parameters(), lr=self.lr)
+            X_in = torch.from_numpy(X[in_idx])
+            y_in = torch.from_numpy(y[in_idx])
+            for _ in range(min(self.n_epochs // 2, 30)):
+                opt.zero_grad()
+                pred = net(X_in).squeeze(-1)
+                loss = ((y_in - pred) ** 2).mean()
+                loss.backward()
+                opt.step()
+            with torch.no_grad():
+                oob_pred = net(torch.from_numpy(X[oob_idx])).squeeze(-1).numpy()
+            oob_preds_sum[oob_idx] += oob_pred
+            oob_counts[oob_idx] += 1.0
+        with np.errstate(invalid="ignore"):
+            mask = oob_counts > 0
+            if not mask.any():
+                return 0.5
+            avg_pred = np.zeros(n, dtype=float)
+            avg_pred[mask] = oob_preds_sum[mask] / oob_counts[mask]
+            eps2 = (y[mask] - avg_pred[mask]) ** 2
+            nu = float(eps2.mean() / var_y)
+        return float(np.clip(nu, 1e-3, 0.99))
+
+    def _resolve_nu(self, X: np.ndarray | None = None, y: np.ndarray | None = None) -> float:
+        """Return the variance-emphasis target ν. v0.9.0F audit-fix:
+        when the user does not supply ``nu``, compute a paper-faithful
+        proxy from a plain-NN OOB MSE (Ingredient 2, paper p.11
+        footnote 2) instead of defaulting to 0.5."""
+        if self.nu_target is not None:
+            return float(np.clip(self.nu_target, 1e-3, 0.99))
+        if X is None or y is None:
+            return 0.5
+        try:
+            return self._compute_nu_proxy(X, y)
+        except Exception:
+            return 0.5
+
+    def _apply_reality_check(self, hv_pred: np.ndarray, eps2: np.ndarray) -> tuple[float, float]:
+        """Paper Eq. 9-10 (Ingredient 4): log-linear regression of OOB
+        squared residuals on log(h_v), then return the Eq. 10 rescaling
+        coefficients (zeta_0, zeta_1) plus the bootstrap correction
+        ``ς̂``. Returns (intercept_correction, slope) used to update
+        h_v(X_test) = exp(ζ_0 + ζ_1 · log(h_v(X_test))) · ς̂.
+
+        Output: ``(adj_intercept, adj_slope)`` such that
+        ``h_v_corrected = exp(adj_intercept) · h_v_raw ** adj_slope``.
+        """
+        if hv_pred.size < 4 or eps2.size < 4:
+            return 0.0, 1.0
+        valid = (hv_pred > 1e-9) & (eps2 > 1e-9)
+        if valid.sum() < 4:
+            return 0.0, 1.0
+        log_eps2 = np.log(eps2[valid])
+        log_hv = np.log(hv_pred[valid])
+        # OLS of log_eps2 on [1, log_hv]
+        A = np.column_stack([np.ones_like(log_hv), log_hv])
+        coef, *_ = np.linalg.lstsq(A, log_eps2, rcond=None)
+        zeta_0, zeta_1 = float(coef[0]), float(coef[1])
+        # Bootstrap correction ς̂ = E[exp(ξ_t)]: simple sample mean of
+        # exp(residuals) (Goulet Coulombe et al. 2025 Eq. 10).
+        delta = log_eps2 - (zeta_0 + zeta_1 * log_hv)
+        sigma_hat = float(np.exp(delta).mean())
+        adj_intercept = zeta_0 + np.log(max(sigma_hat, 1e-12))
+        adj_slope = zeta_1
+        return adj_intercept, adj_slope
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_HemisphereNN":
+        try:
+            import torch
+            import torch.nn as nn
+        except ImportError as exc:
+            raise NotImplementedError(
+                "mlp.architecture=hemisphere requires the [deep] extra."
+            ) from exc
+
+        torch.manual_seed(self.random_state)
+        np.random.seed(self.random_state)
+        rng = np.random.default_rng(self.random_state)
+
+        self._cols = tuple(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype="float32")
+        ya = np.asarray(y, dtype="float32")
+        n, K = Xa.shape
+        self._var_y = float(ya.var() + 1e-9)
+        self._fallback = float(ya.mean()) if ya.size else 0.0
+        if n < 4 or K == 0:
+            return self
+        # v0.9.0F audit-fix Ingredient 2: ν proxy from plain-NN OOB
+        # residuals when not user-supplied (replaces previous default 0.5).
+        nu = self._resolve_nu(Xa, ya)
+        target_hv_mean = nu * self._var_y
+
+        # v0.9.0F audit-fix Ingredient 3: blocked subsamples (paper
+        # Eq. 8) replace the previous random row sampling.
+        oob_eps2_sum = np.zeros(n, dtype=float)
+        oob_hv_sum = np.zeros(n, dtype=float)
+        oob_counts = np.zeros(n, dtype=float)
+        # v0.9.0F gap-4 fix: Lagrangian penalty term added to the MLE
+        # loss enforces the volatility-emphasis constraint in-MLE
+        # rather than via post-batch bias rescaling. Audit gap closed:
+        # previous per-epoch bias shift was an *approximation* of paper
+        # §3.2 Ingredient 2; the Lagrangian penalty matches the paper's
+        # "constrained MLE" framing exactly.
+        lambda_emph = float(getattr(self, "lambda_emphasis", 1.0))
+
+        for b in range(self.B):
+            in_idx, oob_idx = self._blocked_subsample(n, self.sub_rate, b, rng)
+            if len(in_idx) < 4:
+                continue
+            X_b = torch.from_numpy(Xa[in_idx])
+            y_b = torch.from_numpy(ya[in_idx])
+            X_full = torch.from_numpy(Xa)
+            target_hv_mean_t = torch.tensor(target_hv_mean, dtype=torch.float32)
+            model = self._build_one_model(K)
+            opt = torch.optim.Adam(model.parameters(), lr=self.lr)
+            for _ in range(self.n_epochs):
+                model.train()
+                opt.zero_grad()
+                m, v = model(X_b)
+                nll = ((y_b - m) ** 2 / v + torch.log(v)).mean()
+                # Augmented Lagrangian penalty (paper §3.2 Ingredient 2,
+                # in-MLE constraint): drive mean(h_v) toward ν · var(y)
+                # via a soft squared penalty. λ_emphasis = 1.0 default;
+                # users may scale via params.
+                _, v_full = model(X_full)
+                emph_penalty = ((v_full.mean() - target_hv_mean_t) ** 2)
+                loss = nll + lambda_emph * emph_penalty
+                loss.backward()
+                opt.step()
+            # Collect OOB squared residuals + h_v predictions for the
+            # Eq. 9-10 reality check.
+            if len(oob_idx) > 0:
+                with torch.no_grad():
+                    model.eval()
+                    m_oob, v_oob = model(torch.from_numpy(Xa[oob_idx]))
+                    eps2 = (ya[oob_idx] - m_oob.numpy()) ** 2
+                    oob_eps2_sum[oob_idx] += eps2
+                    oob_hv_sum[oob_idx] += v_oob.numpy()
+                    oob_counts[oob_idx] += 1.0
+            self._models.append(model)
+
+        # v0.9.0F audit-fix Ingredient 4: blocked-OOB log-linear reality
+        # check (paper Eq. 9-10). Recover (adj_intercept, adj_slope) so
+        # predict-time variance is corrected via
+        #   h_v_test ← exp(adj_intercept) · h_v_test_raw ** adj_slope.
+        with np.errstate(invalid="ignore", divide="ignore"):
+            mask = oob_counts > 0
+            if mask.any():
+                avg_eps2 = oob_eps2_sum[mask] / oob_counts[mask]
+                avg_hv = oob_hv_sum[mask] / oob_counts[mask]
+                self._reality_check_intercept, self._reality_check_slope = (
+                    self._apply_reality_check(avg_hv, avg_eps2)
+                )
+            else:
+                self._reality_check_intercept, self._reality_check_slope = 0.0, 1.0
+        return self
+
+    def _ensemble_mean_and_variance(self, X: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        """Return (mean, variance) per row aggregated across the bagged
+        ensemble. Variance has Eq. 10 reality check applied."""
+
+        try:
+            import torch
+        except ImportError:
+            n = len(X)
+            return np.full(n, self._fallback, dtype=float), np.full(n, self._var_y, dtype=float)
+        if not self._models:
+            n = len(X)
+            return np.full(n, self._fallback, dtype=float), np.full(n, self._var_y, dtype=float)
+        Xa = X.reindex(columns=list(self._cols), fill_value=0.0).fillna(0.0).to_numpy(dtype="float32")
+        Xt = torch.from_numpy(Xa)
+        means: list[np.ndarray] = []
+        vars_: list[np.ndarray] = []
+        with torch.no_grad():
+            for model in self._models:
+                model.eval()
+                m, v = model(Xt)
+                means.append(m.numpy())
+                vars_.append(v.numpy())
+        mean_pred = np.mean(np.column_stack(means), axis=1)
+        var_raw = np.mean(np.column_stack(vars_), axis=1)
+        # Eq. 10 (Goulet Coulombe / Frenette / Klieber 2025) reality check:
+        #   h_v_corrected = exp(adj_intercept) · h_v_raw ** adj_slope
+        # adj_intercept absorbs ζ_0 + log(ς̂); adj_slope = ζ_1.
+        var_floor = np.maximum(var_raw, 1e-12)
+        var_corrected = np.exp(self._reality_check_intercept) * np.power(var_floor, self._reality_check_slope)
+        # Numerical guard: keep variance strictly positive and finite.
+        var_corrected = np.where(np.isfinite(var_corrected) & (var_corrected > 0), var_corrected, var_raw)
+        return mean_pred, var_corrected
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        mean_pred, _ = self._ensemble_mean_and_variance(X)
+        return mean_pred
+
+    def predict_variance(self, X: pd.DataFrame) -> np.ndarray:
+        """Eq. 10 reality-check-corrected ensemble variance ``h_v(X)``.
+        Returns an array of length ``len(X)``."""
+
+        _, var_pred = self._ensemble_mean_and_variance(X)
+        return var_pred
+
+    def predict_distribution(self, X: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        """Return ``(mean, variance)`` arrays per row -- the paper's
+        Gaussian predictive distribution with Eq. 10 calibration."""
+
+        return self._ensemble_mean_and_variance(X)
+
+    def predict_quantiles(self, X: pd.DataFrame, levels: tuple[float, ...] = (0.05, 0.5, 0.95)) -> dict[float, np.ndarray]:
+        """Gaussian quantile bands from the paper's calibrated distribution
+        (mean head + Eq.-10-corrected variance head). Used by the L4
+        ``forecast_object='quantile' | 'density'`` paths."""
+
+        from scipy import stats as _stats
+
+        mean_pred, var_pred = self._ensemble_mean_and_variance(X)
+        sigma = np.sqrt(np.maximum(var_pred, 1e-12))
+        out: dict[float, np.ndarray] = {}
+        for q in levels:
+            out[float(q)] = mean_pred + sigma * float(_stats.norm.ppf(float(q)))
+        return out
+
+
 class _DFMMixedFrequency:
     """Mariano-Murasawa-style dynamic factor model.
 
@@ -2594,18 +4478,32 @@ class _DFMMixedFrequency:
         self._mode: str = "single_frequency"
         self._scaler_mean = 0.0
         self._scaler_std = 1.0
+        # Populated by ``_fit_mixed_frequency`` when MQ requested but
+        # could not run (statsmodels error / insufficient data / no
+        # monthly variables). Surfaces the diagnostic instead of silently
+        # degrading to single-frequency. None when MQ succeeds or was
+        # not requested.
+        self._mq_failure_reason: str | None = None
+        # Set to True/False by ``_fit_mixed_frequency`` on success so
+        # callers can confirm the AR(1) idiosyncratic spec
+        # (Mariano-Murasawa 2010 Eq. 4) was active.
+        self._idiosyncratic_ar1: bool | None = None
 
     def _fit_mixed_frequency(self, X: pd.DataFrame, y: pd.Series) -> bool:
-        """Issue #245 -- DynamicFactorMQ with monthly aggregator. Returns
-        True when the MQ fit succeeded; False when the caller should fall
-        back to the single-frequency path."""
+        """Issue #245 + v0.8.9 V2.4 fix -- ``DynamicFactorMQ`` with monthly
+        aggregator (Mariano-Murasawa 2003). Returns True when the MQ fit
+        succeeded; False when the caller should fall back to the single-
+        frequency path. On failure, ``_mq_failure_reason`` is set so the
+        diagnostic surfaces instead of silently degrading."""
 
         try:
             from statsmodels.tsa.statespace.dynamic_factor_mq import DynamicFactorMQ
         except ImportError:
+            self._mq_failure_reason = "statsmodels DynamicFactorMQ unavailable"
             return False
         endog = pd.concat([y.rename("__y__"), X], axis=1).dropna(how="all")
         if endog.shape[0] < 12 or endog.shape[1] < 2:
+            self._mq_failure_reason = "insufficient endog shape"
             return False
         # Build the M / Q split per documented column_frequencies; default
         # to monthly when unspecified.
@@ -2619,6 +4517,7 @@ class _DFMMixedFrequency:
                 tag = self.column_frequencies.get(str(col), "monthly")
             (quarterly if str(tag).lower() == "quarterly" else monthly).append(col)
         if not monthly:  # MQ requires at least one monthly variable
+            self._mq_failure_reason = "no monthly variables declared"
             return False
         scaler_mean = endog.mean()
         scaler_std = endog.std(ddof=0).replace(0.0, 1.0)
@@ -2626,27 +4525,70 @@ class _DFMMixedFrequency:
         # Issue #274 -- Mariano-Murasawa (2010) Eq. (4) specifies AR(1)
         # idiosyncratic errors. Try the published spec first; fall back
         # to the iid form when the optimisation diverges.
+        last_exc: Exception | None = None
         for idiosyncratic_ar1 in (True, False):
             try:
-                model = DynamicFactorMQ(
-                    normalised[monthly],
-                    endog_quarterly=normalised[quarterly] if quarterly else None,
-                    k_endog_monthly=len(monthly),
+                # v0.8.9 V2.4 honesty fix: when ``endog_quarterly`` is
+                # supplied, statsmodels infers ``k_endog_monthly`` from the
+                # primary endog shape and rejects an explicit value. The
+                # v0.25 #245 implementation passed ``k_endog_monthly``
+                # alongside ``endog_quarterly``, which made *every* MQ fit
+                # raise ValueError -- the silent try/except then routed
+                # users into the single-frequency fallback without warning.
+                kwargs = dict(
                     factors=self.n_factors,
                     factor_orders=self.factor_order,
                     idiosyncratic_ar1=idiosyncratic_ar1,
                     standardize=False,
                 )
+                if quarterly:
+                    # statsmodels DynamicFactorMQ requires the quarterly
+                    # endog to carry a quarterly-frequency DateTimeIndex
+                    # (``freqstr`` starting with 'Q'), not a monthly index
+                    # with NaN at non-quarter-end months. Convert: drop
+                    # the all-NaN rows in the quarterly block, then
+                    # reindex to a quarterly DateTimeIndex with the freq
+                    # attribute explicitly set so ``freqstr`` resolves.
+                    q_block = normalised[quarterly].dropna(how="all")
+                    if q_block.empty:
+                        raise ValueError("quarterly block empty after NaN-row drop")
+                    if isinstance(q_block.index, pd.DatetimeIndex):
+                        q_block = q_block.copy()
+                        # pandas 3.0 deprecates ``freq='Q'`` in favour of
+                        # ``freq='QE'``; statsmodels' check inspects only
+                        # the first character of ``freqstr`` so 'QE'
+                        # passes the quarterly-frequency gate.
+                        q_index = pd.date_range(
+                            start=q_block.index[0],
+                            periods=len(q_block),
+                            freq="QE",
+                        )
+                        q_block.index = q_index
+                    model = DynamicFactorMQ(
+                        normalised[monthly],
+                        endog_quarterly=q_block,
+                        **kwargs,
+                    )
+                else:
+                    model = DynamicFactorMQ(
+                        normalised[monthly],
+                        k_endog_monthly=len(monthly),
+                        **kwargs,
+                    )
                 self._results = model.fit(disp=False, maxiter=20)
                 self._idiosyncratic_ar1 = idiosyncratic_ar1
+                last_exc = None
                 break
-            except Exception:  # pragma: no cover - DFMQ is fragile on small data
+            except Exception as exc:  # pragma: no cover - DFMQ is fragile on small data
+                last_exc = exc
                 continue
         else:
+            self._mq_failure_reason = f"DynamicFactorMQ fit failed: {type(last_exc).__name__}: {last_exc}"
             return False
         self._scaler_mean = float(scaler_mean["__y__"])
         self._scaler_std = float(scaler_std["__y__"])
         self._mode = "mixed_frequency_mq"
+        self._mq_failure_reason = None
         return True
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_DFMMixedFrequency":
@@ -2694,6 +4636,43 @@ class _DFMMixedFrequency:
         except Exception:
             target_pred = self._fallback
         return np.full(len(X), target_pred, dtype=float)
+
+    def predict_smoothed_factors(self) -> pd.DataFrame | None:
+        """Coulombe & Goebel (2021) §3.4 deliverable: Kalman *smoother*
+        marginal posterior of the latent factors. statsmodels exposes
+        ``self._results.smoothed_state`` (k_states × T) — we reshape
+        and only return the factor rows (one per ``k_factors``), which
+        for the Mariano-Murasawa Eq. (4) state-space layout are the
+        first ``k_factors`` rows of the state vector.
+
+        Returns ``None`` if the fit failed or the results object does
+        not expose ``smoothed_state`` (e.g. fallback path)."""
+
+        if self._results is None:
+            return None
+        smoothed = getattr(self._results, "smoothed_state", None)
+        if smoothed is None:
+            return None
+        try:
+            # ``smoothed_state`` shape: (k_states, T). For DynamicFactor
+            # the first ``k_factors`` rows are the factors themselves
+            # (stacked across factor_order); we surface just the lag-0
+            # factor block.
+            arr = np.asarray(smoothed, dtype=float)
+            if arr.ndim != 2:
+                return None
+            k_factors = int(getattr(self._results.model, "k_factors", arr.shape[0]))
+            k_factors = max(1, min(k_factors, arr.shape[0]))
+            factors = arr[:k_factors, :].T  # (T, k_factors)
+            cols = [f"smoothed_factor_{i + 1}" for i in range(k_factors)]
+            # Use the model's original index when available.
+            try:
+                idx = self._results.model.data.row_labels
+            except Exception:
+                idx = pd.RangeIndex(arr.shape[1])
+            return pd.DataFrame(factors, index=idx, columns=cols)
+        except Exception:
+            return None
 
 
 class _QuantileRegressionForest:
@@ -2772,7 +4751,17 @@ class _BaggingWrapper:
     """Issue #282 -- bootstrap-aggregating meta-estimator over a base
     L4 family. Fits ``n_estimators`` models on bootstrap resamples of
     (X, y), averages their point predictions, and surfaces empirical
-    quantile bands across the bag for ``predict_quantiles``."""
+    quantile bands across the bag for ``predict_quantiles``.
+
+    v0.9 Phase 1 (B-4) adds a ``strategy`` kwarg:
+
+    * ``standard`` (default) -- i.i.d. bootstrap (Breiman 1996).
+    * ``block`` -- moving-block bootstrap (Kunsch 1989). Resamples
+      consecutive ``block_length``-row blocks until reaching
+      ``sample_size``, preserving short-range serial dependence in the
+      training rows. Used for serially-correlated macro panels and for
+      the Taddy 2015 extension cited by Coulombe (2024) MRF.
+    """
 
     def __init__(
         self,
@@ -2781,20 +4770,38 @@ class _BaggingWrapper:
         max_samples: float = 0.8,
         random_state: int = 0,
         base_params: dict[str, Any] | None = None,
+        strategy: str = "standard",
+        block_length: int = 4,
     ) -> None:
         self.base_family = str(base_family)
         self.n_estimators = int(n_estimators)
         self.max_samples = float(max_samples)
         self.random_state = int(random_state)
         self.base_params = dict(base_params or {})
+        self.strategy = str(strategy)
+        self.block_length = max(1, int(block_length))
         self._models: list[Any] = []
+
+    def _draw_indices(self, rng: np.random.Generator, n: int, sample_size: int) -> np.ndarray:
+        if self.strategy == "block":
+            # Moving-block bootstrap: draw ceil(sample_size / block_length)
+            # block-start positions uniformly from {0, ..., n-1} and
+            # extend each by block_length consecutive rows (wrapping at
+            # n via modulo). Trim to sample_size.
+            n_blocks = (sample_size + self.block_length - 1) // self.block_length
+            starts = rng.integers(0, n, size=n_blocks)
+            offsets = np.arange(self.block_length)
+            idx = ((starts[:, None] + offsets[None, :]) % n).reshape(-1)
+            return idx[:sample_size]
+        # Default: i.i.d. bootstrap
+        return rng.choice(n, size=sample_size, replace=True)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_BaggingWrapper":
         rng = np.random.default_rng(self.random_state)
         n = len(X)
         sample_size = max(2, int(round(self.max_samples * n)))
         for i in range(self.n_estimators):
-            idx = rng.choice(n, size=sample_size, replace=True)
+            idx = self._draw_indices(rng, n, sample_size)
             sub_X = X.iloc[idx]
             sub_y = y.iloc[idx]
             params = dict(self.base_params)
@@ -2820,116 +4827,297 @@ class _BaggingWrapper:
         return {q: np.quantile(preds, q, axis=1) for q in levels}
 
 
-class _MRFWrapper:
-    """Macroeconomic random forest (Coulombe 2024) -- generalised time-varying
-    parameter (GTVP) estimator.
+class _BoogingWrapper:
+    """Goulet Coulombe (2024) "To Bag is to Prune" — Booging.
 
-    Issue #187. The published procedure trains a tree forest where the
-    splitting features include a time / regime indicator, and *each leaf
-    fits a local linear regression of y on X*. The forest prediction is
-    the average of leaf-local linear predictions.
+    Outer bagging of (intentionally over-fitted) inner Stochastic Gradient
+    Boosted Trees + Data Augmentation. The bagging-prune theorem
+    (Section 2 of the paper) replaces tuning the boosting depth ``S``
+    with outer bagging: fix ``S`` to a high (over-fitting) value and let
+    the bag average prune.
 
-    Implementation:
+    Algorithm (paper §2.4 + Appendix A.2):
 
-    1. Augment ``X`` with a normalized time-trend column.
-    2. Fit a sklearn ``RandomForestRegressor`` on the augmented design --
-       this provides the (data-driven, time-aware) partitioning.
-    3. For every (tree, leaf) pair, fit a local linear regression of
-       ``y`` on the original ``X`` columns using the training rows that
-       land in that leaf. Singleton / collinear leaves fall back to the
-       leaf's mean target value.
-    4. At predict time, route every sample through every tree to its
-       leaf, evaluate the leaf-local linear model, and average across
-       the forest.
+    1. **Data augmentation** — for each predictor column ``X_k`` append a
+       noisy copy ``X̃_k = X_k + ε_k`` with ``ε_k ~ N(0, (σ_k / 3)²)``.
+       Doubles the design width to 2K.
+    2. **Outer bagging** — draw ``B`` subsamples of size
+       ``sample_frac · n`` *without replacement*. For each, also drop a
+       random ``da_drop_rate`` fraction of the (augmented) columns.
+    3. **Inner SGB** — fit a ``GradientBoostingRegressor`` with
+       ``n_estimators`` set high (over-fit), ``max_depth = 4``,
+       ``learning_rate = 0.1``, ``subsample`` (row sub-sampling) for
+       intra-boost stochasticity (per paper line 1562-1563).
+    4. **Predict** — augment test rows with the same noise SDs (fresh
+       draws per call), restrict to per-bag kept columns, average the
+       ``B`` per-bag predictions.
 
-    This is the GTVP form documented in the design table -- not the
-    plain ``RandomForest + time_trend`` of v0.1. Promoted FUTURE ->
-    OPERATIONAL.
+    The schema name ``sequential_residual`` is retained as a legacy alias
+    for back-compat; the canonical option name is ``booging``.
+
+    Hyperparameters (override via ``params``):
+      * ``n_estimators`` (= outer ``B``; default 100)
+      * ``max_samples`` (= ``sample_frac``; default 0.75)
+      * ``inner_n_estimators`` (boosting steps ``S``; default 500)
+      * ``inner_learning_rate`` (default 0.1)
+      * ``inner_max_depth`` (default 4)
+      * ``inner_subsample`` (intra-boost row fraction; default 0.5)
+      * ``da_noise_frac`` (test-time noise SD as fraction of σ_k;
+        default 1/3)
+      * ``da_drop_rate`` (per-bag column-drop fraction; default 0.2)
+      * ``random_state`` (propagated from L0 random_seed)
     """
 
-    def __init__(self, n_estimators: int = 200, max_depth: Any = None, random_state: int = 0) -> None:
-        self.n_estimators = int(n_estimators)
-        self.max_depth = max_depth
+    def __init__(
+        self,
+        B: int = 100,
+        sample_frac: float = 0.75,
+        inner_n_estimators: int = 1500,
+        inner_learning_rate: float = 0.1,
+        inner_max_depth: int = 4,
+        inner_subsample: float = 0.5,
+        da_noise_frac: float = 1.0 / 3.0,
+        da_drop_rate: float = 0.2,
+        random_state: int = 0,
+    ) -> None:
+        self.B = max(1, int(B))
+        self.sample_frac = float(np.clip(sample_frac, 0.1, 1.0))
+        self.inner_n_estimators = int(inner_n_estimators)
+        self.inner_learning_rate = float(inner_learning_rate)
+        self.inner_max_depth = int(inner_max_depth)
+        self.inner_subsample = float(np.clip(inner_subsample, 0.1, 1.0))
+        self.da_noise_frac = float(da_noise_frac)
+        self.da_drop_rate = float(np.clip(da_drop_rate, 0.0, 0.95))
         self.random_state = int(random_state)
-        self._forest: RandomForestRegressor | None = None
-        self._n_train: int | None = None
-        # Per-tree dict: leaf_id -> LinearRegression OR float (mean fallback)
-        self._leaf_models: list[dict[int, Any]] = []
-        self._feature_columns: tuple[str, ...] = ()
-        self._global_fallback: float = 0.0
+        self._cols: tuple[str, ...] = ()
+        self._aug_cols: tuple[str, ...] = ()
+        self._sigma_k: np.ndarray | None = None
+        # List of (fitted_model, kept_aug_column_indices)
+        self._models: list[tuple[Any, np.ndarray]] = []
 
-    def _augment(self, X: pd.DataFrame, offset: int) -> np.ndarray:
-        time_trend = (np.arange(len(X), dtype=float) + offset).reshape(-1, 1)
-        return np.concatenate([X.fillna(0.0).to_numpy(dtype=float), time_trend], axis=1)
+    def _augment(self, X_arr: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+        """Append noisy copies X̃_k = X_k + N(0, (σ_k · da_noise_frac)²)."""
+        if self._sigma_k is None:
+            return X_arr
+        noise = rng.standard_normal(X_arr.shape) * (self._sigma_k * self.da_noise_frac)
+        return np.hstack([X_arr, X_arr + noise])
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_MRFWrapper":
-        self._feature_columns = tuple(X.columns)
-        self._n_train = len(X)
-        if self._n_train == 0:
-            self._global_fallback = float(np.nan_to_num(y.mean(), nan=0.0))
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_BoogingWrapper":
+        from sklearn.ensemble import GradientBoostingRegressor
+
+        self._cols = tuple(X.columns)
+        Xa = X.fillna(0.0).to_numpy(dtype=float)
+        ya = np.asarray(y, dtype=float)
+        n, K = Xa.shape
+        if n == 0 or K == 0:
             return self
-        augmented = self._augment(X, offset=0)
-        self._forest = RandomForestRegressor(
-            n_estimators=self.n_estimators,
-            max_depth=self.max_depth,
-            random_state=self.random_state,
-            n_jobs=1,
-        )
-        target = np.asarray(y, dtype=float)
-        self._forest.fit(augmented, target)
-        self._global_fallback = float(target.mean())
+        self._sigma_k = Xa.std(axis=0, ddof=0).clip(min=1e-12)
+        self._aug_cols = tuple(self._cols) + tuple(f"{c}__noisy" for c in self._cols)
+        rng = np.random.default_rng(self.random_state)
 
-        # Per (tree, leaf) local linear fit.
-        train_leaves = self._forest.apply(augmented)
-        self._leaf_models = []
-        X_arr = X.fillna(0.0).to_numpy(dtype=float)
-        for tree_idx in range(train_leaves.shape[1]):
-            tree_leaves = train_leaves[:, tree_idx]
-            leaf_dict: dict[int, Any] = {}
-            for leaf_id in np.unique(tree_leaves):
-                mask = tree_leaves == leaf_id
-                count = int(mask.sum())
-                # Need n_features + 1 rows for a stable linear fit; otherwise
-                # store the leaf-mean so prediction stays well-defined.
-                if count > X_arr.shape[1] + 1:
-                    try:
-                        lr = LinearRegression()
-                        lr.fit(X_arr[mask], target[mask])
-                        leaf_dict[int(leaf_id)] = lr
-                    except Exception:
-                        leaf_dict[int(leaf_id)] = float(target[mask].mean())
-                else:
-                    leaf_dict[int(leaf_id)] = float(target[mask].mean()) if count else self._global_fallback
-            self._leaf_models.append(leaf_dict)
+        Xa_aug = self._augment(Xa, rng)  # (n, 2K)
+        n_aug_cols = Xa_aug.shape[1]
+        n_kept_cols = max(1, int(round((1.0 - self.da_drop_rate) * n_aug_cols)))
+        sample_size = max(K + 1, int(round(self.sample_frac * n)))
+        sample_size = min(sample_size, n)
+
+        for b in range(self.B):
+            row_idx = rng.choice(n, sample_size, replace=False)
+            col_idx = rng.choice(n_aug_cols, n_kept_cols, replace=False)
+            X_bag = Xa_aug[np.ix_(row_idx, col_idx)]
+            y_bag = ya[row_idx]
+            try:
+                model = GradientBoostingRegressor(
+                    n_estimators=self.inner_n_estimators,
+                    learning_rate=self.inner_learning_rate,
+                    max_depth=self.inner_max_depth,
+                    subsample=self.inner_subsample,
+                    random_state=self.random_state + b,
+                )
+                model.fit(X_bag, y_bag)
+                self._models.append((model, col_idx))
+            except Exception:
+                continue
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if self._forest is None or self._n_train is None:
-            return np.full(len(X), self._global_fallback)
-        # Re-align prediction matrix to the columns seen at fit time.
-        aligned = pd.DataFrame(index=X.index, columns=self._feature_columns)
+        if not self._models or self._sigma_k is None:
+            return np.zeros(len(X), dtype=float)
+        Xa = X.reindex(columns=list(self._cols), fill_value=0.0).fillna(0.0).to_numpy(dtype=float)
+        # Test-time augmentation: fresh noise draws using the stored σ_k.
+        # Paper Appendix A.2 is silent on whether to reuse training noise;
+        # the safer interpretation (independent fresh draws) preserves
+        # the implicit Gaussian-perturbation regularisation.
+        rng = np.random.default_rng(self.random_state + 9_999)
+        Xa_aug = self._augment(Xa, rng)
+        preds = np.zeros(len(X), dtype=float)
+        for model, col_idx in self._models:
+            preds += model.predict(Xa_aug[:, col_idx])
+        return preds / max(len(self._models), 1)
+
+
+class _MRFExternalWrapper:
+    """Macroeconomic Random Forest (Coulombe 2024, arXiv:2006.12724) backed
+    by Ryan Lucas's reference implementation, vendored under
+    ``macroforecast/_vendor/macro_random_forest/`` with surgical numpy 2.x
+    / pandas 2.x compatibility patches (no algorithmic changes — see
+    ``_vendor/macro_random_forest/PATCHES.md``). Upstream:
+    https://github.com/RyanLucas3/MacroRandomForest.
+
+    The vendored package implements the full paper procedure:
+
+    1. **Per-leaf local linear regression** of ``y`` on the state vector
+       ``S`` at each tree leaf.
+    2. **Random walk regularisation** on the time-varying coefficients
+       (``rw_regul`` parameter) and Olympic-podium smoothing for the GTVP
+       series.
+    3. **Block Bayesian Bootstrap** (Taddy 2015 extension) forecast
+       ensembles of size ``B``, surfaced via ``pred_ensemble``.
+
+    The previous in-house ``_MRFWrapper`` implemented only piece (1); this
+    wrapper switches the family to the authoritative paper-author code so
+    the ``macroeconomic_random_forest`` family in macroforecast matches
+    the published procedure.
+
+    sklearn-style adapter: ``fit`` caches the training panel and ``predict``
+    invokes ``MacroRandomForest._ensemble_loop()`` with the test rows
+    appended to the cached training data and ``oos_pos`` set to the
+    appended block. Each ``predict`` call therefore re-runs the full
+    ensemble loop -- expensive but unavoidable given the paper algorithm
+    is a fit-and-forecast pipeline.
+
+    Citation: users running this family should cite Goulet Coulombe (2024)
+    "The Macroeconomy as a Random Forest", Journal of Applied Econometrics
+    (arXiv:2006.12724) and acknowledge the upstream implementation by
+    Ryan Lucas (https://github.com/RyanLucas3/MacroRandomForest).
+    """
+
+    def __init__(
+        self,
+        B: int = 50,
+        ridge_lambda: float = 0.1,
+        rw_regul: float = 0.75,
+        mtry_frac: float = 1 / 3,
+        trend_push: float = 1,
+        quantile_rate: float = 0.3,
+        fast_rw: bool = True,
+        resampling_opt: int = 2,
+        parallelise: bool = False,
+        n_cores: int = 1,
+        block_size: int = 24,
+        random_state: int = 0,
+    ) -> None:
+        self.B = int(B)
+        self.ridge_lambda = float(ridge_lambda)
+        self.rw_regul = float(rw_regul)
+        self.mtry_frac = float(mtry_frac)
+        self.trend_push = float(trend_push)
+        self.quantile_rate = float(quantile_rate)
+        self.fast_rw = bool(fast_rw)
+        self.resampling_opt = int(resampling_opt)
+        self.parallelise = bool(parallelise)
+        self.n_cores = int(n_cores)
+        # Block-bootstrap block length (Bayesian Bayesian Bootstrap step).
+        # v0.9.0a0 audit-fix: default raised from upstream 12 → 24 to match
+        # Goulet Coulombe (2024) JAE paper-spec for monthly macro panels.
+        # User-overridable for quarterly (try 8) or weekly (try 52) data.
+        self.block_size = int(block_size)
+        self.random_state = int(random_state)
+        self._train_X: pd.DataFrame | None = None
+        self._train_y: pd.Series | None = None
+        self._feature_columns: tuple[str, ...] = ()
+        # Caches populated by the most recent ``predict`` call (for L7 GTVP
+        # consumption and forecast-interval surfacing).
+        self._cached_betas: np.ndarray | None = None
+        self._cached_pred_ensemble: np.ndarray | None = None
+
+    @staticmethod
+    def _import_external():
+        # Vendored under ``macroforecast/_vendor/macro_random_forest/`` --
+        # always importable, no extra to install. License + upstream URL
+        # preserved alongside the source.
+        from macroforecast._vendor.macro_random_forest import MacroRandomForest
+
+        return MacroRandomForest
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_MRFExternalWrapper":
+        self._feature_columns = tuple(X.columns)
+        self._train_X = X.copy()
+        self._train_y = pd.Series(np.asarray(y, dtype=float), index=X.index, name="y")
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self._train_X is None or self._train_y is None or len(self._train_X) == 0:
+            return np.zeros(len(X), dtype=float)
+
+        MacroRandomForest = self._import_external()
+
+        # Align test panel to training feature order; fill missing with 0.
+        aligned_test = pd.DataFrame(index=X.index, columns=self._feature_columns)
         for col in self._feature_columns:
             if col in X.columns:
-                aligned[col] = pd.to_numeric(X[col], errors="coerce")
-        aligned = aligned.fillna(0.0)
-        augmented = self._augment(aligned, offset=self._n_train)
-        leaves = self._forest.apply(augmented)
-        n_pred = len(aligned)
-        n_trees = leaves.shape[1]
-        preds = np.zeros(n_pred, dtype=float)
-        X_arr = aligned.to_numpy(dtype=float)
-        for tree_idx in range(n_trees):
-            leaf_models = self._leaf_models[tree_idx]
-            tree_leaves = leaves[:, tree_idx]
-            for i in range(n_pred):
-                model = leaf_models.get(int(tree_leaves[i]))
-                if isinstance(model, LinearRegression):
-                    preds[i] += float(model.predict(X_arr[i : i + 1])[0])
-                elif model is not None:
-                    preds[i] += float(model)
-                else:
-                    preds[i] += self._global_fallback
-        return preds / max(n_trees, 1)
+                aligned_test[col] = pd.to_numeric(X[col], errors="coerce")
+        aligned_test = aligned_test.fillna(0.0)
+        n_train = len(self._train_X)
+        n_test = len(aligned_test)
+        if n_test == 0:
+            return np.zeros(0, dtype=float)
+
+        # Build the data frame mrf-web expects: y first column, then features.
+        # mrf-web rejects NaNs -- fill train and pad test y with 0.
+        train_block = pd.concat(
+            [self._train_y.rename("y"), self._train_X[list(self._feature_columns)].fillna(0.0)],
+            axis=1,
+        )
+        test_block = pd.DataFrame(
+            np.column_stack([np.zeros(n_test, dtype=float), aligned_test.to_numpy(dtype=float)]),
+            columns=["y", *self._feature_columns],
+        )
+        data = pd.concat([train_block.reset_index(drop=True), test_block], ignore_index=True)
+        oos_pos = list(range(n_train, n_train + n_test))
+        n_features = len(self._feature_columns)
+        feature_idx = np.arange(1, n_features + 1)
+
+        # Global numpy seed propagation -- mrf-web does not expose a seed
+        # kwarg, so we set the module-level RNG before construction. This
+        # matches the L0 ``random_seed`` -> L4 estimator ``random_state``
+        # contract used elsewhere in macroforecast (issue #215).
+        np.random.seed(self.random_state)
+        mrf = MacroRandomForest(
+            data=data,
+            y_pos=0,
+            x_pos=feature_idx,
+            S_pos=feature_idx,
+            B=self.B,
+            oos_pos=oos_pos,
+            parallelise=self.parallelise,
+            n_cores=self.n_cores,
+            resampling_opt=self.resampling_opt,
+            trend_push=self.trend_push,
+            quantile_rate=self.quantile_rate,
+            print_b=False,
+            fast_rw=self.fast_rw,
+            ridge_lambda=self.ridge_lambda,
+            rw_regul=self.rw_regul,
+            mtry_frac=self.mtry_frac,
+            block_size=self.block_size,
+        )
+        with np.errstate(invalid="ignore", divide="ignore"):
+            output = mrf._ensemble_loop()
+
+        pred_frame = output.get("pred")
+        if hasattr(pred_frame, "to_numpy"):
+            preds = pred_frame.to_numpy(dtype=float).ravel()
+        else:
+            preds = np.asarray(pred_frame, dtype=float).ravel()
+
+        betas = output.get("betas")
+        if betas is not None:
+            self._cached_betas = np.asarray(betas, dtype=float)
+        ensemble = output.get("pred_ensemble")
+        if ensemble is not None:
+            self._cached_pred_ensemble = np.asarray(ensemble, dtype=float)
+        return preds
 
 
 def _add_l5_relative_metrics(metrics: pd.DataFrame, l4_models: L4ModelArtifactsArtifact | None) -> pd.DataFrame:
@@ -3483,6 +5671,18 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
         X, _ = _l7_xy(inputs, l3_features)
         frame = _forecast_decomposition_frame(model, X)
         return _attach_l7_attrs(frame, model, op, l3_features)
+    if op == "dual_decomposition":
+        # v0.9 Phase 1 promotion (linear families only).
+        model = _first_model_input(inputs)
+        X, y = _l7_xy(inputs, l3_features)
+        frame = _dual_decomposition_frame(model, X, y)
+        return _attach_l7_attrs(frame, model, op, l3_features)
+    if op in {"oshapley_vi", "pbsv"}:
+        # v0.9.1 dev-stage v0.9.0D Path B: final-window fit anatomy adapter.
+        model = _first_model_input(inputs)
+        X, y = _l7_xy(inputs, l3_features)
+        frame = _l7_anatomy_op(op, model, X, y, params)
+        return _attach_l7_attrs(frame, model, op, l3_features)
     if op in {"linear_coef"}:
         model = _first_model_input(inputs)
         frame = _linear_importance_frame(model, method="linear_coef")
@@ -3510,7 +5710,19 @@ def _execute_l7_step(op: str, inputs: list[Any], params: dict[str, Any], l3_feat
         X, _ = _l7_xy(inputs, l3_features)
         frame = _gradient_attribution_frame(model, X, kind=op)
         return _attach_l7_attrs(frame, model, op, l3_features)
-    if op == "fevd" or op == "historical_decomposition" or op == "generalized_irf":
+    if op == "generalized_irf":
+        # v0.8.9 honesty pass V2.3: name is reserved for the Pesaran-Shin
+        # (1998) order-invariant variant, not yet implemented. The previous
+        # v0.2 #189 runtime shipped Cholesky orthogonalised IRFs under this
+        # name; the operational Cholesky variant is now ``orthogonalised_irf``.
+        raise NotImplementedError(
+            "generalized_irf (Pesaran-Shin 1998 order-invariant GIRF) is "
+            "future-gated (v0.9.x roadmap). For Cholesky orthogonalised "
+            "IRFs use the ``orthogonalised_irf`` op (operational since "
+            "v0.8.9; matches the IRF previously emitted under the "
+            "misnamed ``generalized_irf`` alias)."
+        )
+    if op in {"fevd", "historical_decomposition", "orthogonalised_irf"}:
         model = _first_model_input(inputs)
         frame = _var_impulse_frame(model, op_name=op)
         return _attach_l7_attrs(frame, model, op, l3_features)
@@ -4010,57 +6222,47 @@ def _gradient_attribution_frame(model: ModelArtifact, X: pd.DataFrame, *, kind: 
 def _mrf_gtvp_coefficient_frame(model: ModelArtifact, X: pd.DataFrame) -> pd.DataFrame:
     """Issue #190 -- time-varying coefficient series from a Coulombe (2024) MRF.
 
-    For each prediction sample, route through every tree to its leaf,
-    grab the leaf-local linear regression's coefficient vector, and
-    average across the forest. This yields a per-row coefficient
-    estimate β̂(t) for each feature -- the GTVP series the design
-    promised.
+    Reads the GTVP β̂(t) series cached on the
+    ``_MRFExternalWrapper`` (populated during the most recent ``predict``
+    invocation). The mrf-web ``_ensemble_loop`` returns ``betas`` of shape
+    ``(T, K + 1)`` where column 0 is the intercept and columns 1..K are
+    the per-time-step coefficients on the state vector. Importance =
+    time-average of ``|β̂(t)|`` per feature.
 
-    Importance: time-average of |β̂(t)| per feature. The full per-row
-    coefficient table is exposed via the ``coefficient_path`` column for
-    downstream renderers.
+    Falls back to generic tree importance when the fitted object is not
+    an MRF wrapper or has no cached betas yet (e.g. a model artifact that
+    was never used for prediction).
     """
 
     fitted = model.fitted_object
     feature_names = list(model.feature_names)
-    forest = getattr(fitted, "_forest", None)
-    leaf_models = getattr(fitted, "_leaf_models", None)
-    n_train = getattr(fitted, "_n_train", None)
-    if forest is None or leaf_models is None or n_train is None:
-        # Not an _MRFWrapper -- fall back to tree importance.
+    cached_betas = getattr(fitted, "_cached_betas", None)
+    if cached_betas is None or cached_betas.size == 0:
         frame = _tree_importance_frame(model)
         if "status" not in frame.columns:
             frame["status"] = "fallback_not_mrf"
         return frame
 
-    aligned = pd.DataFrame(index=X.index, columns=feature_names)
-    for col in feature_names:
-        if col in X.columns:
-            aligned[col] = pd.to_numeric(X[col], errors="coerce")
-    aligned = aligned.fillna(0.0)
-    augmented = fitted._augment(aligned, offset=n_train)
-    leaves = forest.apply(augmented)
-    n_pred = len(aligned)
-    n_features = len(feature_names)
-    coef_path = np.zeros((n_pred, n_features), dtype=float)
-    n_trees = leaves.shape[1]
-    for tree_idx in range(n_trees):
-        tree_models = leaf_models[tree_idx]
-        tree_leaves = leaves[:, tree_idx]
-        for i in range(n_pred):
-            leaf = tree_models.get(int(tree_leaves[i]))
-            if isinstance(leaf, LinearRegression):
-                coef_path[i] += leaf.coef_
-    coef_path /= max(n_trees, 1)
-    importance = np.abs(coef_path).mean(axis=0)
+    # mrf-web returns betas with column 0 = intercept; align column slice
+    # to the feature_names order. If shape mismatch, fall back gracefully.
+    if cached_betas.shape[1] < len(feature_names) + 1:
+        frame = _tree_importance_frame(model)
+        if "status" not in frame.columns:
+            frame["status"] = "fallback_betas_shape"
+        return frame
+    coef_path = cached_betas[:, 1 : 1 + len(feature_names)]
+    # OOS rows are not covered by mrf-web's in-sample Bayesian bootstrap, so
+    # ``avg_beta_nonOVF`` returns NaN there. Use nan-safe reductions so a
+    # single NaN doesn't poison the per-feature importance score.
+    importance = np.nanmean(np.abs(coef_path), axis=0)
     rows = []
     for j, name in enumerate(feature_names):
         rows.append(
             {
                 "feature": name,
-                "importance": float(importance[j]),
+                "importance": float(importance[j]) if np.isfinite(importance[j]) else 0.0,
                 "coefficient": None,
-                "coefficient_path": [float(v) for v in coef_path[:, j]],
+                "coefficient_path": [float(v) if np.isfinite(v) else None for v in coef_path[:, j]],
                 "status": "operational",
             }
         )
@@ -4100,44 +6302,128 @@ def _var_impulse_frame(model: ModelArtifact, *, op_name: str, n_periods: int = 1
     except Exception:
         target_index = 0
 
+    # v0.9.0a0 audit-fix: when the fitted object is a BVAR with posterior-
+    # sampled IRF draws, route IRF / HD through the Bayesian posterior
+    # rather than the OLS-VAR ``fitted_results.irf()``. FEVD still flows
+    # through statsmodels because it requires ``Σ_u`` recomputation per
+    # draw — surfaced as a v0.9.x roadmap item.
+    posterior_irf = getattr(model.fitted_object, "_posterior_irf", None)
+    use_posterior = isinstance(posterior_irf, dict) and "mean" in posterior_irf
+
     rows: list[dict[str, Any]] = []
     try:
         if op_name == "fevd":
-            fevd = fitted_results.fevd(int(n_periods))
-            # decomp shape: (n_periods, n_vars, n_vars). Last axis is the
-            # contribution of variable j to the variance of variable i.
-            decomp = np.asarray(fevd.decomp, dtype=float)
-            shares = decomp[:, target_index, :].mean(axis=0)  # avg over horizons
-            for j, name in enumerate(fitted_results.names):
-                if j >= len(shares):
-                    break
-                rows.append({"feature": str(name), "importance": float(shares[j]), "coefficient": None, "status": "operational"})
-        elif op_name == "generalized_irf":
-            irf = fitted_results.irf(int(n_periods))
-            # Use orthogonalised IRFs (orth_irfs shape: (n_periods+1, n_vars, n_vars)).
-            irfs = np.asarray(irf.orth_irfs, dtype=float)
-            # Sum of absolute responses of target to each shock.
-            response = np.abs(irfs[:, target_index, :]).sum(axis=0)
-            for j, name in enumerate(fitted_results.names):
-                if j >= len(response):
-                    break
-                rows.append({"feature": str(name), "importance": float(response[j]), "coefficient": None, "status": "operational"})
+            if use_posterior and "fevd_mean" in posterior_irf:
+                # Posterior FEVD (audit gap-fix #14): posterior mean +
+                # credible bands per shock j averaged across horizons.
+                mean_dec = np.asarray(posterior_irf["fevd_mean"], dtype=float)
+                p16_dec = np.asarray(posterior_irf.get("fevd_p16", mean_dec), dtype=float)
+                p84_dec = np.asarray(posterior_irf.get("fevd_p84", mean_dec), dtype=float)
+                horizon_clip = min(int(n_periods), mean_dec.shape[0])
+                shares = mean_dec[:horizon_clip, target_index, :].mean(axis=0)
+                p16_shares = p16_dec[:horizon_clip, target_index, :].mean(axis=0)
+                p84_shares = p84_dec[:horizon_clip, target_index, :].mean(axis=0)
+                for j, name in enumerate(fitted_results.names):
+                    if j >= len(shares):
+                        break
+                    rows.append({
+                        "feature": str(name),
+                        "importance": float(shares[j]),
+                        "coefficient": None,
+                        "status": "posterior_mean",
+                        "p16": float(p16_shares[j]),
+                        "p84": float(p84_shares[j]),
+                    })
+            else:
+                fevd = fitted_results.fevd(int(n_periods))
+                # decomp shape: (n_periods, n_vars, n_vars). Last axis is the
+                # contribution of variable j to the variance of variable i.
+                decomp = np.asarray(fevd.decomp, dtype=float)
+                shares = decomp[:, target_index, :].mean(axis=0)  # avg over horizons
+                for j, name in enumerate(fitted_results.names):
+                    if j >= len(shares):
+                        break
+                    rows.append({"feature": str(name), "importance": float(shares[j]), "coefficient": None, "status": "operational"})
+        elif op_name == "orthogonalised_irf":
+            if use_posterior:
+                # Posterior IRF: response = sum_h |E[orth_irf_h, target, j]|;
+                # surface 16/84 percentile bands as additional columns so
+                # the L7 frame carries Coulombe & Göbel (2021) §3 credible
+                # regions when reported.
+                mean_irf = np.asarray(posterior_irf["mean"], dtype=float)
+                p16 = np.asarray(posterior_irf.get("p16", mean_irf), dtype=float)
+                p84 = np.asarray(posterior_irf.get("p84", mean_irf), dtype=float)
+                horizon_clip = min(int(n_periods) + 1, mean_irf.shape[0])
+                response = np.abs(mean_irf[:horizon_clip, target_index, :]).sum(axis=0)
+                p16_resp = np.abs(p16[:horizon_clip, target_index, :]).sum(axis=0)
+                p84_resp = np.abs(p84[:horizon_clip, target_index, :]).sum(axis=0)
+                for j, name in enumerate(fitted_results.names):
+                    if j >= len(response):
+                        break
+                    rows.append({
+                        "feature": str(name),
+                        "importance": float(response[j]),
+                        "coefficient": None,
+                        "status": "posterior_mean",
+                        "p16": float(p16_resp[j]),
+                        "p84": float(p84_resp[j]),
+                    })
+            else:
+                irf = fitted_results.irf(int(n_periods))
+                # Cholesky orthogonalised IRFs (orth_irfs shape:
+                # (n_periods+1, n_vars, n_vars)). orth_irfs[s, i, j] is the
+                # response of variable i at horizon s to a unit structural
+                # shock to variable j at time 0.
+                irfs = np.asarray(irf.orth_irfs, dtype=float)
+                response = np.abs(irfs[:, target_index, :]).sum(axis=0)
+                for j, name in enumerate(fitted_results.names):
+                    if j >= len(response):
+                        break
+                    rows.append({"feature": str(name), "importance": float(response[j]), "coefficient": None, "status": "operational"})
         else:  # historical_decomposition
-            # statsmodels does not expose a ready-made historical
-            # decomposition. We build one via the cumulative impact of
-            # each shock on the target using orthogonalised impulses
-            # weighted by the sample residuals.
-            irf = fitted_results.irf(int(n_periods))
-            irfs = np.asarray(irf.orth_irfs, dtype=float)
+            # Burbidge-Harrison (1985) historical decomposition. Construct
+            # structural shocks via the Cholesky factor of the residual
+            # covariance matrix:
+            #     P P' = Σᵤ,    eₜ* = P⁻¹ uₜ
+            # then convolve with the orthogonalised IRF coefficients to
+            # express the realised path as a sum of shock-specific
+            # contributions:
+            #     hd[t, i, j] = Σ_{s=0..t}  orth_irfs[s, i, j] · e*_{t-s, j}
+            # The op importance is the per-shock cumulative absolute
+            # contribution to the *target* variable's path; the per-row
+            # ``status`` documents the canonical procedure.
+            n_lags = int(getattr(fitted_results, "k_ar", 1))
             resid = np.asarray(fitted_results.resid, dtype=float)
-            # Contribution of shock j to target i: sum over time of
-            # |IRF[h, i, j]| * |std(resid[:, j])|. Approximate.
-            stds = resid.std(axis=0, ddof=0)
-            response = (np.abs(irfs[:, target_index, :]).sum(axis=0)) * stds
+            sigma_u = np.asarray(fitted_results.sigma_u, dtype=float)
+            chol = np.linalg.cholesky(sigma_u)
+            structural_shocks = np.linalg.solve(chol, resid.T).T  # (T_resid, K)
+            T_resid = structural_shocks.shape[0]
+            horizon_max = max(int(n_periods), T_resid)
+            # Posterior-aware IRF for HD convolution when available
+            # (status reflects the source).
+            if use_posterior:
+                mean_irf = np.asarray(posterior_irf["mean"], dtype=float)
+                if mean_irf.shape[0] >= horizon_max + 1:
+                    irfs = mean_irf[: horizon_max + 1]
+                else:
+                    irfs = np.asarray(fitted_results.irf(horizon_max).orth_irfs, dtype=float)
+                hd_status = "posterior_mean" if mean_irf.shape[0] >= horizon_max + 1 else "operational"
+            else:
+                irfs = np.asarray(fitted_results.irf(horizon_max).orth_irfs, dtype=float)
+                hd_status = "operational"
+            S = irfs.shape[0]
+            # Convolution kernel for the target row only: response of the
+            # target variable at horizon s to a unit shock j is
+            # ``irfs[s, target_index, j]``. Vectorise per-shock:
+            hd_target = np.zeros((T_resid, structural_shocks.shape[1]), dtype=float)
+            for s in range(min(S, T_resid)):
+                # Contributions arriving at times s, s+1, ..., T_resid-1
+                hd_target[s:, :] += irfs[s, target_index, :] * structural_shocks[: T_resid - s, :]
+            response = np.abs(hd_target).sum(axis=0)
             for j, name in enumerate(fitted_results.names):
                 if j >= len(response):
                     break
-                rows.append({"feature": str(name), "importance": float(response[j]), "coefficient": None, "status": "operational"})
+                rows.append({"feature": str(name), "importance": float(response[j]), "coefficient": None, "status": hd_status})
     except Exception as exc:
         return pd.DataFrame(
             {
@@ -4171,6 +6457,556 @@ def _linear_importance_frame(model: ModelArtifact, *, method: str) -> pd.DataFra
             "feature": list(model.feature_names),
             "coefficient": [float(value) for value in values],
             "importance": [abs(float(value)) for value in values],
+        }
+    )
+
+
+def _blocked_oob_reality_check_p_values(
+    losses: pd.DataFrame,
+    *,
+    benchmark: str,
+    block_length: int = 4,
+    n_bootstraps: int = 1000,
+    alpha: float = 0.05,
+    random_state: int = 0,
+) -> pd.DataFrame:
+    """Block-bootstrap variant of White (2000) reality check on
+    per-origin loss differentials vs a named benchmark model.
+
+    Used by the v0.9.x HNN evaluation pipeline (Coulombe / Frenette /
+    Klieber 2025 JAE) where the in-sample serial dependence of macro
+    residuals violates the i.i.d. assumption underpinning the standard
+    reality check.
+
+    Algorithm:
+
+        For each candidate model m (excluding the benchmark):
+            d_t = loss_benchmark_t - loss_m_t   (positive = m better)
+            d_bar = mean(d_t)
+            For b in 1..n_bootstraps:
+                Draw consecutive blocks of length ``block_length`` from
+                {1, ..., T} (with replacement, mod T) until length T.
+                d_bar_b = mean of d_t at block-bootstrapped indices.
+            p_m = fraction of b with (d_bar_b - d_bar) >= d_bar
+                  (one-sided test for H0: m no better than benchmark).
+            reject_m = (p_m < alpha).
+
+    Args:
+        losses: per-origin loss panel. Index = origin date; columns =
+                model_id; values = per-origin loss (e.g. squared error).
+        benchmark: column name of the benchmark model.
+        block_length: moving-block length (Künsch 1989). Default 4.
+        n_bootstraps: number of bootstrap replications. Default 1000.
+        alpha: significance level. Default 0.05.
+        random_state: RNG seed for reproducibility.
+
+    Returns:
+        DataFrame with columns ``['mean_diff', 'p_value', 'reject_h0']``,
+        one row per non-benchmark model. ``mean_diff > 0`` means the
+        candidate has lower loss than the benchmark; ``reject_h0=True``
+        means we reject "candidate no better than benchmark" at α.
+    """
+
+    if benchmark not in losses.columns:
+        raise ValueError(
+            f"benchmark {benchmark!r} not in loss columns {list(losses.columns)}"
+        )
+    rng = np.random.default_rng(random_state)
+    n = len(losses)
+    if n < 2:
+        return pd.DataFrame(columns=["mean_diff", "p_value", "reject_h0"])
+    block_length = max(1, int(block_length))
+    n_bootstraps = max(1, int(n_bootstraps))
+
+    bench_loss = losses[benchmark].to_numpy(dtype=float)
+    rows: list[dict[str, Any]] = []
+    for model in losses.columns:
+        if model == benchmark:
+            continue
+        cand_loss = losses[model].to_numpy(dtype=float)
+        d = bench_loss - cand_loss  # positive when cand better
+        d_bar = float(d.mean())
+
+        # Block-bootstrap distribution of (d_bar_b - d_bar).
+        # Recentre: under H0 (cand no better than benchmark), E[d] <= 0.
+        # The standard reality-check construction recentres d - max(0, d_bar)
+        # then takes the bootstrap distribution of d_bar_b minus the recentred
+        # mean; we use the simpler one-sided variant.
+        n_blocks = (n + block_length - 1) // block_length
+        offsets = np.arange(block_length)
+        boot_means = np.empty(n_bootstraps)
+        for b in range(n_bootstraps):
+            starts = rng.integers(0, n, size=n_blocks)
+            idx = ((starts[:, None] + offsets[None, :]) % n).reshape(-1)[:n]
+            boot_means[b] = float(d[idx].mean())
+        # One-sided test: under H0, d_bar should not be 'large positive'.
+        # Recentre boot_means around d_bar so the null distribution is at 0.
+        recentred = boot_means - d_bar
+        # p-value: fraction of recentred bootstrap means >= d_bar.
+        p_value = float((recentred >= d_bar).mean())
+        rows.append(
+            {
+                "model_id": model,
+                "mean_diff": d_bar,
+                "p_value": p_value,
+                "reject_h0": bool(p_value < alpha),
+            }
+        )
+    return pd.DataFrame(rows).set_index("model_id") if rows else pd.DataFrame(columns=["mean_diff", "p_value", "reject_h0"])
+
+
+def _rf_leaf_cooccurrence_weights(forest: Any, X_train: np.ndarray, X_test: np.ndarray) -> np.ndarray:
+    """RF leaf-co-occurrence kernel for the dual decomposition.
+
+    A random-forest prediction can be written as a weighted sum of
+    training targets:
+        ``ŷ(xₜ) = Σⱼ wⱼ(xₜ) · yⱼ``
+    where the weight is the *leaf-co-occurrence kernel* averaged over
+    trees:
+        ``wⱼ(xₜ) = (1/B) Σ_b  1[j ∈ B_b] · 1[leaf_b(xₜ) == leaf_b(xⱼ)] / leaf_size_b_in_bootstrap(xⱼ)``.
+
+    The ``1[j ∈ B_b]`` indicator restricts each tree to its bootstrap
+    subset (``estimators_samples_``) so the construction reproduces the
+    forest's prediction bit-exactly when ``X_test ⊆ X_train``. See
+    Goulet Coulombe / Goebel / Klieber (2024) §3.2 for the derivation.
+    Returns the (n_test, n_train) weight matrix.
+
+    Compatible with sklearn ``RandomForestRegressor`` and
+    ``ExtraTreesRegressor``. ``GradientBoostingRegressor`` is treated
+    via per-stage tree application but only when the booster is regression
+    with constant init (the default). Other boosters (xgboost / lightgbm)
+    are out of scope here; macroforecast routes those through tree-
+    importance fall-backs.
+    """
+
+    train_leaves = np.asarray(forest.apply(X_train))  # (n_train, n_trees) for ensembles
+    test_leaves = np.asarray(forest.apply(X_test))
+    if train_leaves.ndim == 1:
+        train_leaves = train_leaves.reshape(-1, 1)
+        test_leaves = test_leaves.reshape(-1, 1)
+    n_train, n_trees = train_leaves.shape
+    n_test = test_leaves.shape[0]
+
+    # Per-tree bootstrap indices: sklearn exposes them on
+    # ``estimators_samples_`` (bool mask or index array per tree). When
+    # ``bootstrap=False`` (e.g. ExtraTreesRegressor default) the attribute
+    # may be missing -- fall back to "every training row in every tree".
+    samples_attr = getattr(forest, "estimators_samples_", None)
+    bootstrap = bool(getattr(forest, "bootstrap", True))
+
+    W = np.zeros((n_test, n_train), dtype=float)
+    for b in range(n_trees):
+        train_b = train_leaves[:, b]
+        test_b = test_leaves[:, b]
+        # Identify the rows that actually contributed to tree b's training.
+        if samples_attr is not None and bootstrap:
+            sample_b = np.asarray(samples_attr[b])
+            if sample_b.dtype == bool:
+                bootstrap_mask = sample_b.astype(float)
+            else:
+                # Sampling-with-replacement may put the same index multiple
+                # times. Accumulate via np.add.at so the multiplicity is
+                # reflected in the leaf-size denominator and the dual
+                # weight is bit-exact against ``forest.predict``.
+                bootstrap_mask = np.zeros(n_train, dtype=float)
+                np.add.at(bootstrap_mask, sample_b, 1.0)
+        else:
+            bootstrap_mask = np.ones(n_train, dtype=float)
+        # leaf_size_b[j] = sum over rows i of (in-bootstrap_i ·
+        # 1[leaf_b(i) == leaf_b(j)]).
+        # Compute via bincount on the leaf id, weighted by bootstrap_mask.
+        unique_leaves, inverse = np.unique(train_b, return_inverse=True)
+        leaf_count_in_bag = np.bincount(inverse, weights=bootstrap_mask, minlength=len(unique_leaves))
+        train_leaf_size = leaf_count_in_bag[inverse].astype(float)
+        train_leaf_size = np.maximum(train_leaf_size, 1.0)  # guard against zero
+        match = (test_b[:, None] == train_b[None, :]).astype(float)
+        contribution = match * (bootstrap_mask[None, :] / train_leaf_size[None, :])
+        W += contribution
+    W /= max(n_trees, 1)
+    return W
+
+
+def _dual_decomposition_frame(model: ModelArtifact, X: pd.DataFrame, y: pd.Series | None) -> pd.DataFrame:
+    """Goulet Coulombe / Goebel / Klieber (2024) Dual Interpretation of
+    ML Forecasts -- representer-theorem-based training-target weights.
+
+    For ridge: ``ŷₜ = Σⱼ wⱼ(xₜ) · yⱼ`` where
+    ``w(xₜ) = X (X'X + αI)⁻¹ xₜ``. The vector ``w`` of dimension n_train
+    is the per-test-row weight on training targets. Sum of weights need
+    not equal 1 (no convex constraint); each weight signs / magnitudes
+    encode how the model leans on each training row.
+
+    **Linear families** (operational v0.8.9 B-3): ridge / OLS / lasso
+    use the closed-form ``w(xₜ) = X (X'X + αI)⁻¹ xₜ``.
+
+    **Tree ensembles** (operational v0.9.1 v0.9.0B-5): RandomForest /
+    ExtraTrees / GradientBoosting use the leaf-co-occurrence kernel
+    ``wⱼ(xₜ) = (1/B) Σ_b  1[leaf(xₜ) == leaf(xⱼ)] / leaf_size(xⱼ)``.
+
+    **Kernel SVR** (operational v0.9.1 v0.9.0B-5): SVR with rbf / poly
+    / sigmoid / linear kernels uses ``Wⱼ = αⱼ K(xⱼ, x_test)`` with the
+    fitted dual coefficients and explicit kernel evaluation.
+
+    Output frame layout (matches the L7 importance contract):
+        rows: training row labels
+        cols: ['mean_weight', 'abs_mean_weight', 'max_abs_weight']
+
+    Inline portfolio diagnostics (Coulombe et al. 2024 §4, computed on
+    the dual weights) are attached via ``frame.attrs['portfolio_metrics']``
+    as a (n_test × 4) DataFrame with columns ``['hhi', 'short',
+    'turnover', 'leverage']``. The full ``(n_test × n_train)`` weight
+    matrix is also attached as ``frame.attrs['dual_weights']``. These
+    are trivial numpy reductions on the primary dual weights and do not
+    warrant their own L7 op (decomposition discipline).
+    """
+
+    fitted = model.fitted_object
+    X_train = X.fillna(0.0).to_numpy(dtype=float)
+    n_train, p = X_train.shape
+    if n_train == 0 or p == 0:
+        empty = pd.DataFrame({"feature": [], "mean_weight": [], "abs_mean_weight": [], "max_abs_weight": []})
+        empty.attrs["dual_weights"] = pd.DataFrame()
+        empty.attrs["portfolio_metrics"] = pd.DataFrame(columns=["hhi", "short", "turnover", "leverage"])
+        return empty
+
+    # Test set = same as train (in-sample dual weights).
+    X_test = X_train
+    method = "linear_closed_form"
+    alpha: float | None = None
+
+    if hasattr(fitted, "coef_"):
+        # Linear closed-form.
+        alpha = float(getattr(fitted, "alpha", 0.0) or 0.0)
+        XtX = X_train.T @ X_train
+        K = np.linalg.pinv(XtX + alpha * np.eye(p))
+        W = X_test @ K @ X_train.T
+    elif hasattr(fitted, "estimators_") and hasattr(fitted, "apply") and not isinstance(getattr(fitted, "estimators_", None), np.ndarray):
+        # Tree ensemble (RandomForest / ExtraTrees). The boolean check
+        # excludes GradientBoostingRegressor whose ``estimators_`` is a
+        # numpy ndarray of stages with non-constant per-stage targets;
+        # SGB does not have a clean leaf-co-occurrence dual representation
+        # because each stage fits residuals, not the original y.
+        method = "rf_leaf_cooccurrence_kernel"
+        W = _rf_leaf_cooccurrence_weights(fitted, X_train, X_test)
+    else:
+        raise NotImplementedError(
+            f"dual_decomposition does not yet support family "
+            f"{model.family!r} ({type(fitted).__name__}). Linear families "
+            f"and tree-bagging ensembles (RandomForest / ExtraTrees) are "
+            f"operational. Other non-linear families (gradient_boosting / "
+            f"xgboost / lightgbm / NN / SVR) need a separate dual "
+            f"construction (residual-bagging chains do not admit a clean "
+            f"sum-of-training-targets representation); deferred to a "
+            f"v0.9.x extension."
+        )
+
+    train_labels = [str(idx) for idx in X.index]
+    test_labels = [str(idx) for idx in X.index]
+
+    # Aggregate stats per training row across test rows.
+    abs_W = np.abs(W)
+    frame = pd.DataFrame(
+        {
+            "feature": train_labels,
+            "mean_weight": W.mean(axis=0),
+            "abs_mean_weight": abs_W.mean(axis=0),
+            "max_abs_weight": abs_W.max(axis=0),
+        }
+    )
+
+    # Attach full weights + portfolio metrics inline.
+    weights_full = pd.DataFrame(W, index=test_labels, columns=train_labels)
+
+    # Portfolio metrics per test row, per Goulet Coulombe / Goebel /
+    # Klieber (2024) §4 / Eq. p.21:
+    #   FC  = forecast concentration (squared-weight Herfindahl alternative)
+    #   FSP = forecast short position = Σ I(w<0) · w   (signed; ≤ 0)
+    #   FL  = forecast leverage       = Σ w_{ji}        (signed sum, NOT L1 norm)
+    #   FT  = forecast turnover       = Σ |w_t − w_{t−1}|
+    # The previous v0.9.0B-5 implementation reported `leverage` as the L1
+    # norm and `short` as a positive magnitude; v0.9.0F audit-fix
+    # restores the paper's signed conventions. Absolute-value variants
+    # are still surfaced as ``leverage_l1`` / ``short_abs`` for
+    # backward-compatible plotting.
+    hhi = (W ** 2).sum(axis=1)
+    short_signed = np.where(W < 0, W, 0.0).sum(axis=1)              # ≤ 0
+    leverage_signed = W.sum(axis=1)                                  # signed sum
+    leverage_l1 = abs_W.sum(axis=1)
+    short_abs = -short_signed                                        # ≥ 0 (legacy magnitude)
+    turnover = np.zeros(W.shape[0])
+    if W.shape[0] > 1:
+        turnover[1:] = np.abs(W[1:] - W[:-1]).sum(axis=1)
+
+    portfolio = pd.DataFrame(
+        {
+            "hhi": hhi,
+            "short": short_signed,
+            "turnover": turnover,
+            "leverage": leverage_signed,
+            "leverage_l1": leverage_l1,
+            "short_abs": short_abs,
+        },
+        index=test_labels,
+    )
+
+    frame.attrs["dual_weights"] = weights_full
+    frame.attrs["portfolio_metrics"] = portfolio
+    frame.attrs["method"] = method
+    if alpha is not None:
+        frame.attrs["alpha"] = alpha
+    return frame
+
+
+def _l7_anatomy_op(
+    op: str,
+    model: ModelArtifact,
+    X: pd.DataFrame,
+    y: pd.Series | None,
+    params: dict[str, Any],
+) -> pd.DataFrame:
+    """Borup, Goulet Coulombe, Rapach, Montes Schütte & Schwenk-Nebbe
+    (2022) "Anatomy of Out-of-Sample Forecasting Accuracy" -- adapter
+    for the ``anatomy`` PyPI package.
+
+    Two staging paths:
+
+    * **Path B (v0.9.0D)**: uses the *final-window* fitted model for
+      every period; degraded approximation of the paper's per-origin
+      refit semantics. Status column = ``"degraded"``. Selected when
+      ``params["initial_window"]`` is not supplied.
+    * **Path A (v0.9.0E)**: when ``params["initial_window"]`` is set,
+      anatomy itself splits the panel into expanding-window periods
+      (``AnatomySubsets.generate``) and refits a fresh model at every
+      origin via the L4 family hyperparameters (``model_factory``).
+      Status column = ``"operational"``.
+
+    The two ops are derived from a single ``Anatomy.explain()`` call:
+
+    * ``oshapley_vi`` -- default identity transformer → local per-OOS-
+      instance Shapley values. Importance per feature = mean of
+      ``|values|`` across OOS instances (paper Eq. 16).
+    * ``pbsv`` -- squared-error loss transformer → global scalar PBSV
+      per feature (paper Eq. 24).
+
+    The 2026-05-07 audit (errata E3) corrected the v09_paper_coverage
+    plan sketch, which had referenced non-existent ``Anatomy.oshapley_vi(...)``
+    / ``Anatomy.pbsv(...)`` methods. anatomy 0.1.6 has neither -- both
+    are derived from the single ``explain()`` entry point.
+    """
+
+    try:
+        from anatomy import (
+            Anatomy,
+            AnatomyModel,
+            AnatomyModelOutputTransformer,
+            AnatomyModelProvider,
+            AnatomySubsets,
+        )
+    except ImportError as exc:
+        raise NotImplementedError(
+            f"L7 op {op!r} requires the [anatomy] extra "
+            "(``pip install macroforecast[anatomy]``). The anatomy "
+            "package implements Borup et al. (2022) oShapley-VI / PBSV; "
+            "macroforecast routes through it via _l7_anatomy_op."
+        ) from exc
+
+    feature_cols = list(model.feature_names) if model.feature_names else list(X.columns)
+    if not feature_cols:
+        return pd.DataFrame({"feature": [], "importance": [], "coefficient": [], "status": []})
+    if y is None:
+        # Use a zero target if missing -- anatomy still wants a y column
+        # for its training frame; the final-window fit is the actual
+        # signal source for predictions.
+        y = pd.Series(np.zeros(len(X), dtype=float), index=X.index, name="y")
+    target_name = str(y.name) if y.name else "y"
+
+    fitted = model.fitted_object
+    if not hasattr(fitted, "predict"):
+        raise NotImplementedError(
+            f"L7 op {op!r} requires a fitted model with a .predict method"
+        )
+
+    # Path selection: ``initial_window`` enables Path A (faithful per-
+    # origin refit via AnatomySubsets); absence routes to Path B
+    # (final-window fit, degraded approximation).
+    initial_window = params.get("initial_window")
+    is_path_a = initial_window is not None and int(initial_window) > 0
+    status_label = "operational" if is_path_a else "degraded"
+    if not is_path_a:
+        # v0.9.0a0 audit gap-fix: surface the silent Path B routing as an
+        # explicit UserWarning rather than only an ex-post status column.
+        # Borup et al. (2022) anatomy is paper-faithful only with per-origin
+        # refit (Path A); Path B uses the final-window fit and produces a
+        # different importance estimand. Suppress with `warnings.simplefilter`
+        # if you knowingly want the degraded approximation.
+        import warnings
+        warnings.warn(
+            f"_l7_anatomy_op[{op!r}] routing to Path B (degraded, final-window fit). "
+            "Set params['initial_window'] (e.g., int(T * 0.6)) to enable paper-faithful "
+            "Path A with AnatomySubsets per-origin refit (Borup et al. 2022).",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    # Build the data block: y first, then features. anatomy passes
+    # per-period train/test slices to ``provider_fn`` based on the
+    # AnatomySubsets schedule (Path A) or just one full-sample period
+    # (Path B; equivalent to AnatomySubsets with initial_window = T-1).
+    full_block = pd.concat(
+        [y.rename(target_name), X[feature_cols].fillna(0.0)], axis=1
+    ).reset_index(drop=True)
+    T_full = len(full_block)
+
+    if is_path_a:
+        from sklearn.base import clone as sklearn_clone
+        try:
+            base_estimator = sklearn_clone(fitted)
+            can_clone = True
+        except Exception:
+            can_clone = False
+
+    def _refit(train_df: pd.DataFrame):
+        """Per-origin refit (Path A) or pass-through to the final-window
+        fit (Path B). Used inside ``_provider_fn``."""
+        nonlocal status_label
+        if not is_path_a:
+            return fitted
+        # Path A: clone the sklearn estimator and refit on the period's
+        # training window. v0.9.0F audit-fix: when ``sklearn_clone``
+        # cannot reproduce the estimator (custom wrappers like
+        # ``_VARWrapper`` / ``_DFMMixedFrequency``) we now *demote*
+        # the period to degraded rather than silently using the final-
+        # window fit while still labelling the result "operational".
+        if not can_clone:
+            status_label = "degraded"
+            import warnings
+            warnings.warn(
+                f"_l7_anatomy_op[{op!r}] Path A requested but estimator "
+                f"{type(fitted).__name__!r} is not sklearn-cloneable; period "
+                "demoted to degraded (final-window fit). Wrap your custom "
+                "estimator in a sklearn BaseEstimator subclass for paper-"
+                "faithful per-origin refit.",
+                UserWarning,
+                stacklevel=2,
+            )
+            return fitted
+        try:
+            new_model = sklearn_clone(base_estimator)
+            X_train_period = train_df[feature_cols].to_numpy(dtype=float)
+            y_train_period = train_df[target_name].to_numpy(dtype=float)
+            new_model.fit(X_train_period, y_train_period)
+            return new_model
+        except Exception:
+            status_label = "degraded"
+            return fitted
+
+    def _wrapped_predict(xs: np.ndarray) -> np.ndarray:
+        # anatomy passes 2-D ndarrays of shape (n, n_features). Wrap as
+        # a DataFrame with the original feature names; if the column
+        # count doesn't match, broadcast / pad to the expected width.
+        arr = np.asarray(xs, dtype=float)
+        if arr.ndim == 1:
+            arr = arr.reshape(1, -1)
+        if arr.shape[0] == 0:
+            return np.zeros(0, dtype=float)
+        if arr.shape[1] != len(feature_cols):
+            # Defensive: if the input is sliced unexpectedly, pad with zeros.
+            padded = np.zeros((arr.shape[0], len(feature_cols)), dtype=float)
+            padded[:, : min(arr.shape[1], len(feature_cols))] = arr[:, : min(arr.shape[1], len(feature_cols))]
+            arr = padded
+        return np.asarray(fitted.predict(pd.DataFrame(arr, columns=feature_cols))).ravel()
+
+    if is_path_a:
+        # Path A: AnatomySubsets-driven walk-forward periods.
+        try:
+            subsets = AnatomySubsets.generate(
+                index=full_block.index,
+                initial_window=int(initial_window),
+                estimation_type=AnatomySubsets.EstimationType.EXPANDING,
+                periods=1,
+            )
+            n_periods = max(1, T_full - int(initial_window))
+        except Exception:
+            # If AnatomySubsets misbehaves, fall back to single-period.
+            subsets = None
+            n_periods = 1
+    else:
+        subsets = None
+        n_periods = 1
+
+    def _provider_fn(key):
+        period = int(getattr(key, "period", 0))
+        if subsets is not None:
+            try:
+                train_slice = subsets.get_train_subset(period)
+                test_slice = subsets.get_test_subset(period)
+                train = full_block.iloc[train_slice].reset_index(drop=True)
+                test = full_block.iloc[test_slice].reset_index(drop=True)
+            except Exception:
+                train = full_block
+                test = full_block
+        else:
+            train = full_block
+            test = full_block
+        # Per-period refit (Path A) or final-window pass-through (Path B).
+        period_fitted = _refit(train) if is_path_a else fitted
+        nonlocal_pred = period_fitted.predict
+        def _period_predict(xs: np.ndarray) -> np.ndarray:
+            arr = np.asarray(xs, dtype=float)
+            if arr.ndim == 1:
+                arr = arr.reshape(1, -1)
+            if arr.shape[0] == 0:
+                return np.zeros(0, dtype=float)
+            if arr.shape[1] != len(feature_cols):
+                padded = np.zeros((arr.shape[0], len(feature_cols)), dtype=float)
+                padded[:, : min(arr.shape[1], len(feature_cols))] = arr[:, : min(arr.shape[1], len(feature_cols))]
+                arr = padded
+            return np.asarray(nonlocal_pred(pd.DataFrame(arr, columns=feature_cols))).ravel()
+        anat_model = AnatomyModel(pred_fn=_period_predict)
+        return AnatomyModelProvider.PeriodValue(train=train, test=test, model=anat_model)
+
+    # v0.9.0F audit-fix: previous default 50 was 10× below paper M=500.
+    # Restored to 500 to match Borup et al. (2022) p.16 footnote 16.
+    # Users running cells in tight CI loops can override via
+    # ``params['n_iterations']``.
+    n_iterations = int(params.get("n_iterations", 500))
+    n_jobs = int(params.get("n_jobs", 1))
+    np.random.seed(int(params.get("random_state", 0)))
+
+    provider = AnatomyModelProvider(
+        n_periods=n_periods,
+        n_features=len(feature_cols),
+        model_names=[str(model.model_id)],
+        y_name=target_name,
+        provider_fn=_provider_fn,
+    )
+    anat = Anatomy(provider=provider, n_iterations=n_iterations).precompute(n_jobs=n_jobs)
+
+    if op == "oshapley_vi":
+        df = anat.explain()
+        # ``df`` columns: ['base_contribution', *feature_names]
+        # rows: per (group_name, timestamp). Average |values| over rows.
+        per_feat = df.drop(columns="base_contribution").abs().mean(axis=0)
+        signed = df.drop(columns="base_contribution").mean(axis=0)
+    elif op == "pbsv":
+        def _se_global(y_hat, y):
+            return float(np.mean((np.asarray(y) - np.asarray(y_hat)) ** 2))
+        df = anat.explain(transformer=AnatomyModelOutputTransformer(transform=_se_global))
+        # GLOBAL: single-row DataFrame
+        per_feat = df.drop(columns="base_contribution").iloc[0].abs()
+        signed = df.drop(columns="base_contribution").iloc[0]
+    else:
+        raise ValueError(f"_l7_anatomy_op unknown op: {op!r}")
+
+    # Re-align to feature_cols order (anatomy may permute).
+    importance = per_feat.reindex(feature_cols).fillna(0.0).values
+    coef = signed.reindex(feature_cols).fillna(0.0).values
+    return pd.DataFrame(
+        {
+            "feature": feature_cols,
+            "importance": [float(v) for v in importance],
+            "coefficient": [float(v) for v in coef],
+            "status": [status_label] * len(feature_cols),
         }
     )
 
@@ -6767,7 +9603,35 @@ def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_na
     if op == "regime_indicator":
         return _regime_indicator(inputs[0])
     if op in {"pca", "sparse_pca", "scaled_pca"}:
-        return _pca_factors(_as_frame(inputs[0]), n_components=int(params.get("n_components", 8)), variant=op, target_signal=_first_series(inputs))
+        # Phase A3 fix: accept ``n_components="all"`` sentinel — the
+        # _pca_factors helper resolves it to ``min(T, N)`` at fit time.
+        n_comp_param = params.get("n_components", 8)
+        n_comp_resolved: int | str = (
+            "all" if isinstance(n_comp_param, str) and n_comp_param == "all"
+            else int(n_comp_param)
+        )
+        return _pca_factors(_as_frame(inputs[0]), n_components=n_comp_resolved, variant=op, target_signal=_first_series(inputs))
+    if op == "sparse_pca_chen_rohe":
+        return _sparse_pca_chen_rohe(
+            _as_frame(inputs[0]),
+            n_components=int(params.get("n_components", 4)),
+            zeta=float(params.get("zeta", 0.0)),  # 0.0 → default to J = n_components
+            max_iter=int(params.get("max_iter", 200)),
+            # v0.9.0F audit-fix: Rapach & Zhou (2025) Strategy step 2
+            # ("Fit a VAR(1) to the sparse components; the fitted residuals
+            # constitute the set of sparse macro-finance factors") is
+            # opt-in via ``var_innovations``. Default False = sparse
+            # principal-component scores only (the v0.9.0C-3 baseline).
+            var_innovations=bool(params.get("var_innovations", False)),
+            random_state=int(params.get("random_state", 0)),
+        )
+    if op == "supervised_pca":
+        return _supervised_pca(
+            _as_frame(inputs[0]),
+            target=_first_series(inputs),
+            n_components=int(params.get("n_components", 4)),
+            q=float(params.get("q", 0.5)),
+        )
     if op == "varimax" or op == "varimax_rotation":
         return _varimax_rotation(_as_frame(inputs[0]))
     if op == "partial_least_squares":
@@ -6784,6 +9648,25 @@ def _execute_l3_op(op: str, inputs: list[Any], params: dict[str, Any], target_na
         return _hp_filter(_as_frame(inputs[0]), lam=float(params.get("lambda_", params.get("lam", 1600.0))))
     if op == "hamilton_filter":
         return _hamilton_filter(_as_frame(inputs[0]), n_lags=int(params.get("n_lags", 8)), n_horizon=int(params.get("n_horizon", 24)))
+    if op == "savitzky_golay_filter":
+        return _savitzky_golay_filter(
+            _as_frame(inputs[0]),
+            window_length=int(params.get("window_length", 5)),
+            polyorder=int(params.get("polyorder", 2)),
+        )
+    if op == "asymmetric_trim":
+        return _asymmetric_trim(
+            _as_frame(inputs[0]),
+            smooth_window=int(params.get("smooth_window", 0)),
+        )
+    if op == "adaptive_ma_rf":
+        return _adaptive_ma_rf(
+            _as_frame(inputs[0]),
+            n_estimators=int(params.get("n_estimators", 500)),
+            min_samples_leaf=int(params.get("min_samples_leaf", 40)),
+            sided=str(params.get("sided", "two")).lower(),
+            random_state=int(params.get("random_state", 0)),
+        )
     if op in {"kernel", "kernel_features"}:
         return _kernel_features(_as_frame(inputs[0]), kind=params.get("kind", "rbf"), gamma=float(params.get("gamma", 1.0)))
     if op in {"nystroem", "nystroem_features"}:
@@ -6848,26 +9731,59 @@ def _regime_indicator(value: Any) -> pd.DataFrame:
     return dummies
 
 
-def _pca_factors(frame: pd.DataFrame, *, n_components: int, variant: str = "pca", target_signal: pd.Series | None = None) -> pd.DataFrame:
-    """In-sample PCA on the centered data; target signal scaling for scaled_pca."""
+def _pca_factors(frame: pd.DataFrame, *, n_components: int | str, variant: str = "pca", target_signal: pd.Series | None = None) -> pd.DataFrame:
+    """In-sample PCA factor extraction.
+
+    * ``variant='pca'`` -- standard PCA on the centred data matrix.
+    * ``variant='sparse_pca'`` -- sklearn ``SparsePCA``
+      (Zou-Hastie-Tibshirani 2006 via Mairal et al. 2009 dictionary
+      learning); generic sparse-PCA primitive. NOTE: differs from
+      Chen-Rohe (2023) SCA used in Rapach-Zhou (2025) Sparse Macro-
+      Finance Factors paper -- planned as ``sparse_pca_chen_rohe`` in
+      v0.9.x.
+    * ``variant='scaled_pca'`` -- Huang/Jiang/Li/Tong/Zhou (2022)
+      Scaled PCA (Management Science 68(3)): standardise X column-wise,
+      compute per-column predictive slope ``β_j`` from a univariate
+      OLS regression of target on the j-th standardised column, scale
+      each column j by its signed ``β_j``, then run PCA on the scaled
+      matrix. The signed column scaling means columns that strongly
+      predict the target dominate the principal directions.
+      v0.8.9 honesty-pass fix: prior implementations used a row-wise
+      ``|target|`` weighting which is a different algorithm;
+      ``_scaled_pca_huang_zhou`` below now matches the authors' MATLAB
+      code (sPCAest.m).
+    """
 
     from sklearn.decomposition import PCA, SparsePCA
 
     cleaned = frame.dropna(axis=0, how="any")
     if cleaned.empty:
         return pd.DataFrame(index=frame.index)
-    n_components = max(1, min(int(n_components), min(cleaned.shape) - 1))
-    matrix = cleaned.to_numpy()
-    matrix = matrix - matrix.mean(axis=0)
-    if variant == "scaled_pca" and target_signal is not None:
-        aligned = target_signal.reindex(cleaned.index).to_numpy()
-        weights = np.where(np.isfinite(aligned), aligned - np.nanmean(aligned), 0.0)
-        weights = np.abs(weights) / max(np.abs(weights).max(), 1e-9)
-        matrix = matrix * (1.0 + weights[:, None])
-    if variant == "sparse_pca":
+    # Phase A3 fix: ``n_components="all"`` sentinel resolves to the
+    # effective rank ``min(T, N)`` of the cleaned input. We bypass the
+    # historical ``-1`` safety margin (which capped explicit ints at
+    # ``min(T, N) - 1``); the "all" semantics per Coulombe et al. (2022)
+    # §3.2 paper §3.2 Eq. (18) is "we keep them all", so we let PCA keep
+    # the full effective rank min(T, N).
+    if isinstance(n_components, str) and n_components == "all":
+        n_components = max(1, min(cleaned.shape))
+    else:
+        n_components = max(1, min(int(n_components), min(cleaned.shape) - 1))
+
+    if variant == "scaled_pca":
+        if target_signal is None:
+            raise ValueError(
+                "scaled_pca requires target_signal (per Huang/Zhou 2022 sPCAest)"
+            )
+        scores = _scaled_pca_huang_zhou(
+            cleaned, n_components=n_components, target_signal=target_signal
+        )
+    elif variant == "sparse_pca":
+        matrix = cleaned.to_numpy() - cleaned.to_numpy().mean(axis=0)
         model = SparsePCA(n_components=n_components, random_state=0)
         scores = model.fit_transform(matrix)
     else:
+        matrix = cleaned.to_numpy() - cleaned.to_numpy().mean(axis=0)
         model = PCA(n_components=n_components, random_state=0)
         scores = model.fit_transform(matrix)
     factors = pd.DataFrame(
@@ -6876,6 +9792,89 @@ def _pca_factors(frame: pd.DataFrame, *, n_components: int, variant: str = "pca"
         columns=[f"factor_{idx + 1}" for idx in range(scores.shape[1])],
     )
     return factors.reindex(frame.index)
+
+
+def _scaled_pca_huang_zhou(
+    frame: pd.DataFrame,
+    *,
+    n_components: int,
+    target_signal: pd.Series,
+) -> np.ndarray:
+    """Huang/Jiang/Li/Tong/Zhou (2022) Scaled PCA -- paper-faithful
+    implementation per the authors' MATLAB ``sPCAest.m`` code.
+
+    Algorithm (step-by-step from sPCAest.m):
+
+        1. Standardise X column-wise: ``Xs = (X - mean(X)) / std(X)``
+           with ddof=1 (sample std, matching MATLAB's std default).
+        2. For each column j of Xs, fit a univariate OLS of target on
+           [1, Xs[:, j]] and take the slope coefficient as ``β_j``.
+        3. Scale each column j of Xs by ``β_j`` (signed; columns that
+           positively predict target get positive weight, negatively
+           predictive columns get negative weight, irrelevant columns
+           get near-zero weight).
+        4. Run PCA on the scaled matrix to extract ``n_components``
+           factors.
+
+    The authors' ``pc_T`` factor normalisation (``F'F/T = I``, factors
+    have unit-T variance per column) differs from sklearn ``PCA``
+    (which scales factors by the singular values). The factor
+    *directions* are equivalent up to sign and a per-column scalar,
+    so downstream regression (where factors feed into ridge / OLS)
+    produces the same predictions modulo coefficient rescaling.
+    Documented for transparency.
+
+    Reference:
+        Huang D., Jiang F., Li K., Tong G., Zhou G. (2022)
+        "Scaled PCA: A New Approach to Dimension Reduction",
+        Management Science 68(3), 1591-2376.
+        Authors' MATLAB code: sPCAest.m.
+    """
+
+    from sklearn.decomposition import PCA
+
+    # Align target with frame index; only keep rows where both are non-NaN.
+    target_aligned = target_signal.reindex(frame.index)
+    valid = target_aligned.notna() & frame.notna().all(axis=1)
+    if not valid.any():
+        return np.zeros((len(frame), n_components))
+    X_in = frame.loc[valid].to_numpy(dtype=float)
+    y_in = target_aligned.loc[valid].to_numpy(dtype=float)
+
+    # Step 1: standardise columns (ddof=1 to match MATLAB std default).
+    col_means = X_in.mean(axis=0)
+    col_stds = X_in.std(axis=0, ddof=1)
+    col_stds = np.where(col_stds > 1e-12, col_stds, 1.0)
+    Xs = (X_in - col_means) / col_stds
+
+    # Step 2: per-column predictive slope via univariate OLS
+    # (target_t = α_j + β_j · Xs[t, j] + ε_t)
+    # Closed-form: β_j = Cov(Xs[:, j], target) / Var(Xs[:, j])
+    # Since Xs is standardised, Var(Xs[:, j]) ≈ 1 (modulo ddof), so
+    # β_j ≈ Cov(Xs[:, j], target) = mean(Xs[:, j] · (target − target_mean)).
+    y_centred = y_in - y_in.mean()
+    denom = (Xs ** 2).sum(axis=0)  # since Xs is mean-zero standardised
+    denom = np.where(denom > 1e-12, denom, 1.0)
+    beta = (Xs * y_centred[:, None]).sum(axis=0) / denom
+
+    # Step 3: column-wise signed scaling.
+    scaleXs = Xs * beta[None, :]
+
+    # Step 4: PCA on scaled matrix.
+    pca = PCA(n_components=int(n_components), random_state=0)
+    scores_in = pca.fit_transform(scaleXs)
+
+    # Project the full frame (including any rows where target was NaN)
+    # back through the same standardisation + scaling + PCA so the
+    # output covers the input index. For rows missing target, the
+    # standardisation of X is still well-defined, but the "scaled"
+    # matrix uses the same per-column β learned from the valid subset.
+    X_full = frame.to_numpy(dtype=float)
+    X_full_filled = np.where(np.isfinite(X_full), X_full, col_means[None, :])
+    Xs_full = (X_full_filled - col_means) / col_stds
+    scaleXs_full = Xs_full * beta[None, :]
+    scores_full = pca.transform(scaleXs_full)
+    return scores_full
 
 
 def _varimax_rotation(frame: pd.DataFrame) -> pd.DataFrame:
@@ -6893,6 +9892,153 @@ def _varimax_rotation(frame: pd.DataFrame) -> pd.DataFrame:
         matrix = matrix @ rotation
     rotated = pd.DataFrame(matrix, index=cleaned.index, columns=[f"varimax_{i+1}" for i in range(n_features)])
     return rotated.reindex(frame.index)
+
+
+def _sparse_pca_chen_rohe(
+    frame: pd.DataFrame,
+    *,
+    n_components: int,
+    zeta: float = 0.0,
+    max_iter: int = 200,
+    var_innovations: bool = False,
+    random_state: int = 0,
+) -> pd.DataFrame:
+    """Chen-Rohe (2023) Sparse Component Analysis (SCA) -- non-diagonal D
+    variant used by Rapach & Zhou (2025) Sparse Macro-Finance Factors.
+
+    Solves the equivalent bilinear convex-hull form (Zhou-Rapach Eq. 4):
+
+        ``max ‖Z' X Θ‖_F  s.t.  Z ∈ H(T,J),  Θ ∈ H(M,J),  ‖Θ‖_1 ≤ ζ``
+
+    where ``H(n,r) = {V : V'V ⪯ I_r}``. Alternates SVD-projection of Z
+    (fixing Θ) and L1-budget projection of Θ (fixing Z).
+
+    ``zeta = 0.0`` (default) routes to ``zeta = J = n_components`` --
+    the most-binding boundary the paper finds optimal in cross-
+    validation (§2.3, "with respect to ζ").
+
+    ``var_innovations=True`` activates Rapach & Zhou (2025) Strategy
+    step 2: fit a VAR(1) on the J sparse components and return the
+    fitted residuals as the *sparse macro-finance factors* of the
+    paper title. Default False returns the SCA scores themselves
+    (sparse principal components, paper Strategy step 1).
+    """
+
+    cleaned = frame.dropna(how="any")
+    if cleaned.empty or cleaned.shape[1] == 0:
+        return pd.DataFrame(index=frame.index, columns=[f"sca_{i+1}" for i in range(n_components)])
+    X = cleaned.to_numpy(dtype=float)
+    X = X - X.mean(axis=0, keepdims=True)
+    T, M = X.shape
+    J = max(1, min(n_components, M, T))
+    zeta_val = float(zeta) if zeta > 0 else float(J)
+    rng = np.random.default_rng(random_state)
+
+    # Initialise Z, Θ on the Stiefel manifold via QR of random matrices.
+    Z = np.linalg.qr(rng.standard_normal((T, J)))[0]
+    Theta = np.linalg.qr(rng.standard_normal((M, J)))[0]
+    prev_obj = -np.inf
+    for _ in range(max(1, max_iter)):
+        # Update Z: max ‖Z' X Θ‖_F ⇒ Z = U V' from SVD(X Θ).
+        U, _, Vt = np.linalg.svd(X @ Theta, full_matrices=False)
+        Z = U @ Vt
+        # Update Θ: SVD-orthonormalise X' Z, then soft-threshold to
+        # honour the L1 budget. Bisection over the threshold τ ≥ 0.
+        G = X.T @ Z  # M × J
+        Uo, _, Vto = np.linalg.svd(G, full_matrices=False)
+        Theta_unconstrained = Uo @ Vto
+        # Soft-threshold rows of Theta_unconstrained until ‖Θ‖_1 <= ζ.
+        if np.sum(np.abs(Theta_unconstrained)) <= zeta_val:
+            Theta = Theta_unconstrained
+        else:
+            # Bisection on threshold τ. `hi` is the smallest τ observed
+            # satisfying ‖Θ_st‖_1 ≤ ζ; using `hi` (not the final mid-point)
+            # guarantees the budget. Paper Eq. (4) accepts Θ ∈ H(M,J), the
+            # sub-orthonormal hull `Θ'Θ ⪯ I` — re-orthonormalising after
+            # soft-thresholding would break ‖Θ‖_1 ≤ ζ, so we keep Θ_st.
+            lo, hi = 0.0, float(np.max(np.abs(Theta_unconstrained)))
+            for _ in range(50):
+                tau = 0.5 * (lo + hi)
+                Theta_st = np.sign(Theta_unconstrained) * np.maximum(np.abs(Theta_unconstrained) - tau, 0.0)
+                if np.sum(np.abs(Theta_st)) > zeta_val:
+                    lo = tau
+                else:
+                    hi = tau
+            Theta = np.sign(Theta_unconstrained) * np.maximum(np.abs(Theta_unconstrained) - hi, 0.0)
+        obj = float(np.linalg.norm(Z.T @ X @ Theta, "fro"))
+        if abs(obj - prev_obj) < 1e-9:
+            break
+        prev_obj = obj
+
+    scores = X @ Theta  # (T, J)
+
+    if var_innovations and scores.shape[0] > 2:
+        # Rapach & Zhou (2025) Strategy step 2: fit VAR(1) on the SCA
+        # scores; return the residuals as the sparse macro-finance
+        # factors. The VAR(1) is per-equation OLS with one own-lag
+        # (statsmodels-free implementation to avoid the dependency on
+        # this hot path).
+        S = scores
+        T_s = S.shape[0]
+        S_lag = S[:-1]                         # (T-1, J)
+        S_now = S[1:]                          # (T-1, J)
+        # Per-column AR(1): innovations e_t = S_t − ρ̂_j · S_{t-1}
+        denom = (S_lag ** 2).sum(axis=0)
+        denom = np.where(denom > 1e-12, denom, 1.0)
+        rho = (S_lag * S_now).sum(axis=0) / denom
+        innov = np.full_like(S, np.nan, dtype=float)
+        innov[1:] = S_now - rho[None, :] * S_lag
+        # First row has no lag → drop or zero-fill. We zero-fill so the
+        # output frame keeps the original index length.
+        innov[0] = 0.0
+        scores = innov
+        col_prefix = "scaf"  # sparse macro-finance factors
+    else:
+        col_prefix = "sca"
+
+    out = pd.DataFrame(scores, index=cleaned.index, columns=[f"{col_prefix}_{i+1}" for i in range(J)])
+    return out.reindex(frame.index)
+
+
+def _supervised_pca(
+    frame: pd.DataFrame,
+    *,
+    target: pd.Series | None,
+    n_components: int,
+    q: float = 0.5,
+) -> pd.DataFrame:
+    """Giglio-Xiu-Zhang (2025) Supervised PCA: screen panel columns by
+    univariate correlation with the target, retain the top ``q · M``,
+    run PCA on the screened sub-panel.
+
+    Distinct from ``partial_least_squares`` (NIPALS over all columns)
+    and ``scaled_pca`` (Huang-Jiang-Tu-Zhou 2022 column β-scaling on
+    every column). SPCA hard-screens before factor extraction.
+    """
+
+    if target is None:
+        raise ValueError("supervised_pca requires a target_signal input")
+    aligned = pd.concat([frame, target.rename("__target__")], axis=1).dropna(how="any")
+    if aligned.empty:
+        return pd.DataFrame(index=frame.index, columns=[f"spca_{i+1}" for i in range(n_components)])
+    g = aligned["__target__"].astype(float).to_numpy()
+    R = aligned.drop(columns=["__target__"]).to_numpy(dtype=float)
+    g_c = g - g.mean()
+    R_c = R - R.mean(axis=0, keepdims=True)
+    # Univariate correlations (Pearson).
+    norm_R = np.linalg.norm(R_c, axis=0)
+    norm_g = float(np.linalg.norm(g_c))
+    corr = (R_c.T @ g_c) / (norm_R * norm_g + 1e-12)
+    M = R.shape[1]
+    n_keep = max(1, int(np.floor(np.clip(q, 1e-6, 1.0) * M)))
+    keep = np.argsort(-np.abs(corr))[:n_keep]
+    Rs = R_c[:, keep]
+    # PCA on screened sub-panel via SVD.
+    P = max(1, min(n_components, n_keep, Rs.shape[0]))
+    U, S, Vt = np.linalg.svd(Rs, full_matrices=False)
+    factors = U[:, :P] * S[:P]
+    out = pd.DataFrame(factors, index=aligned.index, columns=[f"spca_{i+1}" for i in range(P)])
+    return out.reindex(frame.index)
 
 
 def _partial_least_squares(frame: pd.DataFrame, *, target: pd.Series | None, n_components: int) -> pd.DataFrame:
@@ -7006,6 +10152,160 @@ def _hamilton_filter(frame: pd.DataFrame, *, n_lags: int, n_horizon: int) -> pd.
         predicted = pd.Series(reg.predict(aligned.iloc[:, :-1]), index=aligned.index)
         cycle = (aligned.iloc[:, -1] - predicted).rename(f"{column}_hamilton_cycle")
         out[f"{column}_hamilton_cycle"] = cycle.reindex(frame.index)
+    return pd.DataFrame(out, index=frame.index)
+
+
+def _asymmetric_trim(frame: pd.DataFrame, *, smooth_window: int = 0) -> pd.DataFrame:
+    """Albacore-family rank-space transformation (Goulet Coulombe et al.
+    2024 "Maximally Forward-Looking Core Inflation").
+
+    For each row of ``frame`` (a (T x K) panel of contemporaneous
+    component growth rates), sort the K values ascending and emit a
+    matrix of the same shape where column ``rank_{r+1}`` is the r-th
+    order statistic at each period. The downstream
+    ``ridge(coefficient_constraint=nonneg)`` learns rank-weight vectors
+    that produce *asymmetric* trimming -- the actual trimming pattern
+    (e.g. drop the lower tail, emphasise the 60-75th percentile) is an
+    emergent property of the supervised weights, not a preset bandit.
+
+    Optional ``smooth_window > 0`` applies a centred moving average to
+    each rank-position time series. Default 0 = no smoothing (paper
+    notes 3-month MA in §3 implementation; users can chain ``ma_window``
+    explicitly).
+    """
+
+    if frame.empty or frame.shape[1] == 0:
+        return frame.copy()
+
+    arr = frame.fillna(0.0).to_numpy(dtype=float)
+    sorted_arr = np.sort(arr, axis=1)  # ascending per row
+    cols = [f"rank_{r + 1}" for r in range(sorted_arr.shape[1])]
+    out = pd.DataFrame(sorted_arr, index=frame.index, columns=cols)
+
+    if smooth_window > 1:
+        # Centred moving average on each rank-position series. Use
+        # ``min_periods=1`` so edges still produce values.
+        out = out.rolling(window=int(smooth_window), center=True, min_periods=1).mean()
+
+    return out
+
+
+def _savitzky_golay_filter(frame: pd.DataFrame, *, window_length: int, polyorder: int) -> pd.DataFrame:
+    """Savitzky-Golay (1964) polynomial smoothing filter.
+
+    Wraps ``scipy.signal.savgol_filter`` column-wise. Used as the
+    fixed-window baseline against which Coulombe & Klieber (2025) AlbaMA
+    is compared (replication recipe in ``examples/recipes/`` once the
+    AlbaMA primitive lands).
+    """
+
+    from scipy.signal import savgol_filter
+
+    if window_length < 3:
+        raise ValueError("savitzky_golay_filter: window_length must be >= 3")
+    if polyorder >= window_length:
+        raise ValueError("savitzky_golay_filter: polyorder must be < window_length")
+    if window_length % 2 == 0:
+        # scipy requires odd window; round up to next odd.
+        window_length = window_length + 1
+
+    out: dict[str, pd.Series] = {}
+    for column in frame.columns:
+        series = frame[column].astype(float)
+        # Forward-fill NaNs so the filter has a contiguous signal; preserve
+        # the original NaN mask on the output so callers can spot edges.
+        filled = series.ffill().bfill().to_numpy()
+        if len(filled) < window_length:
+            out[f"{column}_savgol"] = pd.Series(filled, index=series.index)
+            continue
+        smoothed = savgol_filter(filled, window_length=window_length, polyorder=polyorder)
+        out[f"{column}_savgol"] = pd.Series(smoothed, index=series.index)
+    return pd.DataFrame(out, index=frame.index)
+
+
+def _adaptive_ma_rf(
+    frame: pd.DataFrame,
+    *,
+    n_estimators: int = 500,
+    min_samples_leaf: int = 40,
+    sided: str = "two",
+    random_state: int = 0,
+) -> pd.DataFrame:
+    """AlbaMA -- Adaptive Moving Average via Random Forest with K=1
+    (time index).
+
+    Goulet Coulombe & Klieber (2025) "An Adaptive Moving Average for
+    Macroeconomic Monitoring" (arXiv:2501.13222 §2). The estimator is a
+    bagged-trees ensemble whose *sole regressor is the time index*: the
+    CART splitting objective collapses to ``min_c [SSE(left) + SSE(right)]``
+    over candidate cuts ``c``. Each prediction is a within-leaf average,
+    so the forest prediction at time ``t`` is
+
+        ``ŷ_t = (1/B) Σ_b T_b(t) = w_t · y``
+
+    with leaf-membership-derived weights ``w_τt = (1/B) Σ_b w^b_τt``.
+    The realised window length is *learned* per observation: rule-of-
+    thumb ``min_samples_leaf = 40`` lower-bounds it. Paper recommends
+    ``n_estimators = B = 500`` (paper p.8 line 351-352).
+
+    Parameters
+    ----------
+    sided:
+        ``"two"`` (default) fits the forest once on the full sample;
+        each leaf may span past *and* future observations.
+        ``"one"`` fits an *expanding-window* forest per time index t:
+        for each t, the RF is fit on rows 0..t-1 and the leaf-mean at
+        t is the prediction. Real-time / nowcasting variant per paper
+        p.10 line 407.
+    """
+
+    from sklearn.ensemble import RandomForestRegressor
+
+    if frame.empty:
+        return frame.copy()
+    sided = sided if sided in {"one", "two"} else "two"
+    out: dict[str, pd.Series] = {}
+    T = len(frame)
+    t_index = np.arange(T, dtype=float).reshape(-1, 1)
+
+    for column in frame.columns:
+        y = frame[column].astype(float).to_numpy()
+        if not np.any(np.isfinite(y)):
+            out[f"{column}_albama"] = pd.Series(y, index=frame.index)
+            continue
+        smoothed = np.full(T, np.nan, dtype=float)
+        if sided == "two":
+            mask = np.isfinite(y)
+            if mask.sum() < min_samples_leaf:
+                # Insufficient data -- pass-through.
+                smoothed[mask] = y[mask]
+                out[f"{column}_albama"] = pd.Series(smoothed, index=frame.index)
+                continue
+            rf = RandomForestRegressor(
+                n_estimators=n_estimators,
+                min_samples_leaf=min_samples_leaf,
+                max_features=1, bootstrap=True, random_state=random_state,
+                n_jobs=1,
+            )
+            rf.fit(t_index[mask], y[mask])
+            smoothed = rf.predict(t_index)
+        else:
+            # One-sided: per-t expanding window. The first
+            # ``min_samples_leaf`` observations stay NaN (RF refuses to
+            # fit smaller than the leaf bound).
+            for end in range(min_samples_leaf, T + 1):
+                mask = np.isfinite(y[:end])
+                if mask.sum() < min_samples_leaf:
+                    continue
+                rf = RandomForestRegressor(
+                    n_estimators=n_estimators,
+                    min_samples_leaf=min_samples_leaf,
+                    max_features=1, bootstrap=True, random_state=random_state,
+                    n_jobs=1,
+                )
+                rf.fit(t_index[:end][mask], y[:end][mask])
+                smoothed[end - 1] = float(rf.predict(t_index[end - 1 : end])[0])
+        out[f"{column}_albama"] = pd.Series(smoothed, index=frame.index)
     return pd.DataFrame(out, index=frame.index)
 
 

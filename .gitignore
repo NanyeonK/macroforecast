@@ -75,3 +75,7 @@ macrocast_output/
 # Local transport artifacts (git format-patch / git bundle output)
 *.patch
 *.bundle
+
+# graphify artifacts (large; not source)
+graphify-input/
+graphify-out/

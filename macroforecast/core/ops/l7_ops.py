@@ -109,13 +109,29 @@ DEFAULT_FIGURE_MAPPING = {
     "cumulative_r2_contribution": "bar_global",
     "fevd": "historical_decomp_stacked_bar",
     "historical_decomposition": "historical_decomp_stacked_bar",
-    "generalized_irf": "irf_with_confidence_band",
+    # v0.8.9 honesty pass: ``orthogonalised_irf`` is the operational name for
+    # statsmodels Cholesky orthogonalised IRFs. The op previously called
+    # ``generalized_irf`` was misnamed (it shipped Cholesky, not Pesaran-Shin
+    # 1998 GIRF). ``generalized_irf`` is now reserved for the order-invariant
+    # Pesaran-Shin variant and remains future-gated until v0.9.x.
+    "orthogonalised_irf": "irf_with_confidence_band",
     "forecast_decomposition": "historical_decomp_stacked_bar",
     "group_aggregate": "bar_grouped",
     "lineage_attribution": "bar_grouped_by_pipeline",
     "rolling_recompute": "feature_heatmap_over_time",
     "bootstrap_jackknife": "bar_global",
     "transformation_attribution": "shapley_waterfall",
+    # v0.9 Phase 1 promotion: dual_decomposition (linear families).
+    # Coulombe / Goebel / Klieber (2024). Output artifact carries inline
+    # portfolio diagnostics; figure type uses a generic bar layout for
+    # the per-training-row aggregate-weight summary.
+    "dual_decomposition": "bar_global",
+    # v0.9.1 dev-stage v0.9.0D promotion: anatomy-adapter ops (Borup
+    # et al. 2022 "Anatomy of Out-of-Sample Forecasting Accuracy").
+    # Path B = final-window fit + status='degraded' warning;
+    # Path A (faithful per-origin refit) lands in v0.9.0E.
+    "oshapley_vi": "bar_global",
+    "pbsv": "bar_global",
 }
 
 # Ops whose v0.1 runtime did not faithfully implement the design's named
@@ -164,6 +180,19 @@ FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
     "recursive_feature_elimination",
     "lasso_path_selection",
     "stability_selection",
+    # v0.9 Phase 2 paper-coverage atomic primitives:
+    # (dual_decomposition was moved to OPERATIONAL_OPS in v0.8.9 Phase 1
+    #  -- linear-family closed-form via the representer theorem.
+    #  Coulombe / Goebel / Klieber (2024) arXiv:2412.13076.)
+    # (``oshapley_vi`` and ``pbsv`` were moved to OPERATIONAL in v0.9.1
+    #  dev-stage v0.9.0D Path B -- final-window-fit anatomy adapter; Path
+    #  A faithful per-origin refit lands in v0.9.0E.)
+    # v0.8.9 honesty pass V2.3: ``generalized_irf`` was misnamed in v0.2 #189
+    # (it shipped Cholesky orthogonalised IRFs, not Pesaran-Shin 1998 GIRF).
+    # Operational Cholesky variant is now ``orthogonalised_irf``;
+    # ``generalized_irf`` is reserved for the true order-invariant
+    # Pesaran-Shin procedure and remains future until a v0.9.x runtime.
+    "generalized_irf",
 )
 
 

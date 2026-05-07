@@ -65,8 +65,44 @@ _F_RIDGE = _f(
         "``grid_search`` / ``random_search`` algorithms can sweep over "
         "leaf_config.tuning_grid['alpha']."
     ),
-    "High-dimensional macro panels with collinear predictors; standard benchmark.",
-    references=(_REF_DESIGN_L4, Reference(citation="Hoerl & Kennard (1970) 'Ridge regression: biased estimation for nonorthogonal problems', Technometrics 12(1).")),
+    "High-dimensional macro panels with collinear predictors; standard benchmark.\n\n"
+    "**v0.9 sub-axes** (default values preserve standard ridge):\n"
+    "* ``params.prior`` -- prior on the coefficients. ``none`` (default) "
+    "keeps standard ridge.\n"
+    "  - ``random_walk`` (operational v0.9.1) -- Goulet Coulombe (2025 "
+    "IJF) 'Time-Varying Parameters as Ridge Regressions' two-step "
+    "closed-form estimator with a random-walk kernel on coefficient "
+    "deviations. Yields per-time β path via the cumulative-sum "
+    "reparametrisation β_k = C_RW · θ_k. Helper "
+    "``_TwoStageRandomWalkRidge``.\n"
+    "  - ``shrink_to_target`` (operational v0.9.1) -- Maximally Forward-"
+    "Looking Core Inflation Albacore_comps Variant A (Goulet Coulombe "
+    "/ Klieber / Barrette / Goebel 2024). ``arg min ‖y − Xw‖² + α‖w − "
+    "w_target‖²`` s.t. ``w ≥ 0``, ``w'1 = 1``. Solved via scipy SLSQP. "
+    "Limit cases: α=0 → unconstrained / NNLS; α→∞ → returns w_target. "
+    "Helper ``_ShrinkToTargetRidge``. Sub-axis params: ``prior_target`` "
+    "(default uniform 1/K), ``prior_simplex`` (default True).\n"
+    "  - ``fused_difference`` (operational v0.9.1) -- Maximally FL "
+    "Albacore_ranks Variant B. ``arg min ‖y − Xw‖² + α‖Dw‖²`` s.t. "
+    "``w ≥ 0``, ``mean(y) = mean(Xw)``, where D is the first-difference "
+    "operator. Pairs with the L3 ``asymmetric_trim`` op (B-6 v0.8.9) "
+    "for rank-space transformation. Limit cases: α=0 → standard OLS / "
+    "NNLS; α→∞ → uniform weights (level set by mean equality). Helper "
+    "``_FusedDifferenceRidge``. Sub-axis params: ``prior_diff_order`` "
+    "(default 1), ``prior_mean_equality`` (default True).\n"
+    "* ``params.coefficient_constraint`` -- sign / cone constraints. "
+    "``none`` (default) is unconstrained; ``nonneg`` (operational v0.8.9) "
+    "implements the assemblage non-negative ridge.\n"
+    "* ``params.vol_model`` (random_walk only) -- volatility model for "
+    "the step-2 Ω_ε reconstruction. ``ewma`` (default; RiskMetrics "
+    "λ=0.94; no extra deps) or ``garch11`` (requires ``arch>=5.0``; "
+    "auto-falls-back to EWMA when missing).",
+    references=(
+        _REF_DESIGN_L4,
+        Reference(citation="Hoerl & Kennard (1970) 'Ridge regression: biased estimation for nonorthogonal problems', Technometrics 12(1)."),
+        Reference(citation="Goulet Coulombe (2025) 'Time-Varying Parameters as Ridge Regressions', International Journal of Forecasting 41:982-1002. doi:10.1016/j.ijforecast.2024.08.006."),
+        Reference(citation="Goulet Coulombe / Klieber / Barrette / Goebel (2024) 'Maximally Forward-Looking Core Inflation' -- Albacore_comps (shrink_to_target Variant A) and Albacore_ranks (fused_difference Variant B)."),
+    ),
     related_options=("lasso", "elastic_net", "lasso_path"),
 )
 
@@ -177,7 +213,7 @@ _F_VAR = _f(
         "``VAR`` and forecasts the target component of the joint system. "
         "Captures cross-series dynamics that single-equation AR misses."
     ),
-    "Multi-series joint forecasting; impulse-response decomposition (paired with L7 ``generalized_irf``).",
+    "Multi-series joint forecasting; impulse-response decomposition (paired with L7 ``orthogonalised_irf`` for Cholesky-identified shocks; ``generalized_irf`` reserved for the future Pesaran-Shin 1998 order-invariant variant).",
     when_not_to_use="High-dimensional panels (VAR scales O(p²)); use BVAR shrinkage instead.",
     references=(_REF_DESIGN_L4, Reference(citation="Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1).")),
     related_options=("bvar_minnesota", "factor_augmented_var", "ar_p"),
@@ -276,10 +312,40 @@ _F_DFM_MM = _f(
 # Tree / boosting / forest
 _F_DECISION_TREE = _f(
     "decision_tree",
-    "Single decision tree (sklearn).",
-    "Cheapest non-linear model. Useful as an ablation against random forests / boosting -- if a single tree matches RF performance, the ensemble isn't buying much.",
-    "Ablation studies; cheap non-linear baselines.",
-    references=(_REF_DESIGN_L4, Reference(citation="Breiman, Friedman, Stone & Olshen (1984) 'Classification and Regression Trees', CRC Press.")),
+    "Single decision tree (sklearn) or Slow-Growing Tree (SGT, in-fit shrinkage).",
+    "Cheapest non-linear model. Useful as an ablation against random forests / boosting -- if a single tree matches RF performance, the ensemble isn't buying much.\n\n"
+    "**v0.9 sub-axis ``params.split_shrinkage`` = η** -- per-split soft-"
+    "weight learning rate. ``0.0`` (default) keeps the standard greedy "
+    "sklearn CART. Non-zero values activate **Slow-Growing Trees** "
+    "(Goulet Coulombe 2024 — operational v0.9.1 dev-stage v0.9.0B-6): a "
+    "*soft-weighted* tree where rows on the side that does not satisfy "
+    "the split rule receive weight ``(1 − η)`` instead of 0. Implements "
+    "Algorithm 1 from the paper exactly: leaf weights propagate "
+    "multiplicatively through every split, the Herfindahl index "
+    "``H_l = Σ(ω²)/(Σω)²`` of the leaf weight vector controls stopping, "
+    "and the leaf prediction is the weighted mean.\n\n"
+    "Limit cases (verified by tests):\n"
+    "  * η = 1.0 → recovers standard CART (hard splits).\n"
+    "  * η ≈ 0.1, H̄ ≈ 0.05 → SGT regime ('matches RF on Linear DGP at "
+    "high R²' per paper Figure 2).\n\n"
+    "**Sub-axis params** (only consulted when split_shrinkage ≠ 0):\n"
+    "  * ``herfindahl_threshold`` = H̄ (default 0.25; smaller → deeper "
+    "tree). Practice: ``{0.05, 0.1, 0.25}`` per paper.\n"
+    "  * ``eta_depth_step`` -- paper rule-of-thumb increases η by "
+    "``eta_depth_step·depth`` per level (default 0.0 keeps η constant).\n"
+    "  * ``max_depth`` -- additional safety bound on tree depth.\n\n"
+    "**Note**: sklearn ``DecisionTreeRegressor`` cannot reproduce SGT "
+    "via post-fit leaf-multiplication because the *splits themselves* "
+    "depend on soft weights (every row, including rule-violators, "
+    "contributes to the SSE objective). The custom helper "
+    "``_SlowGrowingTree`` implements the soft-weighted CART from "
+    "scratch.",
+    "Ablation studies; cheap non-linear baselines; SLOTH single-tree replacement for RF on small samples.",
+    references=(
+        _REF_DESIGN_L4,
+        Reference(citation="Breiman, Friedman, Stone & Olshen (1984) 'Classification and Regression Trees', CRC Press."),
+        Reference(citation="Goulet Coulombe (2024) 'Slow-Growing Trees', in Machine Learning for Econometrics and Related Topics, Studies in Systems, Decision and Control 508 (Springer). doi:10.1007/978-3-031-43601-7_4."),
+    ),
     related_options=("random_forest", "extra_trees", "gradient_boosting"),
 )
 
@@ -299,8 +365,14 @@ _F_RF = _f(
 _F_EXTRA_TREES = _f(
     "extra_trees",
     "Extremely randomized trees (sklearn).",
-    "Like RF but splits at random thresholds (no greedy search). Faster than RF; sometimes lower variance.",
-    "Quick non-linear baseline; large ensemble experiments.",
+    "Like RF but splits at random thresholds (no greedy search). Faster than RF; sometimes lower variance.\n\n"
+    "**v0.9 sub-axis**:\n"
+    "* ``params.max_features`` -- number of predictors considered at each "
+    "split. ``\"sqrt\"`` (default) matches sklearn; ``1`` (operational, "
+    "v0.9) implements Coulombe (2024) 'To Bag is to Prune' Perfectly "
+    "Random Forest baseline (one random feature per split, fully random "
+    "structure).",
+    "Quick non-linear baseline; large ensemble experiments; PRF baseline (max_features=1).",
     references=(_REF_DESIGN_L4, Reference(citation="Geurts, Ernst & Wehenkel (2006) 'Extremely randomized trees', Machine Learning 63(1).")),
     related_options=("random_forest", "gradient_boosting"),
 )
@@ -357,16 +429,48 @@ _F_CAT = _f(
 
 _F_MRF = _f(
     "macroeconomic_random_forest",
-    "Coulombe (2024) GTVP random forest (per-leaf local linear regression).",
+    "Goulet Coulombe (2024) MRF: random walk regularised forest with per-leaf local linear regression and Block Bayesian Bootstrap forecast ensembles.",
     (
-        "Generalised Time-Varying Parameter random forest: each leaf "
-        "fits a local linear regression of y on X. Forest prediction = "
-        "average of leaf-local linear predictions. Captures regime-like "
-        "non-linearities while preserving linear interpretability "
-        "within each regime."
+        "Macroeconomic Random Forest. Each leaf fits a local linear "
+        "regression of y on the state vector S; coefficient series are "
+        "smoothed via random-walk regularisation (``rw_regul`` parameter); "
+        "forecast ensembles use the Block Bayesian Bootstrap (Taddy 2015 "
+        "extension). Surfaces Generalised Time-Varying Parameters (GTVPs) "
+        "via the L7 ``mrf_gtvp`` op.\n\n"
+        "Backed by Ryan Lucas's reference implementation, vendored under "
+        "``macroforecast/_vendor/macro_random_forest/`` with surgical "
+        "numpy 2.x / pandas 2.x compatibility patches (no algorithmic "
+        "changes). Upstream: "
+        "https://github.com/RyanLucas3/MacroRandomForest. No extra "
+        "required -- the family works out of the box.\n\n"
+        "**Citation requirement**: research using this family must cite "
+        "Goulet Coulombe (2024) 'The Macroeconomy as a Random Forest', "
+        "Journal of Applied Econometrics (arXiv:2006.12724) and "
+        "acknowledge the upstream implementation by Ryan Lucas "
+        "(https://github.com/RyanLucas3/MacroRandomForest).\n\n"
+        "Tunable params: ``B`` (bootstrap iterations, default 50), "
+        "``ridge_lambda`` (default 0.1), ``rw_regul`` (RW penalty 0..1, "
+        "default 0.75), ``mtry_frac`` (default 1/3), ``trend_push`` "
+        "(default 1), ``quantile_rate`` (default 0.3), ``fast_rw`` "
+        "(default True), ``parallelise`` (default False), ``n_cores`` "
+        "(default 1)."
     ),
     "Macro forecasting with non-stationary parameter dynamics; alternative to switching models.",
-    references=(_REF_DESIGN_L4, Reference(citation="Coulombe (2024) 'A Neural Phillips Curve and a Deep Output Gap', Journal of Monetary Economics, forthcoming.")),
+    references=(
+        _REF_DESIGN_L4,
+        Reference(
+            citation=(
+                "Goulet Coulombe, P. (2024) 'The Macroeconomy as a Random "
+                "Forest', Journal of Applied Econometrics. arXiv:2006.12724."
+            )
+        ),
+        Reference(
+            citation=(
+                "Lucas, R. (2022) 'MacroRandomForest' (Python implementation). "
+                "https://github.com/RyanLucas3/MacroRandomForest. MIT licence."
+            )
+        ),
+    ),
     related_options=("random_forest", "bvar_minnesota"),
 )
 
@@ -386,16 +490,78 @@ _F_QRF = _f(
 
 _F_BAGGING = _f(
     "bagging",
-    "Bootstrap-aggregating wrapper around any base family.",
+    "Bootstrap-aggregating wrapper around any base family; supports Booging.",
     (
         "``params.base_family`` selects the base estimator; "
         "``params.n_estimators`` (default 50) bootstrap resamples are "
         "fit; predict averages. ``predict_quantiles`` surfaces empirical "
-        "bag-quantiles."
+        "bag-quantiles.\n\n"
+        "**v0.9 sub-axis ``params.strategy``** -- bag composition strategy:\n"
+        "* ``standard`` (default) -- plain Breiman (1996) bagging; "
+        "i.i.d. bootstrap with replacement.\n"
+        "* ``block`` (operational v0.8.9) -- *circular* moving-block "
+        "bootstrap (Künsch 1989 variant: block starts wrap at n via "
+        "modulo) for serially-correlated panels (Taddy 2015 ext. used "
+        "in MRF).\n"
+        "* ``booging`` (operational v0.9.1) -- Goulet Coulombe (2024) "
+        "'To Bag is to Prune'. Outer ``B`` bags of (intentionally over-"
+        "fitted) inner Stochastic Gradient Boosted Trees + Data "
+        "Augmentation: each predictor column is duplicated as ``X̃_k = "
+        "X_k + N(0, (σ_k · da_noise_frac)²)``; per-bag column-drop of "
+        "rate ``da_drop_rate`` (default 0.2); inner SGB at "
+        "``inner_n_estimators=500, inner_learning_rate=0.1, inner_"
+        "max_depth=4, inner_subsample=0.5``. Sampling without "
+        "replacement at ``max_samples=0.75``. Outer ``n_estimators=B`` "
+        "(default 100) replaces tuning the boosting depth ``S`` -- the "
+        "bag-prune theorem (paper §2) lets us over-fit the inner SGB "
+        "and let the bag average prune. Helper ``_BoogingWrapper``.\n"
+        "* ``sequential_residual`` -- legacy alias for ``booging`` "
+        "retained for back-compat. Pre-2026-05-07 plan sketch (\"K "
+        "rounds bag-on-residuals\") was an inaccurate description of "
+        "the same paper's algorithm; the option now routes to the "
+        "outer-bagging-of-inner-SGB construction."
     ),
-    "Variance reduction on noisy series; quantile bands without quantile regression.",
-    references=(_REF_DESIGN_L4, Reference(citation="Breiman (1996) 'Bagging Predictors', Machine Learning 24(2).")),
-    related_options=("random_forest", "extra_trees", "quantile_regression_forest"),
+    "Variance reduction on noisy series; quantile bands without quantile regression; Booging / block-bootstrap recipes; over-fit-then-bag pruning.",
+    references=(
+        _REF_DESIGN_L4,
+        Reference(citation="Breiman (1996) 'Bagging Predictors', Machine Learning 24(2)."),
+        Reference(citation="Künsch (1989) 'The jackknife and the bootstrap for general stationary observations', Annals of Statistics 17(3) -- moving-block variant."),
+        Reference(citation="Goulet Coulombe (2024) 'To Bag is to Prune', arXiv:2008.07063 -- Booging algorithm."),
+    ),
+    related_options=("random_forest", "extra_trees", "quantile_regression_forest", "gradient_boosting"),
+)
+
+
+# ---------------------------------------------------------------------------
+# v0.9 Phase 2 paper-coverage atomic additions.
+#
+# Decomposition discipline: only the *atomic* primitives that cannot be
+# expressed as a recipe pattern over existing ops + sub-axes get a new
+# family entry. Paper methods that decompose (PRF / Booging / 2SRR /
+# HNN / SGT / Assemblage / etc.) are captured as recipe patterns in
+# ``examples/recipes/`` and as sub-axis options on existing families,
+# not as standalone L4 families.
+# ---------------------------------------------------------------------------
+
+_F_MARS = _f(
+    "mars",
+    "Multivariate Adaptive Regression Splines (Friedman 1991).",
+    (
+        "Greedy forward / backward selection of piecewise-linear hinge "
+        "basis functions ``max(0, x - c)`` and their products. Atomic "
+        "primitive -- sklearn does not provide a MARS implementation. "
+        "Runtime wraps ``pyearth`` as an optional dep; install via "
+        "``pip install macroforecast[mars]``. Required as the base "
+        "learner for the Coulombe (2024) 'MARSquake' recipe "
+        "(``bagging(base_family=mars, ...)``).\n\n"
+        "Operational from v0.9.0; raises ``NotImplementedError`` with "
+        "an install hint when ``pyearth`` is not present (mirrors the "
+        "xgboost / lightgbm / catboost optional-dep error pattern)."
+    ),
+    "Non-linear regression with interpretable basis functions; MARSquake recipe base learner.",
+    when_not_to_use="Without ``[mars]`` extra installed -- raises a clear NotImplementedError.",
+    references=(_REF_DESIGN_L4, Reference(citation="Friedman (1991) 'Multivariate Adaptive Regression Splines', Annals of Statistics 19(1).")),
+    related_options=("gradient_boosting", "decision_tree", "bagging"),
 )
 
 
@@ -424,6 +590,38 @@ _F_SVR_POLY = _f(
     related_options=("svr_rbf", "svr_linear"),
 )
 
+_F_KERNEL_RIDGE = _f(
+    "kernel_ridge",
+    "Kernel Ridge Regression -- closed-form non-linear ridge in the dual.",
+    (
+        "Ridge regression with a non-linear kernel: "
+        "``ŷ(x) = Σ_i α_i K(x, x_i) + b`` where the dual coefficients "
+        "``α = (K + λ I)⁻¹ y`` are recovered in closed form. Operational "
+        "v0.9.1 dev-stage v0.9.0F (audit-fix). Surfaces as a first-class "
+        "L4 family because Coulombe / Surprenant / Leroux / Stevanovic "
+        "(2022 JAE) 'How is Machine Learning Useful for Macroeconomic "
+        "Forecasting?' Eq. 16 / §3.1.1 uses KRR as the headline "
+        "non-linearity feature in the macro horse race.\n\n"
+        "**Tunable params**: ``alpha`` (= ridge penalty λ; default 1.0); "
+        "``kernel`` ('rbf' default / 'linear' / 'poly' / 'sigmoid' / "
+        "'laplacian' / 'chi2' -- any sklearn-supported kernel); "
+        "``gamma`` (RBF bandwidth, default sklearn auto = 1/n_features); "
+        "``degree`` (poly kernel only, default 3); ``coef0`` (poly / "
+        "sigmoid, default 1.0).\n\n"
+        "Distinct from ``svr_rbf`` (ε-insensitive loss, sparsity in "
+        "support vectors) and from ``ridge`` (linear). The dual "
+        "representation also pairs with the L7 ``dual_decomposition`` "
+        "op for kernel-weighted training-target attribution."
+    ),
+    "Non-linear macro forecasting baselines; KRR vs SVR-RBF / RF ablations; replicating Coulombe et al. (2022) Feature 1 nonlinearity test.",
+    references=(
+        _REF_DESIGN_L4,
+        Reference(citation="Saunders, Gammerman & Vovk (1998) 'Ridge Regression Learning Algorithm in Dual Variables', ICML."),
+        Reference(citation="Coulombe, Leroux, Stevanovic & Surprenant (2022) 'How is Machine Learning Useful for Macroeconomic Forecasting?', Journal of Applied Econometrics 37(5): 920-964 -- Eq. 16 + §3.1.1."),
+    ),
+    related_options=("ridge", "svr_rbf", "dual_decomposition"),
+)
+
 _F_KNN = _f(
     "knn", "k-nearest-neighbours regression.",
     "Memorises training data; predicts via nearest-neighbour averaging. Cheap, non-parametric.",
@@ -434,7 +632,16 @@ _F_KNN = _f(
 
 _F_MLP = _f(
     "mlp", "Multi-layer perceptron (sklearn).",
-    "Feed-forward NN with ReLU activations. ``params.hidden_layer_sizes`` controls the architecture.",
+    "Feed-forward NN with ReLU activations. ``params.hidden_layer_sizes`` controls the architecture.\n\n"
+    "**v0.9 sub-axes** (apply equally to mlp / lstm / gru / transformer):\n"
+    "* ``params.architecture`` -- network topology. ``standard`` (default) "
+    "is the standard feed-forward / sequence variant. ``hemisphere`` "
+    "(future) implements Coulombe / Frenette / Klieber (2025 JAE) HNN "
+    "with separate mean / variance hemispheres joined by a constraint "
+    "loss.\n"
+    "* ``params.loss`` -- objective. ``mse`` (default), ``quantile`` "
+    "(operational via forecast_object=quantile), ``volatility_emphasis`` "
+    "(future, HNN constraint loss).",
     "Non-linear regression baselines; ablations against deep NN.",
     references=(_REF_DESIGN_L4,),
     related_options=("lstm", "gru", "transformer"),
@@ -594,8 +801,10 @@ register(
     _F_AR_P, _F_VAR, _F_FAR, _F_PCR, _F_FAVAR, _F_BVAR_MIN, _F_BVAR_NIW, _F_DFM_MM,
     _F_DECISION_TREE, _F_RF, _F_EXTRA_TREES, _F_GB, _F_XGB, _F_LGBM, _F_CAT,
     _F_MRF, _F_QRF, _F_BAGGING,
-    _F_SVR_LINEAR, _F_SVR_RBF, _F_SVR_POLY, _F_KNN,
+    _F_SVR_LINEAR, _F_SVR_RBF, _F_SVR_POLY, _F_KERNEL_RIDGE, _F_KNN,
     _F_MLP, _F_LSTM, _F_GRU, _F_TRANSFORMER,
+    # v0.9 Phase 2 paper-coverage atomic additions
+    _F_MARS,
     _S_DIRECT, _S_ITERATED, _S_PATH_AVG,
     _TS_EXPANDING, _TS_ROLLING, _TS_FIXED,
     _RP_EVERY, _RP_EVERY_N, _RP_SINGLE,

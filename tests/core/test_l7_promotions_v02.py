@@ -2,8 +2,10 @@
 
 * #189: ``fevd`` / ``historical_decomposition`` / ``generalized_irf``
   (orthogonalised IRFs via statsmodels VAR results object)
-* #190: ``mrf_gtvp`` (per-leaf time-varying coefficient series from
-  ``_MRFWrapper``)
+* #190: ``mrf_gtvp`` (time-varying coefficient series from the GTVP
+  betas surfaced by ``_MRFExternalWrapper`` — re-anchored to the
+  vendored ``_vendor/macro_random_forest`` reference implementation in
+  v0.8.9)
 * #191: ``lasso_inclusion_frequency`` (bootstrap-resample inclusion
   frequency)
 * #193: ``friedman_h_interaction`` (Friedman & Popescu 2008 H statistic)
@@ -15,7 +17,7 @@ import pandas as pd
 from sklearn.linear_model import Lasso, LinearRegression
 
 from macroforecast.core.runtime import (
-    _MRFWrapper,
+    _MRFExternalWrapper,
     _friedman_h_table,
     _lasso_inclusion_frame,
     _mrf_gtvp_coefficient_frame,
@@ -101,11 +103,19 @@ def test_lasso_inclusion_falls_back_when_panel_missing():
 # ---------------------------------------------------------------------------
 
 def test_mrf_gtvp_produces_per_row_coefficient_path():
+    """L7 ``mrf_gtvp`` reads the GTVP β̂(t) series directly from the
+    ``_MRFExternalWrapper._cached_betas`` populated during predict.
+    ``coefficient_path`` length therefore equals the *full panel*
+    size (n_train + n_test) used for the most recent forecast."""
+
     rng = np.random.default_rng(0)
-    n = 60
+    n_train, n_test = 50, 10
+    n = n_train + n_test
     X = pd.DataFrame(rng.normal(size=(n, 3)), columns=list("abc"))
     y = pd.Series(0.5 * X["a"] + rng.normal(scale=0.1, size=n))
-    mrf = _MRFWrapper(n_estimators=8, max_depth=3, random_state=0).fit(X, y)
+    mrf = _MRFExternalWrapper(B=8, parallelise=False, n_cores=1, random_state=0)
+    mrf.fit(X.iloc[:n_train], y.iloc[:n_train])
+    mrf.predict(X.iloc[n_train:])
     artifact = ModelArtifact(
         model_id="m",
         family="macroeconomic_random_forest",
@@ -117,7 +127,8 @@ def test_mrf_gtvp_produces_per_row_coefficient_path():
     assert "coefficient_path" in frame.columns
     for _, row in frame.iterrows():
         assert len(row["coefficient_path"]) == n
-    # Importance: time-average of |β̂(t)|.
+    # Importance: time-average of |β̂(t)| (nan-safe; mrf-web leaves OOS rows
+    # NaN because they're not covered by the in-sample bootstrap).
     assert (frame["importance"] >= 0).all()
 
 
@@ -137,7 +148,9 @@ def test_var_impulse_frame_status_falls_back_for_non_var_model():
         framework="sklearn",
         feature_names=tuple(X.columns),
     )
-    for op_name in ("fevd", "historical_decomposition", "generalized_irf"):
+    # ``generalized_irf`` is now future-gated (v0.8.9 honesty pass V2.3);
+    # the operational Cholesky variant is ``orthogonalised_irf``.
+    for op_name in ("fevd", "historical_decomposition", "orthogonalised_irf"):
         frame = _var_impulse_frame(artifact, op_name=op_name)
         assert "status" in frame.columns
         # Non-VAR fall-through is documented.

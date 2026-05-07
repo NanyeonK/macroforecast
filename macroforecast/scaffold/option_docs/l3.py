@@ -226,7 +226,7 @@ _OP_PCA = _o(
 
 _OP_SPARSE_PCA = _o(
     "sparse_pca",
-    "Sparse PCA -- L1-penalised factor loadings.",
+    "Sparse PCA -- L1-penalised factor loadings (sklearn / Zou-Hastie-Tibshirani 2006).",
     (
         "Variant of PCA where loadings are pushed toward zero by an "
         "L1 penalty (``params.alpha``). Yields more interpretable "
@@ -234,8 +234,75 @@ _OP_SPARSE_PCA = _o(
         "sklearn's ``SparsePCA``."
     ),
     "When you want factor loadings to map cleanly onto a small subset of original predictors (interpretability).",
-    when_not_to_use="When pure variance maximisation is more important than interpretability -- use plain ``pca``.",
-    related_options=("pca", "scaled_pca"),
+    when_not_to_use="When pure variance maximisation is more important than interpretability -- use plain ``pca``. For the Chen-Rohe (2023) SCA variant used in Zhou-Rapach (2025) Sparse Macro-Finance Factors, use ``sparse_pca_chen_rohe`` instead.",
+    related_options=("pca", "scaled_pca", "sparse_pca_chen_rohe", "supervised_pca"),
+)
+
+_OP_SPARSE_PCA_CHEN_ROHE = _o(
+    "sparse_pca_chen_rohe",
+    "Chen-Rohe (2023) Sparse Component Analysis -- non-diagonal D variant.",
+    (
+        "Sparse component analysis solving "
+        "``min_{Z,D,Θ} ‖X − Z D Θ'‖_F`` s.t. ``Z ∈ S(T,J)``, "
+        "``Θ ∈ S(M,J)``, ``‖Θ‖_1 ≤ ζ`` (Chen-Rohe 2023; Rapach & Zhou "
+        "2025 eq. 3). Differs from ``sparse_pca`` (sklearn / Zou-"
+        "Hastie-Tibshirani 2006) in two ways: (1) the central matrix "
+        "D is *not* restricted to be diagonal, which lets SCA explain "
+        "more total variation for a given sparsity budget; (2) the "
+        "single hyperparameter ``ζ ∈ [J, J√M]`` enters as an ℓ_1 "
+        "budget *constraint* rather than a Lagrangian penalty.\n\n"
+        "Implementation: alternating maximisation of the equivalent "
+        "bilinear convex-hull form ``max_{Z,Θ} ‖Z' X Θ‖_F`` over "
+        "``H(T,J) × H(M,J)`` (Zhou-Rapach 2025 eq. 4), iterating SVD-"
+        "projection of Z and L1-budget projection of Θ. Used as the "
+        "macro-side stage in Rapach & Zhou (2025) Sparse Macro-"
+        "Finance Factors. Operational v0.9.1 dev-stage v0.9.0C-3.\n\n"
+        "Hyperparams: ``n_components`` (= J; default 4), ``zeta`` "
+        "(= L1 budget; ``0.0`` defaults to J = most-binding boundary "
+        "the paper finds optimal in CV), ``max_iter`` (default 200), "
+        "``random_state``."
+    ),
+    "Sparse macro-finance factor extraction with non-diagonal D; the Rapach-Zhou (2025) macro-side procedure.",
+    when_not_to_use="When sklearn-style L1-penalised loadings are sufficient -- prefer the cheaper ``sparse_pca``.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(citation="Chen & Rohe (2023) 'A New Basis for Sparse Principal Component Analysis', Journal of Computational and Graphical Statistics. arXiv:2007.00596."),
+        Reference(citation="Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.1 eqs. (3)-(4)."),
+    ),
+    related_options=("sparse_pca", "supervised_pca", "scaled_pca", "pca"),
+)
+
+_OP_SUPERVISED_PCA = _o(
+    "supervised_pca",
+    "Supervised PCA (Giglio-Xiu-Zhang 2025) -- screen-then-PCA on a target panel.",
+    (
+        "Two-stage supervised reduction:\n"
+        "  1. For each target column ``g``, rank panel columns by "
+        "univariate correlation with ``g`` and keep the top "
+        "``⌊q · M⌋`` (q ∈ (0, 1] hyperparameter; default 0.5);\n"
+        "  2. Run PCA on the screened sub-panel, returning P "
+        "supervised components.\n\n"
+        "Refinement of Giglio-Xiu (2021) three-pass: screening makes "
+        "the construction robust to weak factors and omitted-variable "
+        "bias. Used as the asset-side stage of Rapach & Zhou (2025) "
+        "Sparse Macro-Finance Factors for risk-premium estimation. "
+        "Distinct from ``partial_least_squares`` (PLS uses covariance-"
+        "maximising NIPALS over all columns; SPCA uses correlation-"
+        "screened PCA on a sub-panel) and from ``scaled_pca`` (Huang-"
+        "Jiang-Tu-Zhou 2022 weights every column; SPCA hard-screens).\n\n"
+        "Operational v0.9.1 dev-stage v0.9.0C-4. Hyperparams: "
+        "``n_components`` (= P; default 4), ``q`` (screening rate; "
+        "default 0.5)."
+    ),
+    "Cross-sectional asset-pricing factor extraction; weak-factor-robust supervised reduction; Rapach-Zhou (2025) replication.",
+    when_not_to_use="When the supervisory signal is dense (every panel column matters) -- prefer ``scaled_pca`` or ``partial_least_squares``.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(citation="Giglio, Xiu & Zhang (2025) 'Test Assets and Weak Factors', Journal of Finance, forthcoming."),
+        Reference(citation="Giglio & Xiu (2021) 'Asset Pricing with Omitted Factors', Journal of Political Economy 129(7): 1947-1990."),
+        Reference(citation="Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.2 eqs. (5)-(8)."),
+    ),
+    related_options=("partial_least_squares", "scaled_pca", "sparse_pca_chen_rohe", "pca"),
 )
 
 _OP_SCALED_PCA = _o(
@@ -614,12 +681,82 @@ _OP_L3_METADATA_BUILD = _o(
 )
 
 
+# ---------------------------------------------------------------------------
+# v0.9 Phase 2 paper-coverage atomic primitives.
+# ---------------------------------------------------------------------------
+
+_OP_SAVITZKY_GOLAY_FILTER = _o(
+    "savitzky_golay_filter",
+    "Polynomial-fit smoothing filter (Savitzky & Golay 1964).",
+    (
+        "Local polynomial regression smoothing: each output value is the "
+        "polynomial-fit centre value of a moving window. ``window_length`` "
+        "(default 5) and ``polyorder`` (default 2) parameterise the "
+        "kernel. Operational: runtime delegates to "
+        "``scipy.signal.savgol_filter`` (scipy is a hard dependency).\n\n"
+        "Used as the fixed-window baseline against which Goulet Coulombe "
+        "& Klieber (2025) AlbaMA's adaptive-window estimator is compared "
+        "in the v0.9.x replication recipe."
+    ),
+    "Smoothing macro indicator series for monitoring; AlbaMA replication baseline.",
+    when_not_to_use="Series with strong non-linear trends -- the polynomial fit smooths them out.",
+    references=(_REF_DESIGN_L3, Reference(citation="Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by Simplified Least Squares Procedures', Analytical Chemistry 36(8).")),
+    related_options=("hp_filter", "hamilton_filter", "ma_window", "adaptive_ma_rf"),
+)
+
+_OP_ASYMMETRIC_TRIM = _o(
+    "asymmetric_trim",
+    "Albacore-family rank-space transformation (Goulet Coulombe et al. 2024).",
+    (
+        "Per-period sort: panel ``Π`` of shape ``(T, K)`` is mapped to "
+        "``O`` where ``O[t, r] = sort(Π[t, :])[r]`` (ascending). "
+        "Asymmetric trimming emerges in the *downstream* nonneg ridge "
+        "(``ridge(coefficient_constraint=nonneg)``) that learns "
+        "rank-position weights -- this op does the rank-space "
+        "transformation only.\n\n"
+        "Optional ``smooth_window > 0`` applies a centred moving "
+        "average to each rank-position time series (paper §3 mentions "
+        "3-month MA for noisy components; users can chain ``ma_window`` "
+        "explicitly when they want a different window).\n\n"
+        "Operational from v0.8.9 (B-6). Layer scope ``(l2, l3)`` so "
+        "the L3 DAG can dispatch it at recipe time. Algorithm spec: "
+        "``docs/replications/maximally_forward_looking_algorithm_notes.md``."
+    ),
+    "Building Albacore_ranks-style core inflation indicators; supervised asymmetric trimming where the band is learned from data.",
+    when_not_to_use="Symmetric trimmed-mean targets (use a fixed-window ``ma_window`` instead).",
+    references=(_REF_DESIGN_L3, Reference(citation="Goulet Coulombe, Klieber, Barrette & Goebel (2024) 'Maximally Forward-Looking Core Inflation', technical report (R package: assemblage).")),
+    related_options=("ma_window", "ma_increasing_order", "scaled_pca"),
+)
+
+
+_OP_ADAPTIVE_MA_RF = _o(
+    "adaptive_ma_rf",
+    "AlbaMA -- RF-driven adaptive moving average [schema; runtime in v0.9.x].",
+    (
+        "Goulet Coulombe & Klieber (2025) 'Adaptive Moving Average for "
+        "Macroeconomic Monitoring'. A random forest decides the per-"
+        "observation moving-average window length from the predictor "
+        "panel, so the smoother adapts to local volatility / regime. "
+        "Atomic primitive: existing ``ma_window`` uses a fixed length; "
+        "``hamilton_filter`` is a regression on lags rather than a "
+        "moving average; neither composes into AlbaMA without a learned "
+        "window selector.\n\n"
+        "Schema-only in v0.9.0. Runtime promotion blocks on PDF "
+        "readthrough of the RF-split-to-window mapping (arXiv:2501.13222)."
+    ),
+    "Replicating AlbaMA recipes; macro indicator monitoring under regime shifts.",
+    when_not_to_use="Pre-promotion -- validator hard-rejects until runtime lands.",
+    references=(_REF_DESIGN_L3, Reference(citation="Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for Macroeconomic Monitoring', arXiv:2501.13222.")),
+    related_options=("savitzky_golay_filter", "hamilton_filter", "hp_filter", "ma_window"),
+)
+
+
 register(
     _OP_LEVEL, _OP_DIFF, _OP_LOG, _OP_LOG_DIFF, _OP_PCT_CHANGE,
     _OP_SEASONAL_LAG,
     _OP_MA_WINDOW, _OP_MA_INCREASING, _OP_CUMSUM,
     _OP_SCALE,
-    _OP_PCA, _OP_SPARSE_PCA, _OP_SCALED_PCA, _OP_DFM, _OP_VARIMAX,
+    _OP_PCA, _OP_SPARSE_PCA, _OP_SPARSE_PCA_CHEN_ROHE, _OP_SUPERVISED_PCA, _OP_SCALED_PCA, _OP_DFM, _OP_VARIMAX,
     _OP_VARIMAX_ROTATION, _OP_PARTIAL_LEAST_SQUARES, _OP_RANDOM_PROJECTION,
     _OP_FOURIER, _OP_WAVELET,
     _OP_HP_FILTER, _OP_HAMILTON_FILTER,
@@ -629,4 +766,6 @@ register(
     _OP_TARGET_CONSTRUCTION,
     _OP_FEATURE_SELECTION,
     _OP_L3_FEATURE_BUNDLE, _OP_L3_METADATA_BUILD,
+    # v0.9 Phase 2 paper-coverage atomic primitives
+    _OP_SAVITZKY_GOLAY_FILTER, _OP_ADAPTIVE_MA_RF, _OP_ASYMMETRIC_TRIM,
 )
