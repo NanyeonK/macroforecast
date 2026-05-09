@@ -4,6 +4,7 @@
 
 [![ci-core](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-core.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-core.yml)
 [![ci-docs](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml)
+[![ci-typecheck](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-typecheck.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-typecheck.yml)
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 
 > **v0.9.0a0** — 1318 core tests passing locally as of 2026-05-09. The CI badges above
@@ -35,6 +36,7 @@ For development:
 git clone https://github.com/NanyeonK/macroforecast.git
 cd macroforecast
 pip install -e ".[dev]"
+pip install -e ".[typecheck]"  # optional: local mypy baseline
 ```
 
 ## 5-line quickstart

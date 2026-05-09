@@ -45,6 +45,7 @@ docs = [
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
 ]
+typecheck = ["mypy>=1.13"]
 all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy]"]
 ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
@@ -64,3 +65,47 @@ markers = [
     "deep: tests that require torch (skipped unless [deep] extra is installed)",
     "slow: realistic-shape integration tests (gated; opt in with `pytest -m slow`)",
 ]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["macroforecast"]
+ignore_missing_imports = true
+follow_imports = "skip"
+show_error_codes = true
+pretty = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "macroforecast.core.cache",
+    "macroforecast.core.layers.l0",
+    "macroforecast.core.layers.l1",
+    "macroforecast.core.layers.l2",
+    "macroforecast.core.layers.l3",
+    "macroforecast.core.layers.l3_5",
+    "macroforecast.core.layers.l4_5",
+    "macroforecast.core.layers.l5",
+    "macroforecast.core.layers.l6",
+    "macroforecast.core.layers.l7",
+    "macroforecast.core.layers.l8",
+    "macroforecast.core.manifest",
+    "macroforecast.core.ops.diagnostic_ops",
+    "macroforecast.core.ops.l3_ops",
+    "macroforecast.core.ops.l7_ops",
+    "macroforecast.core.ops.l8_ops",
+    "macroforecast.core.ops.universal",
+    "macroforecast.core.runtime",
+    "macroforecast.defaults",
+    "macroforecast.raw.datasets.fred_md",
+    "macroforecast.raw.manager",
+    "macroforecast.recipes.paper_methods",
+    "macroforecast.scaffold.builder",
+    "macroforecast.scaffold.option_docs.l5",
+    "macroforecast.scaffold.templates",
+    "macroforecast.tuning.engine",
+    "macroforecast.tuning.search.genetic",
+    "macroforecast.tuning.search.grid",
+    "macroforecast.tuning.search.random",
+    "macroforecast.tuning.types",
+]
+ignore_errors = true
