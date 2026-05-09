@@ -1,0 +1,581 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>v0.9.1 paper-coverage promotion plan (single published cut) &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6b888095"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">v0.9.1 paper-coverage promotion plan (single published cut)</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/architecture/v09_paper_coverage_plan.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="v0-9-1-paper-coverage-promotion-plan-single-published-cut">
+<h1>v0.9.1 paper-coverage promotion plan (single published cut)<a class="headerlink" href="#v0-9-1-paper-coverage-promotion-plan-single-published-cut" title="Link to this heading"></a></h1>
+<p>This document is the promotion roadmap for the algorithmic implementations
+v0.8.9 registered as <code class="docutils literal notranslate"><span class="pre">future</span></code>. <strong>All work is bundled into the single
+published cut v0.9.1</strong>; the 5 internal dev-stage labels v0.9.0A through
+v0.9.0E below are working tags for staged commits during the v0.9.1
+development cycle. None of v0.9.0A-E ship to PyPI separately.</p>
+<p><strong>Dev stage map</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Stage</p></th>
+<th class="head"><p>Scope</p></th>
+<th class="head"><p>Effort</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>v0.9.0A</strong></p></td>
+<td><p>Errata patch (E1-E4) + paper-10 doc cross-ref + encyclopedia regen</p></td>
+<td><p>1 d</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>v0.9.0B</strong></p></td>
+<td><p>Tier 2 batch: 2SRR / Booging / SGT / Maximally FL G1+G2 / dual non-linear</p></td>
+<td><p>12-15 d</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>v0.9.0C</strong></p></td>
+<td><p>Tier 3 + Sparse Macro G3: AlbaMA / HNN / sparse_pca_chen_rohe / supervised_pca</p></td>
+<td><p>10-12 d</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>v0.9.0D</strong></p></td>
+<td><p>anatomy adapter Path B (degraded — uses final-window fit)</p></td>
+<td><p>2-3 d</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>v0.9.0E</strong></p></td>
+<td><p>anatomy adapter Path A (faithful) + L4PerOriginModelsArtifact</p></td>
+<td><p>2 d</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>v0.9.1</strong></p></td>
+<td><p>Published cut bundling A-E</p></td>
+<td><p>(cut + tag + PyPI publish)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The plan is grouped into Tier-based milestones reflecting implementation
+effort and risk:</p>
+<p>The grouping reflects implementation effort and risk:</p>
+<ul class="simple">
+<li><p><strong>Tier 1</strong> – closed-form / scipy-based; promotion is a thin wrapper
+with a known answer for testing. Lands first.</p></li>
+<li><p><strong>Tier 2</strong> – custom algorithm in pure NumPy; needs paper sections
+for the algorithmic detail but no learned components.</p></li>
+<li><p><strong>Tier 3</strong> – learned algorithms requiring deep PDF read and
+potentially custom architectures (HNN). Heaviest.</p></li>
+<li><p><strong>Tier 4</strong> – external library integration (<code class="docutils literal notranslate"><span class="pre">anatomy</span></code> for oShapley-
+VI / PBSV). Light implementation but depends on adapter design.</p></li>
+</ul>
+<p>Phase 0 (PDF deep-read of the 8 paper algorithm sections) precedes any
+algorithmic implementation. PDFs are already in second_brain at
+<code class="docutils literal notranslate"><span class="pre">wiki/raw/papers/</span></code> (verified 15/16 in the v0.8.9 audit). The
+<code class="docutils literal notranslate"><span class="pre">graphify</span></code> skill is the recommended tool for pseudocode extraction.</p>
+<section id="phase-0-pdf-deep-read-selectable">
+<h2>Phase 0 – PDF deep-read (selectable)<a class="headerlink" href="#phase-0-pdf-deep-read-selectable" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>PDF (in second_brain)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Booging</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">arXiv:2008.07063</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>AlbaMA</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">arXiv:2501.13222</span></code> §3</p></td>
+</tr>
+<tr class="row-even"><td><p>2SRR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.1016/j.ijforecast.2024.08.006</span></code> §3</p></td>
+</tr>
+<tr class="row-odd"><td><p>HNN</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Philippe_Goulet_Coulombe_JAE_version.pdf</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Borup oShapley-VI / PBSV</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.2139ssrn.4278745.pdf</span></code> (cross-check with <code class="docutils literal notranslate"><span class="pre">anatomy</span></code> package source)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Dual Interpretation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">arXiv:2412.13076</span></code> representer formulas</p></td>
+</tr>
+<tr class="row-even"><td><p>Maximally FL Core</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Maximally</span> <span class="pre">Forward-Looking</span> <span class="pre">Core</span> <span class="pre">Inflation.pdf</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Slow-Growing Trees</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10.1007978-3-031-43601-7_4.pdf</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Pseudocode + algorithm sketches land in
+<code class="docutils literal notranslate"><span class="pre">docs/replications/&lt;paper&gt;_algorithm_notes.md</span></code> ahead of code work.</p>
+</section>
+<section id="tier-1-closed-form-scipy-already-shipped-in-v0-8-9">
+<h2>Tier 1 closed-form / scipy (already shipped in v0.8.9)<a class="headerlink" href="#tier-1-closed-form-scipy-already-shipped-in-v0-8-9" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>#</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Algorithm sketch</p></th>
+<th class="head"><p>Files</p></th>
+<th class="head"><p>Est</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ridge.coefficient_constraint=nonneg</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scipy.optimize.nnls</span></code> on augmented system <code class="docutils literal notranslate"><span class="pre">[X;</span> <span class="pre">sqrt(α)·I]</span> <span class="pre">β</span> <span class="pre">=</span> <span class="pre">[y;</span> <span class="pre">0]</span></code>, β ≥ 0</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">core/runtime.py</span></code> ridge dispatch</p></td>
+<td><p>2 h</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code> (linear families)</p></td>
+<td><p>Ridge: wₜ = xₜ’ (X’X+αI)⁻¹ X’. OLS / Lasso analogues. Output artifact also carries inline portfolio diagnostics (HHI / short / turnover / leverage) from the same paper – 4 trivial numpy reductions on the dual weights, no separate L7 op</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">core/runtime.py</span></code> L7 dispatch</p></td>
+<td><p>4 h</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bagging.strategy=block</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_BaggingWrapper</span></code> modification: replace i.i.d. bootstrap with consecutive <code class="docutils literal notranslate"><span class="pre">block_length</span></code>-row blocks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">core/runtime.py</span></code> <code class="docutils literal notranslate"><span class="pre">_BaggingWrapper</span></code></p></td>
+<td><p>3 h</p></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">blocked_oob_reality_check</span></code> (L5)</p></td>
+<td><p>Block-bootstrap on OOS residuals; reject H0 when median MSE_diff &lt; 0 at α=0.05</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">core/runtime.py</span></code> L5 dispatch</p></td>
+<td><p>4 h</p></td>
+</tr>
+<tr class="row-even"><td><p>6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> (L2)</p></td>
+<td><p>Per-predictor target-correlation-weighted lower / upper quantile cutoffs; trim observations beyond</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">core/runtime.py</span></code> L2 path</p></td>
+<td><p>4 h</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phase 1 quality bar.</strong> Closed-form, so each promotion has a
+known-answer test:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nonneg</span></code>: matches OLS-on-augmented-system when no constraint is binding.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code>: ridge prediction matches Σⱼ wⱼ · yⱼ at every
+forecast date. Inline portfolio diagnostics: HHI on uniform weights
+= 1/n; turnover with identical wₜ and wₜ₋₁ = 0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bagging.strategy=block</span></code>: variance reduction at least matches plain
+bagging on serially-correlated synthetic data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blocked_oob</span></code>: rejects at α=0.05 against trivial-improvement
+benchmark; type-I rate ~0.05 against equal-skill benchmark.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code>: idempotent (re-applying does not change output).</p></li>
+</ul>
+</section>
+<section id="tier-2-custom-numpy-dev-stage-v0-9-0b-12-15-d">
+<h2>Tier 2 custom NumPy (dev-stage v0.9.0B, ~12-15 d)<a class="headerlink" href="#tier-2-custom-numpy-dev-stage-v0-9-0b-12-15-d" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>#</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Sketch + risk</p></th>
+<th class="head"><p>Est</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">decision_tree.split_shrinkage</span></code> (SGT)</p></td>
+<td><p><strong>In-fit</strong> soft-weighted tree per Goulet Coulombe (2024) Algorithm 1: at each split step, observations not satisfying the rule receive weight <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">−</span> <span class="pre">η)</span></code> rather than 0; leaf weight propagation <code class="docutils literal notranslate"><span class="pre">ω_i^l</span> <span class="pre">←</span> <span class="pre">ω_i^l</span> <span class="pre">·</span> <span class="pre">(1</span> <span class="pre">−</span> <span class="pre">η</span> <span class="pre">·</span> <span class="pre">I(rule))</span></code>; Herfindahl <code class="docutils literal notranslate"><span class="pre">H_l</span> <span class="pre">≡</span> <span class="pre">Σ</span> <span class="pre">ω_i²</span></code> stopping criterion. <strong>sklearn extension is insufficient</strong> (the splits themselves change under soft weights); requires a custom soft-weighted tree implementation (~250-350 LOC). The post-fit leaf-multiplication sketch this entry previously carried was <strong>incorrect</strong> — corrected on the 2026-05-07 audit.</p></td>
+<td><p>5-7 d</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bagging.strategy=booging</span></code> (Booging)</p></td>
+<td><p><strong>Outer B = 100 bags of (intentionally over-fitted) inner Stochastic Gradient Boosting</strong> + Data Augmentation (<code class="docutils literal notranslate"><span class="pre">X̃</span> <span class="pre">=</span> <span class="pre">X</span> <span class="pre">+</span> <span class="pre">N(0,</span> <span class="pre">σ_k/3)</span></code>) + per-bag column dropping (20%). Sampling without replacement, fraction 2/3 or 3/4 (paper Appendix A.2). The inner SGB is <em>not</em> tuned by CV on <code class="docutils literal notranslate"><span class="pre">S</span></code> — it is over-fit on purpose, and outer bagging plays the pruning role. The pre-2026-05-07 sketch (“outer K rounds: bag a base learner on residuals”) <strong>did not match the paper’s algorithm</strong>; the schema option name should be <code class="docutils literal notranslate"><span class="pre">booging</span></code> (alias <code class="docutils literal notranslate"><span class="pre">sequential_residual</span></code> retained for back-compat).</p></td>
+<td><p>1.5-2 d</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code> (kernel / RF)</p></td>
+<td><p>Non-linear case: leaf-co-occurrence kernel for RF; explicit kernel for kernel methods. Linear case in Phase 1.</p></td>
+<td><p>1-2 d</p></td>
+</tr>
+<tr class="row-odd"><td><p>10</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ridge.prior=random_walk</span></code> (2SRR)</p></td>
+<td><p>Paper’s <strong>closed-form</strong> two-step generalised ridge (Coulombe 2025 IJF Eq. 11): step 1 ridge with RW reparametrisation <code class="docutils literal notranslate"><span class="pre">Z</span> <span class="pre">=</span> <span class="pre">WC</span></code> (<code class="docutils literal notranslate"><span class="pre">C_RW</span></code> = lower-triangular ones), step 2 generalised ridge with <code class="docutils literal notranslate"><span class="pre">Ω_θ</span> <span class="pre">=</span> <span class="pre">diag(σ²_u)</span> <span class="pre">⊗</span> <span class="pre">I_T</span></code> and <code class="docutils literal notranslate"><span class="pre">Ω_ε</span> <span class="pre">=</span> <span class="pre">diag(σ²_ε)</span></code> recovered from step-1 residuals via GARCH(1,1). Two <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">×</span> <span class="pre">T</span></code> matrix inverts, no iteration. <strong>Risk register entry RESOLVED on 2026-05-07 audit</strong> — paper Eq. 11 is unambiguously closed-form.</p></td>
+<td><p>2-2.5 d</p></td>
+</tr>
+<tr class="row-even"><td><p>10a</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ridge.prior=shrink_to_target</span></code> (Maximally FL Albacore_comps Variant A)</p></td>
+<td><p>Goulet Coulombe et al. Eq. 1: <code class="docutils literal notranslate"><span class="pre">arg</span> <span class="pre">min</span> <span class="pre">‖y</span> <span class="pre">−</span> <span class="pre">Xw‖²</span> <span class="pre">+</span> <span class="pre">λ‖w</span> <span class="pre">−</span> <span class="pre">w_target‖²</span></code> s.t. <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">≥</span> <span class="pre">0,</span> <span class="pre">w'1</span> <span class="pre">=</span> <span class="pre">1</span></code>. New constrained QP slot composing with existing <code class="docutils literal notranslate"><span class="pre">coefficient_constraint=nonneg</span></code>. Implementation via scipy SLSQP (small K) or <code class="docutils literal notranslate"><span class="pre">cvxpy[clarabel]</span></code> (production). When <code class="docutils literal notranslate"><span class="pre">w_target</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">simplex=False</span></code>, reduces to existing <code class="docutils literal notranslate"><span class="pre">_NonNegRidge</span></code> (B-1). <strong>Added 2026-05-07</strong> — was absent from this plan.</p></td>
+<td><p>1.5-2 d</p></td>
+</tr>
+<tr class="row-odd"><td><p>10b</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ridge.prior=fused_difference</span></code> (Maximally FL Albacore_ranks Variant B)</p></td>
+<td><p>Goulet Coulombe et al. Eq. 2: <code class="docutils literal notranslate"><span class="pre">arg</span> <span class="pre">min</span> <span class="pre">‖y</span> <span class="pre">−</span> <span class="pre">Ow‖²</span> <span class="pre">+</span> <span class="pre">λ‖Dw‖²</span></code> s.t. <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">≥</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(y)</span> <span class="pre">=</span> <span class="pre">mean(Ow)</span></code>, where <code class="docutils literal notranslate"><span class="pre">O</span> <span class="pre">=</span> <span class="pre">sort(X)</span></code> is the rank-space data and <code class="docutils literal notranslate"><span class="pre">D</span></code> is the first-difference operator. λ → ∞ collapses to uniform <code class="docutils literal notranslate"><span class="pre">1/K</span></code>; λ = 0 is sparse OLS. Composes with <code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> (B-6 v0.8.9) for the rank-space transformation and existing <code class="docutils literal notranslate"><span class="pre">coefficient_constraint=nonneg</span></code>. <strong>Added 2026-05-07</strong>.</p></td>
+<td><p>1.5-2 d</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tier-3-learned-algorithms-dev-stage-v0-9-0c-10-12-d">
+<h2>Tier 3 learned algorithms (dev-stage v0.9.0C, ~10-12 d)<a class="headerlink" href="#tier-3-learned-algorithms-dev-stage-v0-9-0c-10-12-d" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>#</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Why heavy</p></th>
+<th class="head"><p>Dependency</p></th>
+<th class="head"><p>Est</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>11</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">adaptive_ma_rf</span></code> (AlbaMA)</p></td>
+<td><p>Novel algorithm: RF determines per-observation window length. Phase 0 produces pseudocode; implementation builds on sklearn RF primitives.</p></td>
+<td><p>sklearn RF</p></td>
+<td><p>3-4 d</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mlp.architecture=hemisphere</span></code> (HNN)</p></td>
+<td><p>Dual-head torch architecture (mean / variance) + emphasis loss tying the heads. Extends the existing <code class="docutils literal notranslate"><span class="pre">_TorchSequenceModel</span></code>. Smoke test on synthetic; full reproduction needs FRED-MD.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra (already exists)</p></td>
+<td><p>3-5 d</p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mlp.loss=volatility_emphasis</span></code></p></td>
+<td><p>HNN constraint loss; lands together with the architecture in #12.</p></td>
+<td><p>(with #12)</p></td>
+<td><p>(included)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phase 3 quality bar.</strong> Smoke tests on synthetic data + paper’s toy
+example reproduction where the PDF includes one. Real-data
+reproduction (e.g. HNN on FRED-MD) is a v0.9.4 documentation milestone,
+not a runtime gate.</p>
+</section>
+<section id="tier-4-anatomy-adapter-dev-stages-v0-9-0d-path-b-v0-9-0e-path-a-2-3-d-each">
+<h2>Tier 4 anatomy adapter (dev-stages v0.9.0D Path B + v0.9.0E Path A; ~2-3 d each)<a class="headerlink" href="#tier-4-anatomy-adapter-dev-stages-v0-9-0d-path-b-v0-9-0e-path-a-2-3-d-each" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>#</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Sketch</p></th>
+<th class="head"><p>Est</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>14</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code> + <code class="docutils literal notranslate"><span class="pre">pbsv</span></code></p></td>
+<td><p>L7 dispatch via single <code class="docutils literal notranslate"><span class="pre">Anatomy.explain(transformer=...)</span></code> call (anatomy 0.1.6 has <strong>no</strong> dedicated <code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code> / <code class="docutils literal notranslate"><span class="pre">pbsv</span></code> methods — corrected on 2026-05-07 audit). For <code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code>: default identity transformer → local explanations → mean of <code class="docutils literal notranslate"><span class="pre">|values|</span></code> across OOS instances per Borup Eq. 16. For <code class="docutils literal notranslate"><span class="pre">pbsv</span></code>: squared-error transformer → global scalar explanation per Eq. 24. <strong>Path B (v0.9.3)</strong>: use the final-window fitted model for every period; degraded relative to Eq. 11 semantics; surfaces <code class="docutils literal notranslate"><span class="pre">status=&quot;degraded&quot;</span></code> warning. <strong>Path A (v0.9.4)</strong>: requires new <code class="docutils literal notranslate"><span class="pre">L4PerOriginModelsArtifact</span></code> to persist per-origin fitted estimators.</p></td>
+<td><p>2-3 d (B) + 2 d (A)</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Adapter sketch (Path B; corrected on 2026-05-07 audit):</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">_l7_anatomy_op</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">l3_features</span><span class="p">,</span> <span class="n">l4_models</span><span class="p">,</span> <span class="n">l4_train</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">anatomy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">Anatomy</span><span class="p">,</span> <span class="n">AnatomyModel</span><span class="p">,</span> <span class="n">AnatomyModelProvider</span><span class="p">,</span> <span class="n">AnatomyModelOutputTransformer</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;[anatomy] extra missing -- pip install macroforecast[anatomy]&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="n">feature_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">feature_names</span><span class="p">)</span>
+    <span class="n">y_name</span> <span class="o">=</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">y_final</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">origins</span> <span class="o">=</span> <span class="n">l4_train</span><span class="o">.</span><span class="n">forecast_origins</span>
+    <span class="n">X_full</span><span class="p">,</span> <span class="n">y_full</span> <span class="o">=</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">X_final</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">l3_features</span><span class="o">.</span><span class="n">y_final</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_provider_fn</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">origins</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">period</span><span class="p">]</span>
+        <span class="n">win_lo</span><span class="p">,</span> <span class="n">win_hi</span> <span class="o">=</span> <span class="n">l4_train</span><span class="o">.</span><span class="n">training_window_per_origin</span><span class="p">[(</span><span class="n">model</span><span class="o">.</span><span class="n">model_id</span><span class="p">,</span> <span class="n">origin</span><span class="p">)]</span>
+        <span class="n">train</span> <span class="o">=</span> <span class="n">X_full</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">win_lo</span><span class="p">:</span><span class="n">win_hi</span><span class="p">,</span> <span class="n">feature_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">train</span><span class="p">[</span><span class="n">y_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_full</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">win_lo</span><span class="p">:</span><span class="n">win_hi</span><span class="p">]</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="n">X_full</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">origin</span><span class="p">],</span> <span class="n">feature_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">test</span><span class="p">[</span><span class="n">y_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_full</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">origin</span><span class="p">]]</span>
+        <span class="c1"># Path B: final-window fit for every period -&gt; status=&quot;degraded&quot;.</span>
+        <span class="c1"># Path A (v0.9.4): swap in l4_per_origin_models[(model_id, origin)].</span>
+        <span class="n">fitted</span> <span class="o">=</span> <span class="n">l4_models</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">model_name</span><span class="p">]</span><span class="o">.</span><span class="n">fitted_object</span>
+        <span class="k">return</span> <span class="n">AnatomyModelProvider</span><span class="o">.</span><span class="n">PeriodValue</span><span class="p">(</span>
+            <span class="n">train</span><span class="o">=</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="n">test</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">AnatomyModel</span><span class="p">(</span><span class="n">pred_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">xs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">fitted</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
+        <span class="p">)</span>
+
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">AnatomyModelProvider</span><span class="p">(</span>
+        <span class="n">n_periods</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">origins</span><span class="p">),</span> <span class="n">n_features</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_cols</span><span class="p">),</span>
+        <span class="n">model_names</span><span class="o">=</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">model_id</span><span class="p">],</span> <span class="n">y_name</span><span class="o">=</span><span class="n">y_name</span><span class="p">,</span> <span class="n">provider_fn</span><span class="o">=</span><span class="n">_provider_fn</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">anat</span> <span class="o">=</span> <span class="n">Anatomy</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_iterations&quot;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)))</span> \
+            <span class="o">.</span><span class="n">precompute</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_jobs&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;oshapley_vi&quot;</span><span class="p">:</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">anat</span><span class="o">.</span><span class="n">explain</span><span class="p">()</span>                          <span class="c1"># local; mean abs over OOS rows</span>
+        <span class="n">per_feat</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;base_contribution&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;pbsv&quot;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_se</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_hat</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">anat</span><span class="o">.</span><span class="n">explain</span><span class="p">(</span><span class="n">transformer</span><span class="o">=</span><span class="n">AnatomyModelOutputTransformer</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="n">_se</span><span class="p">))</span>
+        <span class="n">per_feat</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;base_contribution&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s2">&quot;feature&quot;</span><span class="p">:</span> <span class="n">feature_cols</span><span class="p">,</span>
+        <span class="s2">&quot;importance&quot;</span><span class="p">:</span> <span class="n">per_feat</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">feature_cols</span><span class="p">)</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+        <span class="s2">&quot;coefficient&quot;</span><span class="p">:</span> <span class="n">per_feat</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">feature_cols</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>  <span class="c1"># signed PBSV / mean Shapley</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;degraded&quot;</span> <span class="k">if</span> <span class="n">op</span> <span class="o">==</span> <span class="s2">&quot;pbsv&quot;</span> <span class="k">else</span> <span class="s2">&quot;operational&quot;</span><span class="p">,</span>  <span class="c1"># path-B downgrade</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+<p><strong>Path A (v0.9.4)</strong>: introduce <code class="docutils literal notranslate"><span class="pre">L4PerOriginModelsArtifact</span></code> in <code class="docutils literal notranslate"><span class="pre">core/types.py</span></code>
+keyed by <code class="docutils literal notranslate"><span class="pre">(model_id,</span> <span class="pre">origin)</span></code>; opt-in storage in the L4 walk-forward loop
+when the recipe declares <code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code> or <code class="docutils literal notranslate"><span class="pre">pbsv</span></code>. The adapter switches to
+<code class="docutils literal notranslate"><span class="pre">l4_per_origin.fitted_for(model_id,</span> <span class="pre">origin)</span></code> and clears the degraded
+warning.</p>
+</section>
+<section id="tier-extra-v2-5-follow-through-sparse-macro-factors-bundled-into-dev-stage-v0-9-0c-3-75-d">
+<h2>Tier-extra V2.5 follow-through Sparse Macro Factors (bundled into dev-stage v0.9.0C; ~3.75 d)<a class="headerlink" href="#tier-extra-v2-5-follow-through-sparse-macro-factors-bundled-into-dev-stage-v0-9-0c-3-75-d" title="Link to this heading"></a></h2>
+<p>Added on 2026-05-07 audit. Two new L3 ops alongside the existing <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>
+(which keeps its sklearn <code class="docutils literal notranslate"><span class="pre">SparsePCA</span></code> semantics).</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>#</p></th>
+<th class="head"><p>Item</p></th>
+<th class="head"><p>Sketch</p></th>
+<th class="head"><p>Est</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>15</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code></p></td>
+<td><p>Chen-Rohe (2023) Sparse Component Analysis with non-diagonal <code class="docutils literal notranslate"><span class="pre">D</span></code>: <code class="docutils literal notranslate"><span class="pre">min</span> <span class="pre">‖X</span> <span class="pre">−</span> <span class="pre">ZDΘ'‖_F</span></code> s.t. <code class="docutils literal notranslate"><span class="pre">Z</span> <span class="pre">∈</span> <span class="pre">S(T,J),</span> <span class="pre">Θ</span> <span class="pre">∈</span> <span class="pre">S(M,J),</span> <span class="pre">‖Θ‖_1</span> <span class="pre">≤</span> <span class="pre">ζ</span></code>. Implemented via the equivalent bilinear convex-hull form <code class="docutils literal notranslate"><span class="pre">max</span> <span class="pre">‖Z'XΘ‖_F</span></code> over <code class="docutils literal notranslate"><span class="pre">H(T,J)</span> <span class="pre">×</span> <span class="pre">H(M,J)</span></code> (Zhou-Rapach 2025 Eq. 4) — alternating SVD-projection of Z + L1-budget projection of Θ. Pure NumPy. Used as the macro-side stage of Rapach &amp; Zhou (2025).</p></td>
+<td><p>1.5 d</p></td>
+</tr>
+<tr class="row-odd"><td><p>16</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></p></td>
+<td><p>Giglio-Xiu-Zhang (2025): for each target column, screen panel by univariate correlation, retain top <code class="docutils literal notranslate"><span class="pre">⌊q·N⌋</span></code>, run PCA on the screened sub-panel. Refines Giglio-Xiu (2021) three-pass for weak-factor robustness. Distinct from <code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code> (NIPALS) and <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> (column β). Used as the asset-side stage of Rapach-Zhou (2025) for risk-premium estimation.</p></td>
+<td><p>0.5 d</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="total-budget-revised-2026-05-07">
+<h2>Total budget (revised 2026-05-07)<a class="headerlink" href="#total-budget-revised-2026-05-07" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dev stage</p></th>
+<th class="head"><p>Scope</p></th>
+<th class="head"><p>Promotions</p></th>
+<th class="head"><p>Calendar</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Phase 0 (PDF readthrough)</p></td>
+<td><p>already done in v0.8.9 audit</p></td>
+<td><p>0</p></td>
+<td><p>done</p></td>
+</tr>
+<tr class="row-odd"><td><p>(Tier 1, shipped in v0.8.9)</p></td>
+<td><p>nonneg ridge / dual / block bagging / blocked_oob / asymmetric_trim</p></td>
+<td><p>6</p></td>
+<td><p>done</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>v0.9.0A</strong></p></td>
+<td><p>Errata + paper-10 doc cross-ref</p></td>
+<td><p>1 doc patch</p></td>
+<td><p>1 d</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>v0.9.0B</strong></p></td>
+<td><p>Tier 2 batch (Booging / SGT / 2SRR / G1 / G2 / dual non-linear)</p></td>
+<td><p>6</p></td>
+<td><p>12-15 d</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>v0.9.0C</strong></p></td>
+<td><p>Tier 3 + Tier-extra (AlbaMA / HNN / SCA / SPCA)</p></td>
+<td><p>4</p></td>
+<td><p>10-12 d</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>v0.9.0D</strong></p></td>
+<td><p>anatomy Path B</p></td>
+<td><p>2 (oshapley_vi, pbsv degraded)</p></td>
+<td><p>2-3 d</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>v0.9.0E</strong></p></td>
+<td><p>anatomy Path A</p></td>
+<td><p>(path B → A) + <code class="docutils literal notranslate"><span class="pre">L4PerOriginModelsArtifact</span></code></p></td>
+<td><p>2 d</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>v0.9.1</strong></p></td>
+<td><p>Single published cut bundling A-E</p></td>
+<td><p>13 promotions</p></td>
+<td><p>(cut/tag/publish)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Total dev work</strong></p></td>
+<td><p></p></td>
+<td><p><strong>13</strong> new promotions</p></td>
+<td><p><strong>~28-34 person-days full-time</strong></p></td>
+</tr>
+</tbody>
+</table>
+<p>Dev stages B / C are independent and can be parallelised. Stage D must
+precede E (E requires <code class="docutils literal notranslate"><span class="pre">L4PerOriginModelsArtifact</span></code>). Stage A is a 1-day
+standalone patch and unblocks nothing else, but lands first to keep the
+roadmap doc honest before any code work begins.</p>
+</section>
+<section id="risk-register-revised-2026-05-07">
+<h2>Risk register (revised 2026-05-07)<a class="headerlink" href="#risk-register-revised-2026-05-07" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>2SRR closed-form</strong> (Phase 2 #10): ✅ <strong>RESOLVED</strong> on 2026-05-07
+audit. Paper Eq. 11 is unambiguously closed-form (two <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">×</span> <span class="pre">T</span></code> solves,
+no iteration). The “fall back to iterative ridge” mitigation is
+unnecessary.</p></li>
+<li><p><strong>SGT in-fit vs post-fit</strong> (Phase 2 #7): ❌ <strong>CONFIRMED in-fit</strong> on
+2026-05-07 audit. Paper Algorithm 1 explicitly applies the soft
+weight <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">−</span> <span class="pre">η)</span></code> during weight propagation at every split step.
+sklearn <code class="docutils literal notranslate"><span class="pre">DecisionTreeRegressor</span></code> cannot reproduce SGT — a custom
+soft-weighted tree implementation is required (~250-350 LOC; effort
+bumped from 1-2 d to <strong>5-7 d</strong>).</p></li>
+<li><p><strong>HNN reproduction fidelity</strong> (Phase 3 #12): synthetic-data smoke
+passes do not guarantee real-data parity with the JAE 2025 paper.
+Real-data reproduction is documented as a v0.9.4 milestone.
+<strong>Additionally on 2026-05-07 audit</strong>: ν proxy from a plain-NN OOB
+MSE roughly doubles training cost per cell — cache the ν estimate
+in the manifest so sweeps over <code class="docutils literal notranslate"><span class="pre">(architecture,</span> <span class="pre">loss)</span></code> don’t recompute.</p></li>
+<li><p><strong>AlbaMA window selector</strong> (Phase 3 #11): if RF variance is poorly
+controlled, output may not match the paper’s smoothness; tuning
+budget is ~1 d on top of the implementation. <strong>Additionally on
+2026-05-07 audit</strong>: paper is silent on per-t refit vs fit-once-with-
+leaf-restriction in one-sided mode. Safe interpretation = per-t refit.</p></li>
+<li><p><strong>anatomy API stability</strong>: <code class="docutils literal notranslate"><span class="pre">anatomy</span> <span class="pre">0.1.6</span></code> is the current PyPI
+release; the adapter depends on <code class="docutils literal notranslate"><span class="pre">Anatomy.explain(...)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">AnatomyModelProvider</span></code> / <code class="docutils literal notranslate"><span class="pre">PeriodKey</span></code> / <code class="docutils literal notranslate"><span class="pre">PeriodValue</span></code> nested-class
+layout. <strong>2026-05-07 audit</strong>: anatomy 0.1.6 has <em>no</em> dedicated
+<code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code> / <code class="docutils literal notranslate"><span class="pre">pbsv</span></code> methods — both metrics are derived from
+<code class="docutils literal notranslate"><span class="pre">Anatomy.explain(transformer=...)</span></code>. Vendor lock to <code class="docutils literal notranslate"><span class="pre">&gt;=0.1.6,&lt;0.2</span></code>.
+CI parity test pins the API surface so a 0.1.7 break is caught.</p></li>
+<li><p><strong>anatomy per-origin refit</strong> (Phase 4 #14): ❌ <strong>NEW risk surfaced
+on 2026-05-07 audit</strong>. Borup paper Eq. 11 requires the per-origin
+fitted model <code class="docutils literal notranslate"><span class="pre">f̂(·;</span> <span class="pre">W_i,</span> <span class="pre">h)</span></code>. macroforecast’s <code class="docutils literal notranslate"><span class="pre">L4ModelArtifactsArtifact</span></code>
+keeps a single fitted_object per <code class="docutils literal notranslate"><span class="pre">model_id</span></code>. Path B (v0.9.3) uses
+the final-window fit and surfaces <code class="docutils literal notranslate"><span class="pre">status=&quot;degraded&quot;</span></code>. Path A
+(v0.9.4) introduces <code class="docutils literal notranslate"><span class="pre">L4PerOriginModelsArtifact</span></code> for the faithful
+semantics — opt-in to control the memory cost.</p></li>
+<li><p><strong>Booging schema name</strong> (Phase 2 #8): ❌ <strong>CONFIRMED misnamed</strong> on
+2026-05-07 audit. Paper’s algorithm is “outer bagging of inner SGB</p>
+<ul>
+<li><p>DA”, <em>not</em> “bag-on-residuals”. Schema option renamed to <code class="docutils literal notranslate"><span class="pre">booging</span></code>
+with <code class="docutils literal notranslate"><span class="pre">sequential_residual</span></code> retained as alias for back-compat.</p></li>
+</ul>
+</li>
+<li><p><strong>Maximally FL solver</strong> (Phase 2 #10a + #10b): scipy SLSQP for the
+constrained QP is robust but slow on K &gt; 100. Future v0.9.x
+optimisation: switch to <code class="docutils literal notranslate"><span class="pre">cvxpy[clarabel]</span></code> or <code class="docutils literal notranslate"><span class="pre">osqp</span></code> when K is large.</p></li>
+<li><p><strong>Sparse Macro Factors solver</strong> (Phase 5 #15): pure-NumPy alternating
+bilinear maximisation may converge slowly on M &gt; 200. Numba-JIT the
+inner SVD-projection if needed.</p></li>
+</ul>
+</section>
+<section id="honesty-pass-discipline">
+<h2>Honesty pass discipline<a class="headerlink" href="#honesty-pass-discipline" title="Link to this heading"></a></h2>
+<p>Every promotion that lands operationally must satisfy the quality bar
+for its Tier (closed-form known-answer test for Tier 1; toy-example
+reproduction for Tiers 2/3; adapter contract test for Tier 4). Items
+that ship as minimum-viable proxies get demoted in the next honesty
+pass (PR #163 / v0.2 / v0.25 pattern). The Tier-grouped milestone
+structure exists to prevent that pattern from recurring.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=6bfd653b"></script>
+      <script src="../../../_static/documentation_options.js?v=6b888095"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -159,7 +159,7 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Operational: 4 option(s)</p></li>
+<li><p>Operational: 5 option(s)</p></li>
 <li><p>Future: 0 option(s)</p></li>
 </ul>
 </section>
@@ -210,6 +210,22 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#dm-diebold-mariano"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="harvey-newbold-encompassing-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">harvey_newbold_encompassing</span></code>  –  operational<a class="headerlink" href="#harvey-newbold-encompassing-operational" title="Link to this heading"></a></h3>
+<p>Harvey-Leybourne-Newbold (1998) forecast-encompassing test.</p>
+<p>Tests the null that forecast f_1 encompasses f_2 – i.e. the optimal linear combination of the two forecasts puts zero weight on f_2’s error. Constructs <code class="docutils literal notranslate"><span class="pre">d_t</span> <span class="pre">=</span> <span class="pre">e_a</span> <span class="pre">(e_a</span> <span class="pre">-</span> <span class="pre">e_b)</span></code> from the per-period forecast errors and tests its mean against zero with a Newey-West HAC long-run variance and an HLN small-sample correction at horizon h&gt;1. Asymmetric by construction (f_1 encompasses f_2 ≠ f_2 encompasses f_1).</p>
+<p><strong>When to use</strong></p>
+<p>Deciding whether one forecast contains all the information of another.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Symmetric equal-MSE comparison – use <code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code> instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L6: ‘tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.’</p></li>
+<li><p>Harvey, Leybourne &amp; Newbold (1998) ‘Tests for Forecast Encompassing’, JBES 16(2): 254-259.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#dm-diebold-mariano"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code></span></a>, <a class="reference internal" href="#gw-giacomini-white"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gw_giacomini_white</span></code></span></a>, <a class="reference internal" href="#multi"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">multi</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
 <section id="multi-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">multi</span></code>  –  operational<a class="headerlink" href="#multi-operational" title="Link to this heading"></a></h3>
 <p>Run DM + GW + DMP and stack the results.</p>
@@ -220,7 +236,7 @@
 <ul class="simple">
 <li><p>macroforecast design Part 3, L6: ‘tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.’</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#dm-diebold-mariano"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code></span></a>, <a class="reference internal" href="#gw-giacomini-white"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gw_giacomini_white</span></code></span></a>, <a class="reference internal" href="#dmp-multi-horizon"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dmp_multi_horizon</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#dm-diebold-mariano"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code></span></a>, <a class="reference internal" href="#gw-giacomini-white"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gw_giacomini_white</span></code></span></a>, <a class="reference internal" href="#dmp-multi-horizon"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dmp_multi_horizon</span></code></span></a>, <a class="reference internal" href="#harvey-newbold-encompassing"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">harvey_newbold_encompassing</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 </section>

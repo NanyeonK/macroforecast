@@ -1,0 +1,724 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>v0.8.9 verification results &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6b888095"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../replications/index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">v0.8.9 verification results</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/architecture/v089_verification_results.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="v0-8-9-verification-results">
+<h1>v0.8.9 verification results<a class="headerlink" href="#v0-8-9-verification-results" title="Link to this heading"></a></h1>
+<p>Honesty-pass audit results. Per-item entries appended in execution
+order. Plan: <code class="docutils literal notranslate"><span class="pre">v089_verification_plan.md</span></code>.</p>
+<section id="v1-1-ridge-coefficient-constraint-nonneg-b-1">
+<h2>V1.1 ridge.coefficient_constraint=nonneg (B-1)<a class="headerlink" href="#v1-1-ridge-coefficient-constraint-nonneg-b-1" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ✅ Pass</p>
+<p><strong>Evidence</strong>:</p>
+<ul class="simple">
+<li><p>Augmented-system equivalence proven algebraically:
+<code class="docutils literal notranslate"><span class="pre">‖[y;0]</span> <span class="pre">−</span> <span class="pre">[X;</span> <span class="pre">√α·I]β‖²</span> <span class="pre">=</span> <span class="pre">‖y</span> <span class="pre">−</span> <span class="pre">Xβ‖²</span> <span class="pre">+</span> <span class="pre">α‖β‖²</span></code>. So NNLS on the
+augmented system minimises the ridge objective under β ≥ 0.</p></li>
+<li><p>Direct <code class="docutils literal notranslate"><span class="pre">scipy.optimize.nnls</span></code> on the augmented system returns
+identical coefficients to <code class="docutils literal notranslate"><span class="pre">_NonNegRidge</span></code> (max abs diff = 0.0).</p></li>
+<li><p>On non-binding-constraint synthetic data, recovered coefficients
+match <code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.Ridge</span></code> to 0.01 (only difference is
+intercept handling: <code class="docutils literal notranslate"><span class="pre">_NonNegRidge</span></code> centres y; <code class="docutils literal notranslate"><span class="pre">Ridge</span></code> includes
+intercept in the L2 penalty by default).</p></li>
+<li><p>On binding constraint (one negative truth), recovered β has the
+negative coefficient clipped to 0 and the others positive.</p></li>
+<li><p>Edge cases: empty input returns zero coefficients without crash;
+NaN in X handled via <code class="docutils literal notranslate"><span class="pre">fillna(0)</span></code>.</p></li>
+</ul>
+<p><strong>Discrepancies</strong>: none.</p>
+<p><strong>Action</strong>: none.</p>
+</section>
+<section id="v1-2-dual-decomposition-linear-b-3">
+<h2>V1.2 dual_decomposition (linear) (B-3)<a class="headerlink" href="#v1-2-dual-decomposition-linear-b-3" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ✅ Pass</p>
+<p><strong>Evidence</strong>:</p>
+<ul class="simple">
+<li><p>Representer identity <code class="docutils literal notranslate"><span class="pre">ŷ</span> <span class="pre">=</span> <span class="pre">W</span> <span class="pre">&#64;</span> <span class="pre">y</span></code> verified to machine precision
+(~1e-15 max abs diff) on a 50×3 synthetic ridge problem with
+<code class="docutils literal notranslate"><span class="pre">fit_intercept=False</span></code>.</p></li>
+<li><p>Closed-form weight matrix <code class="docutils literal notranslate"><span class="pre">W</span> <span class="pre">=</span> <span class="pre">X(X'X</span> <span class="pre">+</span> <span class="pre">αI)⁻¹X'</span></code> matches the
+package’s computation exactly (max abs diff = 0 on the synthetic
+problem; pinv-based path).</p></li>
+<li><p>Frame layout matches the L7 importance contract: index = training
+row labels, columns = <code class="docutils literal notranslate"><span class="pre">[mean_weight,</span> <span class="pre">abs_mean_weight,</span> <span class="pre">max_abs_weight]</span></code>,
+with full <code class="docutils literal notranslate"><span class="pre">(n_test</span> <span class="pre">×</span> <span class="pre">n_train)</span></code> weight matrix attached as
+<code class="docutils literal notranslate"><span class="pre">attrs['dual_weights']</span></code>.</p></li>
+<li><p>Portfolio metrics inline at <code class="docutils literal notranslate"><span class="pre">attrs['portfolio_metrics']</span></code>: columns
+<code class="docutils literal notranslate"><span class="pre">[hhi,</span> <span class="pre">short,</span> <span class="pre">turnover,</span> <span class="pre">leverage]</span></code>; non-negativity invariants
+hold; <code class="docutils literal notranslate"><span class="pre">turnover[0]</span> <span class="pre">=</span> <span class="pre">0</span></code> by construction (no previous row).</p></li>
+<li><p>Non-linear families (RF) correctly raise <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>
+pointing at v0.9.x Phase 2.</p></li>
+<li><p>Empty input handled without crash.</p></li>
+</ul>
+<p><strong>Discrepancies</strong>:</p>
+<ul class="simple">
+<li><p>The implementation defaults to <em>in-sample</em> dual weights
+(X_test = X_train). For walk-forward use cases users must call
+with the test subset explicitly. This is documented in the helper
+docstring; not a runtime correctness issue.</p></li>
+<li><p>Linear-only support is intentional (paper applies dual decomposition
+to non-linear models too). Documented in CHANGELOG; non-linear
+extension scheduled for v0.9.x Phase 2.</p></li>
+</ul>
+<p><strong>Action</strong>: none for v0.8.9 (linear scope is honest).</p>
+</section>
+<section id="v1-3-bagging-strategy-block-b-4">
+<h2>V1.3 bagging.strategy=block (B-4)<a class="headerlink" href="#v1-3-bagging-strategy-block-b-4" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ✅ Pass</p>
+<p><strong>Evidence</strong>:</p>
+<ul class="simple">
+<li><p>Block invariant (consecutive integers mod n) verified across 20
+trials × 6 blocks = 120 blocks; all blocks consecutive.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block_length</span></code> parameter respected for L ∈ {3, 7, 12}: each block
+has length L and consecutive structure.</p></li>
+<li><p>Uniform coverage verified over 5000 bootstrap draws on n=100:
+mean count per index = 2008, std = 32 (1.6%); each index sampled
+approximately uniformly.</p></li>
+<li><p>Variance reduction on AR(1) <code class="docutils literal notranslate"><span class="pre">φ=0.7</span></code> data: block and standard
+bagging both produce comparable per-bag variance; both run to
+completion on the wrapped ridge base learner.</p></li>
+<li><p>Wrapper-level <code class="docutils literal notranslate"><span class="pre">_draw_indices</span></code> for unknown <code class="docutils literal notranslate"><span class="pre">strategy</span></code> falls
+back to i.i.d. bootstrap; the explicit future-gate for
+<code class="docutils literal notranslate"><span class="pre">sequential_residual</span></code> is in the dispatch layer (already covered
+by <code class="docutils literal notranslate"><span class="pre">test_v09_sub_axis_future_gates_raise_at_runtime</span></code>).</p></li>
+</ul>
+<p><strong>Discrepancies</strong>: Implementation is the <em>circular</em> moving-block
+bootstrap (block wraps at n via modulo). The classical Künsch
+non-circular variant samples block starts only from
+<code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">...,</span> <span class="pre">n</span> <span class="pre">-</span> <span class="pre">block_length}</span></code>. The circular variant is a
+standard accepted variant; behaviour difference is minor at the
+sample boundaries. Documented for clarity but not a correctness
+issue.</p>
+<p><strong>Action</strong>: add a one-line note to the OPTION_DOCS prose for
+<code class="docutils literal notranslate"><span class="pre">bagging.strategy</span></code> clarifying “circular variant”. ✅ done.</p>
+</section>
+<section id="v1-4-blocked-oob-reality-check-b-5">
+<h2>V1.4 blocked_oob_reality_check (B-5)<a class="headerlink" href="#v1-4-blocked-oob-reality-check-b-5" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ✅ Pass</p>
+<p><strong>Evidence</strong>:</p>
+<ul class="simple">
+<li><p>Type-I rate against equal-skill benchmark (n_sims=200, n=80,
+α=0.05, n_bootstraps=300): empirical rejection rate = 0.060,
+within 2× nominal α (the 2× tolerance reflects finite-sample
+bootstrap noise; 0.060 vs 0.050 is one bootstrap-standard-error
+away, which is acceptable).</p></li>
+<li><p>Power against clear-winner candidate (cand has 40% of benchmark’s
+loss): power = 1.0 over 50 simulations.</p></li>
+<li><p>Edge cases: n &lt; 2 returns empty DataFrame without crash; missing
+benchmark name raises ValueError with informative message.</p></li>
+<li><p>Single-side test on noisy mid-skill data runs to completion with
+reasonable p-value (mid-tail).</p></li>
+</ul>
+<p><strong>Discrepancies</strong>:</p>
+<ul class="simple">
+<li><p>The recentring in the implementation uses
+<code class="docutils literal notranslate"><span class="pre">recentred</span> <span class="pre">=</span> <span class="pre">boot_means</span> <span class="pre">-</span> <span class="pre">d_bar</span></code> then
+<code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">mean(recentred</span> <span class="pre">&gt;=</span> <span class="pre">d_bar)</span></code>. This is the <em>one-sided
+bootstrap p-value with mean-recentring</em> variant, which is
+equivalent (after algebraic simplification) to
+<code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">mean(boot_means</span> <span class="pre">&gt;=</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">d_bar)</span></code> — a slightly less standard
+formulation than White’s original. The empirical type-I and
+power results confirm the test is correctly sized in practice.</p></li>
+<li><p>For a fully canonical White (2000) reality check, recentring uses
+<code class="docutils literal notranslate"><span class="pre">(d_bar</span> <span class="pre">-</span> <span class="pre">max(0,</span> <span class="pre">d_bar))</span></code> to make the null distribution match
+the least-favourable configuration. Our implementation is the
+simpler “centre on observed mean” variant; for the multi-model
+case (which we do not yet support) the two diverge. Single-model
+(one candidate vs benchmark) case is correct as implemented.</p></li>
+</ul>
+<p><strong>Action</strong>: when v0.9.x adds multi-candidate joint-test support,
+re-verify with the canonical White least-favourable recentring.</p>
+</section>
+<section id="v1-5-asymmetric-trim-b-6">
+<h2>V1.5 asymmetric_trim (B-6)<a class="headerlink" href="#v1-5-asymmetric-trim-b-6" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ✅ Pass</p>
+<p><strong>Evidence</strong>:</p>
+<ul class="simple">
+<li><p>Per-row sort identity: 50 rows × 7 cols all match <code class="docutils literal notranslate"><span class="pre">np.sort(arr,</span> <span class="pre">axis=1)</span></code> exactly.</p></li>
+<li><p>Idempotent on already-sorted input.</p></li>
+<li><p>Per-row monotone: <code class="docutils literal notranslate"><span class="pre">rank_1</span> <span class="pre">&lt;=</span> <span class="pre">rank_2</span> <span class="pre">&lt;=</span> <span class="pre">...</span> <span class="pre">&lt;=</span> <span class="pre">rank_K</span></code> for all rows.</p></li>
+<li><p>Centred 3-month MA verified by hand-computed expected values on a
+small example: actual matches expected exactly.</p></li>
+<li><p>Edge cases: empty input returns empty DataFrame; K=1 returns
+identity (single-column input is already its own sort).</p></li>
+</ul>
+<p><strong>Discrepancies</strong>: none. Trivially correct (np.sort + rolling.mean
+with min_periods=1).</p>
+<p><strong>Action</strong>: none.</p>
+</section>
+<section id="v2-5-sparse-pca-runtime-vs-zhou-paper">
+<h2>V2.5 sparse_pca runtime vs Zhou paper<a class="headerlink" href="#v2-5-sparse-pca-runtime-vs-zhou-paper" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ⚠️ <strong>Partial</strong> — <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code> op is operational and uses
+sklearn’s standard <code class="docutils literal notranslate"><span class="pre">SparsePCA</span></code> (Zou-Hastie-Tibshirani 2006 via
+Mairal et al. 2009 dictionary learning), but <strong>Zhou’s “Sparse
+Macro-Finance Factors” paper uses a different sparse PCA variant</strong>:
+Sparse Component Analysis (SCA) per Chen and Rohe (2023).</p>
+<p><strong>Evidence (from review at <code class="docutils literal notranslate"><span class="pre">second_brain/wiki/papers/reviews/guofu_zhou_sparse_macro_factors-477d3fda.md</span></code>)</strong>:</p>
+<ul class="simple">
+<li><p>Zhou paper objective: <code class="docutils literal notranslate"><span class="pre">min</span> <span class="pre">‖X</span> <span class="pre">−</span> <span class="pre">ZDΘ'‖_F</span> <span class="pre">subject</span> <span class="pre">to</span> <span class="pre">Z</span> <span class="pre">∈</span> <span class="pre">S(T,J),</span> <span class="pre">Θ</span> <span class="pre">∈</span> <span class="pre">S(M,J),</span> <span class="pre">‖Θ‖₁</span> <span class="pre">≤</span> <span class="pre">ζ</span></code> (Chen-Rohe 2023 SCA).</p></li>
+<li><p>sklearn <code class="docutils literal notranslate"><span class="pre">SparsePCA</span></code>: L1-penalised regression formulation
+(Zou-Hastie-Tibshirani 2006); does NOT match the Chen-Rohe SCA
+objective.</p></li>
+<li><p>The two variants produce <strong>different sparse loadings</strong> — they
+are not equivalent reformulations.</p></li>
+<li><p>Additionally, Zhou uses Supervised PCA (Giglio/Xiu/Zhang 2025) for
+risk premium estimation; this is also not in the package.</p></li>
+</ul>
+<p><strong>Discrepancies</strong>:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code> op accurate as a <em>generic</em> sparse PCA primitive
+(Zou-Hastie-Tibshirani 2006) but does NOT replicate Zhou’s
+specific construction (Chen-Rohe 2023 SCA).</p></li>
+<li><p>The 614-test-asset risk premium estimation in Zhou requires
+Supervised PCA (Giglio et al. 2025); this is a separate primitive
+not in the package.</p></li>
+</ol>
+<p><strong>Action</strong>:</p>
+<ul class="simple">
+<li><p>CHANGELOG entry under v0.8.9 sparse_macro_factors helper: clarify
+that the recipe uses the sklearn (Zou-Hastie-Tibshirani) variant,
+not the Chen-Rohe SCA used in Zhou’s paper.</p></li>
+<li><p>Add to v0.9.x roadmap (<code class="docutils literal notranslate"><span class="pre">v09_paper_coverage_plan.md</span></code>):</p>
+<ul>
+<li><p>new L3 op <code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code> for SCA (Chen-Rohe 2023)</p></li>
+<li><p>new L3 op <code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code> for Giglio-Xiu-Zhang 2025 SPCA</p></li>
+</ul>
+</li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">sparse_macro_factors</span></code> paper helper docstring to note
+it produces a related-but-not-identical decomposition. ✅ done.</p></li>
+</ul>
+</section>
+<section id="v2-2-macroeconomic-random-forest-runtime-vs-coulombe-2024">
+<h2>V2.2 macroeconomic_random_forest runtime vs Coulombe (2024)<a class="headerlink" href="#v2-2-macroeconomic-random-forest-runtime-vs-coulombe-2024" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ❌ <strong>FAIL → fixed in v0.8.9 honesty pass via re-anchor to mrf-web</strong></p>
+<p><strong>Pre-fix discrepancy</strong>:</p>
+<p>The previous in-house <code class="docutils literal notranslate"><span class="pre">_MRFWrapper</span></code> implemented <strong>only one of three</strong>
+paper-defining pieces of Goulet Coulombe (2024) “The Macroeconomy as a
+Random Forest” (arXiv:2006.12724):</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Paper piece</p></th>
+<th class="head"><p>Pre-fix <code class="docutils literal notranslate"><span class="pre">_MRFWrapper</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>(a) per-leaf local linear regression of <code class="docutils literal notranslate"><span class="pre">y</span></code> on the state vector</p></td>
+<td><p>✅ present (sklearn <code class="docutils literal notranslate"><span class="pre">RandomForestRegressor</span></code> augmented with a normalised time-trend column, then per-(tree, leaf) <code class="docutils literal notranslate"><span class="pre">LinearRegression</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>(b) random walk kernel / Olympic podium for time-varying β smoothing</p></td>
+<td><p>❌ missing (no time-variation regularisation; only data-driven splits on the time column)</p></td>
+</tr>
+<tr class="row-even"><td><p>(c) Block Bayesian Bootstrap (Taddy 2015 ext.) for forecast ensembles + intervals</p></td>
+<td><p>❌ missing</p></td>
+</tr>
+</tbody>
+</table>
+<p>The “GTVP” claim in the docstring was overclaimed — the wrapper was a
+random forest with leaf-local linear regressions, not the paper’s
+random-walk-regularised time-varying parameter forest.</p>
+<p>This was operational-but-overclaimed since v0.2 #187. The v0.8.9
+verification audit detected it on the V2.2 line of
+<code class="docutils literal notranslate"><span class="pre">v089_verification_plan.md</span></code>.</p>
+<p><strong>Fix landed in v0.8.9 (re-anchor to mrf-web)</strong>:</p>
+<p>A new helper, <code class="docutils literal notranslate"><span class="pre">_MRFExternalWrapper</span></code>, replaces the in-house
+<code class="docutils literal notranslate"><span class="pre">_MRFWrapper</span></code>. It delegates the full algorithm to Ryan Lucas’s
+reference implementation, <strong>vendored under
+<code class="docutils literal notranslate"><span class="pre">macroforecast/_vendor/macro_random_forest/</span></code></strong> with four surgical
+numpy 2.x / pandas 2.x compatibility patches (full delta:
+<code class="docutils literal notranslate"><span class="pre">_vendor/macro_random_forest/PATCHES.md</span></code>). <strong>No algorithmic
+changes</strong>. Upstream URL:
+<a class="reference external" href="https://github.com/RyanLucas3/MacroRandomForest">https://github.com/RyanLucas3/MacroRandomForest</a>; original MIT licence
+preserved alongside the vendored source. See <code class="docutils literal notranslate"><span class="pre">THIRD_PARTY_NOTICES.md</span></code>
+at the repository root for the attribution table.</p>
+<p>Wrapper contract:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fit(X,</span> <span class="pre">y)</span></code> caches the training panel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">predict(X_new)</span></code> builds the <code class="docutils literal notranslate"><span class="pre">[train</span> <span class="pre">;</span> <span class="pre">test]</span></code> data frame mrf-web
+expects, sets <code class="docutils literal notranslate"><span class="pre">oos_pos</span></code> to the test row positions, runs
+<code class="docutils literal notranslate"><span class="pre">MacroRandomForest._ensemble_loop()</span></code> with the full paper procedure,
+caches <code class="docutils literal notranslate"><span class="pre">output['betas']</span></code> (T × K+1 GTVP series) and
+<code class="docutils literal notranslate"><span class="pre">output['pred_ensemble']</span></code> (B × n_oos bootstrap forecasts), and
+returns the <code class="docutils literal notranslate"><span class="pre">output['pred']</span></code> slice.</p></li>
+<li><p>L7 <code class="docutils literal notranslate"><span class="pre">mrf_gtvp</span></code> now reads <code class="docutils literal notranslate"><span class="pre">_cached_betas</span></code> directly (column 0 =
+intercept, columns 1..K = per-time-step coefficients on the state
+vector). <code class="docutils literal notranslate"><span class="pre">np.nanmean</span></code> for importance because OOS rows are
+intentionally NaN under mrf-web’s in-sample-only Bayesian bootstrap.</p></li>
+</ul>
+<p>No new install extra: the family works out of the box once
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast</span></code> is done.</p>
+<p><strong>Verification (this V2.2 entry)</strong>:</p>
+<ul class="simple">
+<li><p>End-to-end smoke test on synthetic AR(1) panel (n=80, 3 features,
+B=10, train=60 / test=20): wrapper returns finite forecasts; betas
+cache populated at shape (80, 4); pred_ensemble at shape (10, 20).</p></li>
+<li><p>Known-answer test
+(<code class="docutils literal notranslate"><span class="pre">test_v22_mrf_external_wrapper_matches_vendored_reference</span></code>):
+<code class="docutils literal notranslate"><span class="pre">_MRFExternalWrapper</span></code> produces forecast values bit-identical to a
+direct <code class="docutils literal notranslate"><span class="pre">MacroRandomForest._ensemble_loop()</span></code> call with matching seed
+and parameters (rtol 1e-10).</p></li>
+<li><p>L7 mrf_gtvp regression
+(<code class="docutils literal notranslate"><span class="pre">test_mrf_gtvp_produces_per_row_coefficient_path</span></code>): coefficient
+path length equals (n_train + n_test); per-feature importance ≥ 0.</p></li>
+<li><p>Determinism + parameter sensitivity: matching <code class="docutils literal notranslate"><span class="pre">random_state</span></code>
+reproduces forecasts to machine precision; distinct seeds produce
+distinct forecasts. (<code class="docutils literal notranslate"><span class="pre">test_mrf_seed_makes_predictions_deterministic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">test_mrf_distinct_seeds_produce_distinct_forecasts</span></code>.)</p></li>
+</ul>
+<p><strong>Discrepancies (post-fix)</strong>:</p>
+<ul class="simple">
+<li><p>Sklearn-style <code class="docutils literal notranslate"><span class="pre">fit</span></code>/<code class="docutils literal notranslate"><span class="pre">predict</span></code> separation does not match mrf-web’s
+fit-and-forecast pipeline. Each <code class="docutils literal notranslate"><span class="pre">predict</span></code> call therefore re-runs
+the full <code class="docutils literal notranslate"><span class="pre">_ensemble_loop</span></code>. Walk-forward studies pay this cost N
+times (one per origin). Acceptable for v0.8.9; future optimisation
+(collapse fit + multi-origin predict into one <code class="docutils literal notranslate"><span class="pre">_ensemble_loop</span></code>)
+tracked for v0.9.x.</p></li>
+<li><p>Old hyperparameters <code class="docutils literal notranslate"><span class="pre">n_estimators</span></code> / <code class="docutils literal notranslate"><span class="pre">max_depth</span></code> no longer drive
+forest size: <code class="docutils literal notranslate"><span class="pre">n_estimators</span></code> becomes an alias for mrf-web’s <code class="docutils literal notranslate"><span class="pre">B</span></code>
+(bootstrap iterations); <code class="docutils literal notranslate"><span class="pre">max_depth</span></code> is silently ignored because
+the paper algorithm uses RW + ridge regularisation, not tree depth.</p></li>
+</ul>
+<p><strong>Action</strong>: ✅ runtime re-anchor landed. ✅ vendored under
+<code class="docutils literal notranslate"><span class="pre">macroforecast/_vendor/macro_random_forest/</span></code> with LICENSE and
+PATCHES.md preserved. ✅ <code class="docutils literal notranslate"><span class="pre">THIRD_PARTY_NOTICES.md</span></code> at repo root.
+✅ known-answer + L7 + determinism tests added. ✅ OPTION_DOCS entry
+updated with the citation requirement (Goulet Coulombe 2024 +
+Lucas 2022). ✅ CHANGELOG entry under v0.8.9 honesty-pass section.
+✅ encyclopedia regen.</p>
+</section>
+<section id="v2-3-var-irf-fevd-historical-decomposition-vs-coulombe-gobel-2021">
+<h2>V2.3 var + IRF + FEVD + historical_decomposition vs Coulombe &amp; Göbel (2021)<a class="headerlink" href="#v2-3-var-irf-fevd-historical-decomposition-vs-coulombe-gobel-2021" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ⚠️ 2/4 ✅ Pass + 2/4 fixed in v0.8.9 honesty pass</p>
+<p>Paper: Goulet Coulombe, P. and Göbel, M. (2021) “Arctic Amplification of
+Anthropogenic Forcing: A Vector Autoregressive Analysis”, <em>Journal of
+Climate</em> 34, doi:10.1175/JCLI-D-20-0324.1. VARCTIC method = Bayesian
+VAR with Minnesota prior, <strong>Cholesky</strong> identification (CO₂ ordered
+first → atmospheric → temperature → ice), lag length <strong>manually
+specified</strong> (P=12 for VARCTIC 8, P=3 for VARCTIC 18).</p>
+<section id="v2-3-a-var-lag-selection">
+<h3>V2.3 (a) — <code class="docutils literal notranslate"><span class="pre">var</span></code> lag selection<a class="headerlink" href="#v2-3-a-var-lag-selection" title="Link to this heading"></a></h3>
+<p><strong>Status</strong>: ✅ Pass.</p>
+<p>Runtime <code class="docutils literal notranslate"><span class="pre">_VARWrapper.fit</span></code> (<code class="docutils literal notranslate"><span class="pre">runtime.py</span></code>) accepts <code class="docutils literal notranslate"><span class="pre">params['n_lag']</span></code>
+as a user-controlled lag length and calls
+<code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.api.VAR(data).fit(p)</span></code> with that value. <strong>No
+automatic selection</strong> (no AIC/BIC/HQIC), which <strong>matches</strong> the paper’s
+explicit P=12 / P=3 choice – the authors set lag length by domain
+knowledge, not a formal selection criterion. A future <code class="docutils literal notranslate"><span class="pre">lag_selection</span></code>
+sub-axis (information-criterion search) is tracked as a v0.9.x quality-
+of-life addition; not blocking for v0.8.9.</p>
+</section>
+<section id="v2-3-b-irf-identification-generalized-irf-was-misnamed">
+<h3>V2.3 (b) — IRF identification: <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> was misnamed<a class="headerlink" href="#v2-3-b-irf-identification-generalized-irf-was-misnamed" title="Link to this heading"></a></h3>
+<p><strong>Status</strong>: ❌ FAIL → fixed in v0.8.9 honesty pass via op rename.</p>
+<p><strong>Pre-fix discrepancy</strong>:</p>
+<p>The op <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> (operational since v0.2 #189) was named after
+Pesaran-Shin (1998) generalized impulse-response analysis, which is
+<strong>order-invariant</strong>: each shock is constructed as the multivariate-
+normal projection of all residuals onto the j-th canonical direction,
+yielding an IRF table that does not depend on variable ordering.</p>
+<p>The runtime, however, returned <strong>Cholesky orthogonalised IRFs</strong>
+(<code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.vector_ar.irf.IRAnalysis.orth_irfs</span></code>) – order-
+<strong>dependent</strong> by construction. The two methods are distinct algorithms;
+calling Cholesky output “generalized” is a name misuse that misleads
+users picking ops by paper reference.</p>
+<p><strong>Fix landed in v0.8.9</strong>:</p>
+<ul class="simple">
+<li><p>New op <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> registered in <code class="docutils literal notranslate"><span class="pre">DEFAULT_FIGURE_MAPPING</span></code>
+and OPTION_DOCS (<code class="docutils literal notranslate"><span class="pre">Sims</span> <span class="pre">1980</span></code> reference). Routes to the same
+<code class="docutils literal notranslate"><span class="pre">statsmodels</span> <span class="pre">orth_irfs</span></code> runtime path as before – numerical output
+identical, only the op label changed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> removed from <code class="docutils literal notranslate"><span class="pre">DEFAULT_FIGURE_MAPPING</span></code> and added
+to <code class="docutils literal notranslate"><span class="pre">FUTURE_OPS</span></code> with a docstring pointing to the Pesaran-Shin
+paper. The L7 runtime dispatcher raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> with
+a citation-aware message redirecting users to <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code>.</p></li>
+<li><p>Validator (<code class="docutils literal notranslate"><span class="pre">layers/l7.py</span></code>) accepts both <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> and
+<code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> as VAR-only ops; the future-gate fires at
+execute time.</p></li>
+<li><p>Encyclopedia regenerated; existing replication recipes (<code class="docutils literal notranslate"><span class="pre">arctic_var.yaml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">recipes/paper_methods.varctic_arctic_amplification</span></code> docstring) updated
+to use <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code>.</p></li>
+</ul>
+<p><strong>Verification (this V2.3 (b) entry)</strong>:</p>
+<ul class="simple">
+<li><p>Schema regression
+(<code class="docutils literal notranslate"><span class="pre">test_v23_generalized_irf_is_future_gated</span></code>): <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code>
+in <code class="docutils literal notranslate"><span class="pre">OPERATIONAL_OPS</span></code>; <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> in <code class="docutils literal notranslate"><span class="pre">FUTURE_OPS</span></code> and
+raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> with message containing the
+<code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> redirect.</p></li>
+<li><p>Cholesky-factor invariant
+(<code class="docutils literal notranslate"><span class="pre">test_v23_orthogonalised_irf_returns_cholesky_response</span></code>): the
+horizon-0 orthogonalised IRF matrix equals
+<code class="docutils literal notranslate"><span class="pre">np.linalg.cholesky(Σᵤ)</span></code> to <code class="docutils literal notranslate"><span class="pre">atol=1e-10</span></code>, confirming the runtime
+delegates to statsmodels’ standard Cholesky decomposition.</p></li>
+</ul>
+<p><strong>Action</strong>: ✅ rename + future-gate landed. ✅ encyclopedia regen.
+✅ tests pinning the rename. CHANGELOG entry under v0.8.9 honesty-pass
+section.</p>
+</section>
+<section id="v2-3-c-fevd-normalization">
+<h3>V2.3 (c) — FEVD normalization<a class="headerlink" href="#v2-3-c-fevd-normalization" title="Link to this heading"></a></h3>
+<p><strong>Status</strong>: ✅ Pass.</p>
+<p>Runtime <code class="docutils literal notranslate"><span class="pre">_var_impulse_frame</span></code> (op_name=“fevd”) delegates to
+<code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.vector_ar.fevd.FEVD.decomp</span></code>, which normalises the
+forecast-error variance contribution of each (Cholesky-identified)
+structural shock to sum to 1 across shocks at each horizon. This is
+the standard FEVD construction and matches the paper’s setup
+(VARCTIC uses Cholesky identification → Cholesky FEVD).</p>
+<p>The op output averages the per-horizon shares across the requested
+horizons (<code class="docutils literal notranslate"><span class="pre">decomp[:,</span> <span class="pre">target_index,</span> <span class="pre">:].mean(axis=0)</span></code>), which the
+docstring in <code class="docutils literal notranslate"><span class="pre">_var_impulse_frame</span></code> makes explicit. The paper’s
+figures present per-horizon shares; users wanting per-horizon detail
+can call the op with <code class="docutils literal notranslate"><span class="pre">n_periods=1</span></code> and walk the loop, but the
+default returns a horizon-averaged summary appropriate for L7
+importance ranking.</p>
+</section>
+<section id="v2-3-d-historical-decomposition-was-a-proxy">
+<h3>V2.3 (d) — <code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code> was a proxy<a class="headerlink" href="#v2-3-d-historical-decomposition-was-a-proxy" title="Link to this heading"></a></h3>
+<p><strong>Status</strong>: ❌ FAIL → fixed in v0.8.9 honesty pass with a real
+Burbidge-Harrison HD implementation.</p>
+<p><strong>Pre-fix discrepancy</strong>:</p>
+<p>The op claimed to be a Burbidge-Harrison (1985) historical
+decomposition, but the runtime computed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">orth_irfs</span><span class="p">[:,</span> <span class="n">target</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="o">*</span> <span class="n">std</span><span class="p">(</span><span class="n">resid</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This is a per-shock importance score that combines the L1 mass of the
+IRF (a <em>time-invariant</em> quantity) with the residual standard deviation
+(a <em>cross-sectional</em> statistic). It has <strong>no phase alignment</strong> with the
+realised target path – the same number falls out regardless of when
+the shocks actually occurred. The Burbidge-Harrison procedure expresses
+the <em>path</em> of each variable as the sum of contributions from each
+orthogonalised shock at each historical date; our proxy collapses time
+out and replaces it with an unrelated scalar.</p>
+<p><strong>Fix landed in v0.8.9</strong>:</p>
+<p>The runtime now implements canonical HD:</p>
+<ol class="arabic simple">
+<li><p>Cholesky-decompose the residual covariance: <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">P'</span> <span class="pre">=</span> <span class="pre">Σᵤ</span></code>.</p></li>
+<li><p>Recover structural shocks: <code class="docutils literal notranslate"><span class="pre">e*_t</span> <span class="pre">=</span> <span class="pre">P⁻¹</span> <span class="pre">u_t</span></code>.</p></li>
+<li><p>Convolve with the orthogonalised IRF coefficients: for the target
+variable <code class="docutils literal notranslate"><span class="pre">i</span></code> and shock <code class="docutils literal notranslate"><span class="pre">j</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hd[t,</span> <span class="pre">i,</span> <span class="pre">j]</span> <span class="pre">=</span> <span class="pre">Σ_{s=0..t}</span>&#160; <span class="pre">orth_irfs[s,</span> <span class="pre">i,</span> <span class="pre">j]</span> <span class="pre">·</span> <span class="pre">e*_{t-s,</span> <span class="pre">j}</span></code>.</p></li>
+<li><p>Per-shock importance: <code class="docutils literal notranslate"><span class="pre">importance[j]</span> <span class="pre">=</span> <span class="pre">Σ_t</span> <span class="pre">|hd[t,</span> <span class="pre">target,</span> <span class="pre">j]|</span></code>.</p></li>
+</ol>
+<p>The reduction to a <em>summed-absolute</em> importance keeps the L7 frame
+schema unchanged (one row per shock); a future v0.9.x extension can
+surface the full <code class="docutils literal notranslate"><span class="pre">hd[t,</span> <span class="pre">i,</span> <span class="pre">j]</span></code> time path as an additional artefact
+for stacked-bar visualisation.</p>
+<p><strong>Verification (this V2.3 (d) entry)</strong>:</p>
+<ul class="simple">
+<li><p>Reconstruction lower bound
+(<code class="docutils literal notranslate"><span class="pre">test_v23_historical_decomposition_reconstructs_target_path</span></code>):
+total per-shock importance (sum of <code class="docutils literal notranslate"><span class="pre">|hd[t,</span> <span class="pre">target,</span> <span class="pre">j]|</span></code> across
+<code class="docutils literal notranslate"><span class="pre">t</span></code> and <code class="docutils literal notranslate"><span class="pre">j</span></code>) is between 0.5× and 5× the L1 fluctuation of the
+realised target around its sample mean. The previous proxy could
+miss this band wildly because it was decoupled from the realised
+residual sequence.</p></li>
+<li><p>Path dependence (same test): re-fitting on a different residual
+realisation (different seed, same DGP parameters) produces a
+distinct importance vector. The proxy was constant in residual
+realisation up to the residual-std factor, so its per-shock
+importance was nearly identical across draws – the new HD is
+correctly seed-dependent.</p></li>
+</ul>
+<p><strong>Discrepancies (post-fix)</strong>:</p>
+<ul class="simple">
+<li><p>The L7 frame schema returns a per-shock summary, not the full
+<code class="docutils literal notranslate"><span class="pre">(T_resid,</span> <span class="pre">K)</span></code> HD time series. Downstream renderers that wanted
+the time path (e.g. stacked-bar over time) will need a v0.9.x
+artefact extension to surface the full <code class="docutils literal notranslate"><span class="pre">hd_target</span></code> array.</p></li>
+<li><p>HD is sensitive to the variable ordering (Cholesky identification);
+this is the same caveat as for <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> and is
+documented in both OPTION_DOCS entries.</p></li>
+</ul>
+<p><strong>Action</strong>: ✅ runtime rewritten with canonical Burbidge-Harrison
+algorithm. ✅ known-answer tests pinning reconstruction bound + path
+dependence. CHANGELOG entry under v0.8.9 honesty-pass section.</p>
+</section>
+</section>
+<section id="v2-4-dfm-mixed-mariano-murasawa-runtime-vs-mariano-murasawa-2003-2010">
+<h2>V2.4 dfm_mixed_mariano_murasawa runtime vs Mariano-Murasawa (2003 / 2010)<a class="headerlink" href="#v2-4-dfm-mixed-mariano-murasawa-runtime-vs-mariano-murasawa-2003-2010" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ❌ FAIL → fixed in v0.8.9 honesty pass with two patches.</p>
+<p>Plan reference: V2.4 audits the <code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code> family
+operational since v0.25 #245. The expected procedure is the
+Mariano-Murasawa (2003) monthly-state aggregator dynamic factor model
+fitted by Kalman filter + EM, with the Mariano-Murasawa (2010) Eq. 4
+AR(1) idiosyncratic-error spec as the canonical default.</p>
+<section id="pre-fix-behaviour">
+<h3>Pre-fix behaviour<a class="headerlink" href="#pre-fix-behaviour" title="Link to this heading"></a></h3>
+<p>The runtime <code class="docutils literal notranslate"><span class="pre">_DFMMixedFrequency</span></code> documented two paths:</p>
+<ol class="arabic simple">
+<li><p><strong>Mixed-frequency</strong>: when <code class="docutils literal notranslate"><span class="pre">mixed_frequency=True</span></code> or
+<code class="docutils literal notranslate"><span class="pre">column_frequencies</span></code> is provided, route to
+<code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.statespace.dynamic_factor_mq.DynamicFactorMQ</span></code>.</p></li>
+<li><p><strong>Single-frequency</strong> (fallback): route to
+<code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.statespace.dynamic_factor.DynamicFactor</span></code>.</p></li>
+</ol>
+<p>Both delegate to statsmodels state-space estimators (Kalman + MLE) –
+not PCA approximations – so the <em>intent</em> matched the paper. The
+problem was that the <strong>mixed-frequency path had never run successfully</strong>:</p>
+<ul class="simple">
+<li><p><strong>Bug 1 – <code class="docutils literal notranslate"><span class="pre">k_endog_monthly</span></code> argument conflict</strong>. The runtime
+passed <code class="docutils literal notranslate"><span class="pre">endog_quarterly=...</span></code> together with
+<code class="docutils literal notranslate"><span class="pre">k_endog_monthly=len(monthly)</span></code>. <code class="docutils literal notranslate"><span class="pre">DynamicFactorMQ.__init__</span></code>
+rejects this combination with <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>: when
+<code class="docutils literal notranslate"><span class="pre">endog_quarterly</span></code> is supplied, <code class="docutils literal notranslate"><span class="pre">k_endog_monthly</span></code> is inferred from
+the primary endog shape and <em>cannot</em> be specified explicitly. Every
+invocation raised on construction, the silent <code class="docutils literal notranslate"><span class="pre">try/except</span></code> caught
+the exception, and the <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">...</span> <span class="pre">else</span></code> clause routed the user into
+the single-frequency fallback <strong>without warning</strong>.</p></li>
+<li><p><strong>Bug 2 – Quarterly index shape mismatch</strong>. <code class="docutils literal notranslate"><span class="pre">DynamicFactorMQ</span></code>
+requires the quarterly endog to carry a quarterly-frequency
+<code class="docutils literal notranslate"><span class="pre">DateTimeIndex</span></code> (<code class="docutils literal notranslate"><span class="pre">freqstr</span></code> starting with ‘Q’). Users naturally
+supply quarterly variables NaN-padded at non-quarter-end months on a
+monthly index (e.g. FRED-QD inside a FRED-MD panel); this shape was
+rejected by statsmodels and the runtime had no normalisation step to
+convert it.</p></li>
+</ul>
+<p>Combined effect: every recipe declaring <code class="docutils literal notranslate"><span class="pre">mixed_frequency=True</span></code> (the
+M-M 2003 path) silently degraded to the single-frequency
+<code class="docutils literal notranslate"><span class="pre">DynamicFactor</span></code> (which is a generic DFM, not the Mariano-Murasawa
+mixed-state model). The <code class="docutils literal notranslate"><span class="pre">operational</span></code> claim from v0.25 #245 was
+overclaimed for the mixed-frequency contract.</p>
+</section>
+<section id="fix-landed-in-v0-8-9">
+<h3>Fix landed in v0.8.9<a class="headerlink" href="#fix-landed-in-v0-8-9" title="Link to this heading"></a></h3>
+<p>Two surgical patches in <code class="docutils literal notranslate"><span class="pre">_DFMMixedFrequency._fit_mixed_frequency</span></code>:</p>
+<ul class="simple">
+<li><p><strong>Argument fix</strong>. When <code class="docutils literal notranslate"><span class="pre">endog_quarterly</span></code> is non-None, drop
+<code class="docutils literal notranslate"><span class="pre">k_endog_monthly</span></code> from the kwargs (statsmodels infers it). When
+there are no quarterly variables, keep <code class="docutils literal notranslate"><span class="pre">k_endog_monthly</span></code> as before.</p></li>
+<li><p><strong>Quarterly index normalisation</strong>. Drop all-NaN rows in the
+quarterly block, then reindex to a quarterly <code class="docutils literal notranslate"><span class="pre">DateTimeIndex</span></code> with
+<code class="docutils literal notranslate"><span class="pre">freq='QE'</span></code> (pandas 3.0 spelling; statsmodels’ frequency check
+inspects only <code class="docutils literal notranslate"><span class="pre">freqstr[0]</span></code>, which is <code class="docutils literal notranslate"><span class="pre">'Q'</span></code> for both <code class="docutils literal notranslate"><span class="pre">'Q'</span></code> and
+<code class="docutils literal notranslate"><span class="pre">'QE'</span></code>). The conversion only fires when the user-supplied index is
+a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>, so non-monthly inputs are passed through.</p></li>
+</ul>
+<p>Two diagnostic surfaces added to make a future silent-fallback
+regression detectable:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_mq_failure_reason</span></code>: <code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code> populated when MQ requested
+but did not run (statsmodels missing / insufficient data / no
+monthly anchor / fit raised). Replaces the previous “exception
+swallowed, no trace” behaviour.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_idiosyncratic_ar1</span></code>: <code class="docutils literal notranslate"><span class="pre">True</span></code> when the M-M (2010) Eq. 4 spec was
+active, <code class="docutils literal notranslate"><span class="pre">False</span></code> when the runtime fell back to <code class="docutils literal notranslate"><span class="pre">i.i.d.</span></code>
+idiosyncratic errors, <code class="docutils literal notranslate"><span class="pre">None</span></code> when MQ did not run.</p></li>
+</ul>
+</section>
+<section id="verification-this-v2-4-entry">
+<h3>Verification (this V2.4 entry)<a class="headerlink" href="#verification-this-v2-4-entry" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Pure-monthly MQ runs with M-M 2010 Eq. 4 spec</strong>
+(<code class="docutils literal notranslate"><span class="pre">test_v24_dfm_mq_pure_monthly_uses_mariano_murasawa_2010_ar1</span></code>):
+<code class="docutils literal notranslate"><span class="pre">mixed_frequency=True</span></code> with all-monthly columns drives
+<code class="docutils literal notranslate"><span class="pre">_mode</span> <span class="pre">==</span> <span class="pre">&quot;mixed_frequency_mq&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">_idiosyncratic_ar1</span> <span class="pre">is</span> <span class="pre">True</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_mq_failure_reason</span> <span class="pre">is</span> <span class="pre">None</span></code>. <code class="docutils literal notranslate"><span class="pre">_results</span></code> exposes <code class="docutils literal notranslate"><span class="pre">llf</span></code> +
+<code class="docutils literal notranslate"><span class="pre">filter_results</span></code> (state-space invariants).</p></li>
+<li><p><strong>Mixed M+Q with NaN-padded quarterly column</strong>
+(<code class="docutils literal notranslate"><span class="pre">test_v24_dfm_mq_mixed_m_q_handles_quarterly_nan_padded_input</span></code>):
+user supplies <code class="docutils literal notranslate"><span class="pre">q1</span></code> NaN-padded on monthly index; runtime drops the
+NaN rows, reindexes to quarterly DateTimeIndex, runs DFMQ;
+forecasts finite. Pre-fix this path silently degraded to single-
+frequency.</p></li>
+<li><p><strong>Single-frequency uses state-space DFM</strong>
+(<code class="docutils literal notranslate"><span class="pre">test_v24_dfm_single_frequency_falls_back_to_state_space_dfm</span></code>):
+<code class="docutils literal notranslate"><span class="pre">mixed_frequency=False</span></code> routes to <code class="docutils literal notranslate"><span class="pre">DynamicFactor</span></code> (Kalman +
+MLE), <code class="docutils literal notranslate"><span class="pre">_mode</span> <span class="pre">==</span> <span class="pre">&quot;single_frequency&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">llf</span></code> and <code class="docutils literal notranslate"><span class="pre">filter_results</span></code>
+present.</p></li>
+<li><p><strong>Diagnostic surfaces honestly</strong>
+(<code class="docutils literal notranslate"><span class="pre">test_v24_dfm_mq_failure_surfaces_in_diagnostic_attribute</span></code>):
+declaring all variables quarterly (no monthly anchor) makes MQ
+refuse; the runtime sets <code class="docutils literal notranslate"><span class="pre">_mq_failure_reason</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;no</span> <span class="pre">monthly</span> <span class="pre">variables</span> <span class="pre">declared&quot;</span></code> and falls back. The user can now distinguish
+intended single-frequency from a silently-failed MQ.</p></li>
+</ul>
+</section>
+<section id="discrepancies-post-fix">
+<h3>Discrepancies (post-fix)<a class="headerlink" href="#discrepancies-post-fix" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">maxiter=20</span></code> cap on <code class="docutils literal notranslate"><span class="pre">DynamicFactorMQ.fit</span></code> is short relative
+to statsmodels’ default of 50; small-sample MQ fits may emit
+<code class="docutils literal notranslate"><span class="pre">ConvergenceWarning</span></code> while still producing valid forecasts. Tracked
+for v0.9.x as an exposed param.</p></li>
+<li><p>The single-frequency path does not implement the Mariano-Murasawa
+monthly aggregator (it would not apply – the aggregator equation
+is the <em>raison d’être</em> of the mixed-frequency model). When users
+request mixed-frequency but every column is declared monthly, the
+runtime correctly routes to <code class="docutils literal notranslate"><span class="pre">DynamicFactorMQ</span></code> (pure-monthly MQ);
+this is documented behaviour.</p></li>
+</ul>
+</section>
+<section id="action">
+<h3>Action<a class="headerlink" href="#action" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>✅ Argument-conflict patch landed in
+<code class="docutils literal notranslate"><span class="pre">runtime.py:_DFMMixedFrequency._fit_mixed_frequency</span></code>.</p></li>
+<li><p>✅ Quarterly index normalisation patch landed in the same method.</p></li>
+<li><p>✅ Diagnostic attributes <code class="docutils literal notranslate"><span class="pre">_mq_failure_reason</span></code> /
+<code class="docutils literal notranslate"><span class="pre">_idiosyncratic_ar1</span></code> exposed.</p></li>
+<li><p>✅ Four known-answer tests in
+<code class="docutils literal notranslate"><span class="pre">tests/core/test_v09_paper_coverage.py</span></code>.</p></li>
+<li><p>CHANGELOG entry under v0.8.9 honesty-pass section.</p></li>
+</ul>
+</section>
+</section>
+<section id="v2-1-scaled-pca-runtime-vs-huang-zhou-2022-authors-matlab">
+<h2>V2.1 scaled_pca runtime vs Huang/Zhou (2022) authors’ MATLAB<a class="headerlink" href="#v2-1-scaled-pca-runtime-vs-huang-zhou-2022-authors-matlab" title="Link to this heading"></a></h2>
+<p><strong>Status</strong>: ❌ <strong>FAIL → fixed in v0.8.9 honesty pass</strong></p>
+<p><strong>Pre-fix discrepancy</strong>:</p>
+<p>The previous <code class="docutils literal notranslate"><span class="pre">_pca_factors(variant='scaled_pca')</span></code> implemented a
+<strong>row-wise <code class="docutils literal notranslate"><span class="pre">|target|</span></code> weighting</strong> of observations, not the paper’s
+column-wise predictive-slope β scaling. This is a fundamentally
+different algorithm.</p>
+<ul class="simple">
+<li><p>Paper’s algorithm (from authors’ MATLAB <code class="docutils literal notranslate"><span class="pre">sPCAest.m</span></code>):</p>
+<ol class="arabic simple">
+<li><p>Standardise X column-wise (z-score, ddof=1)</p></li>
+<li><p>For each column j, β_j = univariate OLS slope of target on Xs[:, j]</p></li>
+<li><p>Scale each column j of Xs by β_j (signed)</p></li>
+<li><p>PCA on the scaled matrix</p></li>
+</ol>
+</li>
+<li><p>Our previous implementation:</p>
+<ol class="arabic simple">
+<li><p>Centre X (NOT standardise)</p></li>
+<li><p>Compute row-wise weights from |target − mean(target)| / max</p></li>
+<li><p>Multiply each row by (1 + |target|/max)</p></li>
+<li><p>sklearn PCA</p></li>
+</ol>
+</li>
+</ul>
+<p>Synthetic test confirmed: factor correlation between previous
+implementation and authors’ algorithm was 0.977 (not 1.0 → different
+algorithms). On the same data, authors’ algorithm tracked the true
+latent factor at 0.988 vs our previous at 0.963.</p>
+<p><strong>Fix landed in v0.8.9</strong>:</p>
+<p>New helper <code class="docutils literal notranslate"><span class="pre">_scaled_pca_huang_zhou</span></code> implements the four-step paper
+algorithm exactly. Verified against authors’ MATLAB:</p>
+<ul class="simple">
+<li><p>Per-column β agrees to machine precision (max abs diff ~ 1e-16)</p></li>
+<li><p>Resulting first factor correlates 1.000 with authors’ algorithm</p></li>
+<li><p>Test <code class="docutils literal notranslate"><span class="pre">test_v21_scaled_pca_matches_huang_zhou_2022_authors_matlab</span></code>
+pins this in the regression suite.</p></li>
+</ul>
+<p><strong>Discrepancies (post-fix)</strong>:</p>
+<ul class="simple">
+<li><p>Authors’ <code class="docutils literal notranslate"><span class="pre">pc_T</span></code> uses <code class="docutils literal notranslate"><span class="pre">F'F/T</span> <span class="pre">=</span> <span class="pre">I</span></code> factor normalisation; we use
+sklearn <code class="docutils literal notranslate"><span class="pre">PCA</span></code> default (factors scaled by singular values). Up to
+sign and per-column scalar, the factor <em>directions</em> are identical;
+downstream regressions absorb the scaling difference into the
+coefficients. Documented in the helper docstring; non-issue for
+prediction.</p></li>
+</ul>
+<p><strong>Action</strong>: ✅ runtime fix landed. ✅ known-answer test added.
+✅ helper docstring documents normalisation difference. CHANGELOG
+entry needed under v0.8.9 honesty-pass section.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=6bfd653b"></script>
+      <script src="../../../_static/documentation_options.js?v=6b888095"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -67,6 +67,7 @@
 <li class="toctree-l3"><a class="reference internal" href="training_start_rule.html"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="refit_policy.html"><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="search_algorithm.html"><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pi_correction.html"><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a></li>
@@ -131,8 +132,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Operational: 34 option(s)</p></li>
-<li><p>Future: 0 option(s)</p></li>
+<li><p>Operational: 42 option(s)</p></li>
+<li><p>Future: 5 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -174,10 +175,24 @@
 <p>Default α = 1.0. The <code class="docutils literal notranslate"><span class="pre">cv_path</span></code> search algorithm uses <code class="docutils literal notranslate"><span class="pre">RidgeCV</span></code> to pick α from a grid via leave-one-out CV; the <code class="docutils literal notranslate"><span class="pre">grid_search</span></code> / <code class="docutils literal notranslate"><span class="pre">random_search</span></code> algorithms can sweep over leaf_config.tuning_grid[‘alpha’].</p>
 <p><strong>When to use</strong></p>
 <p>High-dimensional macro panels with collinear predictors; standard benchmark.</p>
+<p><strong>v0.9 sub-axes</strong> (default values preserve standard ridge):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">params.prior</span></code> – prior on the coefficients. <code class="docutils literal notranslate"><span class="pre">none</span></code> (default) keeps standard ridge.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">random_walk</span></code> (operational v0.9.1) – Goulet Coulombe (2025 IJF) ‘Time-Varying Parameters as Ridge Regressions’ two-step closed-form estimator with a random-walk kernel on coefficient deviations. Yields per-time β path via the cumulative-sum reparametrisation β_k = C_RW · θ_k. Helper <code class="docutils literal notranslate"><span class="pre">_TwoStageRandomWalkRidge</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shrink_to_target</span></code> (operational v0.9.1) – Maximally Forward-Looking Core Inflation Albacore_comps Variant A (Goulet Coulombe / Klieber / Barrette / Goebel 2024). <code class="docutils literal notranslate"><span class="pre">arg</span> <span class="pre">min</span> <span class="pre">‖y</span> <span class="pre">−</span> <span class="pre">Xw‖²</span> <span class="pre">+</span> <span class="pre">α‖w</span> <span class="pre">−</span> <span class="pre">w_target‖²</span></code> s.t. <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">≥</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">w'1</span> <span class="pre">=</span> <span class="pre">1</span></code>. Solved via scipy SLSQP. Limit cases: α=0 → unconstrained / NNLS; α→∞ → returns w_target. Helper <code class="docutils literal notranslate"><span class="pre">_ShrinkToTargetRidge</span></code>. Sub-axis params: <code class="docutils literal notranslate"><span class="pre">prior_target</span></code> (default uniform 1/K), <code class="docutils literal notranslate"><span class="pre">prior_simplex</span></code> (default True).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fused_difference</span></code> (operational v0.9.1) – Maximally FL Albacore_ranks Variant B. <code class="docutils literal notranslate"><span class="pre">arg</span> <span class="pre">min</span> <span class="pre">‖y</span> <span class="pre">−</span> <span class="pre">Xw‖²</span> <span class="pre">+</span> <span class="pre">α‖Dw‖²</span></code> s.t. <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">≥</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">mean(y)</span> <span class="pre">=</span> <span class="pre">mean(Xw)</span></code>, where D is the first-difference operator. Pairs with the L3 <code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> op (B-6 v0.8.9) for rank-space transformation. Limit cases: α=0 → standard OLS / NNLS; α→∞ → uniform weights (level set by mean equality). Helper <code class="docutils literal notranslate"><span class="pre">_FusedDifferenceRidge</span></code>. Sub-axis params: <code class="docutils literal notranslate"><span class="pre">prior_diff_order</span></code> (default 1), <code class="docutils literal notranslate"><span class="pre">prior_mean_equality</span></code> (default True).</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params.coefficient_constraint</span></code> – sign / cone constraints. <code class="docutils literal notranslate"><span class="pre">none</span></code> (default) is unconstrained; <code class="docutils literal notranslate"><span class="pre">nonneg</span></code> (operational v0.8.9) implements the assemblage non-negative ridge.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params.vol_model</span></code> (random_walk only) – volatility model for the step-2 Ω_ε reconstruction. <code class="docutils literal notranslate"><span class="pre">ewma</span></code> (default; RiskMetrics λ=0.94; no extra deps) or <code class="docutils literal notranslate"><span class="pre">garch11</span></code> (requires <code class="docutils literal notranslate"><span class="pre">arch&gt;=5.0</span></code>; auto-falls-back to EWMA when missing).</p></li>
+</ul>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Hoerl &amp; Kennard (1970) ‘Ridge regression: biased estimation for nonorthogonal problems’, Technometrics 12(1).</p></li>
+<li><p>Goulet Coulombe (2025) ‘Time-Varying Parameters as Ridge Regressions’, International Journal of Forecasting 41:982-1002. doi:10.1016/j.ijforecast.2024.08.006.</p></li>
+<li><p>Goulet Coulombe / Klieber / Barrette / Goebel (2024) ‘Maximally Forward-Looking Core Inflation’ – Albacore_comps (shrink_to_target Variant A) and Albacore_ranks (fused_difference Variant B).</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/linear_model.html#lasso" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a>, <a class="reference internal" href="#elastic-net"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></span></a>, <a class="reference internal" href="#lasso-path"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
@@ -269,7 +284,7 @@
 <p>Vector autoregression VAR(p).</p>
 <p>Joint AR(p) over the target plus its predictors. Uses statsmodels’ <code class="docutils literal notranslate"><span class="pre">VAR</span></code> and forecasts the target component of the joint system. Captures cross-series dynamics that single-equation AR misses.</p>
 <p><strong>When to use</strong></p>
-<p>Multi-series joint forecasting; impulse-response decomposition (paired with L7 <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>).</p>
+<p>Multi-series joint forecasting; impulse-response decomposition (paired with L7 <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> for Cholesky-identified shocks; <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> reserved for the future Pesaran-Shin 1998 order-invariant variant).</p>
 <p><strong>When NOT to use</strong></p>
 <p>High-dimensional panels (VAR scales O(p²)); use BVAR shrinkage instead.</p>
 <p><strong>References</strong></p>
@@ -309,14 +324,28 @@
 </section>
 <section id="decision-tree-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code>  –  operational<a class="headerlink" href="#decision-tree-operational" title="Link to this heading"></a></h3>
-<p>Single decision tree (sklearn).</p>
+<p>Single decision tree (sklearn) or Slow-Growing Tree (SGT, in-fit shrinkage).</p>
 <p>Cheapest non-linear model. Useful as an ablation against random forests / boosting – if a single tree matches RF performance, the ensemble isn’t buying much.</p>
+<p><strong>v0.9 sub-axis <code class="docutils literal notranslate"><span class="pre">params.split_shrinkage</span></code> = η</strong> – per-split soft-weight learning rate. <code class="docutils literal notranslate"><span class="pre">0.0</span></code> (default) keeps the standard greedy sklearn CART. Non-zero values activate <strong>Slow-Growing Trees</strong> (Goulet Coulombe 2024 — operational v0.9.1 dev-stage v0.9.0B-6): a <em>soft-weighted</em> tree where rows on the side that does not satisfy the split rule receive weight <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">−</span> <span class="pre">η)</span></code> instead of 0. Implements Algorithm 1 from the paper exactly: leaf weights propagate multiplicatively through every split, the Herfindahl index <code class="docutils literal notranslate"><span class="pre">H_l</span> <span class="pre">=</span> <span class="pre">Σ(ω²)/(Σω)²</span></code> of the leaf weight vector controls stopping, and the leaf prediction is the weighted mean.</p>
+<p>Limit cases (verified by tests):</p>
+<ul class="simple">
+<li><p>η = 1.0 → recovers standard CART (hard splits).</p></li>
+<li><p>η ≈ 0.1, H̄ ≈ 0.05 → SGT regime (‘matches RF on Linear DGP at high R²’ per paper Figure 2).</p></li>
+</ul>
+<p><strong>Sub-axis params</strong> (only consulted when split_shrinkage ≠ 0):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">herfindahl_threshold</span></code> = H̄ (default 0.25; smaller → deeper tree). Practice: <code class="docutils literal notranslate"><span class="pre">{0.05,</span> <span class="pre">0.1,</span> <span class="pre">0.25}</span></code> per paper.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eta_depth_step</span></code> – paper rule-of-thumb increases η by <code class="docutils literal notranslate"><span class="pre">eta_depth_step·depth</span></code> per level (default 0.0 keeps η constant).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_depth</span></code> – additional safety bound on tree depth.</p></li>
+</ul>
+<p><strong>Note</strong>: sklearn <code class="docutils literal notranslate"><span class="pre">DecisionTreeRegressor</span></code> cannot reproduce SGT via post-fit leaf-multiplication because the <em>splits themselves</em> depend on soft weights (every row, including rule-violators, contributes to the SSE objective). The custom helper <code class="docutils literal notranslate"><span class="pre">_SlowGrowingTree</span></code> implements the soft-weighted CART from scratch.</p>
 <p><strong>When to use</strong></p>
-<p>Ablation studies; cheap non-linear baselines.</p>
+<p>Ablation studies; cheap non-linear baselines; SLOTH single-tree replacement for RF on small samples.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Breiman, Friedman, Stone &amp; Olshen (1984) ‘Classification and Regression Trees’, CRC Press.</p></li>
+<li><p>Goulet Coulombe (2024) ‘Slow-Growing Trees’, in Machine Learning for Econometrics and Related Topics, Studies in Systems, Decision and Control 508 (Springer). doi:10.1007/978-3-031-43601-7_4.</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
@@ -339,8 +368,12 @@
 <h3><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>  –  operational<a class="headerlink" href="#extra-trees-operational" title="Link to this heading"></a></h3>
 <p>Extremely randomized trees (sklearn).</p>
 <p>Like RF but splits at random thresholds (no greedy search). Faster than RF; sometimes lower variance.</p>
+<p><strong>v0.9 sub-axis</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">params.max_features</span></code> – number of predictors considered at each split. <code class="docutils literal notranslate"><span class="pre">&quot;sqrt&quot;</span></code> (default) matches sklearn; <code class="docutils literal notranslate"><span class="pre">1</span></code> (operational, v0.9) implements Coulombe (2024) ‘To Bag is to Prune’ Perfectly Random Forest baseline (one random feature per split, fully random structure).</p></li>
+</ul>
 <p><strong>When to use</strong></p>
-<p>Quick non-linear baseline; large ensemble experiments.</p>
+<p>Quick non-linear baseline; large ensemble experiments; PRF baseline (max_features=1).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
@@ -451,10 +484,32 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#svr-rbf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a>, <a class="reference internal" href="#svr-linear"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
+<section id="kernel-ridge-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code>  –  operational<a class="headerlink" href="#kernel-ridge-operational" title="Link to this heading"></a></h3>
+<p>Kernel Ridge Regression – closed-form non-linear ridge in the dual.</p>
+<p>Ridge regression with a non-linear kernel: <code class="docutils literal notranslate"><span class="pre">ŷ(x)</span> <span class="pre">=</span> <span class="pre">Σ_i</span> <span class="pre">α_i</span> <span class="pre">K(x,</span> <span class="pre">x_i)</span> <span class="pre">+</span> <span class="pre">b</span></code> where the dual coefficients <code class="docutils literal notranslate"><span class="pre">α</span> <span class="pre">=</span> <span class="pre">(K</span> <span class="pre">+</span> <span class="pre">λ</span> <span class="pre">I)⁻¹</span> <span class="pre">y</span></code> are recovered in closed form. Operational v0.9.1 dev-stage v0.9.0F (audit-fix). Surfaces as a first-class L4 family because Coulombe / Surprenant / Leroux / Stevanovic (2022 JAE) ‘How is Machine Learning Useful for Macroeconomic Forecasting?’ Eq. 16 / §3.1.1 uses KRR as the headline non-linearity feature in the macro horse race.</p>
+<p><strong>Tunable params</strong>: <code class="docutils literal notranslate"><span class="pre">alpha</span></code> (= ridge penalty λ; default 1.0); <code class="docutils literal notranslate"><span class="pre">kernel</span></code> (‘rbf’ default / ‘linear’ / ‘poly’ / ‘sigmoid’ / ‘laplacian’ / ‘chi2’ – any sklearn-supported kernel); <code class="docutils literal notranslate"><span class="pre">gamma</span></code> (RBF bandwidth, default sklearn auto = 1/n_features); <code class="docutils literal notranslate"><span class="pre">degree</span></code> (poly kernel only, default 3); <code class="docutils literal notranslate"><span class="pre">coef0</span></code> (poly / sigmoid, default 1.0).</p>
+<p>Distinct from <code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code> (ε-insensitive loss, sparsity in support vectors) and from <code class="docutils literal notranslate"><span class="pre">ridge</span></code> (linear). The dual representation also pairs with the L7 <code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code> op for kernel-weighted training-target attribution.</p>
+<p><strong>When to use</strong></p>
+<p>Non-linear macro forecasting baselines; KRR vs SVR-RBF / RF ablations; replicating Coulombe et al. (2022) Feature 1 nonlinearity test.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Saunders, Gammerman &amp; Vovk (1998) ‘Ridge Regression Learning Algorithm in Dual Variables’, ICML.</p></li>
+<li><p>Coulombe, Leroux, Stevanovic &amp; Surprenant (2022) ‘How is Machine Learning Useful for Macroeconomic Forecasting?’, Journal of Applied Econometrics 37(5): 920-964 – Eq. 16 + §3.1.1.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ridge"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ridge</span></code></span></a>, <a class="reference internal" href="#svr-rbf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a>, <a class="reference internal" href="#dual-decomposition"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
 <section id="mlp-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">mlp</span></code>  –  operational<a class="headerlink" href="#mlp-operational" title="Link to this heading"></a></h3>
 <p>Multi-layer perceptron (sklearn).</p>
 <p>Feed-forward NN with ReLU activations. <code class="docutils literal notranslate"><span class="pre">params.hidden_layer_sizes</span></code> controls the architecture.</p>
+<p><strong>v0.9 sub-axes</strong> (apply equally to mlp / lstm / gru / transformer):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">params.architecture</span></code> – network topology. <code class="docutils literal notranslate"><span class="pre">standard</span></code> (default) is the standard feed-forward / sequence variant. <code class="docutils literal notranslate"><span class="pre">hemisphere</span></code> (future) implements Coulombe / Frenette / Klieber (2025 JAE) HNN with separate mean / variance hemispheres joined by a constraint loss.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params.loss</span></code> – objective. <code class="docutils literal notranslate"><span class="pre">mse</span></code> (default), <code class="docutils literal notranslate"><span class="pre">quantile</span></code> (operational via forecast_object=quantile), <code class="docutils literal notranslate"><span class="pre">volatility_emphasis</span></code> (future, HNN constraint loss).</p></li>
+</ul>
 <p><strong>When to use</strong></p>
 <p>Non-linear regression baselines; ablations against deep NN.</p>
 <p><strong>References</strong></p>
@@ -572,14 +627,18 @@
 </section>
 <section id="macroeconomic-random-forest-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>  –  operational<a class="headerlink" href="#macroeconomic-random-forest-operational" title="Link to this heading"></a></h3>
-<p>Coulombe (2024) GTVP random forest (per-leaf local linear regression).</p>
-<p>Generalised Time-Varying Parameter random forest: each leaf fits a local linear regression of y on X. Forest prediction = average of leaf-local linear predictions. Captures regime-like non-linearities while preserving linear interpretability within each regime.</p>
+<p>Goulet Coulombe (2024) MRF: random walk regularised forest with per-leaf local linear regression and Block Bayesian Bootstrap forecast ensembles.</p>
+<p>Macroeconomic Random Forest. Each leaf fits a local linear regression of y on the state vector S; coefficient series are smoothed via random-walk regularisation (<code class="docutils literal notranslate"><span class="pre">rw_regul</span></code> parameter); forecast ensembles use the Block Bayesian Bootstrap (Taddy 2015 extension). Surfaces Generalised Time-Varying Parameters (GTVPs) via the L7 <code class="docutils literal notranslate"><span class="pre">mrf_gtvp</span></code> op.</p>
+<p>Backed by Ryan Lucas’s reference implementation, vendored under <code class="docutils literal notranslate"><span class="pre">macroforecast/_vendor/macro_random_forest/</span></code> with surgical numpy 2.x / pandas 2.x compatibility patches (no algorithmic changes). Upstream: https://github.com/RyanLucas3/MacroRandomForest. No extra required – the family works out of the box.</p>
+<p><strong>Citation requirement</strong>: research using this family must cite Goulet Coulombe (2024) ‘The Macroeconomy as a Random Forest’, Journal of Applied Econometrics (arXiv:2006.12724) and acknowledge the upstream implementation by Ryan Lucas (https://github.com/RyanLucas3/MacroRandomForest).</p>
+<p>Tunable params: <code class="docutils literal notranslate"><span class="pre">B</span></code> (bootstrap iterations, default 50), <code class="docutils literal notranslate"><span class="pre">ridge_lambda</span></code> (default 0.1), <code class="docutils literal notranslate"><span class="pre">rw_regul</span></code> (RW penalty 0..1, default 0.75), <code class="docutils literal notranslate"><span class="pre">mtry_frac</span></code> (default 1/3), <code class="docutils literal notranslate"><span class="pre">trend_push</span></code> (default 1), <code class="docutils literal notranslate"><span class="pre">quantile_rate</span></code> (default 0.3), <code class="docutils literal notranslate"><span class="pre">fast_rw</span></code> (default True), <code class="docutils literal notranslate"><span class="pre">parallelise</span></code> (default False), <code class="docutils literal notranslate"><span class="pre">n_cores</span></code> (default 1).</p>
 <p><strong>When to use</strong></p>
 <p>Macro forecasting with non-stationary parameter dynamics; alternative to switching models.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
-<li><p>Coulombe (2024) ‘A Neural Phillips Curve and a Deep Output Gap’, Journal of Monetary Economics, forthcoming.</p></li>
+<li><p>Goulet Coulombe, P. (2024) ‘The Macroeconomy as a Random Forest’, Journal of Applied Econometrics. arXiv:2006.12724.</p></li>
+<li><p>Lucas, R. (2022) ‘MacroRandomForest’ (Python implementation). https://github.com/RyanLucas3/MacroRandomForest. MIT licence.</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
@@ -614,17 +673,187 @@
 </section>
 <section id="bagging-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">bagging</span></code>  –  operational<a class="headerlink" href="#bagging-operational" title="Link to this heading"></a></h3>
-<p>Bootstrap-aggregating wrapper around any base family.</p>
+<p>Bootstrap-aggregating wrapper around any base family; supports Booging.</p>
 <p><code class="docutils literal notranslate"><span class="pre">params.base_family</span></code> selects the base estimator; <code class="docutils literal notranslate"><span class="pre">params.n_estimators</span></code> (default 50) bootstrap resamples are fit; predict averages. <code class="docutils literal notranslate"><span class="pre">predict_quantiles</span></code> surfaces empirical bag-quantiles.</p>
+<p><strong>v0.9 sub-axis <code class="docutils literal notranslate"><span class="pre">params.strategy</span></code></strong> – bag composition strategy:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">standard</span></code> (default) – plain Breiman (1996) bagging; i.i.d. bootstrap with replacement.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block</span></code> (operational v0.8.9) – <em>circular</em> moving-block bootstrap (Künsch 1989 variant: block starts wrap at n via modulo) for serially-correlated panels (Taddy 2015 ext. used in MRF).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">booging</span></code> (operational v0.9.1) – Goulet Coulombe (2024) ‘To Bag is to Prune’. Outer <code class="docutils literal notranslate"><span class="pre">B</span></code> bags of (intentionally over-fitted) inner Stochastic Gradient Boosted Trees + Data Augmentation: each predictor column is duplicated as <code class="docutils literal notranslate"><span class="pre">X̃_k</span> <span class="pre">=</span> <span class="pre">X_k</span> <span class="pre">+</span> <span class="pre">N(0,</span> <span class="pre">(σ_k</span> <span class="pre">·</span> <span class="pre">da_noise_frac)²)</span></code>; per-bag column-drop of rate <code class="docutils literal notranslate"><span class="pre">da_drop_rate</span></code> (default 0.2); inner SGB at <code class="docutils literal notranslate"><span class="pre">inner_n_estimators=500,</span> <span class="pre">inner_learning_rate=0.1,</span> <span class="pre">inner_max_depth=4,</span> <span class="pre">inner_subsample=0.5</span></code>. Sampling without replacement at <code class="docutils literal notranslate"><span class="pre">max_samples=0.75</span></code>. Outer <code class="docutils literal notranslate"><span class="pre">n_estimators=B</span></code> (default 100) replaces tuning the boosting depth <code class="docutils literal notranslate"><span class="pre">S</span></code> – the bag-prune theorem (paper §2) lets us over-fit the inner SGB and let the bag average prune. Helper <code class="docutils literal notranslate"><span class="pre">_BoogingWrapper</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sequential_residual</span></code> – legacy alias for <code class="docutils literal notranslate"><span class="pre">booging</span></code> retained for back-compat. Pre-2026-05-07 plan sketch (“K rounds bag-on-residuals”) was an inaccurate description of the same paper’s algorithm; the option now routes to the outer-bagging-of-inner-SGB construction.</p></li>
+</ul>
 <p><strong>When to use</strong></p>
-<p>Variance reduction on noisy series; quantile bands without quantile regression.</p>
+<p>Variance reduction on noisy series; quantile bands without quantile regression; Booging / block-bootstrap recipes; over-fit-then-bag pruning.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
 <li><p>Breiman (1996) ‘Bagging Predictors’, Machine Learning 24(2).</p></li>
+<li><p>Künsch (1989) ‘The jackknife and the bootstrap for general stationary observations’, Annals of Statistics 17(3) – moving-block variant.</p></li>
+<li><p>Goulet Coulombe (2024) ‘To Bag is to Prune’, arXiv:2008.07063 – Booging algorithm.</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#quantile-regression-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#quantile-regression-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="mars-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mars</span></code>  –  operational<a class="headerlink" href="#mars-operational" title="Link to this heading"></a></h3>
+<p>Multivariate Adaptive Regression Splines (Friedman 1991).</p>
+<p>Greedy forward / backward selection of piecewise-linear hinge basis functions <code class="docutils literal notranslate"><span class="pre">max(0,</span> <span class="pre">x</span> <span class="pre">-</span> <span class="pre">c)</span></code> and their products. Atomic primitive – sklearn does not provide a MARS implementation. Runtime wraps <code class="docutils literal notranslate"><span class="pre">pyearth</span></code> as an optional dep; install via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[mars]</span></code>. Required as the base learner for the Coulombe (2024) ‘MARSquake’ recipe (<code class="docutils literal notranslate"><span class="pre">bagging(base_family=mars,</span> <span class="pre">...)</span></code>).</p>
+<p>Operational from v0.9.0; raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> with an install hint when <code class="docutils literal notranslate"><span class="pre">pyearth</span></code> is not present (mirrors the xgboost / lightgbm / catboost optional-dep error pattern).</p>
+<p><strong>When to use</strong></p>
+<p>Non-linear regression with interpretable basis functions; MARSquake recipe base learner.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without <code class="docutils literal notranslate"><span class="pre">[mars]</span></code> extra installed – raises a clear NotImplementedError.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Friedman (1991) ‘Multivariate Adaptive Regression Splines’, Annals of Statistics 19(1).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a>, <a class="reference internal" href="#decision-tree"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#bagging" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bagging</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="garch11-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">garch11</span></code>  –  operational<a class="headerlink" href="#garch11-operational" title="Link to this heading"></a></h3>
+<p>GARCH(1,1) univariate conditional-variance model (Bollerslev 1986).</p>
+<p>Standard GARCH(1,1) volatility model: <code class="docutils literal notranslate"><span class="pre">σ²_t</span> <span class="pre">=</span> <span class="pre">ω</span> <span class="pre">+</span> <span class="pre">α</span> <span class="pre">·</span> <span class="pre">ε²_{t-1}</span> <span class="pre">+</span> <span class="pre">β</span> <span class="pre">·</span> <span class="pre">σ²_{t-1}</span></code>. The L4 wrapper treats <code class="docutils literal notranslate"><span class="pre">y</span></code> as the return-like series and ignores <code class="docutils literal notranslate"><span class="pre">X</span></code>; <code class="docutils literal notranslate"><span class="pre">predict(X)</span></code> returns the conditional mean (μ broadcast over <code class="docutils literal notranslate"><span class="pre">len(X)</span></code>) and the variance forecast is exposed via <code class="docutils literal notranslate"><span class="pre">predict_variance(h_steps)</span></code> for L7 inspection.</p>
+<p><strong>Defaults</strong> (paper-faithful, Bollerslev 1986 §3): <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">q</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">mean_model</span> <span class="pre">=</span> <span class="pre">'constant'</span></code>, <code class="docutils literal notranslate"><span class="pre">dist</span> <span class="pre">=</span> <span class="pre">'normal'</span></code>. Wraps <code class="docutils literal notranslate"><span class="pre">arch.arch_model</span></code> – requires the optional <code class="docutils literal notranslate"><span class="pre">[arch]</span></code> extra (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[arch]</span></code>); raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> with an install hint when missing.</p>
+<p><strong>When to use</strong></p>
+<p>Macro / financial volatility forecasting; baseline GARCH benchmark; volatility-targeting risk applications.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without <code class="docutils literal notranslate"><span class="pre">[arch]</span></code> extra installed – raises a clear NotImplementedError.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Bollerslev (1986) ‘Generalized Autoregressive Conditional Heteroskedasticity’, Journal of Econometrics 31(3): 307-327.</p></li>
+<li><p>Engle (1982) ‘Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation’, Econometrica 50(4): 987-1007.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#egarch"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">egarch</span></code></span></a>, <a class="reference internal" href="#realized-garch-with-rv-exog"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">realized_garch_with_rv_exog</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="egarch-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">egarch</span></code>  –  operational<a class="headerlink" href="#egarch-operational" title="Link to this heading"></a></h3>
+<p>Exponential GARCH with leverage asymmetry (Nelson 1991).</p>
+<p>EGARCH(p, o, q) on log-variance: <code class="docutils literal notranslate"><span class="pre">ln</span> <span class="pre">σ²_t</span> <span class="pre">=</span> <span class="pre">ω</span> <span class="pre">+</span> <span class="pre">Σ</span> <span class="pre">α_i</span> <span class="pre">(|z_{t-i}|</span> <span class="pre">−</span> <span class="pre">E|z|)</span> <span class="pre">+</span> <span class="pre">Σ</span> <span class="pre">γ_i</span> <span class="pre">z_{t-i}</span> <span class="pre">+</span> <span class="pre">Σ</span> <span class="pre">β_j</span> <span class="pre">ln</span> <span class="pre">σ²_{t-j}</span></code>. The asymmetry term <code class="docutils literal notranslate"><span class="pre">γ</span></code> captures the leverage effect (negative shocks raise volatility more than positive ones), and the log specification removes any need for non-negativity constraints on the parameters.</p>
+<p><strong>Defaults</strong> (Nelson 1991 §3): <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">o</span> <span class="pre">=</span> <span class="pre">q</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">mean_model</span> <span class="pre">=</span> <span class="pre">'constant'</span></code>, <code class="docutils literal notranslate"><span class="pre">dist</span> <span class="pre">=</span> <span class="pre">'normal'</span></code>. Wraps <code class="docutils literal notranslate"><span class="pre">arch.arch_model(vol='EGARCH')</span></code> – requires <code class="docutils literal notranslate"><span class="pre">[arch]</span></code> extra.</p>
+<p><strong>When to use</strong></p>
+<p>Asymmetric / leverage volatility; equity returns where bad news amplifies vol; macro variables with sign-asymmetric volatility responses.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without <code class="docutils literal notranslate"><span class="pre">[arch]</span></code> extra installed; symmetric volatility series where GARCH(1,1) is sufficient (parsimony).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Nelson (1991) ‘Conditional Heteroskedasticity in Asset Returns: A New Approach’, Econometrica 59(2): 347-370.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#garch11"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">garch11</span></code></span></a>, <a class="reference internal" href="#realized-garch-with-rv-exog"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">realized_garch_with_rv_exog</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="realized-garch-with-rv-exog-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">realized_garch_with_rv_exog</span></code>  –  operational<a class="headerlink" href="#realized-garch-with-rv-exog-operational" title="Link to this heading"></a></h3>
+<p>GARCH(1,1) with realised-variance series fed as the exogenous regressor (NOT Hansen-Huang-Shek 2012 joint MLE).</p>
+<p>Phase C-3 audit-fix (M9) honest rename. The L4 wrapper consumes <code class="docutils literal notranslate"><span class="pre">params['realized_variance']</span></code> (a column name in <code class="docutils literal notranslate"><span class="pre">X</span></code>) as the RV series and feeds it as the <strong>exogenous regressor</strong> <code class="docutils literal notranslate"><span class="pre">x=</span></code> into a vanilla GARCH(1,1) spec. This is useful in practice (RV improves volatility forecasts), but it is <strong>NOT</strong> the Hansen-Huang-Shek (2012) joint return + measurement-equation MLE: there is no <code class="docutils literal notranslate"><span class="pre">ξ</span></code>, <code class="docutils literal notranslate"><span class="pre">φ</span></code>, <code class="docutils literal notranslate"><span class="pre">δ_1</span></code>, <code class="docutils literal notranslate"><span class="pre">δ_2</span></code> measurement-equation parameters in the fitted output. The proper RealizedGARCH spec is reserved as FUTURE under the name <code class="docutils literal notranslate"><span class="pre">realized_garch</span></code> (awaiting native <code class="docutils literal notranslate"><span class="pre">arch.RealizedGARCH</span></code> API or manual joint-MLE implementation).</p>
+<p>Returns the conditional mean as the point forecast; <code class="docutils literal notranslate"><span class="pre">predict_variance(h_steps)</span></code> exposes the variance path.</p>
+<p><strong>Defaults</strong>: <code class="docutils literal notranslate"><span class="pre">mean_model</span> <span class="pre">=</span> <span class="pre">'constant'</span></code>, <code class="docutils literal notranslate"><span class="pre">dist</span> <span class="pre">=</span> <span class="pre">'normal'</span></code>. Falls back to a squared-returns proxy when the RV column is unavailable.</p>
+<p><strong>When to use</strong></p>
+<p>Volatility forecasting when intraday realised variance is observable as a leading indicator (RV-as-exogenous improves vol forecast); honest baseline labelling for studies that need to distinguish from the proper Hansen-Huang-Shek MLE.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When the proper joint-MLE Realized GARCH is required (the family name <code class="docutils literal notranslate"><span class="pre">realized_garch</span></code> is FUTURE / unrunnable until upstream supports it); without <code class="docutils literal notranslate"><span class="pre">[arch]</span></code> extra installed; without an RV measurement available.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Hansen, Huang &amp; Shek (2012) ‘Realized GARCH: A Joint Model for Returns and Realized Measures of Volatility’, Journal of Applied Econometrics 27(6): 877-906 — the <em>target</em> spec, not implemented here.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#garch11"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">garch11</span></code></span></a>, <a class="reference internal" href="#egarch"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">egarch</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="ets-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ets</span></code>  –  operational<a class="headerlink" href="#ets-operational" title="Link to this heading"></a></h3>
+<p>Exponential Smoothing State-Space (Hyndman-Koehler-Ord-Snyder 2008) – ETS family.</p>
+<p>Exponential-smoothing state-space framework: <code class="docutils literal notranslate"><span class="pre">error_trend_seasonal</span></code> is a 3-character code <code class="docutils literal notranslate"><span class="pre">ETS</span></code> where <code class="docutils literal notranslate"><span class="pre">E</span> <span class="pre">∈</span> <span class="pre">{A,</span> <span class="pre">M}</span></code> (additive / multiplicative error), <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">∈</span> <span class="pre">{A,</span> <span class="pre">M,</span> <span class="pre">N}</span></code> (additive / multiplicative / no trend), <code class="docutils literal notranslate"><span class="pre">S</span> <span class="pre">∈</span> <span class="pre">{A,</span> <span class="pre">M,</span> <span class="pre">N}</span></code> (additive / multiplicative / no seasonality). Wraps <code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.exponential_smoothing.ets.ETSModel</span></code> (MLE fitting; auto-selects the closed-form initialisation per Hyndman 2008 §5.4).</p>
+<p><strong>Defaults</strong>: <code class="docutils literal notranslate"><span class="pre">error_trend_seasonal</span> <span class="pre">=</span> <span class="pre">'AAN'</span></code> (additive error, additive trend, no seasonal – the workhorse non-seasonal spec), <code class="docutils literal notranslate"><span class="pre">seasonal_periods</span> <span class="pre">=</span> <span class="pre">12</span></code> (monthly), <code class="docutils literal notranslate"><span class="pre">initialization_method</span> <span class="pre">=</span> <span class="pre">'estimated'</span></code>. Auto-disables seasonal fitting when <code class="docutils literal notranslate"><span class="pre">len(y)</span> <span class="pre">&lt;</span> <span class="pre">2</span> <span class="pre">·</span> <span class="pre">seasonal_periods</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>M-competition baseline; non-seasonal / seasonal univariate forecasting where a state-space exponential-smoothing model is the natural reference.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Multivariate or covariate-driven forecasting (ETS ignores <code class="docutils literal notranslate"><span class="pre">X</span></code>); short series where seasonal estimation is unstable.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Hyndman, Koehler, Ord &amp; Snyder (2008) ‘Forecasting with Exponential Smoothing: The State Space Approach’, Springer.</p></li>
+<li><p>Hyndman &amp; Athanasopoulos (2018) ‘Forecasting: Principles and Practice’, 2nd ed., OTexts §7.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#theta-method"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></span></a>, <a class="reference internal" href="#holt-winters"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></span></a>, <a class="reference internal" href="#ar-p"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="theta-method-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">theta_method</span></code>  –  operational<a class="headerlink" href="#theta-method-operational" title="Link to this heading"></a></h3>
+<p>Theta method (Assimakopoulos-Nikolopoulos 2000) – M3-competition winning baseline.</p>
+<p>Hand-coded Theta(2) closed-form forecast: blends a long-run linear-trend regression with a short-run simple-exponential-smoothing (SES) level. For <code class="docutils literal notranslate"><span class="pre">θ</span> <span class="pre">=</span> <span class="pre">2</span></code> (M3 winner), the h-step-ahead forecast is <code class="docutils literal notranslate"><span class="pre">ŷ_{T+h}</span> <span class="pre">=</span> <span class="pre">0.5</span> <span class="pre">·</span> <span class="pre">(a</span> <span class="pre">+</span> <span class="pre">b</span> <span class="pre">·</span> <span class="pre">(T+h))</span> <span class="pre">+</span> <span class="pre">0.5</span> <span class="pre">·</span> <span class="pre">ℓ_T</span></code>, where <code class="docutils literal notranslate"><span class="pre">(a,</span> <span class="pre">b)</span></code> are the OLS trend slope/intercept on time index and <code class="docutils literal notranslate"><span class="pre">ℓ_T</span></code> is the SES level at time T (smoothing parameter <code class="docutils literal notranslate"><span class="pre">α</span></code> selected via <code class="docutils literal notranslate"><span class="pre">scipy.optimize.minimize_scalar</span></code> minimising the in-sample 1-step MSE).</p>
+<p><strong>Defaults</strong>: <code class="docutils literal notranslate"><span class="pre">theta</span> <span class="pre">=</span> <span class="pre">2.0</span></code> (M3 winner), <code class="docutils literal notranslate"><span class="pre">seasonal</span> <span class="pre">=</span> <span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_periods</span> <span class="pre">=</span> <span class="pre">12</span></code>. The constructor exposes <code class="docutils literal notranslate"><span class="pre">theta</span></code> for forward compatibility; only the θ=2 closed form is exercised in v0.9.0 – general θ requires a θ-line decomposition out of scope for this run.</p>
+<p><strong>When to use</strong></p>
+<p>M3 / M4-style univariate baselines; quick reference forecast against more elaborate models.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Strongly seasonal series (use <code class="docutils literal notranslate"><span class="pre">holt_winters</span></code> or seasonally-adjusted target); covariate-driven forecasting.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Assimakopoulos &amp; Nikolopoulos (2000) ‘The theta model: a decomposition approach to forecasting’, International Journal of Forecasting 16(4): 521-530.</p></li>
+<li><p>Hyndman &amp; Billah (2003) ‘Unmasking the Theta method’, International Journal of Forecasting 19(2): 287-290.</p></li>
+<li><p>Petropoulos et al. (2022) ‘Forecasting: theory and practice’, International Journal of Forecasting 38(3): 705-871.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ets"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ets</span></code></span></a>, <a class="reference internal" href="#holt-winters"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></span></a>, <a class="reference internal" href="#ar-p"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="holt-winters-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code>  –  operational<a class="headerlink" href="#holt-winters-operational" title="Link to this heading"></a></h3>
+<p>Holt-Winters additive / multiplicative seasonal exponential smoothing.</p>
+<p>Wraps <code class="docutils literal notranslate"><span class="pre">statsmodels.tsa.holtwinters.ExponentialSmoothing</span></code>. Fits level / trend / seasonal smoothing parameters by MLE (<code class="docutils literal notranslate"><span class="pre">optimized=True</span></code>). Supports additive and multiplicative trend and seasonal components plus an optional damped trend (Hyndman et al. 2008 §3).</p>
+<p><strong>Defaults</strong>: <code class="docutils literal notranslate"><span class="pre">seasonal</span> <span class="pre">=</span> <span class="pre">'add'</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_periods</span> <span class="pre">=</span> <span class="pre">12</span></code>, <code class="docutils literal notranslate"><span class="pre">trend</span> <span class="pre">=</span> <span class="pre">'add'</span></code>, <code class="docutils literal notranslate"><span class="pre">damped_trend</span> <span class="pre">=</span> <span class="pre">False</span></code>. Auto-disables seasonal fitting when <code class="docutils literal notranslate"><span class="pre">len(y)</span> <span class="pre">&lt;</span> <span class="pre">2</span> <span class="pre">·</span> <span class="pre">seasonal_periods</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Seasonal univariate baselines; M-competition style benchmarking; standard reference forecast for monthly / quarterly macro series.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Without a clear seasonal pattern (use <code class="docutils literal notranslate"><span class="pre">ets</span></code> AAN instead); covariate-driven forecasting.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Holt (2004 / orig. 1957) ‘Forecasting seasonals and trends by exponentially weighted moving averages’, International Journal of Forecasting 20(1): 5-10.</p></li>
+<li><p>Winters (1960) ‘Forecasting Sales by Exponentially Weighted Moving Averages’, Management Science 6(3): 324-342.</p></li>
+<li><p>Hyndman &amp; Athanasopoulos (2018) ‘Forecasting: Principles and Practice’, 2nd ed., OTexts §7.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ets"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ets</span></code></span></a>, <a class="reference internal" href="#theta-method"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></span></a>, <a class="reference internal" href="#ar-p"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="midas-almon-future">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  future<a class="headerlink" href="#midas-almon-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
+<section id="midas-beta-future">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  future<a class="headerlink" href="#midas-beta-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
+<section id="midas-step-future">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  future<a class="headerlink" href="#midas-step-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">midas_step</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
+<section id="dfm-unrestricted-midas-future">
+<h3><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  future<a class="headerlink" href="#dfm-unrestricted-midas-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
+<section id="realized-garch-future">
+<h3><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>  –  future<a class="headerlink" href="#realized-garch-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
+</div></blockquote>
 </section>
 </section>
 </section>

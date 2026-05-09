@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=6bfd653b"></script>
+      <script src="../../../_static/documentation_options.js?v=6b888095"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Operational: 30 option(s)</p></li>
-<li><p>Future: 0 option(s)</p></li>
+<li><p>Operational: 34 option(s)</p></li>
+<li><p>Future: 6 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -155,6 +155,23 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#partial-dependence"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="attention-weights-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">attention_weights</span></code>  –  operational<a class="headerlink" href="#attention-weights-operational" title="Link to this heading"></a></h3>
+<p>OLS-as-attention closed-form attention matrix (Goulet Coulombe 2026).</p>
+<p>Goulet Coulombe (2026) ‘OLS as an Attention Mechanism’ Eq. 3 closed form: <code class="docutils literal notranslate"><span class="pre">Ω</span> <span class="pre">=</span> <span class="pre">X_test</span> <span class="pre">·</span> <span class="pre">(X'_train</span> <span class="pre">·</span> <span class="pre">X_train)⁻¹</span> <span class="pre">·</span> <span class="pre">X'_train</span></code>. The <code class="docutils literal notranslate"><span class="pre">(n_test,</span> <span class="pre">n_train)</span></code> matrix encodes how strongly each test point attends to each training point under an OLS / ridge fit, identical to the representer expansion of the dual ridge solution. Output table carries one row per training observation (per-test-point weight aggregates) plus the full attention matrix and representer-identity diagnostics inline via <code class="docutils literal notranslate"><span class="pre">frame.attrs</span></code>.</p>
+<p>Promoted from <code class="docutils literal notranslate"><span class="pre">future</span></code> to <code class="docutils literal notranslate"><span class="pre">operational</span></code> in Phase B-10 (paper-10 replication). Compatible with linear-family L4 models (<code class="docutils literal notranslate"><span class="pre">ols</span></code> / <code class="docutils literal notranslate"><span class="pre">ridge</span></code> / <code class="docutils literal notranslate"><span class="pre">lasso</span></code> / <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code> / <code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code> / <code class="docutils literal notranslate"><span class="pre">huber</span></code>).</p>
+<p><strong>When to use</strong></p>
+<p>Linear-family attribution as a kernel-attention map; pedagogical / replication of paper-10 Coulombe (2026).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Non-linear models (the closed form requires a linear estimator).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+<li><p>Goulet Coulombe (2026) ‘OLS as an Attention Mechanism’, working paper – Eq. 3 closed-form attention matrix.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#dual-decomposition"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code></span></a>, <a class="reference internal" href="#model-native-linear-coef"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">model_native_linear_coef</span></code></span></a>, <a class="reference internal" href="#shap-linear"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_linear</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
 <section id="bootstrap-jackknife-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">bootstrap_jackknife</span></code>  –  operational<a class="headerlink" href="#bootstrap-jackknife-operational" title="Link to this heading"></a></h3>
 <p>Bootstrap / jackknife confidence bands around any importance score.</p>
@@ -168,6 +185,13 @@
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#rolling-recompute"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="boruta-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>  –  future<a class="headerlink" href="#boruta-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l7.py</span></code> are welcome.</p>
+</div></blockquote>
 </section>
 <section id="bvar-pip-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">bvar_pip</span></code>  –  operational<a class="headerlink" href="#bvar-pip-operational" title="Link to this heading"></a></h3>
@@ -217,6 +241,29 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#integrated-gradients"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">integrated_gradients</span></code></span></a>, <a class="reference internal" href="#gradient-shap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_shap</span></code></span></a>, <a class="reference internal" href="#saliency-map"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">saliency_map</span></code></span></a>, <a class="reference internal" href="#shap-deep"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_deep</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="dual-decomposition-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">dual_decomposition</span></code>  –  operational<a class="headerlink" href="#dual-decomposition-operational" title="Link to this heading"></a></h3>
+<p>Forecast-as-weighted-training-targets via the representer theorem (Coulombe et al. 2024); equivalently a restricted attention module (Goulet Coulombe 2026).</p>
+<p>Goulet Coulombe / Goebel / Klieber (2024) ‘Dual Interpretation of ML Forecasts’. Surfaces each prediction as a weighted combination of historical training targets; weights recovered through the representer theorem applied to the fitted model. Atomic L7 primitive: SHAP-family ops decompose by feature contribution, this op decomposes by training-row contribution, the natively interpretable view for small-sample temporally-ordered macro panels.</p>
+<p><strong>Linear families</strong> (operational v0.8.9): ridge / OLS / lasso via closed-form <code class="docutils literal notranslate"><span class="pre">w(xₜ)</span> <span class="pre">=</span> <span class="pre">X(X'X</span> <span class="pre">+</span> <span class="pre">αI)⁻¹xₜ</span></code>.</p>
+<p><strong>Tree-bagging ensembles</strong> (operational v0.9.1 dev-stage v0.9.0B-5): RandomForestRegressor / ExtraTreesRegressor via the leaf-co-occurrence kernel <code class="docutils literal notranslate"><span class="pre">wⱼ(xₜ)</span> <span class="pre">=</span> <span class="pre">(1/B)</span> <span class="pre">Σ_b</span> <span class="pre">1[j</span> <span class="pre">∈</span> <span class="pre">B_b]</span> <span class="pre">·</span> <span class="pre">1[leaf_b(xₜ)</span> <span class="pre">==</span> <span class="pre">leaf_b(xⱼ)]</span> <span class="pre">/</span> <span class="pre">leaf_size_b(xⱼ)</span></code> where <code class="docutils literal notranslate"><span class="pre">B_b</span></code> is tree b’s bootstrap subset (sklearn <code class="docutils literal notranslate"><span class="pre">estimators_samples_</span></code>). Reproduces <code class="docutils literal notranslate"><span class="pre">forest.predict</span></code> to machine precision (~4e-16). Helper <code class="docutils literal notranslate"><span class="pre">_rf_leaf_cooccurrence_weights</span></code> in core/runtime.py.</p>
+<p>Output frame layout: rows = training row labels, columns = <code class="docutils literal notranslate"><span class="pre">mean_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">abs_mean_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">max_abs_weight</span></code>. Full <code class="docutils literal notranslate"><span class="pre">(n_test</span> <span class="pre">×</span> <span class="pre">n_train)</span></code> weight matrix attached as <code class="docutils literal notranslate"><span class="pre">frame.attrs['dual_weights']</span></code>; <code class="docutils literal notranslate"><span class="pre">frame.attrs['method']</span></code> carries <code class="docutils literal notranslate"><span class="pre">'linear_closed_form'</span></code> or <code class="docutils literal notranslate"><span class="pre">'rf_leaf_cooccurrence_kernel'</span></code> for downstream renderers.</p>
+<p><strong>Inline portfolio diagnostics.</strong> The output artifact also carries the four portfolio metrics from the same paper (HHI = <code class="docutils literal notranslate"><span class="pre">Σwⱼ²</span></code>, short = <code class="docutils literal notranslate"><span class="pre">Σ</span> <span class="pre">max(0,-wⱼ)</span></code>, turnover = <code class="docutils literal notranslate"><span class="pre">‖wₜ</span> <span class="pre">-</span> <span class="pre">wₜ₋₁‖₁</span></code>, leverage = <code class="docutils literal notranslate"><span class="pre">‖w‖₁</span></code>) at <code class="docutils literal notranslate"><span class="pre">frame.attrs['portfolio_metrics']</span></code>. These are trivial numpy reductions on the primary dual weights and do not warrant their own L7 op (decomposition discipline).</p>
+<p><strong>OLS-as-attention equivalence.</strong> Goulet Coulombe (2026) ‘Ordinary Least Squares as an Attention Mechanism’ (SSRN 5200864) shows that the same dual representation <code class="docutils literal notranslate"><span class="pre">ŷ_test</span> <span class="pre">=</span> <span class="pre">F_test</span> <span class="pre">F_train'</span> <span class="pre">y_train</span></code> (eq. 7) coincides with a <em>restricted attention module</em>: queries <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">X_test</span> <span class="pre">W</span></code>, keys <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">X_train</span> <span class="pre">W</span></code> with <code class="docutils literal notranslate"><span class="pre">W</span> <span class="pre">=</span> <span class="pre">U</span> <span class="pre">Λ^{-½}</span></code>, values <code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">=</span> <span class="pre">y</span></code>, and the softmax replaced by the identity (eqs. 17-19). The training-row weights <code class="docutils literal notranslate"><span class="pre">ωⱼᵢ</span> <span class="pre">=</span> <span class="pre">⟨Fⱼ,</span> <span class="pre">Fᵢ⟩</span></code> surfaced by this op are exactly the (restricted) attention weights of that paper. Same compute, different vocabulary – no separate runtime needed.</p>
+<p>Boosted-tree (gradient_boosting / xgboost / lightgbm) and NN extensions are deferred: residual-bagging and learned non-linear models do not admit a clean sum-of-training-targets dual representation.</p>
+<p><strong>When to use</strong></p>
+<p>Decomposing macro forecasts into training-target contributions; explaining ML predictions to econometric audiences; bridging classical OLS to transformer-attention literature; per-prediction provenance for tree ensembles.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Boosted-tree / NN families (gradient_boosting, xgboost, lightgbm, mlp, lstm, etc.) – raises NotImplementedError; the residual-bagging structure does not factor into a sum-of-training-targets representation.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+<li><p>Goulet Coulombe, Goebel &amp; Klieber (2024) ‘Dual Interpretation of Machine Learning Forecasts’, arXiv:2412.13076.</p></li>
+<li><p>Goulet Coulombe (2026) ‘Ordinary Least Squares as an Attention Mechanism’, SSRN 5200864 – shows OLS predictions ŷ_test = F_test F_train’ y_train (eq. 7) coincide with a restricted attention module (eqs. 17-19, identity activation, tied W_Q W_K’ = (X_train’ X_train)^{-1}). The dual_decomposition op already implements the same compute via the closed-form ridge representer; no separate runtime needed.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#permutation-importance"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a>, <a class="reference internal" href="#shap-kernel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_kernel</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
 <section id="fevd-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">fevd</span></code>  –  operational<a class="headerlink" href="#fevd-operational" title="Link to this heading"></a></h3>
 <p>Forecast error variance decomposition (Sims 1980).</p>
@@ -262,20 +309,20 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#shap-interaction"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code></span></a>, <a class="reference internal" href="#partial-dependence"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
-<section id="generalized-irf-operational">
-<h3><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>  –  operational<a class="headerlink" href="#generalized-irf-operational" title="Link to this heading"></a></h3>
-<p>Pesaran-Shin (1998) generalized impulse-response function.</p>
-<p>Order-invariant alternative to Cholesky IRFs: shocks are treated as already orthogonalised by the variance-covariance structure of the residuals. Avoids the arbitrary-ordering issue of standard VAR IRFs.</p>
+<section id="generalized-irf-future">
+<h3><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>  –  future<a class="headerlink" href="#generalized-irf-future" title="Link to this heading"></a></h3>
+<p>Pesaran-Shin (1998) generalized impulse-response function (future, v0.9.x).</p>
+<p>Order-invariant IRF where each shock is constructed as the multivariate-normal projection of all residuals onto the j-th canonical direction. Distinct from Cholesky orthogonalised IRFs (which use a recursive lower-triangular rotation). <strong>Future</strong> – the runtime currently raises NotImplementedError. For the Cholesky variant operational since v0.2, use <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code>.</p>
 <p><strong>When to use</strong></p>
-<p>VAR analysis where the variable ordering is not theoretically motivated.</p>
+<p>VAR analysis where the variable ordering has no theoretical motivation – order-invariance is the desired property.</p>
 <p><strong>When NOT to use</strong></p>
-<p>When a structural identification scheme (Cholesky / sign / long-run) IS theoretically motivated – use the structural IRF instead.</p>
+<p>When a recursive identification IS theoretically motivated – use <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
 <li><p>Pesaran &amp; Shin (1998) ‘Generalized impulse response analysis in linear multivariate models’, Economics Letters 58(1): 17-29.</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#fevd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fevd</span></code></span></a>, <a class="reference internal" href="#historical-decomposition"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#fevd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fevd</span></code></span></a>, <a class="reference internal" href="#historical-decomposition"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code></span></a>, <a class="reference internal" href="#orthogonalised-irf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="gradient-shap-operational">
@@ -313,8 +360,8 @@
 </section>
 <section id="historical-decomposition-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code>  –  operational<a class="headerlink" href="#historical-decomposition-operational" title="Link to this heading"></a></h3>
-<p>Historical decomposition of observed series into structural shocks.</p>
-<p>Reconstructs the realised path of each variable as the sum of contributions from each orthogonalised shock + initial conditions. Standard VAR diagnostic complementing FEVD; statsmodels-backed.</p>
+<p>Historical decomposition (Burbidge-Harrison 1985) of the realised series into structural shocks.</p>
+<p>Reconstructs each variable’s realised path as the convolution of orthogonalised IRF coefficients (Cholesky-rotated structural form) with the time series of structural shocks recovered from the reduced-form residuals. Returns the per-shock cumulative absolute contribution to the target variable’s realised fluctuations; the row labels match the VAR variable ordering.</p>
 <p><strong>When to use</strong></p>
 <p>Telling the historical narrative – which shocks drove specific recessions / expansions.</p>
 <p><strong>When NOT to use</strong></p>
@@ -324,7 +371,7 @@
 <li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
 <li><p>Burbidge &amp; Harrison (1985) ‘A historical decomposition of the great depression to determine the role of money’, JME 16(1): 45-54.</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#fevd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fevd</span></code></span></a>, <a class="reference internal" href="#generalized-irf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#fevd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fevd</span></code></span></a>, <a class="reference internal" href="#orthogonalised-irf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="integrated-gradients-operational">
@@ -358,6 +405,13 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#model-native-linear-coef"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">model_native_linear_coef</span></code></span></a>, <a class="reference internal" href="#bootstrap-jackknife"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bootstrap_jackknife</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="lasso-path-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>  –  future<a class="headerlink" href="#lasso-path-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l7.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
 <section id="lineage-attribution-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">lineage_attribution</span></code>  –  operational<a class="headerlink" href="#lineage-attribution-operational" title="Link to this heading"></a></h3>
 <p>Trace importance back through L3 feature lineage to the L1 raw source.</p>
@@ -390,6 +444,13 @@
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#permutation-importance"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="lstm-hidden-state-future">
+<h3><code class="docutils literal notranslate"><span class="pre">lstm_hidden_state</span></code>  –  future<a class="headerlink" href="#lstm-hidden-state-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">lstm_hidden_state</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l7.py</span></code> are welcome.</p>
+</div></blockquote>
 </section>
 <section id="model-native-linear-coef-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">model_native_linear_coef</span></code>  –  operational<a class="headerlink" href="#model-native-linear-coef-operational" title="Link to this heading"></a></h3>
@@ -442,6 +503,39 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#rolling-recompute"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code></span></a>, <a class="reference internal" href="#model-native-tree-importance"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">model_native_tree_importance</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="orthogonalised-irf-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code>  –  operational<a class="headerlink" href="#orthogonalised-irf-operational" title="Link to this heading"></a></h3>
+<p>Cholesky-orthogonalised impulse-response function (Sims 1980).</p>
+<p>Standard structural-VAR IRF: residual covariance Σᵤ is Cholesky-decomposed P P’ = Σᵤ; the structural shocks P⁻¹ u_t are orthogonalised by construction. <code class="docutils literal notranslate"><span class="pre">orth_irfs[s,</span> <span class="pre">i,</span> <span class="pre">j]</span></code> is the response of variable <code class="docutils literal notranslate"><span class="pre">i</span></code> at horizon <code class="docutils literal notranslate"><span class="pre">s</span></code> to a unit structural shock to variable <code class="docutils literal notranslate"><span class="pre">j</span></code> at time 0. <strong>Order-dependent</strong>: the variable ordering in the recipe determines the recursive causal scheme imposed.</p>
+<p><strong>When to use</strong></p>
+<p>VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).</p>
+<p><strong>When NOT to use</strong></p>
+<p>When the variable ordering is arbitrary – file a v0.9.x request for <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> (Pesaran-Shin 1998 order-invariant variant, currently future-gated).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+<li><p>Sims (1980) ‘Macroeconomics and Reality’, Econometrica 48(1): 1-48.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#fevd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fevd</span></code></span></a>, <a class="reference internal" href="#historical-decomposition"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="oshapley-vi-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code>  –  operational<a class="headerlink" href="#oshapley-vi-operational" title="Link to this heading"></a></h3>
+<p>Out-of-sample SHAP-style variable importance (Borup et al. 2022) [schema; runtime via anatomy package].</p>
+<p>Borup, Goulet Coulombe, Montes-Rojas, Schutte &amp; Veiga (2022) ‘Anatomy of Out-of-Sample Forecasting Accuracy’. Recomputes Shapley-style feature contributions on the <em>out-of-sample</em> loss rather than in-sample fit, addressing the distribution-shift mismatch where in-sample SHAP misranks features that matter for OOS accuracy.</p>
+<p>Atomic primitive – existing in-sample <code class="docutils literal notranslate"><span class="pre">shap_*</span></code> ops do not compose into oShapley-VI. Runtime delegates to the Borup et al. <code class="docutils literal notranslate"><span class="pre">anatomy</span></code> Python package as an optional dep (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">macroforecast[anatomy]</span></code>). Schema-only in v0.9.0; operational promotion lands once the anatomy integration is wired.</p>
+<p><strong>When to use</strong></p>
+<p>OOS-aware variable importance for macro forecast audits; replicating Borup et al. (2022).</p>
+<p><strong>When NOT to use</strong></p>
+<p>Pre-promotion. Without the anatomy extra installed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+<li><p>Borup, Goulet Coulombe, Montes-Rojas, Schutte &amp; Veiga (2022) ‘Anatomy of Out-of-Sample Forecasting Accuracy’, SSRN 4278745.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#shap-kernel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_kernel</span></code></span></a>, <a class="reference internal" href="#shap-tree"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_tree</span></code></span></a>, <a class="reference internal" href="#permutation-importance"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a>, <a class="reference internal" href="#pbsv"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pbsv</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
 <section id="partial-dependence-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code>  –  operational<a class="headerlink" href="#partial-dependence-operational" title="Link to this heading"></a></h3>
 <p>Friedman (2001) partial dependence plot.</p>
@@ -456,6 +550,23 @@
 <li><p>Friedman (2001) ‘Greedy Function Approximation: A Gradient Boosting Machine’, Annals of Statistics 29(5): 1189-1232.</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#accumulated-local-effect"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">accumulated_local_effect</span></code></span></a>, <a class="reference internal" href="#friedman-h-interaction"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">friedman_h_interaction</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="pbsv-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">pbsv</span></code>  –  operational<a class="headerlink" href="#pbsv-operational" title="Link to this heading"></a></h3>
+<p>Performance-Based Shapley Value (Borup et al. 2022) [schema; runtime via anatomy package].</p>
+<p>OOS accuracy decomposition: Shapley-attributes the forecast performance improvement over a benchmark to each feature coalition’s contribution. Differs from <code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code> in decomposing the <em>accuracy gain</em> rather than the OOS loss; they are companion ops covering the two faces of OOS Shapley.</p>
+<p>Runtime delegates to <code class="docutils literal notranslate"><span class="pre">anatomy</span></code> package. Schema-only in v0.9.0.</p>
+<p><strong>When to use</strong></p>
+<p>Decomposing OOS forecast skill by feature; benchmark-relative interpretation studies.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Pre-promotion. Without the anatomy extra installed.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
+<li><p>Borup, Goulet Coulombe, Montes-Rojas, Schutte &amp; Veiga (2022) ‘Anatomy of Out-of-Sample Forecasting Accuracy’, SSRN 4278745.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#oshapley-vi"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code></span></a>, <a class="reference internal" href="#permutation-importance"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="permutation-importance-operational">
@@ -491,6 +602,13 @@
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#permutation-importance"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="recursive-feature-elimination-future">
+<h3><code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>  –  future<a class="headerlink" href="#recursive-feature-elimination-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l7.py</span></code> are welcome.</p>
+</div></blockquote>
 </section>
 <section id="rolling-recompute-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">rolling_recompute</span></code>  –  operational<a class="headerlink" href="#rolling-recompute-operational" title="Link to this heading"></a></h3>
@@ -603,6 +721,13 @@
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#shap-kernel"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_kernel</span></code></span></a>, <a class="reference internal" href="#shap-linear"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_linear</span></code></span></a>, <a class="reference internal" href="#shap-interaction"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code></span></a>, <a class="reference internal" href="#shap-deep"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_deep</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="stability-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>  –  future<a class="headerlink" href="#stability-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l7.py</span></code> are welcome.</p>
+</div></blockquote>
 </section>
 <section id="transformation-attribution-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code>  –  operational<a class="headerlink" href="#transformation-attribution-operational" title="Link to this heading"></a></h3>

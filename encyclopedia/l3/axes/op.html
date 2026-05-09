@@ -14,7 +14,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=6bfd653b"></script>
+      <script src="../../../_static/documentation_options.js?v=6b888095"></script>
       <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -127,12 +127,54 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p>Operational: 37 option(s)</p></li>
-<li><p>Future: 0 option(s)</p></li>
+<li><p>Operational: 45 option(s)</p></li>
+<li><p>Future: 5 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
 <h2>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h2>
+<section id="adaptive-ma-rf-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">adaptive_ma_rf</span></code>  –  operational<a class="headerlink" href="#adaptive-ma-rf-operational" title="Link to this heading"></a></h3>
+<p>AlbaMA – RF-driven adaptive moving average smoother for a single time series.</p>
+<p>Goulet Coulombe &amp; Klieber (2025) ‘Adaptive Moving Average for Macroeconomic Monitoring’ (arXiv:2501.13222 §2). A random forest fit with a <em>single</em> regressor – the time index – on the target series <code class="docutils literal notranslate"><span class="pre">y</span></code> (i.e. <code class="docutils literal notranslate"><span class="pre">RF(y_t</span> <span class="pre">~</span> <span class="pre">t)</span></code>). Per-observation leaf membership induces a weight matrix <code class="docutils literal notranslate"><span class="pre">w_τt</span></code> whose row sums to 1, so the smoother is a learned-bandwidth moving average of <code class="docutils literal notranslate"><span class="pre">y</span></code>; the realised window adapts to local volatility / regime. Paper p.8 defaults: <code class="docutils literal notranslate"><span class="pre">n_estimators</span> <span class="pre">=</span> <span class="pre">B</span> <span class="pre">=</span> <span class="pre">500</span></code>, <code class="docutils literal notranslate"><span class="pre">min_samples_leaf</span> <span class="pre">=</span> <span class="pre">40</span></code>, <code class="docutils literal notranslate"><span class="pre">max_features</span> <span class="pre">=</span> <span class="pre">1</span></code>. <code class="docutils literal notranslate"><span class="pre">sided</span> <span class="pre">=</span> <span class="pre">'two'</span></code> (default) fits one forest on the full sample (retrospective smoother); <code class="docutils literal notranslate"><span class="pre">sided</span> <span class="pre">=</span> <span class="pre">'one'</span></code> fits an expanding-window forest per <code class="docutils literal notranslate"><span class="pre">t</span></code> (real-time nowcasting variant, paper §3.3 / p.10).</p>
+<p>Atomic primitive: existing <code class="docutils literal notranslate"><span class="pre">ma_window</span></code> uses a fixed length; <code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code> is a regression on lags rather than a moving average; neither composes into AlbaMA without a learned window selector.</p>
+<p><strong>When to use</strong></p>
+<p>Replicating AlbaMA recipes; macro indicator monitoring under regime shifts.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Multivariate denoising of a predictor panel (AlbaMA smooths a single target series).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Goulet Coulombe &amp; Klieber (2025) ‘An Adaptive Moving Average for Macroeconomic Monitoring’, arXiv:2501.13222.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#savitzky-golay-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">savitzky_golay_filter</span></code></span></a>, <a class="reference internal" href="#hamilton-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code></span></a>, <a class="reference internal" href="#hp-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code></span></a>, <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="asymmetric-trim-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code>  –  operational<a class="headerlink" href="#asymmetric-trim-operational" title="Link to this heading"></a></h3>
+<p>Albacore-family rank-space transformation (Goulet Coulombe et al. 2024).</p>
+<p>Per-period sort: panel <code class="docutils literal notranslate"><span class="pre">Π</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">K)</span></code> is mapped to <code class="docutils literal notranslate"><span class="pre">O</span></code> where <code class="docutils literal notranslate"><span class="pre">O[t,</span> <span class="pre">r]</span> <span class="pre">=</span> <span class="pre">sort(Π[t,</span> <span class="pre">:])[r]</span></code> (ascending). Asymmetric trimming emerges in the <em>downstream</em> nonneg ridge (<code class="docutils literal notranslate"><span class="pre">ridge(coefficient_constraint=nonneg)</span></code>) that learns rank-position weights – this op does the rank-space transformation only.</p>
+<p>Optional <code class="docutils literal notranslate"><span class="pre">smooth_window</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> applies a centred moving average to each rank-position time series (paper §3 mentions 3-month MA for noisy components; users can chain <code class="docutils literal notranslate"><span class="pre">ma_window</span></code> explicitly when they want a different window).</p>
+<p>Operational from v0.8.9 (B-6). Layer scope <code class="docutils literal notranslate"><span class="pre">(l2,</span> <span class="pre">l3)</span></code> so the L3 DAG can dispatch it at recipe time. Algorithm spec: <code class="docutils literal notranslate"><span class="pre">docs/replications/maximally_forward_looking_algorithm_notes.md</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Building Albacore_ranks-style core inflation indicators; supervised asymmetric trimming where the band is learned from data.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Symmetric trimmed-mean targets (use a fixed-window <code class="docutils literal notranslate"><span class="pre">ma_window</span></code> instead).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Goulet Coulombe, Klieber, Barrette &amp; Goebel (2024) ‘Maximally Forward-Looking Core Inflation’, technical report (R package: assemblage).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a>, <a class="reference internal" href="#ma-increasing-order"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="boruta-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>  –  future<a class="headerlink" href="#boruta-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
 <section id="cumsum-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">cumsum</span></code>  –  operational<a class="headerlink" href="#cumsum-operational" title="Link to this heading"></a></h3>
 <p>Cumulative sum of a series.</p>
@@ -208,6 +250,13 @@
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#wavelet"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">wavelet</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="genetic-algorithm-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>  –  future<a class="headerlink" href="#genetic-algorithm-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
+</div></blockquote>
 </section>
 <section id="hamilton-filter-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code>  –  operational<a class="headerlink" href="#hamilton-filter-operational" title="Link to this heading"></a></h3>
@@ -323,6 +372,13 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#l3-feature-bundle"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="lasso-path-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>  –  future<a class="headerlink" href="#lasso-path-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
 <section id="level-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">level</span></code>  –  operational<a class="headerlink" href="#level-operational" title="Link to this heading"></a></h3>
 <p>Pass-through: keep the series at its original level.</p>
@@ -393,6 +449,31 @@
 <li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#ma-increasing-order"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference external" href="https://pandas.pydata.org/docs/user_guide/scale.html#scale" title="pandas 3.0.2"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scale</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="midas-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas</span></code>  –  operational<a class="headerlink" href="#midas-operational" title="Link to this heading"></a></h3>
+<p>MIDAS Almon / Exp-Almon / Beta weighted lag polynomial (Ghysels-Sinko-Valkanov 2007).</p>
+<p>Parametric mixed-frequency aggregation: emits one column per HF predictor whose value is the weighted sum <code class="docutils literal notranslate"><span class="pre">Σ_k</span> <span class="pre">ω_k(θ̂)</span> <span class="pre">·</span> <span class="pre">x_{t·m</span> <span class="pre">−</span> <span class="pre">k}</span></code>. The weight kernel <code class="docutils literal notranslate"><span class="pre">ω_k(θ)</span></code> is fitted by NLS against the LF <code class="docutils literal notranslate"><span class="pre">target_signal</span></code> input.</p>
+<p><strong>Three weighting families</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">almon</span></code> – polynomial basis <code class="docutils literal notranslate"><span class="pre">ω_k</span> <span class="pre">=</span> <span class="pre">Σ_q</span> <span class="pre">θ_q</span> <span class="pre">·</span> <span class="pre">k^q</span></code> of order <code class="docutils literal notranslate"><span class="pre">polynomial_order</span></code> (default 2). Optional sum-to-one normalisation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exp_almon</span></code> (default) – <code class="docutils literal notranslate"><span class="pre">ω_k</span> <span class="pre">∝</span> <span class="pre">exp(θ_1</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">θ_2</span> <span class="pre">k²)</span></code>; numerically stable and the GSV 2007 §3 default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> – <code class="docutils literal notranslate"><span class="pre">ω_k</span> <span class="pre">∝</span> <span class="pre">k_norm^{θ_1−1}</span> <span class="pre">(1</span> <span class="pre">−</span> <span class="pre">k_norm)^{θ_2−1}</span></code> for <code class="docutils literal notranslate"><span class="pre">k_norm</span> <span class="pre">=</span> <span class="pre">(k+1)/(K+1)</span></code>; flexible monotone / hump kernel.</p></li>
+</ul>
+<p>Defaults: <code class="docutils literal notranslate"><span class="pre">freq_ratio</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">n_lags_high</span> <span class="pre">=</span> <span class="pre">12</span></code>, <code class="docutils literal notranslate"><span class="pre">sum_to_one</span> <span class="pre">=</span> <span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">max_iter</span> <span class="pre">=</span> <span class="pre">200</span></code>. Optimiser: <code class="docutils literal notranslate"><span class="pre">scipy.optimize.minimize</span></code> (Nelder-Mead). Per-predictor <code class="docutils literal notranslate"><span class="pre">theta_hat</span></code> / <code class="docutils literal notranslate"><span class="pre">weights</span></code> / <code class="docutils literal notranslate"><span class="pre">converged</span></code> stashed in <code class="docutils literal notranslate"><span class="pre">result.attrs['midas_fit']</span></code> for L7 inspection.</p>
+<p>Requires a <code class="docutils literal notranslate"><span class="pre">target_signal</span></code> input port – shares routing with <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Mixed-frequency nowcasting where parametric lag weights are desired; reproducing GSV 2007 macro / asset-pricing applications.</p>
+<p><strong>When NOT to use</strong></p>
+<p>High-noise predictors where NLS optimiser diverges (use <code class="docutils literal notranslate"><span class="pre">u_midas</span></code> + downstream regularised regression instead).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Ghysels, Sinko &amp; Valkanov (2007) ‘MIDAS Regressions: Further Results and New Directions’, Econometric Reviews 26(1): 53-90.</p></li>
+<li><p>Ghysels, Santa-Clara &amp; Valkanov (2004) ‘The MIDAS Touch: Mixed Data Sampling Regression Models’, UCLA / UNC working paper.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#u-midas"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">u_midas</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a>, <a class="reference internal" href="#lag"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lag</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="nystroem-operational">
@@ -506,6 +587,13 @@
 <p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="recursive-feature-elimination-future">
+<h3><code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>  –  future<a class="headerlink" href="#recursive-feature-elimination-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
 <section id="regime-indicator-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code>  –  operational<a class="headerlink" href="#regime-indicator-operational" title="Link to this heading"></a></h3>
 <p>Discrete regime / state indicator from L1.G.</p>
@@ -517,6 +605,23 @@
 <li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#time-trend"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">time_trend</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="savitzky-golay-filter-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">savitzky_golay_filter</span></code>  –  operational<a class="headerlink" href="#savitzky-golay-filter-operational" title="Link to this heading"></a></h3>
+<p>Polynomial-fit smoothing filter (Savitzky &amp; Golay 1964).</p>
+<p>Local polynomial regression smoothing: each output value is the polynomial-fit centre value of a moving window. <code class="docutils literal notranslate"><span class="pre">window_length</span></code> (default 5) and <code class="docutils literal notranslate"><span class="pre">polyorder</span></code> (default 2) parameterise the kernel. Operational: runtime delegates to <code class="docutils literal notranslate"><span class="pre">scipy.signal.savgol_filter</span></code> (scipy is a hard dependency).</p>
+<p>Used as the fixed-window baseline against which Goulet Coulombe &amp; Klieber (2025) AlbaMA’s adaptive-window estimator is compared in the v0.9.x replication recipe.</p>
+<p><strong>When to use</strong></p>
+<p>Smoothing macro indicator series for monitoring; AlbaMA replication baseline.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Series with strong non-linear trends – the polynomial fit smooths them out.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Savitzky &amp; Golay (1964) ‘Smoothing and Differentiation of Data by Simplified Least Squares Procedures’, Analytical Chemistry 36(8).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#hp-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code></span></a>, <a class="reference internal" href="#hamilton-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code></span></a>, <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a>, <a class="reference internal" href="#adaptive-ma-rf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">adaptive_ma_rf</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="scale-operational">
@@ -577,19 +682,88 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
+<section id="sliced-inverse-regression-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression</span></code>  –  operational<a class="headerlink" href="#sliced-inverse-regression-operational" title="Link to this heading"></a></h3>
+<p>sSUFF / Sliced inverse regression (scaled) – supervised dimension reduction (Huang-Jiang-Li-Tong-Zhou 2022).</p>
+<p>Supervised dimension reduction extending <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> to non-linear y → X dependence. Pipeline: (1) standardise X; (2) optional column-wise predictive scaling (<code class="docutils literal notranslate"><span class="pre">scaling_method</span></code> = <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> reuses the Huang-Zhou OLS-slope; <code class="docutils literal notranslate"><span class="pre">marginal_R2</span></code> uses sign(β_j)·√R²_j; <code class="docutils literal notranslate"><span class="pre">none</span></code> skips); (3) sort rows by y and partition into <code class="docutils literal notranslate"><span class="pre">n_slices</span></code> H contiguous slices; (4) compute weighted between-slice covariance <code class="docutils literal notranslate"><span class="pre">Σ_S</span> <span class="pre">=</span> <span class="pre">Σ_h</span> <span class="pre">(n_h/n)</span> <span class="pre">·</span> <span class="pre">m̄_h</span> <span class="pre">·</span> <span class="pre">m̄_h^⊤</span></code>; (5) take the top-<code class="docutils literal notranslate"><span class="pre">n_components</span></code> eigenvectors as factor loadings; (6) project the full panel onto these directions. The sSUFF augmentation (Huang-Zhou-Tong 2022) recovers latent factors with higher correlation than plain SIR in the macro-panel regime where signals are sparse over predictors.</p>
+<p>Defaults: <code class="docutils literal notranslate"><span class="pre">n_components</span> <span class="pre">=</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">n_slices</span> <span class="pre">=</span> <span class="pre">5</span></code>, <code class="docutils literal notranslate"><span class="pre">scaling_method</span> <span class="pre">=</span> <span class="pre">'scaled_pca'</span></code>. Requires a <code class="docutils literal notranslate"><span class="pre">target_signal</span></code> input port; <code class="docutils literal notranslate"><span class="pre">temporal_rule</span></code> is required and rejects <code class="docutils literal notranslate"><span class="pre">full_sample_once</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Supervised factor extraction from macro panels with non-linear y → X structure; alternative to <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> when the predictive direction is non-monotone.</p>
+<p><strong>When NOT to use</strong></p>
+<p>Very small T (need ≥ 5·n_slices observations after dropping NaN); strictly linear y → X relationship (<code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> is sufficient).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Huang, Jiang, Li, Tong &amp; Zhou (2022) ‘Scaled PCA: A New Approach to Dimension Reduction’, Management Science 68(3): 1678-1695.</p></li>
+<li><p>Fan, Xue &amp; Yao (2017) ‘Sufficient forecasting using factor models’, Journal of Econometrics 201(2): 292-306.</p></li>
+<li><p>Li (1991) ‘Sliced Inverse Regression for Dimension Reduction’, JASA 86(414): 316-327.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a>, <a class="reference internal" href="#supervised-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></span></a>, <a class="reference internal" href="#partial-least-squares"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
 <section id="sparse-pca-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>  –  operational<a class="headerlink" href="#sparse-pca-operational" title="Link to this heading"></a></h3>
-<p>Sparse PCA – L1-penalised factor loadings.</p>
+<p>Sparse PCA – L1-penalised factor loadings (sklearn / Zou-Hastie-Tibshirani 2006).</p>
 <p>Variant of PCA where loadings are pushed toward zero by an L1 penalty (<code class="docutils literal notranslate"><span class="pre">params.alpha</span></code>). Yields more interpretable factors at the cost of a small reconstruction loss; uses sklearn’s <code class="docutils literal notranslate"><span class="pre">SparsePCA</span></code>.</p>
 <p><strong>When to use</strong></p>
 <p>When you want factor loadings to map cleanly onto a small subset of original predictors (interpretability).</p>
 <p><strong>When NOT to use</strong></p>
-<p>When pure variance maximisation is more important than interpretability – use plain <code class="docutils literal notranslate"><span class="pre">pca</span></code>.</p>
+<p>When pure variance maximisation is more important than interpretability – use plain <code class="docutils literal notranslate"><span class="pre">pca</span></code>. For the Chen-Rohe (2023) SCA variant used in Zhou-Rapach (2025) Sparse Macro-Finance Factors, use <code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code> instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a>, <a class="reference internal" href="#sparse-pca-chen-rohe"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code></span></a>, <a class="reference internal" href="#supervised-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="sparse-pca-chen-rohe-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code>  –  operational<a class="headerlink" href="#sparse-pca-chen-rohe-operational" title="Link to this heading"></a></h3>
+<p>Chen-Rohe (2023) Sparse Component Analysis – non-diagonal D variant.</p>
+<p>Sparse component analysis solving <code class="docutils literal notranslate"><span class="pre">min_{Z,D,Θ}</span> <span class="pre">‖X</span> <span class="pre">−</span> <span class="pre">Z</span> <span class="pre">D</span> <span class="pre">Θ'‖_F</span></code> s.t. <code class="docutils literal notranslate"><span class="pre">Z</span> <span class="pre">∈</span> <span class="pre">S(T,J)</span></code>, <code class="docutils literal notranslate"><span class="pre">Θ</span> <span class="pre">∈</span> <span class="pre">S(M,J)</span></code>, <code class="docutils literal notranslate"><span class="pre">‖Θ‖_1</span> <span class="pre">≤</span> <span class="pre">ζ</span></code> (Chen-Rohe 2023; Rapach &amp; Zhou 2025 eq. 3). Differs from <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code> (sklearn / Zou-Hastie-Tibshirani 2006) in two ways: (1) the central matrix D is <em>not</em> restricted to be diagonal, which lets SCA explain more total variation for a given sparsity budget; (2) the single hyperparameter <code class="docutils literal notranslate"><span class="pre">ζ</span> <span class="pre">∈</span> <span class="pre">[J,</span> <span class="pre">J√M]</span></code> enters as an ℓ_1 budget <em>constraint</em> rather than a Lagrangian penalty.</p>
+<p>Implementation: alternating maximisation of the equivalent bilinear convex-hull form <code class="docutils literal notranslate"><span class="pre">max_{Z,Θ}</span> <span class="pre">‖Z'</span> <span class="pre">X</span> <span class="pre">Θ‖_F</span></code> over <code class="docutils literal notranslate"><span class="pre">H(T,J)</span> <span class="pre">×</span> <span class="pre">H(M,J)</span></code> (Zhou-Rapach 2025 eq. 4), iterating SVD-projection of Z and L1-budget projection of Θ. Used as the macro-side stage in Rapach &amp; Zhou (2025) Sparse Macro-Finance Factors. Operational v0.9.1 dev-stage v0.9.0C-3.</p>
+<p>Hyperparams: <code class="docutils literal notranslate"><span class="pre">n_components</span></code> (= J; default 4), <code class="docutils literal notranslate"><span class="pre">zeta</span></code> (= L1 budget; <code class="docutils literal notranslate"><span class="pre">0.0</span></code> defaults to J = most-binding boundary the paper finds optimal in CV), <code class="docutils literal notranslate"><span class="pre">max_iter</span></code> (default 200), <code class="docutils literal notranslate"><span class="pre">random_state</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Sparse macro-finance factor extraction with non-diagonal D; the Rapach-Zhou (2025) macro-side procedure.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When sklearn-style L1-penalised loadings are sufficient – prefer the cheaper <code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Chen &amp; Rohe (2023) ‘A New Basis for Sparse Principal Component Analysis’, Journal of Computational and Graphical Statistics. arXiv:2007.00596.</p></li>
+<li><p>Rapach &amp; Zhou (2025) ‘Sparse Macro-Finance Factors’ working paper – §2.1 eqs. (3)-(4).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#sparse-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code></span></a>, <a class="reference internal" href="#supervised-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="stability-selection-future">
+<h3><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>  –  future<a class="headerlink" href="#stability-selection-future" title="Link to this heading"></a></h3>
+<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>)</em></p>
+<blockquote>
+<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
+</div></blockquote>
+</section>
+<section id="supervised-pca-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code>  –  operational<a class="headerlink" href="#supervised-pca-operational" title="Link to this heading"></a></h3>
+<p>Supervised PCA (Giglio-Xiu-Zhang 2025) – screen-then-PCA on a target panel.</p>
+<p>Two-stage supervised reduction:</p>
+<ol class="arabic simple">
+<li><p>For each target column <code class="docutils literal notranslate"><span class="pre">g</span></code>, rank panel columns by univariate correlation with <code class="docutils literal notranslate"><span class="pre">g</span></code> and keep the top <code class="docutils literal notranslate"><span class="pre">⌊q</span> <span class="pre">·</span> <span class="pre">M⌋</span></code> (q ∈ (0, 1] hyperparameter; default 0.5);</p></li>
+<li><p>Run PCA on the screened sub-panel, returning P supervised components.</p></li>
+</ol>
+<p>Refinement of Giglio-Xiu (2021) three-pass: screening makes the construction robust to weak factors and omitted-variable bias. Used as the asset-side stage of Rapach &amp; Zhou (2025) Sparse Macro-Finance Factors for risk-premium estimation. Distinct from <code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code> (PLS uses covariance-maximising NIPALS over all columns; SPCA uses correlation-screened PCA on a sub-panel) and from <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> (Huang-Jiang-Tu-Zhou 2022 weights every column; SPCA hard-screens).</p>
+<p>Operational v0.9.1 dev-stage v0.9.0C-4. Hyperparams: <code class="docutils literal notranslate"><span class="pre">n_components</span></code> (= P; default 4), <code class="docutils literal notranslate"><span class="pre">q</span></code> (screening rate; default 0.5).</p>
+<p><strong>When to use</strong></p>
+<p>Cross-sectional asset-pricing factor extraction; weak-factor-robust supervised reduction; Rapach-Zhou (2025) replication.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When the supervisory signal is dense (every panel column matters) – prefer <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code> or <code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code>.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Giglio, Xiu &amp; Zhang (2025) ‘Test Assets and Weak Factors’, Journal of Finance, forthcoming.</p></li>
+<li><p>Giglio &amp; Xiu (2021) ‘Asset Pricing with Omitted Factors’, Journal of Political Economy 129(7): 1947-1990.</p></li>
+<li><p>Rapach &amp; Zhou (2025) ‘Sparse Macro-Finance Factors’ working paper – §2.2 eqs. (5)-(8).</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#partial-least-squares"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></span></a>, <a class="reference internal" href="#scaled-pca"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></span></a>, <a class="reference internal" href="#sparse-pca-chen-rohe"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="target-construction-operational">
@@ -619,6 +793,25 @@
 <li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#hp-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code></span></a>, <a class="reference internal" href="#hamilton-filter"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+</section>
+<section id="u-midas-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">u_midas</span></code>  –  operational<a class="headerlink" href="#u-midas-operational" title="Link to this heading"></a></h3>
+<p>Unrestricted MIDAS lag stack – mixed-frequency aggregation primitive (Foroni-Marcellino-Schumacher 2015).</p>
+<p>Atomic mixed-frequency primitive: stacks <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">n_lags_high</span></code> high-frequency lags of each predictor at low-frequency dates without imposing any weighting structure. For HF column <code class="docutils literal notranslate"><span class="pre">col</span></code> and LF index position <code class="docutils literal notranslate"><span class="pre">t·m</span></code>, emits <code class="docutils literal notranslate"><span class="pre">col_lag0,</span> <span class="pre">col_lag1,</span> <span class="pre">…,</span> <span class="pre">col_lag{K-1}</span></code> where <code class="docutils literal notranslate"><span class="pre">col_lagk[t]</span> <span class="pre">=</span> <span class="pre">frame[col].iloc[t·m</span> <span class="pre">−</span> <span class="pre">k]</span></code>. The downstream L4 ridge / OLS / lasso recovers data-driven lag coefficients, i.e. the <em>unrestricted</em> MIDAS regression <code class="docutils literal notranslate"><span class="pre">y_t</span> <span class="pre">=</span> <span class="pre">α</span> <span class="pre">+</span> <span class="pre">Σ_k</span> <span class="pre">β_k</span> <span class="pre">x_{t·m</span> <span class="pre">−</span> <span class="pre">k}</span> <span class="pre">+</span> <span class="pre">ε_t</span></code>.</p>
+<p><strong>Defaults</strong>: <code class="docutils literal notranslate"><span class="pre">freq_ratio</span> <span class="pre">=</span> <span class="pre">3</span></code> (quarterly target / monthly HF), <code class="docutils literal notranslate"><span class="pre">n_lags_high</span> <span class="pre">=</span> <span class="pre">6</span></code> (≈ 2·m); <code class="docutils literal notranslate"><span class="pre">target_freq</span> <span class="pre">=</span> <span class="pre">'low'</span></code> subsamples the LF anchor dates. <code class="docutils literal notranslate"><span class="pre">temporal_rule</span></code> is required and rejects <code class="docutils literal notranslate"><span class="pre">full_sample_once</span></code> so the aggregation respects walk-forward boundaries.</p>
+<p>Surfaces the Borup-Rapach-Schütte (2023) mixed-frequency ML-nowcasting workflow as a 1-line recipe via <code class="docutils literal notranslate"><span class="pre">paper_methods.u_midas(...)</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Macro nowcasting with monthly predictors and quarterly targets; mixed-frequency feature engineering when no parametric weight kernel is desired.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When <code class="docutils literal notranslate"><span class="pre">n_lags_high</span> <span class="pre">·</span> <span class="pre">n_HF_columns</span></code> exceeds T (use <code class="docutils literal notranslate"><span class="pre">midas</span></code> parametric weighting instead, or pair with downstream lasso).</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>Foroni, Marcellino &amp; Schumacher (2015) ‘Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials’, JRSS-A 178(1): 57-82.</p></li>
+<li><p>Borup, Rapach &amp; Schütte (2023) ‘Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data’, International Journal of Forecasting 39(3): 1122-1144.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#midas"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">midas</span></code></span></a>, <a class="reference internal" href="#lag"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">lag</span></code></span></a>, <a class="reference internal" href="#ma-window"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
 <section id="varimax-operational">

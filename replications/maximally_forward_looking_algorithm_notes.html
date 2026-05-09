@@ -1,0 +1,207 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maximally Forward-Looking Core Inflation — algorithm notes &mdash; macroforecast</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6b888095"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            macroforecast
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_researchers/index.html">For researchers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_recipe_authors/index.html">For recipe authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../for_contributors/index.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/index.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../navigator/index.html">Navigator Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Replications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encyclopedia/index.html">Encyclopedia</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONVENTIONS.html">Docs Conventions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">macroforecast</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Maximally Forward-Looking Core Inflation — algorithm notes</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/NanyeonK/macroforecast/blob/main/docs/replications/maximally_forward_looking_algorithm_notes.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="maximally-forward-looking-core-inflation-algorithm-notes">
+<h1>Maximally Forward-Looking Core Inflation — algorithm notes<a class="headerlink" href="#maximally-forward-looking-core-inflation-algorithm-notes" title="Link to this heading"></a></h1>
+<p><strong>Paper</strong>: Goulet Coulombe, Klieber, Barrette, Göbel (2024) “Maximally
+Forward-Looking Core Inflation”. Draft 2024-03-15. R package
+<code class="docutils literal notranslate"><span class="pre">assemblage</span></code> (CRAN).</p>
+<p><strong>PDF</strong>: <code class="docutils literal notranslate"><span class="pre">wiki/raw/papers/Maximally</span> <span class="pre">Forward-Looking</span> <span class="pre">Core</span> <span class="pre">Inflation.pdf</span></code></p>
+<section id="decomposition-into-atomic-primitives">
+<h2>Decomposition into atomic primitives<a class="headerlink" href="#decomposition-into-atomic-primitives" title="Link to this heading"></a></h2>
+<p>The paper introduces two indicators built from a generalised
+non-negative ridge (“Assemblage Regression”):</p>
+<ul class="simple">
+<li><p><strong>Albacore_comps</strong> (component space) – supervised weighting of
+inflation components.</p></li>
+<li><p><strong>Albacore_ranks</strong> (rank space) – supervised weighting of
+<em>order statistics</em> of components per period; “asymmetric trimming”
+emerges from the learned weights on each rank position.</p></li>
+</ul>
+<p>Decomposition into the macroforecast vocabulary:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Paper construct</p></th>
+<th class="head"><p>macroforecast primitive</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Assemblage Regression (nonneg ridge, no intercept)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ridge(coefficient_constraint=nonneg)</span></code> ✓ v0.8.9 (B-1)</p></td>
+</tr>
+<tr class="row-odd"><td><p>`</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p>Albacore_comps target</p></td>
+<td><p>recipe pattern: nonneg ridge on components Π_t against forward inflation</p></td>
+</tr>
+<tr class="row-odd"><td><p>Albacore_ranks target</p></td>
+<td><p>recipe pattern: <code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> (L2 op) → nonneg ridge on order statistics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> rank-space transformation</p></td>
+<td><p>new L2 op (this doc)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="asymmetric-trim-algorithm-b-6-spec">
+<h2>asymmetric_trim algorithm (B-6 spec)<a class="headerlink" href="#asymmetric-trim-algorithm-b-6-spec" title="Link to this heading"></a></h2>
+<p><strong>Input</strong>: panel <code class="docutils literal notranslate"><span class="pre">Π</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n_periods,</span> <span class="pre">K)</span></code>, where each row is the
+contemporaneous component growth rates at time t.</p>
+<p><strong>Output</strong>: panel <code class="docutils literal notranslate"><span class="pre">O</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(n_periods,</span> <span class="pre">K)</span></code>, where <code class="docutils literal notranslate"><span class="pre">O[t,</span> <span class="pre">r]</span></code> =
+the r-th order statistic of <code class="docutils literal notranslate"><span class="pre">Π[t,</span> <span class="pre">:]</span></code> (ascending sort).</p>
+<p><strong>Pseudocode</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">asymmetric_trim</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="c1"># panel: (T x K), columns = component labels.</span>
+    <span class="c1"># output: (T x K), columns = [&#39;rank_1&#39;, ..., &#39;rank_K&#39;] (1-indexed).</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">sorted_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># ascending per-row</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;rank_</span><span class="si">{</span><span class="n">r</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sorted_arr</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Optional 3-month MA smoothing</strong> (paper §3 implementation note):
+“Order statistics time series are smoothed using the 3-month moving
+average.” This is delegated to a downstream <code class="docutils literal notranslate"><span class="pre">ma_window</span></code> op when the
+user wants the smoothed variant; the bare <code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> op does
+not bake it in (decomposition discipline).</p>
+</section>
+<section id="equation-reference-paper-2">
+<h2>Equation reference (paper §2)<a class="headerlink" href="#equation-reference-paper-2" title="Link to this heading"></a></h2>
+<p>Albacore_ranks regression:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ŵ_r = argmin_w  Σ_{t=1}^{T-h} (π_{t+1:t+h} - w&#39; O_t)²  +  λ ||Dw||₂²
+              s.t.  w &gt;= 0,  π̄_{t+1:t+h} = π̄*_ranks,t
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">D</span></code> is the difference operator and <code class="docutils literal notranslate"><span class="pre">O_t</span> <span class="pre">=</span> <span class="pre">sort(Π_t)</span></code>.</p>
+</section>
+<section id="verification-b-6-quality-bar">
+<h2>Verification (B-6 quality bar)<a class="headerlink" href="#verification-b-6-quality-bar" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code> is idempotent on already-sorted input: applying it
+twice yields the same matrix as one application.</p></li>
+<li><p>For a uniformly-distributed component panel, the rank-r series
+approximates the r/K quantile of the marginal distribution.</p></li>
+<li><p>Per-row monotone: <code class="docutils literal notranslate"><span class="pre">O[t,</span> <span class="pre">0]</span> <span class="pre">&lt;=</span> <span class="pre">O[t,</span> <span class="pre">1]</span> <span class="pre">&lt;=</span> <span class="pre">...</span> <span class="pre">&lt;=</span> <span class="pre">O[t,</span> <span class="pre">K-1]</span></code>.</p></li>
+</ul>
+</section>
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
+<p>Implemented in v0.8.9 (B-6) as an L2 op. The downstream
+<code class="docutils literal notranslate"><span class="pre">ridge(coefficient_constraint=nonneg)</span></code> is also in v0.8.9 (B-1), so the
+Albacore_ranks recipe runs end-to-end after sorting. The fused-ridge
+penalty (<code class="docutils literal notranslate"><span class="pre">||Dw||₂²</span></code>) on the weight differences across ranks is <em>not</em>
+yet in the package – standard ridge <code class="docutils literal notranslate"><span class="pre">α||w||₂²</span></code> is a less informative
+prior on the rank weights but still produces a valid (just less
+smooth) solution. Fused-ridge is a v0.9.x sub-axis target.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, NanyeonK.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,8 +5,8 @@
 - Layer ID: `l4`
 - Category: `construction`
 - Sub-layers: 4
-- Axes: 5
-- Options across axes: 49
+- Axes: 6
+- Options across axes: 64
 
 ## Sub-layers
 
@@ -26,4 +26,5 @@ axes/forecast_strategy
 axes/training_start_rule
 axes/refit_policy
 axes/search_algorithm
+axes/pi_correction
 ```
