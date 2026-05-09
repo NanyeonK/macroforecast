@@ -1417,6 +1417,19 @@ arch = [
 catboost = [
     { name = "catboost" },
 ]
+ci = [
+    { name = "anatomy" },
+    { name = "arch" },
+    { name = "catboost" },
+    { name = "lightgbm" },
+    { name = "lime" },
+    { name = "optuna" },
+    { name = "pyarrow" },
+    { name = "pytest" },
+    { name = "shap", version = "0.49.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "shap", version = "0.51.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "xgboost" },
+]
 deep = [
     { name = "torch" },
 ]
@@ -1476,6 +1489,7 @@ requires-dist = [
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0" },
     { name = "lime", marker = "extra == 'lime'", specifier = ">=0.2" },
     { name = "macroforecast", extras = ["all"], marker = "extra == 'dev'" },
+    { name = "macroforecast", extras = ["tuning", "shap", "lime", "xgboost", "lightgbm", "catboost", "parquet", "arch", "anatomy"], marker = "extra == 'ci'" },
     { name = "macroforecast", extras = ["tuning", "shap", "lime", "xgboost", "lightgbm", "catboost", "parquet", "deep", "mars", "arch", "anatomy"], marker = "extra == 'all'" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0" },
@@ -1485,6 +1499,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2" },
     { name = "pyarrow", marker = "extra == 'parquet'", specifier = ">=14.0" },
     { name = "pyearth", marker = "extra == 'mars'", specifier = ">=0.1" },
+    { name = "pytest", marker = "extra == 'ci'", specifier = ">=8.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "scikit-learn", specifier = ">=1.5" },
@@ -1497,7 +1512,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'deep'", specifier = ">=2.0" },
     { name = "xgboost", marker = "extra == 'xgboost'", specifier = ">=3.0,<3.1" },
 ]
-provides-extras = ["tuning", "shap", "lime", "xgboost", "lightgbm", "catboost", "parquet", "deep", "mars", "arch", "anatomy", "docs", "all", "dev"]
+provides-extras = ["tuning", "shap", "lime", "xgboost", "lightgbm", "catboost", "parquet", "deep", "mars", "arch", "anatomy", "docs", "all", "ci", "dev"]
 
 [[package]]
 name = "mako"

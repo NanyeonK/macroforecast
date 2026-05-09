@@ -46,6 +46,7 @@ docs = [
     "sphinx-copybutton>=0.5",
 ]
 all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy]"]
+ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
