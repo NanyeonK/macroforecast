@@ -4,6 +4,7 @@ name: ci-deep
 # Runs on nightly schedule + PRs labeled 'needs-deep-test'.
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 3 * * *'
   pull_request:
@@ -13,6 +14,7 @@ jobs:
   test-deep:
     if: >
       github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
       contains(github.event.pull_request.labels.*.name, 'needs-deep-test')
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +29,7 @@ jobs:
       - name: Install dependencies including [deep]
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,deep]"
+          pip install -e ".[ci,deep]"
 
       - name: Run deep tests
         run: |
@@ -35,4 +37,4 @@ jobs:
 
       - name: Run cross-cutting sweep-safety (deep included)
         run: |
-          pytest tests/test_deep_models_sweep_safety.py -x -q
+          pytest tests/core/test_deep_models_sweep_safety.py -x -q
