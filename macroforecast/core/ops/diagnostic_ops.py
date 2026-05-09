@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from .registry import register_op
-from ..types import DiagnosticArtifact
+from typing import cast
+
+from .registry import LayerScope, register_op
+from ..types import DataType, DiagnosticArtifact
 
 
 def _passthrough(name: str):
@@ -54,4 +56,4 @@ for _name, _scope in (
     ("l4_5_ensemble_diagnostics", ("l4_5",)),
     ("l4_5_diagnostic_export", ("l4_5",)),
 ):
-    register_op(name=_name, layer_scope=_scope, input_types={"default": object}, output_type=DiagnosticArtifact)(_passthrough(_name))
+    register_op(name=_name, layer_scope=cast(LayerScope, _scope), input_types={"default": DataType}, output_type=DiagnosticArtifact)(_passthrough(_name))

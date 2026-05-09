@@ -8,7 +8,7 @@ from ..types import TuningResult, TuningTrial
 def grid_search(eval_fn, hp_grid: dict[str, list], budget, search_algorithm: str = "grid_search") -> TuningResult:
     keys = list(hp_grid)
     combos = list(itertools.product(*[hp_grid[k] for k in keys]))
-    trials = []
+    trials: list[TuningTrial] = []
     start = time.time()
     for i, combo in enumerate(combos):
         if budget.exceeded(trials):

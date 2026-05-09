@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..dag import DAG, LayerId, Node, NodeRef, NodeType, SourceSelector
 from ..ops.l7_ops import FUTURE_OPS, PRE_DEFINED_BLOCKS
 
 
@@ -114,9 +114,10 @@ def normalize_to_dag_form(layer: dict[str, Any] | L7Layer, layer_id: Literal["l7
             first = next(iter(target.values()), None)
             if isinstance(first, list):
                 first = first[0] if first else None
-            sink_map[sink_name] = first
+            if first is not None:
+                sink_map[sink_name] = str(first)
         else:
-            sink_map[sink_name] = target
+            sink_map[sink_name] = str(target)
     return DAG("l7", nodes, sinks=sink_map, layer_globals={"resolved_axes": resolve_axes_from_raw(raw)})
 
 
@@ -233,11 +234,18 @@ def make_l7_yaml_with_lineage_attribution() -> str:
 
 
 def _parse_node(raw_node: dict[str, Any]) -> Node:
-    node_type = raw_node.get("type", "step")
+    raw_node_id = raw_node.get("id")
+    if not isinstance(raw_node_id, str):
+        raise ValueError("L7 node requires a string id")
+    node_type = str(raw_node.get("type", "step"))
     selector = None
     if node_type == "source":
         raw_selector = raw_node.get("selector", {}) or {}
-        selector = SourceSelector(raw_selector.get("layer_ref"), raw_selector.get("sink_name"), raw_selector.get("subset", {}) or {})
+        layer_ref = raw_selector.get("layer_ref")
+        sink_name = raw_selector.get("sink_name")
+        if not isinstance(layer_ref, str) or not isinstance(sink_name, str):
+            raise ValueError(f"L7 source node {raw_node_id!r} requires layer_ref and sink_name")
+        selector = SourceSelector(cast(LayerId | Literal["external"], layer_ref), sink_name, raw_selector.get("subset", {}) or {})
     inputs = []
     for item in raw_node.get("inputs", ()) or ():
         if isinstance(item, str):
@@ -248,8 +256,8 @@ def _parse_node(raw_node: dict[str, Any]) -> Node:
         elif isinstance(item, dict) and "id" in item:
             inputs.append(NodeRef(item["id"]))
     return Node(
-        id=raw_node.get("id"),
-        type=node_type,
+        id=raw_node_id,
+        type=cast(NodeType, node_type),
         layer_id="l7",
         op=raw_node.get("op", "source" if node_type == "source" else ""),
         params=raw_node.get("params", {}) or {},
@@ -297,7 +305,9 @@ def _validate_nodes(raw: dict[str, Any], context: dict[str, Any]) -> list[Any]:
 def _validate_grouping(node: dict[str, Any], context: dict[str, Any]) -> list[Any]:
     grouping = (node.get("params", {}) or {}).get("grouping")
     dataset = context.get("dataset", "fred_md")
-    issues = []
+    issues: list[Any] = []
+    if not isinstance(grouping, str):
+        return issues
     if grouping == "mccracken_ng_md_groups" and "fred_md" not in dataset:
         issues.append(_issue(f"l7.{node.get('id')}.grouping", "mccracken_ng_md_groups requires fred_md dataset"))
     if grouping == "mccracken_ng_qd_groups" and "fred_qd" not in dataset:
@@ -374,6 +384,7 @@ _AXIS_OPTION_SETS = {
 
 
 def _build_axis(name: str) -> _AxisSpec:
+    opts: tuple[_Option, ...]
     if name in ("latex_table_export", "markdown_table_export"):
         opts = (_Option("true", "True", ""), _Option("false", "False", ""))
     elif name in ("top_k_features_to_show", "precision_digits", "figure_dpi"):

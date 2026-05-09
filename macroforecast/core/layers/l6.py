@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from ..dag import DAG, Node, NodeRef, SourceSelector
 
@@ -217,7 +217,7 @@ def normalize_to_dag_form(layer: dict[str, Any] | L6Layer, layer_id: Literal["l6
 
 def resolve_axes(dag_or_layer: DAG | L6Layer | dict[str, Any]) -> L6ResolvedAxes:
     if isinstance(dag_or_layer, DAG):
-        return getattr(dag_or_layer, "_l6_resolved", _resolve_from_dag_nodes(dag_or_layer))
+        return cast(L6ResolvedAxes, getattr(dag_or_layer, "_l6_resolved", _resolve_from_dag_nodes(dag_or_layer)))
     raw = dag_or_layer.raw_yaml if isinstance(dag_or_layer, L6Layer) else dag_or_layer
     return resolve_axes_from_raw(raw)
 
@@ -337,14 +337,14 @@ def _apply_sub_layer_gates(sub_name: str, values: dict[str, Any], active: dict[s
 
 
 def _validate_globals(resolved: L6ResolvedAxes, context: dict[str, Any]) -> list[Any]:
-    issues = []
+    issues: list[Any] = []
     if resolved["overlap_handling"] == "none" and any(h > 1 for h in context.get("horizons", (1,))):
         issues.append(_issue("l6.overlap_handling", "overlap_handling=none is invalid when any horizon is greater than 1"))
     return issues
 
 
 def _validate_sub_layer(sub_name: str, sub: AxisGroup, leaf: dict[str, Any], context: dict[str, Any]) -> list[Any]:
-    issues = []
+    issues: list[Any] = []
     if not sub["enabled"]:
         return issues
     if sub_name == "L6_A_equal_predictive":
@@ -400,9 +400,9 @@ def _resolve_from_dag_nodes(dag: DAG) -> L6ResolvedAxes:
         sub_values["enabled"] = any(node.id.startswith(f"axis_{sub_name}.") for node in dag.nodes.values())
         sub_active = {axis: f"axis_{sub_name}.{axis}" in dag.nodes for axis in SUB_LAYER_AXES[sub_name]}
         for axis in SUB_LAYER_AXES[sub_name]:
-            node = dag.nodes.get(f"axis_{sub_name}.{axis}")
-            if node is not None:
-                sub_values[axis] = node.params["value"]
+            axis_node = dag.nodes.get(f"axis_{sub_name}.{axis}")
+            if axis_node is not None:
+                sub_values[axis] = axis_node.params["value"]
         values[sub_name] = AxisGroup(sub_values, sub_active)
     return L6ResolvedAxes(values, {key: True for key in values if key not in SUB_LAYER_ORDER})
 
@@ -418,7 +418,13 @@ def _extract_horizons(l1_fixed: dict[str, Any], l1_leaf: dict[str, Any]) -> tupl
 
 
 def _extract_model_ids(nodes: Any) -> tuple[str, ...]:
-    return tuple(node.get("id") for node in nodes if isinstance(node, dict) and node.get("type") == "step" and node.get("op") == "fit_model" and node.get("id"))
+    return tuple(
+        node_id
+        for node in nodes
+        if isinstance(node, dict) and node.get("type") == "step" and node.get("op") == "fit_model"
+        for node_id in (node.get("id"),)
+        if isinstance(node_id, str)
+    )
 
 
 def _copy_default(value: Any) -> Any:

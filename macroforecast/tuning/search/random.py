@@ -7,7 +7,7 @@ from ..types import TuningResult, TuningTrial
 
 def random_search(eval_fn, hp_space: dict, budget, random_state: int = 42, search_algorithm: str = "random_search") -> TuningResult:
     rng = np.random.RandomState(random_state)
-    trials=[]
+    trials: list[TuningTrial] = []
     start=time.time()
     i=0
     while not budget.exceeded(trials):

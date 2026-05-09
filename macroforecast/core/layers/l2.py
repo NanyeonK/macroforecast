@@ -347,7 +347,7 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes) -> l
 
 
 def _validate_l2a_gates(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes, l1_context: dict[str, Any] | None) -> list[Any]:
-    issues = []
+    issues: list[Any] = []
     if l1_context is None:
         return issues
     if not _l2a_active(l1_context):

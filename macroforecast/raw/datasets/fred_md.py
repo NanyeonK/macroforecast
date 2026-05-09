@@ -49,6 +49,8 @@ def load_fred_md(
                 atomic_copy_to_cache(Path(local_source), target)
                 source_url = str(local_source)
             elif local_zip_source is not None:
+                if request.vintage is None:
+                    raise RawDownloadError("local_zip_source requires an explicit vintage")
                 _extract_vintage_from_zip(Path(local_zip_source), request.vintage, target)
                 source_url = str(local_zip_source)
             else:

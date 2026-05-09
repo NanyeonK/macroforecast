@@ -306,6 +306,7 @@ def _opt(value: str) -> _Option:
 
 
 def _build_axis(name: str) -> _AxisSpec:
+    opts: tuple[_Option, ...]
     if name == "attach_to_manifest":
         opts = (_Option("true", "True", ""), _Option("false", "False", ""))
     elif name in ("figure_dpi",):

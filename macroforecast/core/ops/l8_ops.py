@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .registry import register_op
-from ..types import L8ArtifactsArtifact
+from ..types import DataType, L8ArtifactsArtifact
 
 
 def _passthrough(name: str):
@@ -16,4 +16,4 @@ def _passthrough(name: str):
 
 
 for _name in ("l8_collect_inputs", "l8_export_format", "l8_saved_objects", "l8_provenance", "l8_artifact_granularity"):
-    register_op(name=_name, layer_scope=("l8",), input_types={"default": object}, output_type=L8ArtifactsArtifact)(_passthrough(_name))
+    register_op(name=_name, layer_scope=("l8",), input_types={"default": DataType}, output_type=L8ArtifactsArtifact)(_passthrough(_name))

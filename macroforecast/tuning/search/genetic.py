@@ -54,8 +54,8 @@ def genetic_algorithm(eval_fn, hp_space: dict, budget, random_state: int = 42, p
         population_size = min(population_size, max(2, int(budget.max_trials)))
     population=[{k: dist.sample(rng) for k,dist in hp_space.items()} for _ in range(population_size)]
     start=time.time()
-    all_trials=[]
-    fitness=[]
+    all_trials: list[TuningTrial] = []
+    fitness: list[float] = []
     for ind in population:
         if budget.exceeded(all_trials):
             break

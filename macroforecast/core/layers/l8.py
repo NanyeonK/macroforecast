@@ -261,7 +261,7 @@ def _expand_saved_objects(objects: list[str]) -> list[str]:
 
 
 def _validate_values(resolved: L8ResolvedAxes, leaf: dict[str, Any], context: dict[str, Any]) -> list[Any]:
-    issues = []
+    issues: list[Any] = []
     if any(_is_sweep(resolved.get(axis)) for axis in L8_AXIS_NAMES):
         return issues
     if resolved["export_format"] not in EXPORT_FORMATS:

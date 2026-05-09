@@ -4,6 +4,7 @@ from dataclasses import replace
 
 from .registry import Rule, register_op
 from ..types import (
+    DataType,
     Factor,
     L3FeaturesArtifact,
     L3MetadataArtifact,
@@ -515,7 +516,7 @@ def nystroem(inputs, params):
 @register_op(
     name="regime_indicator",
     layer_scope=("l3",),
-    input_types={"default": object},
+    input_types={"default": DataType},
     output_type=Panel,
 )
 def regime_indicator(inputs, params):

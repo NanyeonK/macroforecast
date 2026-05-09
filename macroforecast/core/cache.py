@@ -13,7 +13,7 @@ from .ops import get_op
 
 
 def canonical_dict(value: Any) -> Any:
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return canonical_dict(asdict(value))
     if isinstance(value, dict):
         return {str(key): canonical_dict(value[key]) for key in sorted(value)}
@@ -105,14 +105,15 @@ def execute_node(
     cache_path.mkdir(parents=True, exist_ok=True)
     with result_path.open("wb") as fh:
         pickle.dump(result, fh)
-    metadata = {
+    created_at = datetime.now(timezone.utc).isoformat()
+    metadata: dict[str, Any] = {
         "op": node.op,
         "params": node.params,
         "input_hashes": [node_hash(dag.node(ref.node_id), dag, runtime_context) for ref in node.inputs],
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at,
     }
     (cache_path / "metadata.json").write_text(canonical_serialize(metadata), encoding="utf-8")
-    (cache_path / "created_at.txt").write_text(metadata["created_at"], encoding="utf-8")
+    (cache_path / "created_at.txt").write_text(created_at, encoding="utf-8")
     return result
 
 

@@ -406,7 +406,7 @@ def _replace_manifest(manifest: Manifest, **changes: Any) -> Manifest:
 def _manifest_to_jsonable(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat()
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, type):
         return {key: _manifest_to_jsonable(child) for key, child in asdict(value).items()}
     if isinstance(value, dict):
         return {str(key): _manifest_to_jsonable(child) for key, child in value.items()}

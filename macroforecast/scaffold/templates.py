@@ -14,7 +14,7 @@ Five templates ship in v1.0:
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from .builder import RecipeBuilder
 
@@ -26,7 +26,7 @@ def ridge_baseline(*, target: str = "y") -> RecipeBuilder:
     Useful as the wizard's quick-start path and as a smoke test.
     """
 
-    panel = {
+    panel: dict[str, list[Any]] = {
         "date": [f"2018-{m:02d}-01" for m in range(1, 13)],
         "y": [float(v) for v in range(1, 13)],
         "x1": [0.5 * v for v in range(1, 13)],
@@ -123,7 +123,7 @@ def fred_sd_geographic(*, target: str = "PAYEMS") -> RecipeBuilder:
     return b
 
 
-_TEMPLATES: dict[str, callable] = {
+_TEMPLATES: dict[str, Callable[..., RecipeBuilder]] = {
     "ridge_baseline": ridge_baseline,
     "horse_race_md": horse_race_md,
     "regime_conditional": regime_conditional,

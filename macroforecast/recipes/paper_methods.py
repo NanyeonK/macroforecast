@@ -281,7 +281,7 @@ def _l5_l6_paper16_eval_blocks() -> tuple[dict[str, Any], dict[str, Any]]:
     """Return ``(5_evaluation, 6_statistical_tests)`` blocks that wire
     DM-vs-benchmark + MCS for the auto-attached paper-16 evaluation."""
 
-    l5 = {"fixed_axes": {}}
+    l5: dict[str, Any] = {"fixed_axes": {}}
     l6 = {
         "enabled": True,
         "test_scope": "per_target_horizon",
@@ -2168,7 +2168,7 @@ def ml_useful_macro(
 # v0.9.0F gap-closure: 4-feature horse race for the paper's central
 # decomposition (Coulombe et al. 2022 JAE §3 + Eq. 16).
 
-_ML_USEFUL_FEATURES = {
+_ML_USEFUL_FEATURES: dict[str, tuple[str, dict[str, Any]]] = {
     # Feature 1 — nonlinearity
     "linear_baseline": ("ar_p", {"n_lag": 4}),
     "krr_rbf": ("kernel_ridge", {"kernel": "rbf", "alpha": 1.0}),

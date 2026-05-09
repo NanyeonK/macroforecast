@@ -372,12 +372,12 @@ for option, (summary, desc, when, when_not) in POINT.items():
 
 _DENSITY = []
 for option, (summary, desc, when) in DENSITY.items():
-    refs = (_REF_DESIGN_L5, _REF_GNEITING_RAFTERY_2007, _REF_GNEITING_KATZFUSS_2014)
+    density_refs: tuple[Reference, ...] = (_REF_DESIGN_L5, _REF_GNEITING_RAFTERY_2007, _REF_GNEITING_KATZFUSS_2014)
     if option == "interval_score":
-        refs = refs + (_REF_WINKLER_1972,)
+        density_refs = density_refs + (_REF_WINKLER_1972,)
     _DENSITY.append(_e("density_metrics", option, summary,
         f"Density-forecast metric ``{option}``. {desc}",
-        when, references=refs,
+        when, references=density_refs,
         related=tuple(k for k in DENSITY if k != option)))
 
 _DIRECTION = [
@@ -391,12 +391,12 @@ _DIRECTION = [
 
 _RELATIVE = []
 for option, (summary, desc, when) in RELATIVE.items():
-    refs: tuple[Reference, ...] = (_REF_DESIGN_L5, _REF_DIEBOLD_2017)
+    relative_refs: tuple[Reference, ...] = (_REF_DESIGN_L5, _REF_DIEBOLD_2017)
     if option in ("mse_reduction", "r2_oos"):
-        refs = (_REF_DESIGN_L5, _REF_CAMPBELL_THOMPSON_2008)
+        relative_refs = (_REF_DESIGN_L5, _REF_CAMPBELL_THOMPSON_2008)
     _RELATIVE.append(_e("relative_metrics", option, summary,
         f"Relative-loss metric ``{option}``. {desc}",
-        when, references=refs,
+        when, references=relative_refs,
         related=tuple(k for k in RELATIVE if k != option)))
 
 register(*_PRIMARY, *_POINT, *_DENSITY, *_DIRECTION, *_RELATIVE)

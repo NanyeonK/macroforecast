@@ -263,7 +263,7 @@ def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
 
 
 def _validate_metric_options(resolved: L5ResolvedAxes, context: dict[str, Any]) -> list[Any]:
-    issues = []
+    issues: list[Any] = []
     primary = resolved.get("primary_metric")
     if _is_sweep(primary):
         return issues

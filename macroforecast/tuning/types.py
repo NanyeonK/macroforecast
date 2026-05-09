@@ -15,10 +15,16 @@ class HPDistribution:
 
     def sample(self, rng: np.random.RandomState):
         if self.type == "float":
+            if self.low is None or self.high is None:
+                raise ValueError("float distribution requires low and high")
             return float(rng.uniform(float(self.low), float(self.high)))
         if self.type == "log_float":
+            if self.low is None or self.high is None:
+                raise ValueError("log_float distribution requires low and high")
             return float(np.exp(rng.uniform(np.log(float(self.low)), np.log(float(self.high)))))
         if self.type == "int":
+            if self.low is None or self.high is None:
+                raise ValueError("int distribution requires low and high")
             return int(rng.randint(int(self.low), int(self.high) + 1))
         if self.type == "categorical":
             assert self.choices is not None

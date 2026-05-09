@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Sequence
 
 from ..dag import DAG, LayerId, Node, NodeRef
 from ..status import ItemStatus, normalize_status
@@ -32,7 +32,7 @@ class OpSpec:
     params_schema: dict[str, dict[str, Any]] = field(default_factory=dict)
     hard_rules: tuple[Rule, ...] = ()
     soft_rules: tuple[Rule, ...] = ()
-    default_figure_type: str | None = None
+    default_figure_type: str | Sequence[str] | None = None
     status: OpStatus = "operational"
     function: Callable[..., Any] | None = None
 
@@ -56,7 +56,7 @@ def register_op(
     params_schema: dict[str, dict[str, Any]] | None = None,
     hard_rules: tuple[Rule, ...] = (),
     soft_rules: tuple[Rule, ...] = (),
-    default_figure_type: str | None = None,
+    default_figure_type: str | Sequence[str] | None = None,
     status: OpStatus = "operational",
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:

@@ -56,6 +56,7 @@ def _normalize_horizons(horizons: Iterable[int]) -> tuple[int, ...]:
 
 
 def _normalize_models(model_families: Iterable[str] | None, model_family: str) -> tuple[str, ...]:
+    values: tuple[str, ...]
     if model_families is None:
         values = (model_family,)
     elif isinstance(model_families, str):
