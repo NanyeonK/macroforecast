@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from .registry import Rule, register_op
 from ..status import FUTURE, OPERATIONAL, ItemStatus, is_runnable
-from ..types import L1RegimeMetadataArtifact, L3FeaturesArtifact, L4ForecastsArtifact, L4ModelArtifactsArtifact, L4TrainingMetadataArtifact
+from ..types import (
+    L1RegimeMetadataArtifact,
+    L3FeaturesArtifact,
+    L4ForecastsArtifact,
+    L4ModelArtifactsArtifact,
+    L4TrainingMetadataArtifact,
+)
 
 
 # Families whose runtime fully matches the published procedure named in
@@ -69,6 +75,28 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     #   with a clear hint when the extra is missing -- mirrors the
     #   xgboost / lightgbm / catboost / deep optional-dep pattern.
     "mars",
+    # Phase C top-6 net-new methods (2026-05-08):
+    # - garch11 / egarch: Bollerslev (1986) / Nelson (1991) univariate
+    #   volatility families. Wrap the ``arch`` package; raise
+    #   NotImplementedError when ``arch`` is missing.
+    # - realized_garch_with_rv_exog: Phase C-3 audit-fix (M9) honest
+    #   rename. The L4 runtime feeds the realised-variance series as the
+    #   exogenous ``x=`` regressor in a vanilla GARCH(1,1) — useful in
+    #   practice (RV improves volatility forecast) but **NOT** the
+    #   Hansen-Huang-Shek (2012) joint return + measurement-equation
+    #   MLE. The proper RealizedGARCH spec is reserved as
+    #   ``realized_garch`` (FUTURE) until ``arch`` ships a native
+    #   ``RealizedGARCH`` class or we implement the joint MLE manually.
+    # - ets / theta_method / holt_winters: M16 baseline family.
+    #   Hyndman-Koehler-Ord-Snyder (2008) ETS state-space (statsmodels);
+    #   Assimakopoulos-Nikolopoulos (2000) Theta(2) closed form;
+    #   Hyndman-Athanasopoulos (2018) §7 Holt-Winters (statsmodels).
+    "garch11",
+    "egarch",
+    "realized_garch_with_rv_exog",
+    "ets",
+    "theta_method",
+    "holt_winters",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -99,6 +127,14 @@ FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
     "midas_beta",
     "midas_step",
     "dfm_unrestricted_midas",
+    # Phase C-3 audit-fix (M9): the canonical name ``realized_garch`` is
+    # reserved for the Hansen-Huang-Shek (2012) joint return +
+    # measurement-equation MLE. Until that runtime exists (awaiting
+    # ``arch.RealizedGARCH`` upstream wiring or manual joint MLE), the
+    # name is FUTURE. The current RV-as-exogenous approximation is
+    # exposed under the honest name ``realized_garch_with_rv_exog``
+    # (operational).
+    "realized_garch",
 )
 
 
@@ -139,10 +175,15 @@ SEARCH_ALGORITHMS = (
     # shuffle) and from ``TimeSeriesSplit`` (expanding sequential).
     "block_cv",
 )
-FORECAST_STRATEGIES = ("direct", "iterated", "path_average")
+FORECAST_STRATEGIES = ("direct", "iterated", "path_average", "path_average_eq4")
 TRAINING_START_RULES = ("expanding", "rolling", "fixed")
 REFIT_POLICIES = ("every_origin", "every_n_origins", "single_fit")
-VALIDATION_METHODS = ("expanding_walk_forward", "rolling_walk_forward", "kfold", "time_series_split")
+VALIDATION_METHODS = (
+    "expanding_walk_forward",
+    "rolling_walk_forward",
+    "kfold",
+    "time_series_split",
+)
 
 
 def get_family_status(family: str) -> ItemStatus:
@@ -169,7 +210,10 @@ def _family_operational(dag, nref) -> bool:
 
 
 def _valid_strategy(dag, nref) -> bool:
-    return dag.node(nref.node_id).params.get("forecast_strategy", "direct") in FORECAST_STRATEGIES
+    return (
+        dag.node(nref.node_id).params.get("forecast_strategy", "direct")
+        in FORECAST_STRATEGIES
+    )
 
 
 @register_op(
@@ -178,17 +222,55 @@ def _valid_strategy(dag, nref) -> bool:
     input_types={"default": (L3FeaturesArtifact, L1RegimeMetadataArtifact)},
     output_type=L4ModelArtifactsArtifact,
     params_schema={
-        "family": {"type": str, "default": "ridge", "sweepable": True, "options": OPERATIONAL_MODEL_FAMILIES + FUTURE_MODEL_FAMILIES},
-        "forecast_strategy": {"type": str, "default": "direct", "sweepable": True, "options": FORECAST_STRATEGIES},
-        "training_start_rule": {"type": str, "default": "expanding", "sweepable": True, "options": TRAINING_START_RULES},
-        "refit_policy": {"type": str, "default": "every_origin", "sweepable": True, "options": REFIT_POLICIES},
-        "search_algorithm": {"type": str, "default": "none", "sweepable": True, "options": SEARCH_ALGORITHMS},
+        "family": {
+            "type": str,
+            "default": "ridge",
+            "sweepable": True,
+            "options": OPERATIONAL_MODEL_FAMILIES + FUTURE_MODEL_FAMILIES,
+        },
+        "forecast_strategy": {
+            "type": str,
+            "default": "direct",
+            "sweepable": True,
+            "options": FORECAST_STRATEGIES,
+        },
+        "training_start_rule": {
+            "type": str,
+            "default": "expanding",
+            "sweepable": True,
+            "options": TRAINING_START_RULES,
+        },
+        "refit_policy": {
+            "type": str,
+            "default": "every_origin",
+            "sweepable": True,
+            "options": REFIT_POLICIES,
+        },
+        "search_algorithm": {
+            "type": str,
+            "default": "none",
+            "sweepable": True,
+            "options": SEARCH_ALGORITHMS,
+        },
         "tuning_objective": {"type": str, "default": "cv_mse", "sweepable": True},
-        "validation_method": {"type": str, "default": "expanding_walk_forward", "sweepable": True, "options": VALIDATION_METHODS},
+        "validation_method": {
+            "type": str,
+            "default": "expanding_walk_forward",
+            "sweepable": True,
+            "options": VALIDATION_METHODS,
+        },
     },
     hard_rules=(
-        Rule("hard", _family_operational, "model family is future or unknown -- see v0.2 implementation tracker on GitHub"),
-        Rule("hard", _valid_strategy, "forecast_strategy must be one of direct, iterated, path_average"),
+        Rule(
+            "hard",
+            _family_operational,
+            "model family is future or unknown -- see v0.2 implementation tracker on GitHub",
+        ),
+        Rule(
+            "hard",
+            _valid_strategy,
+            "forecast_strategy must be one of direct, iterated, path_average, path_average_eq4",
+        ),
     ),
 )
 def fit_model(inputs, params):
@@ -210,8 +292,30 @@ def fit_model(inputs, params):
 @register_op(
     name="predict",
     layer_scope=("l4",),
-    input_types={"default": (L4ModelArtifactsArtifact, L3FeaturesArtifact, L1RegimeMetadataArtifact)},
+    input_types={
+        "default": (
+            L4ModelArtifactsArtifact,
+            L3FeaturesArtifact,
+            L1RegimeMetadataArtifact,
+        )
+    },
     output_type=L4ForecastsArtifact,
+    params_schema={
+        # Phase C M12 -- Bai-Ng (2006) generated-regressor PI correction.
+        # When ``pi_correction='bai_ng'`` and the upstream fitted family
+        # is ``factor_augmented_ar``, the runtime applies the Theorem 3
+        # / Corollary 1 correction to the prediction-interval bands so
+        # they account for factor estimation noise (V₂/N) on top of the
+        # standard parameter-estimation noise (V₁/T) and residual
+        # variance (σ²_ε). Default 'none' = current Gaussian-residual
+        # behaviour (back-compat).
+        "pi_correction": {
+            "type": str,
+            "default": "none",
+            "options": ("none", "bai_ng"),
+            "sweepable": True,
+        },
+    },
 )
 def predict(inputs, params):
     """Pass-through used by cache-driven DAG executors.

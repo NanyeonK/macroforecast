@@ -36,7 +36,7 @@ existing primitives rather than inflating the registry.
 | 12 | Macroeconomic Data Transformations Matter (Coulombe 2021) | `macroeconomic_data_transformations.yaml` | TBD | `ma_increasing_order` (MARX) + `pca` (rotation) + `cumulative_average` (path-avg) |
 | 13 | How is ML Useful for Macro Forecasting (Coulombe et al. 2022 JAE) | `ml_useful_macro.yaml` | TBD | sweep machinery over `family` × `regularization` × `cv` × `loss` |
 | 14 | Slow-Growing Trees (Coulombe 2024) | `slow_growing_trees.yaml` | pre-promotion | `decision_tree(split_shrinkage=η)` (future) |
-| 15 | Arctic Sea Ice DFM | `arctic_sea_ice_dfm.yaml` | TBD | `dfm_mixed_mariano_murasawa` |
+| 15 | Deprecated — no paper anchor; helper cut 2026-05-08 | — | — | — |
 | 16 | Arctic Amplification VAR / VARCTIC (Coulombe & Goebel 2021) | `arctic_var.yaml` | TBD | `var` + `historical_decomposition` + `orthogonalised_irf` + `fevd` |
 
 ## Calling them programmatically

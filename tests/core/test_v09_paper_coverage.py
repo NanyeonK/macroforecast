@@ -17,6 +17,7 @@ This module pins the v0.9.0 baseline:
 * L7 op additions: ``dual_decomposition`` + ``portfolio_metrics`` (Coulombe
   Dual paper) + ``oshapley_vi`` + ``pbsv`` (Borup anatomy, future).
 """
+
 from __future__ import annotations
 
 import pytest
@@ -28,7 +29,7 @@ from macroforecast.core.ops.l4_ops import (
     OPERATIONAL_MODEL_FAMILIES,
     get_family_status,
 )
-from macroforecast.core.status import FUTURE, OPERATIONAL
+from macroforecast.core.status import OPERATIONAL
 
 
 # ---------------------------------------------------------------------------
@@ -46,15 +47,18 @@ def test_mars_registered_operational_with_pyearth_optional():
     assert get_family_status("mars") == OPERATIONAL
 
 
-@pytest.mark.parametrize("decomposable_family", [
-    "perfectly_random_forest",        # = extra_trees(max_features=1)
-    "booging",                         # = bagging(strategy=sequential_residual)
-    "marsquake",                       # = bagging(base_family=mars)
-    "slow_growing_tree",               # = decision_tree(split_shrinkage=η)
-    "two_step_ridge_regression",       # = chained ridge + ridge(prior=random_walk)
-    "hemisphere_neural_network",       # = mlp(architecture=hemisphere, ...)
-    "assemblage_regression",           # = ridge(coefficient_constraint=nonneg)
-])
+@pytest.mark.parametrize(
+    "decomposable_family",
+    [
+        "perfectly_random_forest",  # = extra_trees(max_features=1)
+        "booging",  # = bagging(strategy=sequential_residual)
+        "marsquake",  # = bagging(base_family=mars)
+        "slow_growing_tree",  # = decision_tree(split_shrinkage=η)
+        "two_step_ridge_regression",  # = chained ridge + ridge(prior=random_walk)
+        "hemisphere_neural_network",  # = mlp(architecture=hemisphere, ...)
+        "assemblage_regression",  # = ridge(coefficient_constraint=nonneg)
+    ],
+)
 def test_decomposable_paper_methods_are_not_l4_families(decomposable_family):
     """These paper methods decompose into recipes over existing
     primitives + sub-axes; they must NOT appear as standalone L4
@@ -143,11 +147,12 @@ def test_b6_asymmetric_trim_with_smoothing():
     """smooth_window > 1 applies centred moving-average to rank-position
     time series."""
 
-    import numpy as np
     import pandas as pd
     from macroforecast.core.runtime import _asymmetric_trim
 
-    panel = pd.DataFrame({"c0": [1.0, 2.0, 3.0, 4.0, 5.0], "c1": [5.0, 4.0, 3.0, 2.0, 1.0]})
+    panel = pd.DataFrame(
+        {"c0": [1.0, 2.0, 3.0, 4.0, 5.0], "c1": [5.0, 4.0, 3.0, 2.0, 1.0]}
+    )
     out = _asymmetric_trim(panel, smooth_window=3)
     assert out.shape == (5, 2)
     # rank_1 (= per-row min) for the input above is uniformly the smaller
@@ -176,10 +181,13 @@ def test_blocked_oob_reality_check_registered_operational():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("op_name", [
-    "oshapley_vi",
-    "pbsv",
-])
+@pytest.mark.parametrize(
+    "op_name",
+    [
+        "oshapley_vi",
+        "pbsv",
+    ],
+)
 def test_l7_paper_coverage_ops_registered_operational(op_name):
     """Promoted in v0.9.1 dev-stage v0.9.0D Path B (anatomy adapter,
     final-window fit, status='degraded' warning). Path A faithful per-
@@ -232,7 +240,9 @@ def test_b3_dual_decomposition_recovers_ridge_predictions():
     yhat_dual = weights_full.to_numpy() @ y.to_numpy()
     # Ridge intercept absorbs the y-mean offset; check shape + reasonable correlation.
     corr = np.corrcoef(yhat_ridge, yhat_dual)[0, 1]
-    assert corr > 0.95, f"dual prediction should track ridge prediction (corr={corr:.3f})"
+    assert corr > 0.95, (
+        f"dual prediction should track ridge prediction (corr={corr:.3f})"
+    )
 
     # Portfolio metrics shape + paper-faithful sign invariants
     # (v0.9.0F audit-fix: ``leverage`` is now signed sum per paper Eq.
@@ -240,12 +250,17 @@ def test_b3_dual_decomposition_recovers_ridge_predictions():
     # absolute-value variants are surfaced as ``leverage_l1`` and
     # ``short_abs`` for backward-compatible plotting).
     assert set(portfolio.columns) == {
-        "hhi", "short", "turnover", "leverage", "leverage_l1", "short_abs",
+        "hhi",
+        "short",
+        "turnover",
+        "leverage",
+        "leverage_l1",
+        "short_abs",
     }
     assert (portfolio["hhi"] >= 0).all()
-    assert (portfolio["short"] <= 0).all()       # signed: ≤ 0
-    assert (portfolio["short_abs"] >= 0).all()   # legacy magnitude
-    assert (portfolio["leverage_l1"] >= 0).all() # L1 norm
+    assert (portfolio["short"] <= 0).all()  # signed: ≤ 0
+    assert (portfolio["short_abs"] >= 0).all()  # legacy magnitude
+    assert (portfolio["leverage_l1"] >= 0).all()  # L1 norm
     # Turnover for first row is 0 by construction.
     assert portfolio["turnover"].iloc[0] == 0.0
 
@@ -309,12 +324,14 @@ def test_v21_scaled_pca_matches_huang_zhou_2022_authors_matlab():
     T, N = 100, 4
     factor = rng.normal(size=T)
     target_arr = factor + 0.1 * rng.normal(size=T)
-    X_arr = np.column_stack([
-        factor + 0.1 * rng.normal(size=T),       # x1: strongly predictive
-        0.3 * factor + 0.5 * rng.normal(size=T), # x2: weakly predictive
-        rng.normal(size=T),                       # x3: noise
-        rng.normal(size=T),                       # x4: noise
-    ])
+    X_arr = np.column_stack(
+        [
+            factor + 0.1 * rng.normal(size=T),  # x1: strongly predictive
+            0.3 * factor + 0.5 * rng.normal(size=T),  # x2: weakly predictive
+            rng.normal(size=T),  # x3: noise
+            rng.normal(size=T),  # x4: noise
+        ]
+    )
     frame = pd.DataFrame(X_arr, columns=["x1", "x2", "x3", "x4"])
     target = pd.Series(target_arr)
 
@@ -329,7 +346,7 @@ def test_v21_scaled_pca_matches_huang_zhou_2022_authors_matlab():
     # Our internal β (re-derived via the closed-form used in
     # _scaled_pca_huang_zhou)
     y_c = target_arr - target_arr.mean()
-    beta_ours = (Xs * y_c[:, None]).sum(axis=0) / (Xs ** 2).sum(axis=0)
+    beta_ours = (Xs * y_c[:, None]).sum(axis=0) / (Xs**2).sum(axis=0)
     np.testing.assert_allclose(beta_ours, beta_authors, atol=1e-12)
 
     # Sanity: noise columns get near-zero β; predictive columns get
@@ -342,7 +359,9 @@ def test_v21_scaled_pca_matches_huang_zhou_2022_authors_matlab():
     # the true latent factor.
     f_ours = _scaled_pca_huang_zhou(frame, n_components=1, target_signal=target)
     corr_with_truth = abs(np.corrcoef(f_ours[:, 0], factor)[0, 1])
-    assert corr_with_truth > 0.95, f"sPCA factor should track truth (corr={corr_with_truth})"
+    assert corr_with_truth > 0.95, (
+        f"sPCA factor should track truth (corr={corr_with_truth})"
+    )
 
 
 def test_b3_dual_decomposition_rejects_unsupported_nonlinear_families():
@@ -370,7 +389,9 @@ def test_b3_dual_decomposition_rejects_unsupported_nonlinear_families():
         feature_names=tuple(X.columns),
     )
 
-    with pytest.raises(NotImplementedError, match="dual_decomposition does not yet support"):
+    with pytest.raises(
+        NotImplementedError, match="dual_decomposition does not yet support"
+    ):
         _dual_decomposition_frame(artifact, X, y)
 
 
@@ -490,16 +511,31 @@ def _gated_l4_recipe(family: str, extra_params: dict) -> str:
 """
 
 
-@pytest.mark.parametrize("family,extra,marker", [
-    # All v0.9.1 dev-stage promotions removed: 2SRR (B-1), Booging (B-4),
-    # SGT (B-6), HNN (C-2). The future-gate test now exercises only the
-    # remaining mismatched combinations -- specifically, hemisphere arch
-    # *without* the volatility_emphasis loss (or vice versa), which the
-    # paper requires together.
-    ("mlp", {"architecture": "hemisphere", "loss": "mse"}, "mlp.architecture-without-loss"),
-    ("mlp", {"architecture": "standard", "loss": "volatility_emphasis"}, "mlp.loss-without-architecture"),
-    ("lstm", {"architecture": "hemisphere", "loss": "volatility_emphasis"}, "lstm.hemisphere-not-mlp"),
-])
+@pytest.mark.parametrize(
+    "family,extra,marker",
+    [
+        # All v0.9.1 dev-stage promotions removed: 2SRR (B-1), Booging (B-4),
+        # SGT (B-6), HNN (C-2). The future-gate test now exercises only the
+        # remaining mismatched combinations -- specifically, hemisphere arch
+        # *without* the volatility_emphasis loss (or vice versa), which the
+        # paper requires together.
+        (
+            "mlp",
+            {"architecture": "hemisphere", "loss": "mse"},
+            "mlp.architecture-without-loss",
+        ),
+        (
+            "mlp",
+            {"architecture": "standard", "loss": "volatility_emphasis"},
+            "mlp.loss-without-architecture",
+        ),
+        (
+            "lstm",
+            {"architecture": "hemisphere", "loss": "volatility_emphasis"},
+            "lstm.hemisphere-not-mlp",
+        ),
+    ],
+)
 def test_v09_sub_axis_future_gates_raise_at_runtime(family, extra, marker, tmp_path):
     """Non-default values for sub-axis future params raise
     NotImplementedError so users discover the gap cleanly with a paper
@@ -512,7 +548,9 @@ def test_v09_sub_axis_future_gates_raise_at_runtime(family, extra, marker, tmp_p
         (NotImplementedError, RuntimeError),
         match=r"(schema-only|paper-coupled|requires family='mlp')",
     ):
-        macroforecast.run(_gated_l4_recipe(family, extra), output_directory=tmp_path / "gated")
+        macroforecast.run(
+            _gated_l4_recipe(family, extra), output_directory=tmp_path / "gated"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -532,9 +570,13 @@ def test_v090b_2srr_recovers_random_walk_beta_path():
 
     rng = np.random.default_rng(7)
     T, K = 80, 2
-    beta_path = np.cumsum(rng.standard_normal((T, K)) * 0.05, axis=0) + np.array([1.0, -0.5])
+    beta_path = np.cumsum(rng.standard_normal((T, K)) * 0.05, axis=0) + np.array(
+        [1.0, -0.5]
+    )
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=["x1", "x2"])
-    y = pd.Series((X.values * beta_path).sum(axis=1) + rng.standard_normal(T) * 0.1, index=X.index)
+    y = pd.Series(
+        (X.values * beta_path).sum(axis=1) + rng.standard_normal(T) * 0.1, index=X.index
+    )
 
     model = _TwoStageRandomWalkRidge(alpha=1.0).fit(X, y)
     assert model._beta_path is not None
@@ -559,7 +601,9 @@ def test_v090b_2srr_alpha_to_infinity_collapses_to_static_ols():
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=["a", "b"])
     y = pd.Series(rng.standard_normal(T), index=X.index)
 
-    model = _TwoStageRandomWalkRidge(alpha=1e6).fit(X, y)
+    # Phase B-8: pin alpha_strategy="fixed" so the second CV (paper §2.5
+    # Algorithm 1 step 4) does not override the test-supplied α=1e6.
+    model = _TwoStageRandomWalkRidge(alpha=1e6, alpha_strategy="fixed").fit(X, y)
     cross_time_sd = model._beta_path.std(axis=0)
     assert (cross_time_sd < 1e-2).all(), (
         f"large-α limit should yield near-flat β path; got SD = {cross_time_sd}"
@@ -621,7 +665,7 @@ def test_v090b_g1_shrink_to_target_alpha_zero_recovers_truth():
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=list("abcd"))
     y = pd.Series(X.values @ true_w + rng.standard_normal(T) * 0.1)
 
-    model = _ShrinkToTargetRidge(alpha=0.0, prior_target=[1/K]*K).fit(X, y)
+    model = _ShrinkToTargetRidge(alpha=0.0, prior_target=[1 / K] * K).fit(X, y)
     coef = model._coef
     assert coef is not None
     np.testing.assert_allclose(coef.sum(), 1.0, atol=1e-6)
@@ -649,6 +693,7 @@ def test_v090b_g1_shrink_to_target_alpha_infinity_returns_target():
 
 def test_v090b_g1_shrink_to_target_runs_in_recipe(tmp_path):
     import macroforecast
+
     recipe = _gated_l4_recipe(
         "ridge",
         {"prior": "shrink_to_target", "alpha": 1.0, "coefficient_constraint": "nonneg"},
@@ -675,8 +720,10 @@ def test_v090b_g2_fused_difference_alpha_infinity_yields_uniform_shape():
 
     rng = np.random.default_rng(7)
     K = 5
-    X_sorted = pd.DataFrame(np.sort(rng.standard_normal((60, K)), axis=1), columns=list("abcde"))
-    y = pd.Series(X_sorted.values @ np.full(K, 1/K) + rng.standard_normal(60) * 0.1)
+    X_sorted = pd.DataFrame(
+        np.sort(rng.standard_normal((60, K)), axis=1), columns=list("abcde")
+    )
+    y = pd.Series(X_sorted.values @ np.full(K, 1 / K) + rng.standard_normal(60) * 0.1)
 
     model = _FusedDifferenceRidge(alpha=1e6).fit(X_sorted, y)
     coef = model._coef
@@ -697,7 +744,7 @@ def test_v090b_g2_fused_difference_mean_equality_holds():
     rng = np.random.default_rng(11)
     K = 4
     X = pd.DataFrame(rng.standard_normal((50, K)), columns=list("abcd"))
-    y = pd.Series(X.values @ np.full(K, 1/K) + rng.standard_normal(50) * 0.05)
+    y = pd.Series(X.values @ np.full(K, 1 / K) + rng.standard_normal(50) * 0.05)
 
     model = _FusedDifferenceRidge(alpha=10.0, mean_equality=True).fit(X, y)
     pred_mean = float((X.values @ model._coef).mean())
@@ -716,15 +763,20 @@ def test_v090b_g2_fused_difference_alpha_zero_collapses_to_ols(tmp_path):
     rng = np.random.default_rng(0)
     K = 3
     X = pd.DataFrame(rng.standard_normal((100, K)), columns=list("xyz"))
-    y = pd.Series(X.values @ np.array([0.6, 0.3, 0.1]) + rng.standard_normal(100) * 0.05)
+    y = pd.Series(
+        X.values @ np.array([0.6, 0.3, 0.1]) + rng.standard_normal(100) * 0.05
+    )
 
-    model = _FusedDifferenceRidge(alpha=0.0, mean_equality=False, nonneg=False).fit(X, y)
+    model = _FusedDifferenceRidge(alpha=0.0, mean_equality=False, nonneg=False).fit(
+        X, y
+    )
     ols = LinearRegression(fit_intercept=False).fit(X.values, (y - y.mean()).values)
     np.testing.assert_allclose(model._coef, ols.coef_, atol=1e-4)
 
 
 def test_v090b_g2_fused_difference_runs_in_recipe(tmp_path):
     import macroforecast
+
     recipe = _gated_l4_recipe(
         "ridge",
         {"prior": "fused_difference", "alpha": 1.0, "coefficient_constraint": "nonneg"},
@@ -752,11 +804,16 @@ def test_v090b_booging_fits_all_outer_bags():
     rng = np.random.default_rng(42)
     T, K = 120, 4
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=list("abcd"))
-    y = pd.Series(np.where(X["a"] > 0, X["a"] * 2 - X["b"], -X["c"] + 0.5 * X["d"])
-                  + rng.standard_normal(T) * 0.3)
+    y = pd.Series(
+        np.where(X["a"] > 0, X["a"] * 2 - X["b"], -X["c"] + 0.5 * X["d"])
+        + rng.standard_normal(T) * 0.3
+    )
     model = _BoogingWrapper(
-        B=15, sample_frac=0.75, inner_n_estimators=40,
-        inner_max_depth=3, random_state=7,
+        B=15,
+        sample_frac=0.75,
+        inner_n_estimators=40,
+        inner_max_depth=3,
+        random_state=7,
     ).fit(X, y)
     assert len(model._models) == 15
     # Sanity: in-sample R² substantially above zero on a non-trivial DGP.
@@ -771,12 +828,14 @@ def test_v090b_booging_aliases_sequential_residual_to_booging(tmp_path):
     ``'booging'`` (Goulet Coulombe 2024). Verify the alias dispatches to
     the same wrapper."""
 
-    import macroforecast
     from macroforecast.core.runtime import _build_l4_model, _BoogingWrapper
 
     p_canon = {
-        "n_estimators": 5, "inner_n_estimators": 20, "inner_max_depth": 2,
-        "random_state": 1, "strategy": "booging",
+        "n_estimators": 5,
+        "inner_n_estimators": 20,
+        "inner_max_depth": 2,
+        "random_state": 1,
+        "strategy": "booging",
     }
     p_alias = dict(p_canon, strategy="sequential_residual")
     m_canon = _build_l4_model("bagging", p_canon)
@@ -799,7 +858,10 @@ def test_v090b_booging_data_augmentation_doubles_internal_design_width():
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=list("xyz"))
     y = pd.Series(rng.standard_normal(T))
     model = _BoogingWrapper(
-        B=5, sample_frac=0.8, inner_n_estimators=10, da_drop_rate=0.0,
+        B=5,
+        sample_frac=0.8,
+        inner_n_estimators=10,
+        da_drop_rate=0.0,
         random_state=0,
     ).fit(X, y)
     # da_drop_rate=0 → keep all 2K columns
@@ -846,12 +908,17 @@ def test_v090b_dual_decomposition_rf_bit_exact_with_bootstrap():
 
     rng = np.random.default_rng(0)
     X = pd.DataFrame(rng.standard_normal((50, 3)), columns=list("abc"))
-    y = pd.Series(np.where(X["a"] > 0, X["b"] - X["c"], 0.5 * X["a"] + X["c"])
-                  + rng.standard_normal(50) * 0.2)
+    y = pd.Series(
+        np.where(X["a"] > 0, X["b"] - X["c"], 0.5 * X["a"] + X["c"])
+        + rng.standard_normal(50) * 0.2
+    )
     rf = RandomForestRegressor(n_estimators=10, max_depth=4, random_state=0).fit(X, y)
     artifact = ModelArtifact(
-        model_id="rf", family="random_forest",
-        fitted_object=rf, framework="sklearn", feature_names=tuple(X.columns),
+        model_id="rf",
+        family="random_forest",
+        fitted_object=rf,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
     frame = _dual_decomposition_frame(artifact, X, y)
     W = frame.attrs["dual_weights"].to_numpy()
@@ -876,8 +943,11 @@ def test_v090b_dual_decomposition_extra_trees_bit_exact():
     y = pd.Series(rng.standard_normal(40))
     et = ExtraTreesRegressor(n_estimators=15, max_depth=5, random_state=0).fit(X, y)
     artifact = ModelArtifact(
-        model_id="et", family="extra_trees",
-        fitted_object=et, framework="sklearn", feature_names=tuple(X.columns),
+        model_id="et",
+        family="extra_trees",
+        fitted_object=et,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
     frame = _dual_decomposition_frame(artifact, X, y)
     W = frame.attrs["dual_weights"].to_numpy()
@@ -902,10 +972,15 @@ def test_v090b_dual_decomposition_rejects_unsupported_families():
     y = pd.Series(rng.standard_normal(30))
     gb = GradientBoostingRegressor(n_estimators=5, random_state=0).fit(X, y)
     artifact = ModelArtifact(
-        model_id="gb", family="gradient_boosting",
-        fitted_object=gb, framework="sklearn", feature_names=tuple(X.columns),
+        model_id="gb",
+        family="gradient_boosting",
+        fitted_object=gb,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
-    with pytest.raises(NotImplementedError, match="dual_decomposition does not yet support"):
+    with pytest.raises(
+        NotImplementedError, match="dual_decomposition does not yet support"
+    ):
         _dual_decomposition_frame(artifact, X, y)
 
 
@@ -974,8 +1049,12 @@ def test_v090b_sgt_predicts_finite_on_test_rows():
     rng = np.random.default_rng(7)
     X_train = pd.DataFrame(rng.standard_normal((50, 2)), columns=list("xy"))
     y_train = pd.Series(rng.standard_normal(50))
-    X_test = pd.DataFrame(rng.standard_normal((10, 2)) * 5.0, columns=list("xy"))  # extrapolate
-    model = _SlowGrowingTree(eta=0.7, herfindahl_threshold=0.25, max_depth=4).fit(X_train, y_train)
+    X_test = pd.DataFrame(
+        rng.standard_normal((10, 2)) * 5.0, columns=list("xy")
+    )  # extrapolate
+    model = _SlowGrowingTree(eta=0.7, herfindahl_threshold=0.25, max_depth=4).fit(
+        X_train, y_train
+    )
     preds = model.predict(X_test)
     assert preds.shape == (10,)
     assert np.all(np.isfinite(preds))
@@ -1014,10 +1093,14 @@ def test_v090c_albama_two_sided_recovers_piecewise_structure():
 
     rng = np.random.default_rng(0)
     T = 120
-    y = np.concatenate([np.full(40, 1.0), np.full(40, 3.0), np.full(40, 0.5)]) \
+    y = (
+        np.concatenate([np.full(40, 1.0), np.full(40, 3.0), np.full(40, 0.5)])
         + rng.standard_normal(T) * 0.3
+    )
     frame = pd.DataFrame({"y": y})
-    out = _adaptive_ma_rf(frame, n_estimators=50, min_samples_leaf=15, sided="two", random_state=0)
+    out = _adaptive_ma_rf(
+        frame, n_estimators=50, min_samples_leaf=15, sided="two", random_state=0
+    )
     assert out.shape == (T, 1)
     assert np.all(np.isfinite(out["y_albama"]))
     # MSE should be on the order of the noise variance (≈ 0.09)
@@ -1038,7 +1121,9 @@ def test_v090c_albama_one_sided_expanding_window_first_min_leaf_nan():
     rng = np.random.default_rng(0)
     T = 60
     frame = pd.DataFrame({"y": rng.standard_normal(T)})
-    out = _adaptive_ma_rf(frame, n_estimators=10, min_samples_leaf=15, sided="one", random_state=0)
+    out = _adaptive_ma_rf(
+        frame, n_estimators=10, min_samples_leaf=15, sided="one", random_state=0
+    )
     series = out["y_albama"]
     assert series.iloc[:14].isna().all()
     # From index 14 onward we have valid predictions.
@@ -1050,6 +1135,7 @@ def test_v090c_albama_op_registered_operational():
     v0.9.0C-1 promotion."""
 
     from macroforecast.core.ops import get_op
+
     spec = get_op("adaptive_ma_rf")
     assert spec is not None
     assert getattr(spec, "status", "operational") != "future"
@@ -1076,7 +1162,13 @@ def test_v090c_hnn_fits_and_predicts_finite_values():
     y = pd.Series(2 * X["a"] - 0.5 * X["b"] + rng.standard_normal(T) * 0.3)
 
     model = _HemisphereNN(
-        B=3, n_epochs=10, neurons=16, lc=1, lm=1, lv=1, random_state=42,
+        B=3,
+        n_epochs=10,
+        neurons=16,
+        lc=1,
+        lm=1,
+        lv=1,
+        random_state=42,
     ).fit(X, y)
     assert len(model._models) == 3
     preds = model.predict(X)
@@ -1100,7 +1192,13 @@ def test_hnn_predict_variance_is_positive_and_finite():
     y = pd.Series(2 * X["a"] - 0.5 * X["b"] + rng.standard_normal(T) * 0.3)
 
     model = _HemisphereNN(
-        B=3, n_epochs=10, neurons=16, lc=1, lm=1, lv=1, random_state=7,
+        B=3,
+        n_epochs=10,
+        neurons=16,
+        lc=1,
+        lm=1,
+        lv=1,
+        random_state=7,
     ).fit(X, y)
     var_pred = model.predict_variance(X)
     assert var_pred.shape == (T,)
@@ -1126,7 +1224,13 @@ def test_hnn_predict_distribution_returns_mean_and_variance_pair():
     y = pd.Series(rng.standard_normal(T))
 
     model = _HemisphereNN(
-        B=2, n_epochs=8, neurons=16, lc=1, lm=1, lv=1, random_state=11,
+        B=2,
+        n_epochs=8,
+        neurons=16,
+        lc=1,
+        lm=1,
+        lv=1,
+        random_state=11,
     ).fit(X, y)
     mean_pred, var_pred = model.predict_distribution(X)
     np.testing.assert_array_equal(mean_pred, model.predict(X))
@@ -1151,7 +1255,13 @@ def test_hnn_reality_check_eq10_actually_applied_at_predict():
     y = pd.Series(rng.standard_normal(T))
 
     model = _HemisphereNN(
-        B=2, n_epochs=8, neurons=16, lc=1, lm=1, lv=1, random_state=21,
+        B=2,
+        n_epochs=8,
+        neurons=16,
+        lc=1,
+        lm=1,
+        lv=1,
+        random_state=21,
     ).fit(X, y)
     # Pin reality-check coefficients to a known non-trivial pair, then
     # verify the variance prediction shifts accordingly.
@@ -1185,7 +1295,13 @@ def test_hnn_predict_quantiles_returns_monotonic_gaussian_bands():
     y = pd.Series(rng.standard_normal(T))
 
     model = _HemisphereNN(
-        B=2, n_epochs=8, neurons=16, lc=1, lm=1, lv=1, random_state=33,
+        B=2,
+        n_epochs=8,
+        neurons=16,
+        lc=1,
+        lm=1,
+        lv=1,
+        random_state=33,
     ).fit(X, y)
     levels = (0.05, 0.5, 0.95)
     bands = model.predict_quantiles(X, levels=levels)
@@ -1219,8 +1335,14 @@ def test_v090c_hnn_runs_in_recipe(tmp_path):
     recipe = _gated_l4_recipe(
         "mlp",
         {
-            "architecture": "hemisphere", "loss": "volatility_emphasis",
-            "B": 2, "n_epochs": 5, "neurons": 8, "lc": 1, "lm": 1, "lv": 1,
+            "architecture": "hemisphere",
+            "loss": "volatility_emphasis",
+            "B": 2,
+            "n_epochs": 5,
+            "neurons": 8,
+            "lc": 1,
+            "lm": 1,
+            "lv": 1,
         },
     )
     result = macroforecast.run(recipe, output_directory=tmp_path / "hnn")
@@ -1255,7 +1377,9 @@ def test_v090c_sparse_pca_chen_rohe_recovers_sparse_loadings():
         Z_true @ loadings.T + rng.standard_normal((T, M)) * 0.3,
         columns=[f"x{i}" for i in range(M)],
     )
-    sca = _sparse_pca_chen_rohe(X, n_components=3, zeta=3.0, max_iter=100, random_state=0)
+    sca = _sparse_pca_chen_rohe(
+        X, n_components=3, zeta=3.0, max_iter=100, random_state=0
+    )
     assert sca.shape == (T, 3)
     corr = abs(np.corrcoef(sca["sca_1"].values, Z_true[:, 0])[0, 1])
     assert corr > 0.9, f"expected SCA factor 1 to track truth; got {corr}"
@@ -1318,10 +1442,15 @@ def test_v090d_anatomy_oshapley_vi_recovers_dominant_feature():
     y = pd.Series(2 * X["a"] - X["b"] + 0.5 * X["c"] + rng.standard_normal(T) * 0.2)
     ridge = Ridge(alpha=1.0).fit(X, y)
     art = ModelArtifact(
-        model_id="r", family="ridge", fitted_object=ridge,
-        framework="sklearn", feature_names=tuple(X.columns),
+        model_id="r",
+        family="ridge",
+        fitted_object=ridge,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
-    frame = _l7_anatomy_op("oshapley_vi", art, X, y, params={"n_iterations": 5, "random_state": 0})
+    frame = _l7_anatomy_op(
+        "oshapley_vi", art, X, y, params={"n_iterations": 5, "random_state": 0}
+    )
     assert frame.shape == (3, 4)
     importances = dict(zip(frame["feature"], frame["importance"]))
     assert importances["a"] > importances["b"] > importances["c"]
@@ -1352,10 +1481,15 @@ def test_v090d_anatomy_pbsv_marks_status_degraded():
     y = pd.Series(2 * X["a"] - X["b"] + 0.5 * X["c"] + rng.standard_normal(T) * 0.2)
     ridge = Ridge(alpha=1.0).fit(X, y)
     art = ModelArtifact(
-        model_id="r", family="ridge", fitted_object=ridge,
-        framework="sklearn", feature_names=tuple(X.columns),
+        model_id="r",
+        family="ridge",
+        fitted_object=ridge,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
-    frame = _l7_anatomy_op("pbsv", art, X, y, params={"n_iterations": 5, "random_state": 0})
+    frame = _l7_anatomy_op(
+        "pbsv", art, X, y, params={"n_iterations": 5, "random_state": 0}
+    )
     assert (frame["status"] == "degraded").all()
 
 
@@ -1381,11 +1515,17 @@ def test_v090e_anatomy_path_a_marks_status_operational():
     y = pd.Series(2 * X["a"] - X["b"] + 0.5 * X["c"] + rng.standard_normal(T) * 0.2)
     ridge = Ridge(alpha=1.0).fit(X, y)
     art = ModelArtifact(
-        model_id="r", family="ridge", fitted_object=ridge,
-        framework="sklearn", feature_names=tuple(X.columns),
+        model_id="r",
+        family="ridge",
+        fitted_object=ridge,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
     frame = _l7_anatomy_op(
-        "oshapley_vi", art, X, y,
+        "oshapley_vi",
+        art,
+        X,
+        y,
         params={"n_iterations": 5, "initial_window": 60, "random_state": 0},
     )
     # Path A clears the degraded marker.
@@ -1419,12 +1559,17 @@ def test_anatomy_path_b_emits_user_warning_about_degraded_routing():
     y = pd.Series(2 * X["a"] - X["b"] + 0.5 * X["c"] + rng.standard_normal(T) * 0.2)
     ridge = Ridge(alpha=1.0).fit(X, y)
     art = ModelArtifact(
-        model_id="r", family="ridge", fitted_object=ridge,
-        framework="sklearn", feature_names=tuple(X.columns),
+        model_id="r",
+        family="ridge",
+        fitted_object=ridge,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        _l7_anatomy_op("oshapley_vi", art, X, y, params={"n_iterations": 5, "random_state": 0})
+        _l7_anatomy_op(
+            "oshapley_vi", art, X, y, params={"n_iterations": 5, "random_state": 0}
+        )
     msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
     assert any("Path B" in m and "initial_window" in m for m in msgs), (
         f"expected Path B / initial_window warning; got {msgs}"
@@ -1453,13 +1598,19 @@ def test_anatomy_path_a_with_initial_window_does_not_warn_about_path_b():
     y = pd.Series(2 * X["a"] - X["b"] + 0.5 * X["c"] + rng.standard_normal(T) * 0.2)
     ridge = Ridge(alpha=1.0).fit(X, y)
     art = ModelArtifact(
-        model_id="r", family="ridge", fitted_object=ridge,
-        framework="sklearn", feature_names=tuple(X.columns),
+        model_id="r",
+        family="ridge",
+        fitted_object=ridge,
+        framework="sklearn",
+        feature_names=tuple(X.columns),
     )
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         _l7_anatomy_op(
-            "oshapley_vi", art, X, y,
+            "oshapley_vi",
+            art,
+            X,
+            y,
             params={"n_iterations": 5, "initial_window": 60, "random_state": 0},
         )
     msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
@@ -1477,6 +1628,7 @@ def test_v090d_anatomy_ops_registered_operational():
     OPERATIONAL_OPS in v0.9.0D."""
 
     from macroforecast.core.ops.l7_ops import OPERATIONAL_OPS, FUTURE_OPS
+
     assert "oshapley_vi" in OPERATIONAL_OPS
     assert "pbsv" in OPERATIONAL_OPS
     assert "oshapley_vi" not in FUTURE_OPS
@@ -1496,8 +1648,12 @@ def test_v090c_sparse_pca_chen_rohe_is_distinct_from_sklearn_sparse_pca():
 
     rng = np.random.default_rng(0)
     X = pd.DataFrame(rng.standard_normal((50, 6)), columns=[f"x{i}" for i in range(6)])
-    sca = _sparse_pca_chen_rohe(X, n_components=2, zeta=2.0, max_iter=50, random_state=0)
-    sklearn_sparse = _pca_factors(X, n_components=2, variant="sparse_pca", target_signal=None)
+    sca = _sparse_pca_chen_rohe(
+        X, n_components=2, zeta=2.0, max_iter=50, random_state=0
+    )
+    sklearn_sparse = _pca_factors(
+        X, n_components=2, variant="sparse_pca", target_signal=None
+    )
     # Both shape (T, 2). Loadings differ because algorithms differ.
     assert sca.shape == sklearn_sparse.shape == (50, 2)
     sca_v = sca.iloc[:, 0].dropna().values
@@ -1507,7 +1663,9 @@ def test_v090c_sparse_pca_chen_rohe_is_distinct_from_sklearn_sparse_pca():
         # Distinct enough that absolute correlation is < 0.99 (i.e. not
         # the same component up to sign).
         corr = abs(np.corrcoef(sca_v[:n], sk_v[:n])[0, 1])
-        assert corr < 0.99, "expected SCA and sklearn SparsePCA to give distinct factors"
+        assert corr < 0.99, (
+            "expected SCA and sklearn SparsePCA to give distinct factors"
+        )
 
 
 def test_sparse_pca_chen_rohe_enforces_l1_budget_when_binding():
@@ -1564,7 +1722,9 @@ def test_sparse_pca_chen_rohe_enforces_l1_budget_when_binding():
 
     # And the runtime function itself still produces sensible scores at
     # the binding boundary (no silent regression in factor recovery).
-    sca = _sparse_pca_chen_rohe(X, n_components=J, zeta=zeta_val, max_iter=200, random_state=0)
+    sca = _sparse_pca_chen_rohe(
+        X, n_components=J, zeta=zeta_val, max_iter=200, random_state=0
+    )
     assert sca.shape == (T, J)
 
 
@@ -1619,7 +1779,9 @@ def test_b1_nonneg_ridge_runs_in_recipe(tmp_path):
     """End-to-end: ridge(coefficient_constraint=nonneg) recipe runs to
     completion (no longer hits the future gate)."""
 
-    recipe = _gated_l4_recipe("ridge", {"coefficient_constraint": "nonneg", "alpha": 0.01})
+    recipe = _gated_l4_recipe(
+        "ridge", {"coefficient_constraint": "nonneg", "alpha": 0.01}
+    )
     result = macroforecast.run(recipe, output_directory=tmp_path / "nonneg")
     assert result.cells
     forecasts = result.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
@@ -1650,7 +1812,12 @@ def test_b4_block_bagging_runs_in_recipe(tmp_path):
 
     recipe = _gated_l4_recipe(
         "bagging",
-        {"strategy": "block", "base_family": "ridge", "block_length": 3, "n_estimators": 5},
+        {
+            "strategy": "block",
+            "base_family": "ridge",
+            "block_length": 3,
+            "n_estimators": 5,
+        },
     )
     result = macroforecast.run(recipe, output_directory=tmp_path / "block")
     assert result.cells
@@ -1682,10 +1849,18 @@ def test_perfectly_random_forest_recipe_yaml_runs(tmp_path):
 
     from pathlib import Path
 
-    yaml_path = Path(__file__).resolve().parents[2] / "examples" / "recipes" / "replications" / "perfectly_random_forest.yaml"
+    yaml_path = (
+        Path(__file__).resolve().parents[2]
+        / "examples"
+        / "recipes"
+        / "replications"
+        / "perfectly_random_forest.yaml"
+    )
     if not yaml_path.exists():
         pytest.skip("PRF replication recipe missing")
-    result = macroforecast.run(yaml_path.read_text(), output_directory=tmp_path / "prf_yaml")
+    result = macroforecast.run(
+        yaml_path.read_text(), output_directory=tmp_path / "prf_yaml"
+    )
     assert result.cells
 
 
@@ -1785,7 +1960,10 @@ def test_v22_mrf_external_wrapper_matches_vendored_reference():
 
     # Cached state populated for L7 mrf_gtvp consumption.
     assert wrapper._cached_betas is not None
-    assert wrapper._cached_betas.shape == (n, X.shape[1] + 1)  # (T, K+1) with intercept col
+    assert wrapper._cached_betas.shape == (
+        n,
+        X.shape[1] + 1,
+    )  # (T, K+1) with intercept col
     assert wrapper._cached_pred_ensemble is not None
     assert wrapper._cached_pred_ensemble.shape == (common["B"], n - n_train)
 
@@ -1869,14 +2047,20 @@ def test_v23_generalized_irf_is_future_gated():
     # Build a minimal viable context using construction defaults. Any
     # input shape is fine because the gate triggers before any payload
     # inspection.
-    from macroforecast.core.types import L3FeaturesArtifact, L3MetadataArtifact, L5EvaluationArtifact
+    from macroforecast.core.types import (
+        L3FeaturesArtifact,
+        L3MetadataArtifact,
+        L5EvaluationArtifact,
+    )
 
     # Inspect the dataclass fields to construct safely without coupling
     # to the internal field set.
     import dataclasses
 
     def _empty(cls):
-        defaults = {f.name: getattr(f, "default", None) for f in dataclasses.fields(cls)}
+        defaults = {
+            f.name: getattr(f, "default", None) for f in dataclasses.fields(cls)
+        }
         # Replace MISSING sentinels with None / {}
         for k, v in defaults.items():
             if v is dataclasses.MISSING:
@@ -1909,7 +2093,9 @@ def test_v23_historical_decomposition_reconstructs_target_path():
     from macroforecast.core.runtime import _var_impulse_frame
 
     artifact, wrapper, _, target_y = _var_artifact_for_v23(seed=11, n=300, p=2)
-    frame = _var_impulse_frame(artifact, op_name="historical_decomposition", n_periods=12)
+    frame = _var_impulse_frame(
+        artifact, op_name="historical_decomposition", n_periods=12
+    )
     assert (frame["status"] == "operational").all()
     assert (frame["importance"] >= 0).all()
 
@@ -1930,8 +2116,12 @@ def test_v23_historical_decomposition_reconstructs_target_path():
     # dependent: re-fit with permuted residual signs and confirm the
     # importance vector changes (it would not for the proxy).
     permuted_artifact, _, _, _ = _var_artifact_for_v23(seed=12, n=300, p=2)
-    other = _var_impulse_frame(permuted_artifact, op_name="historical_decomposition", n_periods=12)
-    assert not np.allclose(frame["importance"].to_numpy(), other["importance"].to_numpy())
+    other = _var_impulse_frame(
+        permuted_artifact, op_name="historical_decomposition", n_periods=12
+    )
+    assert not np.allclose(
+        frame["importance"].to_numpy(), other["importance"].to_numpy()
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1974,7 +2164,9 @@ def test_v24_dfm_mq_pure_monthly_uses_mariano_murasawa_2010_ar1():
 
     X, y = _dfm_synthetic_panel()
     model = _DFMMixedFrequency(
-        n_factors=1, factor_order=1, mixed_frequency=True,
+        n_factors=1,
+        factor_order=1,
+        mixed_frequency=True,
         column_frequencies={"m1": "monthly", "m2": "monthly", "__y__": "monthly"},
     ).fit(X[["m1", "m2"]], y)
     assert model._mode == "mixed_frequency_mq"
@@ -2001,9 +2193,14 @@ def test_v24_dfm_mq_mixed_m_q_handles_quarterly_nan_padded_input():
 
     X, y = _dfm_synthetic_panel()
     model = _DFMMixedFrequency(
-        n_factors=1, factor_order=1, mixed_frequency=True,
+        n_factors=1,
+        factor_order=1,
+        mixed_frequency=True,
         column_frequencies={
-            "q1": "quarterly", "m1": "monthly", "m2": "monthly", "__y__": "monthly",
+            "q1": "quarterly",
+            "m1": "monthly",
+            "m2": "monthly",
+            "__y__": "monthly",
         },
     ).fit(X, y)
     assert model._mode == "mixed_frequency_mq"
@@ -2011,11 +2208,14 @@ def test_v24_dfm_mq_mixed_m_q_handles_quarterly_nan_padded_input():
     # statsmodels state-space MLE wrappers expose ``llf`` (log-likelihood)
     # and ``filter_results`` (Kalman filter output); a PCA factor model
     # exposes neither. The compound check pins the algorithm to Kalman+MLE.
-    assert hasattr(model._results, "llf") and hasattr(model._results, "filter_results")  # state-space MLE invariant
+    assert hasattr(model._results, "llf") and hasattr(
+        model._results, "filter_results"
+    )  # state-space MLE invariant
     # Forecast is finite and broadcast to all rows (single-step ahead).
     preds = model.predict(X)
     assert preds.shape == (len(X),)
     import numpy as np
+
     assert np.all(np.isfinite(preds))
 
 
@@ -2030,7 +2230,8 @@ def test_v24_dfm_single_frequency_falls_back_to_state_space_dfm():
     X_dropna = X.dropna()
     y_dropna = y.loc[X_dropna.index]
     model = _DFMMixedFrequency(n_factors=1, factor_order=1, mixed_frequency=False).fit(
-        X_dropna, y_dropna,
+        X_dropna,
+        y_dropna,
     )
     assert model._mode == "single_frequency"
     # statsmodels state-space MLE wrappers expose ``llf`` (log-likelihood)
@@ -2046,16 +2247,20 @@ def test_v24_dfm_mq_failure_surfaces_in_diagnostic_attribute():
     no monthly variables declared), the diagnostic message lands on
     ``_mq_failure_reason`` instead of being silently swallowed."""
 
-    import numpy as np
-    import pandas as pd
-
     from macroforecast.core.runtime import _DFMMixedFrequency
 
     # All variables flagged quarterly -> no monthly anchor -> MQ refused.
     X, y = _dfm_synthetic_panel()
     model = _DFMMixedFrequency(
-        n_factors=1, factor_order=1, mixed_frequency=True,
-        column_frequencies={"m1": "quarterly", "m2": "quarterly", "q1": "quarterly", "__y__": "quarterly"},
+        n_factors=1,
+        factor_order=1,
+        mixed_frequency=True,
+        column_frequencies={
+            "m1": "quarterly",
+            "m2": "quarterly",
+            "q1": "quarterly",
+            "__y__": "quarterly",
+        },
     ).fit(X, y)
     # MQ refused -> single-frequency fallback ran.
     assert model._mode == "single_frequency"
@@ -2076,6 +2281,7 @@ def test_data_transforms_default_families_include_fm_and_lb():
     ``glmboost`` (LB) into the default tuple."""
 
     from macroforecast.recipes.paper_methods import _DATA_TRANSFORM_FAMILIES_DEFAULT
+
     assert "factor_augmented_ar" in _DATA_TRANSFORM_FAMILIES_DEFAULT
     assert "glmboost" in _DATA_TRANSFORM_FAMILIES_DEFAULT
     # All seven Table 1 family slots covered.
@@ -2093,10 +2299,12 @@ def test_data_transforms_grid_sweeps_horizons_and_target_methods():
         _DATA_TRANSFORM_FAMILIES_DEFAULT,
         macroeconomic_data_transformations_horse_race,
     )
+
     horizons = (1, 3)
     target_methods = ("direct", "path_average")
     grid = macroeconomic_data_transformations_horse_race(
-        horizons=horizons, target_methods=target_methods,
+        horizons=horizons,
+        target_methods=target_methods,
     )
     expected = (
         len(_DATA_TRANSFORM_CELLS_16)
@@ -2148,7 +2356,9 @@ def test_ml_useful_macro_horse_race_h_minus_routes_to_lag_y_only():
     from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
-        cases=("ridge",), horizons=(1,), cv_schemes=("kfold",),
+        cases=("ridge",),
+        horizons=(1,),
+        cv_schemes=("kfold",),
         data_richness="H_minus",
     )
     recipe = next(iter(grid.values()))
@@ -2166,7 +2376,9 @@ def test_ml_useful_macro_horse_race_h_plus_routes_to_factor_concat():
     from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
-        cases=("ridge",), horizons=(1,), cv_schemes=("kfold",),
+        cases=("ridge",),
+        horizons=(1,),
+        cv_schemes=("kfold",),
         data_richness="H_plus",
     )
     recipe = next(iter(grid.values()))
@@ -2197,17 +2409,21 @@ def test_dfm_mixed_frequency_predict_smoothed_factors_returns_kalman_posterior()
     from macroforecast.core.runtime import _DFMMixedFrequency
 
     rng = np.random.default_rng(7)
-    T, K = 80, 4
+    T = 80
     f = rng.standard_normal(T)
-    X_arr = np.column_stack([
-        0.7 * f + 0.3 * rng.standard_normal(T),
-        -0.5 * f + 0.4 * rng.standard_normal(T),
-        rng.standard_normal(T),
-    ])
+    X_arr = np.column_stack(
+        [
+            0.7 * f + 0.3 * rng.standard_normal(T),
+            -0.5 * f + 0.4 * rng.standard_normal(T),
+            rng.standard_normal(T),
+        ]
+    )
     X = pd.DataFrame(X_arr, columns=[f"x{i}" for i in range(3)])
     y = pd.Series(0.8 * f + 0.3 * rng.standard_normal(T), name="y")
 
-    model = _DFMMixedFrequency(n_factors=1, factor_order=1, mixed_frequency=False).fit(X, y)
+    model = _DFMMixedFrequency(n_factors=1, factor_order=1, mixed_frequency=False).fit(
+        X, y
+    )
     smoothed = model.predict_smoothed_factors()
     assert smoothed is not None
     assert isinstance(smoothed, pd.DataFrame)
@@ -2238,7 +2454,9 @@ def test_albacore_prior_target_none_emits_warning():
         warnings.simplefilter("always")
         _ShrinkToTargetRidge(alpha=1.0, prior_target=None).fit(X, y)
     msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
-    assert any("w_headline" in m for m in msgs), f"expected w_headline warning, got {msgs}"
+    assert any("w_headline" in m for m in msgs), (
+        f"expected w_headline warning, got {msgs}"
+    )
 
 
 def test_albacore_prior_target_explicit_does_not_warn():
@@ -2255,9 +2473,13 @@ def test_albacore_prior_target_explicit_does_not_warn():
     y = pd.Series(rng.standard_normal(T))
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        _ShrinkToTargetRidge(alpha=1.0, prior_target=[0.4, 0.3, 0.15, 0.1, 0.05]).fit(X, y)
+        _ShrinkToTargetRidge(alpha=1.0, prior_target=[0.4, 0.3, 0.15, 0.1, 0.05]).fit(
+            X, y
+        )
     msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
-    assert not any("w_headline" in m for m in msgs), f"explicit target should not warn; got {msgs}"
+    assert not any("w_headline" in m for m in msgs), (
+        f"explicit target should not warn; got {msgs}"
+    )
 
 
 def test_block_cv_search_picks_alpha_via_non_overlapping_blocks():
@@ -2275,7 +2497,9 @@ def test_block_cv_search_picks_alpha_via_non_overlapping_blocks():
     y = pd.Series(2.0 * X["a"] - 0.5 * X["b"] + rng.normal(scale=0.5, size=n))
     custom_alphas = [0.01, 0.1, 1.0, 10.0]
     params = {
-        "family": "ridge", "search_algorithm": "block_cv", "alpha": 99.0,
+        "family": "ridge",
+        "search_algorithm": "block_cv",
+        "alpha": 99.0,
         "_l4_leaf_config": {"cv_path_alphas": custom_alphas, "block_cv_splits": 5},
     }
     result = _resolve_l4_tuning(params, X, y)
@@ -2288,6 +2512,7 @@ def test_block_cv_in_search_algorithms_enum():
     op validator."""
 
     from macroforecast.core.ops.l4_ops import SEARCH_ALGORITHMS
+
     assert "block_cv" in SEARCH_ALGORITHMS
 
 
@@ -2305,9 +2530,7 @@ def test_scaled_pca_helper_runs_end_to_end_on_multi_feature_panel(tmp_path):
 
     rng = np.random.default_rng(13)
     n = 36
-    dates = [
-        f"{2018 + i // 12:04d}-{(i % 12) + 1:02d}-01" for i in range(n)
-    ]
+    dates = [f"{2018 + i // 12:04d}-{(i % 12) + 1:02d}-01" for i in range(n)]
     # Latent factor + noise + supervised target.
     f = rng.standard_normal(n)
     panel = {
@@ -2334,46 +2557,62 @@ def test_slow_growing_tree_helper_exposes_all_paper_axes():
     class helper args + grid builder for the {η, H̄} sweep grid."""
 
     from macroforecast.recipes.paper_methods import (
-        slow_growing_tree, slow_growing_tree_grid,
+        slow_growing_tree,
+        slow_growing_tree_grid,
     )
 
     recipe = slow_growing_tree(
-        split_shrinkage=0.25, herfindahl_threshold=0.05,
-        eta_depth_step=0.02, max_depth=8,
+        split_shrinkage=0.25,
+        herfindahl_threshold=0.05,
+        eta_depth_step=0.02,
+        max_depth=8,
     )
-    fit = next(n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model")
+    fit = next(
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+    )
     assert fit["params"]["split_shrinkage"] == 0.25
     assert fit["params"]["herfindahl_threshold"] == 0.05
     assert fit["params"]["eta_depth_step"] == 0.02
     assert fit["params"]["max_depth"] == 8
 
     grid = slow_growing_tree_grid()
-    # 4 η values × 3 H̄ values = 12 cells.
-    assert len(grid) == 12
+    # Phase B-3 audit-fix: paper §3 p.90 specifies a 3-line grid, NOT
+    # a Cartesian product. See ``test_sgt_grid_matches_paper_figure_2``
+    # for the exact (η, H̄) pairs.
+    assert len(grid) == 3
     # All cells map to decision_tree family with split_shrinkage set.
     for key, recipe in grid.items():
-        fit = next(n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model")
+        fit = next(
+            n
+            for n in recipe["4_forecasting_model"]["nodes"]
+            if n.get("op") == "fit_model"
+        )
         assert fit["params"]["family"] == "decision_tree"
 
 
 def test_anatomy_oos_helper_exposes_initial_window_and_n_iterations():
-    """Audit gap-fix: helper now stamps ``anatomy_initial_window`` and
-    ``anatomy_n_iterations`` on the recipe meta so the L7 block routes
-    Path A (per-origin refit) instead of silently falling back to
-    Path B."""
+    """Phase B-11 paper-11 F1 fix: helper now wires ``initial_window`` and
+    ``n_iterations`` onto the L7 ``oshapley_vi`` op step (where the
+    anatomy adapter actually reads them) rather than stamping a dead
+    ``0_meta.leaf_config.anatomy_initial_window`` key. Previously the
+    stamp was unread and users always routed to Path B."""
 
     from macroforecast.recipes.paper_methods import anatomy_oos
 
     recipe = anatomy_oos(initial_window=60, n_iterations=300)
-    leaf = recipe["0_meta"]["leaf_config"]
-    assert leaf["anatomy_initial_window"] == 60
-    assert leaf["anatomy_n_iterations"] == 300
+    nodes = recipe["7_interpretation"]["nodes"]
+    step = next(n for n in nodes if n.get("type") == "step")
+    assert step["op"] == "oshapley_vi"
+    assert step["params"]["initial_window"] == 60
+    assert step["params"]["n_iterations"] == 300
 
-    # Default (no initial_window) keeps the entry as None so downstream
-    # code can detect the unset case and warn.
+    # Default (no initial_window) omits the key so the runtime warns
+    # about Path B routing rather than silently passing 0/None through.
     recipe_default = anatomy_oos()
-    assert recipe_default["0_meta"]["leaf_config"]["anatomy_initial_window"] is None
-    assert recipe_default["0_meta"]["leaf_config"]["anatomy_n_iterations"] == 500
+    nodes_default = recipe_default["7_interpretation"]["nodes"]
+    step_default = next(n for n in nodes_default if n.get("type") == "step")
+    assert "initial_window" not in step_default["params"]
+    assert step_default["params"]["n_iterations"] == 500
 
 
 def test_two_step_ridge_default_vol_model_is_garch11():
@@ -2388,8 +2627,7 @@ def test_two_step_ridge_default_vol_model_is_garch11():
     assert _TwoStageRandomWalkRidge().vol_model == "garch11"
     recipe = two_step_ridge()
     fit_step2 = next(
-        n for n in recipe["4_forecasting_model"]["nodes"]
-        if n.get("id") == "fit_step2"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("id") == "fit_step2"
     )
     assert fit_step2["params"]["vol_model"] == "garch11"
 
@@ -2407,10 +2645,16 @@ def test_mrf_block_size_default_is_24_and_is_overridable():
     assert _MRFExternalWrapper(block_size=8).block_size == 8
 
     recipe = macroeconomic_random_forest()
-    fit_node = next(n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model")
+    fit_node = next(
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+    )
     assert fit_node["params"]["block_size"] == 24
     recipe_q = macroeconomic_random_forest(block_size=8)
-    fit_node_q = next(n for n in recipe_q["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model")
+    fit_node_q = next(
+        n
+        for n in recipe_q["4_forecasting_model"]["nodes"]
+        if n.get("op") == "fit_model"
+    )
     assert fit_node_q["params"]["block_size"] == 8
 
 
@@ -2424,7 +2668,9 @@ def test_ml_useful_macro_attach_eval_blocks_wires_dm_and_mcs():
     from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
-        cases=("ridge",), horizons=(1,), cv_schemes=("kfold",),
+        cases=("ridge",),
+        horizons=(1,),
+        cv_schemes=("kfold",),
         attach_eval_blocks=True,
     )
     recipe = next(iter(grid.values()))
@@ -2446,8 +2692,14 @@ def test_ml_useful_macro_attach_eval_blocks_wires_dm_and_mcs():
     assert l6["enabled"] is True
     assert "L6_A_equal_predictive" in l6["sub_layers"]
     assert "L6_D_multiple_model" in l6["sub_layers"]
-    assert l6["sub_layers"]["L6_A_equal_predictive"]["fixed_axes"]["equal_predictive_test"] == "dm_diebold_mariano"
-    assert l6["sub_layers"]["L6_D_multiple_model"]["fixed_axes"]["multiple_model_test"] == "mcs_hansen"
+    assert (
+        l6["sub_layers"]["L6_A_equal_predictive"]["fixed_axes"]["equal_predictive_test"]
+        == "dm_diebold_mariano"
+    )
+    assert (
+        l6["sub_layers"]["L6_D_multiple_model"]["fixed_axes"]["multiple_model_test"]
+        == "mcs_hansen"
+    )
 
 
 def test_ml_useful_macro_attach_eval_blocks_default_off_preserves_minimal_recipe():
@@ -2457,12 +2709,16 @@ def test_ml_useful_macro_attach_eval_blocks_default_off_preserves_minimal_recipe
     from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
-        cases=("ridge",), horizons=(1,), cv_schemes=("kfold",),
+        cases=("ridge",),
+        horizons=(1,),
+        cv_schemes=("kfold",),
     )
     recipe = next(iter(grid.values()))
     assert "5_evaluation" not in recipe
     assert "6_statistical_tests" not in recipe
-    fit_nodes = [n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"]
+    fit_nodes = [
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+    ]
     assert len(fit_nodes) == 1
 
 
@@ -2513,13 +2769,13 @@ def test_ml_useful_macro_b_grid_b2_has_pca_node_b3_has_concat_node():
     # then PCA rotates the stack. No contemporaneous-X concat node, no
     # trailing-lag node.
     b3_concat = next(
-        n for n in b3_nodes
+        n
+        for n in b3_nodes
         if n.get("op") == "weighted_concat" and set(n["inputs"]) == {"lag_y", "lag_x"}
     )
     assert b3_concat is not None
     assert any(
-        n.get("op") == "pca" and "h_plus" in n.get("inputs", [])
-        for n in b3_nodes
+        n.get("op") == "pca" and "h_plus" in n.get("inputs", []) for n in b3_nodes
     ), "B₃ must rotate the H_t^+ stack via PCA (paper §3.2)"
 
 
@@ -2533,7 +2789,8 @@ def test_ml_useful_macro_cv_schemes_are_first_class_search_algorithms():
     from macroforecast.core.ops.l4_ops import SEARCH_ALGORITHMS
 
     grid = ml_useful_macro_horse_race(
-        cases=("ridge",), horizons=(1,),
+        cases=("ridge",),
+        horizons=(1,),
         cv_schemes=("kfold", "poos", "aic", "bic"),
     )
     for recipe in grid.values():
@@ -2578,11 +2835,13 @@ def _phase_a3_synthetic_panel(K: int, T: int = 60, seed: int = 7) -> dict[str, l
     import pandas as pd
 
     rng = np.random.default_rng(seed)
-    dates = pd.date_range("2010-01-01", periods=T, freq="MS").strftime("%Y-%m-%d").tolist()
+    dates = (
+        pd.date_range("2010-01-01", periods=T, freq="MS").strftime("%Y-%m-%d").tolist()
+    )
     panel: dict[str, list] = {"date": dates}
     panel["y"] = (np.cumsum(rng.standard_normal(T)) + np.arange(T) * 0.05).tolist()
     for k in range(K):
-        panel[f"x{k+1}"] = rng.standard_normal(T).tolist()
+        panel[f"x{k + 1}"] = rng.standard_normal(T).tolist()
     return panel
 
 
@@ -2598,8 +2857,11 @@ def test_b2_keeps_all_pca_components_K8(tmp_path):
 
     panel = _phase_a3_synthetic_panel(K=8, T=60)
     grid = ml_useful_macro_b_grid(
-        n_factors=8, n_lag=2, panel=panel,
-        rotations=("B2",), families=("ridge",),
+        n_factors=8,
+        n_lag=2,
+        panel=panel,
+        rotations=("B2",),
+        families=("ridge",),
     )
     recipe = grid["B2__ridge"]
     result = macroforecast.run(recipe, output_directory=tmp_path / "b2_K8")
@@ -2632,8 +2894,7 @@ def test_b3_no_trailing_lag_node():
     # Also check no lag node consumes the PCA output.
     pca_id = x_final_node["id"]
     trailing_lags = [
-        n for n in nodes
-        if n.get("op") == "lag" and pca_id in n.get("inputs", [])
+        n for n in nodes if n.get("op") == "lag" and pca_id in n.get("inputs", [])
     ]
     assert not trailing_lags, (
         f"B₃ must not have a lag node downstream of PCA; found {trailing_lags!r}"
@@ -2657,8 +2918,11 @@ def test_b3_eq_b2_at_n_lag_zero(tmp_path):
 
     panel = _phase_a3_synthetic_panel(K=4, T=40)
     grid = ml_useful_macro_b_grid(
-        n_factors=4, n_lag=0, panel=panel,
-        rotations=("B2", "B3"), families=("ridge",),
+        n_factors=4,
+        n_lag=0,
+        panel=panel,
+        rotations=("B2", "B3"),
+        families=("ridge",),
     )
     res_b2 = macroforecast.run(grid["B2__ridge"], output_directory=tmp_path / "b2_n0")
     res_b3 = macroforecast.run(grid["B3__ridge"], output_directory=tmp_path / "b3_n0")
@@ -2713,8 +2977,11 @@ def test_lag_node_uses_n_lag_param(tmp_path):
     # End-to-end: B₁ × ridge with K=5, n_lag=2 → 5 × 2 = 10 cols.
     panel = _phase_a3_synthetic_panel(K=5, T=40)
     grid = ml_useful_macro_b_grid(
-        n_factors=5, n_lag=2, panel=panel,
-        rotations=("B1",), families=("ridge",),
+        n_factors=5,
+        n_lag=2,
+        panel=panel,
+        rotations=("B1",),
+        families=("ridge",),
     )
     recipe = grid["B1__ridge"]
     result = macroforecast.run(recipe, output_directory=tmp_path / "b1_K5")
@@ -2782,8 +3049,7 @@ def test_paper13_variant_comps_drops_asymmetric_trim():
     # L3: asymmetric_trim step absent.
     trim_nodes = [n for n in l3_nodes if n.get("op") == "asymmetric_trim"]
     assert not trim_nodes, (
-        f"variant='comps' must drop the asymmetric_trim L3 step; "
-        f"found {trim_nodes!r}."
+        f"variant='comps' must drop the asymmetric_trim L3 step; found {trim_nodes!r}."
     )
     # L4: ridge with prior=shrink_to_target.
     fit_nodes = [n for n in l4_nodes if n.get("op") == "fit_model"]
@@ -2807,14 +3073,15 @@ def test_paper16_default_benchmark_is_factor_augmented_ar():
     from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
-        cases=("ridge",), horizons=(1,), cv_schemes=("kfold",),
+        cases=("ridge",),
+        horizons=(1,),
+        cv_schemes=("kfold",),
         attach_eval_blocks=True,
     )
     recipe = next(iter(grid.values()))
     l4_nodes = recipe["4_forecasting_model"]["nodes"]
     benchmark = next(
-        n for n in l4_nodes
-        if n.get("op") == "fit_model" and n.get("is_benchmark")
+        n for n in l4_nodes if n.get("op") == "fit_model" and n.get("is_benchmark")
     )
     assert benchmark["params"]["family"] == "factor_augmented_ar", (
         "Paper §4.4 specifies the (ARDI, BIC) reference; default helper "
@@ -2856,7 +3123,9 @@ def test_a4a_elastic_net_l1_ratio_tuned_under_kfold():
     n, K = 60, 4
     X = pd.DataFrame(rng.standard_normal((n, K)), columns=list("abcd"))
     # Sparse-ish DGP so the EN landscape is non-trivial across (alpha, ζ).
-    y = pd.Series(2.0 * X["a"] - 0.8 * X["b"] + 0.4 * X["c"] + rng.normal(scale=0.3, size=n))
+    y = pd.Series(
+        2.0 * X["a"] - 0.8 * X["b"] + 0.4 * X["c"] + rng.normal(scale=0.3, size=n)
+    )
 
     custom_alphas = [0.001, 0.01, 0.1, 1.0]
     custom_l1 = [0.1, 0.3, 0.5, 0.7, 0.9]
@@ -2908,8 +3177,7 @@ def test_a4b_h_plus_axis_includes_lag_F():
 
     # Find the lag node whose sole input is the PCA factor node.
     lag_F_candidates = [
-        n for n in nodes
-        if n.get("op") == "lag" and n.get("inputs") == ["feat_F"]
+        n for n in nodes if n.get("op") == "lag" and n.get("inputs") == ["feat_F"]
     ]
     assert len(lag_F_candidates) == 1, (
         f"H_plus DAG must include exactly one lag(feat_F) node; "
@@ -2953,7 +3221,9 @@ def test_a4c_b_grid_n_lag_zero_b2_eq_b3(tmp_path):
 
     panel = _phase_a3_synthetic_panel(K=8, T=60)
     grid = ml_useful_macro_b_grid(
-        n_factors=4, n_lag=0, panel=panel,
+        n_factors=4,
+        n_lag=0,
+        panel=panel,
         rotations=("B1", "B2", "B3"),
         families=("ridge", "lasso", "elastic_net"),
     )
@@ -2964,7 +3234,9 @@ def test_a4c_b_grid_n_lag_zero_b2_eq_b3(tmp_path):
     for name, recipe in grid.items():
         out_dir = tmp_path / name.replace("__", "_")
         result = macroforecast.run(recipe, output_directory=out_dir)
-        artifacts[name] = result.cells[0].runtime_result.artifacts["l3_features_v1"].X_final
+        artifacts[name] = (
+            result.cells[0].runtime_result.artifacts["l3_features_v1"].X_final
+        )
 
     # (b) B₂ ≡ B₃ at n_lag=0 (paper §3.2 footnote identity). Compare
     # ridge cells specifically (the family that doesn't randomise the L3
@@ -2972,8 +3244,7 @@ def test_a4c_b_grid_n_lag_zero_b2_eq_b3(tmp_path):
     x2 = artifacts["B2__ridge"].data
     x3 = artifacts["B3__ridge"].data
     assert x2.shape == x3.shape, (
-        f"B₂ and B₃ X_final shapes must match at n_lag=0; got {x2.shape} "
-        f"vs {x3.shape}."
+        f"B₂ and B₃ X_final shapes must match at n_lag=0; got {x2.shape} vs {x3.shape}."
     )
     assert np.allclose(x2.values, x3.values), (
         "Paper §3.2 footnote: B₃() = B₂() at n_lag=0; got differing "
@@ -2983,8 +3254,7 @@ def test_a4c_b_grid_n_lag_zero_b2_eq_b3(tmp_path):
     # (c) Col count = min(T, K). PCA at n_components="all" resolves to
     # min(T, K). With T=60, K=8 the expected count is 8.
     assert x2.shape[1] == min(60, 8) == 8, (
-        f"B₂ at n_lag=0 must keep min(T,K)=8 PCA factors; got "
-        f"{x2.shape[1]} cols."
+        f"B₂ at n_lag=0 must keep min(T,K)=8 PCA factors; got {x2.shape[1]} cols."
     )
 
 
@@ -3018,10 +3288,12 @@ def test_a4d_paper13_variant_comps_no_prior_target_raises():
     # variant='comps' WITH prior_target is the paper-faithful Variant A
     # and must build a recipe without raising.
     recipe_comps = maximally_forward_looking(
-        variant="comps", prior_target=[0.5, 0.5],
+        variant="comps",
+        prior_target=[0.5, 0.5],
     )
     fit = next(
-        n for n in recipe_comps["4_forecasting_model"]["nodes"]
+        n
+        for n in recipe_comps["4_forecasting_model"]["nodes"]
         if n.get("op") == "fit_model"
     )
     assert fit["params"]["prior_target"] == [0.5, 0.5]

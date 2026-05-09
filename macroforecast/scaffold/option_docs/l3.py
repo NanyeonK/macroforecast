@@ -12,10 +12,11 @@ The only L3 axis exposed via :data:`introspect.operational_options` is
 operator-specific configuration that lives on the node body, not as
 schema axes.
 """
+
 from __future__ import annotations
 
 from . import register
-from .types import CodeExample, OptionDoc, Reference
+from .types import OptionDoc, Reference
 
 _REVIEWED = "2026-05-05"
 _REVIEWER = "macroforecast author"
@@ -32,16 +33,29 @@ _REF_STOCK_WATSON_2002 = Reference(
 )
 
 
-def _o(option: str, summary: str, description: str, when_to_use: str,
-       *, when_not_to_use: str = "",
-       references: tuple[Reference, ...] = (_REF_DESIGN_L3,),
-       related_options: tuple[str, ...] = ()) -> OptionDoc:
+def _o(
+    option: str,
+    summary: str,
+    description: str,
+    when_to_use: str,
+    *,
+    when_not_to_use: str = "",
+    references: tuple[Reference, ...] = (_REF_DESIGN_L3,),
+    related_options: tuple[str, ...] = (),
+) -> OptionDoc:
     return OptionDoc(
-        layer="l3", sublayer="L3_A_step_op", axis="op", option=option,
-        summary=summary, description=description, when_to_use=when_to_use,
-        when_not_to_use=when_not_to_use, references=references,
+        layer="l3",
+        sublayer="L3_A_step_op",
+        axis="op",
+        option=option,
+        summary=summary,
+        description=description,
+        when_to_use=when_to_use,
+        when_not_to_use=when_not_to_use,
+        references=references,
         related_options=related_options,
-        last_reviewed=_REVIEWED, reviewer=_REVIEWER,
+        last_reviewed=_REVIEWED,
+        reviewer=_REVIEWER,
     )
 
 
@@ -166,7 +180,12 @@ _OP_MA_INCREASING = _o(
         "trick from Coulombe (2024)."
     ),
     "Tree / RF models that benefit from multi-scale temporal features without manual lag selection.",
-    references=(_REF_DESIGN_L3, Reference(citation="Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209."
+        ),
+    ),
     related_options=("ma_window", "lag"),
 )
 
@@ -221,7 +240,13 @@ _OP_PCA = _o(
     ),
     "Reducing FRED-MD's 100+ predictors to a handful of latent factors; factor-augmented forecasts.",
     references=(_REF_DESIGN_L3, _REF_STOCK_WATSON_2002),
-    related_options=("sparse_pca", "scaled_pca", "varimax", "dfm", "partial_least_squares"),
+    related_options=(
+        "sparse_pca",
+        "scaled_pca",
+        "varimax",
+        "dfm",
+        "partial_least_squares",
+    ),
 )
 
 _OP_SPARSE_PCA = _o(
@@ -266,8 +291,12 @@ _OP_SPARSE_PCA_CHEN_ROHE = _o(
     when_not_to_use="When sklearn-style L1-penalised loadings are sufficient -- prefer the cheaper ``sparse_pca``.",
     references=(
         _REF_DESIGN_L3,
-        Reference(citation="Chen & Rohe (2023) 'A New Basis for Sparse Principal Component Analysis', Journal of Computational and Graphical Statistics. arXiv:2007.00596."),
-        Reference(citation="Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.1 eqs. (3)-(4)."),
+        Reference(
+            citation="Chen & Rohe (2023) 'A New Basis for Sparse Principal Component Analysis', Journal of Computational and Graphical Statistics. arXiv:2007.00596."
+        ),
+        Reference(
+            citation="Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.1 eqs. (3)-(4)."
+        ),
     ),
     related_options=("sparse_pca", "supervised_pca", "scaled_pca", "pca"),
 )
@@ -298,11 +327,22 @@ _OP_SUPERVISED_PCA = _o(
     when_not_to_use="When the supervisory signal is dense (every panel column matters) -- prefer ``scaled_pca`` or ``partial_least_squares``.",
     references=(
         _REF_DESIGN_L3,
-        Reference(citation="Giglio, Xiu & Zhang (2025) 'Test Assets and Weak Factors', Journal of Finance, forthcoming."),
-        Reference(citation="Giglio & Xiu (2021) 'Asset Pricing with Omitted Factors', Journal of Political Economy 129(7): 1947-1990."),
-        Reference(citation="Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.2 eqs. (5)-(8)."),
+        Reference(
+            citation="Giglio, Xiu & Zhang (2025) 'Test Assets and Weak Factors', Journal of Finance, forthcoming."
+        ),
+        Reference(
+            citation="Giglio & Xiu (2021) 'Asset Pricing with Omitted Factors', Journal of Political Economy 129(7): 1947-1990."
+        ),
+        Reference(
+            citation="Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.2 eqs. (5)-(8)."
+        ),
     ),
-    related_options=("partial_least_squares", "scaled_pca", "sparse_pca_chen_rohe", "pca"),
+    related_options=(
+        "partial_least_squares",
+        "scaled_pca",
+        "sparse_pca_chen_rohe",
+        "pca",
+    ),
 )
 
 _OP_SCALED_PCA = _o(
@@ -315,7 +355,12 @@ _OP_SCALED_PCA = _o(
         "Reduces to plain PCA when all weights are equal."
     ),
     "When standard PCA's leading factor is dominated by predictively-irrelevant variance.",
-    references=(_REF_DESIGN_L3, Reference(citation="Huang, Jiang, Tu & Zhou (2022) 'Scaled PCA: A New Approach to Dimension Reduction', Management Science 68(3): 1678-1695.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Huang, Jiang, Tu & Zhou (2022) 'Scaled PCA: A New Approach to Dimension Reduction', Management Science 68(3): 1678-1695."
+        ),
+    ),
     related_options=("pca", "partial_least_squares"),
 )
 
@@ -331,7 +376,12 @@ _OP_DFM = _o(
         "auto-routes to ``DynamicFactorMQ`` (Mariano-Murasawa 2003)."
     ),
     "Smoothed factors with an explicit dynamic; mixed-frequency panels (FRED-SD).",
-    references=(_REF_DESIGN_L3, Reference(citation="Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Mariano & Murasawa (2003) 'A new coincident index of business cycles based on monthly and quarterly series', JAE 18(4): 427-443."
+        ),
+    ),
     related_options=("pca", "scaled_pca"),
 )
 
@@ -369,7 +419,12 @@ _OP_PARTIAL_LEAST_SQUARES = _o(
         "as in PCA). sklearn's ``PLSRegression``; ``params.n_components``."
     ),
     "When a target-supervised reduction is preferable to PCA's unsupervised projection.",
-    references=(_REF_DESIGN_L3, Reference(citation="Wold, Sjöström & Eriksson (2001) 'PLS-regression: a basic tool of chemometrics', Chemometrics and Intelligent Laboratory Systems 58(2): 109-130.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Wold, Sjöström & Eriksson (2001) 'PLS-regression: a basic tool of chemometrics', Chemometrics and Intelligent Laboratory Systems 58(2): 109-130."
+        ),
+    ),
     related_options=("pca", "scaled_pca"),
 )
 
@@ -434,7 +489,12 @@ _OP_HP_FILTER = _o(
     ),
     "Extracting business-cycle gaps from trending series.",
     when_not_to_use="Real-time / one-sided forecasting -- HP introduces look-ahead bias unless restricted to ``expanding_window_per_origin``.",
-    references=(_REF_DESIGN_L3, Reference(citation="Hodrick & Prescott (1997) 'Postwar U.S. Business Cycles: An Empirical Investigation', JMCB 29(1): 1-16.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Hodrick & Prescott (1997) 'Postwar U.S. Business Cycles: An Empirical Investigation', JMCB 29(1): 1-16."
+        ),
+    ),
     related_options=("hamilton_filter", "diff"),
 )
 
@@ -448,7 +508,12 @@ _OP_HAMILTON_FILTER = _o(
         "Uses statsmodels ``hamilton_filter``."
     ),
     "Real-time / one-sided detrending where HP's two-sided smoothing is inappropriate.",
-    references=(_REF_DESIGN_L3, Reference(citation="Hamilton (2018) 'Why You Should Never Use the Hodrick-Prescott Filter', RES 100(5): 831-843.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Hamilton (2018) 'Why You Should Never Use the Hodrick-Prescott Filter', RES 100(5): 831-843."
+        ),
+    ),
     related_options=("hp_filter",),
 )
 
@@ -519,7 +584,12 @@ _OP_KERNEL_FEATURES = _o(
     ),
     "Kernel-augmented ridge / SVM at scale (n > 10k).",
     when_not_to_use="Small-sample problems where exact kernel SVM is feasible.",
-    references=(_REF_DESIGN_L3, Reference(citation="Rahimi & Recht (2007) 'Random Features for Large-Scale Kernel Machines', NeurIPS.")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Rahimi & Recht (2007) 'Random Features for Large-Scale Kernel Machines', NeurIPS."
+        ),
+    ),
     related_options=("kernel", "nystroem"),
 )
 
@@ -700,7 +770,12 @@ _OP_SAVITZKY_GOLAY_FILTER = _o(
     ),
     "Smoothing macro indicator series for monitoring; AlbaMA replication baseline.",
     when_not_to_use="Series with strong non-linear trends -- the polynomial fit smooths them out.",
-    references=(_REF_DESIGN_L3, Reference(citation="Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by Simplified Least Squares Procedures', Analytical Chemistry 36(8).")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by Simplified Least Squares Procedures', Analytical Chemistry 36(8)."
+        ),
+    ),
     related_options=("hp_filter", "hamilton_filter", "ma_window", "adaptive_ma_rf"),
 )
 
@@ -724,48 +799,221 @@ _OP_ASYMMETRIC_TRIM = _o(
     ),
     "Building Albacore_ranks-style core inflation indicators; supervised asymmetric trimming where the band is learned from data.",
     when_not_to_use="Symmetric trimmed-mean targets (use a fixed-window ``ma_window`` instead).",
-    references=(_REF_DESIGN_L3, Reference(citation="Goulet Coulombe, Klieber, Barrette & Goebel (2024) 'Maximally Forward-Looking Core Inflation', technical report (R package: assemblage).")),
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Goulet Coulombe, Klieber, Barrette & Goebel (2024) 'Maximally Forward-Looking Core Inflation', technical report (R package: assemblage)."
+        ),
+    ),
     related_options=("ma_window", "ma_increasing_order", "scaled_pca"),
 )
 
 
 _OP_ADAPTIVE_MA_RF = _o(
     "adaptive_ma_rf",
-    "AlbaMA -- RF-driven adaptive moving average [schema; runtime in v0.9.x].",
+    "AlbaMA -- RF-driven adaptive moving average smoother for a single time series.",
     (
         "Goulet Coulombe & Klieber (2025) 'Adaptive Moving Average for "
-        "Macroeconomic Monitoring'. A random forest decides the per-"
-        "observation moving-average window length from the predictor "
-        "panel, so the smoother adapts to local volatility / regime. "
+        "Macroeconomic Monitoring' (arXiv:2501.13222 §2). A random "
+        "forest fit with a *single* regressor -- the time index -- on "
+        "the target series ``y`` (i.e. ``RF(y_t ~ t)``). Per-"
+        "observation leaf membership induces a weight matrix ``w_τt`` "
+        "whose row sums to 1, so the smoother is a learned-bandwidth "
+        "moving average of ``y``; the realised window adapts to local "
+        "volatility / regime. Paper p.8 defaults: ``n_estimators = "
+        "B = 500``, ``min_samples_leaf = 40``, ``max_features = 1``. "
+        "``sided = 'two'`` (default) fits one forest on the full "
+        "sample (retrospective smoother); ``sided = 'one'`` fits an "
+        "expanding-window forest per ``t`` (real-time nowcasting "
+        "variant, paper §3.3 / p.10).\n\n"
         "Atomic primitive: existing ``ma_window`` uses a fixed length; "
         "``hamilton_filter`` is a regression on lags rather than a "
-        "moving average; neither composes into AlbaMA without a learned "
-        "window selector.\n\n"
-        "Schema-only in v0.9.0. Runtime promotion blocks on PDF "
-        "readthrough of the RF-split-to-window mapping (arXiv:2501.13222)."
+        "moving average; neither composes into AlbaMA without a "
+        "learned window selector."
     ),
     "Replicating AlbaMA recipes; macro indicator monitoring under regime shifts.",
-    when_not_to_use="Pre-promotion -- validator hard-rejects until runtime lands.",
-    references=(_REF_DESIGN_L3, Reference(citation="Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for Macroeconomic Monitoring', arXiv:2501.13222.")),
-    related_options=("savitzky_golay_filter", "hamilton_filter", "hp_filter", "ma_window"),
+    when_not_to_use="Multivariate denoising of a predictor panel (AlbaMA smooths a single target series).",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for Macroeconomic Monitoring', arXiv:2501.13222."
+        ),
+    ),
+    related_options=(
+        "savitzky_golay_filter",
+        "hamilton_filter",
+        "hp_filter",
+        "ma_window",
+    ),
+)
+
+
+# ---------------------------------------------------------------------------
+# v0.9 Phase C top-6 net-new methods (mixed-frequency + supervised reduction).
+# ---------------------------------------------------------------------------
+
+_OP_U_MIDAS = _o(
+    "u_midas",
+    "Unrestricted MIDAS lag stack -- mixed-frequency aggregation primitive (Foroni-Marcellino-Schumacher 2015).",
+    (
+        "Atomic mixed-frequency primitive: stacks ``K = n_lags_high`` "
+        "high-frequency lags of each predictor at low-frequency dates "
+        "without imposing any weighting structure. For HF column "
+        "``col`` and LF index position ``t·m``, emits "
+        "``col_lag0, col_lag1, …, col_lag{K-1}`` where "
+        "``col_lagk[t] = frame[col].iloc[t·m − k]``. The downstream L4 "
+        "ridge / OLS / lasso recovers data-driven lag coefficients, "
+        "i.e. the *unrestricted* MIDAS regression ``y_t = α + Σ_k β_k "
+        "x_{t·m − k} + ε_t``.\n\n"
+        "**Defaults**: ``freq_ratio = 3`` (quarterly target / monthly "
+        "HF), ``n_lags_high = 6`` (≈ 2·m); ``target_freq = 'low'`` "
+        "subsamples the LF anchor dates. ``temporal_rule`` is required "
+        "and rejects ``full_sample_once`` so the aggregation respects "
+        "walk-forward boundaries.\n\n"
+        "Surfaces the Borup-Rapach-Schütte (2023) mixed-frequency "
+        "ML-nowcasting workflow as a 1-line recipe via "
+        "``paper_methods.u_midas(...)``."
+    ),
+    "Macro nowcasting with monthly predictors and quarterly targets; mixed-frequency feature engineering when no parametric weight kernel is desired.",
+    when_not_to_use="When ``n_lags_high · n_HF_columns`` exceeds T (use ``midas`` parametric weighting instead, or pair with downstream lasso).",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Foroni, Marcellino & Schumacher (2015) 'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials', JRSS-A 178(1): 57-82."
+        ),
+        Reference(
+            citation="Borup, Rapach & Schütte (2023) 'Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data', International Journal of Forecasting 39(3): 1122-1144."
+        ),
+    ),
+    related_options=("midas", "lag", "ma_window"),
+)
+
+
+_OP_MIDAS = _o(
+    "midas",
+    "MIDAS Almon / Exp-Almon / Beta weighted lag polynomial (Ghysels-Sinko-Valkanov 2007).",
+    (
+        "Parametric mixed-frequency aggregation: emits one column per HF "
+        "predictor whose value is the weighted sum "
+        "``Σ_k ω_k(θ̂) · x_{t·m − k}``. The weight kernel ``ω_k(θ)`` is "
+        "fitted by NLS against the LF ``target_signal`` input.\n\n"
+        "**Three weighting families**:\n"
+        "* ``almon`` -- polynomial basis ``ω_k = Σ_q θ_q · k^q`` of "
+        "order ``polynomial_order`` (default 2). Optional sum-to-one "
+        "normalisation.\n"
+        "* ``exp_almon`` (default) -- ``ω_k ∝ exp(θ_1 k + θ_2 k²)``; "
+        "numerically stable and the GSV 2007 §3 default.\n"
+        "* ``beta`` -- ``ω_k ∝ k_norm^{θ_1−1} (1 − k_norm)^{θ_2−1}`` for "
+        "``k_norm = (k+1)/(K+1)``; flexible monotone / hump kernel.\n\n"
+        "Defaults: ``freq_ratio = 3``, ``n_lags_high = 12``, "
+        "``sum_to_one = True``, ``max_iter = 200``. Optimiser: "
+        "``scipy.optimize.minimize`` (Nelder-Mead). Per-predictor "
+        "``theta_hat`` / ``weights`` / ``converged`` stashed in "
+        "``result.attrs['midas_fit']`` for L7 inspection.\n\n"
+        "Requires a ``target_signal`` input port -- shares routing with "
+        "``scaled_pca``."
+    ),
+    "Mixed-frequency nowcasting where parametric lag weights are desired; reproducing GSV 2007 macro / asset-pricing applications.",
+    when_not_to_use="High-noise predictors where NLS optimiser diverges (use ``u_midas`` + downstream regularised regression instead).",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Ghysels, Sinko & Valkanov (2007) 'MIDAS Regressions: Further Results and New Directions', Econometric Reviews 26(1): 53-90."
+        ),
+        Reference(
+            citation="Ghysels, Santa-Clara & Valkanov (2004) 'The MIDAS Touch: Mixed Data Sampling Regression Models', UCLA / UNC working paper."
+        ),
+    ),
+    related_options=("u_midas", "scaled_pca", "lag"),
+)
+
+
+_OP_SLICED_INVERSE_REGRESSION = _o(
+    "sliced_inverse_regression",
+    "sSUFF / Sliced inverse regression (scaled) -- supervised dimension reduction (Huang-Jiang-Li-Tong-Zhou 2022).",
+    (
+        "Supervised dimension reduction extending ``scaled_pca`` to "
+        "non-linear y → X dependence. Pipeline: (1) standardise X; "
+        "(2) optional column-wise predictive scaling (``scaling_method`` "
+        "= ``scaled_pca`` reuses the Huang-Zhou OLS-slope; "
+        "``marginal_R2`` uses sign(β_j)·√R²_j; ``none`` skips); "
+        "(3) sort rows by y and partition into ``n_slices`` H "
+        "contiguous slices; (4) compute weighted between-slice "
+        "covariance ``Σ_S = Σ_h (n_h/n) · m̄_h · m̄_h^⊤``; (5) take the "
+        "top-``n_components`` eigenvectors as factor loadings; "
+        "(6) project the full panel onto these directions. The sSUFF "
+        "augmentation (Huang-Zhou-Tong 2022) recovers latent factors "
+        "with higher correlation than plain SIR in the macro-panel "
+        "regime where signals are sparse over predictors.\n\n"
+        "Defaults: ``n_components = 2``, ``n_slices = 5``, "
+        "``scaling_method = 'scaled_pca'``. Requires a "
+        "``target_signal`` input port; ``temporal_rule`` is required "
+        "and rejects ``full_sample_once``."
+    ),
+    "Supervised factor extraction from macro panels with non-linear y → X structure; alternative to ``scaled_pca`` when the predictive direction is non-monotone.",
+    when_not_to_use="Very small T (need ≥ 5·n_slices observations after dropping NaN); strictly linear y → X relationship (``scaled_pca`` is sufficient).",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Huang, Jiang, Li, Tong & Zhou (2022) 'Scaled PCA: A New Approach to Dimension Reduction', Management Science 68(3): 1678-1695."
+        ),
+        Reference(
+            citation="Fan, Xue & Yao (2017) 'Sufficient forecasting using factor models', Journal of Econometrics 201(2): 292-306."
+        ),
+        Reference(
+            citation="Li (1991) 'Sliced Inverse Regression for Dimension Reduction', JASA 86(414): 316-327."
+        ),
+    ),
+    related_options=("scaled_pca", "supervised_pca", "partial_least_squares"),
 )
 
 
 register(
-    _OP_LEVEL, _OP_DIFF, _OP_LOG, _OP_LOG_DIFF, _OP_PCT_CHANGE,
+    _OP_LEVEL,
+    _OP_DIFF,
+    _OP_LOG,
+    _OP_LOG_DIFF,
+    _OP_PCT_CHANGE,
     _OP_SEASONAL_LAG,
-    _OP_MA_WINDOW, _OP_MA_INCREASING, _OP_CUMSUM,
+    _OP_MA_WINDOW,
+    _OP_MA_INCREASING,
+    _OP_CUMSUM,
     _OP_SCALE,
-    _OP_PCA, _OP_SPARSE_PCA, _OP_SPARSE_PCA_CHEN_ROHE, _OP_SUPERVISED_PCA, _OP_SCALED_PCA, _OP_DFM, _OP_VARIMAX,
-    _OP_VARIMAX_ROTATION, _OP_PARTIAL_LEAST_SQUARES, _OP_RANDOM_PROJECTION,
-    _OP_FOURIER, _OP_WAVELET,
-    _OP_HP_FILTER, _OP_HAMILTON_FILTER,
-    _OP_POLYNOMIAL, _OP_POLYNOMIAL_EXPANSION, _OP_INTERACTION,
-    _OP_KERNEL, _OP_KERNEL_FEATURES, _OP_NYSTROEM, _OP_NYSTROEM_FEATURES,
-    _OP_REGIME_INDICATOR, _OP_SEASON_DUMMY, _OP_TIME_TREND, _OP_HOLIDAY,
+    _OP_PCA,
+    _OP_SPARSE_PCA,
+    _OP_SPARSE_PCA_CHEN_ROHE,
+    _OP_SUPERVISED_PCA,
+    _OP_SCALED_PCA,
+    _OP_DFM,
+    _OP_VARIMAX,
+    _OP_VARIMAX_ROTATION,
+    _OP_PARTIAL_LEAST_SQUARES,
+    _OP_RANDOM_PROJECTION,
+    _OP_FOURIER,
+    _OP_WAVELET,
+    _OP_HP_FILTER,
+    _OP_HAMILTON_FILTER,
+    _OP_POLYNOMIAL,
+    _OP_POLYNOMIAL_EXPANSION,
+    _OP_INTERACTION,
+    _OP_KERNEL,
+    _OP_KERNEL_FEATURES,
+    _OP_NYSTROEM,
+    _OP_NYSTROEM_FEATURES,
+    _OP_REGIME_INDICATOR,
+    _OP_SEASON_DUMMY,
+    _OP_TIME_TREND,
+    _OP_HOLIDAY,
     _OP_TARGET_CONSTRUCTION,
     _OP_FEATURE_SELECTION,
-    _OP_L3_FEATURE_BUNDLE, _OP_L3_METADATA_BUILD,
+    _OP_L3_FEATURE_BUNDLE,
+    _OP_L3_METADATA_BUILD,
     # v0.9 Phase 2 paper-coverage atomic primitives
-    _OP_SAVITZKY_GOLAY_FILTER, _OP_ADAPTIVE_MA_RF, _OP_ASYMMETRIC_TRIM,
+    _OP_SAVITZKY_GOLAY_FILTER,
+    _OP_ADAPTIVE_MA_RF,
+    _OP_ASYMMETRIC_TRIM,
+    # v0.9 Phase C top-6 net-new methods
+    _OP_U_MIDAS,
+    _OP_MIDAS,
+    _OP_SLICED_INVERSE_REGRESSION,
 )

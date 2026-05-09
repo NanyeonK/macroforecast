@@ -1,4 +1,4 @@
-"""Phase A3 — 16-helper end-to-end smoke tests.
+"""Phase A3 — 15-helper end-to-end smoke tests.
 
 One smoke test per paper-method helper in
 ``macroforecast.recipes.paper_methods``. Each test builds a minimal
@@ -12,8 +12,8 @@ through the public pipeline." Algorithm-level correctness (DM-vs-ARDI
 benchmark, ARDI lag-of-F, full-rank rotation, etc.) is the subject of
 Round 3 micro-audits.
 
-**xfail bookkeeping.** Eight helpers are xfail-marked per the Round 1
-review.md ground truth (papers 2, 4, 7, 9, 10, 11, 12, 14). The
+**xfail bookkeeping.** Seven helpers are xfail-marked per the Round 1
+review.md ground truth (papers 4, 7, 9, 10, 11, 12, 14). The
 remaining 8 (papers 1, 3, 5, 6, 8, 13, 15, 16) are expected to pass.
 ``strict=False`` so an xfail that incidentally starts passing (xpassed)
 does not fail the suite — those cases should be flagged in the report
@@ -22,7 +22,12 @@ and demoted from xfail later.
 After Phase A2 this module's paper 13 (`maximally_forward_looking`) and
 paper 16 (`ml_useful_macro_b_grid`) are expected to pass, validating
 the fixes committed in `paper_methods.py`.
+
+Paper 2 (`arctic_sea_ice_dfm`) helper was cut 2026-05-08 — phantom
+citation (paper has no DFM content). The underlying `_DFMMixedFrequency`
+class in `core/runtime.py` is unaffected.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -35,7 +40,6 @@ import macroforecast
 from macroforecast.recipes.paper_methods import (
     adaptive_ma,
     anatomy_oos,
-    arctic_sea_ice_dfm,
     arctic_var,
     booging,
     dual_interpretation,
@@ -127,7 +131,10 @@ def _assert_grid_has_passing_cell(grid: dict[str, dict]) -> None:
         for key, recipe in grid.items():
             try:
                 result = macroforecast.run(recipe)
-                if result.cells and "l4_forecasts_v1" in result.cells[0].runtime_result.artifacts:
+                if (
+                    result.cells
+                    and "l4_forecasts_v1" in result.cells[0].runtime_result.artifacts
+                ):
                     return
             except Exception as exc:  # noqa: BLE001
                 last_err = exc
@@ -138,7 +145,7 @@ def _assert_grid_has_passing_cell(grid: dict[str, dict]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 16 e2e tests — one per paper helper
+# 15 e2e tests — one per paper helper (paper 2 helper cut 2026-05-08)
 # ---------------------------------------------------------------------------
 
 
@@ -148,16 +155,9 @@ def test_paper_01_scaled_pca(synth_panel):
     _assert_recipe_runs(recipe)
 
 
-# Paper 2 — arctic_sea_ice_dfm: Round 1 flagged §3.4 phantom (smoother surface
-# unanchored). Helper itself runs end-to-end via the DFM family but the
-# documented procedure is incomplete; xfail until anchored.
-@pytest.mark.xfail(
-    reason="Round 1: arctic_sea_ice_dfm helper exposes §3.4 phantom (Kalman smoother surface unanchored)",
-    strict=False,
-)
-def test_paper_02_arctic_sea_ice_dfm(synth_panel):
-    recipe = arctic_sea_ice_dfm(target="y", horizon=1, panel=synth_panel, n_factors=1, factor_order=1)
-    _assert_recipe_runs(recipe)
+# Paper 2 — arctic_sea_ice_dfm helper cut 2026-05-08: phantom citation (paper
+# has no DFM content). The `_DFMMixedFrequency` class in `core/runtime.py`
+# remains operational; only the paper-anchored helper was removed.
 
 
 # Paper 3 — slow_growing_tree (operational decision_tree.split_shrinkage). Cap
@@ -167,14 +167,24 @@ def test_paper_03_slow_growing_tree(synth_panel):
     _assert_recipe_runs(recipe)
 
 
-# Paper 4 — arctic_var: Round 1 flagged that the helper routes to plain VAR
-# rather than BVAR (paper specifies BVAR for VARCTIC).
-@pytest.mark.xfail(
-    reason="Round 1: arctic_var routes to OLS-VAR rather than BVAR (paper specifies BVAR)",
-    strict=False,
-)
+# Paper 4 — arctic_var: Phase B-4 (2026-05-08) rewired the helper to
+# bvar_minnesota with paper-faithful defaults (b_AR=0.9, λ₁=0.3,
+# λ_cross=0.5, λ_decay=1.5, n_posterior_draws=2000, n_lag=12) plus
+# Cholesky ordering exposure and posterior IRF / HD bands. The Round 1
+# xfail is closed; passing ``n_lags`` (legacy plural) emits a
+# DeprecationWarning but still routes correctly.
 def test_paper_04_arctic_var(synth_panel):
-    recipe = arctic_var(target="y", horizon=1, panel=synth_panel, n_lags=2)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        # n_posterior_draws kept small to keep the smoke test fast.
+        recipe = arctic_var(
+            target="y",
+            horizon=1,
+            panel=synth_panel,
+            n_lag=2,
+            n_posterior_draws=20,
+            posterior_irf_periods=4,
+        )
     _assert_recipe_runs(recipe)
 
 
@@ -184,8 +194,11 @@ def test_paper_04_arctic_var(synth_panel):
 # range.
 def test_paper_05_macroeconomic_random_forest(synth_panel_long):
     recipe = macroeconomic_random_forest(
-        target="y", horizon=1, panel=synth_panel_long,
-        n_estimators=2, block_size=4,
+        target="y",
+        horizon=1,
+        panel=synth_panel_long,
+        n_estimators=2,
+        block_size=4,
     )
     for node in recipe["4_forecasting_model"]["nodes"]:
         if node.get("op") == "fit_model":
@@ -257,14 +270,14 @@ def test_paper_10_ols_attention_demo(synth_panel):
     _assert_recipe_runs(recipe)
 
 
-# Paper 11 — anatomy_oos: Round 1 flagged that initial_window kwarg is not
-# consumed by the underlying anatomy adapter (Path A degrades to Path B).
-@pytest.mark.xfail(
-    reason="Round 1: anatomy_oos initial_window not consumed -- adapter falls back to Path B (final-window fit)",
-    strict=False,
-)
+# Paper 11 — anatomy_oos: Phase B-11 paper-11 helper rewrite closed F1
+# (initial_window now reaches the anatomy adapter via the L7 op step,
+# not a dead 0_meta.leaf_config stamp). The helper now drives Path A
+# (per-origin refit) end-to-end, so the smoke test passes outright.
 def test_paper_11_anatomy_oos(synth_panel):
-    recipe = anatomy_oos(target="y", horizon=1, panel=synth_panel, initial_window=72, n_iterations=10)
+    recipe = anatomy_oos(
+        target="y", horizon=1, panel=synth_panel, initial_window=72, n_iterations=10
+    )
     _assert_recipe_runs(recipe)
 
 
@@ -283,8 +296,11 @@ def test_paper_12_dual_interpretation(synth_panel):
 # from L2 (validator-rejected) to an L3 step node. Now expected to pass.
 def test_paper_13_maximally_forward_looking(synth_panel):
     recipe = maximally_forward_looking(
-        target="y", horizon=1, panel=synth_panel,
-        alpha=10.0, search_algorithm="block_cv",
+        target="y",
+        horizon=1,
+        panel=synth_panel,
+        alpha=10.0,
+        search_algorithm="block_cv",
     )
     _assert_recipe_runs(recipe)
 
@@ -300,7 +316,9 @@ def test_paper_13_maximally_forward_looking(synth_panel):
     strict=False,
 )
 def test_paper_14_sparse_macro_factors(synth_panel):
-    recipe = sparse_macro_factors(target="y", horizon=1, panel=synth_panel, n_components=3)
+    recipe = sparse_macro_factors(
+        target="y", horizon=1, panel=synth_panel, n_components=3
+    )
     _assert_recipe_runs(recipe)
 
 
@@ -315,9 +333,13 @@ def test_paper_15_macroeconomic_data_transformations_horse_race(synth_panel):
     # so we test the helper's grid surface without tripping over a
     # paper-15-specific gap. Round 3 micro-audit will follow up.
     grid = macroeconomic_data_transformations_horse_race(
-        target="y", horizon=1, panel=synth_panel,
-        cells=("X",), families=("ar_p",),
-        target_methods=("direct",), max_order=4,
+        target="y",
+        horizon=1,
+        panel=synth_panel,
+        cells=("X",),
+        families=("ar_p",),
+        target_methods=("direct",),
+        max_order=4,
     )
     _assert_grid_has_passing_cell(grid)
 
@@ -328,7 +350,9 @@ def test_paper_15_macroeconomic_data_transformations_horse_race(synth_panel):
 # cells run; pre-fix only the 3 B₁ cells did).
 def test_paper_16_ml_useful_macro_b_grid(synth_panel):
     grid = ml_useful_macro_b_grid(
-        target="y", horizon=1, panel=synth_panel,
+        target="y",
+        horizon=1,
+        panel=synth_panel,
         rotations=("B1", "B2", "B3"),
         families=("ridge",),
     )

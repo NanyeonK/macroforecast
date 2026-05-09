@@ -25,12 +25,13 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`apply_official_tcode`](l2/axes/transform_policy.md) | L2 | `transform_policy` | operational |
 | [`ar_p`](l4/axes/family.md) | L4 | `family` | operational |
 | [`asymmetric_trim`](l3/axes/op.md) | L3 | `op` | operational |
-| [`attention_weights`](l7/axes/op.md) | L7 | `op` | future |
+| [`attention_weights`](l7/axes/op.md) | L7 | `op` | operational |
 | [`auto`](l4_5/axes/back_transform_method.md) | L4.5 | `back_transform_method` | operational |
 | [`auto`](l7/axes/figure_type.md) | L7 | `figure_type` | operational |
 | [`autocorrelation_per_lag`](l3_5/axes/lag_view.md) | L3.5 | `lag_view` | operational |
 | [`back_transformed_only`](l4_5/axes/forecast_scale_view.md) | L4.5 | `forecast_scale_view` | operational |
 | [`bagging`](l4/axes/family.md) | L4 | `family` | operational |
+| [`bai_ng`](l4/axes/pi_correction.md) | L4 | `pi_correction` | operational |
 | [`bar`](l7/axes/figure_type.md) | L7 | `figure_type` | operational |
 | [`bayesian_optimization`](l4/axes/search_algorithm.md) | L4 | `search_algorithm` | operational |
 | [`bayesian_ridge`](l4/axes/family.md) | L4 | `family` | operational |
@@ -123,6 +124,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`drop_unknown_native_frequency`](l2/axes/mixed_frequency_representation.md) | L2 | `mixed_frequency_representation` | operational |
 | [`dual_decomposition`](l7/axes/op.md) | L7 | `op` | operational |
 | [`earliest_available`](l1/axes/sample_start_rule.md) | L1 | `sample_start_rule` | operational |
+| [`egarch`](l4/axes/family.md) | L4 | `family` | operational |
 | [`elastic_net`](l4/axes/family.md) | L4 | `family` | operational |
 | [`em_factor`](l2/axes/imputation_policy.md) | L2 | `imputation_policy` | operational |
 | [`em_multivariate`](l2/axes/imputation_policy.md) | L2 | `imputation_policy` | operational |
@@ -131,6 +133,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`estimated_markov_switching`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
 | [`estimated_structural_break`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
 | [`estimated_threshold`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
+| [`ets`](l4/axes/family.md) | L4 | `family` | operational |
 | [`every_n_origins`](l4/axes/refit_policy.md) | L4 | `refit_policy` | operational |
 | [`every_n_origins`](l4_5/axes/fit_per_origin.md) | L4.5 | `fit_per_origin` | operational |
 | [`every_origin`](l4/axes/refit_policy.md) | L4 | `refit_policy` | operational |
@@ -185,6 +188,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`full_matrix`](l1_5/axes/correlation_view.md) | L1.5 | `correlation_view` | operational |
 | [`full_matrix`](l3_5/axes/correlation_view.md) | L3.5 | `correlation_view` | operational |
 | [`full_sample`](l1_5/axes/summary_split.md) | L1.5 | `summary_split` | operational |
+| [`garch11`](l4/axes/family.md) | L4 | `family` | operational |
 | [`generalized_irf`](l7/axes/op.md) | L7 | `op` | future |
 | [`genetic_algorithm`](l4/axes/search_algorithm.md) | L4 | `search_algorithm` | operational |
 | [`genetic_algorithm_selection`](l3/axes/op.md) | L3 | `op` | future |
@@ -201,12 +205,14 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`gw_giacomini_white`](l6/axes/equal_predictive_test.md) | L6 | `equal_predictive_test` | operational |
 | [`gzip`](l8/axes/compression.md) | L8 | `compression` | operational |
 | [`hamilton_filter`](l3/axes/op.md) | L3 | `op` | operational |
+| [`harvey_newbold_encompassing`](l6/axes/equal_predictive_test.md) | L6 | `equal_predictive_test` | operational |
 | [`heatmap`](l1_5/axes/missing_view.md) | L1.5 | `missing_view` | operational |
 | [`heatmap`](l4_5/axes/weights_over_time_method.md) | L4.5 | `weights_over_time_method` | operational |
 | [`heatmap`](l7/axes/figure_type.md) | L7 | `figure_type` | operational |
 | [`histogram_overlay`](l2_5/axes/distribution_view.md) | L2.5 | `distribution_view` | operational |
 | [`historical_decomposition`](l7/axes/op.md) | L7 | `op` | operational |
 | [`holiday`](l3/axes/op.md) | L3 | `op` | operational |
+| [`holt_winters`](l4/axes/family.md) | L4 | `family` | operational |
 | [`housing`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
 | [`hp_filter`](l3/axes/op.md) | L3 | `op` | operational |
 | [`html`](l1_5/axes/diagnostic_format.md) | L1.5 | `diagnostic_format` | operational |
@@ -311,6 +317,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`medae`](l5/axes/primary_metric.md) | L5 | `primary_metric` | operational |
 | [`member_contribution`](l4_5/axes/ensemble_view.md) | L4.5 | `ensemble_view` | operational |
 | [`metrics`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
+| [`midas`](l3/axes/op.md) | L3 | `op` | operational |
 | [`midas_almon`](l4/axes/family.md) | L4 | `family` | future |
 | [`midas_beta`](l4/axes/family.md) | L4 | `family` | future |
 | [`midas_step`](l4/axes/family.md) | L4 | `family` | future |
@@ -373,6 +380,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`none`](l3_5/axes/dfm_diagnostics.md) | L3.5 | `dfm_diagnostics` | operational |
 | [`none`](l3_5/axes/feature_correlation.md) | L3.5 | `feature_correlation` | operational |
 | [`none`](l3_5/axes/marx_view.md) | L3.5 | `marx_view` | operational |
+| [`none`](l4/axes/pi_correction.md) | L4 | `pi_correction` | operational |
 | [`none`](l4/axes/search_algorithm.md) | L4 | `search_algorithm` | operational |
 | [`none`](l8/axes/compression.md) | L8 | `compression` | operational |
 | [`none_propagate`](l2/axes/imputation_policy.md) | L2 | `imputation_policy` | operational |
@@ -471,6 +479,8 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`raw_vs_tcoded`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`real_time_alfred`](l1/axes/vintage_policy.md) | L1 | `vintage_policy` | future |
 | [`reality_check_white`](l6/axes/multiple_model_test.md) | L6 | `multiple_model_test` | operational |
+| [`realized_garch`](l4/axes/family.md) | L4 | `family` | future |
+| [`realized_garch_with_rv_exog`](l4/axes/family.md) | L4 | `family` | operational |
 | [`recipe_hash`](l8/axes/naming_convention.md) | L8 | `naming_convention` | operational |
 | [`recipe_hash`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
 | [`recipe_yaml_full`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
@@ -538,6 +548,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`single_target`](l1/axes/target_structure.md) | L1 | `target_structure` | operational |
 | [`skew`](l1_5/axes/summary_metrics.md) | L1.5 | `summary_metrics` | operational |
 | [`skew_change`](l2_5/axes/distribution_metric.md) | L2.5 | `distribution_metric` | operational |
+| [`sliced_inverse_regression`](l3/axes/op.md) | L3 | `op` | operational |
 | [`spa_hansen`](l6/axes/multiple_model_test.md) | L6 | `multiple_model_test` | operational |
 | [`sparse_pca`](l3/axes/op.md) | L3 | `op` | operational |
 | [`sparse_pca_chen_rohe`](l3/axes/op.md) | L3 | `op` | operational |
@@ -580,6 +591,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`theil_u1`](l5/axes/primary_metric.md) | L5 | `primary_metric` | operational |
 | [`theil_u2`](l5/axes/point_metrics.md) | L5 | `point_metrics` | operational |
 | [`theil_u2`](l5/axes/primary_metric.md) | L5 | `primary_metric` | operational |
+| [`theta_method`](l4/axes/family.md) | L4 | `family` | operational |
 | [`time_trend`](l3/axes/op.md) | L3 | `op` | operational |
 | [`top_k`](l3_5/axes/correlation_view.md) | L3.5 | `correlation_view` | operational |
 | [`top_k_per_target`](l1_5/axes/correlation_view.md) | L1.5 | `correlation_view` | operational |
@@ -599,6 +611,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`true`](l7/axes/latex_table_export.md) | L7 | `latex_table_export` | operational |
 | [`true`](l7/axes/markdown_table_export.md) | L7 | `markdown_table_export` | operational |
 | [`truncate_to_balanced`](l2/axes/frame_edge_policy.md) | L2 | `frame_edge_policy` | operational |
+| [`u_midas`](l3/axes/op.md) | L3 | `op` | operational |
 | [`user_list`](l4_5/axes/coef_view_models.md) | L4.5 | `coef_view_models` | operational |
 | [`var`](l4/axes/family.md) | L4 | `family` | operational |
 | [`varimax`](l3/axes/op.md) | L3 | `op` | operational |

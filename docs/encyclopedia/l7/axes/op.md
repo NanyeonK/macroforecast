@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 33 option(s)
-- Future: 7 option(s)
+- Operational: 34 option(s)
+- Future: 6 option(s)
 
 ## Options
 
@@ -40,11 +40,30 @@ Correlated feature panels (FRED-MD / -QD) where PDPs are misleading.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
-### `attention_weights`  --  future
+### `attention_weights`  --  operational
 
-_(no schema description for `attention_weights`)_
+OLS-as-attention closed-form attention matrix (Goulet Coulombe 2026).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
+Goulet Coulombe (2026) 'OLS as an Attention Mechanism' Eq. 3 closed form: ``Ω = X_test · (X'_train · X_train)⁻¹ · X'_train``. The ``(n_test, n_train)`` matrix encodes how strongly each test point attends to each training point under an OLS / ridge fit, identical to the representer expansion of the dual ridge solution. Output table carries one row per training observation (per-test-point weight aggregates) plus the full attention matrix and representer-identity diagnostics inline via ``frame.attrs``.
+
+Promoted from ``future`` to ``operational`` in Phase B-10 (paper-10 replication). Compatible with linear-family L4 models (``ols`` / ``ridge`` / ``lasso`` / ``elastic_net`` / ``bayesian_ridge`` / ``huber``).
+
+**When to use**
+
+Linear-family attribution as a kernel-attention map; pedagogical / replication of paper-10 Coulombe (2026).
+
+**When NOT to use**
+
+Non-linear models (the closed form requires a linear estimator).
+
+**References**
+
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* Goulet Coulombe (2026) 'OLS as an Attention Mechanism', working paper -- Eq. 3 closed-form attention matrix.
+
+**Related options**: [`dual_decomposition`](#dual-decomposition), [`model_native_linear_coef`](#model-native-linear-coef), [`shap_linear`](#shap-linear)
+
+_Last reviewed 2026-05-05 by macroforecast author._
 
 ### `bootstrap_jackknife`  --  operational
 

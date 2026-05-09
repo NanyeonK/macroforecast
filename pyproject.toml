@@ -18,6 +18,7 @@ dependencies = [
     "scipy>=1.11",
     "matplotlib>=3.7",
     "openpyxl>=3.1",
+    "cvxpy>=1.4",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +31,13 @@ catboost = ["catboost>=1.2"]
 parquet = ["pyarrow>=14.0"]
 deep = ["torch>=2.0"]
 mars = ["pyearth>=0.1"]
+# Phase C M9 (2026-05-08): GARCH(1,1) / EGARCH / Realized-GARCH families
+# wrap the ``arch`` package. Kept optional (not promoted to top-level
+# ``dependencies``) so users not using vol forecasting do not pay an
+# import-time cost. Mirrors the xgboost / lightgbm / catboost / deep
+# pattern -- the L4 fit raises ``NotImplementedError`` with an install
+# hint when ``arch`` is missing.
+arch = ["arch>=6.0"]
 anatomy = ["anatomy"]
 docs = [
     "sphinx>=7.0",
@@ -37,7 +45,7 @@ docs = [
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
 ]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,anatomy]"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]

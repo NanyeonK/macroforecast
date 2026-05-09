@@ -3,7 +3,14 @@ from __future__ import annotations
 from dataclasses import replace
 
 from .registry import Rule, register_op
-from ..types import Factor, L3FeaturesArtifact, L3MetadataArtifact, LaggedPanel, Panel, Series
+from ..types import (
+    Factor,
+    L3FeaturesArtifact,
+    L3MetadataArtifact,
+    LaggedPanel,
+    Panel,
+    Series,
+)
 
 
 def _positive_param(name: str, default: int = 1):
@@ -15,11 +22,14 @@ def _positive_param(name: str, default: int = 1):
         if isinstance(value, str) and value == "all":
             return True
         return value >= 1
+
     return check
 
 
 def _not_full_sample(param: str = "temporal_rule"):
-    return lambda dag, nref: dag.node(nref.node_id).params.get(param) != "full_sample_once"
+    return lambda dag, nref: (
+        dag.node(nref.node_id).params.get(param) != "full_sample_once"
+    )
 
 
 def _temporal_present(dag, nref) -> bool:
@@ -37,13 +47,34 @@ def _n_components_reasonable(dag, nref) -> bool:
 
 
 def _has_target_signal_input(dag, nref) -> bool:
+    """Phase B-1 F1 fix: also accept upstream ``target_construction`` nodes
+    (e.g. ``y_h``) as a valid target_signal input. The previous gate only
+    accepted ``src_y``-prefixed source nodes or explicit
+    ``output_port='target_signal'`` references, but the paper-faithful
+    Huang/Zhou (2022) sPCA helper now wires the *h-shifted* target into
+    the scaled_pca step so the supervised slope is predictive (Eq. 3)
+    rather than contemporaneous. See ``recipes/paper_methods.scaled_pca``."""
+
     node = dag.node(nref.node_id)
-    return any(ref.output_port == "target_signal" or ref.node_id.startswith("src_y") for ref in node.inputs[1:])
+    for ref in node.inputs[1:]:
+        if ref.output_port == "target_signal" or ref.node_id.startswith("src_y"):
+            return True
+        upstream = dag.nodes.get(ref.node_id)
+        if (
+            upstream is not None
+            and getattr(upstream, "op", None) == "target_construction"
+        ):
+            return True
+    return False
 
 
 def _positive_horizon(dag, nref) -> bool:
     horizon = dag.node(nref.node_id).params.get("horizon", 1)
-    values = horizon.get("sweep", ()) if isinstance(horizon, dict) and "sweep" in horizon else (horizon,)
+    values = (
+        horizon.get("sweep", ())
+        if isinstance(horizon, dict) and "sweep" in horizon
+        else (horizon,)
+    )
     return all(isinstance(value, int) and value >= 1 for value in values)
 
 
@@ -58,7 +89,12 @@ def _delegate(op_name: str):
         from ..runtime import _execute_l3_op
 
         target_name = (params or {}).get("__target_name__", "y")
-        return _execute_l3_op(op_name, list(inputs) if isinstance(inputs, list) else [inputs], dict(params or {}), target_name)
+        return _execute_l3_op(
+            op_name,
+            list(inputs) if isinstance(inputs, list) else [inputs],
+            dict(params or {}),
+            target_name,
+        )
 
     run.__name__ = op_name
     return run
@@ -88,7 +124,11 @@ def _rewire_l3_ops() -> None:
     from .registry import _OPS
 
     for op_name, spec in list(_OPS.items()):
-        scope = spec.layer_scope if isinstance(spec.layer_scope, tuple) else (spec.layer_scope,)
+        scope = (
+            spec.layer_scope
+            if isinstance(spec.layer_scope, tuple)
+            else (spec.layer_scope,)
+        )
         if "l3" not in scope:
             continue
         if op_name in {"l3_feature_bundle", "l3_metadata_build"}:
@@ -106,8 +146,16 @@ def _rewire_l3_ops() -> None:
         "n_seasonal_lags": {"type": int, "default": 1, "sweepable": True},
     },
     hard_rules=(
-        Rule("hard", _positive_param("seasonal_period", 12), "seasonal_period must be >= 2"),
-        Rule("hard", _positive_param("n_seasonal_lags", 1), "n_seasonal_lags must be >= 1"),
+        Rule(
+            "hard",
+            _positive_param("seasonal_period", 12),
+            "seasonal_period must be >= 2",
+        ),
+        Rule(
+            "hard",
+            _positive_param("n_seasonal_lags", 1),
+            "n_seasonal_lags must be >= 1",
+        ),
     ),
 )
 def seasonal_lag(inputs, params):
@@ -120,7 +168,13 @@ def seasonal_lag(inputs, params):
     input_types={"default": (Panel, Series)},
     output_type=(Panel, Series),
     params_schema={"window": {"type": int, "default": 3, "sweepable": True}},
-    hard_rules=(Rule("hard", lambda dag, nref: dag.node(nref.node_id).params.get("window", 3) >= 2, "window must be >= 2"),),
+    hard_rules=(
+        Rule(
+            "hard",
+            lambda dag, nref: dag.node(nref.node_id).params.get("window", 3) >= 2,
+            "window must be >= 2",
+        ),
+    ),
 )
 def ma_window(inputs, params):
     _stub(inputs, params)
@@ -132,13 +186,24 @@ def ma_window(inputs, params):
     input_types={"default": (Panel, LaggedPanel, Factor)},
     output_type=Panel,
     params_schema={"max_order": {"type": int, "default": 12, "sweepable": True}},
-    hard_rules=(Rule("hard", lambda dag, nref: dag.node(nref.node_id).params.get("max_order", 12) >= 2, "max_order must be >= 2"),),
+    hard_rules=(
+        Rule(
+            "hard",
+            lambda dag, nref: dag.node(nref.node_id).params.get("max_order", 12) >= 2,
+            "max_order must be >= 2",
+        ),
+    ),
 )
 def ma_increasing_order(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="cumsum", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=(Panel, Series))
+@register_op(
+    name="cumsum",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=(Panel, Series),
+)
 def cumsum(inputs, params):
     _stub(inputs, params)
 
@@ -150,15 +215,27 @@ def cumsum(inputs, params):
     output_type=Panel,
     params_schema={
         "method": {"type": str, "default": "zscore", "sweepable": True},
-        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
     },
-    hard_rules=(Rule("hard", _not_full_sample(), "full_sample_once is rejected for scale temporal_rule"),),
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for scale temporal_rule",
+        ),
+    ),
 )
 def scale(inputs, params):
     _stub(inputs, params)
 
 
-def _factor_op(name: str, input_type=Panel, output_type=Factor, extra_rules=()):
+def _factor_op(
+    name: str, input_type=(Panel, Series), output_type=Factor, extra_rules=()
+):
     return register_op(
         name=name,
         layer_scope=("l3",),
@@ -169,13 +246,23 @@ def _factor_op(name: str, input_type=Panel, output_type=Factor, extra_rules=()):
             # The literal sentinel ``"all"`` is resolved to ``min(T, N)``
             # at PCA fit time (see ``_pca_factors`` in ``core/runtime.py``).
             "n_components": {"type": (int, str), "default": 4, "sweepable": True},
-            "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+            "temporal_rule": {
+                "type": str,
+                "default": "expanding_window_per_origin",
+                "sweepable": True,
+            },
         },
         hard_rules=(
-            Rule("hard", _positive_param("n_components", 4), "n_components must be >= 1"),
+            Rule(
+                "hard", _positive_param("n_components", 4), "n_components must be >= 1"
+            ),
             Rule("hard", _n_components_reasonable, "n_components must be < min(T, N)"),
             Rule("hard", _temporal_present, "temporal_rule is required"),
-            Rule("hard", _not_full_sample(), "full_sample_once is rejected for factor temporal_rule"),
+            Rule(
+                "hard",
+                _not_full_sample(),
+                "full_sample_once is rejected for factor temporal_rule",
+            ),
         )
         + tuple(extra_rules),
     )
@@ -201,7 +288,16 @@ def sparse_pca_chen_rohe(inputs, params):
     _stub(inputs, params)
 
 
-@_factor_op("supervised_pca", extra_rules=(Rule("hard", _has_target_signal_input, "supervised_pca requires target_signal input port"),))
+@_factor_op(
+    "supervised_pca",
+    extra_rules=(
+        Rule(
+            "hard",
+            _has_target_signal_input,
+            "supervised_pca requires target_signal input port",
+        ),
+    ),
+)
 def supervised_pca(inputs, params):
     """Supervised PCA (Giglio-Xiu-Zhang 2025): screen panel columns by
     univariate correlation with the target, retain top ``q · N``, run
@@ -210,7 +306,16 @@ def supervised_pca(inputs, params):
     _stub(inputs, params)
 
 
-@_factor_op("scaled_pca", extra_rules=(Rule("hard", _has_target_signal_input, "scaled_pca requires target_signal input port"),))
+@_factor_op(
+    "scaled_pca",
+    extra_rules=(
+        Rule(
+            "hard",
+            _has_target_signal_input,
+            "scaled_pca requires target_signal input port",
+        ),
+    ),
+)
 def scaled_pca(inputs, params):
     _stub(inputs, params)
 
@@ -223,30 +328,65 @@ def scaled_pca(inputs, params):
     params_schema={
         "n_factors": {"type": int, "default": 4, "sweepable": True},
         "n_lags_factor": {"type": int, "default": 1, "sweepable": True},
-        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
     },
     hard_rules=(
         Rule("hard", _positive_param("n_factors", 4), "n_factors must be >= 1"),
         Rule("hard", _temporal_present, "temporal_rule is required"),
-        Rule("hard", _not_full_sample(), "full_sample_once is rejected for dfm temporal_rule"),
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for dfm temporal_rule",
+        ),
     ),
-    soft_rules=(Rule("soft", lambda dag, nref: dag.node(nref.node_id).params.get("n_lags_factor", 1) <= 4, "dfm n_lags_factor > 4 may not converge"),),
+    soft_rules=(
+        Rule(
+            "soft",
+            lambda dag, nref: (
+                dag.node(nref.node_id).params.get("n_lags_factor", 1) <= 4
+            ),
+            "dfm n_lags_factor > 4 may not converge",
+        ),
+    ),
 )
 def dfm(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="varimax_rotation", layer_scope=("l3",), input_types={"default": Factor}, output_type=Factor)
+@register_op(
+    name="varimax_rotation",
+    layer_scope=("l3",),
+    input_types={"default": Factor},
+    output_type=Factor,
+)
 def varimax_rotation(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="varimax", layer_scope=("l3",), input_types={"default": Factor}, output_type=Factor)
+@register_op(
+    name="varimax",
+    layer_scope=("l3",),
+    input_types={"default": Factor},
+    output_type=Factor,
+)
 def varimax(inputs, params):
     _stub(inputs, params)
 
 
-@_factor_op("partial_least_squares", extra_rules=(Rule("hard", _has_target_signal_input, "partial_least_squares requires target_signal input port"),))
+@_factor_op(
+    "partial_least_squares",
+    extra_rules=(
+        Rule(
+            "hard",
+            _has_target_signal_input,
+            "partial_least_squares requires target_signal input port",
+        ),
+    ),
+)
 def partial_least_squares(inputs, params):
     _stub(inputs, params)
 
@@ -256,7 +396,14 @@ def random_projection(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="wavelet", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=Panel, params_schema={"n_levels": {"type": int, "default": 1, "sweepable": True}}, hard_rules=(Rule("hard", _positive_param("n_levels", 1), "n_levels must be >= 1"),))
+@register_op(
+    name="wavelet",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    params_schema={"n_levels": {"type": int, "default": 1, "sweepable": True}},
+    hard_rules=(Rule("hard", _positive_param("n_levels", 1), "n_levels must be >= 1"),),
+)
 def wavelet(inputs, params):
     _stub(inputs, params)
 
@@ -266,27 +413,81 @@ def fourier(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="hp_filter", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=Panel, soft_rules=(Rule("soft", lambda dag, nref: False, "Hamilton (2018) recommends hamilton_filter over hp_filter for macroeconomic data"),))
+@register_op(
+    name="hp_filter",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    soft_rules=(
+        Rule(
+            "soft",
+            lambda dag, nref: False,
+            "Hamilton (2018) recommends hamilton_filter over hp_filter for macroeconomic data",
+        ),
+    ),
+)
 def hp_filter(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="hamilton_filter", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=Panel, params_schema={"n_lags": {"type": int, "default": 8, "sweepable": True}, "n_horizon": {"type": int, "default": 24, "sweepable": True}})
+@register_op(
+    name="hamilton_filter",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    params_schema={
+        "n_lags": {"type": int, "default": 8, "sweepable": True},
+        "n_horizon": {"type": int, "default": 24, "sweepable": True},
+    },
+)
 def hamilton_filter(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="polynomial_expansion", layer_scope=("l3",), input_types={"default": Panel}, output_type=Panel, params_schema={"degree": {"type": int, "default": 2, "sweepable": True}}, hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),), soft_rules=(Rule("soft", lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3, "very high polynomial degree, consider kernel instead"),))
+@register_op(
+    name="polynomial_expansion",
+    layer_scope=("l3",),
+    input_types={"default": Panel},
+    output_type=Panel,
+    params_schema={"degree": {"type": int, "default": 2, "sweepable": True}},
+    hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),),
+    soft_rules=(
+        Rule(
+            "soft",
+            lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3,
+            "very high polynomial degree, consider kernel instead",
+        ),
+    ),
+)
 def polynomial_expansion(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="polynomial", layer_scope=("l3",), input_types={"default": Panel}, output_type=Panel, params_schema={"degree": {"type": int, "default": 2, "sweepable": True}}, hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),), soft_rules=(Rule("soft", lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3, "very high polynomial degree, consider kernel"),))
+@register_op(
+    name="polynomial",
+    layer_scope=("l3",),
+    input_types={"default": Panel},
+    output_type=Panel,
+    params_schema={"degree": {"type": int, "default": 2, "sweepable": True}},
+    hard_rules=(Rule("hard", _positive_param("degree", 2), "degree must be >= 1"),),
+    soft_rules=(
+        Rule(
+            "soft",
+            lambda dag, nref: dag.node(nref.node_id).params.get("degree", 2) <= 3,
+            "very high polynomial degree, consider kernel",
+        ),
+    ),
+)
 def polynomial(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="interaction", layer_scope=("l3",), input_types={"default": Panel}, output_type=Panel)
+@register_op(
+    name="interaction",
+    layer_scope=("l3",),
+    input_types={"default": Panel},
+    output_type=Panel,
+)
 def interaction(inputs, params):
     _stub(inputs, params)
 
@@ -311,22 +512,42 @@ def nystroem(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="regime_indicator", layer_scope=("l3",), input_types={"default": object}, output_type=Panel)
+@register_op(
+    name="regime_indicator",
+    layer_scope=("l3",),
+    input_types={"default": object},
+    output_type=Panel,
+)
 def regime_indicator(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="season_dummy", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=Panel)
+@register_op(
+    name="season_dummy",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+)
 def season_dummy(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="time_trend", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=Series)
+@register_op(
+    name="time_trend",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Series,
+)
 def time_trend(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="holiday", layer_scope=("l3",), input_types={"default": (Panel, Series)}, output_type=Panel)
+@register_op(
+    name="holiday",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+)
 def holiday(inputs, params):
     _stub(inputs, params)
 
@@ -347,7 +568,13 @@ def target_construction(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="feature_selection", layer_scope=("l3",), input_types={"default": (Panel, LaggedPanel, Factor)}, output_type=Panel, params_schema={"n_features": {"type": object, "default": 0.5, "sweepable": True}})
+@register_op(
+    name="feature_selection",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    params_schema={"n_features": {"type": object, "default": 0.5, "sweepable": True}},
+)
 def feature_selection(inputs, params):
     _stub(inputs, params)
 
@@ -368,7 +595,12 @@ def _future_selection_op(name: str):
     def run(inputs, params):
         from ..runtime import _execute_l3_op
 
-        return _execute_l3_op("feature_selection", list(inputs) if isinstance(inputs, list) else [inputs], dict(params or {}), params.get("__target_name__", "y") if params else "y")
+        return _execute_l3_op(
+            "feature_selection",
+            list(inputs) if isinstance(inputs, list) else [inputs],
+            dict(params or {}),
+            params.get("__target_name__", "y") if params else "y",
+        )
 
     run.__name__ = name
     return run
@@ -381,7 +613,6 @@ for _future_name in (
     "stability_selection",
     "genetic_algorithm_selection",
 ):
-
     register_op(
         name=_future_name,
         layer_scope=("l3",),
@@ -430,7 +661,12 @@ def savitzky_golay_filter(inputs, params):
     params_schema={
         "n_estimators": {"type": int, "default": 500, "sweepable": True},
         "min_samples_leaf": {"type": int, "default": 40, "sweepable": True},
-        "sided": {"type": str, "default": "two", "options": ("one", "two"), "sweepable": True},
+        "sided": {
+            "type": str,
+            "default": "two",
+            "options": ("one", "two"),
+            "sweepable": True,
+        },
         "random_state": {"type": int, "default": 0},
     },
 )
@@ -482,7 +718,13 @@ def asymmetric_trim(inputs, params):
     _stub(inputs, params)
 
 
-@register_op(name="chow_lin_disaggregation", layer_scope=("l2",), input_types={"default": Panel}, output_type=Panel, status="future")
+@register_op(
+    name="chow_lin_disaggregation",
+    layer_scope=("l2",),
+    input_types={"default": Panel},
+    output_type=Panel,
+    status="future",
+)
 def chow_lin_disaggregation(inputs, params):
     """Chow-Lin (1971) regression-based temporal disaggregation.
 
@@ -527,6 +769,161 @@ def l3_metadata_build(inputs, params):
     """Mirror of :func:`build_metadata_artifact` for cache-driven execution."""
 
     return None
+
+
+# ---------------------------------------------------------------------------
+# Phase C top-6 net-new methods (2026-05-08).
+#
+# - u_midas: Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS
+#   aggregation. Stacks high-frequency lags as separate columns indexed
+#   at the low-frequency target dates.
+# - midas: Ghysels-Sinko-Valkanov (2007) MIDAS with parametric weighted
+#   lag polynomial (almon / exp_almon / beta). NLS optimisation via
+#   ``scipy.optimize.minimize``.
+# - sliced_inverse_regression: Fan-Xue-Yao (2017) SIR for factor models,
+#   optionally scaled by Huang-Zhou (2022) predictive slopes (sSUFF
+#   variant).
+# ---------------------------------------------------------------------------
+
+
+@register_op(
+    name="u_midas",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    params_schema={
+        "freq_ratio": {"type": int, "default": 3, "sweepable": True},
+        "n_lags_high": {"type": int, "default": 6, "sweepable": True},
+        "target_freq": {
+            "type": str,
+            "default": "low",
+            "options": ("low", "high"),
+            "sweepable": False,
+        },
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
+    },
+    hard_rules=(
+        Rule("hard", _positive_param("freq_ratio", 3), "freq_ratio must be >= 1"),
+        Rule("hard", _positive_param("n_lags_high", 6), "n_lags_high must be >= 1"),
+        Rule("hard", _temporal_present, "temporal_rule is required"),
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for u_midas temporal_rule",
+        ),
+    ),
+)
+def u_midas(inputs, params):
+    """Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS.
+
+    Stacks high-frequency predictor lags as separate columns reindexed at
+    the low-frequency target dates. Output column ``{col}_lag{k}`` for
+    each predictor ``col`` and each ``k ∈ {0..n_lags_high-1}``.
+    """
+
+    _stub(inputs, params)
+
+
+@register_op(
+    name="midas",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Panel,
+    params_schema={
+        "weighting": {
+            "type": str,
+            "default": "exp_almon",
+            "options": ("almon", "exp_almon", "beta"),
+            "sweepable": True,
+        },
+        "polynomial_order": {"type": int, "default": 2, "sweepable": True},
+        "freq_ratio": {"type": int, "default": 3, "sweepable": True},
+        "n_lags_high": {"type": int, "default": 12, "sweepable": True},
+        "sum_to_one": {"type": bool, "default": True, "sweepable": False},
+        "max_iter": {"type": int, "default": 200, "sweepable": False},
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
+    },
+    hard_rules=(
+        Rule("hard", _positive_param("freq_ratio", 3), "freq_ratio must be >= 1"),
+        Rule("hard", _positive_param("n_lags_high", 12), "n_lags_high must be >= 1"),
+        Rule("hard", _temporal_present, "temporal_rule is required"),
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for midas temporal_rule",
+        ),
+        Rule(
+            "hard", _has_target_signal_input, "midas requires target_signal input port"
+        ),
+    ),
+)
+def midas(inputs, params):
+    """Ghysels-Sinko-Valkanov (2007) MIDAS with parametric weighted lag polynomial.
+
+    Three weighting schemes: ``almon`` (polynomial of degree
+    ``polynomial_order``), ``exp_almon`` (default; two-parameter
+    exponential Almon), ``beta`` (two-parameter Beta density). NLS fit
+    via ``scipy.optimize.minimize``.
+    """
+
+    _stub(inputs, params)
+
+
+@register_op(
+    name="sliced_inverse_regression",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, Series)},
+    output_type=Factor,
+    params_schema={
+        "n_components": {"type": (int, str), "default": 2, "sweepable": True},
+        "n_slices": {"type": int, "default": 5, "sweepable": True},
+        "scaling_method": {
+            "type": str,
+            "default": "scaled_pca",
+            "options": ("scaled_pca", "marginal_R2", "none"),
+            "sweepable": True,
+        },
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
+    },
+    hard_rules=(
+        Rule("hard", _positive_param("n_components", 2), "n_components must be >= 1"),
+        Rule("hard", _positive_param("n_slices", 5), "n_slices must be >= 2"),
+        Rule(
+            "hard",
+            _has_target_signal_input,
+            "sliced_inverse_regression requires target_signal input port",
+        ),
+        Rule("hard", _temporal_present, "temporal_rule is required"),
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for sliced_inverse_regression temporal_rule",
+        ),
+    ),
+)
+def sliced_inverse_regression(inputs, params):
+    """Fan-Xue-Yao (2017) sliced inverse regression for factor models.
+
+    Optional Huang-Zhou (2022) predictive scaling (``scaling_method=
+    'scaled_pca'``) applies a univariate target-supervised slope per
+    column before slicing -- the ``sSUFF`` variant. The output is the
+    ``n_components``-column factor frame projected by the top SIR
+    eigenvectors of the between-slice covariance.
+    """
+
+    _stub(inputs, params)
 
 
 _rewire_l3_ops()

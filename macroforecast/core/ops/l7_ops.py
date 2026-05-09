@@ -3,14 +3,38 @@ from __future__ import annotations
 from dataclasses import replace
 
 from .registry import _OPS, register_op
-from ..types import L3FeaturesArtifact, L3MetadataArtifact, L4ForecastsArtifact, L4ModelArtifactsArtifact, L5EvaluationArtifact, L6TestsArtifact, L7ImportanceArtifact, L7TransformationAttributionArtifact
+from ..types import (
+    L3FeaturesArtifact,
+    L3MetadataArtifact,
+    L4ForecastsArtifact,
+    L4ModelArtifactsArtifact,
+    L5EvaluationArtifact,
+    L6TestsArtifact,
+    L7ImportanceArtifact,
+    L7TransformationAttributionArtifact,
+)
 
 FIGURE_TYPES = (
-    "bar_global", "bar_grouped", "bar_grouped_by_pipeline", "beeswarm", "force_plot", "pdp_line", "ale_line", "heatmap",
-    "feature_heatmap_over_time", "attribution_heatmap", "inclusion_heatmap", "pip_bar", "shapley_waterfall",
-    "shap_dependence_scatter", "importance_by_horizon_bar", "lasso_path_inclusion_order", "irf_with_confidence_band",
+    "bar_global",
+    "bar_grouped",
+    "bar_grouped_by_pipeline",
+    "beeswarm",
+    "force_plot",
+    "pdp_line",
+    "ale_line",
+    "heatmap",
+    "feature_heatmap_over_time",
+    "attribution_heatmap",
+    "inclusion_heatmap",
+    "pip_bar",
+    "shapley_waterfall",
+    "shap_dependence_scatter",
+    "importance_by_horizon_bar",
+    "lasso_path_inclusion_order",
+    "irf_with_confidence_band",
     "historical_decomp_stacked_bar",
 )
+
 
 def _mccracken_ng_md_groups() -> dict[str, tuple[str, ...]]:
     """McCracken & Ng (2016) FRED-MD canonical 8-group taxonomy.
@@ -21,14 +45,147 @@ def _mccracken_ng_md_groups() -> dict[str, tuple[str, ...]]:
     """
 
     return {
-        "output_and_income": ("RPI", "W875RX1", "INDPRO", "IPFPNSS", "IPFINAL", "IPCONGD", "IPDCONGD", "IPNCONGD", "IPBUSEQ", "IPMAT", "IPDMAT", "IPNMAT", "IPMANSICS", "IPB51222S", "IPFUELS", "CUMFNS"),
-        "labor_market": ("UNRATE", "UEMPMEAN", "UEMPLT5", "UEMP5TO14", "UEMP15OV", "UEMP15T26", "UEMP27OV", "CLAIMSx", "PAYEMS", "USGOOD", "CES1021000001", "USCONS", "MANEMP", "DMANEMP", "NDMANEMP", "SRVPRD", "USTPU", "USWTRADE", "USTRADE", "USFIRE", "USGOVT", "CES0600000007", "AWOTMAN", "AWHMAN", "CES0600000008", "CES2000000008", "CES3000000008", "HOABS"),
-        "housing": ("HOUST", "HOUSTNE", "HOUSTMW", "HOUSTS", "HOUSTW", "PERMIT", "PERMITNE", "PERMITMW", "PERMITS", "PERMITW"),
-        "consumption_orders_inventories": ("DPCERA3M086SBEA", "CMRMTSPLx", "RETAILx", "ACOGNO", "AMDMNOx", "ANDENOx", "AMDMUOx", "BUSINVx", "ISRATIOx", "UMCSENTx"),
-        "money_and_credit": ("M1SL", "M2SL", "M2REAL", "BOGMBASE", "TOTRESNS", "NONBORRES", "BUSLOANS", "REALLN", "NONREVSL", "CONSPI", "S&P 500", "S&P: indust", "S&P div yield", "S&P PE ratio"),
-        "interest_and_exchange_rates": ("FEDFUNDS", "CP3Mx", "TB3MS", "TB6MS", "GS1", "GS5", "GS10", "AAA", "BAA", "COMPAPFFx", "TB3SMFFM", "TB6SMFFM", "T1YFFM", "T5YFFM", "T10YFFM", "AAAFFM", "BAAFFM", "TWEXAFEGSMTHx", "EXSZUSx", "EXJPUSx", "EXUSUKx", "EXCAUSx"),
-        "prices": ("WPSFD49207", "WPSFD49502", "WPSID61", "WPSID62", "OILPRICEx", "PPICMM", "CPIAUCSL", "CPIAPPSL", "CPITRNSL", "CPIMEDSL", "CUSR0000SAC", "CUSR0000SAD", "CUSR0000SAS", "CPIULFSL", "CUSR0000SA0L2", "CUSR0000SA0L5", "PCEPI", "DDURRG3M086SBEA", "DNDGRG3M086SBEA", "DSERRG3M086SBEA"),
-        "stock_market": ("S&P 500", "S&P: indust", "S&P div yield", "S&P PE ratio", "VIXCLSx"),
+        "output_and_income": (
+            "RPI",
+            "W875RX1",
+            "INDPRO",
+            "IPFPNSS",
+            "IPFINAL",
+            "IPCONGD",
+            "IPDCONGD",
+            "IPNCONGD",
+            "IPBUSEQ",
+            "IPMAT",
+            "IPDMAT",
+            "IPNMAT",
+            "IPMANSICS",
+            "IPB51222S",
+            "IPFUELS",
+            "CUMFNS",
+        ),
+        "labor_market": (
+            "UNRATE",
+            "UEMPMEAN",
+            "UEMPLT5",
+            "UEMP5TO14",
+            "UEMP15OV",
+            "UEMP15T26",
+            "UEMP27OV",
+            "CLAIMSx",
+            "PAYEMS",
+            "USGOOD",
+            "CES1021000001",
+            "USCONS",
+            "MANEMP",
+            "DMANEMP",
+            "NDMANEMP",
+            "SRVPRD",
+            "USTPU",
+            "USWTRADE",
+            "USTRADE",
+            "USFIRE",
+            "USGOVT",
+            "CES0600000007",
+            "AWOTMAN",
+            "AWHMAN",
+            "CES0600000008",
+            "CES2000000008",
+            "CES3000000008",
+            "HOABS",
+        ),
+        "housing": (
+            "HOUST",
+            "HOUSTNE",
+            "HOUSTMW",
+            "HOUSTS",
+            "HOUSTW",
+            "PERMIT",
+            "PERMITNE",
+            "PERMITMW",
+            "PERMITS",
+            "PERMITW",
+        ),
+        "consumption_orders_inventories": (
+            "DPCERA3M086SBEA",
+            "CMRMTSPLx",
+            "RETAILx",
+            "ACOGNO",
+            "AMDMNOx",
+            "ANDENOx",
+            "AMDMUOx",
+            "BUSINVx",
+            "ISRATIOx",
+            "UMCSENTx",
+        ),
+        "money_and_credit": (
+            "M1SL",
+            "M2SL",
+            "M2REAL",
+            "BOGMBASE",
+            "TOTRESNS",
+            "NONBORRES",
+            "BUSLOANS",
+            "REALLN",
+            "NONREVSL",
+            "CONSPI",
+            "S&P 500",
+            "S&P: indust",
+            "S&P div yield",
+            "S&P PE ratio",
+        ),
+        "interest_and_exchange_rates": (
+            "FEDFUNDS",
+            "CP3Mx",
+            "TB3MS",
+            "TB6MS",
+            "GS1",
+            "GS5",
+            "GS10",
+            "AAA",
+            "BAA",
+            "COMPAPFFx",
+            "TB3SMFFM",
+            "TB6SMFFM",
+            "T1YFFM",
+            "T5YFFM",
+            "T10YFFM",
+            "AAAFFM",
+            "BAAFFM",
+            "TWEXAFEGSMTHx",
+            "EXSZUSx",
+            "EXJPUSx",
+            "EXUSUKx",
+            "EXCAUSx",
+        ),
+        "prices": (
+            "WPSFD49207",
+            "WPSFD49502",
+            "WPSID61",
+            "WPSID62",
+            "OILPRICEx",
+            "PPICMM",
+            "CPIAUCSL",
+            "CPIAPPSL",
+            "CPITRNSL",
+            "CPIMEDSL",
+            "CUSR0000SAC",
+            "CUSR0000SAD",
+            "CUSR0000SAS",
+            "CPIULFSL",
+            "CUSR0000SA0L2",
+            "CUSR0000SA0L5",
+            "PCEPI",
+            "DDURRG3M086SBEA",
+            "DNDGRG3M086SBEA",
+            "DSERRG3M086SBEA",
+        ),
+        "stock_market": (
+            "S&P 500",
+            "S&P: indust",
+            "S&P div yield",
+            "S&P PE ratio",
+            "VIXCLSx",
+        ),
     }
 
 
@@ -39,16 +196,144 @@ def _mccracken_ng_qd_groups() -> dict[str, tuple[str, ...]]:
     """
 
     return {
-        "nipa": ("GDPC1", "PCECC96", "PCDGx", "PCESVx", "PCNDx", "GPDIC1", "FPIx", "Y033RC1Q027SBEAx", "PNFIx", "PRFIx", "A014RE1Q156NBEA", "GCEC1", "A823RL1Q225SBEA", "FGRECPTx", "SLCEx", "EXPGSC1", "IMPGSC1"),
-        "industrial_production": ("INDPRO", "IPFPNSS", "IPFINAL", "IPCONGD", "IPDCONGD", "IPNCONGD", "IPBUSEQ", "IPMAT", "IPDMAT", "IPNMAT", "IPMANSICS", "IPB51222S", "IPFUELS", "CUMFNS"),
-        "employment_unemployment": ("UNRATE", "PAYEMS", "USGOOD", "USCONS", "MANEMP", "USTPU", "USWTRADE", "USTRADE", "USFIRE", "USGOVT", "USEHS", "USPBS", "USSERV", "USMINE", "CE16OV", "CIVPART", "UEMPMEAN", "UEMPLT5", "UEMP5TO14", "UEMP15OV", "UEMP15T26", "UEMP27OV", "CLAIMSx"),
-        "housing": ("HOUST", "HOUSTNE", "HOUSTMW", "HOUSTS", "HOUSTW", "PERMIT", "PERMITNE", "PERMITMW", "PERMITS", "PERMITW"),
-        "inventories_orders_sales": ("CMRMTSPLx", "RSAFSx", "AMDMNOx", "AMDMUOx", "BUSINVx", "ISRATIOx"),
-        "prices": ("WPSFD49207", "PPIACO", "WPSID61", "OILPRICEx", "CPIAUCSL", "CPIAPPSL", "CPITRNSL", "CPIMEDSL", "CUSR0000SAC", "CUSR0000SAS", "CPIULFSL", "PCEPI", "GDPCTPI"),
-        "earnings_productivity": ("CES0600000008", "CES2000000008", "CES3000000008", "COMPRMS", "ULCBS", "ULCMFG", "PRS84006221", "PRS85006023", "PRS85006221", "OPHNFB"),
-        "interest_rates": ("FEDFUNDS", "TB3MS", "TB6MS", "GS1", "GS5", "GS10", "AAA", "BAA"),
-        "money_credit": ("M1SL", "M2SL", "M2REAL", "BOGMBASE", "TOTRESNS", "NONBORRES", "BUSLOANS", "REALLN", "NONREVSL"),
-        "household_balance_sheets": ("TABSHNOx", "TLBSHNOx", "TFAABSHNOx", "VANRRESHNOx", "TARESAx", "HNOREMQ027Sx", "OEHRENWBSHNOx", "TVCKSHNOx"),
+        "nipa": (
+            "GDPC1",
+            "PCECC96",
+            "PCDGx",
+            "PCESVx",
+            "PCNDx",
+            "GPDIC1",
+            "FPIx",
+            "Y033RC1Q027SBEAx",
+            "PNFIx",
+            "PRFIx",
+            "A014RE1Q156NBEA",
+            "GCEC1",
+            "A823RL1Q225SBEA",
+            "FGRECPTx",
+            "SLCEx",
+            "EXPGSC1",
+            "IMPGSC1",
+        ),
+        "industrial_production": (
+            "INDPRO",
+            "IPFPNSS",
+            "IPFINAL",
+            "IPCONGD",
+            "IPDCONGD",
+            "IPNCONGD",
+            "IPBUSEQ",
+            "IPMAT",
+            "IPDMAT",
+            "IPNMAT",
+            "IPMANSICS",
+            "IPB51222S",
+            "IPFUELS",
+            "CUMFNS",
+        ),
+        "employment_unemployment": (
+            "UNRATE",
+            "PAYEMS",
+            "USGOOD",
+            "USCONS",
+            "MANEMP",
+            "USTPU",
+            "USWTRADE",
+            "USTRADE",
+            "USFIRE",
+            "USGOVT",
+            "USEHS",
+            "USPBS",
+            "USSERV",
+            "USMINE",
+            "CE16OV",
+            "CIVPART",
+            "UEMPMEAN",
+            "UEMPLT5",
+            "UEMP5TO14",
+            "UEMP15OV",
+            "UEMP15T26",
+            "UEMP27OV",
+            "CLAIMSx",
+        ),
+        "housing": (
+            "HOUST",
+            "HOUSTNE",
+            "HOUSTMW",
+            "HOUSTS",
+            "HOUSTW",
+            "PERMIT",
+            "PERMITNE",
+            "PERMITMW",
+            "PERMITS",
+            "PERMITW",
+        ),
+        "inventories_orders_sales": (
+            "CMRMTSPLx",
+            "RSAFSx",
+            "AMDMNOx",
+            "AMDMUOx",
+            "BUSINVx",
+            "ISRATIOx",
+        ),
+        "prices": (
+            "WPSFD49207",
+            "PPIACO",
+            "WPSID61",
+            "OILPRICEx",
+            "CPIAUCSL",
+            "CPIAPPSL",
+            "CPITRNSL",
+            "CPIMEDSL",
+            "CUSR0000SAC",
+            "CUSR0000SAS",
+            "CPIULFSL",
+            "PCEPI",
+            "GDPCTPI",
+        ),
+        "earnings_productivity": (
+            "CES0600000008",
+            "CES2000000008",
+            "CES3000000008",
+            "COMPRMS",
+            "ULCBS",
+            "ULCMFG",
+            "PRS84006221",
+            "PRS85006023",
+            "PRS85006221",
+            "OPHNFB",
+        ),
+        "interest_rates": (
+            "FEDFUNDS",
+            "TB3MS",
+            "TB6MS",
+            "GS1",
+            "GS5",
+            "GS10",
+            "AAA",
+            "BAA",
+        ),
+        "money_credit": (
+            "M1SL",
+            "M2SL",
+            "M2REAL",
+            "BOGMBASE",
+            "TOTRESNS",
+            "NONBORRES",
+            "BUSLOANS",
+            "REALLN",
+            "NONREVSL",
+        ),
+        "household_balance_sheets": (
+            "TABSHNOx",
+            "TLBSHNOx",
+            "TFAABSHNOx",
+            "VANRRESHNOx",
+            "TARESAx",
+            "HNOREMQ027Sx",
+            "OEHRENWBSHNOx",
+            "TVCKSHNOx",
+        ),
         "exchange_rates": ("TWEXAFEGSMTHx", "EXSZUSx", "EXJPUSx", "EXUSUKx", "EXCAUSx"),
         "stock_markets": ("S&P 500", "S&P: indust", "S&P div yield", "S&P PE ratio"),
         "non_household_balance_sheets": ("TABSNNCBx", "TLBSNNCBx"),
@@ -61,11 +346,56 @@ def _fred_sd_states_block() -> tuple[str, ...]:
     visualisation. Issue #260."""
 
     return (
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL",
+        "AK",
+        "AZ",
+        "AR",
+        "CA",
+        "CO",
+        "CT",
+        "DE",
+        "FL",
+        "GA",
+        "HI",
+        "ID",
+        "IL",
+        "IN",
+        "IA",
+        "KS",
+        "KY",
+        "LA",
+        "ME",
+        "MD",
+        "MA",
+        "MI",
+        "MN",
+        "MS",
+        "MO",
+        "MT",
+        "NE",
+        "NV",
+        "NH",
+        "NJ",
+        "NM",
+        "NY",
+        "NC",
+        "ND",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VT",
+        "VA",
+        "WA",
+        "WV",
+        "WI",
+        "WY",
         "DC",
     )
 
@@ -78,7 +408,16 @@ PRE_DEFINED_BLOCKS = {
     "fred_sd_states": _fred_sd_states_block(),
     "nber_real_activity": ("INDPRO", "PAYEMS", "RPI", "CMRMTSPL", "CMRMTSPLx"),
     "taylor_rule_block": ("CPIAUCSL", "GDPC1", "FEDFUNDS", "UNRATE", "PCEPI"),
-    "term_structure_block": ("TB3MS", "TB6MS", "GS1", "GS5", "GS10", "T1YFFM", "T5YFFM", "T10YFFM"),
+    "term_structure_block": (
+        "TB3MS",
+        "TB6MS",
+        "GS1",
+        "GS5",
+        "GS10",
+        "T1YFFM",
+        "T5YFFM",
+        "T10YFFM",
+    ),
     "credit_spread_block": ("BAA", "AAA", "BAAFFM", "AAAFFM", "TB3SMFFM", "TB6SMFFM"),
     "financial_conditions_block": ("NFCI", "VIXCLSx", "S&P 500", "TB3SMFFM", "BAAFFM"),
 }
@@ -126,6 +465,14 @@ DEFAULT_FIGURE_MAPPING = {
     # portfolio diagnostics; figure type uses a generic bar layout for
     # the per-training-row aggregate-weight summary.
     "dual_decomposition": "bar_global",
+    # Phase B-10 paper-10 promotion: ``attention_weights`` =
+    # Goulet Coulombe (2026) "OLS as an Attention Mechanism" Eq. 3
+    # closed-form attention matrix
+    # ``Omega = X_test (X'_train X_train)^{-1} X'_train``. Output frame
+    # carries one row per training observation (per-test-point weight
+    # aggregates) and attaches the full ``(n_test, n_train)`` matrix +
+    # representer identity diagnostics inline via ``frame.attrs``.
+    "attention_weights": "heatmap",
     # v0.9.1 dev-stage v0.9.0D promotion: anatomy-adapter ops (Borup
     # et al. 2022 "Anatomy of Out-of-Sample Forecasting Accuracy").
     # Path B = final-window fit + status='degraded' warning;
@@ -172,9 +519,14 @@ HONESTY_DEMOTED_L7_OPS: tuple[str, ...] = ()
 #         NotImplementedError otherwise -- mirrors lstm/gru/transformer
 #         torch-missing pattern).
 
-OPERATIONAL_OPS = tuple(name for name in DEFAULT_FIGURE_MAPPING if name not in HONESTY_DEMOTED_L7_OPS)
+OPERATIONAL_OPS = tuple(
+    name for name in DEFAULT_FIGURE_MAPPING if name not in HONESTY_DEMOTED_L7_OPS
+)
 FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
-    "attention_weights",
+    # ``attention_weights`` was future in v0.1-v0.9.0; promoted to
+    # OPERATIONAL_OPS in Phase B-10 (paper-10 Goulet Coulombe 2026
+    # "OLS as an Attention Mechanism", Eq. 3 closed form). See the
+    # DEFAULT_FIGURE_MAPPING entry above.
     "lstm_hidden_state",
     "boruta_selection",
     "recursive_feature_elimination",
@@ -204,13 +556,21 @@ def _stub(name: str):
         from ..runtime import _execute_l7_step
         from ..types import L3FeaturesArtifact, L3MetadataArtifact, L5EvaluationArtifact
 
-        l3_features = next((item for item in inputs if isinstance(item, L3FeaturesArtifact)), None)
-        l3_metadata = next((item for item in inputs if isinstance(item, L3MetadataArtifact)), None)
-        l5_eval = next((item for item in inputs if isinstance(item, L5EvaluationArtifact)), None)
+        l3_features = next(
+            (item for item in inputs if isinstance(item, L3FeaturesArtifact)), None
+        )
+        l3_metadata = next(
+            (item for item in inputs if isinstance(item, L3MetadataArtifact)), None
+        )
+        l5_eval = next(
+            (item for item in inputs if isinstance(item, L5EvaluationArtifact)), None
+        )
         if l3_features is None or l3_metadata is None or l5_eval is None:
             # Fall back to a structured payload if upstream context is incomplete.
             return {"op": name, "inputs": list(inputs), "params": dict(params)}
-        return _execute_l7_step(name, list(inputs), dict(params), l3_features, l3_metadata, l5_eval)
+        return _execute_l7_step(
+            name, list(inputs), dict(params), l3_features, l3_metadata, l5_eval
+        )
 
     run.__name__ = name
     return run
@@ -218,22 +578,86 @@ def _stub(name: str):
 
 def _schema(name: str) -> dict[str, dict]:
     if name == "group_aggregate":
-        return {"grouping": {"options": tuple(PRE_DEFINED_BLOCKS) + ("user_defined",)}, "aggregation": {"options": ("sum", "mean", "max_abs", "signed_sum"), "default": "sum"}}
+        return {
+            "grouping": {"options": tuple(PRE_DEFINED_BLOCKS) + ("user_defined",)},
+            "aggregation": {
+                "options": ("sum", "mean", "max_abs", "signed_sum"),
+                "default": "sum",
+            },
+        }
     if name == "lineage_attribution":
-        return {"level": {"options": ("pipeline_name", "step_op", "source_node"), "default": "pipeline_name"}, "aggregation": {"options": ("sum", "mean", "max_abs", "signed_sum"), "default": "sum"}}
+        return {
+            "level": {
+                "options": ("pipeline_name", "step_op", "source_node"),
+                "default": "pipeline_name",
+            },
+            "aggregation": {
+                "options": ("sum", "mean", "max_abs", "signed_sum"),
+                "default": "sum",
+            },
+        }
     if name == "rolling_recompute":
-        return {"window": {"options": ("expanding", "rolling"), "default": "expanding"}, "step_size": {"default": 1}, "recompute_step": {"default": "shap_tree"}}
+        return {
+            "window": {"options": ("expanding", "rolling"), "default": "expanding"},
+            "step_size": {"default": 1},
+            "recompute_step": {"default": "shap_tree"},
+        }
     if name == "transformation_attribution":
-        return {"decomposition_method": {"options": ("shapley_over_pipelines", "marginal_addition", "leave_one_out_pipeline"), "default": "shapley_over_pipelines"}}
+        return {
+            "decomposition_method": {
+                "options": (
+                    "shapley_over_pipelines",
+                    "marginal_addition",
+                    "leave_one_out_pipeline",
+                ),
+                "default": "shapley_over_pipelines",
+            }
+        }
+    if name == "attention_weights":
+        # Paper Eq. 3 closed form: ``Omega = X_test (X'_train X_train)^{-1}
+        # X'_train``. ``test_set`` selects the test-row provider; ``in_sample``
+        # reuses ``X_train`` (Coulombe 2026 §3 Fig. 1 in-sample diagnostic).
+        # ``add_intercept`` controls whether the op prepends an intercept
+        # column before forming the attention matrix -- needed for the
+        # row-sum-to-one diagnostic (paper §3.2 footnote 1).
+        return {
+            "test_set": {"options": ("in_sample",), "default": "in_sample"},
+            "add_intercept": {"options": (True, False), "default": True},
+        }
+    if name in {"oshapley_vi", "pbsv"}:
+        # Phase B-11 paper-11 (Borup et al. 2022 "Anatomy of OOS
+        # Forecasting Accuracy") F3 fix: surface the two anatomy adapter
+        # routing parameters so recipe authors and the validator both
+        # see them. ``initial_window`` enables Path A (per-origin refit
+        # via ``AnatomySubsets``); ``n_iterations`` is anatomy's Shapley
+        # Monte Carlo permutation count (paper p.16 fn 16: M=500).
+        return {
+            "initial_window": {"type": int, "default": 60, "sweepable": True},
+            "n_iterations": {"type": int, "default": 500, "sweepable": True},
+        }
     return {}
 
 
 for _name in OPERATIONAL_OPS:
-    _output = L7TransformationAttributionArtifact if _name == "transformation_attribution" else L7ImportanceArtifact
+    _output = (
+        L7TransformationAttributionArtifact
+        if _name == "transformation_attribution"
+        else L7ImportanceArtifact
+    )
     register_op(
         name=_name,
         layer_scope=("l7",),
-        input_types={"default": (L4ModelArtifactsArtifact, L4ForecastsArtifact, L3FeaturesArtifact, L3MetadataArtifact, L5EvaluationArtifact, L6TestsArtifact, L7ImportanceArtifact)},
+        input_types={
+            "default": (
+                L4ModelArtifactsArtifact,
+                L4ForecastsArtifact,
+                L3FeaturesArtifact,
+                L3MetadataArtifact,
+                L5EvaluationArtifact,
+                L6TestsArtifact,
+                L7ImportanceArtifact,
+            )
+        },
         output_type=_output,
         params_schema=_schema(_name),
         default_figure_type=DEFAULT_FIGURE_MAPPING[_name],
@@ -246,7 +670,17 @@ for _name in HONESTY_DEMOTED_L7_OPS:
     register_op(
         name=_name,
         layer_scope=("l7",),
-        input_types={"default": (L4ModelArtifactsArtifact, L4ForecastsArtifact, L3FeaturesArtifact, L3MetadataArtifact, L5EvaluationArtifact, L6TestsArtifact, L7ImportanceArtifact)},
+        input_types={
+            "default": (
+                L4ModelArtifactsArtifact,
+                L4ForecastsArtifact,
+                L3FeaturesArtifact,
+                L3MetadataArtifact,
+                L5EvaluationArtifact,
+                L6TestsArtifact,
+                L7ImportanceArtifact,
+            )
+        },
         output_type=L7ImportanceArtifact,
         params_schema=_schema(_name),
         default_figure_type=DEFAULT_FIGURE_MAPPING[_name],
@@ -263,4 +697,10 @@ for _name in FUTURE_OPS:
         if "l7" not in scope:
             _OPS[_name] = replace(spec, layer_scope=tuple(scope) + ("l7",))
     else:
-        register_op(name=_name, layer_scope=("l7",), input_types={"default": L7ImportanceArtifact}, output_type=L7ImportanceArtifact, status="future")(_stub(_name))
+        register_op(
+            name=_name,
+            layer_scope=("l7",),
+            input_types={"default": L7ImportanceArtifact},
+            output_type=L7ImportanceArtifact,
+            status="future",
+        )(_stub(_name))

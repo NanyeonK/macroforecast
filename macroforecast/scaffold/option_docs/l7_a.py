@@ -12,6 +12,7 @@ literature reference for every op. Compatibility rules (which ops
 support which model families) live in ``core/ops/l7_ops.py``; the
 docs surface only the *what* and *when*.
 """
+
 from __future__ import annotations
 
 from . import register
@@ -25,16 +26,29 @@ _REF_DESIGN_L7 = Reference(
 )
 
 
-def _o(option: str, summary: str, description: str, when_to_use: str,
-       *, when_not_to_use: str = "",
-       references: tuple[Reference, ...] = (_REF_DESIGN_L7,),
-       related: tuple[str, ...] = ()) -> OptionDoc:
+def _o(
+    option: str,
+    summary: str,
+    description: str,
+    when_to_use: str,
+    *,
+    when_not_to_use: str = "",
+    references: tuple[Reference, ...] = (_REF_DESIGN_L7,),
+    related: tuple[str, ...] = (),
+) -> OptionDoc:
     return OptionDoc(
-        layer="l7", sublayer="L7_A_importance_dag_body", axis="op", option=option,
-        summary=summary, description=description, when_to_use=when_to_use,
-        when_not_to_use=when_not_to_use, references=references,
+        layer="l7",
+        sublayer="L7_A_importance_dag_body",
+        axis="op",
+        option=option,
+        summary=summary,
+        description=description,
+        when_to_use=when_to_use,
+        when_not_to_use=when_not_to_use,
+        references=references,
         related_options=related,
-        last_reviewed=_REVIEWED, reviewer=_REVIEWER,
+        last_reviewed=_REVIEWED,
+        reviewer=_REVIEWER,
     )
 
 
@@ -56,9 +70,12 @@ _MODEL_NATIVE_LINEAR_COEF = _o(
     ),
     "Linear-model baselines; quick interpretation when a tree / NN model is overkill.",
     when_not_to_use="Non-linear models -- coefficients no longer summarise marginal effects.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Greene (2018) 'Econometric Analysis', 8th ed., Pearson, Chapter 4.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Greene (2018) 'Econometric Analysis', 8th ed., Pearson, Chapter 4.",
+        ),
+    ),
     related=("model_native_tree_importance", "lasso_inclusion_frequency"),
 )
 
@@ -78,11 +95,15 @@ _MODEL_NATIVE_TREE_IMPORTANCE = _o(
     ),
     "Quick first-pass tree importance; pair with permutation importance for bias-correction.",
     when_not_to_use="High-cardinality continuous features dominate -- known MDI bias (Strobl et al. 2007).",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.",
-    ), Reference(
-        citation="Strobl, Boulesteix, Zeileis & Hothorn (2007) 'Bias in random forest variable importance measures', BMC Bioinformatics 8: 25.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.",
+        ),
+        Reference(
+            citation="Strobl, Boulesteix, Zeileis & Hothorn (2007) 'Bias in random forest variable importance measures', BMC Bioinformatics 8: 25.",
+        ),
+    ),
     related=("permutation_importance", "permutation_importance_strobl"),
 )
 
@@ -106,11 +127,15 @@ _PERMUTATION_IMPORTANCE = _o(
     ),
     "Default importance score for non-linear models; comparing across model families.",
     when_not_to_use="Highly correlated predictors -- permutation breaks the dependence and inflates importance. Use ``permutation_importance_strobl`` instead.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Fisher, Rudin & Dominici (2019) 'All Models are Wrong, but Many are Useful: Learning a Variable's Importance by Studying an Entire Class of Prediction Models Simultaneously', JMLR 20(177): 1-81.",
-    ), Reference(
-        citation="Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Fisher, Rudin & Dominici (2019) 'All Models are Wrong, but Many are Useful: Learning a Variable's Importance by Studying an Entire Class of Prediction Models Simultaneously', JMLR 20(177): 1-81.",
+        ),
+        Reference(
+            citation="Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.",
+        ),
+    ),
     related=("permutation_importance_strobl", "lofo", "model_native_tree_importance"),
 )
 
@@ -126,9 +151,12 @@ _PERMUTATION_IMPORTANCE_STROBL = _o(
     ),
     "Highly correlated macro panels (FRED-MD / -QD with redundant aggregates).",
     when_not_to_use="When predictor correlations are negligible -- the cheaper plain permutation importance suffices.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Strobl, Boulesteix, Kneib, Augustin & Zeileis (2008) 'Conditional variable importance for random forests', BMC Bioinformatics 9: 307.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Strobl, Boulesteix, Kneib, Augustin & Zeileis (2008) 'Conditional variable importance for random forests', BMC Bioinformatics 9: 307.",
+        ),
+    ),
     related=("permutation_importance",),
 )
 
@@ -146,9 +174,12 @@ _LOFO = _o(
     ),
     "Small / medium feature panels (< 100) where N-extra fits are affordable.",
     when_not_to_use="Wide panels (n_features > 200) -- prohibitive runtime.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Lemaître, Aridas & Nogueira (2018) 'imbalanced-learn', JMLR 18(17): 1-5 -- LOFO popularised; pre-dating refit-importance traditions in econometrics.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Lemaître, Aridas & Nogueira (2018) 'imbalanced-learn', JMLR 18(17): 1-5 -- LOFO popularised; pre-dating refit-importance traditions in econometrics.",
+        ),
+    ),
     related=("permutation_importance",),
 )
 
@@ -176,9 +207,13 @@ _SHAP_TREE = _o(
     ),
     "Default importance op for tree ensembles; exact and fast.",
     when_not_to_use="Non-tree models -- use ``shap_kernel`` or ``shap_linear`` instead.",
-    references=(_REF_DESIGN_L7, _REF_SHAP_LUNDBERG, Reference(
-        citation="Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        _REF_SHAP_LUNDBERG,
+        Reference(
+            citation="Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.",
+        ),
+    ),
     related=("shap_kernel", "shap_linear", "shap_interaction", "shap_deep"),
 )
 
@@ -224,9 +259,13 @@ _SHAP_INTERACTION = _o(
     ),
     "Identifying which feature pairs drive the model's non-additive structure.",
     when_not_to_use="Wide feature panels -- the ``M²`` storage cost grows quickly.",
-    references=(_REF_DESIGN_L7, _REF_SHAP_LUNDBERG, Reference(
-        citation="Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        _REF_SHAP_LUNDBERG,
+        Reference(
+            citation="Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.",
+        ),
+    ),
     related=("shap_tree", "friedman_h_interaction"),
 )
 
@@ -241,10 +280,20 @@ _SHAP_DEEP = _o(
     ),
     "Neural-network forecasters (LSTM / GRU / Transformer / MLP).",
     when_not_to_use="Non-NN models -- use ``shap_tree`` / ``shap_linear`` / ``shap_kernel`` instead.",
-    references=(_REF_DESIGN_L7, _REF_SHAP_LUNDBERG, Reference(
-        citation="Shrikumar, Greenside & Kundaje (2017) 'Learning Important Features Through Propagating Activation Differences', ICML.",
-    )),
-    related=("shap_tree", "shap_kernel", "deep_lift", "gradient_shap", "integrated_gradients"),
+    references=(
+        _REF_DESIGN_L7,
+        _REF_SHAP_LUNDBERG,
+        Reference(
+            citation="Shrikumar, Greenside & Kundaje (2017) 'Learning Important Features Through Propagating Activation Differences', ICML.",
+        ),
+    ),
+    related=(
+        "shap_tree",
+        "shap_kernel",
+        "deep_lift",
+        "gradient_shap",
+        "integrated_gradients",
+    ),
 )
 
 
@@ -277,9 +326,12 @@ _INTEGRATED_GRADIENTS = _o(
     ),
     "Axiomatically-grounded NN attribution (Sundararajan completeness + sensitivity properties).",
     when_not_to_use="Non-NN models; pathological models where integration along the linear path is misleading.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Sundararajan, Taly & Yan (2017) 'Axiomatic Attribution for Deep Networks', ICML.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Sundararajan, Taly & Yan (2017) 'Axiomatic Attribution for Deep Networks', ICML.",
+        ),
+    ),
     related=("gradient_shap", "saliency_map", "deep_lift"),
 )
 
@@ -294,9 +346,12 @@ _SALIENCY_MAP = _o(
     ),
     "Quick NN attribution baseline; sanity-check vs more elaborate methods.",
     when_not_to_use="Production attribution -- prefer integrated gradients or SHAP.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Simonyan, Vedaldi & Zisserman (2014) 'Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps', ICLR Workshops.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Simonyan, Vedaldi & Zisserman (2014) 'Deep Inside Convolutional Networks: Visualising Image Classification Models and Saliency Maps', ICLR Workshops.",
+        ),
+    ),
     related=("integrated_gradients", "gradient_shap", "deep_lift"),
 )
 
@@ -311,9 +366,12 @@ _DEEP_LIFT = _o(
     ),
     "NN attribution where integrated-gradients runtime is too high.",
     when_not_to_use="When the completeness / sensitivity axioms matter -- prefer integrated gradients.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Shrikumar, Greenside & Kundaje (2017) 'Learning Important Features Through Propagating Activation Differences', ICML.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Shrikumar, Greenside & Kundaje (2017) 'Learning Important Features Through Propagating Activation Differences', ICML.",
+        ),
+    ),
     related=("integrated_gradients", "gradient_shap", "saliency_map", "shap_deep"),
 )
 
@@ -333,9 +391,12 @@ _PARTIAL_DEPENDENCE = _o(
     ),
     "Visualising marginal feature effects; first-pass non-linearity audit.",
     when_not_to_use="Highly correlated features -- PDP averages over impossible regions of feature space. Use ``accumulated_local_effect`` instead.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Friedman (2001) 'Greedy Function Approximation: A Gradient Boosting Machine', Annals of Statistics 29(5): 1189-1232.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Friedman (2001) 'Greedy Function Approximation: A Gradient Boosting Machine', Annals of Statistics 29(5): 1189-1232.",
+        ),
+    ),
     related=("accumulated_local_effect", "friedman_h_interaction"),
 )
 
@@ -349,9 +410,12 @@ _ACCUMULATED_LOCAL_EFFECT = _o(
         "low-density regions' bias of plain PDPs."
     ),
     "Correlated feature panels (FRED-MD / -QD) where PDPs are misleading.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Apley & Zhu (2020) 'Visualizing the Effects of Predictor Variables in Black Box Supervised Learning Models', JRSS Series B 82(4): 1059-1086.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Apley & Zhu (2020) 'Visualizing the Effects of Predictor Variables in Black Box Supervised Learning Models', JRSS Series B 82(4): 1059-1086.",
+        ),
+    ),
     related=("partial_dependence",),
 )
 
@@ -366,9 +430,12 @@ _FRIEDMAN_H_INTERACTION = _o(
     ),
     "Identifying which feature pairs the model treats non-additively.",
     when_not_to_use="Wide panels -- the M² PDP grid grows expensive.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Friedman & Popescu (2008) 'Predictive Learning via Rule Ensembles', Annals of Applied Statistics 2(3): 916-954.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Friedman & Popescu (2008) 'Predictive Learning via Rule Ensembles', Annals of Applied Statistics 2(3): 916-954.",
+        ),
+    ),
     related=("shap_interaction", "partial_dependence"),
 )
 
@@ -388,11 +455,15 @@ _LASSO_INCLUSION_FREQUENCY = _o(
         "(via leaf_config)."
     ),
     "Feature-selection stability audit for Lasso / Lasso-Path / Elastic Net.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Bach (2008) 'Bolasso: model consistent Lasso estimation through the bootstrap', ICML.",
-    ), Reference(
-        citation="Meinshausen & Bühlmann (2010) 'Stability selection', JRSS Series B 72(4): 417-473.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Bach (2008) 'Bolasso: model consistent Lasso estimation through the bootstrap', ICML.",
+        ),
+        Reference(
+            citation="Meinshausen & Bühlmann (2010) 'Stability selection', JRSS Series B 72(4): 417-473.",
+        ),
+    ),
     related=("model_native_linear_coef", "bootstrap_jackknife"),
 )
 
@@ -407,9 +478,12 @@ _BVAR_PIP = _o(
     ),
     "Bayesian model selection; comparing variable importance under posterior uncertainty.",
     when_not_to_use="Frequentist models -- use ``lasso_inclusion_frequency`` for an analogous stability score.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Koop & Korobilis (2010) 'Bayesian Multivariate Time Series Methods for Empirical Macroeconomics', Foundations and Trends in Econometrics 3(4): 267-358.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Koop & Korobilis (2010) 'Bayesian Multivariate Time Series Methods for Empirical Macroeconomics', Foundations and Trends in Econometrics 3(4): 267-358.",
+        ),
+    ),
     related=("lasso_inclusion_frequency",),
 )
 
@@ -424,9 +498,12 @@ _CUMULATIVE_R2_CONTRIBUTION = _o(
     ),
     "Quantifying how many predictors the model actually needs to reach a target R².",
     when_not_to_use="Highly correlated features -- the order is sensitive to entry rules.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Stock & Watson (2012) 'Generalized Shrinkage Methods for Forecasting using Many Predictors', JBES 30(4): 481-493.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Stock & Watson (2012) 'Generalized Shrinkage Methods for Forecasting using Many Predictors', JBES 30(4): 481-493.",
+        ),
+    ),
     related=("lasso_inclusion_frequency", "lofo"),
 )
 
@@ -445,9 +522,12 @@ _BOOTSTRAP_JACKKNIFE = _o(
         "per feature; pair with the ``boxplot`` figure type."
     ),
     "Reporting confidence-banded importance rankings.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Politis & White (2004) 'Automatic Block-Length Selection for the Dependent Bootstrap', Econometric Reviews 23(1): 53-70.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Politis & White (2004) 'Automatic Block-Length Selection for the Dependent Bootstrap', Econometric Reviews 23(1): 53-70.",
+        ),
+    ),
     related=("rolling_recompute",),
 )
 
@@ -483,9 +563,12 @@ _FEVD = _o(
     ),
     "Standard VAR analysis; interpreting how shocks propagate across variables.",
     when_not_to_use="Non-VAR models -- use ``permutation_importance`` instead.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.",
+        ),
+    ),
     related=("historical_decomposition", "generalized_irf", "forecast_decomposition"),
 )
 
@@ -502,9 +585,12 @@ _HISTORICAL_DECOMPOSITION = _o(
     ),
     "Telling the historical narrative -- which shocks drove specific recessions / expansions.",
     when_not_to_use="Non-VAR models.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Burbidge & Harrison (1985) 'A historical decomposition of the great depression to determine the role of money', JME 16(1): 45-54.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Burbidge & Harrison (1985) 'A historical decomposition of the great depression to determine the role of money', JME 16(1): 45-54.",
+        ),
+    ),
     related=("fevd", "orthogonalised_irf"),
 )
 
@@ -522,9 +608,12 @@ _ORTHOGONALISED_IRF = _o(
     ),
     "VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).",
     when_not_to_use="When the variable ordering is arbitrary -- file a v0.9.x request for ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, currently future-gated).",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1): 1-48.",
+        ),
+    ),
     related=("fevd", "historical_decomposition"),
 )
 
@@ -551,9 +640,12 @@ _GENERALIZED_IRF = _o(
     ),
     "VAR analysis where the variable ordering has no theoretical motivation -- order-invariance is the desired property.",
     when_not_to_use="When a recursive identification IS theoretically motivated -- use ``orthogonalised_irf`` instead.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate models', Economics Letters 58(1): 17-29.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate models', Economics Letters 58(1): 17-29.",
+        ),
+    ),
     related=("fevd", "historical_decomposition", "orthogonalised_irf"),
 )
 
@@ -595,9 +687,12 @@ _GROUP_AGGREGATE = _o(
     ),
     "FRED-MD / -QD / -SD analyses where per-series importance should roll up to thematic / geographic blocks.",
     when_not_to_use="Custom panels lacking a meaningful grouping.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4): 574-589.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4): 574-589.",
+        ),
+    ),
     related=("lineage_attribution", "transformation_attribution"),
 )
 
@@ -630,9 +725,12 @@ _TRANSFORMATION_ATTRIBUTION = _o(
     ),
     "Interpreting horse-race sweeps -- which L3 transform delivers the win?",
     when_not_to_use="Single-pipeline studies; sweeps with fewer than 3 alternative pipelines.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Castro, Gómez & Tejada (2009) 'Polynomial calculation of the Shapley value based on sampling', Computers & Operations Research 36(5): 1726-1730.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Castro, Gómez & Tejada (2009) 'Polynomial calculation of the Shapley value based on sampling', Computers & Operations Research 36(5): 1726-1730.",
+        ),
+    ),
     related=("lineage_attribution", "group_aggregate"),
 )
 
@@ -653,9 +751,12 @@ _MRF_GTVP = _o(
     ),
     "Coulombe (2024) MRF interpretation; spotting non-linearity captured by the leaf partition.",
     when_not_to_use="Non-MRF models.",
-    references=(_REF_DESIGN_L7, Reference(
-        citation="Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.",
-    )),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.",
+        ),
+    ),
     related=("rolling_recompute", "model_native_tree_importance"),
 )
 
@@ -719,8 +820,12 @@ _DUAL_DECOMPOSITION = _o(
     when_not_to_use="Boosted-tree / NN families (gradient_boosting, xgboost, lightgbm, mlp, lstm, etc.) -- raises NotImplementedError; the residual-bagging structure does not factor into a sum-of-training-targets representation.",
     references=(
         _REF_DESIGN_L7,
-        Reference(citation="Goulet Coulombe, Goebel & Klieber (2024) 'Dual Interpretation of Machine Learning Forecasts', arXiv:2412.13076."),
-        Reference(citation="Goulet Coulombe (2026) 'Ordinary Least Squares as an Attention Mechanism', SSRN 5200864 -- shows OLS predictions ŷ_test = F_test F_train' y_train (eq. 7) coincide with a restricted attention module (eqs. 17-19, identity activation, tied W_Q W_K' = (X_train' X_train)^{-1}). The dual_decomposition op already implements the same compute via the closed-form ridge representer; no separate runtime needed."),
+        Reference(
+            citation="Goulet Coulombe, Goebel & Klieber (2024) 'Dual Interpretation of Machine Learning Forecasts', arXiv:2412.13076."
+        ),
+        Reference(
+            citation="Goulet Coulombe (2026) 'Ordinary Least Squares as an Attention Mechanism', SSRN 5200864 -- shows OLS predictions ŷ_test = F_test F_train' y_train (eq. 7) coincide with a restricted attention module (eqs. 17-19, identity activation, tied W_Q W_K' = (X_train' X_train)^{-1}). The dual_decomposition op already implements the same compute via the closed-form ridge representer; no separate runtime needed."
+        ),
     ),
     related=("permutation_importance", "shap_kernel"),
 )
@@ -743,7 +848,12 @@ _OSHAPLEY_VI = _o(
     ),
     "OOS-aware variable importance for macro forecast audits; replicating Borup et al. (2022).",
     when_not_to_use="Pre-promotion. Without the anatomy extra installed.",
-    references=(_REF_DESIGN_L7, Reference(citation="Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745.")),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745."
+        ),
+    ),
     related=("shap_kernel", "shap_tree", "permutation_importance", "pbsv"),
 )
 
@@ -760,23 +870,83 @@ _PBSV = _o(
     ),
     "Decomposing OOS forecast skill by feature; benchmark-relative interpretation studies.",
     when_not_to_use="Pre-promotion. Without the anatomy extra installed.",
-    references=(_REF_DESIGN_L7, Reference(citation="Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745.")),
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Borup, Goulet Coulombe, Montes-Rojas, Schutte & Veiga (2022) 'Anatomy of Out-of-Sample Forecasting Accuracy', SSRN 4278745."
+        ),
+    ),
     related=("oshapley_vi", "permutation_importance"),
 )
 
 
+_ATTENTION_WEIGHTS = _o(
+    "attention_weights",
+    "OLS-as-attention closed-form attention matrix (Goulet Coulombe 2026).",
+    (
+        "Goulet Coulombe (2026) 'OLS as an Attention Mechanism' Eq. 3 "
+        "closed form: "
+        "``Ω = X_test · (X'_train · X_train)⁻¹ · X'_train``. The "
+        "``(n_test, n_train)`` matrix encodes how strongly each test "
+        "point attends to each training point under an OLS / ridge "
+        "fit, identical to the representer expansion of the dual ridge "
+        "solution. Output table carries one row per training "
+        "observation (per-test-point weight aggregates) plus the full "
+        "attention matrix and representer-identity diagnostics inline "
+        "via ``frame.attrs``.\n\n"
+        "Promoted from ``future`` to ``operational`` in Phase B-10 "
+        "(paper-10 replication). Compatible with linear-family L4 "
+        "models (``ols`` / ``ridge`` / ``lasso`` / ``elastic_net`` / "
+        "``bayesian_ridge`` / ``huber``)."
+    ),
+    "Linear-family attribution as a kernel-attention map; pedagogical / replication of paper-10 Coulombe (2026).",
+    when_not_to_use="Non-linear models (the closed form requires a linear estimator).",
+    references=(
+        _REF_DESIGN_L7,
+        Reference(
+            citation="Goulet Coulombe (2026) 'OLS as an Attention Mechanism', working paper -- Eq. 3 closed-form attention matrix."
+        ),
+    ),
+    related=("dual_decomposition", "model_native_linear_coef", "shap_linear"),
+)
+
+
 register(
-    _MODEL_NATIVE_LINEAR_COEF, _MODEL_NATIVE_TREE_IMPORTANCE,
-    _PERMUTATION_IMPORTANCE, _PERMUTATION_IMPORTANCE_STROBL, _LOFO,
-    _SHAP_TREE, _SHAP_KERNEL, _SHAP_LINEAR, _SHAP_INTERACTION, _SHAP_DEEP,
-    _GRADIENT_SHAP, _INTEGRATED_GRADIENTS, _SALIENCY_MAP, _DEEP_LIFT,
-    _PARTIAL_DEPENDENCE, _ACCUMULATED_LOCAL_EFFECT, _FRIEDMAN_H_INTERACTION,
-    _LASSO_INCLUSION_FREQUENCY, _BVAR_PIP, _CUMULATIVE_R2_CONTRIBUTION,
-    _BOOTSTRAP_JACKKNIFE, _ROLLING_RECOMPUTE,
-    _FEVD, _HISTORICAL_DECOMPOSITION, _ORTHOGONALISED_IRF, _GENERALIZED_IRF,
+    _MODEL_NATIVE_LINEAR_COEF,
+    _MODEL_NATIVE_TREE_IMPORTANCE,
+    _PERMUTATION_IMPORTANCE,
+    _PERMUTATION_IMPORTANCE_STROBL,
+    _LOFO,
+    _SHAP_TREE,
+    _SHAP_KERNEL,
+    _SHAP_LINEAR,
+    _SHAP_INTERACTION,
+    _SHAP_DEEP,
+    _GRADIENT_SHAP,
+    _INTEGRATED_GRADIENTS,
+    _SALIENCY_MAP,
+    _DEEP_LIFT,
+    _PARTIAL_DEPENDENCE,
+    _ACCUMULATED_LOCAL_EFFECT,
+    _FRIEDMAN_H_INTERACTION,
+    _LASSO_INCLUSION_FREQUENCY,
+    _BVAR_PIP,
+    _CUMULATIVE_R2_CONTRIBUTION,
+    _BOOTSTRAP_JACKKNIFE,
+    _ROLLING_RECOMPUTE,
+    _FEVD,
+    _HISTORICAL_DECOMPOSITION,
+    _ORTHOGONALISED_IRF,
+    _GENERALIZED_IRF,
     _FORECAST_DECOMPOSITION,
-    _GROUP_AGGREGATE, _LINEAGE_ATTRIBUTION, _TRANSFORMATION_ATTRIBUTION,
+    _GROUP_AGGREGATE,
+    _LINEAGE_ATTRIBUTION,
+    _TRANSFORMATION_ATTRIBUTION,
     _MRF_GTVP,
     # v0.9 Phase 2 paper-coverage atomic primitives
-    _DUAL_DECOMPOSITION, _OSHAPLEY_VI, _PBSV,
+    _DUAL_DECOMPOSITION,
+    _OSHAPLEY_VI,
+    _PBSV,
+    # v0.9 Phase B-10 paper-10 promotion
+    _ATTENTION_WEIGHTS,
 )

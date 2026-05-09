@@ -16,7 +16,7 @@
 
 ## Operational status summary
 
-- Operational: 4 option(s)
+- Operational: 5 option(s)
 - Future: 0 option(s)
 
 ## Options
@@ -83,6 +83,29 @@ Joint significance across multiple horizons (avoids per-horizon p-value adjustme
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `harvey_newbold_encompassing`  --  operational
+
+Harvey-Leybourne-Newbold (1998) forecast-encompassing test.
+
+Tests the null that forecast f_1 encompasses f_2 -- i.e. the optimal linear combination of the two forecasts puts zero weight on f_2's error. Constructs ``d_t = e_a (e_a - e_b)`` from the per-period forecast errors and tests its mean against zero with a Newey-West HAC long-run variance and an HLN small-sample correction at horizon h>1. Asymmetric by construction (f_1 encompasses f_2 ≠ f_2 encompasses f_1).
+
+**When to use**
+
+Deciding whether one forecast contains all the information of another.
+
+**When NOT to use**
+
+Symmetric equal-MSE comparison -- use ``dm_diebold_mariano`` instead.
+
+**References**
+
+* macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
+* Harvey, Leybourne & Newbold (1998) 'Tests for Forecast Encompassing', JBES 16(2): 254-259.
+
+**Related options**: [`dm_diebold_mariano`](#dm-diebold-mariano), [`gw_giacomini_white`](#gw-giacomini-white), [`multi`](#multi)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
 ### `multi`  --  operational
 
 Run DM + GW + DMP and stack the results.
@@ -97,6 +120,6 @@ Comprehensive equal-predictive-ability audits.
 
 * macroforecast design Part 3, L6: 'tests must report (statistic, p-value, kernel, lag) and respect HAC dependence-correction.'
 
-**Related options**: [`dm_diebold_mariano`](#dm-diebold-mariano), [`gw_giacomini_white`](#gw-giacomini-white), [`dmp_multi_horizon`](#dmp-multi-horizon)
+**Related options**: [`dm_diebold_mariano`](#dm-diebold-mariano), [`gw_giacomini_white`](#gw-giacomini-white), [`dmp_multi_horizon`](#dmp-multi-horizon), [`harvey_newbold_encompassing`](#harvey-newbold-encompassing)
 
 _Last reviewed 2026-05-05 by macroforecast author._

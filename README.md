@@ -6,7 +6,7 @@
 [![ci-docs](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml)
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 
-> **v0.6.0** — 953 tests passing locally as of 2026-05-05. The CI badges above
+> **v0.9.0a0** — 1318 core tests passing locally as of 2026-05-09. The CI badges above
 > reflect live build status and replace the previously static
 > "tests-N passing / version-X" badges to keep the README from going stale.
 >
@@ -26,7 +26,7 @@ pip install 'macroforecast[shap]'            # + shap package for richer L7 figu
 Or pin to a tagged release directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.8.8"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.0a0"
 ```
 
 For development:

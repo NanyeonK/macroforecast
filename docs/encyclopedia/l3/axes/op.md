@@ -16,18 +16,18 @@
 
 ## Operational status summary
 
-- Operational: 42 option(s)
+- Operational: 45 option(s)
 - Future: 5 option(s)
 
 ## Options
 
 ### `adaptive_ma_rf`  --  operational
 
-AlbaMA -- RF-driven adaptive moving average [schema; runtime in v0.9.x].
+AlbaMA -- RF-driven adaptive moving average smoother for a single time series.
 
-Goulet Coulombe & Klieber (2025) 'Adaptive Moving Average for Macroeconomic Monitoring'. A random forest decides the per-observation moving-average window length from the predictor panel, so the smoother adapts to local volatility / regime. Atomic primitive: existing ``ma_window`` uses a fixed length; ``hamilton_filter`` is a regression on lags rather than a moving average; neither composes into AlbaMA without a learned window selector.
+Goulet Coulombe & Klieber (2025) 'Adaptive Moving Average for Macroeconomic Monitoring' (arXiv:2501.13222 §2). A random forest fit with a *single* regressor -- the time index -- on the target series ``y`` (i.e. ``RF(y_t ~ t)``). Per-observation leaf membership induces a weight matrix ``w_τt`` whose row sums to 1, so the smoother is a learned-bandwidth moving average of ``y``; the realised window adapts to local volatility / regime. Paper p.8 defaults: ``n_estimators = B = 500``, ``min_samples_leaf = 40``, ``max_features = 1``. ``sided = 'two'`` (default) fits one forest on the full sample (retrospective smoother); ``sided = 'one'`` fits an expanding-window forest per ``t`` (real-time nowcasting variant, paper §3.3 / p.10).
 
-Schema-only in v0.9.0. Runtime promotion blocks on PDF readthrough of the RF-split-to-window mapping (arXiv:2501.13222).
+Atomic primitive: existing ``ma_window`` uses a fixed length; ``hamilton_filter`` is a regression on lags rather than a moving average; neither composes into AlbaMA without a learned window selector.
 
 **When to use**
 
@@ -35,7 +35,7 @@ Replicating AlbaMA recipes; macro indicator monitoring under regime shifts.
 
 **When NOT to use**
 
-Pre-promotion -- validator hard-rejects until runtime lands.
+Multivariate denoising of a predictor panel (AlbaMA smooths a single target series).
 
 **References**
 
@@ -459,6 +459,39 @@ Smoothing noisy series; building short / medium / long-term momentum features.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `midas`  --  operational
+
+MIDAS Almon / Exp-Almon / Beta weighted lag polynomial (Ghysels-Sinko-Valkanov 2007).
+
+Parametric mixed-frequency aggregation: emits one column per HF predictor whose value is the weighted sum ``Σ_k ω_k(θ̂) · x_{t·m − k}``. The weight kernel ``ω_k(θ)`` is fitted by NLS against the LF ``target_signal`` input.
+
+**Three weighting families**:
+* ``almon`` -- polynomial basis ``ω_k = Σ_q θ_q · k^q`` of order ``polynomial_order`` (default 2). Optional sum-to-one normalisation.
+* ``exp_almon`` (default) -- ``ω_k ∝ exp(θ_1 k + θ_2 k²)``; numerically stable and the GSV 2007 §3 default.
+* ``beta`` -- ``ω_k ∝ k_norm^{θ_1−1} (1 − k_norm)^{θ_2−1}`` for ``k_norm = (k+1)/(K+1)``; flexible monotone / hump kernel.
+
+Defaults: ``freq_ratio = 3``, ``n_lags_high = 12``, ``sum_to_one = True``, ``max_iter = 200``. Optimiser: ``scipy.optimize.minimize`` (Nelder-Mead). Per-predictor ``theta_hat`` / ``weights`` / ``converged`` stashed in ``result.attrs['midas_fit']`` for L7 inspection.
+
+Requires a ``target_signal`` input port -- shares routing with ``scaled_pca``.
+
+**When to use**
+
+Mixed-frequency nowcasting where parametric lag weights are desired; reproducing GSV 2007 macro / asset-pricing applications.
+
+**When NOT to use**
+
+High-noise predictors where NLS optimiser diverges (use ``u_midas`` + downstream regularised regression instead).
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Ghysels, Sinko & Valkanov (2007) 'MIDAS Regressions: Further Results and New Directions', Econometric Reviews 26(1): 53-90.
+* Ghysels, Santa-Clara & Valkanov (2004) 'The MIDAS Touch: Mixed Data Sampling Regression Models', UCLA / UNC working paper.
+
+**Related options**: [`u_midas`](#u-midas), [`scaled_pca`](#scaled-pca), [`lag`](#lag)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
 ### `nystroem`  --  operational
 
 Nyström kernel approximation -- subset-based feature map.
@@ -747,6 +780,33 @@ When season_dummy or X-13 deseasonalisation is preferred over lag-based seasonal
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `sliced_inverse_regression`  --  operational
+
+sSUFF / Sliced inverse regression (scaled) -- supervised dimension reduction (Huang-Jiang-Li-Tong-Zhou 2022).
+
+Supervised dimension reduction extending ``scaled_pca`` to non-linear y → X dependence. Pipeline: (1) standardise X; (2) optional column-wise predictive scaling (``scaling_method`` = ``scaled_pca`` reuses the Huang-Zhou OLS-slope; ``marginal_R2`` uses sign(β_j)·√R²_j; ``none`` skips); (3) sort rows by y and partition into ``n_slices`` H contiguous slices; (4) compute weighted between-slice covariance ``Σ_S = Σ_h (n_h/n) · m̄_h · m̄_h^⊤``; (5) take the top-``n_components`` eigenvectors as factor loadings; (6) project the full panel onto these directions. The sSUFF augmentation (Huang-Zhou-Tong 2022) recovers latent factors with higher correlation than plain SIR in the macro-panel regime where signals are sparse over predictors.
+
+Defaults: ``n_components = 2``, ``n_slices = 5``, ``scaling_method = 'scaled_pca'``. Requires a ``target_signal`` input port; ``temporal_rule`` is required and rejects ``full_sample_once``.
+
+**When to use**
+
+Supervised factor extraction from macro panels with non-linear y → X structure; alternative to ``scaled_pca`` when the predictive direction is non-monotone.
+
+**When NOT to use**
+
+Very small T (need ≥ 5·n_slices observations after dropping NaN); strictly linear y → X relationship (``scaled_pca`` is sufficient).
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Huang, Jiang, Li, Tong & Zhou (2022) 'Scaled PCA: A New Approach to Dimension Reduction', Management Science 68(3): 1678-1695.
+* Fan, Xue & Yao (2017) 'Sufficient forecasting using factor models', Journal of Econometrics 201(2): 292-306.
+* Li (1991) 'Sliced Inverse Regression for Dimension Reduction', JASA 86(414): 316-327.
+
+**Related options**: [`scaled_pca`](#scaled-pca), [`supervised_pca`](#supervised-pca), [`partial_least_squares`](#partial-least-squares)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
 ### `sparse_pca`  --  operational
 
 Sparse PCA -- L1-penalised factor loadings (sklearn / Zou-Hastie-Tibshirani 2006).
@@ -873,6 +933,34 @@ Series with structural breaks -- use ``regime_indicator`` or stochastic detrendi
 * macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`hp_filter`](#hp-filter), [`hamilton_filter`](#hamilton-filter)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `u_midas`  --  operational
+
+Unrestricted MIDAS lag stack -- mixed-frequency aggregation primitive (Foroni-Marcellino-Schumacher 2015).
+
+Atomic mixed-frequency primitive: stacks ``K = n_lags_high`` high-frequency lags of each predictor at low-frequency dates without imposing any weighting structure. For HF column ``col`` and LF index position ``t·m``, emits ``col_lag0, col_lag1, …, col_lag{K-1}`` where ``col_lagk[t] = frame[col].iloc[t·m − k]``. The downstream L4 ridge / OLS / lasso recovers data-driven lag coefficients, i.e. the *unrestricted* MIDAS regression ``y_t = α + Σ_k β_k x_{t·m − k} + ε_t``.
+
+**Defaults**: ``freq_ratio = 3`` (quarterly target / monthly HF), ``n_lags_high = 6`` (≈ 2·m); ``target_freq = 'low'`` subsamples the LF anchor dates. ``temporal_rule`` is required and rejects ``full_sample_once`` so the aggregation respects walk-forward boundaries.
+
+Surfaces the Borup-Rapach-Schütte (2023) mixed-frequency ML-nowcasting workflow as a 1-line recipe via ``paper_methods.u_midas(...)``.
+
+**When to use**
+
+Macro nowcasting with monthly predictors and quarterly targets; mixed-frequency feature engineering when no parametric weight kernel is desired.
+
+**When NOT to use**
+
+When ``n_lags_high · n_HF_columns`` exceeds T (use ``midas`` parametric weighting instead, or pair with downstream lasso).
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Foroni, Marcellino & Schumacher (2015) 'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials', JRSS-A 178(1): 57-82.
+* Borup, Rapach & Schütte (2023) 'Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data', International Journal of Forecasting 39(3): 1122-1144.
+
+**Related options**: [`midas`](#midas), [`lag`](#lag), [`ma_window`](#ma-window)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 

@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 36 option(s)
-- Future: 4 option(s)
+- Operational: 42 option(s)
+- Future: 5 option(s)
 
 ## Options
 
@@ -794,6 +794,164 @@ Without ``[mars]`` extra installed -- raises a clear NotImplementedError.
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
+### `garch11`  --  operational
+
+GARCH(1,1) univariate conditional-variance model (Bollerslev 1986).
+
+Standard GARCH(1,1) volatility model: ``σ²_t = ω + α · ε²_{t-1} + β · σ²_{t-1}``. The L4 wrapper treats ``y`` as the return-like series and ignores ``X``; ``predict(X)`` returns the conditional mean (μ broadcast over ``len(X)``) and the variance forecast is exposed via ``predict_variance(h_steps)`` for L7 inspection.
+
+**Defaults** (paper-faithful, Bollerslev 1986 §3): ``p = q = 1``, ``mean_model = 'constant'``, ``dist = 'normal'``. Wraps ``arch.arch_model`` -- requires the optional ``[arch]`` extra (``pip install macroforecast[arch]``); raises ``NotImplementedError`` with an install hint when missing.
+
+**When to use**
+
+Macro / financial volatility forecasting; baseline GARCH benchmark; volatility-targeting risk applications.
+
+**When NOT to use**
+
+Without ``[arch]`` extra installed -- raises a clear NotImplementedError.
+
+**References**
+
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* Bollerslev (1986) 'Generalized Autoregressive Conditional Heteroskedasticity', Journal of Econometrics 31(3): 307-327.
+* Engle (1982) 'Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation', Econometrica 50(4): 987-1007.
+
+**Related options**: [`egarch`](#egarch), [`realized_garch_with_rv_exog`](#realized-garch-with-rv-exog)
+
+_Last reviewed 2026-05-04 by macroforecast author._
+
+### `egarch`  --  operational
+
+Exponential GARCH with leverage asymmetry (Nelson 1991).
+
+EGARCH(p, o, q) on log-variance: ``ln σ²_t = ω + Σ α_i (|z_{t-i}| − E|z|) + Σ γ_i z_{t-i} + Σ β_j ln σ²_{t-j}``. The asymmetry term ``γ`` captures the leverage effect (negative shocks raise volatility more than positive ones), and the log specification removes any need for non-negativity constraints on the parameters.
+
+**Defaults** (Nelson 1991 §3): ``p = o = q = 1``, ``mean_model = 'constant'``, ``dist = 'normal'``. Wraps ``arch.arch_model(vol='EGARCH')`` -- requires ``[arch]`` extra.
+
+**When to use**
+
+Asymmetric / leverage volatility; equity returns where bad news amplifies vol; macro variables with sign-asymmetric volatility responses.
+
+**When NOT to use**
+
+Without ``[arch]`` extra installed; symmetric volatility series where GARCH(1,1) is sufficient (parsimony).
+
+**References**
+
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* Nelson (1991) 'Conditional Heteroskedasticity in Asset Returns: A New Approach', Econometrica 59(2): 347-370.
+
+**Related options**: [`garch11`](#garch11), [`realized_garch_with_rv_exog`](#realized-garch-with-rv-exog)
+
+_Last reviewed 2026-05-04 by macroforecast author._
+
+### `realized_garch_with_rv_exog`  --  operational
+
+GARCH(1,1) with realised-variance series fed as the exogenous regressor (NOT Hansen-Huang-Shek 2012 joint MLE).
+
+Phase C-3 audit-fix (M9) honest rename. The L4 wrapper consumes ``params['realized_variance']`` (a column name in ``X``) as the RV series and feeds it as the **exogenous regressor** ``x=`` into a vanilla GARCH(1,1) spec. This is useful in practice (RV improves volatility forecasts), but it is **NOT** the Hansen-Huang-Shek (2012) joint return + measurement-equation MLE: there is no ``ξ``, ``φ``, ``δ_1``, ``δ_2`` measurement-equation parameters in the fitted output. The proper RealizedGARCH spec is reserved as FUTURE under the name ``realized_garch`` (awaiting native ``arch.RealizedGARCH`` API or manual joint-MLE implementation).
+
+Returns the conditional mean as the point forecast; ``predict_variance(h_steps)`` exposes the variance path.
+
+**Defaults**: ``mean_model = 'constant'``, ``dist = 'normal'``. Falls back to a squared-returns proxy when the RV column is unavailable.
+
+**When to use**
+
+Volatility forecasting when intraday realised variance is observable as a leading indicator (RV-as-exogenous improves vol forecast); honest baseline labelling for studies that need to distinguish from the proper Hansen-Huang-Shek MLE.
+
+**When NOT to use**
+
+When the proper joint-MLE Realized GARCH is required (the family name ``realized_garch`` is FUTURE / unrunnable until upstream supports it); without ``[arch]`` extra installed; without an RV measurement available.
+
+**References**
+
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* Hansen, Huang & Shek (2012) 'Realized GARCH: A Joint Model for Returns and Realized Measures of Volatility', Journal of Applied Econometrics 27(6): 877-906 — the *target* spec, not implemented here.
+
+**Related options**: [`garch11`](#garch11), [`egarch`](#egarch)
+
+_Last reviewed 2026-05-04 by macroforecast author._
+
+### `ets`  --  operational
+
+Exponential Smoothing State-Space (Hyndman-Koehler-Ord-Snyder 2008) -- ETS family.
+
+Exponential-smoothing state-space framework: ``error_trend_seasonal`` is a 3-character code ``ETS`` where ``E ∈ {A, M}`` (additive / multiplicative error), ``T ∈ {A, M, N}`` (additive / multiplicative / no trend), ``S ∈ {A, M, N}`` (additive / multiplicative / no seasonality). Wraps ``statsmodels.tsa.exponential_smoothing.ets.ETSModel`` (MLE fitting; auto-selects the closed-form initialisation per Hyndman 2008 §5.4).
+
+**Defaults**: ``error_trend_seasonal = 'AAN'`` (additive error, additive trend, no seasonal -- the workhorse non-seasonal spec), ``seasonal_periods = 12`` (monthly), ``initialization_method = 'estimated'``. Auto-disables seasonal fitting when ``len(y) < 2 · seasonal_periods``.
+
+**When to use**
+
+M-competition baseline; non-seasonal / seasonal univariate forecasting where a state-space exponential-smoothing model is the natural reference.
+
+**When NOT to use**
+
+Multivariate or covariate-driven forecasting (ETS ignores ``X``); short series where seasonal estimation is unstable.
+
+**References**
+
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* Hyndman, Koehler, Ord & Snyder (2008) 'Forecasting with Exponential Smoothing: The State Space Approach', Springer.
+* Hyndman & Athanasopoulos (2018) 'Forecasting: Principles and Practice', 2nd ed., OTexts §7.
+
+**Related options**: [`theta_method`](#theta-method), [`holt_winters`](#holt-winters), [`ar_p`](#ar-p)
+
+_Last reviewed 2026-05-04 by macroforecast author._
+
+### `theta_method`  --  operational
+
+Theta method (Assimakopoulos-Nikolopoulos 2000) -- M3-competition winning baseline.
+
+Hand-coded Theta(2) closed-form forecast: blends a long-run linear-trend regression with a short-run simple-exponential-smoothing (SES) level. For ``θ = 2`` (M3 winner), the h-step-ahead forecast is ``ŷ_{T+h} = 0.5 · (a + b · (T+h)) + 0.5 · ℓ_T``, where ``(a, b)`` are the OLS trend slope/intercept on time index and ``ℓ_T`` is the SES level at time T (smoothing parameter ``α`` selected via ``scipy.optimize.minimize_scalar`` minimising the in-sample 1-step MSE).
+
+**Defaults**: ``theta = 2.0`` (M3 winner), ``seasonal = False``, ``seasonal_periods = 12``. The constructor exposes ``theta`` for forward compatibility; only the θ=2 closed form is exercised in v0.9.0 -- general θ requires a θ-line decomposition out of scope for this run.
+
+**When to use**
+
+M3 / M4-style univariate baselines; quick reference forecast against more elaborate models.
+
+**When NOT to use**
+
+Strongly seasonal series (use ``holt_winters`` or seasonally-adjusted target); covariate-driven forecasting.
+
+**References**
+
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* Assimakopoulos & Nikolopoulos (2000) 'The theta model: a decomposition approach to forecasting', International Journal of Forecasting 16(4): 521-530.
+* Hyndman & Billah (2003) 'Unmasking the Theta method', International Journal of Forecasting 19(2): 287-290.
+* Petropoulos et al. (2022) 'Forecasting: theory and practice', International Journal of Forecasting 38(3): 705-871.
+
+**Related options**: [`ets`](#ets), [`holt_winters`](#holt-winters), [`ar_p`](#ar-p)
+
+_Last reviewed 2026-05-04 by macroforecast author._
+
+### `holt_winters`  --  operational
+
+Holt-Winters additive / multiplicative seasonal exponential smoothing.
+
+Wraps ``statsmodels.tsa.holtwinters.ExponentialSmoothing``. Fits level / trend / seasonal smoothing parameters by MLE (``optimized=True``). Supports additive and multiplicative trend and seasonal components plus an optional damped trend (Hyndman et al. 2008 §3).
+
+**Defaults**: ``seasonal = 'add'``, ``seasonal_periods = 12``, ``trend = 'add'``, ``damped_trend = False``. Auto-disables seasonal fitting when ``len(y) < 2 · seasonal_periods``.
+
+**When to use**
+
+Seasonal univariate baselines; M-competition style benchmarking; standard reference forecast for monthly / quarterly macro series.
+
+**When NOT to use**
+
+Without a clear seasonal pattern (use ``ets`` AAN instead); covariate-driven forecasting.
+
+**References**
+
+* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
+* Holt (2004 / orig. 1957) 'Forecasting seasonals and trends by exponentially weighted moving averages', International Journal of Forecasting 20(1): 5-10.
+* Winters (1960) 'Forecasting Sales by Exponentially Weighted Moving Averages', Management Science 6(3): 324-342.
+* Hyndman & Athanasopoulos (2018) 'Forecasting: Principles and Practice', 2nd ed., OTexts §7.
+
+**Related options**: [`ets`](#ets), [`theta_method`](#theta-method), [`ar_p`](#ar-p)
+
+_Last reviewed 2026-05-04 by macroforecast author._
+
 ### `midas_almon`  --  future
 
 _(no schema description for `midas_almon`)_
@@ -815,5 +973,11 @@ _(no schema description for `midas_step`)_
 ### `dfm_unrestricted_midas`  --  future
 
 _(no schema description for `dfm_unrestricted_midas`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.
+
+### `realized_garch`  --  future
+
+_(no schema description for `realized_garch`)_
 
 > TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.

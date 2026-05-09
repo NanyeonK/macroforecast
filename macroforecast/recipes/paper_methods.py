@@ -20,6 +20,7 @@ Status indicators in each helper docstring:
   runtime gate. Helper still produces the recipe so users can inspect /
   customise the canonical decomposition ahead of the runtime promotion.
 """
+
 from __future__ import annotations
 
 from typing import Any, Literal
@@ -33,16 +34,27 @@ import warnings
 
 _DEFAULT_PANEL: dict[str, list[Any]] = {
     "date": [
-        "2018-01-01", "2018-02-01", "2018-03-01", "2018-04-01",
-        "2018-05-01", "2018-06-01", "2018-07-01", "2018-08-01",
-        "2018-09-01", "2018-10-01", "2018-11-01", "2018-12-01",
+        "2018-01-01",
+        "2018-02-01",
+        "2018-03-01",
+        "2018-04-01",
+        "2018-05-01",
+        "2018-06-01",
+        "2018-07-01",
+        "2018-08-01",
+        "2018-09-01",
+        "2018-10-01",
+        "2018-11-01",
+        "2018-12-01",
     ],
     "y": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
     "x1": [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
 }
 
 
-def _l1_minimal(target: str, horizon: int, panel: dict[str, list[Any]] | None) -> dict[str, Any]:
+def _l1_minimal(
+    target: str, horizon: int, panel: dict[str, list[Any]] | None
+) -> dict[str, Any]:
     """L1 block shared across helpers when no FRED data is requested."""
 
     return {
@@ -64,10 +76,42 @@ def _l3_lag_target(horizon: int) -> dict[str, Any]:
 
     return {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-            {"id": "lag_x", "type": "step", "op": "lag", "params": {"n_lag": 1}, "inputs": ["src_X"]},
-            {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "lag_x",
+                "type": "step",
+                "op": "lag",
+                "params": {"n_lag": 1},
+                "inputs": ["src_X"],
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
         ],
         "sinks": {
             "l3_features_v1": {"X_final": "lag_x", "y_final": "y_h"},
@@ -76,7 +120,9 @@ def _l3_lag_target(horizon: int) -> dict[str, Any]:
     }
 
 
-def _l4_single_fit(family: str, fit_params: dict[str, Any], fit_node_id: str = "fit") -> dict[str, Any]:
+def _l4_single_fit(
+    family: str, fit_params: dict[str, Any], fit_node_id: str = "fit"
+) -> dict[str, Any]:
     """L4 block with one fit_model node + predict node."""
 
     fit = {
@@ -96,10 +142,31 @@ def _l4_single_fit(family: str, fit_params: dict[str, Any], fit_node_id: str = "
     }
     return {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l3", "sink_name": "l3_features_v1", "subset": {"component": "X_final"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l3", "sink_name": "l3_features_v1", "subset": {"component": "y_final"}}},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "y_final"},
+                },
+            },
             fit,
-            {"id": "predict", "type": "step", "op": "predict", "inputs": [fit_node_id, "src_X"]},
+            {
+                "id": "predict",
+                "type": "step",
+                "op": "predict",
+                "inputs": [fit_node_id, "src_X"],
+            },
         ],
         "sinks": {
             "l4_forecasts_v1": "predict",
@@ -155,12 +222,51 @@ def _l4_with_benchmark(
     }
     return {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l3", "sink_name": "l3_features_v1", "subset": {"component": "X_final"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l3", "sink_name": "l3_features_v1", "subset": {"component": "y_final"}}},
-            {"id": "fit_benchmark", "type": "step", "op": "fit_model", "params": bench_params, "is_benchmark": True, "inputs": ["src_X", "src_y"]},
-            {"id": "predict_benchmark", "type": "step", "op": "predict", "inputs": ["fit_benchmark", "src_X"]},
-            {"id": "fit_cell", "type": "step", "op": "fit_model", "params": cell_params, "inputs": ["src_X", "src_y"]},
-            {"id": "predict_cell", "type": "step", "op": "predict", "inputs": ["fit_cell", "src_X"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "y_final"},
+                },
+            },
+            {
+                "id": "fit_benchmark",
+                "type": "step",
+                "op": "fit_model",
+                "params": bench_params,
+                "is_benchmark": True,
+                "inputs": ["src_X", "src_y"],
+            },
+            {
+                "id": "predict_benchmark",
+                "type": "step",
+                "op": "predict",
+                "inputs": ["fit_benchmark", "src_X"],
+            },
+            {
+                "id": "fit_cell",
+                "type": "step",
+                "op": "fit_model",
+                "params": cell_params,
+                "inputs": ["src_X", "src_y"],
+            },
+            {
+                "id": "predict_cell",
+                "type": "step",
+                "op": "predict",
+                "inputs": ["fit_cell", "src_X"],
+            },
         ],
         "forecast_object": "point",
         "sinks": {
@@ -221,12 +327,20 @@ def _base_recipe(
 
     return {
         "0_meta": {
-            "fixed_axes": {"failure_policy": "fail_fast", "reproducibility_mode": "seeded_reproducible"},
+            "fixed_axes": {
+                "failure_policy": "fail_fast",
+                "reproducibility_mode": "seeded_reproducible",
+            },
             "leaf_config": {"random_seed": seed},
         },
         "1_data": _l1_minimal(target, horizon, panel),
         "2_preprocessing": {
-            "fixed_axes": {"transform_policy": "no_transform", "outlier_policy": "none", "imputation_policy": "none_propagate", "frame_edge_policy": "keep_unbalanced"},
+            "fixed_axes": {
+                "transform_policy": "no_transform",
+                "outlier_policy": "none",
+                "imputation_policy": "none_propagate",
+                "frame_edge_policy": "keep_unbalanced",
+            },
         },
         "3_feature_engineering": _l3_lag_target(horizon),
         "4_forecasting_model": l4,
@@ -247,6 +361,7 @@ def _base_recipe(
 # ---------------------------------------------------------------------------
 # 3. To Bag is to Prune -- Perfectly Random Forest baseline (Coulombe 2024)
 # ---------------------------------------------------------------------------
+
 
 def perfectly_random_forest(
     *,
@@ -291,27 +406,67 @@ def perfectly_random_forest(
 # gated atomic primitive lands.
 # ---------------------------------------------------------------------------
 
+
 def booging(
     *,
     target: str = "y",
     horizon: int = 1,
-    n_iterations: int = 10,
+    B: int = 100,
+    inner_n_estimators: int = 1500,
+    inner_learning_rate: float = 0.1,
+    inner_max_depth: int = 3,
+    inner_subsample: float = 0.5,
+    sample_frac: float = 0.75,
+    da_noise_frac: float = 1.0 / 3.0,
+    da_drop_rate: float = 0.2,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
+    n_iterations: int | None = None,
 ) -> dict[str, Any]:
     """Goulet Coulombe (2024) "To Bag is to Prune" -- Booging algorithm.
 
-    **Decomposition.** Booging = ``bagging(strategy=sequential_residual)``.
-    Each round refits a fresh bagged learner on the residuals of the
-    previous round's bagged prediction.
+    **Decomposition.** Booging = outer ``B``-bagging of *intentionally
+    over-fitted* inner Stochastic Gradient Boosted trees, with
+    per-bag Data Augmentation. Each outer bag (i) draws a row
+    sub-sample of size ``sample_frac · n`` *without replacement*,
+    (ii) appends a noisy column copy ``X̃_k = X_k + N(0, (σ_k ·
+    da_noise_frac)²)`` to the design (doubling the width to ``2K``),
+    (iii) drops a random ``da_drop_rate`` fraction of the augmented
+    columns, and (iv) fits one ``GradientBoostingRegressor`` at fixed
+    high ``inner_n_estimators`` (over-fit regime, *not* CV-tuned).
+    Final forecast is the mean over the ``B`` per-bag predictions.
 
-    **Status: pre-promotion.** Calling :func:`macroforecast.run` raises
-    ``NotImplementedError`` from the ``bagging.strategy`` runtime gate
-    until the v0.9.x promotion. The recipe surface is canonical so
-    callers can inspect / customise ahead of time.
+    The bag-prune theorem (paper §2.4) replaces tuning the boosting
+    depth ``S`` with outer bagging: fix ``S`` to a high (over-fitting)
+    value and let the bag average prune. This is the inverse of the
+    standard "tune via CV" recipe.
 
-    Reference: Goulet Coulombe (2024) arXiv:2008.07063 §4 Booging.
+    **Status: operational.** Recipe dispatches to ``_BoogingWrapper``
+    via the ``bagging.strategy = "booging"`` sub-axis (see
+    ``runtime.py:1958``).
+
+    Paper-faithful defaults (Appendix A.2 p.39):
+    ``B = 100``, ``inner_n_estimators = 1500``,
+    ``inner_learning_rate = 0.1``, ``inner_max_depth = 3``
+    (paper §4.1 p.25), ``inner_subsample = 0.5``,
+    ``sample_frac = 0.75``, ``da_noise_frac = 1/3``,
+    ``da_drop_rate = 0.2``.
+
+    The legacy ``n_iterations`` kwarg is retained as a deprecated alias
+    for ``B`` and emits ``DeprecationWarning`` when used.
+
+    Reference: Goulet Coulombe (2024) "To Bag is to Prune"
+    arXiv:2008.07063 §2.4 + Appendix A.2 p.39.
     """
+
+    if n_iterations is not None:
+        warnings.warn(
+            "`n_iterations` is deprecated; use `B` (the outer bagging count). "
+            "Will be removed in a future release.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        B = int(n_iterations)
 
     return _base_recipe(
         target=target,
@@ -321,9 +476,15 @@ def booging(
         l4=_l4_single_fit(
             family="bagging",
             fit_params={
-                "strategy": "sequential_residual",
-                "base_family": "decision_tree",
-                "n_estimators": n_iterations,
+                "strategy": "booging",
+                "n_estimators": int(B),
+                "inner_n_estimators": int(inner_n_estimators),
+                "inner_learning_rate": float(inner_learning_rate),
+                "inner_max_depth": int(inner_max_depth),
+                "inner_subsample": float(inner_subsample),
+                "max_samples": float(sample_frac),
+                "da_noise_frac": float(da_noise_frac),
+                "da_drop_rate": float(da_drop_rate),
             },
             fit_node_id="fit_booging",
         ),
@@ -363,7 +524,9 @@ def slow_growing_tree(
     horizon: int = 1,
     split_shrinkage: float = 0.1,
     herfindahl_threshold: float = 0.25,
-    eta_depth_step: float = 0.0,
+    eta_depth_step: float = 0.01,
+    eta_max_plateau: float = 0.5,
+    mtry_frac: float = 0.75,
     max_depth: int | None = None,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
@@ -371,21 +534,47 @@ def slow_growing_tree(
     """Goulet Coulombe (2024) Slow-Growing Tree =
     ``decision_tree(split_shrinkage=η)``.
 
-    Audit gap-fix: ``herfindahl_threshold`` (H̄, default 0.25 per paper),
-    ``eta_depth_step`` (η-depth-update rule, default 0.0), and
-    ``max_depth`` (safety bound, default None) now first-class helper
-    args so the SGT sub-axis is sweep-friendly without users having to
-    hand-edit the recipe dict.
+    Phase B-3 audit-fix (paper p.87-88 rule-of-thumb defaults):
+
+    * ``eta_depth_step`` default raised from ``0.0`` to ``0.01``. Paper
+      p.87 specifies "starting at η=0.1 and increasing it by 0.01 with
+      depth, until an imposed plateau of 0.5". The previous default
+      silently disabled the depth-step rule.
+    * ``eta_max_plateau`` (paper p.87) surfaced as a first-class helper
+      arg with default ``0.5`` (the paper's "imposed plateau").
+    * ``mtry_frac`` (paper p.88 §2.3 "mtry = 0.75 is used throughout")
+      surfaced as a first-class helper arg with default ``0.75``.
+
+    Other gap-fixes retained: ``herfindahl_threshold`` (H̄, default 0.25
+    per paper) and ``max_depth`` (safety bound, default None) remain
+    first-class helper args. If you need η=0 (which routes to plain
+    sklearn ``DecisionTreeRegressor`` and bypasses the SGT mechanism)
+    the helper emits a ``UserWarning``; pick a non-zero η or a recipe
+    from :func:`slow_growing_tree_grid` instead.
 
     **Status: pre-promotion** -- ``decision_tree.split_shrinkage`` is
     future. Reference: Goulet Coulombe (2024)
     doi:10.1007/978-3-031-43601-7_4.
     """
 
+    if float(split_shrinkage) == 0.0:
+        import warnings
+
+        warnings.warn(
+            "split_shrinkage=0.0 disables the SGT mechanism; routes to "
+            "sklearn DecisionTreeRegressor (CART). The slow_growing_tree "
+            "helper expects eta > 0; use eta in (0, 1] or pick a recipe "
+            "in slow_growing_tree_grid().",
+            UserWarning,
+            stacklevel=2,
+        )
+
     fit_params: dict[str, Any] = {
         "split_shrinkage": split_shrinkage,
         "herfindahl_threshold": herfindahl_threshold,
         "eta_depth_step": eta_depth_step,
+        "eta_max_plateau": eta_max_plateau,
+        "mtry_frac": mtry_frac,
     }
     if max_depth is not None:
         fit_params["max_depth"] = int(max_depth)
@@ -406,25 +595,49 @@ def slow_growing_tree_grid(
     *,
     target: str = "y",
     horizon: int = 1,
-    eta_grid: tuple[float, ...] = (0.0, 0.1, 0.25, 1.0),
-    h_bar_grid: tuple[float, ...] = (0.05, 0.1, 0.25),
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, dict[str, Any]]:
-    """Slow-Growing Tree paper-faithful grid: η ∈ {0.0, 0.1, 0.25, 1.0}
-    × H̄ ∈ {0.05, 0.1, 0.25} (Goulet Coulombe 2024 Figure 2 + Table 1).
-    Returns a dict keyed by ``"eta<η>__h<H̄>"`` so users can run each
-    cell and aggregate via L5 / L6."""
+    """Slow-Growing Tree paper-faithful grid: the three (η, H̄) recipe
+    lines from Goulet Coulombe (2024) §3 p.90 (Figure 2 SGT row).
 
+    Phase B-3 audit-fix: replaces the prior 4×3 Cartesian product
+    (which both omitted the paper's η=0.01 line and silently routed
+    η=0 to sklearn ``DecisionTreeRegressor``) with the exact 3-line
+    set from the paper:
+
+    * ``(η = 0.5,  H̄ = 0.25)`` -- higher learning rate, mid early-stopping
+    * ``(η = 0.1,  H̄ = 0.25)``
+    * ``(η = 0.01, H̄ = 0.05)`` -- low learning rate + tighter early-stopping
+
+    Each cell uses the paper p.87-88 rule-of-thumb defaults
+    (``eta_depth_step=0.01``, ``eta_max_plateau=0.5``, ``mtry_frac=0.75``).
+    Returns a dict keyed by ``"eta<η>__h<H̄>"`` so users can run each
+    cell and aggregate via L5 / L6.
+
+    Reference: Goulet Coulombe (2024) §3 p.90, Figure 2 (Slow-Growing
+    Tree row).
+    """
+
+    paper_grid = (
+        (0.5, 0.25),
+        (0.1, 0.25),
+        (0.01, 0.05),
+    )
     grid: dict[str, dict[str, Any]] = {}
-    for eta in eta_grid:
-        for h_bar in h_bar_grid:
-            recipe = slow_growing_tree(
-                target=target, horizon=horizon,
-                split_shrinkage=eta, herfindahl_threshold=h_bar,
-                panel=panel, seed=seed,
-            )
-            grid[f"eta{eta}__h{h_bar}"] = recipe
+    for eta, h_bar in paper_grid:
+        recipe = slow_growing_tree(
+            target=target,
+            horizon=horizon,
+            split_shrinkage=eta,
+            herfindahl_threshold=h_bar,
+            eta_depth_step=0.01,
+            eta_max_plateau=0.5,
+            mtry_frac=0.75,
+            panel=panel,
+            seed=seed,
+        )
+        grid[f"eta{eta}__h{h_bar}"] = recipe
     return grid
 
 
@@ -432,40 +645,100 @@ def two_step_ridge(
     *,
     target: str = "y",
     horizon: int = 1,
-    alpha_step1: float = 1.0,
     alpha_step2: float = 0.1,
     vol_model: str = "garch11",
+    alpha_strategy: str = "second_cv",
+    alpha_grid: list[float] | None = None,
+    cv_folds: int = 5,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """Goulet Coulombe (2025) 2SRR = chained ``ridge`` +
-    ``ridge(prior=random_walk)``.
+    """Goulet Coulombe (2025 IJF) 2SRR = ``ridge(prior=random_walk)``.
+
+    Implements paper §2.5 Algorithm 1: warm-start ridge on a homogeneous
+    Ω, recover heterogeneous Ω_θ / Ω_ε from the step-1 residuals + θ̂_1
+    sample variance, then **rerun CV** at step 4 to pick the final λ
+    before a closed-form heterogeneous-Ω solve. The second CV is the
+    paper's "crucial" step (§2.5 footnote 4 + §2.4.1): heterogeneous
+    variance changes the effective regularization, so the warm-start λ
+    is no longer the optimum. Default ``alpha_strategy="second_cv"``
+    enables the K-fold CV; set to ``"fixed"`` to bypass it.
+
+    Phase B-8 audit-fix:
+
+    * Dropped ``alpha_step1`` (paper-faithful 2SRR uses ONE λ across
+      step 1 + step 2, picked by the second CV; the previous wired
+      ``fit_step1`` ridge node was unused dead weight).
+    * Surfaced ``alpha_strategy`` (``"second_cv"`` default,
+      ``"fixed"``), ``alpha_grid`` (default
+      ``[0.01, 0.1, 1.0, 10.0, 100.0]``), and ``cv_folds`` (default
+      ``5``) as first-class kwargs for paper §2.5 step 4.
+    * ``alpha_step2`` retained as the fallback / fixed-strategy λ.
 
     ``vol_model`` (default ``"garch11"``) controls the residual-variance
     estimator used in step 2's heterogeneous-Ω solve (paper §4 Eq. 11).
-    Audit gap-fix: previous default ``"ewma"`` was the lighter
-    RiskMetrics decay; the paper specifies GARCH(1,1) (requires the
-    optional ``arch`` package; falls back to EWMA if unavailable).
+    Previous default ``"ewma"`` was the lighter RiskMetrics decay; the
+    paper specifies GARCH(1,1) (requires the optional ``arch`` package;
+    falls back to EWMA if unavailable).
 
     **Status: pre-promotion** -- ``ridge.prior=random_walk`` is future.
     Reference: doi:10.1016/j.ijforecast.2024.08.006.
     """
 
-    step2_params = {
-        "family": "ridge", "alpha": alpha_step2, "prior": "random_walk",
+    step2_params: dict[str, Any] = {
+        "family": "ridge",
+        "alpha": alpha_step2,
+        "prior": "random_walk",
         "vol_model": vol_model,
-        "forecast_strategy": "direct", "training_start_rule": "expanding",
-        "refit_policy": "every_origin", "search_algorithm": "none", "min_train_size": 6,
+        "alpha_strategy": alpha_strategy,
+        "cv_folds": cv_folds,
+        "forecast_strategy": "direct",
+        "training_start_rule": "expanding",
+        "refit_policy": "every_origin",
+        "search_algorithm": "none",
+        "min_train_size": 6,
     }
+    if alpha_grid is not None:
+        step2_params["alpha_grid"] = list(alpha_grid)
     l4 = {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l3", "sink_name": "l3_features_v1", "subset": {"component": "X_final"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l3", "sink_name": "l3_features_v1", "subset": {"component": "y_final"}}},
-            {"id": "fit_step1", "type": "step", "op": "fit_model", "params": {"family": "ridge", "alpha": alpha_step1, "forecast_strategy": "direct", "training_start_rule": "expanding", "refit_policy": "every_origin", "search_algorithm": "none", "min_train_size": 6}, "inputs": ["src_X", "src_y"]},
-            {"id": "fit_step2", "type": "step", "op": "fit_model", "params": step2_params, "inputs": ["src_X", "src_y"]},
-            {"id": "predict", "type": "step", "op": "predict", "inputs": ["fit_step2", "src_X"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "y_final"},
+                },
+            },
+            {
+                "id": "fit_step2",
+                "type": "step",
+                "op": "fit_model",
+                "params": step2_params,
+                "inputs": ["src_X", "src_y"],
+            },
+            {
+                "id": "predict",
+                "type": "step",
+                "op": "predict",
+                "inputs": ["fit_step2", "src_X"],
+            },
         ],
-        "sinks": {"l4_forecasts_v1": "predict", "l4_model_artifacts_v1": "fit_step2", "l4_training_metadata_v1": "auto"},
+        "sinks": {
+            "l4_forecasts_v1": "predict",
+            "l4_model_artifacts_v1": "fit_step2",
+            "l4_training_metadata_v1": "auto",
+        },
     }
     return _base_recipe(target=target, horizon=horizon, panel=panel, seed=seed, l4=l4)
 
@@ -476,13 +749,86 @@ def hemisphere_neural_network(
     horizon: int = 1,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
+    B: int = 1000,
+    neurons: int = 400,
+    lc: int = 5,
+    lm: int = 5,
+    lv: int = 5,
+    nu: float | None = None,
+    lambda_emphasis: float = 1.0,
+    n_epochs: int = 200,
+    dropout: float = 0.2,
+    lr: float = 0.01,
+    sub_rate: float = 0.5,
+    quantile_levels: tuple[float, ...] = (0.05, 0.16, 0.84, 0.95),
+    forecast_object: Literal["mean", "quantile", "density"] = "density",
 ) -> dict[str, Any]:
     """Goulet Coulombe / Frenette / Klieber (2025 JAE) HNN =
     ``mlp(architecture=hemisphere, loss=volatility_emphasis)``.
 
-    **Status: pre-promotion** -- ``mlp.architecture`` and ``mlp.loss``
-    sub-axes are future.
+    HNN models ``y_{t+h} ~ N(h_m(X_t), h_v(X_t))`` (paper Eq. 1) with a
+    shared ReLU common core feeding two hemispheres -- a mean head
+    ``h_m`` and a softplus variance head ``h_v``. The ensemble of ``B``
+    blocked-OOB subsamples (paper Eq. 8 / Ingredient 3) is averaged to
+    yield calibrated mean + variance, and a log-linear "reality check"
+    on the OOB residual variance (paper Eq. 9-10) corrects the variance
+    head before quantile/density emission.
+
+    **Hyperparameter defaults are paper-faithful:**
+
+    * ``B = 1000`` (paper p.12, ensemble size).
+    * ``neurons = 400`` (paper §3 hidden-layer width).
+    * ``lc = lm = lv = 5`` (paper §3 hemisphere stack depths).
+    * ``nu = None`` -- triggers data-driven plain-NN OOB residual proxy
+      for the variance-emphasis target (paper p.11 footnote 2).
+    * ``lambda_emphasis = 1.0`` (Lagrangian multiplier on the volatility-
+      emphasis penalty added to the MLE loss; paper §3.2 Ingredient 2).
+    * ``n_epochs = 200``, ``dropout = 0.2``, ``lr = 0.01`` (paper §3 + §4
+      training schedule).
+    * ``sub_rate = 0.5`` (per-bag block fraction; paper Eq. 8).
+    * ``quantile_levels = (0.05, 0.16, 0.84, 0.95)`` (paper Figure 3
+      fan-chart bands).
+    * ``forecast_object = 'density'`` -- the paper headline is density
+      forecasting, so ``macroforecast.run`` populates
+      ``forecast_intervals`` with mean + variance + Gaussian quantile
+      bands derived from the Eq. 10-corrected variance head.
+
+    For laptops / smoke tests, dial ``B`` and ``neurons`` down (e.g.
+    ``B=10, neurons=16, n_epochs=20``) -- the paper's defaults are
+    intentionally heavy.
+
+    **Status: operational; Eq. 10 reality-check active on public path
+    post-Phase-B9 fix.** ``predict_quantiles`` and
+    ``predict_distribution`` were unreachable from ``macroforecast.run``
+    in v0.9.x because ``_emit_quantile_intervals`` routed by family
+    string ("mlp" had no native quantile engine) and the density branch
+    had no L4 dispatch. Phase B-9 paper-9 F1+F2 added the HNN dispatch
+    in ``runtime._emit_quantile_intervals`` /
+    ``_emit_density_intervals`` so the paper's distributional head
+    drives ``forecast_intervals`` directly.
+
+    Reference: Goulet Coulombe / Frenette / Klieber (2025) "Hemisphere
+    Neural Networks", JAE.
     """
+
+    fit_params: dict[str, Any] = {
+        "architecture": "hemisphere",
+        "loss": "volatility_emphasis",
+        "B": int(B),
+        "neurons": int(neurons),
+        "lc": int(lc),
+        "lm": int(lm),
+        "lv": int(lv),
+        "lambda_emphasis": float(lambda_emphasis),
+        "n_epochs": int(n_epochs),
+        "dropout": float(dropout),
+        "lr": float(lr),
+        "sub_rate": float(sub_rate),
+        "quantile_levels": list(quantile_levels),
+        "forecast_object": str(forecast_object),
+    }
+    if nu is not None:
+        fit_params["nu"] = float(nu)
 
     return _base_recipe(
         target=target,
@@ -491,7 +837,7 @@ def hemisphere_neural_network(
         seed=seed,
         l4=_l4_single_fit(
             family="mlp",
-            fit_params={"architecture": "hemisphere", "loss": "volatility_emphasis"},
+            fit_params=fit_params,
             fit_node_id="fit_hnn",
         ),
     )
@@ -528,6 +874,7 @@ def assemblage_regression(
 # 1. Scaled PCA (Huang/Jiang/Li/Tong/Zhou 2022)
 # ---------------------------------------------------------------------------
 
+
 def scaled_pca(
     *,
     target: str = "y",
@@ -548,18 +895,68 @@ def scaled_pca(
     **Status: operational** -- ``scaled_pca`` op operational since v0.1.
     """
 
+    # Phase B-1 F1 fix: paper Eq. (3) is `y_{t+h} = ν_i + γ_i X_{i,t} +
+    # u_{i,t+h}`, so the supervised slope used to scale each predictor must
+    # regress the *h-shifted* target on `X_{i,t}`. The target_construction
+    # step (`y_h`) emits that shift; the `scaled_pca` step now consumes
+    # `[src_X, y_h]` so `_first_series` resolves the shifted target as the
+    # `target_signal` input to the L3 op (instead of the unshifted `src_y`,
+    # which would yield a contemporaneous-correlation slope rather than a
+    # predictive one).
     l3 = {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-            {"id": "spca", "type": "step", "op": "scaled_pca",
-             "params": {"n_components": n_components, "temporal_rule": "expanding_window_per_origin"},
-             "inputs": ["src_X", "src_y"]},
-            {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
+            {
+                "id": "spca",
+                "type": "step",
+                "op": "scaled_pca",
+                "params": {
+                    "n_components": n_components,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X", "y_h"],
+            },
         ],
-        "sinks": {"l3_features_v1": {"X_final": "spca", "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": "spca", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
-    recipe = _base_recipe(target=target, horizon=horizon, panel=panel, seed=seed, l4=_l4_single_fit("ridge", {"alpha": 1.0}))
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+    )
     recipe["3_feature_engineering"] = l3
     return recipe
 
@@ -568,12 +965,19 @@ def scaled_pca(
 # 2. The Macroeconomy as a Random Forest (Coulombe 2024)
 # ---------------------------------------------------------------------------
 
+
 def macroeconomic_random_forest(
     *,
     target: str = "y",
     horizon: int = 1,
     n_estimators: int = 200,
     block_size: int = 24,
+    ridge_lambda: float = 0.1,
+    rw_regul: float = 0.75,
+    mtry_frac: float = 1.0 / 3.0,
+    subsampling_rate: float = 0.75,
+    quantile_rate: float = 0.3,
+    trend_push: float = 1.0,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
@@ -590,6 +994,29 @@ def macroeconomic_random_forest(
     upstream 12 to match the paper's monthly-data spec. Override to
     8 for quarterly panels or 52 for weekly panels.
 
+    **Phase B-5 paper-5 (v0.9.0a0) helper expansion.** The paper-relevant
+    hyperparameters (Goulet Coulombe 2024 JAE p.7-10) are now first-class
+    helper kwargs so the public API exposes the full paper calibration
+    rather than forcing callers to hand-edit ``fit_params``. Defaults
+    match the paper:
+
+    * ``ridge_lambda = 0.1`` -- per-leaf ridge penalty λ (paper p.9).
+    * ``rw_regul = 0.75`` -- random-walk shrinkage ζ on the time-varying
+      coefficients (paper p.10, fixed across all simulations).
+    * ``mtry_frac = 1/3`` -- fraction of features sampled at each split
+      (paper p.7, "mtry = 1/3" matching the Breiman default).
+    * ``subsampling_rate = 0.75`` -- per-tree subsample fraction inside
+      the Block Bayesian Bootstrap (paper p.10).
+    * ``quantile_rate = 0.3`` -- vendored MRF default for the
+      Extremely-Randomised-Trees split-quantile rate (paper §3.2 ERT).
+    * ``trend_push = 1.0`` -- vendored MRF default trend-axis split
+      preference (paper §3.2; values >1 bias splits toward the trend
+      column for explicit time-axis non-stationarity handling).
+
+    All six are forwarded into the L4 ``fit_model`` ``params`` dict and
+    plumbed through ``_MRFExternalWrapper`` to the vendored
+    ``MacroRandomForest`` constructor.
+
     **Status: operational.**
     """
 
@@ -600,7 +1027,16 @@ def macroeconomic_random_forest(
         seed=seed,
         l4=_l4_single_fit(
             family="macroeconomic_random_forest",
-            fit_params={"n_estimators": n_estimators, "block_size": block_size},
+            fit_params={
+                "n_estimators": n_estimators,
+                "block_size": block_size,
+                "ridge_lambda": ridge_lambda,
+                "rw_regul": rw_regul,
+                "mtry_frac": mtry_frac,
+                "subsampling_rate": subsampling_rate,
+                "quantile_rate": quantile_rate,
+                "trend_push": trend_push,
+            },
             fit_node_id="fit_mrf",
         ),
     )
@@ -610,31 +1046,94 @@ def macroeconomic_random_forest(
 # 4. Adaptive Moving Average -- AlbaMA (Coulombe & Klieber 2025)
 # ---------------------------------------------------------------------------
 
+
 def adaptive_ma(
     *,
     target: str = "y",
     horizon: int = 1,
-    n_estimators: int = 100,
+    n_estimators: int = 500,
+    min_samples_leaf: int = 40,
+    sided: Literal["one", "two"] = "two",
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
     """Goulet Coulombe & Klieber (2025) AlbaMA = ``adaptive_ma_rf`` L3 op
     feeding a downstream ridge.
 
-    **Status: pre-promotion** -- ``adaptive_ma_rf`` runtime is future.
-    Reference: arXiv:2501.13222.
+    **Decomposition.** Paper §2.1-2.3 defines AlbaMA as a random forest
+    fit with a *single* regressor (the time index) on the target series
+    ``y`` -- ``RF(y_t ~ t)``. Per-observation leaf membership induces
+    a weight matrix ``w_τt`` whose row sums to 1, so the smoother is a
+    learned-bandwidth moving average of ``y`` (not of the predictor
+    panel). Paper p.8 fixes ``B = n_estimators = 500`` and
+    ``min_samples_leaf = 40`` as defaults; paper §3.3 selects the
+    two-sided variant for retrospective smoothing and the one-sided
+    expanding-window variant for real-time nowcasting.
+
+    The L3 ``adaptive_ma_rf`` step consumes ``src_y`` (the target
+    series) -- predictors are *not* inputs to AlbaMA. The smoothed
+    target series feeds downstream ridge as the canonical feature.
+
+    **Status: operational** -- ``adaptive_ma_rf`` runtime ships in
+    v0.9 (paper-faithful K=1 RF, ``max_features=1``). Reference:
+    arXiv:2501.13222 §2.1-2.3 + p.7-8 + §3.
     """
 
     l3 = {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-            {"id": "alba", "type": "step", "op": "adaptive_ma_rf", "params": {"n_estimators": n_estimators}, "inputs": ["src_X"]},
-            {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "alba",
+                "type": "step",
+                "op": "adaptive_ma_rf",
+                "params": {
+                    "n_estimators": n_estimators,
+                    "min_samples_leaf": min_samples_leaf,
+                    "sided": sided,
+                },
+                "inputs": ["src_y"],
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
         ],
-        "sinks": {"l3_features_v1": {"X_final": "alba", "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": "alba", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
-    recipe = _base_recipe(target=target, horizon=horizon, panel=panel, seed=seed, l4=_l4_single_fit("ridge", {"alpha": 1.0}))
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+    )
     recipe["3_feature_engineering"] = l3
     return recipe
 
@@ -643,6 +1142,7 @@ def adaptive_ma(
 # 7. OLS as Attention (Coulombe 2026) -- conceptual demo
 # ---------------------------------------------------------------------------
 
+
 def ols_attention_demo(
     *,
     target: str = "y",
@@ -650,56 +1150,23 @@ def ols_attention_demo(
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """Goulet Coulombe (2026) OLS-as-Attention -- conceptual paper.
+    """Goulet Coulombe (2026) OLS-as-Attention.
 
-    Reference paper has no replication object; the package supports the
-    empirical demo by running OLS and a transformer side-by-side via
-    sweep machinery. Helper returns the OLS half of the demo as a
-    starting point.
+    Returns OLS forecast + attention-weight matrix ``Omega`` (paper
+    Eq. 3) + per-test-point proximity diagnostics. The L7 block invokes
+    the ``attention_weights`` op which builds
+    ``Omega = X_test (X'_train X_train)^{-1} X'_train`` so that
+    ``y_hat_test = Omega @ y_train`` (paper §3 representer identity).
+
+    Phase B-10 paper-10 promotion: the helper previously returned
+    generic OLS forecasts only -- ``Omega`` was never computed and the
+    paper's central interpretive object was inaccessible. The L7
+    ``attention_weights`` op is now operational (closed-form, ~10 lines
+    of NumPy) and the helper appends a ``7_interpretation`` block by
+    default so ``macroforecast.run`` exposes the attention matrix on
+    the public L7 sink.
 
     **Status: operational.** Reference: SSRN 5200864.
-    """
-
-    return _base_recipe(
-        target=target,
-        horizon=horizon,
-        panel=panel,
-        seed=seed,
-        l4=_l4_single_fit(family="ols", fit_params={}, fit_node_id="fit_ols_attn_demo"),
-    )
-
-
-# ---------------------------------------------------------------------------
-# 8. Anatomy of OOS Forecasting (Borup et al. 2022)
-# ---------------------------------------------------------------------------
-
-def anatomy_oos(
-    *,
-    target: str = "y",
-    horizon: int = 1,
-    initial_window: int | None = None,
-    n_iterations: int = 500,
-    panel: dict[str, list[Any]] | None = None,
-    seed: int = 42,
-) -> dict[str, Any]:
-    """Borup et al. (2022) Anatomy of OOS Forecasting Accuracy.
-
-    **Decomposition.** Baseline forecast (ridge on lagged X) plus L7
-    ``oshapley_vi`` + ``pbsv`` interpretation ops. Helper returns the
-    L0-L4 baseline plus a ready-to-extend L7 block carrying the
-    ``initial_window`` and ``n_iterations`` parameters that route the
-    anatomy adapter to the paper-faithful Path A (per-origin refit via
-    ``AnatomySubsets.generate``). Audit gap-fix: previous helper did
-    not surface ``initial_window``, so the adapter silently fell back
-    to Path B (final-window fit, "degraded" status) — different
-    estimand from the published procedure.
-
-    Recommended ``initial_window`` ≈ ``int(T * 0.6)`` (60% expanding-
-    window seed). ``n_iterations=500`` matches paper p.16 footnote 16.
-
-    **Status: pre-promotion** for the full L7 workflow (oshapley_vi /
-    pbsv via anatomy package); the baseline forecast is operational.
-    Reference: SSRN 4278745.
     """
 
     recipe = _base_recipe(
@@ -707,22 +1174,181 @@ def anatomy_oos(
         horizon=horizon,
         panel=panel,
         seed=seed,
-        l4=_l4_single_fit(family="ridge", fit_params={"alpha": 1.0}, fit_node_id="fit_anatomy_baseline"),
+        l4=_l4_single_fit(family="ols", fit_params={}, fit_node_id="fit_ols_attn_demo"),
     )
-    # Stamp the anatomy parameters onto the recipe metadata so callers
-    # building the L7 block downstream can pull them via a single
-    # accessor rather than re-deriving them.
-    recipe["0_meta"].setdefault("leaf_config", {})
-    recipe["0_meta"]["leaf_config"].update({
-        "anatomy_initial_window": initial_window,
-        "anatomy_n_iterations": int(n_iterations),
-    })
+    # Phase B-10 F1 fix: attach the L7 attention-weights interpretation
+    # block by default. Mirrors the paper-4 ``arctic_var`` pattern -- the
+    # paper's central object (Omega) is now reachable via
+    # ``result.cells[0].runtime_result.artifacts["l7_importance_v1"]``.
+    recipe["7_interpretation"] = {
+        "enabled": True,
+        "nodes": [
+            {
+                "id": "src_model",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l4",
+                    "sink_name": "l4_model_artifacts_v1",
+                    "subset": {"model_id": "fit_ols_attn_demo"},
+                },
+            },
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "attention",
+                "type": "step",
+                "op": "attention_weights",
+                "params": {"add_intercept": True, "model_family": "ols"},
+                "inputs": ["src_model", "src_X"],
+            },
+        ],
+        "sinks": {
+            "l7_importance_v1": {"global": "attention"},
+        },
+        "fixed_axes": {
+            "output_table_format": "long",
+            "figure_type": "heatmap",
+            "top_k_features_to_show": 20,
+            "precision_digits": 4,
+            "figure_format": "pdf",
+            "latex_table_export": False,
+        },
+    }
+    return recipe
+
+
+# ---------------------------------------------------------------------------
+# 8. Anatomy of OOS Forecasting (Borup et al. 2022)
+# ---------------------------------------------------------------------------
+
+
+def anatomy_oos(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    initial_window: int | None = None,
+    n_iterations: int = 500,
+    metric: Literal["oshapley_vi", "pbsv"] = "oshapley_vi",
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Borup et al. (2022) Anatomy of OOS Forecasting Accuracy.
+
+    **Decomposition.** Baseline forecast (ridge on lagged X) plus an
+    L7 ``oshapley_vi`` (or ``pbsv``) interpretation op. Helper returns
+    the L0-L4 baseline plus a ``7_interpretation`` block whose
+    interpretation step carries ``initial_window`` and ``n_iterations``
+    as op params — the anatomy adapter (``_l7_anatomy_op``) reads
+    ``params["initial_window"]`` to take the paper-faithful Path A
+    (per-origin refit via ``AnatomySubsets.generate``) instead of the
+    final-window-fit Path B.
+
+    Phase B-11 paper-11 F1 fix: previous helper stamped
+    ``anatomy_initial_window`` into ``0_meta.leaf_config`` but no
+    consumer read that key, so users following the helper always
+    routed to Path B (degraded). The L7 block now wires the params
+    onto the op step where the runtime actually picks them up.
+
+    The default metric is ``oshapley_vi`` per paper §2.4 (the local
+    per-OOS-instance Shapley values are the headline contribution);
+    pass ``metric="pbsv"`` for the global squared-error PBSV
+    (paper Eq. 24).
+
+    Recommended ``initial_window`` ≈ ``int(T * 0.6)`` (60% expanding-
+    window seed). ``n_iterations=500`` matches paper p.16 footnote 16.
+
+    iShapley-VI (paper Eq. 10, in-sample analogue) is **deferred** to
+    a later phase — anatomy 0.1.6 has no native iShapley adapter and
+    the in-sample formulation requires additional plumbing beyond
+    this Phase B-11 scope.
+
+    **Status: pre-promotion** for the full L7 workflow (oshapley_vi /
+    pbsv via anatomy package, depends on the optional ``anatomy``
+    extra); the baseline forecast is operational.
+    Reference: SSRN 4278745.
+    """
+
+    fit_node_id = "fit_anatomy_baseline"
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit(
+            family="ridge", fit_params={"alpha": 1.0}, fit_node_id=fit_node_id
+        ),
+    )
+
+    # Op params: ``initial_window`` enables Path A; omit when None so
+    # the runtime takes Path B and emits its degraded-routing warning.
+    op_params: dict[str, Any] = {"n_iterations": int(n_iterations)}
+    if initial_window is not None:
+        op_params["initial_window"] = int(initial_window)
+
+    recipe["7_interpretation"] = {
+        "enabled": True,
+        "nodes": [
+            {
+                "id": "src_model",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l4",
+                    "sink_name": "l4_model_artifacts_v1",
+                    "subset": {"model_id": fit_node_id},
+                },
+            },
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "y_final"},
+                },
+            },
+            {
+                "id": "anatomy_explain",
+                "type": "step",
+                "op": metric,
+                "params": op_params,
+                "inputs": ["src_model", "src_X", "src_y"],
+            },
+        ],
+        "sinks": {
+            "l7_importance_v1": {"global": "anatomy_explain"},
+        },
+        "fixed_axes": {
+            "output_table_format": "long",
+            "figure_type": "bar_global",
+            "top_k_features_to_show": 20,
+            "precision_digits": 4,
+            "figure_format": "pdf",
+            "latex_table_export": False,
+        },
+    }
     return recipe
 
 
 # ---------------------------------------------------------------------------
 # 9. Dual Interpretation of ML Forecasts (Coulombe et al. 2024)
 # ---------------------------------------------------------------------------
+
 
 def dual_interpretation(
     *,
@@ -733,28 +1359,102 @@ def dual_interpretation(
 ) -> dict[str, Any]:
     """Goulet Coulombe / Goebel / Klieber (2024) Dual Interpretation.
 
-    **Decomposition.** Baseline forecast (ridge on lagged X) plus L7
-    ``dual_decomposition`` interpretation op. The op's output artifact
-    also carries the four portfolio diagnostics (HHI / short / turnover
-    / leverage) inline -- those are trivial numpy reductions on the
-    dual weights and do not warrant a separate L7 op.
+    **Decomposition.** Baseline forecast (ridge on lagged X) plus an L7
+    ``dual_decomposition`` interpretation op (paper §2 Eqs. 5-6, the
+    representer-theorem identity ``ŷₜ = Σⱼ wⱼ(xₜ) · yⱼ``). The op's
+    output artifact also carries the four paper §2.8 portfolio
+    diagnostics (FC = forecast concentration, FSP = forecast short
+    position, FL = forecast leverage, FT = forecast turnover) inline as
+    a ``portfolio_metrics`` frame on the L7 sink — trivial numpy
+    reductions on the dual weights that do not warrant a separate L7
+    op (decomposition discipline).
 
-    **Status: pre-promotion** for L7 ``dual_decomposition`` (future);
-    baseline forecast operational. Reference: arXiv:2412.13076.
+    Phase B-12 paper-12 F1/F2 fix: the previous helper returned only
+    the L4 ridge baseline (no L7 block), so users following the helper
+    got ``forecasts`` but never reached the paper's central object —
+    the ``(n_test × n_train)`` dual-weight matrix and per-row
+    portfolio metrics. The helper now appends a ``7_interpretation``
+    block invoking ``dual_decomposition`` so ``macroforecast.run``
+    exposes ``frame.attrs['dual_weights']`` and
+    ``frame.attrs['portfolio_metrics']`` on the public L7 sink.
+
+    **Status: operational.** Linear ridge / OLS / lasso, RF / ExtraTrees
+    tree-bagging, kernel SVR, and KernelRidge (paper §2.2 headline
+    application) are paper-faithful. NN ridge-representation (paper
+    §2.3 Eqs. 9-12) is deferred to a later phase.
+    Reference: arXiv:2412.13076.
     """
 
-    return _base_recipe(
+    fit_node_id = "fit_dual_baseline"
+    recipe = _base_recipe(
         target=target,
         horizon=horizon,
         panel=panel,
         seed=seed,
-        l4=_l4_single_fit(family="ridge", fit_params={"alpha": 1.0}, fit_node_id="fit_dual_baseline"),
+        l4=_l4_single_fit(
+            family="ridge", fit_params={"alpha": 1.0}, fit_node_id=fit_node_id
+        ),
     )
+    # Phase B-12 F1/F2 fix: attach the L7 dual_decomposition block by
+    # default. Mirrors the paper-10 ``ols_attention_demo`` and paper-11
+    # ``anatomy_oos`` patterns.
+    recipe["7_interpretation"] = {
+        "enabled": True,
+        "nodes": [
+            {
+                "id": "src_model",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l4",
+                    "sink_name": "l4_model_artifacts_v1",
+                    "subset": {"model_id": fit_node_id},
+                },
+            },
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "y_final"},
+                },
+            },
+            {
+                "id": "dual_explain",
+                "type": "step",
+                "op": "dual_decomposition",
+                "params": {},
+                "inputs": ["src_model", "src_X", "src_y"],
+            },
+        ],
+        "sinks": {
+            "l7_importance_v1": {"global": "dual_explain"},
+        },
+        "fixed_axes": {
+            "output_table_format": "long",
+            "figure_type": "heatmap",
+            "top_k_features_to_show": 20,
+            "precision_digits": 4,
+            "figure_format": "pdf",
+            "latex_table_export": False,
+        },
+    }
+    return recipe
 
 
 # ---------------------------------------------------------------------------
 # 10. Maximally Forward-Looking Core Inflation (Coulombe et al. 2024)
 # ---------------------------------------------------------------------------
+
 
 def maximally_forward_looking(
     *,
@@ -764,6 +1464,7 @@ def maximally_forward_looking(
     prior_target: list[float] | None = None,
     alpha: float = 1.0,
     search_algorithm: str = "block_cv",
+    smooth_window: int = 3,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
@@ -806,7 +1507,21 @@ def maximally_forward_looking(
     ``block_cv`` = paper §3 non-overlapping 10-fold block CV) are
     first-class helper args on both variants.
 
-    **Status: operational (v0.9.0a0 Phase A2 + v0.9.0a0 Phase A3 fix).**
+    Phase B-13 (Round 5 F3 + F8) updates:
+
+    * ``smooth_window`` (default ``3``): paper §3 explicitly applies a
+      3-month centred moving average to the order-statistic time series
+      before they enter the fused-difference ridge ("the order statistics
+      time series are smoothed using the 3 months moving average"). This
+      is now the helper default and is forwarded into the L3
+      ``asymmetric_trim`` step's ``smooth_window`` param. Pass
+      ``smooth_window=0`` to recover the un-smoothed pre-A4 behaviour.
+    * Both Variant A (``_ShrinkToTargetRidge``) and Variant B
+      (``_FusedDifferenceRidge``) now solve their convex QPs via
+      ``cvxpy + OSQP``, matching the paper §2 "Implementation Details"
+      stated solver (CVXR / convex programming, OSQP/ECOS backends).
+
+    **Status: operational (v0.9.0a0 Phase A2 + Phase A3 + Phase B-13).**
     Both ``asymmetric_trim`` (operational since v0.8.9 B-6) and
     ``ridge(coefficient_constraint=nonneg, prior={fused_difference,
     shrink_to_target})`` (operational since v0.9.0a0) are
@@ -826,11 +1541,49 @@ def maximally_forward_looking(
         # difference prior at L4. ``prior_target`` is ignored here.
         l3 = {
             "nodes": [
-                {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-                {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-                {"id": "trim_x", "type": "step", "op": "asymmetric_trim", "params": {"smooth_window": 0}, "inputs": ["src_X"]},
-                {"id": "lag_x", "type": "step", "op": "lag", "params": {"n_lag": 1}, "inputs": ["trim_x"]},
-                {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+                {
+                    "id": "src_X",
+                    "type": "source",
+                    "selector": {
+                        "layer_ref": "l2",
+                        "sink_name": "l2_clean_panel_v1",
+                        "subset": {"role": "predictors"},
+                    },
+                },
+                {
+                    "id": "src_y",
+                    "type": "source",
+                    "selector": {
+                        "layer_ref": "l2",
+                        "sink_name": "l2_clean_panel_v1",
+                        "subset": {"role": "target"},
+                    },
+                },
+                {
+                    "id": "trim_x",
+                    "type": "step",
+                    "op": "asymmetric_trim",
+                    "params": {"smooth_window": int(smooth_window)},
+                    "inputs": ["src_X"],
+                },
+                {
+                    "id": "lag_x",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": 1},
+                    "inputs": ["trim_x"],
+                },
+                {
+                    "id": "y_h",
+                    "type": "step",
+                    "op": "target_construction",
+                    "params": {
+                        "mode": "point_forecast",
+                        "method": "direct",
+                        "horizon": horizon,
+                    },
+                    "inputs": ["src_y"],
+                },
             ],
             "sinks": {
                 "l3_features_v1": {"X_final": "lag_x", "y_final": "y_h"},
@@ -857,10 +1610,42 @@ def maximally_forward_looking(
             )
         l3 = {
             "nodes": [
-                {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-                {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-                {"id": "lag_x", "type": "step", "op": "lag", "params": {"n_lag": 1}, "inputs": ["src_X"]},
-                {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+                {
+                    "id": "src_X",
+                    "type": "source",
+                    "selector": {
+                        "layer_ref": "l2",
+                        "sink_name": "l2_clean_panel_v1",
+                        "subset": {"role": "predictors"},
+                    },
+                },
+                {
+                    "id": "src_y",
+                    "type": "source",
+                    "selector": {
+                        "layer_ref": "l2",
+                        "sink_name": "l2_clean_panel_v1",
+                        "subset": {"role": "target"},
+                    },
+                },
+                {
+                    "id": "lag_x",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": 1},
+                    "inputs": ["src_X"],
+                },
+                {
+                    "id": "y_h",
+                    "type": "step",
+                    "op": "target_construction",
+                    "params": {
+                        "mode": "point_forecast",
+                        "method": "direct",
+                        "horizon": horizon,
+                    },
+                    "inputs": ["src_y"],
+                },
             ],
             "sinks": {
                 "l3_features_v1": {"X_final": "lag_x", "y_final": "y_h"},
@@ -876,7 +1661,10 @@ def maximally_forward_looking(
         if prior_target is not None:
             fit_params["prior_target"] = list(prior_target)
     recipe = _base_recipe(
-        target=target, horizon=horizon, panel=panel, seed=seed,
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
         l4=_l4_single_fit(
             family="ridge",
             fit_params=fit_params,
@@ -891,39 +1679,95 @@ def maximally_forward_looking(
 # 11. Sparse Macro Factors (Zhou)
 # ---------------------------------------------------------------------------
 
+
 def sparse_macro_factors(
     *,
     target: str = "y",
     horizon: int = 1,
-    n_components: int = 4,
+    n_components: int = 12,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """Rapach & Zhou (2025) Sparse Macro-Finance Factors -- foundational
-    primitive recipe.
+    """Rapach & Zhou (2025) Sparse Macro-Finance Factors helper recipe.
 
-    **Decomposition.** ``sparse_pca`` (sklearn Zou-Hastie-Tibshirani
-    2006 variant) + downstream ``ridge``. Produces a *related* but
-    NOT identical decomposition to the paper, which uses Sparse
-    Component Analysis (SCA) per Chen & Rohe (2023) — a different
-    sparse-PCA objective. Faithful Zhou-paper replication needs
-    ``sparse_pca_chen_rohe`` + ``supervised_pca`` (Giglio/Xiu/Zhang
-    2025); both are scheduled for v0.9.x.
+    **Decomposition (paper §2.1).** Sparse Component Analysis (SCA) per
+    Chen & Rohe (2023) — the bilinear convex-hull form
 
-    **Status: operational** as a generic sparse-PCA recipe; not
-    paper-faithful for Zhou (2025).
+        ``max ‖Z' X Θ‖_F  s.t.  Z ∈ H(T,J),  Θ ∈ H(M,J),  ‖Θ‖_1 ≤ ζ``
+
+    routed through the ``sparse_pca_chen_rohe`` op (NOT the sklearn
+    Zou-Hastie-Tibshirani 2006 variant). The default ``n_components=12``
+    matches the paper's headline ``J = 12`` factor count; the L1
+    budget defaults to the binding boundary ``ζ = J`` (the paper's
+    cross-validated optimum, §2.3).
+
+    **Factor dynamics (paper §2.3).** ``var_innovations=True`` fits a
+    first-order vector autoregression ``S_t = B S_{t-1} + e_t`` on the
+    SCA scores and returns the fitted residuals as the *sparse macro-
+    finance factors* of the paper title — Strategy step 2.
+
+    Downstream estimator: ``ridge`` regression on the J factors.
+
+    **Status: operational.** Faithful to Rapach & Zhou (2025) §2.1 +
+    §2.3; does not include the §3 supervised-PCA risk-premium chain
+    (separate phase).
     """
 
     l3 = {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-            {"id": "spca", "type": "step", "op": "sparse_pca", "params": {"n_components": n_components}, "inputs": ["src_X"]},
-            {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "spca",
+                "type": "step",
+                "op": "sparse_pca_chen_rohe",
+                "params": {
+                    "n_components": n_components,
+                    "var_innovations": True,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X"],
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
         ],
-        "sinks": {"l3_features_v1": {"X_final": "spca", "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": "spca", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
-    recipe = _base_recipe(target=target, horizon=horizon, panel=panel, seed=seed, l4=_l4_single_fit("ridge", {"alpha": 1.0}))
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+    )
     recipe["3_feature_engineering"] = l3
     return recipe
 
@@ -931,6 +1775,7 @@ def sparse_macro_factors(
 # ---------------------------------------------------------------------------
 # 12. Macroeconomic Data Transformations Matter (Coulombe 2021)
 # ---------------------------------------------------------------------------
+
 
 def macroeconomic_data_transformations(
     *,
@@ -955,15 +1800,62 @@ def macroeconomic_data_transformations(
 
     l3 = {
         "nodes": [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
-            {"id": "marx", "type": "step", "op": "ma_increasing_order", "params": {"max_order": max_order}, "inputs": ["src_X"]},
-            {"id": "rotated", "type": "step", "op": "pca", "params": {"n_components": 4}, "inputs": ["marx"]},
-            {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon}, "inputs": ["src_y"]},
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "marx",
+                "type": "step",
+                "op": "ma_increasing_order",
+                "params": {"max_order": max_order},
+                "inputs": ["src_X"],
+            },
+            {
+                "id": "rotated",
+                "type": "step",
+                "op": "pca",
+                "params": {"n_components": 4},
+                "inputs": ["marx"],
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
         ],
-        "sinks": {"l3_features_v1": {"X_final": "rotated", "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": "rotated", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
-    recipe = _base_recipe(target=target, horizon=horizon, panel=panel, seed=seed, l4=_l4_single_fit("random_forest", {"n_estimators": 200}))
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("random_forest", {"n_estimators": 200}),
+    )
     recipe["3_feature_engineering"] = l3
     return recipe
 
@@ -972,10 +1864,22 @@ def macroeconomic_data_transformations(
 # paper's Table 1 (Coulombe et al. 2021 §3 + Recap p.11).
 
 _DATA_TRANSFORM_CELLS_16 = (
-    "F", "F-X", "F-MARX", "F-MAF", "F-Level",
-    "F-X-MARX", "F-X-MAF", "F-X-Level", "F-X-MARX-Level",
-    "X", "MARX", "MAF",
-    "X-MARX", "X-MAF", "X-Level", "X-MARX-Level",
+    "F",
+    "F-X",
+    "F-MARX",
+    "F-MAF",
+    "F-Level",
+    "F-X-MARX",
+    "F-X-MAF",
+    "F-X-Level",
+    "F-X-MARX-Level",
+    "X",
+    "MARX",
+    "MAF",
+    "X-MARX",
+    "X-MAF",
+    "X-Level",
+    "X-MARX-Level",
 )
 
 
@@ -1004,45 +1908,127 @@ def _l3_data_transforms_cell(
 
     components = cell.split("-")
     nodes: list[dict[str, Any]] = [
-        {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-        {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
+        {
+            "id": "src_X",
+            "type": "source",
+            "selector": {
+                "layer_ref": "l2",
+                "sink_name": "l2_clean_panel_v1",
+                "subset": {"role": "predictors"},
+            },
+        },
+        {
+            "id": "src_y",
+            "type": "source",
+            "selector": {
+                "layer_ref": "l2",
+                "sink_name": "l2_clean_panel_v1",
+                "subset": {"role": "target"},
+            },
+        },
     ]
     feature_nodes: list[str] = []
     if "F" in components:
-        nodes.append({"id": "feat_F", "type": "step", "op": "pca",
-                      "params": {"n_components": 4}, "inputs": ["src_X"]})
+        nodes.append(
+            {
+                "id": "feat_F",
+                "type": "step",
+                "op": "pca",
+                "params": {"n_components": 4},
+                "inputs": ["src_X"],
+            }
+        )
         feature_nodes.append("feat_F")
     if "X" in components:
-        nodes.append({"id": "feat_X", "type": "step", "op": "lag",
-                      "params": {"max_lag": 4}, "inputs": ["src_X"]})
+        nodes.append(
+            {
+                "id": "feat_X",
+                "type": "step",
+                "op": "lag",
+                "params": {"max_lag": 4},
+                "inputs": ["src_X"],
+            }
+        )
         feature_nodes.append("feat_X")
     if "MARX" in components:
-        nodes.append({"id": "feat_MARX", "type": "step", "op": "ma_increasing_order",
-                      "params": {"max_order": max_order}, "inputs": ["src_X"]})
+        nodes.append(
+            {
+                "id": "feat_MARX",
+                "type": "step",
+                "op": "ma_increasing_order",
+                "params": {"max_order": max_order},
+                "inputs": ["src_X"],
+            }
+        )
         feature_nodes.append("feat_MARX")
     if "MAF" in components:
         # MAF = MA-of-X then PCA (paper: "moving average factors")
-        nodes.append({"id": "feat_MAF_ma", "type": "step", "op": "ma_increasing_order",
-                      "params": {"max_order": max_order}, "inputs": ["src_X"]})
-        nodes.append({"id": "feat_MAF", "type": "step", "op": "pca",
-                      "params": {"n_components": 4}, "inputs": ["feat_MAF_ma"]})
+        nodes.append(
+            {
+                "id": "feat_MAF_ma",
+                "type": "step",
+                "op": "ma_increasing_order",
+                "params": {"max_order": max_order},
+                "inputs": ["src_X"],
+            }
+        )
+        nodes.append(
+            {
+                "id": "feat_MAF",
+                "type": "step",
+                "op": "pca",
+                "params": {"n_components": 4},
+                "inputs": ["feat_MAF_ma"],
+            }
+        )
         feature_nodes.append("feat_MAF")
     if "Level" in components:
-        nodes.append({"id": "feat_Level", "type": "step", "op": "lag",
-                      "params": {"max_lag": 4}, "inputs": ["src_y"]})
+        nodes.append(
+            {
+                "id": "feat_Level",
+                "type": "step",
+                "op": "lag",
+                "params": {"max_lag": 4},
+                "inputs": ["src_y"],
+            }
+        )
         feature_nodes.append("feat_Level")
-    nodes.append({"id": "X_final", "type": "step", "op": "weighted_concat",
-                  "params": {}, "inputs": feature_nodes})
+    nodes.append(
+        {
+            "id": "X_final",
+            "type": "step",
+            "op": "weighted_concat",
+            "params": {},
+            "inputs": feature_nodes,
+        }
+    )
     # Runtime switches on ``mode`` (not ``method``); map target_method to
     # the right mode so ``path_average`` actually triggers the cumulative-
     # average target (paper §2.2 + Table 2).
-    target_mode = "path_average" if target_method in {"path_average", "cumulative_average"} else "point_forecast"
-    nodes.append({"id": "y_h", "type": "step", "op": "target_construction",
-                  "params": {"mode": target_mode, "method": target_method, "horizon": horizon},
-                  "inputs": ["src_y"]})
+    target_mode = (
+        "path_average"
+        if target_method in {"path_average", "cumulative_average"}
+        else "point_forecast"
+    )
+    nodes.append(
+        {
+            "id": "y_h",
+            "type": "step",
+            "op": "target_construction",
+            "params": {
+                "mode": target_mode,
+                "method": target_method,
+                "horizon": horizon,
+            },
+            "inputs": ["src_y"],
+        }
+    )
     return {
         "nodes": nodes,
-        "sinks": {"l3_features_v1": {"X_final": "X_final", "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": "X_final", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
 
 
@@ -1051,13 +2037,13 @@ def _l3_data_transforms_cell(
 # mappings: FM → ``factor_augmented_ar`` (Stock-Watson 2002a ARDI), LB →
 # ``glmboost`` (component-wise L2 boosting with linear base learners).
 _DATA_TRANSFORM_FAMILIES_DEFAULT = (
-    "ar_p",                   # AR
-    "factor_augmented_ar",    # FM (Stock-Watson 2002a) — audit-fix
-    "lasso_path",             # AL (Adaptive Lasso proxy)
-    "elastic_net",            # EN
-    "glmboost",               # LB (component-wise linear boosting) — audit-fix
-    "random_forest",          # RF
-    "gradient_boosting",      # BT
+    "ar_p",  # AR
+    "factor_augmented_ar",  # FM (Stock-Watson 2002a) — audit-fix
+    "lasso_path",  # AL (Adaptive Lasso proxy)
+    "elastic_net",  # EN
+    "glmboost",  # LB (component-wise linear boosting) — audit-fix
+    "random_forest",  # RF
+    "gradient_boosting",  # BT
 )
 
 _DATA_TRANSFORM_TARGET_METHODS_DEFAULT = ("direct", "path_average")
@@ -1074,6 +2060,9 @@ def macroeconomic_data_transformations_horse_race(
     max_order: int = 12,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
+    attach_eval_blocks: bool = False,
+    benchmark_family: str = "factor_augmented_ar",
+    benchmark_params: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Coulombe / Leroux / Stevanovic / Surprenant (2021)
     "Macroeconomic Data Transformations Matter" full horse race.
@@ -1094,23 +2083,49 @@ def macroeconomic_data_transformations_horse_race(
     ``path_average`` (paper §2.2 + Table 2) are exercised by default,
     matching the paper grid.
 
+    Phase B-15 paper-15 F5: ``attach_eval_blocks=True`` mirrors the
+    sister helper ``ml_useful_macro_horse_race`` -- it routes each cell
+    through ``_l4_with_benchmark`` (so each recipe has BOTH the cell
+    family AND a benchmark fit_node flagged ``is_benchmark: true``) and
+    stamps the canonical paper-16 L5 / L6 dicts so the §4.4 DM-vs-FM
+    comparison is one kwarg away. The default benchmark is
+    ``factor_augmented_ar`` with ``search_algorithm="bic"`` and
+    ``n_factors=4``, matching paper §4.4 ("DM tested against the
+    reference (ARDI, BIC)").
+
     **Status: operational (v0.9.0a0 audit gap-fix).** Reference:
     arXiv:2008.01714.
     """
 
     grid: dict[str, dict[str, Any]] = {}
     horizons_iter = tuple(horizons) if horizons else (horizon,)
+    eval_l5, eval_l6 = _l5_l6_paper16_eval_blocks() if attach_eval_blocks else ({}, {})
     for cell in cells:
         for family in families:
             for h in horizons_iter:
                 for method in target_methods:
+                    if attach_eval_blocks:
+                        l4 = _l4_with_benchmark(
+                            family,
+                            {},
+                            benchmark_family=benchmark_family,
+                            benchmark_params=benchmark_params,
+                        )
+                    else:
+                        l4 = _l4_single_fit(family, {})
                     recipe = _base_recipe(
-                        target=target, horizon=h, panel=panel, seed=seed,
-                        l4=_l4_single_fit(family, {}),
+                        target=target,
+                        horizon=h,
+                        panel=panel,
+                        seed=seed,
+                        l4=l4,
                     )
                     recipe["3_feature_engineering"] = _l3_data_transforms_cell(
                         cell, h, max_order, target_method=method
                     )
+                    if attach_eval_blocks:
+                        recipe["5_evaluation"] = dict(eval_l5)
+                        recipe["6_statistical_tests"] = dict(eval_l6)
                     grid[f"{cell}__{family}__h{h}__{method}"] = recipe
     return grid
 
@@ -1118,6 +2133,7 @@ def macroeconomic_data_transformations_horse_race(
 # ---------------------------------------------------------------------------
 # 13. How is ML Useful for Macro Forecasting (Coulombe et al. 2022)
 # ---------------------------------------------------------------------------
+
 
 def ml_useful_macro(
     *,
@@ -1143,7 +2159,9 @@ def ml_useful_macro(
         horizon=horizon,
         panel=panel,
         seed=seed,
-        l4=_l4_single_fit(family="ridge", fit_params={"alpha": 1.0}, fit_node_id="fit_baseline"),
+        l4=_l4_single_fit(
+            family="ridge", fit_params={"alpha": 1.0}, fit_node_id="fit_baseline"
+        ),
     )
 
 
@@ -1153,18 +2171,18 @@ def ml_useful_macro(
 _ML_USEFUL_FEATURES = {
     # Feature 1 — nonlinearity
     "linear_baseline": ("ar_p", {"n_lag": 4}),
-    "krr_rbf":        ("kernel_ridge", {"kernel": "rbf", "alpha": 1.0}),
-    "rf":             ("random_forest", {"n_estimators": 200, "max_depth": 8}),
+    "krr_rbf": ("kernel_ridge", {"kernel": "rbf", "alpha": 1.0}),
+    "rf": ("random_forest", {"n_estimators": 200, "max_depth": 8}),
     # Feature 2 — regularization
-    "lasso":          ("lasso", {"alpha": 0.05}),
-    "elastic_net":    ("elastic_net", {"alpha": 0.05, "l1_ratio": 0.5}),
-    "ridge":          ("ridge", {"alpha": 1.0}),
+    "lasso": ("lasso", {"alpha": 0.05}),
+    "elastic_net": ("elastic_net", {"alpha": 0.05, "l1_ratio": 0.5}),
+    "ridge": ("ridge", {"alpha": 1.0}),
     # Feature 4 — loss function
-    "svr_rbf":        ("svr_rbf", {"C": 1.0, "epsilon": 0.1, "gamma": "scale"}),
-    "svr_linear":     ("svr_linear", {"C": 1.0, "epsilon": 0.1}),
+    "svr_rbf": ("svr_rbf", {"C": 1.0, "epsilon": 0.1, "gamma": "scale"}),
+    "svr_linear": ("svr_linear", {"C": 1.0, "epsilon": 0.1}),
     # Reference baselines
-    "fm":             ("factor_augmented_ar", {"n_factors": 3, "n_lag": 2}),
-    "ols":            ("ols", {}),
+    "fm": ("factor_augmented_ar", {"n_factors": 3, "n_lag": 2}),
+    "ols": ("ols", {}),
 }
 
 
@@ -1220,7 +2238,9 @@ def ml_useful_macro_horse_race(
             "H_minus = paper §3.2 data-poor (own-lag y only, ~14 models). "
             "H_plus = data-rich (factor-augmented ARDI, ~30 models)."
         )
-    cases_iter: tuple[str, ...] = cases if cases is not None else tuple(_ML_USEFUL_FEATURES.keys())
+    cases_iter: tuple[str, ...] = (
+        cases if cases is not None else tuple(_ML_USEFUL_FEATURES.keys())
+    )
     targets_iter: tuple[str, ...] = tuple(targets) if targets else (target,)
     grid: dict[str, dict[str, Any]] = {}
     eval_l5, eval_l6 = _l5_l6_paper16_eval_blocks() if attach_eval_blocks else ({}, {})
@@ -1234,19 +2254,26 @@ def ml_useful_macro_horse_race(
                     cell_fit_params = dict(fit_params, search_algorithm=cv)
                     if attach_eval_blocks:
                         l4 = _l4_with_benchmark(
-                            family, cell_fit_params,
+                            family,
+                            cell_fit_params,
                             benchmark_family=benchmark_family,
                             benchmark_params=benchmark_params,
                         )
                     else:
                         l4 = _l4_single_fit(family, cell_fit_params)
                     recipe = _base_recipe(
-                        target=tgt, horizon=h, panel=panel, seed=seed, l4=l4,
+                        target=tgt,
+                        horizon=h,
+                        panel=panel,
+                        seed=seed,
+                        l4=l4,
                     )
                     # H_minus: paper §3.2 data-poor (own-lag y only).
                     # H_plus: data-rich (PCA factors of X plus lagged y).
                     recipe["3_feature_engineering"] = _l3_h_axis(
-                        data_richness, h, n_factors=n_factors,
+                        data_richness,
+                        h,
+                        n_factors=n_factors,
                     )
                     if attach_eval_blocks:
                         recipe["5_evaluation"] = dict(eval_l5)
@@ -1255,7 +2282,9 @@ def ml_useful_macro_horse_race(
     return grid
 
 
-def _l3_h_axis(richness: str, horizon: int, *, n_factors: int = 4, n_lag: int = 4) -> dict[str, Any]:
+def _l3_h_axis(
+    richness: str, horizon: int, *, n_factors: int = 4, n_lag: int = 4
+) -> dict[str, Any]:
     """Paper §3.2 H⁻ / H⁺ feature axis builder.
 
     * ``H_minus`` — data-poor: lagged-y only (14 paper models).
@@ -1275,33 +2304,129 @@ def _l3_h_axis(richness: str, horizon: int, *, n_factors: int = 4, n_lag: int = 
     """
 
     nodes: list[dict[str, Any]] = [
-        {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-        {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
+        {
+            "id": "src_X",
+            "type": "source",
+            "selector": {
+                "layer_ref": "l2",
+                "sink_name": "l2_clean_panel_v1",
+                "subset": {"role": "predictors"},
+            },
+        },
+        {
+            "id": "src_y",
+            "type": "source",
+            "selector": {
+                "layer_ref": "l2",
+                "sink_name": "l2_clean_panel_v1",
+                "subset": {"role": "target"},
+            },
+        },
     ]
     if richness == "H_minus":
         if n_lag == 0:
-            nodes.append({"id": "X_final", "type": "step", "op": "identity", "params": {}, "inputs": ["src_y"]})
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "identity",
+                    "params": {},
+                    "inputs": ["src_y"],
+                }
+            )
             x_final = "X_final"
         else:
-            nodes.append({"id": "lag_y", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["src_y"]})
+            nodes.append(
+                {
+                    "id": "lag_y",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["src_y"],
+                }
+            )
             x_final = "lag_y"
     else:  # H_plus
-        nodes.append({"id": "feat_F", "type": "step", "op": "pca", "params": {"n_components": n_factors, "temporal_rule": "expanding_window_per_origin"}, "inputs": ["src_X"]})
+        nodes.append(
+            {
+                "id": "feat_F",
+                "type": "step",
+                "op": "pca",
+                "params": {
+                    "n_components": n_factors,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X"],
+            }
+        )
         if n_lag == 0:
             # No-lag DAG: identity(feat_F) ⊕ identity(src_y) via weighted_concat.
-            nodes.append({"id": "id_y", "type": "step", "op": "identity", "params": {}, "inputs": ["src_y"]})
-            nodes.append({"id": "X_final", "type": "step", "op": "weighted_concat", "params": {}, "inputs": ["feat_F", "id_y"]})
+            nodes.append(
+                {
+                    "id": "id_y",
+                    "type": "step",
+                    "op": "identity",
+                    "params": {},
+                    "inputs": ["src_y"],
+                }
+            )
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "weighted_concat",
+                    "params": {},
+                    "inputs": ["feat_F", "id_y"],
+                }
+            )
         else:
-            nodes.append({"id": "lag_F", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["feat_F"]})
-            nodes.append({"id": "lag_y", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["src_y"]})
-            nodes.append({"id": "X_final", "type": "step", "op": "weighted_concat", "params": {}, "inputs": ["lag_F", "lag_y"]})
+            nodes.append(
+                {
+                    "id": "lag_F",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["feat_F"],
+                }
+            )
+            nodes.append(
+                {
+                    "id": "lag_y",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["src_y"],
+                }
+            )
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "weighted_concat",
+                    "params": {},
+                    "inputs": ["lag_F", "lag_y"],
+                }
+            )
         x_final = "X_final"
-    nodes.append({"id": "y_h", "type": "step", "op": "target_construction",
-                  "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon},
-                  "inputs": ["src_y"]})
+    nodes.append(
+        {
+            "id": "y_h",
+            "type": "step",
+            "op": "target_construction",
+            "params": {
+                "mode": "point_forecast",
+                "method": "direct",
+                "horizon": horizon,
+            },
+            "inputs": ["src_y"],
+        }
+    )
     return {
         "nodes": nodes,
-        "sinks": {"l3_features_v1": {"X_final": x_final, "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": x_final, "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
 
 
@@ -1338,15 +2463,22 @@ def ml_useful_macro_b_grid(
     for rot in rotations:
         for family in families:
             recipe = _base_recipe(
-                target=target, horizon=horizon, panel=panel, seed=seed,
+                target=target,
+                horizon=horizon,
+                panel=panel,
+                seed=seed,
                 l4=_l4_single_fit(family, {}),
             )
-            recipe["3_feature_engineering"] = _l3_b_rotation(rot, horizon, n_factors=n_factors, n_lag=n_lag)
+            recipe["3_feature_engineering"] = _l3_b_rotation(
+                rot, horizon, n_factors=n_factors, n_lag=n_lag
+            )
             grid[f"{rot}__{family}"] = recipe
     return grid
 
 
-def _l3_b_rotation(rotation: str, horizon: int, *, n_factors: int = 4, n_lag: int = 4) -> dict[str, Any]:
+def _l3_b_rotation(
+    rotation: str, horizon: int, *, n_factors: int = 4, n_lag: int = 4
+) -> dict[str, Any]:
     """L3 graph for one of the §3.2 B₁/B₂/B₃ rotations.
 
     Phase A4c (paper 16, Round 1 finding / Round 4 F5): paper §3.2
@@ -1362,15 +2494,47 @@ def _l3_b_rotation(rotation: str, horizon: int, *, n_factors: int = 4, n_lag: in
     """
 
     nodes: list[dict[str, Any]] = [
-        {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-        {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
+        {
+            "id": "src_X",
+            "type": "source",
+            "selector": {
+                "layer_ref": "l2",
+                "sink_name": "l2_clean_panel_v1",
+                "subset": {"role": "predictors"},
+            },
+        },
+        {
+            "id": "src_y",
+            "type": "source",
+            "selector": {
+                "layer_ref": "l2",
+                "sink_name": "l2_clean_panel_v1",
+                "subset": {"role": "target"},
+            },
+        },
     ]
     if rotation == "B1":
         # Identity: pass X through unchanged.
         if n_lag == 0:
-            nodes.append({"id": "X_final", "type": "step", "op": "identity", "params": {}, "inputs": ["src_X"]})
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "identity",
+                    "params": {},
+                    "inputs": ["src_X"],
+                }
+            )
         else:
-            nodes.append({"id": "X_final", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["src_X"]})
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["src_X"],
+                }
+            )
     elif rotation == "B2":
         # Phase A2 fix: paper §3.2 Eq. (18) keeps ALL N factors ("we do
         # not select F_t … we keep them all"). Phase A3 fix: pass the
@@ -1379,16 +2543,42 @@ def _l3_b_rotation(rotation: str, horizon: int, *, n_factors: int = 4, n_lag: in
         # at PCA fit time.
         if n_lag == 0:
             # Phase A4c: no-lag identity path. PCA-of-X is the X_final.
-            nodes.append({"id": "X_final", "type": "step", "op": "pca",
-                          "params": {"n_components": "all", "temporal_rule": "expanding_window_per_origin"},
-                          "inputs": ["src_X"]})
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "pca",
+                    "params": {
+                        "n_components": "all",
+                        "temporal_rule": "expanding_window_per_origin",
+                    },
+                    "inputs": ["src_X"],
+                }
+            )
         else:
-            nodes.append({"id": "feat_pca", "type": "step", "op": "pca",
-                          "params": {"n_components": "all", "temporal_rule": "expanding_window_per_origin"},
-                          "inputs": ["src_X"]})
+            nodes.append(
+                {
+                    "id": "feat_pca",
+                    "type": "step",
+                    "op": "pca",
+                    "params": {
+                        "n_components": "all",
+                        "temporal_rule": "expanding_window_per_origin",
+                    },
+                    "inputs": ["src_X"],
+                }
+            )
             # Phase A3 fix: rename ``max_lag`` → ``n_lag`` (the lag op reads
             # ``n_lag``; the typo silently fell back to the default 4).
-            nodes.append({"id": "X_final", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["feat_pca"]})
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["feat_pca"],
+                }
+            )
     elif rotation == "B3":
         # Phase A2 fix: paper §3.2 "B₃() rotates H_t^+ rather than X_t and
         # still keeps all the factors. H_t^+ includes all the relevant
@@ -1417,50 +2607,584 @@ def _l3_b_rotation(rotation: str, horizon: int, *, n_factors: int = 4, n_lag: in
             # Phase A4c: paper §3.2 footnote — "B₃() = B₂() only when no
             # lags are included." At n_lag=0 the H_t^+ stack collapses
             # to X_t alone, so PCA reduces to PCA-of-X (B₂'s no-lag DAG).
-            nodes.append({"id": "X_final", "type": "step", "op": "pca",
-                          "params": {"n_components": "all", "temporal_rule": "expanding_window_per_origin"},
-                          "inputs": ["src_X"]})
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "pca",
+                    "params": {
+                        "n_components": "all",
+                        "temporal_rule": "expanding_window_per_origin",
+                    },
+                    "inputs": ["src_X"],
+                }
+            )
         else:
-            nodes.append({"id": "lag_x", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["src_X"]})
-            nodes.append({"id": "lag_y", "type": "step", "op": "lag", "params": {"n_lag": n_lag}, "inputs": ["src_y"]})
-            nodes.append({"id": "h_plus", "type": "step", "op": "weighted_concat", "params": {}, "inputs": ["lag_y", "lag_x"]})
-            nodes.append({"id": "X_final", "type": "step", "op": "pca",
-                          "params": {"n_components": "all", "temporal_rule": "expanding_window_per_origin"},
-                          "inputs": ["h_plus"]})
+            nodes.append(
+                {
+                    "id": "lag_x",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["src_X"],
+                }
+            )
+            nodes.append(
+                {
+                    "id": "lag_y",
+                    "type": "step",
+                    "op": "lag",
+                    "params": {"n_lag": n_lag},
+                    "inputs": ["src_y"],
+                }
+            )
+            nodes.append(
+                {
+                    "id": "h_plus",
+                    "type": "step",
+                    "op": "weighted_concat",
+                    "params": {},
+                    "inputs": ["lag_y", "lag_x"],
+                }
+            )
+            nodes.append(
+                {
+                    "id": "X_final",
+                    "type": "step",
+                    "op": "pca",
+                    "params": {
+                        "n_components": "all",
+                        "temporal_rule": "expanding_window_per_origin",
+                    },
+                    "inputs": ["h_plus"],
+                }
+            )
     else:
         raise ValueError(f"unknown rotation {rotation!r}; expected B1/B2/B3")
-    nodes.append({"id": "y_h", "type": "step", "op": "target_construction",
-                  "params": {"mode": "point_forecast", "method": "direct", "horizon": horizon},
-                  "inputs": ["src_y"]})
+    nodes.append(
+        {
+            "id": "y_h",
+            "type": "step",
+            "op": "target_construction",
+            "params": {
+                "mode": "point_forecast",
+                "method": "direct",
+                "horizon": horizon,
+            },
+            "inputs": ["src_y"],
+        }
+    )
     return {
         "nodes": nodes,
-        "sinks": {"l3_features_v1": {"X_final": "X_final", "y_final": "y_h"}, "l3_metadata_v1": "auto"},
+        "sinks": {
+            "l3_features_v1": {"X_final": "X_final", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
     }
 
 
 # ---------------------------------------------------------------------------
-# 15. Arctic Sea Ice DFM
+# 16. Arctic Amplification VAR / VARCTIC (Coulombe & Goebel 2021)
 # ---------------------------------------------------------------------------
 
-def arctic_sea_ice_dfm(
+
+def arctic_var(
     *,
     target: str = "y",
     horizon: int = 1,
-    n_factors: int = 1,
-    factor_order: int = 1,
+    n_lag: int | None = None,
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+    b_AR: float = 0.9,
+    lambda_1: float = 0.3,
+    lambda_cross: float = 0.5,
+    lambda_decay: float = 1.5,
+    n_posterior_draws: int = 2000,
+    posterior_irf_periods: int = 36,
+    ordering: tuple[str, ...] | None = None,
+    n_lags: int | None = None,
+) -> dict[str, Any]:
+    """Goulet Coulombe & Goebel (2021) VARCTIC = ``bvar_minnesota`` family
+    + L7 ``orthogonalised_irf`` / ``historical_decomposition`` / ``fevd``
+    ops for shock decomposition + Bayesian credible bands.
+
+    **Phase B-4 paper-4 rewire (2026-05-08).** The helper now routes to
+    the multi-equation Minnesota BVAR (paper §3.c, Eq. 5) rather than
+    the OLS-VAR proxy used in v0.9.0a0. Default hyperparameters track
+    paper Appx-A.3 VARCTIC 8 optimum: ``b_AR = 0.9`` (random-walk
+    anchor), ``λ₁ = 0.3`` (overall tightness), ``λ_cross = 0.5``
+    (cross-equation shrinkage), ``λ_decay = 1.5`` (lag decay),
+    ``n_posterior_draws = 2000`` (paper Appx-A footnote A5),
+    ``n_lag = 12`` (paper VARCTIC 8 P=12).
+
+    **Cholesky identification.** Pass ``ordering = ("co2", "tcc",
+    "pr", "at", "sst", "sie", "sit", "albedo")`` (or the panel-
+    appropriate column names) to anchor the Cholesky decomposition to
+    the paper §3.c (footnote 12) ordering: CO₂ first (most exogenous),
+    surface-feedback channels last. With ``ordering = None`` the BVAR
+    falls back to pandas-concat column order.
+
+    **Backward-compatibility.** ``n_lags`` (plural) is accepted as a
+    legacy alias and emits ``DeprecationWarning``; the recipe always
+    writes the canonical ``n_lag`` key consumed by ``_BayesianVAR``.
+    Earlier releases silently routed ``n_lags`` to nowhere because the
+    L4 BVAR factory reads ``n_lag``.
+
+    **Decomposition.** Helper returns L0-L4 + an L7 block that wires
+    ``orthogonalised_irf`` and ``historical_decomposition`` against the
+    fitted BVAR so the artifact carries posterior-mean impulse / HD
+    paths plus 16/84 percentile credible bands per the paper §3.
+
+    **Status: operational** (BVAR Minnesota + posterior IRF / HD bands).
+    Reference: doi:10.1175/JCLI-D-20-0324.1.
+    """
+
+    # F2 backward-compat: accept legacy ``n_lags`` plural arg with a
+    # DeprecationWarning. The canonical key is ``n_lag`` (singular) to
+    # match the L4 factory at runtime.py and the rest of the codebase.
+    if n_lags is not None:
+        import warnings
+
+        warnings.warn(
+            "arctic_var: 'n_lags' is deprecated; use the canonical "
+            "'n_lag' (singular). Earlier releases silently dropped "
+            "'n_lags' because the L4 BVAR factory reads 'n_lag'.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if n_lag is None:
+            n_lag = int(n_lags)
+        elif int(n_lags) != int(n_lag):
+            raise ValueError(
+                f"arctic_var: conflicting n_lag={n_lag} and "
+                f"n_lags={n_lags}; pass exactly one (prefer n_lag)."
+            )
+    if n_lag is None:
+        n_lag = 12  # paper VARCTIC 8 default
+
+    fit_params: dict[str, Any] = {
+        "n_lag": int(n_lag),
+        "b_AR": float(b_AR),
+        "lambda_1": float(lambda_1),
+        "lambda_cross": float(lambda_cross),
+        "lambda_decay": float(lambda_decay),
+        "n_posterior_draws": int(n_posterior_draws),
+        "posterior_irf_periods": int(posterior_irf_periods),
+    }
+    if ordering is not None:
+        fit_params["ordering"] = list(ordering)
+
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit(
+            family="bvar_minnesota",
+            fit_params=fit_params,
+            fit_node_id="fit_varctic",
+        ),
+    )
+    # Phase B-4 F7: attach the L7 IRF / HD block by default so the
+    # public artifact carries posterior-mean responses + 16/84 bands.
+    recipe["7_interpretation"] = {
+        "enabled": True,
+        "nodes": [
+            {
+                "id": "src_var",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l4",
+                    "sink_name": "l4_model_artifacts_v1",
+                    "subset": {"model_id": "fit_varctic"},
+                },
+            },
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "irf",
+                "type": "step",
+                "op": "orthogonalised_irf",
+                "params": {
+                    "n_periods": int(posterior_irf_periods),
+                    "model_family": "bvar_minnesota",
+                },
+                "inputs": ["src_var", "src_X"],
+            },
+            {
+                "id": "hd",
+                "type": "step",
+                "op": "historical_decomposition",
+                "params": {
+                    "n_periods": int(posterior_irf_periods),
+                    "model_family": "bvar_minnesota",
+                },
+                "inputs": ["src_var", "src_X"],
+            },
+        ],
+        "sinks": {
+            "l7_importance_v1": {
+                "global": ["irf", "hd"],
+            },
+        },
+        "fixed_axes": {
+            "output_table_format": "long",
+            "figure_type": "auto",
+            "top_k_features_to_show": 20,
+            "precision_digits": 4,
+            "figure_format": "pdf",
+            "latex_table_export": False,
+        },
+    }
+    return recipe
+
+
+# ---------------------------------------------------------------------------
+# Phase C top-6 net-new method helpers (2026-05-08).
+# ---------------------------------------------------------------------------
+
+
+def u_midas(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    freq_ratio: int = 3,
+    n_lags_high: int = 6,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """Arctic Sea Ice DFM = ``dfm_mixed_mariano_murasawa`` family.
+    """Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS recipe.
 
-    To recover the paper §3.4 Kalman *smoother* posterior on the latent
-    factors after running ``macroforecast.run(recipe)``, pull the
-    fitted ``_DFMMixedFrequency`` instance from the returned
-    ``ModelArtifact`` and call ``predict_smoothed_factors()``. Audit
-    gap-fix: the smoother surface was previously not exposed.
+    **Decomposition.** Pure aggregation: stack high-frequency lags as
+    separate columns indexed at low-frequency target dates, then run a
+    standard linear regression. The ``u_midas`` L3 op handles step 1;
+    ridge fits the resulting wide design.
 
-    **Status: operational** (DFM family operational since v0.25). Reference:
-    Coulombe & Goebel (2021) JCLI-D-20-0324 paired Arctic VAR.
+    **Status: operational** -- ``u_midas`` op operational v0.9.1 dev-stage
+    Phase C (2026-05-08).
+    """
+
+    l3 = {
+        "nodes": [
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
+            {
+                "id": "umidas",
+                "type": "step",
+                "op": "u_midas",
+                "params": {
+                    "freq_ratio": freq_ratio,
+                    "n_lags_high": n_lags_high,
+                    "target_freq": "low",
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X"],
+            },
+        ],
+        "sinks": {
+            "l3_features_v1": {"X_final": "umidas", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
+    }
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+    )
+    recipe["3_feature_engineering"] = l3
+    return recipe
+
+
+def midas_almon(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    weighting: str = "exp_almon",
+    polynomial_order: int = 2,
+    freq_ratio: int = 3,
+    n_lags_high: int = 12,
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Ghysels-Sinko-Valkanov (2007) MIDAS with parametric weighted lag polynomial.
+
+    **Decomposition.** Single ``midas`` L3 op that internally fits the
+    NLS optimisation (``scipy.optimize.minimize``) and emits one
+    aggregated column per HF predictor. Downstream linear regression
+    then maps the weighted aggregates to the target.
+
+    **Status: operational** -- ``midas`` op operational v0.9.1 dev-stage
+    Phase C (2026-05-08).
+    """
+
+    l3 = {
+        "nodes": [
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
+            {
+                "id": "midas",
+                "type": "step",
+                "op": "midas",
+                "params": {
+                    "weighting": weighting,
+                    "polynomial_order": polynomial_order,
+                    "freq_ratio": freq_ratio,
+                    "n_lags_high": n_lags_high,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X", "y_h"],
+            },
+        ],
+        "sinks": {
+            "l3_features_v1": {"X_final": "midas", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
+    }
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+    )
+    recipe["3_feature_engineering"] = l3
+    return recipe
+
+
+def sliced_inverse_regression(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    n_components: int = 2,
+    n_slices: int = 5,
+    scaling_method: str = "scaled_pca",
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Fan-Xue-Yao (2017) sliced inverse regression with optional Huang-Zhou
+    (2022) predictive scaling (``scaling_method='scaled_pca'`` = sSUFF).
+
+    **Decomposition.** Single ``sliced_inverse_regression`` L3 op (paper-
+    faithful: standardise → optional column-wise scaling → sort by y →
+    H slices → between-slice covariance → top-K eigenvectors → project)
+    feeding a downstream ridge.
+
+    **Status: operational** -- ``sliced_inverse_regression`` op
+    operational v0.9.1 dev-stage Phase C (2026-05-08).
+    """
+
+    l3 = {
+        "nodes": [
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
+            {
+                "id": "sir",
+                "type": "step",
+                "op": "sliced_inverse_regression",
+                "params": {
+                    "n_components": n_components,
+                    "n_slices": n_slices,
+                    "scaling_method": scaling_method,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X", "y_h"],
+            },
+        ],
+        "sinks": {
+            "l3_features_v1": {"X_final": "sir", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
+    }
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+    )
+    recipe["3_feature_engineering"] = l3
+    return recipe
+
+
+def garch_volatility(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    family: str = "garch11",
+    min_train_size: int | None = None,
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """GARCH-family univariate volatility recipe.
+
+    **Decomposition.** Standard L3 lag + target_construction; L4 fit
+    dispatches to ``_GARCHFamily`` which wraps the ``arch`` package.
+    Three variants supported via ``family``:
+    ``garch11`` (Bollerslev 1986), ``egarch`` (Nelson 1991),
+    ``realized_garch_with_rv_exog`` (RV as exogenous regressor in a
+    vanilla GARCH(1,1); honest rename of the previous
+    ``realized_garch`` family — **NOT** the Hansen-Huang-Shek 2012
+    joint MLE).
+
+    Phase C-3 audit-fix (M9): the helper auto-sets ``min_train_size``
+    based on the family. The ``arch`` package requires ≥30 observations
+    to fit a GARCH spec, so the helper now defaults to a paper-
+    conservative ``min_train_size = 60`` for any GARCH family. The
+    pre-fix default of 6 (inherited from ``_l4_single_fit``) made the
+    recipe unrunnable without manual override. Callers may override
+    via the explicit ``min_train_size`` keyword.
+
+    The legacy family name ``realized_garch`` is now FUTURE (reserved
+    for the proper Hansen-Huang-Shek 2012 joint MLE); the helper raises
+    ``ValueError`` if used and points at ``realized_garch_with_rv_exog``.
+
+    **Status: operational** when ``arch>=6.0`` is installed (optional
+    extra ``pip install macroforecast[arch]``); otherwise the L4 fit
+    raises ``NotImplementedError`` with an install hint.
+    """
+
+    operational_garch_families = {
+        "garch11",
+        "egarch",
+        "realized_garch_with_rv_exog",
+    }
+    if family == "realized_garch":
+        raise ValueError(
+            "family='realized_garch' is now reserved (FUTURE) for the "
+            "Hansen-Huang-Shek (2012) joint return + measurement-equation "
+            "MLE. The previous v0.9.0F runtime fed RV as the GARCH(1,1) "
+            "exogenous regressor — that approximation is now exposed "
+            "honestly under family='realized_garch_with_rv_exog'."
+        )
+    if family not in operational_garch_families:
+        raise ValueError(
+            f"family must be one of {sorted(operational_garch_families)}; "
+            f"got {family!r}"
+        )
+    # Phase C-3 audit-fix (M9): GARCH requires ≥30 obs (arch package);
+    # paper-conservative buffer = 60. Helper users can override via
+    # explicit ``min_train_size`` kwarg.
+    resolved_min_train_size = (
+        max(60, int(min_train_size)) if min_train_size is not None else 60
+    )
+    return _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit(
+            family=family,
+            fit_params={"min_train_size": resolved_min_train_size},
+            fit_node_id="fit_garch",
+        ),
+    )
+
+
+def ets(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    error_trend_seasonal: str = "AAN",
+    seasonal_periods: int = 12,
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Hyndman-Koehler-Ord-Snyder (2008) ETS state-space recipe.
+
+    Wraps :class:`statsmodels.tsa.exponential_smoothing.ets.ETSModel`.
+
+    **Status: operational** -- ``ets`` family operational v0.9.1
+    dev-stage Phase C (2026-05-08).
     """
 
     return _base_recipe(
@@ -1469,35 +3193,31 @@ def arctic_sea_ice_dfm(
         panel=panel,
         seed=seed,
         l4=_l4_single_fit(
-            family="dfm_mixed_mariano_murasawa",
-            fit_params={"n_factors": n_factors, "factor_order": factor_order},
-            fit_node_id="fit_arctic_dfm",
+            family="ets",
+            fit_params={
+                "error_trend_seasonal": error_trend_seasonal,
+                "seasonal_periods": seasonal_periods,
+            },
+            fit_node_id="fit_ets",
         ),
     )
 
 
-# ---------------------------------------------------------------------------
-# 16. Arctic Amplification VAR / VARCTIC (Coulombe & Goebel 2021)
-# ---------------------------------------------------------------------------
-
-def arctic_var(
+def theta_method(
     *,
     target: str = "y",
     horizon: int = 1,
-    n_lags: int = 4,
+    theta: float = 2.0,
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
-    """Goulet Coulombe & Goebel (2021) VARCTIC = ``var`` family + L7
-    ``historical_decomposition`` / ``orthogonalised_irf`` / ``fevd`` for
-    shock decomposition.
+    """Assimakopoulos-Nikolopoulos (2000) Theta(2) closed-form recipe.
 
-    **Decomposition.** Helper returns the L0-L4 VAR baseline; users add
-    L7 IRF / FEVD ops via a custom L7 block to reproduce the paper's
-    shock-decomposition figures.
+    **Decomposition.** Linear-trend OLS + simple exponential smoothing
+    blended 0.5 / 0.5 at theta=2 (the M3-winner setup).
 
-    **Status: operational** (VAR + IRF / FEVD ops operational).
-    Reference: doi:10.1175/JCLI-D-20-0324.1.
+    **Status: operational** -- ``theta_method`` family operational
+    v0.9.1 dev-stage Phase C (2026-05-08).
     """
 
     return _base_recipe(
@@ -1505,33 +3225,161 @@ def arctic_var(
         horizon=horizon,
         panel=panel,
         seed=seed,
-        l4=_l4_single_fit(family="var", fit_params={"n_lags": n_lags}, fit_node_id="fit_varctic"),
+        l4=_l4_single_fit(
+            family="theta_method",
+            fit_params={"theta": theta},
+            fit_node_id="fit_theta",
+        ),
     )
+
+
+def holt_winters(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    seasonal_periods: int = 12,
+    trend: str | None = "add",
+    seasonal: str | None = "add",
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Hyndman-Athanasopoulos (2018) §7 Holt-Winters recipe.
+
+    Wraps :class:`statsmodels.tsa.holtwinters.ExponentialSmoothing`. The
+    runtime auto-disables seasonality when the training series is
+    shorter than ``2 * seasonal_periods``.
+
+    **Status: operational** -- ``holt_winters`` family operational
+    v0.9.1 dev-stage Phase C (2026-05-08).
+    """
+
+    return _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=_l4_single_fit(
+            family="holt_winters",
+            fit_params={
+                "seasonal_periods": seasonal_periods,
+                "trend": trend,
+                "seasonal": seasonal,
+            },
+            fit_node_id="fit_hw",
+        ),
+    )
+
+
+def bai_ng_corrected_factor_ar(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    n_factors: int = 4,
+    n_lag: int = 1,
+    quantile_levels: tuple[float, ...] = (0.05, 0.25, 0.5, 0.75, 0.95),
+    panel: dict[str, list[Any]] | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Bai-Ng (2006) generated-regressor PI correction on factor_augmented_ar.
+
+    **Decomposition.** Standard L3 lag + target_construction; L4 fit on
+    ``factor_augmented_ar`` family with ``forecast_object='quantile'``;
+    predict node sets ``pi_correction='bai_ng'`` so the runtime applies
+    the Theorem 3 / Corollary 1 correction (V₂/N + V₁/T + σ²_ε) to the
+    quantile-band sigma.
+
+    **Status: operational** -- ``predict.pi_correction`` axis operational
+    v0.9.1 dev-stage Phase C (2026-05-08).
+    """
+
+    fit_params = {
+        "family": "factor_augmented_ar",
+        "n_factors": n_factors,
+        "n_lag": n_lag,
+        "forecast_object": "quantile",
+        "quantile_levels": list(quantile_levels),
+        "forecast_strategy": "direct",
+        "training_start_rule": "expanding",
+        "refit_policy": "every_origin",
+        "search_algorithm": "none",
+        "min_train_size": 6,
+    }
+    l4 = {
+        "nodes": [
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "X_final"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l3",
+                    "sink_name": "l3_features_v1",
+                    "subset": {"component": "y_final"},
+                },
+            },
+            {
+                "id": "fit",
+                "type": "step",
+                "op": "fit_model",
+                "params": fit_params,
+                "inputs": ["src_X", "src_y"],
+            },
+            {
+                "id": "predict",
+                "type": "step",
+                "op": "predict",
+                "params": {"pi_correction": "bai_ng"},
+                "inputs": ["fit", "src_X"],
+            },
+        ],
+        "forecast_object": "quantile",
+        "sinks": {
+            "l4_forecasts_v1": "predict",
+            "l4_model_artifacts_v1": "fit",
+            "l4_training_metadata_v1": "auto",
+        },
+    }
+    return _base_recipe(target=target, horizon=horizon, panel=panel, seed=seed, l4=l4)
 
 
 __all__ = [
     # Operational (runs end-to-end on current main):
-    "perfectly_random_forest",      # #3 PRF baseline
-    "scaled_pca",                    # #1
-    "macroeconomic_random_forest",   # #2
-    "ols_attention_demo",            # #7 conceptual
-    "sparse_macro_factors",          # #11
+    "perfectly_random_forest",  # #3 PRF baseline
+    "scaled_pca",  # #1
+    "macroeconomic_random_forest",  # #2
+    "ols_attention_demo",  # #7 conceptual
+    "sparse_macro_factors",  # #11
     "macroeconomic_data_transformations",  # #12 MARX
-    "ml_useful_macro",               # #13
-    "ml_useful_macro_horse_race",    # #16 paper-16 grid helper
-    "ml_useful_macro_b_grid",        # #16 §3.2 B₁/B₂/B₃ rotation grid
+    "ml_useful_macro",  # #13
+    "ml_useful_macro_horse_race",  # #16 paper-16 grid helper
+    "ml_useful_macro_b_grid",  # #16 §3.2 B₁/B₂/B₃ rotation grid
     "macroeconomic_data_transformations_horse_race",  # #15 16-cell helper
-    "arctic_sea_ice_dfm",            # #15
-    "arctic_var",                    # #16
+    "arctic_var",  # #16
+    # Phase C top-6 net-new methods:
+    "u_midas",  # M1 Foroni-Marcellino-Schumacher 2015
+    "midas_almon",  # M2 Ghysels-Sinko-Valkanov 2007
+    "sliced_inverse_regression",  # M3 Fan-Xue-Yao 2017 + Huang-Zhou 2022 sSUFF
+    "garch_volatility",  # M9 Bollerslev/Nelson/Hansen
+    "ets",  # M16 Hyndman-Koehler-Ord-Snyder 2008
+    "theta_method",  # M16 Assimakopoulos-Nikolopoulos 2000
+    "holt_winters",  # M16 Hyndman-Athanasopoulos 2018
+    "bai_ng_corrected_factor_ar",  # M12 Bai-Ng 2006 PI correction
     # Pre-promotion (depend on future-status atomic primitives):
-    "booging",                       # #3b bagging.strategy
-    "marsquake",                     # #3c mars family
-    "adaptive_ma",                   # #4 adaptive_ma_rf
-    "two_step_ridge",                # #5 ridge.prior=random_walk
-    "hemisphere_neural_network",     # #6 mlp.architecture
-    "anatomy_oos",                   # #8 oshapley_vi/pbsv
-    "dual_interpretation",           # #9 dual_decomposition
-    "maximally_forward_looking",     # #10 asymmetric_trim + ridge.constraint
-    "slow_growing_tree",             # #14 decision_tree.split_shrinkage
-    "assemblage_regression",         # repackaged ridge.constraint
+    "booging",  # #3b bagging.strategy
+    "marsquake",  # #3c mars family
+    "adaptive_ma",  # #4 adaptive_ma_rf
+    "two_step_ridge",  # #5 ridge.prior=random_walk
+    "hemisphere_neural_network",  # #6 mlp.architecture
+    "anatomy_oos",  # #8 oshapley_vi/pbsv
+    "dual_interpretation",  # #9 dual_decomposition
+    "maximally_forward_looking",  # #10 asymmetric_trim + ridge.constraint
+    "slow_growing_tree",  # #14 decision_tree.split_shrinkage
+    "assemblage_regression",  # repackaged ridge.constraint
 ]

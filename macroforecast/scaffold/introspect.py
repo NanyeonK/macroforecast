@@ -5,13 +5,14 @@ The wizard never reads ``LayerImplementationSpec`` directly -- it goes
 through this module so a future schema-shape change has a single
 re-wire point.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from importlib import import_module
 from typing import Any
 
-from ..core.layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
+from ..core.layer_specs import AxisSpec, LayerImplementationSpec, Option
 
 
 # Layer modules that expose ``<LAYER>_LAYER_SPEC`` constants. Order
@@ -169,10 +170,16 @@ def axes(layer_id: str) -> tuple[AxisInfo, ...]:
             # shape but unlocks the option list).
             if not info.options and fallback is not None:
                 info = AxisInfo(
-                    layer=info.layer, sublayer=info.sublayer, name=info.name,
-                    default=info.default if info.default is not None else fallback.default,
-                    status=info.status, sweepable=info.sweepable,
-                    options=fallback.options, has_gate=info.has_gate,
+                    layer=info.layer,
+                    sublayer=info.sublayer,
+                    name=info.name,
+                    default=info.default
+                    if info.default is not None
+                    else fallback.default,
+                    status=info.status,
+                    sweepable=info.sweepable,
+                    options=fallback.options,
+                    has_gate=info.has_gate,
                     leaf_config_keys=info.leaf_config_keys,
                 )
             out.append(info)
@@ -220,10 +227,20 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
     from ..core.ops.l4_ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES
 
     family_options = tuple(
-        OptionInfo(value=fam, label=fam.replace("_", " ").title(), description="", status="operational")
+        OptionInfo(
+            value=fam,
+            label=fam.replace("_", " ").title(),
+            description="",
+            status="operational",
+        )
         for fam in OPERATIONAL_MODEL_FAMILIES
     ) + tuple(
-        OptionInfo(value=fam, label=fam.replace("_", " ").title(), description="", status="future")
+        OptionInfo(
+            value=fam,
+            label=fam.replace("_", " ").title(),
+            description="",
+            status="future",
+        )
         for fam in FUTURE_MODEL_FAMILIES
     )
     return (
@@ -247,7 +264,9 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
             options=(
                 OptionInfo("direct", "Direct h-step", "One model per horizon."),
                 OptionInfo("iterated", "Iterated", "h=1 model applied recursively."),
-                OptionInfo("path_average", "Path average", "Cumulative-average target."),
+                OptionInfo(
+                    "path_average", "Path average", "Cumulative-average target."
+                ),
             ),
             has_gate=False,
         ),
@@ -260,8 +279,14 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
             sweepable=True,
             options=(
                 OptionInfo("expanding", "Expanding window", "Start at sample t=0."),
-                OptionInfo("rolling", "Rolling window", "Fixed-size window of size rolling_window."),
-                OptionInfo("fixed", "Fixed window", "Fixed start/end dates from leaf_config."),
+                OptionInfo(
+                    "rolling",
+                    "Rolling window",
+                    "Fixed-size window of size rolling_window.",
+                ),
+                OptionInfo(
+                    "fixed", "Fixed window", "Fixed start/end dates from leaf_config."
+                ),
             ),
             has_gate=False,
         ),
@@ -273,8 +298,12 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
             status="operational",
             sweepable=True,
             options=(
-                OptionInfo("every_origin", "Refit each origin", "Walk-forward default."),
-                OptionInfo("every_n_origins", "Refit every n origins", "Caps refit cost."),
+                OptionInfo(
+                    "every_origin", "Refit each origin", "Walk-forward default."
+                ),
+                OptionInfo(
+                    "every_n_origins", "Refit every n origins", "Caps refit cost."
+                ),
                 OptionInfo("single_fit", "Single fit", "Fit once on the full sample."),
             ),
             has_gate=False,
@@ -289,10 +318,56 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
             options=(
                 OptionInfo("none", "No tuning", "Use the params as-is."),
                 OptionInfo("cv_path", "Regularisation path", "RidgeCV / LassoCV path."),
-                OptionInfo("grid_search", "Grid search", "Exhaustive over leaf_config.tuning_grid."),
-                OptionInfo("random_search", "Random search", "Sample tuning_distributions."),
-                OptionInfo("bayesian_optimization", "Bayesian (optuna)", "TPE optimisation."),
+                OptionInfo(
+                    "grid_search",
+                    "Grid search",
+                    "Exhaustive over leaf_config.tuning_grid.",
+                ),
+                OptionInfo(
+                    "random_search", "Random search", "Sample tuning_distributions."
+                ),
+                OptionInfo(
+                    "bayesian_optimization", "Bayesian (optuna)", "TPE optimisation."
+                ),
                 OptionInfo("genetic_algorithm", "Genetic", "Tournament evolution."),
+            ),
+            has_gate=False,
+        ),
+        # v0.9 Phase C M12 -- Bai-Ng (2006) generated-regressor PI correction
+        # axis on the predict node. Surfaced under a virtual ``L4_E_predict``
+        # sub-layer so docs / wizard can iterate the option list. The runtime
+        # reads ``predict.params['pi_correction']`` directly via
+        # ``_emit_quantile_intervals`` (see ``core/runtime.py``).
+        AxisInfo(
+            layer="l4",
+            sublayer="L4_E_predict",
+            name="pi_correction",
+            default="none",
+            status="operational",
+            sweepable=True,
+            options=(
+                OptionInfo(
+                    value="none",
+                    label="No correction",
+                    description=(
+                        "Standard Gaussian-residual sigma; assumes factor "
+                        "regressors are observed without estimation noise."
+                    ),
+                    status="operational",
+                ),
+                OptionInfo(
+                    value="bai_ng",
+                    label="Bai-Ng (2006)",
+                    description=(
+                        "Theorem 3 + Corollary 1 generated-regressor "
+                        "correction: inflates the predictive sigma by the "
+                        "factor-estimation noise V₂/N and parameter-"
+                        "estimation noise V₁/T on top of the residual "
+                        "variance σ²_ε. Active only when the upstream "
+                        "fitted family is ``factor_augmented_ar``."
+                    ),
+                    status="operational",
+                ),
             ),
             has_gate=False,
         ),
@@ -323,7 +398,8 @@ def _build_l3_fallback() -> tuple[AxisInfo, ...]:
                     status=spec.status,
                 )
                 for name, spec in _OPS_REGISTRY.items()
-                if "l3" in (spec.layer_scope or ()) and spec.status in ("operational", "future")
+                if "l3" in (spec.layer_scope or ())
+                and spec.status in ("operational", "future")
             ),
             key=lambda o: o.value,
         )
@@ -348,33 +424,82 @@ def _build_l6_fallback() -> tuple[AxisInfo, ...]:
 
     return (
         AxisInfo(
-            layer="l6", sublayer="L6_A_equal_predictive", name="equal_predictive_test",
-            default="dm_diebold_mariano", status="operational", sweepable=True,
+            layer="l6",
+            sublayer="L6_A_equal_predictive",
+            name="equal_predictive_test",
+            default="dm_diebold_mariano",
+            status="operational",
+            sweepable=True,
             options=(
-                OptionInfo("dm_diebold_mariano", "Diebold-Mariano", "DM with HLN small-sample correction."),
-                OptionInfo("gw_giacomini_white", "Giacomini-White", "Conditional predictive ability."),
-                OptionInfo("dmp_multi_horizon", "DM-Pesaran joint", "Joint multi-horizon test."),
-                OptionInfo("multi", "All of the above", "Run every test in this sub-layer."),
+                OptionInfo(
+                    "dm_diebold_mariano",
+                    "Diebold-Mariano",
+                    "DM with HLN small-sample correction.",
+                ),
+                OptionInfo(
+                    "gw_giacomini_white",
+                    "Giacomini-White",
+                    "Conditional predictive ability.",
+                ),
+                OptionInfo(
+                    "dmp_multi_horizon", "DM-Pesaran joint", "Joint multi-horizon test."
+                ),
+                # v0.9 Phase C M14 -- Harvey-Leybourne-Newbold (1998) IJF
+                # forecast-encompassing test. Runtime dispatcher in
+                # ``_l6_equal_predictive_results`` reads this value
+                # directly (see ``core/runtime.py``).
+                OptionInfo(
+                    value="harvey_newbold_encompassing",
+                    label="Harvey-Newbold encompassing",
+                    description=(
+                        "Harvey-Leybourne-Newbold (1998) test for "
+                        "forecast encompassing. H_0: forecast f_1 "
+                        "encompasses f_2 (i.e. the optimal linear "
+                        "combination puts zero weight on f_2's error). "
+                        "Uses ``d_t = e_a (e_a - e_b)`` with HAC SE and "
+                        "an HLN small-sample correction at horizon h>1."
+                    ),
+                    status="operational",
+                ),
+                OptionInfo(
+                    "multi", "All of the above", "Run every test in this sub-layer."
+                ),
             ),
             has_gate=False,
         ),
         AxisInfo(
-            layer="l6", sublayer="L6_C_cpa", name="cpa_test",
-            default="giacomini_rossi_2010", status="operational", sweepable=True,
+            layer="l6",
+            sublayer="L6_C_cpa",
+            name="cpa_test",
+            default="giacomini_rossi_2010",
+            status="operational",
+            sweepable=True,
             options=(
-                OptionInfo("giacomini_rossi_2010", "Giacomini-Rossi rolling", "Rolling-window fluctuation test."),
-                OptionInfo("rossi_sekhposyan", "Rossi-Sekhposyan", "Recursive variant."),
+                OptionInfo(
+                    "giacomini_rossi_2010",
+                    "Giacomini-Rossi rolling",
+                    "Rolling-window fluctuation test.",
+                ),
+                OptionInfo(
+                    "rossi_sekhposyan", "Rossi-Sekhposyan", "Recursive variant."
+                ),
                 OptionInfo("multi", "Both", "Run both variants."),
             ),
             has_gate=False,
         ),
         AxisInfo(
-            layer="l6", sublayer="L6_D_multiple_model", name="multiple_model_test",
-            default="mcs_hansen", status="operational", sweepable=True,
+            layer="l6",
+            sublayer="L6_D_multiple_model",
+            name="multiple_model_test",
+            default="mcs_hansen",
+            status="operational",
+            sweepable=True,
             options=(
                 OptionInfo("mcs_hansen", "Hansen MCS", "Stationary block bootstrap."),
                 OptionInfo("spa_hansen", "Hansen SPA", "Studentized SPA."),
-                OptionInfo("reality_check_white", "White reality check", "Original RC."),
+                OptionInfo(
+                    "reality_check_white", "White reality check", "Original RC."
+                ),
                 OptionInfo("step_m_romano_wolf", "Romano-Wolf StepM", "Step-down."),
             ),
             has_gate=False,
@@ -411,7 +536,8 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
                     status=spec.status,
                 )
                 for name, spec in _OPS_REGISTRY.items()
-                if "l7" in (spec.layer_scope or ()) and spec.status in ("operational", "future")
+                if "l7" in (spec.layer_scope or ())
+                and spec.status in ("operational", "future")
             ),
             key=lambda o: o.value,
         )
