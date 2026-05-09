@@ -47,6 +47,18 @@ python -m pytest tests/ -x -q -m "not deep"
 Expected: ~953 tests pass / ~12 skipped in <30 seconds. The `[deep]` extra (and
 its tests) require torch.
 
+## Typecheck
+
+```bash
+python -m pip install -e ".[typecheck]"
+mypy
+```
+
+The mypy gate is a baseline, not a strict package-wide cleanup. It runs over the
+package entrypoint in `pyproject.toml` and explicitly marks legacy dynamic
+runtime/layer modules as typed-debt via `tool.mypy.overrides`. New typed modules
+should pass without adding to that override list.
+
 ## Release
 
 The release workflow (`release.yml`) publishes to PyPI on tag push. The

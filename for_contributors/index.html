@@ -151,6 +151,17 @@ ship a release. Start here.</p>
 <p>Expected: ~953 tests pass / ~12 skipped in &lt;30 seconds. The <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra (and
 its tests) require torch.</p>
 </section>
+<section id="typecheck">
+<h2>Typecheck<a class="headerlink" href="#typecheck" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[typecheck]&quot;</span>
+mypy
+</pre></div>
+</div>
+<p>The mypy gate is a baseline, not a strict package-wide cleanup. It runs over the
+package entrypoint in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> and explicitly marks legacy dynamic
+runtime/layer modules as typed-debt via <code class="docutils literal notranslate"><span class="pre">tool.mypy.overrides</span></code>. New typed modules
+should pass without adding to that override list.</p>
+</section>
 <section id="release">
 <h2>Release<a class="headerlink" href="#release" title="Link to this heading"></a></h2>
 <p>The release workflow (<code class="docutils literal notranslate"><span class="pre">release.yml</span></code>) publishes to PyPI on tag push. The
