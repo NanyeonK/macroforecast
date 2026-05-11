@@ -490,3 +490,99 @@ Module-level docstring updated: "Seven helpers are xfail-marked" →
 
 Phase F is documentation-only. No source modules, layer schemas, op registries, runtime helpers, or test files were modified. The 12-layer canonical design and all module relationships described above remain unchanged at HEAD `3744646d`.
 
+
+---
+
+## Phase D-2d HNN Early Stopping Closure (2026-05-12)
+
+> HEAD `e4ad0fb1` — Paper 9 (Coulombe / Frenette / Klieber 2025 JAE) §3 p.14 early stopping
+> mechanism added to `_HemisphereNN`. 3 source edits + 1 new test file (7 tests). 0 regressions.
+
+### What Changed
+
+Paper §3 p.14 (verbatim): *"we perform early stopping by using only a subset (80%) of the
+training sample for estimation and determine with the remaining set (20%) when to stop the
+optimization. The patience parameter in early stopping is 15 epochs."*
+
+Before D-2d, `_HemisphereNN.fit()` ran `n_epochs` unconditionally with no validation split
+and no early stopping (Round 5 audit finding F-3, D-2c explicitly deferred this ~18-line
+training-loop rewrite). D-2d closes F-3 fully.
+
+### Changed Modules / Functions
+
+| Module / File | Change | Details |
+| --- | --- | --- |
+| `macroforecast/core/runtime.py` | `import copy` added at top-level imports | Needed for `copy.deepcopy(model.state_dict())` |
+| `macroforecast/core/runtime.py` | `_HemisphereNN.__init__` | Added `patience: int = 15` and `val_frac: float = 0.20` kwargs (after `lambda_emphasis`, before `random_state`). Body: `self.patience = max(1, int(patience))`, `self.val_frac = float(np.clip(val_frac, 0.05, 0.5))`. Paper-locked defaults. |
+| `macroforecast/core/runtime.py` | `_HemisphereNN.fit()` training loop | (1) Pre-loop: 80/20 split via `np.random.RandomState(self.random_state).permutation(n)`; `train_idx`/`val_idx` sorted to preserve time order. (2) Bag loop: `_blocked_subsample` called on `train_size` not `n`; local→global index mapping via `train_idx[in_idx_local]`. (3) Per-epoch: val NLL with `model.eval()` + `torch.no_grad()`; patience counter; `copy.deepcopy(model.state_dict())` on improvement; `break` on `epochs_since_improvement >= self.patience`; `model.load_state_dict(best_state_dict)` after epoch loop. |
+| `macroforecast/core/runtime.py` | `_materialize_l4_model` | Added `patience=int(params.get("patience", 15))` and `val_frac=float(params.get("val_frac", 0.20))` to `_HemisphereNN(...)` constructor call. |
+| `tests/core/test_phase_d2d_hnn_earlystop.py` | New test file (7 tests) | `test_hnn_early_stopping_triggers_on_plateau`, `test_hnn_train_val_split_size_ratio`, `test_hnn_best_model_restored`, `test_hnn_init_defaults`, `test_hnn_init_clip_patience`, `test_hnn_init_clip_val_frac`, `test_hnn_small_dataset_guard`. |
+
+### Key Design Choices
+
+- **Single split per `fit()` call**: the 80/20 partition is computed once before the bag loop;
+  all bags share the same `X_val / y_val`. Paper p.14 specifies "single split per fit call".
+- **Sorted partition indices**: `np.sort(perm[:train_size])` preserves time order within each
+  partition so that `_blocked_subsample` (which creates contiguous-time windows) remains valid.
+- **Separate RNG streams**: `split_rng = np.random.RandomState(self.random_state)` for the
+  partition is independent of `rng = np.random.default_rng(self.random_state)` for bag-loop
+  blocked subsampling. Both seeded from `self.random_state`; non-interfering.
+- **`copy.deepcopy(model.state_dict())` not `copy.deepcopy(model)`**: lighter; `load_state_dict`
+  restores weights on the same model object.
+- **Pure NLL for validation**: no Lagrangian penalty in val computation — the patience signal
+  is generalization loss only (paper: "determine when to stop the optimization").
+- **OOB on global indices**: `oob_idx_global = train_idx[oob_idx_local]` maps back before
+  accumulation; the Eq. 9/10 reality check still covers the full dataset accumulator.
+- **Backward compat**: all existing callers use paper defaults via `params.get(...)` fallbacks;
+  `hemisphere_neural_network()` helper signature unchanged.
+
+### Function Call Graph (D-2d changed path)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    helper["hemisphere_neural_network()"] --> mat["_materialize_l4_model()"]
+    mat --> init["_HemisphereNN.__init__()<br/>+patience, +val_frac"]
+    init --> fit["_HemisphereNN.fit()"]
+    fit --> resolve["_resolve_nu()"]
+    fit --> split["80/20 split<br/>train_idx / val_idx"]
+    fit --> bagloop["Bag loop × B"]
+    bagloop --> subsamp["_blocked_subsample(train_size)"]
+    bagloop --> build["_build_one_model()"]
+    bagloop --> epochloop["Epoch loop × n_epochs"]
+    epochloop --> train["Training step<br/>NLL + Lagrangian"]
+    epochloop --> valnll["Val NLL<br/>model.eval() + no_grad()"]
+    epochloop --> patience["Patience counter<br/>deepcopy on improve"]
+    epochloop --> earlystop{"epochs_since >= patience?"}
+    earlystop -- yes --> restore["load_state_dict(best)"]
+    earlystop -- no --> epochloop
+    restore --> oob["OOB accumulation<br/>global indices"]
+    oob --> rc["_apply_reality_check()"]
+
+    style init fill:#1e90ff,stroke:#1565c0,color:#fff
+    style fit fill:#1e90ff,stroke:#1565c0,color:#fff
+    style split fill:#1e90ff,stroke:#1565c0,color:#fff
+    style bagloop fill:#1e90ff,stroke:#1565c0,color:#fff
+    style epochloop fill:#1e90ff,stroke:#1565c0,color:#fff
+    style valnll fill:#1e90ff,stroke:#1565c0,color:#fff
+    style patience fill:#1e90ff,stroke:#1565c0,color:#fff
+    style earlystop fill:#1e90ff,stroke:#1565c0,color:#fff
+    style restore fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Test Impact
+
+| Metric | Baseline (pre-D-2d, HEAD `c864f1cf`) | After D-2d (`e4ad0fb1`) |
+| --- | --- | --- |
+| PASS | 1329 | 1336 (+7 new D-2d tests) |
+| FAIL (pre-existing MRF) | 9 | 9 (unchanged — `np.matrix` NumPy compat issue, D-2e scope) |
+| New regressions | — | 0 |
+
+### Deferred
+
+- **Paper 9 determinism invariant (P3)**: explicit `np.allclose(m1.predict, m2.predict, atol=1e-5)`
+  named test not in builder's 7 tests; property holds implicitly (fixed seeds, all results consistent
+  across runs). Non-blocking omission.
+- **MRF vendor `np.matrix` fix (D-2e)**: 9 pre-existing MRF failures (`ValueError: ndarray is not
+  contiguous`) from `_vendor/macro_random_forest/MRF.py` using deprecated `np.matrix`. Out of D-2d
+  scope; tracked as D-2e.
