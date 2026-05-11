@@ -4,7 +4,8 @@
 > updated 2026-05-09 (Phase C-3/C-4), 2026-05-12 (Phase D-1: paper 13 +
 > paper 15 MEDIUM gap-fix, HEAD `b3a22336`), and 2026-05-12 (Phase F:
 > docs polish — CLAUDE.md WORKFLOW MANDATE + CHANGELOG Phase D + README
-> test count 1329, HEAD `3744646d`), 2026-05-12 (Phase D-2e: MRF vendor np.matrix → ndarray, 12 patches, 1336→1345 PASS, HEAD `685e2cd1`).
+> test count 1329, HEAD `3744646d`), 2026-05-12 (Phase D-2e: MRF vendor np.matrix → ndarray, 12 patches, 1336→1345 PASS, HEAD `685e2cd1`),
+> 2026-05-12 (Phase D-2f: CLAUDE.md deferred cosmetics — test count 953→1345 + WORKFLOW MANDATE path note, HEAD `9cde74b3`).
 
 ## Overview
 
@@ -681,3 +682,48 @@ graph TD
 - **Line 1285 docstring**: `Y (np.matrix): Matrix of variables to standardise.` → updated to
   `Y (np.ndarray or pd.DataFrame)` by scriber.
 - **Upstream PR to RyanLucas3/MacroRandomForest**: informational future work; not in this run.
+
+---
+
+## Phase D-2f: Deferred Cosmetic Doc Fixes (CLAUDE.md)
+
+Run: `2026-05-12-phase-d2f-deferred-cosmetics`, HEAD `9cde74b3`. Workflow 3 (docs-only).
+
+### What Changed
+
+Two single-line text-only edits to `CLAUDE.md`. No source code or tests were touched.
+
+| Fix | File | Line | Change |
+| --- | --- | --- | --- |
+| F-1 | `CLAUDE.md` | 35 | Test count comment: `~953 tests, <30s` → `~1345 tests, ~2-3 min` |
+| F-2 | `CLAUDE.md` | 26 | WORKFLOW MANDATE path note: appended `(mac-local; server1 mirrors plugin via separate install)` |
+
+### Rationale
+
+**F-1**: The test suite grew from ~953 to 1345 tests across Phases D-1 through D-2e (HNN, MRF, cvxpy, DFM, IRF/HD and multiple paper-faithfulness additions). The quick-start comment sets developer expectations; the old number was misleading by ~40% and the runtime estimate (`<30s`) was also stale (actual ~2-3 min on a standard laptop due to expanded coverage).
+
+**F-2**: The StatsClaw protocol SKILL.md path in the WORKFLOW MANDATE block is mac-local (`~/.claude/plugins/marketplaces/statsclaw/...`). On server1, the plugin is installed via a separate path. Without the parenthetical, any developer reading CLAUDE.md on server1 would find the path non-existent and potentially confusing.
+
+### Function Call Graph (D-2f)
+
+No source code changed. Not applicable — this section records documentation changes only.
+
+### Changed Surface
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    CLAUDEMD["CLAUDE.md<br/>(developer workflow doc)"]
+    F1["Line 35: quick-start block<br/>test count comment"]
+    F2["Line 26: WORKFLOW MANDATE<br/>path note"]
+    CLAUDEMD --> F1
+    CLAUDEMD --> F2
+    style CLAUDEMD fill:#1e90ff,stroke:#1565c0,color:#fff
+    style F1 fill:#1e90ff,stroke:#1565c0,color:#fff
+    style F2 fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+| File | Purpose | Changed in D-2f |
+| --- | --- | --- |
+| `CLAUDE.md` | Developer workflow doc: quick-start, WORKFLOW MANDATE, project conventions | Yes — lines 26, 35 only |
+| All source files | Not in scope | No |
