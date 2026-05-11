@@ -543,7 +543,7 @@ class MacroRandomForest:
 
                     if bayes:
                         z = weights[whos_who]*z
-                        y = weights[whos_who]*np.matrix(y)
+                        y = np.ascontiguousarray(np.atleast_2d(np.asarray(y)))
 
                 else:
 
@@ -702,7 +702,7 @@ class MacroRandomForest:
         min_frac_times_no_cols = self.min_leaf_fracz*z.shape[1]
 
         y_as_list = np.array(y)
-        y = np.matrix(y)
+        y = np.asarray(np.atleast_2d(y))
 
         sse = np.repeat(np.inf, repeats=len(uni_x), axis=0)
         the_seq = np.arange(0, len(splits))
@@ -863,11 +863,11 @@ class MacroRandomForest:
         beta_bank = np.full(fill_value=np.nan, shape=(
             len(self.ori_y), len(self.ori_z.columns)))
 
-        ori_z = np.matrix(self.ori_z)
+        ori_z = np.ascontiguousarray(np.asarray(self.ori_z))
 
-        regul_mat = np.matrix(rw_regul_dat)
+        regul_mat = np.ascontiguousarray(np.asarray(rw_regul_dat))
 
-        leafs_mat = np.matrix(leafs)
+        leafs_mat = np.asarray(leafs, dtype=object)
 
         for i in range(0, len(leafs)):
 
@@ -934,7 +934,7 @@ class MacroRandomForest:
                     b0 = np.transpose(leafs_mat[i, 4: 4+len(self.z_pos)+1])
 
                 if len(ind_all) == 1:
-                    if np.matrix(np.transpose(zz_all)).shape[0] != 1:
+                    if np.asarray(zz_all).T.shape[0] != 1:
                         zz_all = np.transpose(zz_all)
 
                     # numpy 2.x compat: zz_all is a np.matrix, so the matmul
@@ -1000,20 +1000,20 @@ class MacroRandomForest:
             add_neighbors = False
 
         else:
-            y_neighbors = np.matrix(
+            y_neighbors = np.ravel(
                 self.rw_regul*rw_regul_dat[everybody, 0])
-            z_neighbors = np.matrix(self.rw_regul * np.column_stack(
+            z_neighbors = np.asarray(self.rw_regul * np.column_stack(
                 [np.repeat(1, repeats=len(everybody)), rw_regul_dat[everybody, 1: ncrd]]))
 
         if len(everybody2) == 0:
             add_neighbors_2 = False
 
         else:
-            y_neighbors2 = np.matrix(
+            y_neighbors2 = np.ravel(
                 self.rw_regul ** 2 * rw_regul_dat[everybody2, 0])
-            z_neighbors2 = np.matrix(self.rw_regul ** 2*np.column_stack(
+            z_neighbors2 = np.asarray(self.rw_regul ** 2 * np.column_stack(
                 [np.repeat(1, repeats=len(everybody2)),
-                 np.matrix(rw_regul_dat[everybody2, 1: ncrd])]))
+                 np.asarray(rw_regul_dat[everybody2, 1: ncrd])]))
 
         if len(zz) == len(self.z_pos) + 1:
             zz_copy = np.transpose(zz)
@@ -1121,7 +1121,7 @@ class MacroRandomForest:
             nrows=nrows, ncols=2, gridspec_kw={"wspace": 0.1, 'hspace': 0.3})
 
         # display(bands[0])
-        data = np.matrix(self.data)
+        data = np.ascontiguousarray(np.asarray(self.data))
         z_mat = np.hstack([np.ones(shape=(len(data), 1)), data[:, self.z_pos]])
 
         keep_OLS = np.linalg.inv(
@@ -1288,10 +1288,10 @@ def standard(Y):
         - Standardised Data (dict): Including standardised matrix ("Y"), mean ("mean") and standard deviation "std"
     '''
 
-    Y = np.matrix(Y)
+    Y = np.atleast_2d(np.asarray(Y))
     size = Y.shape
-    mean_y = Y.mean(axis=0)
-    sd_y = Y.std(axis=0, ddof=1)
+    mean_y = Y.mean(axis=0, keepdims=True)
+    sd_y = Y.std(axis=0, ddof=1, keepdims=True)
     Y0 = (Y - np.repeat(mean_y,
                         repeats=size[0], axis=0)) / np.repeat(sd_y, repeats=size[0], axis=0)
 
