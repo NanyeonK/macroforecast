@@ -7429,12 +7429,20 @@ class _ThetaWrapper:
         steps = max(len(X), 1)
         out = np.empty(steps, dtype=float)
         for h_idx in range(1, steps + 1):
-            # Theta(2)-line forecast = SES level on Y_t* (held flat).
-            ses_h = self._level
+            # Theta(2)-line forecast = SES level on Y_t* extrapolated
+            # with its residual OLS slope ``self._b``. Phase C-3b
+            # audit-fix (Round 1): holding the level FLAT (pre-fix)
+            # discarded the slope embedded in Y* and attenuated the
+            # combined trend by 50%. Per Assimakopoulos-Nikolopoulos
+            # (2000) Eq. 9 the Theta(2)-line is extrapolated along the
+            # same OLS slope that defines the deflator L_t = a + b·t,
+            # since Y*_t = 2 Y_t − L_t inherits ``b`` exactly when Y is
+            # linear-plus-noise.
+            ses_h = self._level + self._b * h_idx
             # Theta(0)-line forecast = linear trend extrapolation.
             trend_h = self._a + self._b * (self._n + h_idx)
             # Theta(2) blend: 0.5 weight each on the trend line
-            # (theta=0) and the doubled-curvature SES level (theta=2).
+            # (theta=0) and the doubled-curvature SES path (theta=2).
             # Generalised theta could interpolate; the M3-winner uses
             # equal-weight blending (Assimakopoulos-Nikolopoulos 2000
             # Eq. 9).

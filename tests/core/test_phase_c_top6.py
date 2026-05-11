@@ -1196,3 +1196,83 @@ class TestM16ETSThetaHW:
         # Both forecasts at h=1 are similar by design (curvature is
         # only one period out); the test below distinguishes via the
         # SES level (above) and the per-step slope.
+
+    def test_theta_linear_dgp_recovers_trend_slope(self):
+        """Phase C-3b audit-fix (M16, Round 1): on a noisy linear-plus-
+        seasonal DGP ``y = 0.5·t + sin(2πt/12) + N(0,1)`` the Theta(2)
+        12-step forecast slope per step should recover the OLS slope.
+
+        Pre-fix (Round 1 finding): SES level on Y* was held FLAT in
+        ``predict``, discarding the slope embedded in Y* and attenuating
+        the combined forecast slope to ≈ 0.245 (50% of the true 0.5).
+        Post-fix: SES leg extrapolates as ``level + b·h`` per
+        Assimakopoulos-Nikolopoulos (2000) Eq. 9.
+        """
+        from macroforecast.core.runtime import _ThetaWrapper
+
+        rng = np.random.default_rng(11)
+        T = 120
+        t = np.arange(T)
+        y = 0.5 * t + np.sin(2 * np.pi * t / 12.0) + rng.normal(0, 1.0, size=T)
+        idx = pd.date_range("2010-01-01", periods=T, freq="MS")
+        X = pd.DataFrame({"x": np.zeros(T)}, index=idx)
+        s = pd.Series(y, index=idx, name="y")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            m = _ThetaWrapper(theta=2.0).fit(X, s)
+        future_idx = pd.date_range(
+            idx[-1] + pd.tseries.offsets.MonthBegin(1), periods=12, freq="MS"
+        )
+        Xfut = pd.DataFrame({"x": np.zeros(12)}, index=future_idx)
+        fc = m.predict(Xfut)
+        per_step = float(fc[-1] - fc[0]) / 11.0
+        assert per_step >= 0.4, (
+            f"Theta(2) per-step slope = {per_step:.3f}; expected >= 0.4 "
+            f"on linear DGP with true slope 0.5 (pre-fix would be ≈0.245)."
+        )
+
+    def test_theta_quadratic_dgp_competitive_with_ets(self):
+        """Phase C-3b audit-fix (M16, Round 1) regression guard: on a
+        quadratic DGP ``y = 0.5·t² + ε``, Theta(2) is fundamentally a
+        linear-trend method and cannot match ETS's level-of-trend
+        capability, but the pre-fix FLAT-level bug made Theta 200×+
+        worse than ETS (smoking-gun regression).
+
+        Post-fix the SES leg extrapolates with its slope, so the gap
+        shrinks meaningfully; we assert Theta_MSE < 200 × ETS_MSE as a
+        regression guard. The pre-fix ratio at this configuration was
+        roughly 327× — well above 200; the post-fix ratio is ≈ 152×.
+        """
+        from macroforecast.core.runtime import _ThetaWrapper
+
+        rng = np.random.default_rng(33)
+        T = 120
+        t = np.arange(T)
+        y = 0.5 * t**2 + rng.normal(0, 1.0, size=T)
+        idx = pd.date_range("2010-01-01", periods=T, freq="MS")
+        X = pd.DataFrame({"x": np.zeros(T)}, index=idx)
+        s = pd.Series(y, index=idx, name="y")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            m = _ThetaWrapper(theta=2.0).fit(X, s)
+        future_idx = pd.date_range(
+            idx[-1] + pd.tseries.offsets.MonthBegin(1), periods=12, freq="MS"
+        )
+        Xfut = pd.DataFrame({"x": np.zeros(12)}, index=future_idx)
+        fc_theta = m.predict(Xfut)
+        y_true = 0.5 * (np.arange(T, T + 12)) ** 2
+        mse_theta = float(np.mean((fc_theta - y_true) ** 2))
+
+        from statsmodels.tsa.holtwinters import ExponentialSmoothing  # type: ignore
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ets = ExponentialSmoothing(y, trend="add", seasonal=None).fit()
+            fc_ets = np.asarray(ets.forecast(12))
+        mse_ets = float(np.mean((fc_ets - y_true) ** 2))
+        ratio = mse_theta / max(mse_ets, 1e-9)
+        assert ratio < 200.0, (
+            f"Theta(2) quadratic-DGP MSE = {mse_theta:.1f} vs ETS = "
+            f"{mse_ets:.1f} (ratio {ratio:.1f}×); expected < 200× as "
+            f"post-fix regression guard (pre-fix ratio was ≈ 327×)."
+        )
