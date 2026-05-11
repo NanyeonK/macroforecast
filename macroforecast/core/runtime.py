@@ -13466,7 +13466,7 @@ def _execute_l3_op(
             _as_frame(inputs[0]),
             target=_first_series(inputs),
             n_components=n_comp_resolved,
-            n_slices=int(params.get("n_slices", 5)),
+            n_slices=int(params.get("n_slices", 10)),
             scaling_method=str(params.get("scaling_method", "scaled_pca")),
         )
     raise NotImplementedError(f"L3 runtime does not support op {op!r}")
@@ -13584,10 +13584,22 @@ def _midas(
     target_aligned = pd.Series(target).astype(float)
 
     def w_almon(theta: np.ndarray) -> np.ndarray:
+        """Almon polynomial MIDAS weights.
+
+        Computes w_k = sum_q theta[q] * k^q for k = 0..K-1, then:
+        1. Clamps all weights to >= 0 (non-negativity for economic decay).
+        2. If all clamped weights are zero, returns uniform 1/K (fallback).
+        3. If sum_to_one=True, normalises the clamped weights by their sum.
+        """
         kk = np.arange(K, dtype=float)
         w_raw = np.zeros(K, dtype=float)
         for q in range(poly_q + 1):
             w_raw = w_raw + theta[q] * (kk**q)
+        # Non-negativity clamp: enforce economic constraint before normalisation.
+        w_raw = np.maximum(w_raw, 0.0)
+        if float(np.sum(w_raw)) == 0.0:
+            # All weights clamped to zero: fall back to uniform.
+            return np.full(K, 1.0 / K, dtype=float)
         if sum_to_one:
             denom = float(np.sum(w_raw))
             if abs(denom) > 1e-12:

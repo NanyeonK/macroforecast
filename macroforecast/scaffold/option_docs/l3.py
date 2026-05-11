@@ -945,7 +945,7 @@ _OP_SLICED_INVERSE_REGRESSION = _o(
         "augmentation (Huang-Zhou-Tong 2022) recovers latent factors "
         "with higher correlation than plain SIR in the macro-panel "
         "regime where signals are sparse over predictors.\n\n"
-        "Defaults: ``n_components = 2``, ``n_slices = 5``, "
+        "Defaults: ``n_components = 2``, ``n_slices = 10``, "
         "``scaling_method = 'scaled_pca'``. Requires a "
         "``target_signal`` input port; ``temporal_rule`` is required "
         "and rejects ``full_sample_once``."

@@ -885,7 +885,7 @@ def midas(inputs, params):
     output_type=Factor,
     params_schema={
         "n_components": {"type": (int, str), "default": 2, "sweepable": True},
-        "n_slices": {"type": int, "default": 5, "sweepable": True},
+        "n_slices": {"type": int, "default": 10, "sweepable": True},
         "scaling_method": {
             "type": str,
             "default": "scaled_pca",

@@ -3048,7 +3048,7 @@ def sliced_inverse_regression(
     target: str = "y",
     horizon: int = 1,
     n_components: int = 2,
-    n_slices: int = 5,
+    n_slices: int = 10,
     scaling_method: str = "scaled_pca",
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
@@ -3160,6 +3160,11 @@ def garch_volatility(
     **Status: operational** when ``arch>=6.0`` is installed (optional
     extra ``pip install macroforecast[arch]``); otherwise the L4 fit
     raises ``NotImplementedError`` with an install hint.
+
+    **Panel size requirement.** This recipe requires the training panel to have
+    at least 60 observations (per series). Calling with fewer observations will
+    raise an error from the ``arch`` package. Override via
+    ``min_train_size=K`` for K ≥ 30 (the absolute floor).
     """
 
     operational_garch_families = {
