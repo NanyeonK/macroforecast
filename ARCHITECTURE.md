@@ -425,3 +425,46 @@ Module-level docstring updated: "Seven helpers are xfail-marked" →
 - Paper 9 (`hemisphere_neural_network`, ~300s NN train) verified PASS
   by Round 5 audit-paper-09; deferred from synchronous tester run per
   test-spec.md §9 NOTE provision.
+
+---
+
+## Phase D-2c Paper-Faithfulness Tightening Closure (2026-05-12)
+
+> HEAD `ce464f8e` — 9 papers covered: 2/3/4/5/9/10/11/12/16. 11 source edits + 2 new tests. BLOCK cycle (3 bugs) → retry PASS. 1329 tests pass.
+
+### What Changed
+
+| File | Edits | Papers |
+| --- | --- | --- |
+| `macroforecast/core/runtime.py` | R-1…R-7, V-1 (8 edits) | 2 (docstring + _mode), 3 (mtry_frac), 4 (b_AR), 5 (B/n_estimators warn), 10 (Eq. 7), 11 (scope-out), 12 (NN ValueError) |
+| `macroforecast/recipes/paper_methods.py` | P-1…P-3 (3 edits) | 5 (block_size citation), 9 (sub_rate 0.5→0.80, lc/lm/lv 5→2) |
+| `tests/core/test_phase_b4_paper4.py` | T-1: new test | 4 (p05/p95 90% band) |
+| `tests/core/test_v09_paper_coverage.py` | T-2: new test | 16 (feat_F n_components pin) |
+| `tests/core/test_phase_b9_paper9.py` | assertion update | 9 (lc/lm/lv 5→2 stale assertions fixed) |
+
+### BLOCK / Retry Cycle
+
+| Bug | Root Cause | Fix |
+| --- | --- | --- |
+| B-1 (paper 4) | p05/p95 computed in `_sample_posterior_irf_multivariate_minnesota` but not forwarded to L7 IRF row-dict (~line 9053) | Added p05/p95 extraction to row-dict builder; relaxed ordering assertion (abs().sum() does not preserve percentile order) |
+| B-2/B-3 (paper 5) | Redundant `import warnings` inside BVAR branch of `_build_l4_model` shadowed module-level `warnings`, causing `UnboundLocalError` in the MRF branch | Removed the local `import warnings` at line 3035 |
+| B-4 (paper 9) | `test_hnn_helper_exposes_paper_hyperparameters` still asserted `lc.default == 5` after P-3 changed default to `2` | Updated assertions to `== 2` |
+
+### Key Learnings
+
+- **p05/p95 forwarding to L7 IRF (paper 4)**: posteriors are computed in the sampling layer but must be explicitly propagated through every downstream frame builder. Ordering assertions on `abs().sum()` importance scores are not valid — the abs transform destroys percentile ordering.
+- **Redundant `import warnings` shadowing (paper 5)**: local `import` inside a conditional branch makes `warnings` local to the entire function in Python. The module-level import must be used throughout. Check all such patterns when adding `warnings.warn()` calls.
+- **Test assertion updates when defaults change (paper 9)**: changing a helper default requires auditing all existing tests that assert the old value. P-3 changed `lc/lm/lv` to `2` but the pre-existing `test_hnn_helper_exposes_paper_hyperparameters` still asserted `5`.
+
+### Deferred
+
+- **Paper 9 fix-3 (early stopping, patience=15)**: ~15-18 line training-loop rewrite in `_HemisphereNN.fit`. Design ambiguity on "training sample" (outer global 80/20 vs inner per-bag). Deferred to follow-on D-2d run.
+- **Paper 12 true validate-time gate**: Schema-level L4+L7 combo check for NN+dual_decomposition at recipe-validation time. V-1 provides runtime `ValueError` with "FUTURE" signal; true validate-time rejection requires schema-level changes.
+
+### Test Impact
+
+| Metric | Baseline (`49a8a498`) | After (`ce464f8e`) |
+| --- | --- | --- |
+| PASS | 1327 | 1329 (+2 new D-2c tests) |
+| FAIL (pre-existing MRF env) | 9 | 9 (unchanged) |
+| New D-2c regressions | 0 | 0 |
