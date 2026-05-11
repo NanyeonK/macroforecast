@@ -3032,8 +3032,6 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         n_lag_canonical = params.get("n_lag")
         n_lag_legacy = params.get("n_lags")
         if n_lag_canonical is None and n_lag_legacy is not None:
-            import warnings
-
             warnings.warn(
                 "bvar_minnesota: 'n_lags' is deprecated; use 'n_lag' "
                 "(singular). Routing legacy 'n_lags' to 'n_lag'.",
@@ -9052,12 +9050,16 @@ def _var_impulse_frame(
                 # the L7 frame carries Coulombe & Göbel (2021) §3 credible
                 # regions when reported.
                 mean_irf = np.asarray(posterior_irf["mean"], dtype=float)
+                p05 = np.asarray(posterior_irf.get("p05", mean_irf), dtype=float)
                 p16 = np.asarray(posterior_irf.get("p16", mean_irf), dtype=float)
                 p84 = np.asarray(posterior_irf.get("p84", mean_irf), dtype=float)
+                p95 = np.asarray(posterior_irf.get("p95", mean_irf), dtype=float)
                 horizon_clip = min(int(n_periods) + 1, mean_irf.shape[0])
                 response = np.abs(mean_irf[:horizon_clip, target_index, :]).sum(axis=0)
+                p05_resp = np.abs(p05[:horizon_clip, target_index, :]).sum(axis=0)
                 p16_resp = np.abs(p16[:horizon_clip, target_index, :]).sum(axis=0)
                 p84_resp = np.abs(p84[:horizon_clip, target_index, :]).sum(axis=0)
+                p95_resp = np.abs(p95[:horizon_clip, target_index, :]).sum(axis=0)
                 for j, name in enumerate(fitted_results.names):
                     if j >= len(response):
                         break
@@ -9067,8 +9069,10 @@ def _var_impulse_frame(
                             "importance": float(response[j]),
                             "coefficient": None,
                             "status": "posterior_mean",
+                            "p05": float(p05_resp[j]),
                             "p16": float(p16_resp[j]),
                             "p84": float(p84_resp[j]),
+                            "p95": float(p95_resp[j]),
                         }
                     )
             else:

@@ -85,7 +85,7 @@ def _build_hetero_panel(T: int = 80, K: int = 3, seed: int = 0):
 def test_hnn_helper_exposes_paper_hyperparameters():
     """Phase B-9 F5: helper signature includes the paper hyperparameters
     with paper-faithful defaults (B=1000 from paper p.12, neurons=400
-    from paper §3, hemisphere depths 5-5-5, density forecast-object)."""
+    from paper §3, hemisphere depths 2-2-2, density forecast-object)."""
 
     sig = inspect.signature(hemisphere_neural_network)
     params = sig.parameters
@@ -109,15 +109,15 @@ def test_hnn_helper_exposes_paper_hyperparameters():
 
     assert params["B"].default == 1000, "paper p.12 B=1000"
     assert params["neurons"].default == 400, "paper §3 neurons=400"
-    assert params["lc"].default == 5
-    assert params["lm"].default == 5
-    assert params["lv"].default == 5
+    assert params["lc"].default == 2, "paper §3 lc=2"
+    assert params["lm"].default == 2, "paper §3 lm=2"
+    assert params["lv"].default == 2, "paper §3 lv=2"
     assert params["nu"].default is None
     assert params["lambda_emphasis"].default == 1.0
     assert params["n_epochs"].default == 200
     assert params["dropout"].default == 0.2
     assert params["lr"].default == 0.01
-    assert params["sub_rate"].default == 0.5
+    assert params["sub_rate"].default == 0.80, "paper Eq. 8 sub_rate=0.80"
     assert tuple(params["quantile_levels"].default) == (0.05, 0.16, 0.84, 0.95)
     assert params["forecast_object"].default == "density"
 
