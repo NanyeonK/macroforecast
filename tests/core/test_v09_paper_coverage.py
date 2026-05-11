@@ -3297,3 +3297,135 @@ def test_a4d_paper13_variant_comps_no_prior_target_raises():
         if n.get("op") == "fit_model"
     )
     assert fit["params"]["prior_target"] == [0.5, 0.5]
+
+
+# ---------------------------------------------------------------------------
+# Phase D-1 gap-fix tests — papers 13 (target mode) + 15 (temporal_rule + lag)
+# ---------------------------------------------------------------------------
+
+
+def test_maximally_forward_looking_uses_cumulative_average_target_ranks():
+    """Phase D-1 F2 gap-fix: Albacore ranks variant must set target
+    mode to cumulative_average (paper Eq.1 average-path target) not
+    point_forecast (single h-step value). Both variants were wrong;
+    this test pins the ranks fix."""
+    from macroforecast.recipes.paper_methods import maximally_forward_looking
+
+    recipe = maximally_forward_looking(variant="ranks", horizon=12)
+    l3 = recipe["3_feature_engineering"]
+    y_h = next(n for n in l3["nodes"] if n["id"] == "y_h")
+    assert y_h["params"]["mode"] == "cumulative_average", (
+        f"expected cumulative_average, got {y_h['params']['mode']!r}"
+    )
+    assert "method" not in y_h["params"], (
+        "'method' param should be absent from cumulative_average node"
+    )
+
+
+def test_maximally_forward_looking_uses_cumulative_average_target_comps():
+    """Phase D-1 F2 gap-fix: Albacore comps variant must set target
+    mode to cumulative_average (paper Eq.1 average-path target)."""
+    import numpy as np
+    from macroforecast.recipes.paper_methods import maximally_forward_looking
+
+    rng = np.random.default_rng(0)
+    K = 5
+    prior_target = (rng.dirichlet(np.ones(K))).tolist()
+    recipe = maximally_forward_looking(
+        variant="comps", horizon=12, prior_target=prior_target
+    )
+    l3 = recipe["3_feature_engineering"]
+    y_h = next(n for n in l3["nodes"] if n["id"] == "y_h")
+    assert y_h["params"]["mode"] == "cumulative_average", (
+        f"expected cumulative_average, got {y_h['params']['mode']!r}"
+    )
+    assert "method" not in y_h["params"], (
+        "'method' param should be absent from cumulative_average node"
+    )
+
+
+def test_maximally_forward_looking_target_equals_rolling_average_on_synthetic_dgp():
+    """Phase D-1 F2 gap-fix: _cumulative_average_target must match
+    the paper's formula y_t = (1/h) sum_{j=1}^{h} pi_{t+j}.
+    DGP: pi_t = 0.02 + 0.001 * N(0,1), T=240, h=12.
+    Tolerance: absolute |y_t - rolling_mean| < 1e-9 at 5 representative t."""
+    import numpy as np
+    import pandas as pd
+    from macroforecast.core.runtime import _cumulative_average_target
+
+    rng = np.random.default_rng(42)
+    T, h = 240, 12
+    pi = pd.Series(0.02 + 0.001 * rng.standard_normal(T), name="headline")
+    y = _cumulative_average_target(pi, horizon=h)
+    # Check 5 interior representative t values (avoid edges where rolling is NaN)
+    check_t = [60, 90, 120, 150, 180]
+    for t in check_t:
+        expected = pi.iloc[t + 1 : t + 1 + h].mean()  # (1/h) sum_{j=1}^{h} pi_{t+j}
+        actual = y.iloc[t]
+        assert not np.isnan(actual), f"y_t is NaN at t={t}"
+        assert abs(actual - expected) < 1e-9, (
+            f"at t={t}: y_t={actual:.12f}, rolling_mean={expected:.12f}, "
+            f"diff={abs(actual-expected):.2e}"
+        )
+
+
+def test_data_transforms_pca_nodes_carry_temporal_rule():
+    """Phase D-1 F7 gap-fix: all pca op nodes in F and MAF branches
+    of _l3_data_transforms_cell must carry temporal_rule=
+    'expanding_window_per_origin' (hard rule of _factor_op)."""
+    from macroforecast.recipes.paper_methods import (
+        _DATA_TRANSFORM_CELLS_16,
+        _l3_data_transforms_cell,
+    )
+
+    f_cells = [c for c in _DATA_TRANSFORM_CELLS_16 if "F" in c.split("-") or c == "MAF" or "MAF" in c.split("-")]
+    for cell in f_cells:
+        l3 = _l3_data_transforms_cell(cell, horizon=1)
+        pca_nodes = [n for n in l3["nodes"] if n.get("op") == "pca"]
+        assert len(pca_nodes) >= 1, f"expected pca node in cell {cell!r}"
+        for pca_node in pca_nodes:
+            tr = pca_node["params"].get("temporal_rule")
+            assert tr == "expanding_window_per_origin", (
+                f"cell={cell!r}, node={pca_node['id']!r}: "
+                f"expected expanding_window_per_origin, got {tr!r}"
+            )
+
+
+def test_data_transforms_f_branch_emits_lagged_factors():
+    """Phase D-1 F7 gap-fix: F-branch must include a lag node
+    downstream of PCA before concat, implementing Table 1's
+    {L^{i-1} F_t}_{i=1}^{p_f} structure."""
+    from macroforecast.recipes.paper_methods import _l3_data_transforms_cell
+
+    for cell in ("F", "F-X", "F-MARX", "F-MAF", "F-Level",
+                 "F-X-MARX", "F-X-MAF", "F-X-Level", "F-X-MARX-Level"):
+        l3 = _l3_data_transforms_cell(cell, horizon=1)
+        nodes_by_id = {n["id"]: n for n in l3["nodes"]}
+
+        # feat_F_lag must exist
+        assert "feat_F_lag" in nodes_by_id, (
+            f"cell={cell!r}: expected feat_F_lag node, not found"
+        )
+        lag_node = nodes_by_id["feat_F_lag"]
+
+        # feat_F_lag must take feat_F as input
+        assert "feat_F" in lag_node["inputs"], (
+            f"cell={cell!r}: feat_F_lag inputs={lag_node['inputs']!r}, "
+            "expected feat_F"
+        )
+
+        # feat_F_lag must be a lag op
+        assert lag_node["op"] == "lag", (
+            f"cell={cell!r}: feat_F_lag op={lag_node['op']!r}, expected lag"
+        )
+
+        # weighted_concat must reference feat_F_lag, not feat_F
+        concat_node = nodes_by_id.get("X_final")
+        assert concat_node is not None, f"cell={cell!r}: X_final node missing"
+        assert "feat_F_lag" in concat_node["inputs"], (
+            f"cell={cell!r}: weighted_concat inputs={concat_node['inputs']!r}, "
+            "expected feat_F_lag (not raw feat_F)"
+        )
+        assert "feat_F" not in concat_node["inputs"], (
+            f"cell={cell!r}: weighted_concat must not reference raw feat_F directly"
+        )

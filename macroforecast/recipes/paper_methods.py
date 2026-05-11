@@ -1526,6 +1526,15 @@ def maximally_forward_looking(
     ``ridge(coefficient_constraint=nonneg, prior={fused_difference,
     shrink_to_target})`` (operational since v0.9.0a0) are
     runtime-implemented. Reference: arXiv:2501.13... (technical report).
+
+    Phase D-1 (Round 5 F2) gap-fix: both variants previously set
+    ``"mode": "point_forecast"`` in the ``target_construction`` step,
+    training weights to predict the single h-step-ahead inflation value
+    ``π_{t+h}``. Paper §2 Eq. (1) and §3 define the target as
+    ``π_{t+1:t+h}`` — the **average** of headline inflation between t+1
+    and t+h. Both branches now set ``"mode": "cumulative_average"``,
+    which routes to ``_cumulative_average_target`` in the runtime
+    (``(1/h) Σ_{j=1}^{h} π_{t+j}``).
     """
 
     if variant not in {"ranks", "comps"}:
@@ -1578,8 +1587,7 @@ def maximally_forward_looking(
                     "type": "step",
                     "op": "target_construction",
                     "params": {
-                        "mode": "point_forecast",
-                        "method": "direct",
+                        "mode": "cumulative_average",
                         "horizon": horizon,
                     },
                     "inputs": ["src_y"],
@@ -1640,8 +1648,7 @@ def maximally_forward_looking(
                     "type": "step",
                     "op": "target_construction",
                     "params": {
-                        "mode": "point_forecast",
-                        "method": "direct",
+                        "mode": "cumulative_average",
                         "horizon": horizon,
                     },
                     "inputs": ["src_y"],
@@ -1904,6 +1911,13 @@ def _l3_data_transforms_cell(
     (a.k.a. ``"cumulative_average"``) forecasts the h-period running
     mean (paper §2.2 + Table 2). Audit gap-fix: previous helper hard-
     coded ``"direct"`` and never exposed the path-average grid.
+
+    Phase D-1 gap-fix (Round 5 F7): ``pca`` nodes require
+    ``temporal_rule="expanding_window_per_origin"`` (hard rule of
+    ``_factor_op``). Added to F-branch (``feat_F``) and MAF-branch
+    (``feat_MAF``). F-branch output is now lagged (``feat_F_lag``,
+    ``n_lag=4``) before concat, matching Table 1's
+    ``{L^{i-1} F_t}_{i=1}^{p_f}`` structure (p_f=4).
     """
 
     components = cell.split("-")
@@ -1934,11 +1948,23 @@ def _l3_data_transforms_cell(
                 "id": "feat_F",
                 "type": "step",
                 "op": "pca",
-                "params": {"n_components": 4},
+                "params": {
+                    "n_components": 4,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
                 "inputs": ["src_X"],
             }
         )
-        feature_nodes.append("feat_F")
+        nodes.append(
+            {
+                "id": "feat_F_lag",
+                "type": "step",
+                "op": "lag",
+                "params": {"n_lag": 4},
+                "inputs": ["feat_F"],
+            }
+        )
+        feature_nodes.append("feat_F_lag")
     if "X" in components:
         nodes.append(
             {
@@ -1977,7 +2003,10 @@ def _l3_data_transforms_cell(
                 "id": "feat_MAF",
                 "type": "step",
                 "op": "pca",
-                "params": {"n_components": 4},
+                "params": {
+                    "n_components": 4,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
                 "inputs": ["feat_MAF_ma"],
             }
         )
