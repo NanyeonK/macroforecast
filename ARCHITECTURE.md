@@ -6,6 +6,7 @@
 > docs polish — CLAUDE.md WORKFLOW MANDATE + CHANGELOG Phase D + README
 > test count 1329, HEAD `3744646d`), 2026-05-12 (Phase D-2e: MRF vendor np.matrix → ndarray, 12 patches, 1336→1345 PASS, HEAD `685e2cd1`),
 > 2026-05-12 (Phase D-2f: CLAUDE.md deferred cosmetics — test count 953→1345 + WORKFLOW MANDATE path note, HEAD `9cde74b3`).
+Updated 2026-05-12 (Phase D-2g: user_data_workflow.md + custom_function_quickstart.md guides, HEAD `949b6c78`).
 
 ## Overview
 
@@ -727,3 +728,118 @@ graph TD
 | --- | --- | --- |
 | `CLAUDE.md` | Developer workflow doc: quick-start, WORKFLOW MANDATE, project conventions | Yes — lines 26, 35 only |
 | All source files | Not in scope | No |
+
+
+---
+
+## Phase D-2g: User Data Workflow + Custom Function Quickstart (docs-only)
+
+Run: `2026-05-12-phase-d2g-user-guide`, HEAD `949b6c78`. Workflow 3 (docs-only).
+
+### What Changed
+
+Two new user-facing documentation files created; three existing files extended.
+No source code was touched. This phase closes the documentation gap for the
+"bring your own data" and "bring your own function" researcher paths.
+
+| Action | File | Lines |
+| --- | --- | --- |
+| CREATE | `docs/for_researchers/user_data_workflow.md` | 233 |
+| CREATE | `docs/for_recipe_authors/custom_function_quickstart.md` | 245 |
+| EXTEND | `docs/for_researchers/index.md` | +2 (nav row + toctree entry) |
+| EXTEND | `docs/for_recipe_authors/index.md` | +2 (nav row + toctree entry) |
+| EXTEND | `README.md` | +9 ("Bring your own data or model" section) |
+
+### Changed Surface
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    README["README.md<br/>entry point"]
+    ResIdx["docs/for_researchers/index.md<br/>researcher nav table"]
+    RecIdx["docs/for_recipe_authors/index.md<br/>recipe author nav table"]
+    UDW["docs/for_researchers/<br/>user_data_workflow.md"]
+    CFQ["docs/for_recipe_authors/<br/>custom_function_quickstart.md"]
+    FREDMD["docs/for_researchers/fred_datasets/fred_md.md<br/>(existing, cross-ref)"]
+    HOOKS["docs/for_recipe_authors/custom_hooks.md<br/>(existing, cross-ref)"]
+    TT["docs/for_recipe_authors/target_transformer.md<br/>(existing, cross-ref)"]
+
+    README --> ResIdx
+    README --> RecIdx
+    ResIdx --> UDW
+    RecIdx --> CFQ
+    UDW --> FREDMD
+    UDW --> CFQ
+    CFQ --> HOOKS
+    CFQ --> TT
+    CFQ --> UDW
+
+    style UDW fill:#1e90ff,stroke:#1565c0,color:#fff
+    style CFQ fill:#1e90ff,stroke:#1565c0,color:#fff
+    style README fill:#1e90ff,stroke:#1565c0,color:#fff
+    style ResIdx fill:#1e90ff,stroke:#1565c0,color:#fff
+    style RecIdx fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+| File | Purpose | Changed in D-2g |
+| --- | --- | --- |
+| `docs/for_researchers/user_data_workflow.md` | End-to-end guide: custom CSV/Parquet data loading, YAML recipe, FRED merge pattern, common pitfalls | Yes -- NEW |
+| `docs/for_recipe_authors/custom_function_quickstart.md` | One-page reference for all three register_* decorator APIs with copy-paste examples | Yes -- NEW |
+| `docs/for_researchers/index.md` | Researcher navigation table + toctree | Yes -- +1 nav row, +1 toctree entry |
+| `docs/for_recipe_authors/index.md` | Recipe author navigation table + toctree | Yes -- +1 nav row, +1 toctree entry |
+| `README.md` | Package readme | Yes -- new "Bring your own data or model" section |
+| All source `.py` files | Not in scope (workflow 3) | No |
+
+### Key API Honesty Points Documented
+
+Two discrepancies between existing docs and actual code were identified during
+planning and correctly documented in the new guides:
+
+1. **`Experiment.use_target_transformer()` does NOT exist** -- the method is
+   absent from `Experiment`'s public API. The correct path (`recipe dict mutation
+   or YAML axis`) is accurately documented in `custom_function_quickstart.md`.
+
+2. **`Experiment.__init__` does NOT accept `custom_source_policy` or
+   `custom_source_path`** as constructor arguments -- these are recipe-level
+   axes. The YAML recipe path is the canonical documented path for file-based
+   custom data.
+
+### Data Flow for Custom Data Path
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    CSV["User CSV/Parquet file<br/>(date col + numeric cols)"]
+    YAML["YAML recipe<br/>custom_source_policy: custom_panel_only<br/>custom_source_path: path"]
+    RUN["mf.run(recipe.yaml)"]
+    L1{"L1 data loader<br/>detect extension?"}
+    CSV_LOAD["load_custom_csv()<br/>raw/datasets/custom_csv.py"]
+    PQ_LOAD["load_custom_parquet()<br/>raw/datasets/custom_parquet.py"]
+    MERGE{"official_plus_custom?"}
+    FRED["FRED-MD/QD vintage<br/>+custom_merge_rule"]
+    PANEL["Clean panel<br/>DatetimeIndex + numeric cols"]
+    L2["L2 preprocessing<br/>(transform_policy, etc.)"]
+    L3["L3 feature DAG"]
+    L4["L4 model fit + forecast"]
+    L5["L5 evaluation + output"]
+
+    CSV --> YAML
+    YAML --> RUN
+    RUN --> L1
+    L1 -->|".csv"| CSV_LOAD
+    L1 -->|".parquet / .pq"| PQ_LOAD
+    CSV_LOAD --> MERGE
+    PQ_LOAD --> MERGE
+    MERGE -->|"custom_panel_only"| PANEL
+    MERGE -->|"official_plus_custom"| FRED
+    FRED --> PANEL
+    PANEL --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+
+    style CSV fill:#1e90ff,stroke:#1565c0,color:#fff
+    style YAML fill:#1e90ff,stroke:#1565c0,color:#fff
+    style CSV_LOAD fill:#1e90ff,stroke:#1565c0,color:#fff
+    style PQ_LOAD fill:#1e90ff,stroke:#1565c0,color:#fff
+```
