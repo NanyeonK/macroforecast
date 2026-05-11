@@ -937,10 +937,8 @@ class MacroRandomForest:
                     if np.asarray(zz_all).T.shape[0] != 1:
                         zz_all = np.transpose(zz_all)
 
-                    # numpy 2.x compat: zz_all is a np.matrix, so the matmul
-                    # returns a 2-D matrix. Flatten to 1-D before scalar slot
-                    # assignment (numpy 2.x rejects assigning a 1x1 matrix to
-                    # an int-indexed scalar slot).
+                    # numpy 2.x compat: zz_all is an ndarray (Patch 7); flatten
+                    # the matmul result to 1-D before scalar slot assignment.
                     fitted_vals = np.asarray(
                         zz_all.T @ ((1-self.HRW) * beta_hat + self.HRW*b0)
                     ).ravel()
@@ -1282,7 +1280,7 @@ def standard(Y):
     Function to standardise the data. Remember we are doing ridge.
 
     Args: 
-        - Y (np.matrix): Matrix of variables to standardise.
+        - Y (np.ndarray or pd.DataFrame): Matrix of variables to standardise.
 
     Returns:
         - Standardised Data (dict): Including standardised matrix ("Y"), mean ("mean") and standard deviation "std"

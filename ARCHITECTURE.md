@@ -4,7 +4,7 @@
 > updated 2026-05-09 (Phase C-3/C-4), 2026-05-12 (Phase D-1: paper 13 +
 > paper 15 MEDIUM gap-fix, HEAD `b3a22336`), and 2026-05-12 (Phase F:
 > docs polish — CLAUDE.md WORKFLOW MANDATE + CHANGELOG Phase D + README
-> test count 1329, HEAD `3744646d`).
+> test count 1329, HEAD `3744646d`), 2026-05-12 (Phase D-2e: MRF vendor np.matrix → ndarray, 12 patches, 1336→1345 PASS, HEAD `685e2cd1`).
 
 ## Overview
 
@@ -586,3 +586,98 @@ graph TD
 - **MRF vendor `np.matrix` fix (D-2e)**: 9 pre-existing MRF failures (`ValueError: ndarray is not
   contiguous`) from `_vendor/macro_random_forest/MRF.py` using deprecated `np.matrix`. Out of D-2d
   scope; tracked as D-2e.
+
+
+---
+
+## Phase D-2e MRF Vendor numpy.matrix Closure (2026-05-12)
+
+> HEAD `685e2cd1` — 12 vendor patches (Patches 5–16) to
+> `_vendor/macro_random_forest/MRF.py`. All `np.matrix(...)` executable
+> calls replaced with `np.asarray` / `np.atleast_2d` / `np.ascontiguousarray`
+> equivalents. 9 pre-existing MRF failures CLOSED. 1336 → 1345 PASS (+9).
+
+### What Changed
+
+Vendored `MRF.py` (Macro Random Forest, Lucas 2023) used `np.matrix(...)`
+at 13 call expressions across 12 line numbers. In numpy 2.x, `np.matrix()`
+raises `ValueError: ndarray is not contiguous` when its argument is a
+non-contiguous array. Non-contiguous arrays arise from `data.iloc[rando_vec,
+:]` where `rando_vec` is a non-sequential list of bootstrap-sampled indices
+— the normal execution path in `_splitter_mrf` (the confirmed root cause at
+line 705).
+
+All 13 call expressions have been replaced with semantics-preserving
+ndarray equivalents. No algorithmic change; PATCHES.md Patches 5–16 document
+each fix with Before/After/Why blocks.
+
+### Changed Modules / Functions
+
+| Module / File | Change | Details |
+| --- | --- | --- |
+| `macroforecast/_vendor/macro_random_forest/MRF.py` | Patches 5–16 applied | All 13 `np.matrix(...)` call expressions removed; replaced with `np.asarray`/`np.atleast_2d`/`np.ascontiguousarray`/`np.ravel` equivalents |
+| `macroforecast/_vendor/macro_random_forest/PATCHES.md` | Patches 5–16 appended | 12 new documentation entries with Before/After/Why blocks (total: 16 patches) |
+
+### Patch Reference Table
+
+| Patch | Line(s) | Function | Fix | Notes |
+| --- | --- | --- | --- | --- |
+| 5 | 546 | `_one_MRF_tree` | `np.ascontiguousarray(np.atleast_2d(np.asarray(y)))` | Dead-code bayes=True branch; contiguity-safe |
+| 6 | 705 | `_splitter_mrf` | `np.asarray(np.atleast_2d(y))` | **Root cause** of all 9 failures |
+| 7 | 866 | `_pred_given_tree` | `np.ascontiguousarray(np.asarray(self.ori_z))` | pd.concat non-contiguous |
+| 8 | 868 | `_pred_given_tree` | `np.ascontiguousarray(np.asarray(rw_regul_dat))` | Defensive for non-sequential z_pos |
+| 9 | 870 | `_pred_given_tree` | `np.asarray(leafs, dtype=object)` | b0 shape → (k+1,) 1-D, consistent with beta_hat |
+| 10 | 937 | `_pred_given_tree` | `np.asarray(zz_all).T.shape[0]` | Fortran-order transpose crashes np.matrix |
+| 11 | 1003–1004 | `_random_walk_regularisation` | `np.ravel(...)` | 1-D y_neighbors direct |
+| 12 | 1005–1006 | `_random_walk_regularisation` | `np.asarray(...)` | 2-D z_neighbors |
+| 13 | 1012–1013 | `_random_walk_regularisation` | `np.ravel(...)` | 1-D y_neighbors2 direct |
+| 14 | 1014–1016 | `_random_walk_regularisation` | `np.asarray(outer + np.asarray(inner))` | Removes nested np.matrix |
+| 15 | 1124 | `plot_res` | `np.ascontiguousarray(np.asarray(self.data))` | Visualization; defensive |
+| 16 | 1291–1294 | `standard()` | `np.atleast_2d + keepdims=True` | Critical: preserves (1,k) shape for std_stuff[:, pos] |
+
+### Function Call Graph (D-2e changed path)
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    fit["_MRFExternalWrapper.fit()"] --> ens["MacroRandomForest._ensemble_loop()"]
+    ens --> onemrf["_one_MRF_tree()"]
+    onemrf --> split["_splitter_mrf()<br/>Patch 6: y = atleast_2d"]
+    onemrf --> pred["_pred_given_tree()<br/>Patches 7-10: ori_z, regul_mat,<br/>leafs, zz_all"]
+    pred --> rw["_random_walk_regularisation()<br/>Patches 11-14: y/z_neighbors"]
+    pred --> std["standard()<br/>Patch 16: keepdims=True"]
+    ens --> plotres["plot_res()<br/>Patch 15: data contiguous"]
+
+    style split fill:#1e90ff,stroke:#1565c0,color:#fff
+    style pred fill:#1e90ff,stroke:#1565c0,color:#fff
+    style rw fill:#1e90ff,stroke:#1565c0,color:#fff
+    style std fill:#1e90ff,stroke:#1565c0,color:#fff
+    style plotres fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+| Function | Purpose | Key Dependencies | Changed in D-2e |
+| --- | --- | --- | --- |
+| `_splitter_mrf` | Split-finding for one MRF tree | `_one_MRF_tree` | Yes — Patch 6 (root cause) |
+| `_pred_given_tree` | Prediction for one leaf | `_random_walk_regularisation`, `standard` | Yes — Patches 7, 8, 9, 10 |
+| `_random_walk_regularisation` | RW prior augmentation | `_pred_given_tree` | Yes — Patches 11, 12, 13, 14 |
+| `standard` | Standardise data matrix | `_ensemble_loop` | Yes — Patch 16 (keepdims) |
+| `plot_res` | Visualization (OLS benchmark) | `_ensemble_loop` | Yes — Patch 15 (defensive) |
+| `_one_MRF_tree` | One bootstrap tree fit | `_ensemble_loop` | Yes — Patch 5 (dead-code) |
+| `_MRFExternalWrapper` | Public macroforecast interface | `runtime.py` | No (internal only changed) |
+
+### Test Impact
+
+| Metric | Baseline (pre-D-2e, HEAD `4979c4b5`) | After D-2e (`685e2cd1`) |
+| --- | --- | --- |
+| PASS | 1336 | 1345 (+9 MRF failures closed) |
+| FAIL | 9 (all MRF `np.matrix` contiguity) | 0 |
+| New regressions | — | 0 |
+| PATCHES.md entries | 4 | 16 |
+
+### Deferred (scriber Patch 17 — comment cleanup)
+
+- **Line 940 comment**: `# numpy 2.x compat: zz_all is a np.matrix, so the matmul` is stale
+  (zz_all is now an ndarray after Patch 7). Cleaned up by scriber in the same commit.
+- **Line 1285 docstring**: `Y (np.matrix): Matrix of variables to standardise.` → updated to
+  `Y (np.ndarray or pd.DataFrame)` by scriber.
+- **Upstream PR to RyanLucas3/MacroRandomForest**: informational future work; not in this run.
