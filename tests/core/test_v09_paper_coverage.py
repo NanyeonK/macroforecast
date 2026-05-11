@@ -30,6 +30,7 @@ from macroforecast.core.ops.l4_ops import (
     get_family_status,
 )
 from macroforecast.core.status import OPERATIONAL
+from macroforecast.recipes.paper_methods import _DATA_TRANSFORM_CELLS_16
 
 
 # ---------------------------------------------------------------------------
@@ -3429,3 +3430,52 @@ def test_data_transforms_f_branch_emits_lagged_factors():
         assert "feat_F" not in concat_node["inputs"], (
             f"cell={cell!r}: weighted_concat must not reference raw feat_F directly"
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase D-1 — Test 6 (S6): all 16 Table 1 cells run e2e on synthetic data
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("cell", _DATA_TRANSFORM_CELLS_16)
+def test_data_transforms_16_cells_all_run_e2e_on_synthetic(cell, tmp_path):
+    """Phase D-1 F7 gap-fix: all 16 Table 1 cells (Coulombe et al. 2021)
+    must execute end-to-end via ``macroforecast.run`` on a minimal
+    synthetic dataset without raising an exception and must produce a
+    finite forecast scalar.
+
+    DGP: T=80 monthly observations, N=5 predictors, h=1, seed=7, 1 OOS
+    origin.  Parametrised over ``_DATA_TRANSFORM_CELLS_16`` so each cell
+    appears as an independent test item for clean per-cell reporting."""
+
+    import numpy as np
+    import macroforecast
+    from macroforecast.recipes.paper_methods import (
+        macroeconomic_data_transformations_horse_race,
+    )
+
+    # Synthetic panel: T=80, N=5 predictors, seed=7 — reuse existing helper.
+    panel = _phase_a3_synthetic_panel(K=5, T=80, seed=7)
+
+    # Build one recipe for this single cell: ridge, h=1, direct.
+    grid = macroeconomic_data_transformations_horse_race(
+        cells=(cell,),
+        families=("ridge",),
+        horizons=(1,),
+        target_methods=("direct",),
+        panel=panel,
+        seed=7,
+    )
+    assert len(grid) == 1, f"expected 1 cell, got {len(grid)}"
+    recipe = next(iter(grid.values()))
+
+    result = macroforecast.run(recipe, output_directory=tmp_path / cell.replace("-", "_"))
+    assert result.cells, f"cell={cell!r}: macroforecast.run returned no cells"
+
+    forecasts = result.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts
+    assert forecasts, f"cell={cell!r}: forecast artifact is empty"
+
+    arr = np.asarray(list(forecasts.values()), dtype=float)
+    assert np.all(np.isfinite(arr)), (
+        f"cell={cell!r}: forecast contains NaN or Inf — got {arr!r}"
+    )
