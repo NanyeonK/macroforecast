@@ -88,6 +88,16 @@ A minimal recipe:
   fixed_axes: {primary_metric: mse}
 ```
 
+## Bring your own data or model
+
+To run a study on your own CSV / Parquet data (monthly or quarterly):
+
+- [Bring your own data guide](docs/for_researchers/user_data_workflow.md) -- file format spec, end-to-end recipe walkthrough, FRED merge pattern
+
+To register a custom forecasting model, preprocessor, or target transformer:
+
+- [Custom function quickstart](docs/for_recipe_authors/custom_function_quickstart.md) -- decorator APIs, YAML integration, common pitfalls
+
 ## Architecture (12 layers)
 
 ```
