@@ -390,3 +390,38 @@ Initial spec used `ratio > 1.05` with `>= 8/10` gate. Tester BLOCK revealed only
 cleared that threshold (DGP T=50, N=5, K=2 produces ratios 1.016–1.068). Planner revised threshold to `> 1.0`
 — the paper-exact Bai-Ng (2002) claim (strictly positive PI correction). All 10/10 seeds clear `> 1.0`
 with headroom; the `>= 8/10` gate is retained for stochastic robustness.
+
+---
+
+## Phase D-2b Stale-xfail Housekeeping Closure (2026-05-12)
+
+> HEAD `4985b8f3` — test-marker housekeeping only, no source code changes.
+
+### What Changed
+
+Five `@pytest.mark.xfail(strict=False)` decorator blocks removed from
+`tests/core/test_paper_helpers_e2e.py`. The underlying Round 1 findings
+were already closed by Phase B (papers 7, 9, 10, 12, 14) and Phase D-1
+work; the decorators were stale bookkeeping that silently swallowed
+XPASS status in CI.
+
+| Paper | Helper | Phase that closed the Round 1 finding |
+| ----- | ------ | ------------------------------------- |
+| 7 | `adaptive_ma` | Phase B-7 (src_y wiring) |
+| 9 | `hemisphere_neural_network` | Phase B-9 (HNN dispatch fix) |
+| 10 | `ols_attention_demo` | Phase B-10 (Ω attention artifact) |
+| 12 | `dual_interpretation` | Phase B-12 (L7 op wiring) |
+| 14 | `sparse_macro_factors` | Phase B-14 (Chen-Rohe SCA) |
+
+Module-level docstring updated: "Seven helpers are xfail-marked" →
+"All Round 1 xfail markers have been removed as of 2026-05-12 Phase D-2b."
+
+### Test Impact
+
+- 5 tests now show plain `PASSED` (previously silent `XPASS`).
+- Zero xfail decorators remain in `test_paper_helpers_e2e.py`.
+- Total collected: 1380 (unchanged). Pre-existing MRF env failures: 9
+  (unchanged, unrelated to this phase).
+- Paper 9 (`hemisphere_neural_network`, ~300s NN train) verified PASS
+  by Round 5 audit-paper-09; deferred from synchronous tester run per
+  test-spec.md §9 NOTE provision.
