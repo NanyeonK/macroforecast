@@ -751,15 +751,15 @@ def hemisphere_neural_network(
     seed: int = 42,
     B: int = 1000,
     neurons: int = 400,
-    lc: int = 5,
-    lm: int = 5,
-    lv: int = 5,
+    lc: int = 2,
+    lm: int = 2,
+    lv: int = 2,
     nu: float | None = None,
     lambda_emphasis: float = 1.0,
     n_epochs: int = 200,
     dropout: float = 0.2,
     lr: float = 0.01,
-    sub_rate: float = 0.5,
+    sub_rate: float = 0.80,
     quantile_levels: tuple[float, ...] = (0.05, 0.16, 0.84, 0.95),
     forecast_object: Literal["mean", "quantile", "density"] = "density",
 ) -> dict[str, Any]:
@@ -778,14 +778,15 @@ def hemisphere_neural_network(
 
     * ``B = 1000`` (paper p.12, ensemble size).
     * ``neurons = 400`` (paper §3 hidden-layer width).
-    * ``lc = lm = lv = 5`` (paper §3 hemisphere stack depths).
+    * ``lc = lm = lv = 2`` (paper §3 symmetric structure: two hidden
+      layers per hemisphere and common block).
     * ``nu = None`` -- triggers data-driven plain-NN OOB residual proxy
       for the variance-emphasis target (paper p.11 footnote 2).
     * ``lambda_emphasis = 1.0`` (Lagrangian multiplier on the volatility-
       emphasis penalty added to the MLE loss; paper §3.2 Ingredient 2).
     * ``n_epochs = 200``, ``dropout = 0.2``, ``lr = 0.01`` (paper §3 + §4
       training schedule).
-    * ``sub_rate = 0.5`` (per-bag block fraction; paper Eq. 8).
+    * ``sub_rate = 0.80`` (per-bag block fraction; paper Eq. 8 example).
     * ``quantile_levels = (0.05, 0.16, 0.84, 0.95)`` (paper Figure 3
       fan-chart bands).
     * ``forecast_object = 'density'`` -- the paper headline is density
@@ -991,8 +992,10 @@ def macroeconomic_random_forest(
 
     ``block_size`` (default 24) is the Bayesian Bayesian Bootstrap
     block length; v0.9.0a0 audit gap-fix raised the default from the
-    upstream 12 to match the paper's monthly-data spec. Override to
-    8 for quarterly panels or 52 for weekly panels.
+    upstream 12 to match the paper's monthly-data spec (Coulombe 2024
+    JAE §2 footnote 7 for monthly macro panels; upstream default 12
+    is for higher-frequency data). Override to 8 for quarterly panels
+    or 52 for weekly panels.
 
     **Phase B-5 paper-5 (v0.9.0a0) helper expansion.** The paper-relevant
     hyperparameters (Goulet Coulombe 2024 JAE p.7-10) are now first-class

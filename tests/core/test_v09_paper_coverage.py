@@ -3479,3 +3479,34 @@ def test_data_transforms_16_cells_all_run_e2e_on_synthetic(cell, tmp_path):
     assert np.all(np.isfinite(arr)), (
         f"cell={cell!r}: forecast contains NaN or Inf — got {arr!r}"
     )
+
+
+def test_d2c_paper16_h_plus_pca_n_components_equals_n_factors():
+    """Phase D-2c Paper 16 Eq. (7): ARDI H_plus uses K=n_factors static
+    factors. The ``feat_F`` PCA node in ``_l3_h_axis`` must set
+    ``n_components=n_factors`` (default 4), not ``'all'``.
+
+    Structural pin: prevents silent change to n_components='all' which
+    would expand the factor set and break paper Eq. (7) semantics
+    (B₂ uses 'all'; H_plus / ARDI uses K truncated factors)."""
+
+    from macroforecast.recipes.paper_methods import _l3_h_axis
+
+    for n_factors in (4, 6):
+        block = _l3_h_axis("H_plus", horizon=1, n_factors=n_factors)
+        nodes_by_id = {n["id"]: n for n in block["nodes"]}
+        assert "feat_F" in nodes_by_id, (
+            f"H_plus DAG must have a 'feat_F' PCA node; "
+            f"node ids = {list(nodes_by_id)!r}"
+        )
+        feat_F_params = nodes_by_id["feat_F"].get("params", {})
+        assert feat_F_params.get("n_components") == n_factors, (
+            f"feat_F PCA n_components must equal n_factors={n_factors} "
+            f"(paper Eq. 7 ARDI K static factors); "
+            f"got {feat_F_params.get('n_components')!r}"
+        )
+        # Confirm NOT 'all' (which is B2 semantics, not ARDI H_plus).
+        assert feat_F_params.get("n_components") != "all", (
+            "feat_F n_components='all' is B2 semantics; H_plus ARDI "
+            "must use n_factors (integer), not 'all'."
+        )

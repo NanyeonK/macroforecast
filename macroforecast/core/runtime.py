@@ -2904,7 +2904,7 @@ def _build_l4_model(family: str, params: dict[str, Any]):
                 herfindahl_threshold=float(params.get("herfindahl_threshold", 0.25)),
                 eta_depth_step=float(params.get("eta_depth_step", 0.01)),
                 eta_max_plateau=float(params.get("eta_max_plateau", 0.5)),
-                mtry_frac=float(params.get("mtry_frac", 1.0)),
+                mtry_frac=float(params.get("mtry_frac", 0.75)),
                 max_depth=params.get("max_depth"),
                 random_state=seed,
             )
@@ -3064,7 +3064,7 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         lambda_cross = float(
             params.get("lambda_cross", params.get("minnesota_lambda_cross", 0.5))
         )
-        b_AR = float(params.get("b_AR", 1.0))
+        b_AR = float(params.get("b_AR", 0.9))
         ordering = params.get("ordering")
         if ordering is not None:
             ordering = tuple(str(x) for x in ordering)
@@ -3086,6 +3086,13 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         # ensembles. Backed by Ryan Lucas's reference implementation
         # vendored under ``_vendor/macro_random_forest/`` — see
         # ``_MRFExternalWrapper``.
+        if "B" in params and "n_estimators" in params:
+            warnings.warn(
+                "MRF recipe has both 'B' and 'n_estimators'; 'B' wins. "
+                "Use 'B' exclusively to suppress this warning.",
+                UserWarning,
+                stacklevel=2,
+            )
         return _MRFExternalWrapper(
             B=int(params.get("B", params.get("n_estimators", 50))),
             ridge_lambda=float(params.get("ridge_lambda", 0.1)),
@@ -6536,6 +6543,7 @@ class _DFMMixedFrequency:
             self._results = model.fit(disp=False, maxiter=50)
             self._scaler_mean = float(scaler_mean["__y__"])
             self._scaler_std = float(scaler_std["__y__"])
+            self._mode = "single_frequency"  # explicit: MQ fallback path confirmed
         except Exception:  # pragma: no cover - statsmodels can fail at edges
             self._results = None
             self._fallback = float(y.dropna().iloc[-1]) if not y.dropna().empty else 0.0
@@ -6564,8 +6572,8 @@ class _DFMMixedFrequency:
         return np.full(len(X), target_pred, dtype=float)
 
     def predict_smoothed_factors(self) -> pd.DataFrame | None:
-        """Coulombe & Goebel (2021) §3.4 deliverable: Kalman *smoother*
-        marginal posterior of the latent factors. statsmodels exposes
+        """Single-frequency DFM: Kalman *smoother* marginal posterior of
+        the latent factors. statsmodels exposes
         ``self._results.smoothed_state`` (k_states × T) — we reshape
         and only return the factor rows (one per ``k_factors``), which
         for the Mariano-Murasawa Eq. (4) state-space layout are the
@@ -8195,7 +8203,7 @@ def _execute_l7_step(
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "attention_weights":
         # Phase B-10 paper-10 promotion -- Goulet Coulombe (2026)
-        # "OLS as an Attention Mechanism", Eq. 3 closed form.
+        # "OLS as an Attention Mechanism", Eq. 7 closed form.
         model = _first_model_input(inputs)
         X, y = _l7_xy(inputs, l3_features)
         frame = _l7_attention_weights_op(model, X, y, params)
@@ -9503,6 +9511,16 @@ def _dual_decomposition_frame(
         method = "rf_leaf_cooccurrence_kernel"
         W = _rf_leaf_cooccurrence_weights(fitted, X_train, X_test)
     else:
+        _nn_families = {"mlp", "lstm", "gru", "transformer"}
+        if getattr(model, "family", None) in _nn_families:
+            raise ValueError(
+                f"dual_decomposition: NN family {model.family!r} is "
+                f"FUTURE — paper §2.3 (Eqs. 9-12) NN dual via auxiliary "
+                f"ridge on penultimate-layer activations is not yet "
+                f"implemented. Use a linear or tree-bagging family. "
+                f"This will be rejected at recipe-validation time in a "
+                f"future release."
+            )
         raise NotImplementedError(
             f"dual_decomposition does not yet support family "
             f"{model.family!r} ({type(fitted).__name__}). Linear families "
@@ -9585,11 +9603,11 @@ def _l7_attention_weights_op(
     y: pd.Series | None,
     params: dict[str, Any],
 ) -> pd.DataFrame:
-    """Goulet Coulombe (2026) "OLS as an Attention Mechanism" Eq. 3.
+    """Goulet Coulombe (2026) "OLS as an Attention Mechanism" Eq. 7.
 
     Builds the closed-form attention matrix
     ``Omega = X_test (X'_train X_train)^{-1} X'_train`` so that
-    ``y_hat_test = Omega @ y_train`` (representer identity, paper §3.1).
+    ``y_hat_test = Omega @ y_train`` (representer identity, paper §2.1).
 
     The op is registered with ``L4ModelArtifactsArtifact`` +
     ``L3FeaturesArtifact`` inputs but the matrix is constructed from
@@ -9652,7 +9670,7 @@ def _l7_attention_weights_op(
         ones_test = np.ones((Z_test.shape[0], 1))
         Z_test = np.concatenate([ones_test, Z_test], axis=1)
 
-    # Paper Eq. 3: Omega = X_test (X'X)^{-1} X'_train. ``np.linalg.solve``
+    # Paper Eq. 7: Omega = X_test (X'X)^{-1} X'_train. ``np.linalg.solve``
     # is more numerically stable than explicit inversion.
     XtX = Z_train.T @ Z_train
     try:
@@ -9739,6 +9757,15 @@ def _l7_anatomy_op(
     plan sketch, which had referenced non-existent ``Anatomy.oshapley_vi(...)``
     / ``Anatomy.pbsv(...)`` methods. anatomy 0.1.6 has neither -- both
     are derived from the single ``explain()`` entry point.
+
+    Scope note: Eq. 15 (per-feature oShapley linear closed form,
+    φ̂_p^out = β̂_p (x_{p,t} − x̄_p)) and Eq. 22 (SE-PBSV local linear
+    closed form) are performance shortcuts described in the paper but
+    not implemented as native shortcuts here. The general
+    ``Anatomy.explain()`` sampling algorithm is used for all model
+    families including linear/ridge, which is correct for all cases
+    (the closed forms are simplifications for speed, not correctness
+    requirements).
     """
 
     try:

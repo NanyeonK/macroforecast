@@ -308,3 +308,63 @@ def test_arctic_var_helper_n_lags_legacy_alias_warns_or_works():
     assert params["n_lag"] == 8, (
         f"legacy n_lags should propagate to canonical n_lag; got {params['n_lag']!r}"
     )
+
+
+# ----------------------------------------------------------------------
+# Phase D-2c — Paper 4 Fig. 3: 90% credible band (5/95 percentile)
+# ----------------------------------------------------------------------
+
+
+def test_arctic_var_e2e_returns_90_percent_band():
+    """Phase D-2c Paper 4: paper Fig. 3 shades the *90% credible region*
+    (5–95 percentile band). Both p05 and p95 are computed alongside
+    p16/p84 in ``_sample_posterior_irf_multivariate_minnesota``; this
+    test asserts they are present and non-degenerate in the L7 artifact."""
+
+    import warnings
+
+    import macroforecast
+    from macroforecast.recipes.paper_methods import arctic_var
+
+    panel = _build_var_panel(t=80, k=3, seed=5)
+    recipe = arctic_var(
+        target="y",
+        horizon=1,
+        panel=panel,
+        n_lag=2,
+        n_posterior_draws=50,
+        posterior_irf_periods=6,
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = macroforecast.run(recipe)
+    cell = res.cells[0]
+    importance = cell.runtime_result.artifacts["l7_importance_v1"]
+    irf_frames = [
+        v
+        for k, v in importance.global_importance.items()
+        if k[3] == "orthogonalised_irf"
+    ]
+    assert irf_frames, (
+        "orthogonalised_irf missing from L7 artifact; "
+        f"keys = {list(importance.global_importance.keys())}"
+    )
+    irf_frame = irf_frames[0]
+    assert "p05" in irf_frame.columns, (
+        "p05 (5th percentile, 90% lower bound) missing from IRF frame; "
+        f"columns = {list(irf_frame.columns)}"
+    )
+    assert "p95" in irf_frame.columns, (
+        "p95 (95th percentile, 90% upper bound) missing from IRF frame; "
+        f"columns = {list(irf_frame.columns)}"
+    )
+    # 90% band should be wider than the 68% band.
+    assert (irf_frame["p05"] <= irf_frame["p16"]).all(), (
+        "p05 must be <= p16 (90% lower bound <= 68% lower bound)"
+    )
+    assert (irf_frame["p95"] >= irf_frame["p84"]).all(), (
+        "p95 must be >= p84 (90% upper bound >= 68% upper bound)"
+    )
+    assert (irf_frame["p05"] != irf_frame["p95"]).any(), (
+        "90% band is degenerate (p05 == p95 everywhere)"
+    )
