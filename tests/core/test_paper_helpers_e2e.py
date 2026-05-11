@@ -12,12 +12,10 @@ through the public pipeline." Algorithm-level correctness (DM-vs-ARDI
 benchmark, ARDI lag-of-F, full-rank rotation, etc.) is the subject of
 Round 3 micro-audits.
 
-**xfail bookkeeping.** Seven helpers are xfail-marked per the Round 1
-review.md ground truth (papers 4, 7, 9, 10, 11, 12, 14). The
-remaining 8 (papers 1, 3, 5, 6, 8, 13, 15, 16) are expected to pass.
-``strict=False`` so an xfail that incidentally starts passing (xpassed)
-does not fail the suite — those cases should be flagged in the report
-and demoted from xfail later.
+**xfail bookkeeping.** All Round 1 xfail markers have been removed as of
+2026-05-12 Phase D-2b. Papers 4 and 11 were demoted in Phase B; papers 7,
+9, 10, 12, and 14 were demoted here. All 15 tests are now expected to pass
+without xfail annotation.
 
 After Phase A2 this module's paper 13 (`maximally_forward_looking`) and
 paper 16 (`ml_useful_macro_b_grid`) are expected to pass, validating
@@ -224,10 +222,6 @@ def test_paper_06_booging(synth_panel):
 # Paper 7 — adaptive_ma: Round 1 flagged that the helper pipes src_X through
 # adaptive_ma_rf without using src_y as the supervised target (the AlbaMA
 # procedure uses target-supervised aggregation).
-@pytest.mark.xfail(
-    reason="Round 1: adaptive_ma pipes src_X to adaptive_ma_rf, not src_y -- AlbaMA target-supervision missing",
-    strict=False,
-)
 def test_paper_07_adaptive_ma(synth_panel):
     recipe = adaptive_ma(target="y", horizon=1, panel=synth_panel, n_estimators=5)
     _assert_recipe_runs(recipe)
@@ -242,10 +236,6 @@ def test_paper_08_two_step_ridge(synth_panel):
 
 # Paper 9 — hemisphere_neural_network: Round 1 flagged that L4 dispatches to
 # LinearRegression rather than the HNN distrib methods.
-@pytest.mark.xfail(
-    reason="Round 1: hemisphere_neural_network L4 dispatches to LinearRegression (HNN architecture/loss sub-axes are future)",
-    strict=False,
-)
 def test_paper_09_hemisphere_neural_network(synth_panel):
     recipe = hemisphere_neural_network(target="y", horizon=1, panel=synth_panel)
     # MLP per-origin walk-forward refit blows up the smoke budget; raise
@@ -261,10 +251,6 @@ def test_paper_09_hemisphere_neural_network(synth_panel):
 
 # Paper 10 — ols_attention_demo: Round 1 flagged that the helper returns a
 # generic OLS without the Ω attention artifact.
-@pytest.mark.xfail(
-    reason="Round 1: ols_attention_demo returns generic OLS, no Ω attention artifact",
-    strict=False,
-)
 def test_paper_10_ols_attention_demo(synth_panel):
     recipe = ols_attention_demo(target="y", horizon=1, panel=synth_panel)
     _assert_recipe_runs(recipe)
@@ -283,10 +269,6 @@ def test_paper_11_anatomy_oos(synth_panel):
 
 # Paper 12 — dual_interpretation: Round 1 flagged that the L7
 # dual_decomposition op is future, so the helper has no L7 wiring.
-@pytest.mark.xfail(
-    reason="Round 1: dual_interpretation has no L7 wiring (dual_decomposition op is future)",
-    strict=False,
-)
 def test_paper_12_dual_interpretation(synth_panel):
     recipe = dual_interpretation(target="y", horizon=1, panel=synth_panel)
     _assert_recipe_runs(recipe)
@@ -311,10 +293,6 @@ def test_paper_13_maximally_forward_looking(synth_panel):
 # faithful, and the L3 sparse_pca node also lacks temporal_rule, so the
 # recipe is not runnable through ``macroforecast.run`` without a runtime
 # patch.
-@pytest.mark.xfail(
-    reason="Round 1: sparse_macro_factors routes to sklearn sparse_pca, not chen_rohe (paper SCA)",
-    strict=False,
-)
 def test_paper_14_sparse_macro_factors(synth_panel):
     recipe = sparse_macro_factors(
         target="y", horizon=1, panel=synth_panel, n_components=3
