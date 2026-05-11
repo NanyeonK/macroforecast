@@ -4,6 +4,31 @@
 > Current version is in ``pyproject.toml`` and ``macroforecast/__init__.py``;
 > 12-layer canonical design lives in ``plans/design/part1-4``.
 
+## ⚠️ WORKFLOW MANDATE — StatsClaw 전용 (NO EXCEPTIONS)
+
+**이 프로젝트의 모든 작업은 반드시 StatsClaw plugin workflow 로 진행한다.** 사용자 명시 (2026-05-12).
+
+- Target repo source 수정 → workflow 1 또는 자격 시 workflow 10 simplified
+- Target repo docs 수정 → workflow 3
+- Tests / validation 실행 → workflow 6 (tester only)
+- Audit / paper-faithfulness check → workflow 8 (reviewer only, anchor-free)
+- Push / PyPI publish 전 git → workflow 7
+- Simulation / Monte Carlo → workflow 11 (new estimator) 또는 12 (existing estimator)
+
+**Additional constraint (2026-05-12 추가)**: macroforecast 의 모든 코드 작업은 server1 (115.145.17.140) 에서만 진행. mac local 작업 절대 금지.
+
+**금지 사항**:
+- Leader (Claude main) 가 target repo 파일을 직접 Edit/Write — builder/scriber 통해서만
+- Leader 가 pytest 등 validation 직접 실행 — tester 통해서만
+- Leader 가 git commit/push 직접 실행 — shipper 통해서만
+- 사용자가 명시적으로 ship/PyPI publish 요청하지 않으면 cut 안 함
+
+**프로토콜 entry point**: `~/.claude/plugins/marketplaces/statsclaw/skills/statsclaw-protocol/SKILL.md`.
+
+**Workspace runtime**: `~/.claude/plugins/data/statsclaw-statsclaw/.repos/workspace/macroforecast/` (audit trail, run logs, HANDOFF.md 모두 여기).
+
+이 룰은 영구. 사용자가 명시적으로 "StatsClaw 우회" 라고 말하지 않는 한 항상 적용.
+
 ## Quick start
 
 ```bash

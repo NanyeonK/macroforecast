@@ -71,6 +71,29 @@ Factors, ``inner_n_estimators=1500`` for Booging).
 Stable v0.9.0 will close the 5 remaining gaps in v0.9.0a1 / a2 / b0
 release candidates.
 
+### Post-2026-05-07 hardening (Phase D cycles, 2026-05-12)
+
+After the 2026-05-07 initial alpha cut, four independent audit-fix dev stages
+were applied on server1. None change the PyPI release version (still 0.9.0a0);
+they harden paper-faithfulness and close LOW/MEDIUM audit findings.
+
+**Round 5 anchor-free sweep** (2026-05-12, workflow 8, 16 papers):
+- 4 ✅ strict Match / 10 ✅ PASS WITH NOTE (LOW) / 2 ⚠️ PASS WITH NOTE (MEDIUM) / 0 ❌ Mismatch
+- MEDIUM gaps: Paper 13 (target-mode point_forecast vs cumulative_average) + Paper 15 (temporal_rule + F-branch lag missing in 12/16 Table 1 cells)
+- All HIGH and CRITICAL findings from Round 1 closed.
+
+**Phase D-1** (workflow 1): Paper 13 target-mode fix (`cumulative_average`) + Paper 15 `temporal_rule` + F-branch lag. Test count: 1311 → 1319 (+8 tests).
+
+**Phase D-2a** (workflow 10 simplified): LOW housekeeping bundle — stale xfail decorators removed (papers 7, 9, 10, 12, 14), Almon positivity / n_slices / docstring / multi-seed cosmetic items. Test count: 1319 → 1327 (+8 tests).
+
+**Phase D-2b** (workflow 10 simplified): Additional LOW items from Round 5. Test count: 1327 → 1327 (no net change; 0 new tests in this slice).
+
+**Phase D-2c** (workflow 10 simplified): 9 paper-grounded LOW housekeeping items — docstring corrections (papers 2, 5, 10, 11), default value alignments (papers 3, 4, 9), error-quality improvement (paper 12 NN `ValueError`), structural test pin (paper 16 H⁺ `n_components`). HEAD `3e2d3b03`. Test count: 1327 → 1329 (+2 tests).
+
+**Demote pattern**: 9 demotes total across the full audit-fix cycle (8 code-side, 1 report-side). Pattern stabilising — Round 5 surfaces no new code-side demotes.
+
+**Final test count at HEAD `3e2d3b03`**: 1329 passing, 9 failed (pre-existing MRF `ndarray not contiguous` from vendored `np.matrix()` — not regressions), 25 skipped.
+
 
 
 The single published cut after v0.8.9 that closes the 16-paper Phase-2
