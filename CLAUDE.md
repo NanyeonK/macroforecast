@@ -23,7 +23,7 @@
 - Leader 가 git commit/push 직접 실행 — shipper 통해서만
 - 사용자가 명시적으로 ship/PyPI publish 요청하지 않으면 cut 안 함
 
-**프로토콜 entry point**: `~/.claude/plugins/marketplaces/statsclaw/skills/statsclaw-protocol/SKILL.md`.
+**프로토콜 entry point**: `~/.claude/plugins/marketplaces/statsclaw/skills/statsclaw-protocol/SKILL.md` (mac-local; server1 mirrors plugin via separate install).
 
 **Workspace runtime**: `~/.claude/plugins/data/statsclaw-statsclaw/.repos/workspace/macroforecast/` (audit trail, run logs, HANDOFF.md 모두 여기).
 
@@ -32,7 +32,7 @@
 ## Quick start
 
 ```bash
-python3 -m pytest tests/ -x -q                     # ~953 tests, <30s on a laptop
+python3 -m pytest tests/ -x -q                     # ~1345 tests, ~2-3 min on a laptop
 python3 -c "import macroforecast; print(macroforecast.__version__)"
 python3 -c "import macroforecast; macroforecast.run('examples/recipes/l4_minimal_ridge.yaml')"
 ```
