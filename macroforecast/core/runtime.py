@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
+import copy
 import math
 import json
 from pathlib import Path
@@ -3139,6 +3140,8 @@ def _build_l4_model(family: str, params: dict[str, Any]):
                 sub_rate=float(params.get("sub_rate", 0.80)),
                 nu=params.get("nu"),
                 lambda_emphasis=float(params.get("lambda_emphasis", 1.0)),
+                patience=int(params.get("patience", 15)),
+                val_frac=float(params.get("val_frac", 0.20)),
                 random_state=seed,
             )
         if family == "mlp":
@@ -5998,6 +6001,8 @@ class _HemisphereNN:
         sub_rate: float = 0.80,
         nu: Any = None,
         lambda_emphasis: float = 1.0,
+        patience: int = 15,
+        val_frac: float = 0.20,
         random_state: int = 0,
     ) -> None:
         self.lc = max(1, int(lc))
@@ -6014,6 +6019,9 @@ class _HemisphereNN:
         # emphasis penalty term added to the MLE loss (in-MLE constraint
         # per paper §3.2 Ingredient 2).
         self.lambda_emphasis = float(max(lambda_emphasis, 0.0))
+        # Paper §3 p.14: patience=15 and 80/20 train/val split for early stopping.
+        self.patience = max(1, int(patience))
+        self.val_frac = float(np.clip(val_frac, 0.05, 0.5))
         self.random_state = int(random_state)
         self._cols: tuple[str, ...] = ()
         self._models: list[Any] = []
@@ -6221,6 +6229,22 @@ class _HemisphereNN:
         nu = self._resolve_nu(Xa, ya)
         target_hv_mean = nu * self._var_y
 
+        # Paper §3 p.14: single 80/20 train/val split for early stopping.
+        # Split is computed ONCE here; all bags share the same validation set.
+        val_size = max(1, round(self.val_frac * n))
+        train_size = n - val_size
+        # Shuffle indices using the same random state for reproducibility.
+        split_rng = np.random.RandomState(self.random_state)
+        perm = split_rng.permutation(n)
+        train_idx = np.sort(perm[:train_size])   # sort to preserve time order within partition
+        val_idx = np.sort(perm[train_size:])
+        X_train = Xa[train_idx]
+        y_train = ya[train_idx]
+        X_val_np = Xa[val_idx]
+        y_val_np = ya[val_idx]
+        X_val_t = torch.from_numpy(X_val_np)
+        y_val_t = torch.from_numpy(y_val_np)
+
         # v0.9.0F audit-fix Ingredient 3: blocked subsamples (paper
         # Eq. 8) replace the previous random row sampling.
         oob_eps2_sum = np.zeros(n, dtype=float)
@@ -6235,16 +6259,32 @@ class _HemisphereNN:
         lambda_emph = float(getattr(self, "lambda_emphasis", 1.0))
 
         for b in range(self.B):
-            in_idx, oob_idx = self._blocked_subsample(n, self.sub_rate, b, rng)
-            if len(in_idx) < 4:
+            # Blocked subsample within the TRAINING PARTITION only.
+            in_idx_local, oob_idx_local = self._blocked_subsample(
+                train_size, self.sub_rate, b, rng
+            )
+            if len(in_idx_local) < 4:
                 continue
-            X_b = torch.from_numpy(Xa[in_idx])
-            y_b = torch.from_numpy(ya[in_idx])
-            X_full = torch.from_numpy(Xa)
+
+            # Map local indices back to global dataset indices for OOB accumulation.
+            in_idx_global = train_idx[in_idx_local]
+            oob_idx_global = train_idx[oob_idx_local]
+
+            X_b = torch.from_numpy(X_train[in_idx_local])
+            y_b = torch.from_numpy(y_train[in_idx_local])
+            X_full_t = torch.from_numpy(Xa)   # full dataset for Lagrangian penalty
             target_hv_mean_t = torch.tensor(target_hv_mean, dtype=torch.float32)
+
             model = self._build_one_model(K)
             opt = torch.optim.Adam(model.parameters(), lr=self.lr)
+
+            # ----- Early stopping state (per-bag) -----
+            best_val_loss = float("inf")
+            epochs_since_improvement = 0
+            best_state_dict = copy.deepcopy(model.state_dict())
+
             for _ in range(self.n_epochs):
+                # --- Training step ---
                 model.train()
                 opt.zero_grad()
                 m, v = model(X_b)
@@ -6253,21 +6293,43 @@ class _HemisphereNN:
                 # in-MLE constraint): drive mean(h_v) toward ν · var(y)
                 # via a soft squared penalty. λ_emphasis = 1.0 default;
                 # users may scale via params.
-                _, v_full = model(X_full)
+                _, v_full = model(X_full_t)
                 emph_penalty = (v_full.mean() - target_hv_mean_t) ** 2
                 loss = nll + lambda_emph * emph_penalty
                 loss.backward()
                 opt.step()
-            # Collect OOB squared residuals + h_v predictions for the
-            # Eq. 9-10 reality check.
-            if len(oob_idx) > 0:
+
+                # --- Validation NLL (pure NLL, no Lagrangian penalty) ---
+                model.eval()
+                with torch.no_grad():
+                    m_val, v_val = model(X_val_t)
+                    val_nll = float(
+                        ((y_val_t - m_val) ** 2 / v_val + torch.log(v_val)).mean().item()
+                    )
+
+                # --- Patience logic ---
+                if val_nll < best_val_loss:
+                    best_val_loss = val_nll
+                    epochs_since_improvement = 0
+                    best_state_dict = copy.deepcopy(model.state_dict())
+                else:
+                    epochs_since_improvement += 1
+                if epochs_since_improvement >= self.patience:
+                    break   # early stopping triggered
+
+            # Restore best-checkpoint weights for this bag.
+            model.load_state_dict(best_state_dict)
+
+            # --- OOB collection for Ingredient 4 reality check ---
+            if len(oob_idx_global) > 0:
                 with torch.no_grad():
                     model.eval()
-                    m_oob, v_oob = model(torch.from_numpy(Xa[oob_idx]))
-                    eps2 = (ya[oob_idx] - m_oob.numpy()) ** 2
-                    oob_eps2_sum[oob_idx] += eps2
-                    oob_hv_sum[oob_idx] += v_oob.numpy()
-                    oob_counts[oob_idx] += 1.0
+                    m_oob, v_oob = model(torch.from_numpy(Xa[oob_idx_global]))
+                    eps2 = (ya[oob_idx_global] - m_oob.numpy()) ** 2
+                    oob_eps2_sum[oob_idx_global] += eps2
+                    oob_hv_sum[oob_idx_global] += v_oob.numpy()
+                    oob_counts[oob_idx_global] += 1.0
+
             self._models.append(model)
 
         # v0.9.0F audit-fix Ingredient 4: blocked-OOB log-linear reality
