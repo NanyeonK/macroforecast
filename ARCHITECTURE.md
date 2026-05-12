@@ -843,3 +843,70 @@ graph TD
     style CSV_LOAD fill:#1e90ff,stroke:#1565c0,color:#fff
     style PQ_LOAD fill:#1e90ff,stroke:#1565c0,color:#fff
 ```
+
+---
+
+## Phase F-07-R: U-MIDAS Paper-Faithful Fix (R1-R5)
+
+Run: `2026-05-12-phase-f07-umidas-paper-faithful-fix`. Commits: `e67f3aaf` (R1-R5 algorithmic) + `722a8f3b` (R4 NLS MIDAS baseline). Reviewer GO 2026-05-12. 2 commits ahead of origin/main.
+
+Paper: Foroni-Marcellino-Schumacher (2015) JRSS-A 178(1), 57-82, DOI 10.1111/rssa.12043; Bundesbank DP 35/2011.
+
+### Sub-items Closed
+
+| ID | Fix | Paper anchor | LOC delta |
+|---|---|---|---|
+| R1 | OLS default L4 (`_l4_single_fit("ols",{})`) | §2.1 p.6, §3.2 p.11 "estimated by simple OLS" | paper_methods.py +73/-13 |
+| R2 | BIC lag-order selection via `_bic_select_k`; K_max=ceil(1.5×freq_ratio) | §3.2 p.11 + §3.5 full subsection | runtime.py +186/-5 |
+| R3 | AR(1) y-lag term (`include_y_lag=True` default); `y_lag1` prepended leftmost | §3.2 eq.(20): μ₁ y_{t×k-k} term | runtime.py (same delta) |
+| R4 | MC anchor test: NLS exp-Almon MIDAS baseline, k=3 ratio∈[0.79,1.03] | §3.4 Table 2, §3.1 eq.(17) VAR(1) DGP | tester file +67/-38 |
+| R5 | Docstring citations (DOI, DP number, eq./(20) in all 4 functions) | All sections | runtime.py + paper_methods.py |
+
+Total LOC: +465 / -29 source; +28 new tests (1345 → ≥1373 passing).
+
+### New Public Symbols
+
+| Symbol | File | Type | Description |
+|---|---|---|---|
+| `_bic_select_k(frame_hf, y_lf, *, freq_ratio, include_y_lag, ic)` | `core/runtime.py:13634` | Private function | BIC/AIC lag-order selection; K_max=ceil(1.5×freq_ratio); §3.2 p.11+§3.5 |
+| `u_midas(n_lags_high)` | `recipes/paper_methods.py:2891` | Param change | `int\|Literal["bic","aic"]="bic"` (was `int=6`) |
+| `u_midas(include_y_lag)` | `recipes/paper_methods.py:2892` | New param | `bool=True` — AR(1) y-lag per §3.2 eq.(20) |
+| `u_midas(regularization)` | `recipes/paper_methods.py:2893` | New param | `Literal["none","ridge"]="none"` — OLS default |
+| `u_midas(alpha)` | `recipes/paper_methods.py:2894` | New param | `float=1.0` — ridge penalty (opt-in only) |
+| `_u_midas(include_y_lag, y_series, ic_selector)` | `core/runtime.py:13722` | Param additions | Expanded signature; `include_y_lag=False` default (primitive back-compat) |
+
+### Function Call Graph (F-07-R)
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    umidas_helper["u_midas()<br/>paper_methods.py:2886"]
+    l3_dispatch["runtime dispatch<br/>op=='u_midas'<br/>runtime.py:13533"]
+    bic_select["_bic_select_k()<br/>runtime.py:13634"]
+    u_midas_fn["_u_midas()<br/>runtime.py:13722"]
+    lag_stack["_midas_lag_stack()<br/>runtime.py:13573"]
+    l4_ols["_l4_single_fit('ols',{})<br/>paper_methods.py:3001"]
+    l4_ridge["_l4_single_fit('ridge',alpha)<br/>paper_methods.py:2999"]
+
+    umidas_helper --> l3_dispatch
+    umidas_helper --> l4_ols
+    umidas_helper --> l4_ridge
+    l3_dispatch --> u_midas_fn
+    u_midas_fn --> bic_select
+    u_midas_fn --> lag_stack
+    bic_select --> lag_stack
+
+    style umidas_helper fill:#1e90ff,stroke:#1565c0,color:#fff
+    style bic_select fill:#1e90ff,stroke:#1565c0,color:#fff
+    style u_midas_fn fill:#1e90ff,stroke:#1565c0,color:#fff
+    style l4_ols fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+| Function/Module | Purpose | Key Dependencies | Changed in F-07-R |
+|---|---|---|---|
+| `u_midas` (paper_methods.py) | Public helper — paper-faithful U-MIDAS recipe | `_base_recipe`, `_l4_single_fit`, `_l3_op` | Yes — signature, docstring, L3 inputs, L4 OLS |
+| `_bic_select_k` (runtime.py) | BIC/AIC lag-order selection over K∈{1..K_max} | `_midas_lag_stack`, `numpy.linalg.lstsq` | Yes — NEW function |
+| `_u_midas` (runtime.py) | L3 lag-stack op primitive + y-lag prepend | `_bic_select_k`, `_midas_lag_stack` | Yes — signature + logic |
+| `_midas_lag_stack` (runtime.py) | HF→LF lag-stack design matrix (§2.1 eq.(8)) | pandas reindex | No — docstring R5 only |
+| `_positive_param` (l3_ops.py) | L3 DAG validator sentinel check | — | Yes — accepts "bic"/"aic" |
+| `test_f07_umidas_tester.py` | Tester-owned MC + correctness tests (19 tests) | `_bic_select_k`, `_u_midas`, `u_midas` | Yes — NEW file |
