@@ -200,6 +200,66 @@ def ma_increasing_order(inputs, params):
 
 
 @register_op(
+    name="maf_per_variable_pca",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    params_schema={
+        "n_lags": {"type": int, "default": 12, "sweepable": True},
+        "n_components_per_var": {"type": int, "default": 2, "sweepable": True},
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            lambda dag, nref: dag.node(nref.node_id).params.get("n_lags", 12) >= 1,
+            "n_lags must be >= 1",
+        ),
+        Rule(
+            "hard",
+            lambda dag, nref: dag.node(nref.node_id).params.get(
+                "n_components_per_var", 2
+            ) >= 1,
+            "n_components_per_var must be >= 1",
+        ),
+        Rule("hard", _temporal_present, "temporal_rule is required"),
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for maf_per_variable_pca temporal_rule",
+        ),
+    ),
+)
+def maf_per_variable_pca(inputs, params):
+    """Coulombe / Leroux / Stevanovic / Surprenant (2021 IJF)
+    "Macroeconomic Data Transformations Matter" Eq. (7) per-variable
+    Moving Average Factors (MAF) via PCA on lag-panels.
+
+    For each variable k = 1..K in the input panel, constructs the lag-
+    panel ``X̂_{t,k} = [X_{t,k}, L X_{t,k}, ..., L^{n_lags} X_{t,k}]``
+    (T × (n_lags + 1)), runs PCA retaining ``n_components_per_var``
+    components, and appends the resulting factor columns. Output shape
+    is ``(T, K * n_components_per_var)``.
+
+    Paper default: n_lags=12, n_components_per_var=2 → output (T, 2K).
+    Paper footnote 11: "P_MAF = 12. We keep two MAFs for each series
+    and they are obtained by PCA."
+
+    Distinct from the stacked-PCA MAF path used in the existing 16-cell
+    horse race (which runs a single PCA on all MA columns at once). This
+    op is paper-Eq.7-exact.
+
+    Operational from v0.9.0 (phase-f16). Runtime function:
+    :func:`macroforecast.core.runtime._maf_per_variable_pca`.
+    """
+    _stub(inputs, params)
+
+
+@register_op(
     name="cumsum",
     layer_scope=("l3",),
     input_types={"default": (Panel, Series)},

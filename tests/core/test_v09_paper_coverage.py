@@ -2435,14 +2435,14 @@ def test_dfm_mixed_frequency_predict_smoothed_factors_returns_kalman_posterior()
     assert np.all(np.isfinite(smoothed.to_numpy()))
 
 
-def test_albacore_prior_target_none_emits_warning():
+def test_albacore_prior_target_none_raises_value_error():
     """Goulet Coulombe et al. (2024) Albacore Variant A specifies
-    w_headline (CPI/PCE basket weights) as the target. Audit gap-fix:
-    leaving ``prior_target=None`` falls back to uniform 1/K but warns
-    the user — the previous silent fallback collapsed Variant A toward
-    Variant B's large-α limit."""
+    w_headline (CPI/PCE basket weights) as the target. F-14 audit
+    gap-fix (phase-f14): ``prior_target=None`` must raise ``ValueError``
+    (hard error) rather than silently falling back to uniform 1/K.
+    Closes audit-paper-14.md F12 LOW."""
 
-    import warnings
+    import pytest
     import numpy as np
     import pandas as pd
     from macroforecast.core.runtime import _ShrinkToTargetRidge
@@ -2451,13 +2451,8 @@ def test_albacore_prior_target_none_emits_warning():
     K, T = 5, 50
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=[f"c{i}" for i in range(K)])
     y = pd.Series(rng.standard_normal(T))
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
+    with pytest.raises(ValueError, match=r"prior_target"):
         _ShrinkToTargetRidge(alpha=1.0, prior_target=None).fit(X, y)
-    msgs = [str(w.message) for w in caught if issubclass(w.category, UserWarning)]
-    assert any("w_headline" in m for m in msgs), (
-        f"expected w_headline warning, got {msgs}"
-    )
 
 
 def test_albacore_prior_target_explicit_does_not_warn():

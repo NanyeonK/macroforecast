@@ -4449,23 +4449,17 @@ class _ShrinkToTargetRidge:
 
     def _resolve_target(self, K: int) -> np.ndarray:
         if self.prior_target_in is None:
-            # Audit gap-fix: paper specifies w_headline (CPI/PCE basket
-            # weights) as the default target. macroforecast cannot infer
-            # those without domain knowledge, so we fall back to uniform
-            # 1/K but warn the user — the uniform default collapses the
-            # Variant A objective toward the Variant B (fused-difference)
-            # large-α limit, so it is rarely what the user intends.
-            import warnings
-
-            warnings.warn(
-                "_ShrinkToTargetRidge: prior_target=None falls back to "
-                "uniform 1/K. Paper Albacore (Goulet Coulombe et al. 2024) "
-                "uses w_headline (the CPI/PCE basket weights) — pass "
-                "prior_target=<weights> to match the paper.",
-                UserWarning,
-                stacklevel=3,
+            # F-14 audit gap-fix (phase-f14): paper Albacore (Goulet
+            # Coulombe et al. 2024) Eq. (1) requires w_headline
+            # (CPI/PCE basket weights) — there is no paper-faithful
+            # fallback. Raise hard error to match the helper guard in
+            # maximally_forward_looking (paper_methods.py:1620-1625).
+            raise ValueError(
+                "_ShrinkToTargetRidge: prior_target=None is not permitted for the "
+                "'shrink_to_target' prior. Paper Albacore (Goulet Coulombe et al. "
+                "2024) Eq. (1) requires w_headline (CPI/PCE basket weights). Pass "
+                "prior_target=<array of length K> to the recipe L4 node."
             )
-            return np.full(K, 1.0 / max(K, 1), dtype=float)
         target = np.asarray(self.prior_target_in, dtype=float)
         if target.shape[0] != K:
             raise ValueError(f"prior_target length {target.shape[0]} ≠ K={K}")
@@ -13349,6 +13343,12 @@ def _execute_l3_op(
         return _ma_increasing_order(
             _as_frame(inputs[0]), max_order=int(params.get("max_order", 12))
         )
+    if op == "maf_per_variable_pca":
+        return _maf_per_variable_pca(
+            _as_frame(inputs[0]),
+            n_lags=int(params.get("n_lags", 12)),
+            n_components_per_var=int(params.get("n_components_per_var", 2)),
+        )
     if op == "cumsum":
         return inputs[0].cumsum()
     if op == "concat":
@@ -15042,6 +15042,72 @@ def _ma_increasing_order(frame: pd.DataFrame, *, max_order: int) -> pd.DataFrame
             .add_suffix(f"_ma{order}")
         )
     return pd.concat(windows, axis=1)
+
+
+def _maf_per_variable_pca(
+    frame: pd.DataFrame,
+    *,
+    n_lags: int = 12,
+    n_components_per_var: int = 2,
+) -> pd.DataFrame:
+    """Coulombe et al. (2021 IJF) Eq. (7) per-variable PCA MAF.
+
+    For each column k in ``frame``:
+      1. Build the (T, n_lags+1) lag-panel: [X_k, L X_k, ..., L^n_lags X_k].
+      2. Drop rows with any NaN (introduced by lagging).
+      3. Run sklearn PCA with n_components = min(n_components_per_var,
+         effective_rank) on the cleaned lag-panel.
+      4. Project back to full T-length index (NaN rows remain NaN in output).
+      5. Name output columns ``{col}_maf1``, ``{col}_maf2``, ...,
+         ``{col}_maf{n_components_per_var}``.
+
+    Returns a (T, K * n_components_per_var) DataFrame.
+
+    Operational from v0.9.0 (phase-f16). Registered as L3 op
+    ``maf_per_variable_pca`` in :mod:`macroforecast.core.ops.l3_ops`.
+    """
+    from sklearn.decomposition import PCA
+
+    if n_lags < 1:
+        raise ValueError("n_lags must be >= 1")
+    if n_components_per_var < 1:
+        raise ValueError("n_components_per_var must be >= 1")
+
+    pieces: list[pd.DataFrame] = []
+    for col in frame.columns:
+        series = frame[col]
+        # Build lag-panel: shape (T, n_lags + 1)
+        lag_cols = [series.shift(j).rename(f"lag{j}") for j in range(n_lags + 1)]
+        lag_panel = pd.concat(lag_cols, axis=1)
+        valid_rows = lag_panel.dropna()
+        if valid_rows.empty or valid_rows.shape[0] < 2:
+            # Degenerate: not enough data; fill with NaN columns
+            n_comp = n_components_per_var
+            empty = pd.DataFrame(
+                np.nan,
+                index=frame.index,
+                columns=[f"{col}_maf{j + 1}" for j in range(n_comp)],
+            )
+            pieces.append(empty)
+            continue
+        n_comp = min(n_components_per_var, valid_rows.shape[0] - 1, valid_rows.shape[1])
+        n_comp = max(n_comp, 1)
+        pca = PCA(n_components=n_comp)
+        factors_valid = pca.fit_transform(valid_rows.to_numpy(dtype=float))
+        # Pad back to full T-length index
+        factor_df = pd.DataFrame(
+            factors_valid,
+            index=valid_rows.index,
+            columns=[f"{col}_maf{j + 1}" for j in range(n_comp)],
+        )
+        if n_comp < n_components_per_var:
+            for j in range(n_comp, n_components_per_var):
+                factor_df[f"{col}_maf{j + 1}"] = np.nan
+        factor_df = factor_df.reindex(frame.index)
+        pieces.append(factor_df)
+    if not pieces:
+        return pd.DataFrame(index=frame.index)
+    return pd.concat(pieces, axis=1)
 
 
 def _polynomial_expansion(frame: pd.DataFrame, *, degree: int) -> pd.DataFrame:

@@ -1782,6 +1782,237 @@ def sparse_macro_factors(
     return recipe
 
 
+def sparse_macro_factors_risk_premia(
+    sparse_factors,           # np.ndarray | pd.DataFrame, shape (T, J)
+    test_asset_returns,       # np.ndarray | pd.DataFrame, shape (T, N)
+    *,
+    q_grid=(0.05, 0.10, 0.15, 0.20, 0.25, 0.50, 0.75, 1.00),
+    cv_folds: int = 5,
+    random_state: int | None = None,
+) -> dict:
+    """Rapach & Zhou (2025) §2.3 Strategy Step 3 — SPCA risk-premia estimation.
+
+    Standalone analysis function (not a :func:`macroforecast.run`-compatible
+    recipe). Computes Supervised PCA (SPCA) risk-premia estimates (γ̂) from
+    sparse macro-finance factor innovations and equity test asset returns.
+
+    This is the sibling of :func:`sparse_macro_factors`, which covers §2.1
+    (SCA factor extraction) and §2.2 (VAR(1) innovation filtering). Strategy
+    step 3 — factor-mimicking portfolio construction + SPCA γ̂ estimation —
+    is an asset-pricing procedure and is therefore implemented here as a
+    standalone analysis function rather than a forecasting recipe.
+
+    **Status: operational (phase-f15).** Reference: Rapach & Zhou (2025)
+    §2.3 Strategy Step 3. Closes audit-paper-15.md F10 LOW / R2.
+
+    Parameters
+    ----------
+    sparse_factors : np.ndarray or pd.DataFrame, shape (T, J)
+        Sparse macro-finance factor innovations produced by
+        :func:`sparse_macro_factors` / ``_sparse_pca_chen_rohe`` with
+        ``var_innovations=True``.
+        **Row 0 is the VAR(1) boundary zero-fill placeholder** (per §2.3
+        footnote 6) and will be dropped internally. Usable rows: index 1..T-1.
+    test_asset_returns : np.ndarray or pd.DataFrame, shape (T, N)
+        Excess returns of N ≥ 1 equity test assets, aligned to the
+        ``sparse_factors`` time index. Paper uses N > 600 CRSP test portfolios.
+    q_grid : tuple of float, optional
+        Screening proportion candidates, each in (0, 1]. Default matches
+        paper §2.3 5-fold CV grid: {0.05, 0.1, 0.15, 0.2, 0.25, 0.5, 0.75, 1}.
+    cv_folds : int, optional
+        Number of cross-validation folds for q selection. Default 5 (paper §2.3
+        "we use 5-fold CV").
+    random_state : int or None, optional
+        RNG seed for CV fold splitting (passed to :class:`sklearn.model_selection.KFold`).
+
+    Returns
+    -------
+    dict with keys:
+
+    ``"gamma_hat"`` : np.ndarray, shape (J,)
+        SPCA risk-premia estimates (the paper's γ̂^SPCA).
+    ``"beta_hat"`` : np.ndarray, shape (N, J)
+        Factor-loading matrix from time-series OLS of R on FMP returns.
+    ``"fmp_returns"`` : np.ndarray, shape (T_eff, J)
+        Factor-mimicking portfolio return panel (after boundary drop).
+    ``"fmp_weights"`` : list of np.ndarray
+        One weight vector per factor; shape (N_screened,).
+    ``"screened_assets"`` : list of list of int
+        Screened asset column indices (per-factor, union over all factors).
+    ``"q_selected"`` : float
+        CV-selected screening proportion.
+
+    Raises
+    ------
+    ValueError
+        If ``sparse_factors`` and ``test_asset_returns`` have incompatible
+        shapes, if there are insufficient rows for CV, or if any q in
+        ``q_grid`` is outside (0, 1].
+    """
+    import math
+    import numpy as np
+    import pandas as pd
+    from sklearn.model_selection import KFold
+
+    # ------------------------------------------------------------------
+    # 0. Input coercion
+    # ------------------------------------------------------------------
+    if isinstance(sparse_factors, pd.DataFrame):
+        G_full = sparse_factors.to_numpy(dtype=float)
+    else:
+        G_full = np.asarray(sparse_factors, dtype=float)
+
+    if isinstance(test_asset_returns, pd.DataFrame):
+        R_full = test_asset_returns.to_numpy(dtype=float)
+    else:
+        R_full = np.asarray(test_asset_returns, dtype=float)
+
+    # Validate q_grid
+    q_grid = tuple(q_grid)
+    for q in q_grid:
+        if not (0 < q <= 1.0):
+            raise ValueError(
+                f"All q values in q_grid must be in (0, 1]; got {q!r}."
+            )
+
+    # ------------------------------------------------------------------
+    # 1. Drop boundary row (VAR(1) zero-fill, §2.3 footnote 6)
+    # ------------------------------------------------------------------
+    G = G_full[1:]   # shape (T_eff, J)
+    R = R_full[1:]   # shape (T_eff, N)
+
+    T_eff, J = G.shape
+    N = R.shape[1] if R.ndim == 2 else 1
+    if R.ndim == 1:
+        R = R.reshape(-1, 1)
+
+    # Shape compatibility check
+    if R.shape[0] != T_eff:
+        raise ValueError(
+            f"sparse_factors and test_asset_returns row mismatch after boundary drop: "
+            f"G has {T_eff} rows, R has {R.shape[0]} rows. "
+            "Both must have the same length T."
+        )
+
+    # Sufficient rows for CV
+    if T_eff < cv_folds * 2:
+        raise ValueError(
+            f"Insufficient rows for {cv_folds}-fold CV: need at least "
+            f"{cv_folds * 2} rows after boundary drop, got {T_eff}."
+        )
+
+    # ------------------------------------------------------------------
+    # Helper: screen + FMP weights for a given q on given (G_sub, R_sub)
+    # ------------------------------------------------------------------
+    def _screen_and_fmp(G_sub, R_sub, q):
+        """Compute screened asset union and per-factor FMP weights."""
+        T_sub, N_sub = R_sub.shape
+        screened_union: set[int] = set()
+        per_factor_screened: list[list[int]] = []
+        for f in range(J):
+            n_keep = max(1, math.ceil(q * N_sub))
+            corr_vals = np.array([
+                abs(np.corrcoef(R_sub[:, j], G_sub[:, f])[0, 1])
+                if np.std(R_sub[:, j]) > 1e-12 and np.std(G_sub[:, f]) > 1e-12
+                else 0.0
+                for j in range(N_sub)
+            ])
+            top_idx = np.argsort(corr_vals)[-n_keep:].tolist()
+            per_factor_screened.append(sorted(top_idx))
+            screened_union.update(top_idx)
+        all_screened = sorted(screened_union)
+        return all_screened, per_factor_screened
+
+    def _fmp_weights_and_returns(G_sub, R_sub, all_screened):
+        """Compute FMP weights and return panel."""
+        R_s = R_sub[:, all_screened]   # (T_sub, N_s)
+        fmp_ret = np.zeros((R_sub.shape[0], J), dtype=float)
+        fmp_w_list: list[np.ndarray] = []
+        for f in range(J):
+            w_dot = np.linalg.lstsq(R_s, G_sub[:, f], rcond=None)[0]
+            denom = float(np.sum(w_dot))
+            if abs(denom) > 1e-12:
+                w_mp = w_dot / denom
+            else:
+                w_mp = w_dot  # degenerate case: skip normalization
+            fmp_ret[:, f] = R_s @ w_mp
+            fmp_w_list.append(w_mp)
+        return fmp_ret, fmp_w_list
+
+    # ------------------------------------------------------------------
+    # 2. CV over q_grid to select q_selected
+    # ------------------------------------------------------------------
+    kf = KFold(n_splits=cv_folds, shuffle=False)
+    q_mse: dict[float, float] = {}
+
+    for q in q_grid:
+        fold_mses: list[float] = []
+        for train_idx, val_idx in kf.split(np.arange(T_eff)):
+            G_tr, G_val = G[train_idx], G[val_idx]
+            R_tr, R_val = R[train_idx], R[val_idx]
+
+            all_sc, _ = _screen_and_fmp(G_tr, R_tr, q)
+            if not all_sc:
+                fold_mses.append(float("inf"))
+                continue
+
+            fmp_tr, _ = _fmp_weights_and_returns(G_tr, R_tr, all_sc)
+            # beta_hat on train: OLS of R_tr[:, j] on fmp_tr (with intercept)
+            X_tr = np.column_stack([np.ones(len(train_idx)), fmp_tr])
+            beta_tr = np.zeros((R_tr.shape[1], J), dtype=float)
+            for j in range(R_tr.shape[1]):
+                coefs = np.linalg.lstsq(X_tr, R_tr[:, j], rcond=None)[0]
+                beta_tr[j] = coefs[1:]  # drop intercept
+
+            # Predict on val: R̂_val = fmp_val @ beta_tr.T
+            # Need fmp_val on val set (use train weights, re-project)
+            R_s_val = R_val[:, all_sc]
+            # Re-project val returns through train FMP weights
+            fmp_val = np.column_stack([
+                R_s_val @ _.copy() for _ in _fmp_weights_and_returns(G_tr, R_tr, all_sc)[1]
+            ])
+            R_hat_val = fmp_val @ beta_tr.T  # (T_val, N)
+            mse = float(np.mean((R_val - R_hat_val) ** 2))
+            fold_mses.append(mse)
+        q_mse[q] = float(np.mean(fold_mses))
+
+    q_selected = min(q_mse, key=q_mse.get)
+
+    # ------------------------------------------------------------------
+    # 3. Screening on full data with q_selected
+    # ------------------------------------------------------------------
+    all_screened, per_factor_screened_full = _screen_and_fmp(G, R, q_selected)
+
+    # ------------------------------------------------------------------
+    # 4. Factor-mimicking portfolio on full data
+    # ------------------------------------------------------------------
+    fmp_returns_full, fmp_weights_full = _fmp_weights_and_returns(G, R, all_screened)
+
+    # ------------------------------------------------------------------
+    # 5. Time-series OLS for beta_hat on full data
+    # ------------------------------------------------------------------
+    X_full = np.column_stack([np.ones(T_eff), fmp_returns_full])  # (T_eff, J+1)
+    beta_hat = np.zeros((N, J), dtype=float)
+    for j in range(N):
+        coefs = np.linalg.lstsq(X_full, R[:, j], rcond=None)[0]
+        beta_hat[j] = coefs[1:]  # drop intercept
+
+    # ------------------------------------------------------------------
+    # 6. SPCA cross-sectional risk premia
+    # ------------------------------------------------------------------
+    mu_hat = R.mean(axis=0)   # shape (N,)
+    gamma_hat = np.linalg.lstsq(beta_hat, mu_hat, rcond=None)[0]  # shape (J,)
+
+    return {
+        "gamma_hat": gamma_hat,
+        "beta_hat": beta_hat,
+        "fmp_returns": fmp_returns_full,
+        "fmp_weights": fmp_weights_full,
+        "screened_assets": per_factor_screened_full,
+        "q_selected": q_selected,
+    }
+
+
 # ---------------------------------------------------------------------------
 # 12. Macroeconomic Data Transformations Matter (Coulombe 2021)
 # ---------------------------------------------------------------------------
@@ -3440,6 +3671,7 @@ __all__ = [
     "macroeconomic_random_forest",  # #2
     "ols_attention_demo",  # #7 conceptual
     "sparse_macro_factors",  # #11
+    "sparse_macro_factors_risk_premia",  # #11 step-3 sibling (phase-f15)
     "macroeconomic_data_transformations",  # #12 MARX
     "ml_useful_macro",  # #13
     "ml_useful_macro_horse_race",  # #16 paper-16 grid helper
