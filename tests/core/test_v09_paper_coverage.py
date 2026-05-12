@@ -695,9 +695,18 @@ def test_v090b_g1_shrink_to_target_alpha_infinity_returns_target():
 def test_v090b_g1_shrink_to_target_runs_in_recipe(tmp_path):
     import macroforecast
 
+    # The gated recipe has K=1 predictor (x1, lagged 1). Paper Albacore
+    # (Goulet Coulombe et al. 2024) Eq. (1) requires w_headline (basket
+    # weights). Post-F14 the runtime hard-errors on prior_target=None, so
+    # we supply a trivial K=1 basket weight of [1.0].
     recipe = _gated_l4_recipe(
         "ridge",
-        {"prior": "shrink_to_target", "alpha": 1.0, "coefficient_constraint": "nonneg"},
+        {
+            "prior": "shrink_to_target",
+            "alpha": 1.0,
+            "coefficient_constraint": "nonneg",
+            "prior_target": [1.0],
+        },
     )
     result = macroforecast.run(recipe, output_directory=tmp_path / "albacomp")
     assert result.cells

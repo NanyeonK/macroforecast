@@ -928,6 +928,46 @@ _OP_MIDAS = _o(
 )
 
 
+_OP_MAF_PER_VARIABLE_PCA = _o(
+    "maf_per_variable_pca",
+    "Per-variable MAF via PCA on lag-panels -- Coulombe et al. (2021 IJF) Eq. (7).",
+    (
+        "Implements the paper-exact Moving Average Factor (MAF) construction "
+        "from Coulombe, Leroux, Stevanovic & Surprenant (2021 IJF) §2.2 "
+        "Eq. (7). For each variable ``k = 1..K`` in the input panel:\n\n"
+        "1. Build the ``T × (n_lags + 1)`` lag-panel "
+        "``[X_{t,k}, L X_{t,k}, ..., L^{n_lags} X_{t,k}]``.\n"
+        "2. Run PCA retaining ``n_components_per_var`` components "
+        "(paper default: 2).\n"
+        "3. Append the resulting factor columns to the output.\n\n"
+        "Output shape: ``(T, K · n_components_per_var)``. With defaults "
+        "``n_lags=12``, ``n_components_per_var=2`` the output is ``(T, 2K)`` "
+        "-- paper footnote 11: 'We keep two MAFs for each series and they are "
+        "obtained by PCA.'\n\n"
+        "**Distinction from existing ``ma_increasing_order → pca(4)`` path**: "
+        "the existing stacked-PCA MAF cell runs a single PCA over all MA "
+        "columns at once (stacked, 4 global components). This op runs "
+        "separate PCA per variable, yielding ``2K`` locally-structured "
+        "factors rather than 4 global ones. Use this op when paper-Eq.7-exact "
+        "replication is required.\n\n"
+        "First ``n_lags`` rows per variable are NaN (lag-panel boundary). "
+        "``temporal_rule`` is required; ``full_sample_once`` is rejected to "
+        "enforce walk-forward boundaries.\n\n"
+        "Operational from v0.9.0 (phase-f16)."
+    ),
+    "Paper-exact replication of Coulombe et al. (2021 IJF) MAF construction; when per-variable PCA factors are preferred over global stacked-PCA (4-component) path.",
+    when_not_to_use="When the 16-cell horse-race stacked-PCA MAF cell is sufficient (use ``ma_increasing_order`` → ``pca`` instead); or when K is large and 2K output columns would exceed T.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data Transformations Matter', International Journal of Forecasting 37(4): 1338-1354.",
+            url="https://doi.org/10.1016/j.ijforecast.2021.05.005",
+        ),
+    ),
+    related_options=("maf", "ma_increasing_order", "ma_window"),
+)
+
+
 _OP_SLICED_INVERSE_REGRESSION = _o(
     "sliced_inverse_regression",
     "sSUFF / Sliced inverse regression (scaled) -- supervised dimension reduction (Huang-Jiang-Li-Tong-Zhou 2022).",
@@ -1016,4 +1056,6 @@ register(
     _OP_U_MIDAS,
     _OP_MIDAS,
     _OP_SLICED_INVERSE_REGRESSION,
+    # v0.9.0 phase-f16: per-variable PCA MAF (Coulombe et al. 2021 IJF Eq. 7)
+    _OP_MAF_PER_VARIABLE_PCA,
 )
