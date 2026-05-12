@@ -2888,20 +2888,61 @@ def u_midas(
     target: str = "y",
     horizon: int = 1,
     freq_ratio: int = 3,
-    n_lags_high: int = 6,
-    panel: dict[str, list[Any]] | None = None,
+    n_lags_high: "int | Literal['bic', 'aic']" = "bic",
+    include_y_lag: bool = True,
+    regularization: "Literal['none', 'ridge']" = "none",
+    alpha: float = 1.0,
+    panel: "dict[str, list[Any]] | None" = None,
     seed: int = 42,
-) -> dict[str, Any]:
+) -> "dict[str, Any]":
     """Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS recipe.
+    Published as Bundesbank Discussion Paper Series 1, No 35/2011;
+    JRSS-A 178(1), 57-82, DOI 10.1111/rssa.12043.
 
-    **Decomposition.** Pure aggregation: stack high-frequency lags as
-    separate columns indexed at low-frequency target dates, then run a
-    standard linear regression. The ``u_midas`` L3 op handles step 1;
-    ridge fits the resulting wide design.
+    Model (paper §3.2 eq.(20)):
+        y_{t*k} = mu0 + mu1 y_{t*k-k} + psi(L) x_{t*k-1} + eps_{t*k}
 
-    **Status: operational** -- ``u_midas`` op operational v0.9.1 dev-stage
-    Phase C (2026-05-08).
+    where psi(L) = psi0 + psi1*L + ... + psi_K*L^K is the unrestricted HF lag
+    polynomial. mu0, mu1, and psi(L) are estimated by OLS (paper §3.2 p.11).
+
+    Lag order K is selected by BIC with K_max = ceil(1.5 * freq_ratio)
+    (paper §3.2 p.11 + §3.5). Pass n_lags_high as an integer to fix K.
+
+    Design matrix (paper §2.1 eq.(8)):
+        Stack columns: [y_lag1 | x_lag0 | x_lag1 | ... | x_lag{K-1}]
+        indexed at LF dates (stock-variable aggregation, §3.1 p.9).
+
+    Decomposition:
+      L3 op "u_midas": lag-stack HF predictors + optional AR(1) y-lag;
+        BIC selects K if n_lags_high in {"bic", "aic"}.
+      L4 op "ols": fit unrestricted polynomial by OLS (paper §3.2 p.11).
+
+    Parameters
+    ----------
+    n_lags_high : int or {"bic", "aic"}, default "bic"
+        Number of HF lags. "bic"/"aic" triggers information-criterion
+        selection over K in {1, ..., ceil(1.5*freq_ratio)} per paper §3.5.
+    include_y_lag : bool, default True
+        Include AR(1) y-lag term mu1 y_{t*k-k} per paper §3.2 eq.(20).
+        Set False to match simplified §2.3 eq.(14) (no-AR form).
+    regularization : {"none", "ridge"}, default "none"
+        "none" = OLS (paper-faithful). "ridge" = ridge regression with
+        penalty alpha; deviates from paper §3.2 estimator choice.
+    alpha : float, default 1.0
+        Ridge penalty (only used when regularization="ridge").
+
+    Monte Carlo anchor (paper §3.4 Table 2, recursive HF VAR DGP):
+      OOS MSE ratio U-MIDAS/MIDAS approx 0.91-0.94 for k=3, rho >= 0.5.
+      OOS MSE ratio approx 1.07-1.24 for k=12, k=60 (MIDAS wins).
     """
+    # Input validation
+    if regularization not in ("none", "ridge"):
+        raise ValueError(f"regularization must be 'none' or 'ridge'; got {regularization!r}")
+    if regularization == "ridge" and alpha <= 0:
+        raise ValueError(f"alpha must be > 0 when regularization='ridge'; got {alpha}")
+
+    # Build L3 DAG
+    umidas_inputs = ["src_X", "src_y"] if include_y_lag else ["src_X"]
 
     l3 = {
         "nodes": [
@@ -2942,9 +2983,10 @@ def u_midas(
                     "freq_ratio": freq_ratio,
                     "n_lags_high": n_lags_high,
                     "target_freq": "low",
+                    "include_y_lag": include_y_lag,
                     "temporal_rule": "expanding_window_per_origin",
                 },
-                "inputs": ["src_X"],
+                "inputs": umidas_inputs,
             },
         ],
         "sinks": {
@@ -2952,12 +2994,17 @@ def u_midas(
             "l3_metadata_v1": "auto",
         },
     }
+    # R1: OLS default (paper §3.2 p.11); ridge opt-in via regularization="ridge"
+    if regularization == "ridge":
+        l4 = _l4_single_fit("ridge", {"alpha": alpha})
+    else:
+        l4 = _l4_single_fit("ols", {})
     recipe = _base_recipe(
         target=target,
         horizon=horizon,
         panel=panel,
         seed=seed,
-        l4=_l4_single_fit("ridge", {"alpha": 1.0}),
+        l4=l4,
     )
     recipe["3_feature_engineering"] = l3
     return recipe

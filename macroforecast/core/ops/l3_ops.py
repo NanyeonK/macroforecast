@@ -20,7 +20,7 @@ def _positive_param(name: str, default: int = 1):
         # Phase A3 fix: ``n_components="all"`` sentinel passes the
         # positive-int gate (the runtime resolves "all" → min(T, N) at
         # PCA fit time, which is always >= 1).
-        if isinstance(value, str) and value == "all":
+        if isinstance(value, str) and value in ("all", "bic", "aic"):
             return True
         return value >= 1
 
@@ -794,13 +794,14 @@ def l3_metadata_build(inputs, params):
     output_type=Panel,
     params_schema={
         "freq_ratio": {"type": int, "default": 3, "sweepable": True},
-        "n_lags_high": {"type": int, "default": 6, "sweepable": True},
+        "n_lags_high": {"type": (int, str), "default": "bic", "sweepable": True},
         "target_freq": {
             "type": str,
             "default": "low",
             "options": ("low", "high"),
             "sweepable": False,
         },
+        "include_y_lag": {"type": bool, "default": False, "sweepable": False},
         "temporal_rule": {
             "type": str,
             "default": "expanding_window_per_origin",
@@ -809,7 +810,7 @@ def l3_metadata_build(inputs, params):
     },
     hard_rules=(
         Rule("hard", _positive_param("freq_ratio", 3), "freq_ratio must be >= 1"),
-        Rule("hard", _positive_param("n_lags_high", 6), "n_lags_high must be >= 1"),
+        Rule("hard", _positive_param("n_lags_high", "bic"), "n_lags_high must be >= 1"),
         Rule("hard", _temporal_present, "temporal_rule is required"),
         Rule(
             "hard",

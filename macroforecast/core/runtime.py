@@ -13531,11 +13531,25 @@ def _execute_l3_op(
         target.attrs["mode"] = mode
         return target
     if op == "u_midas":
+        _u_midas_n_lags = params.get("n_lags_high", "bic")
+        _u_midas_include_y_lag = bool(params.get("include_y_lag", False))
+        # Resolve n_lags_high: keep as string for BIC/AIC, cast to int otherwise
+        if isinstance(_u_midas_n_lags, str) and _u_midas_n_lags not in ("bic", "aic"):
+            _u_midas_n_lags = int(_u_midas_n_lags)
+        elif not isinstance(_u_midas_n_lags, str):
+            _u_midas_n_lags = int(_u_midas_n_lags)
+        # Extract y_series for AR(1) y-lag when include_y_lag=True
+        _u_midas_y_series = None
+        if _u_midas_include_y_lag and len(inputs) > 1:
+            _u_midas_y_series = _first_series(inputs)
         return _u_midas(
             _as_frame(inputs[0]),
             freq_ratio=int(params.get("freq_ratio", 3)),
-            n_lags_high=int(params.get("n_lags_high", 6)),
+            n_lags_high=_u_midas_n_lags,
             target_freq=str(params.get("target_freq", "low")),
+            include_y_lag=_u_midas_include_y_lag,
+            y_series=_u_midas_y_series,
+            ic_selector=str(_u_midas_n_lags) if isinstance(_u_midas_n_lags, str) else "bic",
         )
     if op == "midas":
         return _midas(
@@ -13585,6 +13599,13 @@ def _midas_lag_stack(
     incomplete K-history are NaN. Output index is the LF subset of the
     original index (every m-th row when target_freq='low'); when
     target_freq='high' the LF subset is the full HF index.
+
+    Paper reference: Foroni-Marcellino-Schumacher (2011/2015) §2.1 eq.(8).
+    Bundesbank DP 35/2011; JRSS-A 178(1), 57-82, DOI 10.1111/rssa.12043.
+    Design matrix structure (k=3 example, stock variable omega(L)=1):
+      lag-0 col = x at the HF index coinciding with the LF boundary (eq.(10)
+                  convention: direct-projection, lag-0 is the most recent HF obs).
+      lag-j col = x at j HF steps before the LF boundary.
     """
 
     m = max(1, int(freq_ratio))
@@ -13610,24 +13631,171 @@ def _midas_lag_stack(
     return pd.DataFrame(out, index=out_index)
 
 
+def _bic_select_k(
+    frame_hf: pd.DataFrame,
+    y_lf: "pd.Series | None",
+    *,
+    freq_ratio: int,
+    include_y_lag: bool,
+    ic: str = "bic",
+) -> int:
+    """BIC/AIC lag-order selection for U-MIDAS (paper §3.2 p.11 + §3.5).
+
+    Searches K in {1, ..., K_max} where K_max = ceil(1.5 * freq_ratio).
+    Fits OLS at each K, computes IC, returns K_star = argmin IC.
+
+    Paper reference: Foroni-Marcellino-Schumacher (2011/2015) §3.2 eq.(20),
+    §3.5. BIC formula: log(RSS/T_eff) + K_params * log(T_eff) / T_eff.
+    Bundesbank DP 35/2011; JRSS-A 178(1), 57-82, DOI 10.1111/rssa.12043.
+    """
+    import math
+    import warnings
+
+    K_max = max(1, math.ceil(1.5 * freq_ratio))
+    best_ic_val = np.inf
+    best_K = 1
+    any_valid = False
+
+    for K_cand in range(1, K_max + 1):
+        # Build lag-stacked design
+        stacked = _midas_lag_stack(
+            frame_hf, freq_ratio=freq_ratio, n_lags_high=K_cand, target_freq="low"
+        )
+        # Optionally prepend y-lag column
+        if include_y_lag and y_lf is not None:
+            y_aligned = y_lf.reindex(stacked.index)
+            y_lag1 = y_aligned.shift(1)
+            stacked = pd.concat([y_lag1.rename("y_lag1").to_frame(), stacked], axis=1)
+        # Align y to LF index
+        if y_lf is not None:
+            y_target = y_lf.reindex(stacked.index)
+        else:
+            # Cannot compute IC without target; skip all candidates
+            continue
+        # Drop NaN rows
+        combined = pd.concat(
+            [y_target.rename("__y__"), stacked], axis=1
+        ).dropna()
+        T_eff = len(combined)
+        n_cols = stacked.shape[1]  # K_cand * N_predictors (+ 1 if y_lag1)
+        K_params = n_cols + 1  # +1 for intercept
+        if T_eff < K_params + 2:
+            continue  # insufficient degrees of freedom
+        y_arr = combined["__y__"].to_numpy()
+        X_arr = combined.drop(columns="__y__").to_numpy()
+        # Add intercept column
+        ones = np.ones((T_eff, 1))
+        X_arr_int = np.hstack([ones, X_arr])
+        # OLS via lstsq (numerically stable via SVD)
+        beta, residuals, rank, _ = np.linalg.lstsq(X_arr_int, y_arr, rcond=None)
+        if len(residuals) == 0:
+            # lstsq did not return residuals (underdetermined); compute manually
+            y_hat = X_arr_int @ beta
+            rss = float(np.sum((y_arr - y_hat) ** 2))
+        else:
+            rss = float(residuals[0])
+        if not np.isfinite(rss) or rss < 0:
+            continue
+        if rss == 0:
+            # Perfect fit: BIC = -inf; accept this K (simplest perfect-fit model wins)
+            return K_cand
+        if ic == "bic":
+            ic_val = np.log(rss / T_eff) + K_params * np.log(T_eff) / T_eff
+        else:  # aic
+            ic_val = np.log(rss / T_eff) + 2.0 * K_params / T_eff
+        any_valid = True
+        if ic_val < best_ic_val:
+            best_ic_val = ic_val
+            best_K = K_cand
+
+    if not any_valid:
+        import warnings as _w
+        _w.warn(
+            f"_bic_select_k: no K_candidate had sufficient degrees of freedom "
+            f"(K_max={K_max}, freq_ratio={freq_ratio}); falling back to K_star=1.",
+            stacklevel=3,
+        )
+
+    return best_K
+
+
 def _u_midas(
     frame: pd.DataFrame,
     *,
     freq_ratio: int,
-    n_lags_high: int,
+    n_lags_high: "int | str",
     target_freq: str = "low",
+    include_y_lag: bool = False,
+    y_series: "pd.Series | None" = None,
+    ic_selector: str = "bic",
 ) -> pd.DataFrame:
-    """Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS.
+    """Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS lag-stack op.
+    Bundesbank DP 35/2011; JRSS-A 178(1), 57-82, DOI 10.1111/rssa.12043.
 
-    Thin wrapper around :func:`_midas_lag_stack`.
+    Implements the design matrix for paper §3.2 eq.(20):
+        y_{t×k} = μ₀ + μ₁ y_{t×k-k} + ψ(L) x_{t×k-1} + ε_{t×k}
+
+    Steps:
+    1. Resolve K: if n_lags_high is "bic" or "aic", run BIC/AIC selection
+       over K ∈ {1, ..., ceil(1.5 * freq_ratio)} (paper §3.2 p.11 + §3.5).
+    2. Build lag-stacked design via _midas_lag_stack (paper §2.1 eq.(8)).
+    3. If include_y_lag=True, prepend y_lag1 column (paper eq.(20) μ₁ term).
+
+    The L4 OLS fit (paper §3.2 p.11) is downstream and not part of this op.
+
+    Parameters
+    ----------
+    frame : pd.DataFrame
+        HF predictor panel.
+    freq_ratio : int
+        HF periods per LF period (e.g., 3 for monthly/quarterly).
+    n_lags_high : int or str
+        Number of HF lags. "bic"/"aic" triggers information-criterion
+        selection; an integer fixes K directly.
+    target_freq : str
+        "low" (default) or "high". BIC only meaningful for "low".
+    include_y_lag : bool, default False
+        Include AR(1) y-lag term μ₁ y_{t×k-k} per paper §3.2 eq.(20).
+        Defaults False at the primitive level; the u_midas() helper sets
+        True by default.
+    y_series : pd.Series or None
+        LF target series (required when include_y_lag=True).
+    ic_selector : str
+        "bic" or "aic" (only used when n_lags_high is a string).
     """
 
-    return _midas_lag_stack(
-        frame,
-        freq_ratio=freq_ratio,
-        n_lags_high=n_lags_high,
-        target_freq=target_freq,
+    m = max(1, int(freq_ratio))
+
+    # Step 1: Resolve K
+    if isinstance(n_lags_high, str):
+        if target_freq == "high":
+            # BIC not meaningful for high-freq path (spec §Out of Scope item 5)
+            import math
+            K = max(1, math.ceil(1.5 * m))
+        else:
+            K = _bic_select_k(
+                frame,
+                y_series,
+                freq_ratio=m,
+                include_y_lag=include_y_lag,
+                ic=ic_selector if n_lags_high == ic_selector else n_lags_high,
+            )
+    else:
+        K = max(1, int(n_lags_high))
+
+    # Step 2: Build lag-stacked design matrix
+    stacked = _midas_lag_stack(
+        frame, freq_ratio=m, n_lags_high=K, target_freq=target_freq
     )
+
+    # Step 3: Optionally prepend y_lag1 column (paper eq.(20) μ₁ term)
+    if include_y_lag and y_series is not None:
+        y_lf = y_series.reindex(stacked.index)  # align to LF index
+        y_lag1 = y_lf.shift(1)                  # 1 LF period lag
+        y_lag1.name = "y_lag1"
+        stacked = pd.concat([y_lag1.to_frame(), stacked], axis=1)
+
+    return stacked
 
 
 def _midas(
