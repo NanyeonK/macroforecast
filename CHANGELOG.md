@@ -3,6 +3,77 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [Unreleased] — v0.9.0 stable cut prereqs (in progress)
+
+After the 16-paper full-coverage alpha pre-release (`v0.9.0a0`, 2026-05-12), this
+section tracks the remaining items required before the v0.9.0 stable cut. Changes
+land in the working tree on server1 / Mac via StatsClaw audit-fix cycles and will be
+tagged as `v0.9.0` once all stable prereqs are closed.
+
+### Phase F-14-17 LOW batch (2026-05-12)
+
+Run `2026-05-12-phase-f14-f17-low-batch`. Primary commit `c9285077`. Reviewer GO.
+Test count: 1417 baseline → 1431 (+14 new tests). No new regressions. Closes
+Round 7 PDF-direct audit LOW findings across papers 14, 15, 16, 17.
+
+* **F-14** — `_ShrinkToTargetRidge._resolve_target` hard-error unification
+  (`core/runtime.py:4451`). When `prior_target=None`, the method previously emitted a
+  `UserWarning` and returned a uniform `1/K` fallback. It now raises `ValueError`
+  immediately, matching the guard already present in the `maximally_forward_looking`
+  helper. Paper Albacore (Goulet Coulombe et al. 2024) Eq. (1) is undefined without
+  basket weights `w_headline`; silent fallback was misleading. **Breaking change** for
+  hand-crafted YAML recipes that omitted `prior_target` under `prior: shrink_to_target`.
+  Test `test_albacore_prior_target_none_emits_warning` renamed →
+  `test_albacore_prior_target_none_raises_value_error` and updated to use
+  `pytest.raises(ValueError, match=r"prior_target")`.
+
+* **F-15** — New standalone helper `sparse_macro_factors_risk_premia()`
+  (`recipes/paper_methods.py:1785`). Implements Rapach-Zhou (2025) §2.3 Strategy Step 3:
+  Supervised PCA (SPCA) risk-premium estimation on N equity test asset excess returns.
+  Six-step pipeline: boundary-row drop → 5-fold CV over `q_grid` to select screening
+  proportion `q*` → per-factor asset screening by |corr(R_j, G_f)| → factor-mimicking
+  portfolio (FMP) weights via OLS + normalization → time-series OLS for loading matrix
+  β̂ (N × J) → cross-sectional SPCA risk premia γ̂ = (β̂'β̂)⁻¹β̂'μ̂_R. Returns a dict
+  with keys `gamma_hat`, `beta_hat`, `fmp_returns`, `fmp_weights`, `screened_assets`,
+  `q_selected`. This is a **standalone analysis function**, not a `macroforecast.run`-
+  compatible recipe (risk-premium estimation is an asset-pricing post-processing step,
+  not a macro-forecasting recipe). Exported via `__all__`.
+
+* **F-16** — New L3 op `maf_per_variable_pca` (`core/ops/l3_ops.py:203`,
+  `core/runtime.py:15047`). Implements Coulombe et al. (2021 IJF) Eq. (7) per-variable
+  Moving Average Factors (MAF) via PCA on lag-panels. For each series k = 1..K: builds
+  the T × (n_lags+1) lag-panel `[X_k, L X_k, ..., L^{n_lags} X_k]`, runs PCA
+  retaining `n_components_per_var` components, and concatenates across K series to
+  produce a (T, K × n_components_per_var) panel (paper default n_lags=12,
+  n_components_per_var=2 → output T × 2K). **Backward compatibility preserved**: the
+  existing stacked-PCA MAF cell (`ma_increasing_order → pca(n_components=4)`) in the
+  16-cell horse-race helper (`paper_methods.py:1993–2016`) is unchanged. The new op is
+  an additive extension. OptionDoc entry `_OP_MAF_PER_VARIABLE_PCA` added to
+  `scaffold/option_docs/l3.py` for wizard/sphinx completeness check.
+
+* **F-17** — `attach_eval_blocks=True` tutorial smoke tests added
+  (`tests/core/test_phase_f17_paper17.py`, 2 tests). Closes the gap that no test
+  exercised the full `ml_useful_macro_horse_race(attach_eval_blocks=True)` path
+  end-to-end. Test 1 (`test_paper17_attach_eval_blocks_recipe_structure`) verifies
+  that recipe dicts include `"5_evaluation"` and `"6_statistical_tests"` keys with
+  correct sub-layers `L6_A_equal_predictive` and `L6_D_multiple_model`. Test 2
+  (`test_paper17_attach_eval_blocks_true_runs_and_has_l6_artefacts`) verifies that
+  `macroforecast.run()` executes without error on a minimal synthetic panel and that
+  `result.cells` is non-empty — the observable proxy for paper Eq. (10) α_F
+  treatment-effect regression execution (Coulombe et al. 2022 JAE §2.3).
+
+### Remaining v0.9.0 stable prereqs
+
+The following three items must be resolved before the `v0.9.0` stable tag is cut:
+
+| Prereq | Severity | Status | Notes |
+|--------|----------|--------|-------|
+| F-02: slot 02 phantom citation — Marcellino-Schumacher 2010 | MEDIUM | OPEN | Corpus decision: real paper vs. placeholder. Human call required. |
+| DOCS-1: `option_docs/l3.py` u_midas description sync + Sphinx csv warning | LOW | OPEN | `u_midas` description drift from v0.9.0a0 implementation; Sphinx warning from csv table. |
+| MC-RECAL: paper-exact symmetric MC re-calibration | LOW | OPEN | Current alpha uses asymmetric calibration; paper uses symmetric. No API change required. |
+
+---
+
 ## [0.9.0a0] -- 2026-05-07 -- "16-paper full-coverage cut (alpha pre-release)"
 
 **Pre-release status**. The 2026-05-07 independent paper-vs-implementation

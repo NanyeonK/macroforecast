@@ -7,6 +7,7 @@
 > test count 1329, HEAD `3744646d`), 2026-05-12 (Phase D-2e: MRF vendor np.matrix → ndarray, 12 patches, 1336→1345 PASS, HEAD `685e2cd1`),
 > 2026-05-12 (Phase D-2f: CLAUDE.md deferred cosmetics — test count 953→1345 + WORKFLOW MANDATE path note, HEAD `9cde74b3`).
 Updated 2026-05-12 (Phase D-2g: user_data_workflow.md + custom_function_quickstart.md guides, HEAD `949b6c78`).
+Updated 2026-05-12 (Phase F-14-17: v0.9.0 stable prereq LOW batch — F-14 hard-error / F-15 sparse_macro_factors_risk_premia / F-16 maf_per_variable_pca op / F-17 attach_eval_blocks smoke test; 1417 → 1431 tests, primary commit `c9285077`).
 
 ## Overview
 
@@ -910,3 +911,89 @@ graph TD
 | `_midas_lag_stack` (runtime.py) | HF→LF lag-stack design matrix (§2.1 eq.(8)) | pandas reindex | No — docstring R5 only |
 | `_positive_param` (l3_ops.py) | L3 DAG validator sentinel check | — | Yes — accepts "bic"/"aic" |
 | `test_f07_umidas_tester.py` | Tester-owned MC + correctness tests (19 tests) | `_bic_select_k`, `_u_midas`, `u_midas` | Yes — NEW file |
+
+---
+
+## Phase F-14-17: v0.9.0 Stable Prereq LOW Batch (F-14 / F-15 / F-16 / F-17)
+
+Run: `2026-05-12-phase-f14-f17-low-batch`. Primary commit: `c9285077` (4 fixes). Regression patch commit: `tests/core/test_v09_paper_coverage.py` + `macroforecast/scaffold/option_docs/l3.py` (uncommitted at scriber time; shipper creates 2nd commit). Reviewer GO 2026-05-12.
+
+Trigger: Round 7 PDF-direct audit follow-up table — LOW/NOTE findings across papers 14, 15, 16, 17.
+
+| Fix | Finding closed | File : change | Paper anchor |
+|-----|---------------|---------------|--------------|
+| F-14 | audit-paper-14.md F12 LOW | `core/runtime.py:4451–4462` — `_ShrinkToTargetRidge._resolve_target` warn+fallback → `raise ValueError` | Albacore Eq. (1), Goulet Coulombe et al. 2024 |
+| F-15 | audit-paper-15.md F10 LOW/R2 | `recipes/paper_methods.py:1785` — new `sparse_macro_factors_risk_premia()` standalone helper | Rapach-Zhou 2025, §2.3 Strategy Step 3 |
+| F-16 | audit-paper-16.md F8 NOTE/R3 | `core/ops/l3_ops.py:203` + `core/runtime.py:13346+15047` — new op `maf_per_variable_pca` | Coulombe et al. 2021 IJF Eq. (7) |
+| F-17 | audit-paper-17.md F11 LOW/R1 | `tests/core/test_phase_f17_paper17.py` (NEW, 2 tests) | Coulombe et al. 2022 JAE §2.3 Eq. (10) α_F |
+
+Test count delta: 1417 baseline → 1431 collected (+12 spec tests from tester + 2 F-17 paper17 tests). Pre-existing 9 MRF failures unchanged.
+
+Backward compatibility: existing stacked-PCA `MAF` horse-race cell (`ma_increasing_order → pca(n_components=4)` in `paper_methods.py` lines 1993–2016) is preserved without change. The new `maf_per_variable_pca` op is an additive extension that implements Eq. (7) exactly (per-variable lag-panel PCA, output T × 2K).
+
+### F-15 Standalone Helper Pipeline
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    entry["sparse_macro_factors_risk_premia()<br/>paper_methods.py:1785"]
+    drop["drop boundary row 0<br/>(VAR boundary zero-fill)"]
+    cv["5-fold CV over q_grid<br/>select q* minimising MSE"]
+    screen["screening per factor f<br/>top ceil(q*·N) by |corr(R_j, G_f)|"]
+    fmp["FMP weights w^MP_f<br/>OLS + normalise"]
+    beta["time-series OLS<br/>β̂ shape (N, J)"]
+    gamma["SPCA risk premia<br/>γ̂ = (β̂'β̂)^{-1} β̂' μ̂_R"]
+    out["dict: gamma_hat, beta_hat<br/>fmp_returns, fmp_weights<br/>screened_assets, q_selected"]
+
+    entry --> drop
+    drop --> cv
+    cv --> screen
+    screen --> fmp
+    fmp --> beta
+    beta --> gamma
+    gamma --> out
+
+    style entry fill:#1e90ff,stroke:#1565c0,color:#fff
+    style cv fill:#1e90ff,stroke:#1565c0,color:#fff
+    style gamma fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### F-16 Per-Variable PCA Data Flow
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    inp["Input Panel (T, K)"]
+    loop_k["for each column k = 1..K"]
+    lagpanel["build lag-panel X̂_{t,k}<br/>[X_k, L X_k, ..., L^n_lags X_k]<br/>shape (T, n_lags+1)"]
+    dropna["dropna → valid_rows<br/>(T - n_lags rows)"]
+    pca["PCA n_components=min(n_components_per_var,<br/>valid_rows-1, n_lags+1)<br/>fit_transform"]
+    reindex["reindex to full T-length<br/>NaN rows for first n_lags positions"]
+    concat_k["concat per-variable factors<br/>cols: {col}_maf1, {col}_maf2"]
+    out16["Output (T, K × n_components_per_var)<br/>default (T, 2K)"]
+
+    inp --> loop_k
+    loop_k --> lagpanel
+    lagpanel --> dropna
+    dropna --> pca
+    pca --> reindex
+    reindex --> concat_k
+    concat_k --> out16
+
+    style inp fill:#1e90ff,stroke:#1565c0,color:#fff
+    style pca fill:#1e90ff,stroke:#1565c0,color:#fff
+    style out16 fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Changed Modules / Functions Reference
+
+| Function/Module | Purpose | Key Dependencies | Changed in F-14-17 |
+|---|---|---|---|
+| `_ShrinkToTargetRidge._resolve_target` (runtime.py:4451) | Ridge shrink-to-target prior weight resolver | `prior_target_in`, `numpy` | Yes — warn+fallback → hard `ValueError` |
+| `sparse_macro_factors_risk_premia` (paper_methods.py:1785) | SPCA risk premia estimation — Rapach-Zhou 2025 §2.3 Step 3 | `numpy.linalg.lstsq`, `sklearn.model_selection.KFold` | Yes — NEW function |
+| `maf_per_variable_pca` op (l3_ops.py:203) | L3 op registration — Eq. (7) per-variable MAF PCA | `register_op`, `Rule`, `_stub` | Yes — NEW op |
+| `_maf_per_variable_pca` (runtime.py:15047) | Runtime impl — per-variable lag-panel PCA | `sklearn.decomposition.PCA`, `pandas`, `numpy` | Yes — NEW function |
+| `_execute_l3_op` dispatch (runtime.py:13346) | L3 op dispatch router | `_maf_per_variable_pca` | Yes — new branch added |
+| `_OP_MAF_PER_VARIABLE_PCA` (scaffold/option_docs/l3.py) | OptionDoc entry for wizard/sphinx | `_OPT_DOC_ENTRY` | Yes — NEW entry |
+| `test_albacore_prior_target_none_raises_value_error` (test_v09_paper_coverage.py:2438) | F-14 regression test | `pytest.raises(ValueError)` | Yes — renamed + updated from UserWarning |
+| `test_phase_f17_paper17.py` (tests/core/) | F-17 attach_eval_blocks=True smoke tests (2 tests) | `macroforecast.run`, `ml_useful_macro_horse_race` | Yes — NEW file |
