@@ -1,6 +1,6 @@
 """Paper-method recipe builders (v0.9 Phase 2 paper-coverage pass).
 
-One helper per paper in the 16-paper macro-forecasting target list. Each
+One helper per paper in the 17-paper macro-forecasting target list. Each
 helper returns a recipe dict ready for :func:`macroforecast.run`.
 
 **Decomposition discipline.** Helpers are *recipe patterns*, not L4
@@ -3241,6 +3241,189 @@ def u_midas(
     return recipe
 
 
+def factor_midas_nowcast(
+    *,
+    target: str = "y",
+    horizon: int = 1,
+    freq_ratio: int = 3,
+    n_factors: int = 1,
+    n_lags_high: "int | Literal['bic', 'aic']" = "bic",
+    regularization: "Literal['none', 'ridge']" = "none",
+    alpha: float = 1.0,
+    panel: "dict[str, list[Any]] | None" = None,
+    seed: int = 42,
+) -> "dict[str, Any]":
+    """Marcellino & Schumacher (2010) Factor MIDAS recipe.
+    Oxford Bulletin of Economics and Statistics 72(4), 518-550.
+    DOI 10.1111/j.1468-0084.2010.00591.x.
+    EUI preprint ECO-2008-16 (cadmus.eui.eu handle 1814/8087).
+
+    Implementation reconstructed from abstract and established Factor MIDAS
+    literature; PDF §-references pending post-acquisition verification.
+
+    Model (paper Fig. 1 flowchart):
+        Step 1: Extract r common factors from HF panel via static PCA (paper §2.1).
+                F = PCA(X_hf, r)
+        Step 2: Apply MIDAS lag aggregation to factors (paper §2.2 + §3 U-MIDAS variant).
+                Z_lf = midas_lag_stack(F, m, K)
+        Step 3: OLS regression of LF target on aggregated factor features (paper §2.2).
+                y_h = alpha + Z_lf @ beta + epsilon
+
+    Decomposition:
+      L3 "dfm": static PCA factor extraction from HF predictors (paper §2.1 Method B).
+      L3 "u_midas": unrestricted lag-stacking of extracted factors (paper §3 parsimonious).
+      L4 "ols": OLS fit of LF target on MIDAS-aggregated factor features.
+
+    Explicit implementation assumptions (PDF unavailable; reconstruction from abstract):
+      1. Factor extraction = static PCA (paper Method B), not Kalman smoother (Method D).
+         Paper states extraction methods do not significantly differ in nowcast accuracy.
+      2. MIDAS variant = unrestricted (U-MIDAS) lag stacking, not parametric exp-Almon.
+         Maximally reuses existing ``_u_midas`` / ``op: "u_midas"`` infrastructure.
+      3. Default n_factors=1 (paper uses r=1 or r=2 for German GDP).
+      4. Default n_lags_high="bic" (BIC selection over K in {1,...,ceil(1.5*freq_ratio)}).
+         Paper §3 recommends K=1 (contemporaneous factor only) as best overall.
+
+    Parameters
+    ----------
+    target : str, default "y"
+        Name of the target column in the panel.
+    horizon : int, default 1
+        Forecast horizon in LF periods (h in paper notation).
+    freq_ratio : int, default 3
+        HF periods per LF period (3 = monthly HF / quarterly LF, as in paper).
+        Must be >= 1.
+    n_factors : int, default 1
+        Number of common factors r extracted from HF panel. Paper uses r=1 or r=2
+        for German GDP nowcasting. Must be >= 1 and < number of HF predictors.
+    n_lags_high : int or {"bic", "aic"}, default "bic"
+        Number of HF lags K in the MIDAS polynomial. "bic"/"aic" triggers
+        BIC/AIC selection over K in {1, ..., ceil(1.5*freq_ratio)} (consistent
+        with Foroni-Marcellino-Schumacher 2015 §3.5 lag selection). Paper §3
+        results: K=1 (single-lag / contemporaneous factor) performs best overall.
+    regularization : {"none", "ridge"}, default "none"
+        "none" = OLS (paper-faithful). "ridge" = ridge; deviates from paper.
+    alpha : float, default 1.0
+        Ridge penalty (only used when regularization="ridge"). Must be > 0.
+    panel : dict or None, default None
+        Inline custom panel dict ``{"date": [...], "y": [...], "x1": [...], ...}``.
+        If None, uses the package default 12-row synthetic panel.
+    seed : int, default 42
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    dict[str, Any]
+        A valid macroforecast recipe dict ready for ``macroforecast.run(recipe)``.
+
+    Status: **operational** -- uses existing ``op: "dfm"`` (L3 PCA factor
+    extraction) and ``op: "u_midas"`` (L3 MIDAS lag aggregation). Both ops
+    were promoted operational in v0.9.0a0.
+    """
+    # --- Input validation ---
+    if not (isinstance(n_factors, int) and n_factors >= 1):
+        raise ValueError(
+            f"n_factors must be a positive integer; got {n_factors!r}"
+        )
+    if not (isinstance(freq_ratio, int) and freq_ratio >= 1):
+        raise ValueError(
+            f"freq_ratio must be a positive integer; got {freq_ratio!r}"
+        )
+    if not (
+        (isinstance(n_lags_high, int) and n_lags_high >= 1)
+        or n_lags_high in ("bic", "aic")
+    ):
+        raise ValueError(
+            f"n_lags_high must be a positive integer or one of 'bic', 'aic';"
+            f" got {n_lags_high!r}"
+        )
+    if regularization not in ("none", "ridge"):
+        raise ValueError(
+            f"regularization must be 'none' or 'ridge'; got {regularization!r}"
+        )
+    if regularization == "ridge" and alpha <= 0:
+        raise ValueError(
+            f"alpha must be > 0 when regularization='ridge'; got {alpha}"
+        )
+
+    # --- Build L3 DAG (two-step: dfm factor extraction -> u_midas aggregation) ---
+    l3 = {
+        "nodes": [
+            {
+                "id": "src_X",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "predictors"},
+                },
+            },
+            {
+                "id": "src_y",
+                "type": "source",
+                "selector": {
+                    "layer_ref": "l2",
+                    "sink_name": "l2_clean_panel_v1",
+                    "subset": {"role": "target"},
+                },
+            },
+            {
+                "id": "y_h",
+                "type": "step",
+                "op": "target_construction",
+                "params": {
+                    "mode": "point_forecast",
+                    "method": "direct",
+                    "horizon": horizon,
+                },
+                "inputs": ["src_y"],
+            },
+            {
+                "id": "factors",
+                "type": "step",
+                "op": "dfm",
+                "params": {
+                    "n_factors": n_factors,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["src_X"],
+            },
+            {
+                "id": "fmidas",
+                "type": "step",
+                "op": "u_midas",
+                "params": {
+                    "freq_ratio": freq_ratio,
+                    "n_lags_high": n_lags_high,
+                    "target_freq": "low",
+                    "include_y_lag": False,
+                    "temporal_rule": "expanding_window_per_origin",
+                },
+                "inputs": ["factors"],
+            },
+        ],
+        "sinks": {
+            "l3_features_v1": {"X_final": "fmidas", "y_final": "y_h"},
+            "l3_metadata_v1": "auto",
+        },
+    }
+
+    # --- Build L4 (OLS default; ridge opt-in) ---
+    if regularization == "ridge":
+        l4 = _l4_single_fit("ridge", {"alpha": alpha})
+    else:
+        l4 = _l4_single_fit("ols", {})
+
+    recipe = _base_recipe(
+        target=target,
+        horizon=horizon,
+        panel=panel,
+        seed=seed,
+        l4=l4,
+    )
+    recipe["3_feature_engineering"] = l3
+    return recipe
+
+
 def midas_almon(
     *,
     target: str = "y",
@@ -3680,6 +3863,7 @@ __all__ = [
     "arctic_var",  # #16
     # Phase C top-6 net-new methods:
     "u_midas",  # M1 Foroni-Marcellino-Schumacher 2015
+    "factor_midas_nowcast",  # F-02 Marcellino-Schumacher 2010 OBES 72(4)
     "midas_almon",  # M2 Ghysels-Sinko-Valkanov 2007
     "sliced_inverse_regression",  # M3 Fan-Xue-Yao 2017 + Huang-Zhou 2022 sSUFF
     "garch_volatility",  # M9 Bollerslev/Nelson/Hansen

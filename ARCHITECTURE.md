@@ -8,6 +8,7 @@
 > 2026-05-12 (Phase D-2f: CLAUDE.md deferred cosmetics — test count 953→1345 + WORKFLOW MANDATE path note, HEAD `9cde74b3`).
 Updated 2026-05-12 (Phase D-2g: user_data_workflow.md + custom_function_quickstart.md guides, HEAD `949b6c78`).
 Updated 2026-05-12 (Phase F-14-17: v0.9.0 stable prereq LOW batch — F-14 hard-error / F-15 sparse_macro_factors_risk_premia / F-16 maf_per_variable_pca op / F-17 attach_eval_blocks smoke test; 1417 → 1431 tests, primary commit `c9285077`).
+Updated 2026-05-13 (Phase F-02: slot 02 phantom replace — Marcellino-Schumacher (2010) Factor MIDAS; new `factor_midas_nowcast()` helper; 1431 → 1432 tests; run `2026-05-13-phase-f02-fmidas-replace`).
 
 ## Overview
 
@@ -997,3 +998,120 @@ graph TD
 | `_OP_MAF_PER_VARIABLE_PCA` (scaffold/option_docs/l3.py) | OptionDoc entry for wizard/sphinx | `_OPT_DOC_ENTRY` | Yes — NEW entry |
 | `test_albacore_prior_target_none_raises_value_error` (test_v09_paper_coverage.py:2438) | F-14 regression test | `pytest.raises(ValueError)` | Yes — renamed + updated from UserWarning |
 | `test_phase_f17_paper17.py` (tests/core/) | F-17 attach_eval_blocks=True smoke tests (2 tests) | `macroforecast.run`, `ml_useful_macro_horse_race` | Yes — NEW file |
+
+---
+
+## Phase F-02: Slot 02 Phantom Replace — Marcellino-Schumacher (2010) Factor MIDAS
+
+Run: `2026-05-13-phase-f02-fmidas-replace`. Uncommitted (4 builder files + 1 scriber file; shipper commits). Reviewer GO 2026-05-13.
+
+**Trigger**: Round 7 audit slot 02 SCOPE FLAG — corpus-level MEDIUM phantom. The `arctic_sea_ice_dfm` helper was cut 2026-05-08 (backing Coulombe-Goebel 2021 VARCTIC paper contains no DFM content). Slot 02 was remapped to the real mixed-frequency DFM paper.
+
+Paper: Marcellino, M. and Schumacher, C. (2010). "Factor MIDAS for Nowcasting and Forecasting with Ragged-Edge Data: A Model Comparison for German GDP." *Oxford Bulletin of Economics and Statistics*, 72(4), 518–550. DOI `10.1111/j.1468-0084.2010.00591.x`. EUI preprint ECO-2008-16 (CADMUS handle 1814/8087).
+
+**PDF status**: Unavailable — Wiley closed-access; CADMUS preprint returns JS-protected HTML. Implementation reconstructed from abstract + established Factor MIDAS literature. Four explicit assumptions documented in docstring and CHANGELOG:
+
+| # | Assumption | Basis | Risk |
+|---|-----------|-------|------|
+| 1 | Step 1 = static PCA (not Kalman DFM) | Abstract: extraction methods differ little | LOW |
+| 2 | Step 2 = U-MIDAS unrestricted lag polynomial (not exp-Almon) | Parsimonious paper recommendation; reuses `_u_midas` | LOW |
+| 3 | `n_factors` default = 1 | Paper uses r=1–2 for German GDP | LOW |
+| 4 | `n_lags_high` default = `"bic"` | Consistent with U-MIDAS paper (F-07-R) BIC default | LOW |
+
+### Files Changed
+
+| File | Lines | Change |
+|------|-------|--------|
+| `macroforecast/recipes/paper_methods.py` | 3244–3408 | New `factor_midas_nowcast()` function (165 lines) + `__all__` entry at line 3866 + module docstring "16-paper" → "17-paper" |
+| `macroforecast/core/ops/l3_ops.py` | 853 | `u_midas` `input_types` extended: `(Panel, Series)` → `(Panel, Series, Factor)` |
+| `tests/core/test_paper_helpers_e2e.py` | 163–189 | Phantom comment removed; new `test_paper_02_factor_midas_nowcast` (live test); docstring "15" → "16 helpers" |
+| `CHANGELOG.md` | — | `[Unreleased]` F-02 entry; F-02 prereq `OPEN` → `CLOSED`; `arctic_sea_ice_dfm` → `factor_midas_nowcast` in recipe gallery |
+
+Test count delta: 1431 → 1432 (+1 active test; phantom marker removed).
+
+### Factor MIDAS Recipe Data Flow
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    Panel["Panel HF<br/>(T_hf x N predictors)"]
+    dfm["factors node<br/>op: dfm<br/>n_factors=r<br/>temporal_rule=expanding_window"]
+    Factor["Factor output F<br/>(T_hf x r)<br/>cols: dfm_1..dfm_r"]
+    umidas["fmidas node<br/>op: u_midas<br/>include_y_lag=False<br/>n_lags_high=bic"]
+    Z_lf["Z_lf design matrix<br/>(T_lf x r*K)<br/>cols: dfm_1_lag0..dfm_r_lag{K-1}"]
+    l4["L4 OLS/ridge<br/>family: ols"]
+    l4_forecasts["l4_forecasts_v1<br/>h-step ahead LF forecast"]
+
+    Panel --> dfm
+    dfm --> Factor
+    Factor --> umidas
+    umidas --> Z_lf
+    Z_lf --> l4
+    l4 --> l4_forecasts
+
+    style Panel fill:#1e90ff,stroke:#1565c0,color:#fff
+    style dfm fill:#1e90ff,stroke:#1565c0,color:#fff
+    style Factor fill:#1e90ff,stroke:#1565c0,color:#fff
+    style umidas fill:#1e90ff,stroke:#1565c0,color:#fff
+    style Z_lf fill:#1e90ff,stroke:#1565c0,color:#fff
+    style l4_forecasts fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Function Call Graph (F-02)
+
+```mermaid
+%%{init: {"theme": "neutral"}}%%
+graph TD
+    fmidas_helper["factor_midas_nowcast()<br/>paper_methods.py:3244"]
+    l3_dfm_dispatch["runtime dispatch<br/>op=='dfm'<br/>runtime.py:13444"]
+    dfm_factors["_dfm_factors()<br/>runtime.py:13444"]
+    pca_factors["_pca_factors()<br/>(static PCA)"]
+    l3_umidas_dispatch["runtime dispatch<br/>op=='u_midas'<br/>runtime.py:13533"]
+    u_midas_fn["_u_midas()<br/>runtime.py:13722"]
+    bic_select["_bic_select_k()<br/>runtime.py:13634"]
+    lag_stack["_midas_lag_stack()<br/>runtime.py:13573"]
+    l4_ols["_l4_single_fit('ols',{})<br/>paper_methods.py:3406"]
+
+    fmidas_helper --> l3_dfm_dispatch
+    fmidas_helper --> l3_umidas_dispatch
+    fmidas_helper --> l4_ols
+    l3_dfm_dispatch --> dfm_factors
+    dfm_factors --> pca_factors
+    l3_umidas_dispatch --> u_midas_fn
+    u_midas_fn --> bic_select
+    u_midas_fn --> lag_stack
+    bic_select --> lag_stack
+
+    style fmidas_helper fill:#1e90ff,stroke:#1565c0,color:#fff
+    style dfm_factors fill:#1e90ff,stroke:#1565c0,color:#fff
+    style u_midas_fn fill:#1e90ff,stroke:#1565c0,color:#fff
+    style l4_ols fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Spec Deviations (both additive, both GO)
+
+| # | Type | Description | Justification |
+|---|------|-------------|---------------|
+| 1 | Additive runtime fix | `l3_ops.py:853` — `Factor` added to `u_midas` input_types | `op:"dfm"` output type is `Factor`; type registry gap caused validator rejection; minimal additive fix; 18/18 F-07-R tests still pass |
+| 2 | Recipe node param addition | `factors` node gets `temporal_rule: "expanding_window_per_origin"` (spec node stub omitted it) | `op:"dfm"` has a hard rule requiring `temporal_rule`; additive-only; increases correctness |
+
+### Changed Modules / Functions Reference
+
+| Function/Module | Purpose | Key Dependencies | Changed in F-02 |
+|---|---|---|---|
+| `factor_midas_nowcast` (paper_methods.py:3244) | Public helper — Marcellino-Schumacher 2010 Factor MIDAS recipe | `_base_recipe`, `_l3_op`, `_l4_single_fit` | Yes — NEW function |
+| `u_midas` input_types (l3_ops.py:853) | L3 op registry type-compatibility for Factor input | `Panel`, `Series`, `Factor` types | Yes — additive extension |
+| `test_paper_02_factor_midas_nowcast` (test_paper_helpers_e2e.py:163) | E2E smoke + schema test for Factor MIDAS recipe | `_assert_recipe_runs`, `synth_panel` fixture | Yes — replaces phantom slot |
+| `_dfm_factors` (runtime.py:13444) | Static PCA factor extraction (Step 1) | `_pca_factors`, pandas | No — unchanged; reused |
+| `_u_midas` (runtime.py:13722) | MIDAS lag-stack op primitive (Step 2) | `_bic_select_k`, `_midas_lag_stack` | No — unchanged; reused |
+| `_bic_select_k` (runtime.py:13634) | BIC/AIC lag-order selection | `_midas_lag_stack`, numpy | No — unchanged; reused (added in F-07-R) |
+
+### v0.9.0 Stable Prereqs Status (post F-02)
+
+| Prereq | Status |
+|--------|--------|
+| F-02: slot 02 phantom | **CLOSED** (this run) |
+| DOCS-1: option_docs/l3.py u_midas + Sphinx csv warning | OPEN |
+| MC-RECAL: symmetric MC re-calibration | OPEN |
+
+F-02 was the last MEDIUM prereq. Two LOW prereqs remain before v0.9.0 stable cut.

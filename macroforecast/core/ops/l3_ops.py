@@ -850,7 +850,7 @@ def l3_metadata_build(inputs, params):
 @register_op(
     name="u_midas",
     layer_scope=("l3",),
-    input_types={"default": (Panel, Series)},
+    input_types={"default": (Panel, Series, Factor)},
     output_type=Panel,
     params_schema={
         "freq_ratio": {"type": int, "default": 3, "sweepable": True},

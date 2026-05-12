@@ -62,13 +62,48 @@ Round 7 PDF-direct audit LOW findings across papers 14, 15, 16, 17.
   `result.cells` is non-empty — the observable proxy for paper Eq. (10) α_F
   treatment-effect regression execution (Coulombe et al. 2022 JAE §2.3).
 
+### Phase F-02 slot 02 phantom replace (2026-05-13)
+
+Run `2026-05-13-phase-f02-fmidas-replace`. Closes the F-02 MEDIUM prereq.
+
+* **F-02** — Slot 02 of the 17-paper corpus remapped from phantom citation
+  (`arctic_sea_ice_dfm`, Coulombe-Goebel 2021 VARCTIC paper which contains no DFM
+  content) to Marcellino & Schumacher (2010) "Factor MIDAS for Nowcasting and
+  Forecasting with Ragged-Edge Data." Oxford Bulletin of Economics and Statistics 72(4),
+  518–550. DOI 10.1111/j.1468-0084.2010.00591.x. EUI preprint ECO-2008-16
+  (cadmus.eui.eu handle 1814/8087).
+
+  New helper `factor_midas_nowcast()` added to `macroforecast.recipes.paper_methods`.
+  Implements the two-step Factor MIDAS pipeline as a pure recipe constructor wiring
+  existing operational L3 ops: `op: "dfm"` (static PCA factor extraction) followed by
+  `op: "u_midas"` (unrestricted MIDAS lag aggregation), then `family: "ols"` at L4.
+  Exported via `__all__`.
+
+  **Implementation assumptions** (PDF unavailable; reconstruction from abstract +
+  established literature; PDF §-references pending post-acquisition verification):
+  1. Factor extraction = static PCA (paper Method B), not Kalman smoother (Method D).
+  2. MIDAS variant = unrestricted U-MIDAS, not parametric exp-Almon.
+  3. Default `n_factors=1` (paper uses r=1–2 for German GDP).
+  4. Default `n_lags_high="bic"` (BIC lag selection per Foroni-Marcellino-Schumacher 2015).
+
+  Paper slot in `tests/core/test_paper_helpers_e2e.py` now live:
+  `test_paper_02_factor_midas_nowcast` replaces the phantom placeholder comment.
+  Test count: 15 → 16 e2e smoke tests.
+
+  Module docstring updated: "16-paper" → "17-paper" corpus reference.
+
+  **Note**: The DOI in the original dispatch prompt (`10.1016/j.ijforecast.2010.02.006`,
+  IJF 26(4):581-587) was incorrect; that DOI resolves to Kuzin-Marcellino-Schumacher
+  (2011) "MIDAS vs. Mixed-Frequency VAR." The correct DOI for Marcellino-Schumacher
+  (2010) is 10.1111/j.1468-0084.2010.00591.x (OBES). Corrected in all code references.
+
 ### Remaining v0.9.0 stable prereqs
 
 The following three items must be resolved before the `v0.9.0` stable tag is cut:
 
 | Prereq | Severity | Status | Notes |
 |--------|----------|--------|-------|
-| F-02: slot 02 phantom citation — Marcellino-Schumacher 2010 | MEDIUM | OPEN | Corpus decision: real paper vs. placeholder. Human call required. |
+| F-02: slot 02 phantom citation — Marcellino-Schumacher 2010 | MEDIUM | CLOSED | `factor_midas_nowcast()` added; slot 02 remapped to OBES 72(4) 518-550. |
 | DOCS-1: `option_docs/l3.py` u_midas description sync + Sphinx csv warning | LOW | OPEN | `u_midas` description drift from v0.9.0a0 implementation; Sphinx warning from csv table. |
 | MC-RECAL: paper-exact symmetric MC re-calibration | LOW | OPEN | Current alpha uses asymmetric calibration; paper uses symmetric. No API change required. |
 
@@ -840,7 +875,7 @@ runtime behaviour; non-default values trigger a clear
   * **9 operational**: `perfectly_random_forest`, `scaled_pca`,
     `macroeconomic_random_forest`, `ols_attention_demo`,
     `sparse_macro_factors`, `macroeconomic_data_transformations`
-    (MARX), `ml_useful_macro`, `arctic_sea_ice_dfm`, `arctic_var`.
+    (MARX), `ml_useful_macro`, `factor_midas_nowcast`, `arctic_var`.
   * **8 pre-promotion**: `booging`, `marsquake`, `adaptive_ma_rf`,
     `two_step_ridge`, `hemisphere_nn`, `anatomy_oos`,
     `dual_interpretation`, `maximally_forward_looking`,

@@ -1,4 +1,4 @@
-"""Phase A3 — 15-helper end-to-end smoke tests.
+"""Phase A3 — 16-helper end-to-end smoke tests.
 
 One smoke test per paper-method helper in
 ``macroforecast.recipes.paper_methods``. Each test builds a minimal
@@ -14,16 +14,17 @@ Round 3 micro-audits.
 
 **xfail bookkeeping.** All Round 1 xfail markers have been removed as of
 2026-05-12 Phase D-2b. Papers 4 and 11 were demoted in Phase B; papers 7,
-9, 10, 12, and 14 were demoted here. All 15 tests are now expected to pass
+9, 10, 12, and 14 were demoted here. All 16 tests are now expected to pass
 without xfail annotation.
 
 After Phase A2 this module's paper 13 (`maximally_forward_looking`) and
 paper 16 (`ml_useful_macro_b_grid`) are expected to pass, validating
 the fixes committed in `paper_methods.py`.
 
-Paper 2 (`arctic_sea_ice_dfm`) helper was cut 2026-05-08 — phantom
-citation (paper has no DFM content). The underlying `_DFMMixedFrequency`
-class in `core/runtime.py` is unaffected.
+Paper 2 slot was replaced 2026-05-13 (F-02): phantom citation
+(`arctic_sea_ice_dfm`) replaced with Marcellino-Schumacher (2010) OBES
+72(4) Factor MIDAS helper (`factor_midas_nowcast`). The underlying
+`_DFMMixedFrequency` class in `core/runtime.py` is unaffected.
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ from macroforecast.recipes.paper_methods import (
     arctic_var,
     booging,
     dual_interpretation,
+    factor_midas_nowcast,
     hemisphere_neural_network,
     macroeconomic_data_transformations_horse_race,
     macroeconomic_random_forest,
@@ -143,7 +145,7 @@ def _assert_grid_has_passing_cell(grid: dict[str, dict]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# 15 e2e tests — one per paper helper (paper 2 helper cut 2026-05-08)
+# 16 e2e tests — one per paper helper (paper 2 slot replaced 2026-05-13)
 # ---------------------------------------------------------------------------
 
 
@@ -153,9 +155,38 @@ def test_paper_01_scaled_pca(synth_panel):
     _assert_recipe_runs(recipe)
 
 
-# Paper 2 — arctic_sea_ice_dfm helper cut 2026-05-08: phantom citation (paper
-# has no DFM content). The `_DFMMixedFrequency` class in `core/runtime.py`
-# remains operational; only the paper-anchored helper was removed.
+# Paper 2 — factor_midas_nowcast (Marcellino-Schumacher 2010, OBES 72(4) 518-550)
+# Replaced 2026-05-13 (F-02): phantom `arctic_sea_ice_dfm` slot replaced with
+# the real Factor MIDAS paper. Uses two-step L3 chain: "dfm" (PCA factor
+# extraction) -> "u_midas" (MIDAS lag aggregation) -> "ols" at L4.
+# n_lags_high=1 fixes K to avoid BIC overhead in the smoke test.
+def test_paper_02_factor_midas_nowcast(synth_panel):
+    recipe = factor_midas_nowcast(
+        target="y",
+        horizon=1,
+        freq_ratio=3,
+        n_factors=1,
+        n_lags_high=1,
+        panel=synth_panel,
+    )
+    assert isinstance(recipe, dict), "factor_midas_nowcast must return a dict"
+    assert "3_feature_engineering" in recipe, "recipe must include 3_feature_engineering"
+    nodes = recipe["3_feature_engineering"]["nodes"]
+    node_ids = [n["id"] for n in nodes]
+    assert "factors" in node_ids, "L3 DAG must include 'factors' (dfm) node"
+    assert "fmidas" in node_ids, "L3 DAG must include 'fmidas' (u_midas) node"
+    # Verify dfm node receives src_X and u_midas node receives factor output
+    factors_node = next(n for n in nodes if n["id"] == "factors")
+    fmidas_node = next(n for n in nodes if n["id"] == "fmidas")
+    assert factors_node["op"] == "dfm", "factors node must use op='dfm'"
+    assert fmidas_node["op"] == "u_midas", "fmidas node must use op='u_midas'"
+    assert fmidas_node["inputs"] == ["factors"], (
+        "fmidas node must receive factor output (not raw src_X)"
+    )
+    assert fmidas_node["params"]["include_y_lag"] is False, (
+        "Factor MIDAS must not include AR y-lag by default"
+    )
+    _assert_recipe_runs(recipe)
 
 
 # Paper 3 — slow_growing_tree (operational decision_tree.split_shrinkage). Cap
