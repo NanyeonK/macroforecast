@@ -9,7 +9,7 @@ source panels. It is separate from Layer 1 because Layer 1 should decide the
 source contract, target y, predictor x universe, and timing rules. The raw
 dataset definitions belong here.
 
-Generated: `2026-04-30` from current official FRED-MD/FRED-QD CSV files and
+Generated: `2026-05-13` from current official FRED-MD/FRED-QD CSV files and
 the current FRED-SD by-series workbook.
 
 ## Current Snapshot

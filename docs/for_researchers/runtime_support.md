@@ -1,69 +1,60 @@
 # Runtime Support Matrix
 
-This page describes what the current core runtime executes directly, and what is currently schema-validated but delegated to future specialized runtimes.
+This page describes what the v0.9.0 core runtime executes directly.
 
-macroforecast has two execution surfaces:
-
-- `macroforecast.execution`: the legacy experiment engine used by older recipes and tests.
-- `macroforecast.core.runtime`: the new layer-contract runtime used by L0-L8 and L1.5-L4.5 artifacts.
-
-The support matrix below refers to `macroforecast.core.runtime.execute_minimal_forecast` unless stated otherwise.
+macroforecast's runtime surface is `macroforecast.core.runtime`. The public entry point is `macroforecast.run("recipe.yaml")`; the support matrix below refers to the layer-contract runtime that backs it.
 
 ## End-to-End Supported Path
 
-The current core runtime executes one complete layer-contract path:
+The core runtime executes one complete layer-contract path:
 
-1. L1 loads a custom inline/CSV/Parquet panel, or official FRED-MD/FRED-QD from the raw adapters.
+1. L1 loads a custom inline/CSV/Parquet panel, or official FRED-MD/FRED-QD/FRED-SD from the raw adapters.
 2. L2 applies selected transform, outlier, imputation, and frame-edge policies.
-3. L3 executes deterministic feature DAG operations.
-4. L4 fits expanding-window linear sklearn models and produces point forecasts.
-5. L5 computes point metrics, benchmark-relative metrics, rankings, and report tables.
-6. L1.5-L4.5 optionally materialize diagnostic JSON artifacts.
-7. L6 optionally materializes statistical-test result dictionaries from realized forecast errors.
-8. L7 optionally materializes basic importance artifacts from fitted models and L3 metadata.
-9. L8 optionally writes a reproducible output directory with manifest, recipe, CSV, and JSON sidecars.
+3. L3 executes the feature DAG (deterministic ops plus McCracken-Ng PCA cascades).
+4. L4 fits expanding/rolling-window forecasters across 35+ families and produces point/quantile/density forecasts.
+5. L5 computes point, relative, density, and direction metrics across multiple aggregations.
+6. L1.5-L4.5 materialize diagnostic JSON artifacts when requested.
+7. L6 materializes statistical-test result dictionaries from realized forecast errors.
+8. L7 materializes importance artifacts (linear/tree/permutation/SHAP/gradient/effect/VAR/temporal families) from fitted models and L3 metadata.
+9. L8 writes a reproducible output directory with manifest, recipe, CSV, and JSON sidecars.
 
 ## Layer Support
 
 | Layer | Runtime status | Supported now | Not yet full runtime |
 |---|---|---|---|
-| L0 Meta | Schema/resolution | Recipe metadata and seed pass-through where present | Full study registry integration |
-| L1 Data | Partial runtime | Custom panel inline/records/CSV/Parquet; official FRED-MD/FRED-QD loader path | Official-plus-custom merge; every future dataset policy |
-| L1.5 Data summary | Runtime artifact | Sample coverage, summary stats, missing/outlier audit, optional correlation as JSON metadata | Figure/table rendering |
-| L2 Preprocessing | Partial runtime | No transform, t-code transform, IQR/z-score/winsorize outliers, mean/ffill/interpolation imputation, frame-edge policies | EM factor imputation and every advanced cleaning algorithm |
-| L2.5 Pre/post diagnostics | Runtime artifact | Raw-vs-clean comparison, distribution shift, cleaning log, optional correlation shift | Figure/table rendering and multi-stage L2 hooks |
-| L3 Features | Partial runtime | Source selection, lag, seasonal lag, moving average, MARX, concat, scale, log/diff/log_diff/pct_change, polynomial, interaction, season dummy, trend, direct target construction | Factor models, mixed-frequency disaggregation, feature selection runtime |
-| L3.5 Feature diagnostics | Runtime artifact | Raw/clean/features comparison, feature summary, lineage summary, correlation, lag/factor/selection flags | Factor scree/loadings figures, selection stability figures |
-| L4 Forecasting | Partial runtime | Expanding-window `ols`, `ridge`, `lasso`, `elastic_net` via sklearn; point forecasts; benchmark flag propagation | Tree/boosting/deep/VAR/MRF execution in the core runtime path |
-| L4.5 Generator diagnostics | Runtime artifact | Forecast/model/training/fit/window summaries | Residual figures, tuning traces, ensemble weight figures |
-| L5 Evaluation | Runtime | MSE/RMSE/MAE, relative MSE, OOS R2, relative MAE, MSE reduction, ranking | Density metrics and advanced decomposition computation |
-| L6 Statistical tests | Minimal runtime | DM/GW-style pair tests, nested-lite comparisons, CPA paths, MCS-style inclusion, direction tests, residual diagnostics | Full bootstrap MCS/SPA/RC/StepM, exact HAC/West critical values, density/interval tests |
-| L7 Interpretation | Minimal runtime | Linear coefficients, permutation-style importance, grouping, lineage attribution, transformation attribution table | SHAP backend, neural-gradient methods, VAR FEVD/IRF, rolling recompute, plot rendering |
-| L8 Output | Runtime | Output directory, manifest JSON/JSONL, recipe JSON, forecasts CSV, metrics/ranking CSV, tests/importance/diagnostic JSON | Parquet/LaTeX/HTML rendering, compression, full replication API |
+| L0 Meta | Runtime | Study scope, failure_policy, reproducibility_mode, compute_mode, seed pass-through; manifest metadata | -- |
+| L1 Data | Runtime | Custom panel inline/records/CSV/Parquet; official FRED-MD/FRED-QD loaders; FRED-SD with state-group / variable-group / mixed-frequency routes; missing_availability / raw_missing_policy / raw_outlier_policy / release_lag_rule / contemporaneous_x_rule | -- |
+| L1.5 Data summary | Runtime artifact | Sample coverage, summary stats, ADF/PP/KPSS, missing/outlier audit, optional correlation as JSON | Figure/table rendering |
+| L2 Preprocessing | Runtime | Transform (no_transform / t-code), outlier (IQR / z-score / winsorize / MAD), imputation (mean / ffill / interpolation / EM-factor), frame-edge; mixed-frequency alignment | -- |
+| L2.5 Pre/post diagnostics | Runtime artifact | Raw-vs-clean comparison, distribution shift, cleaning effect summary, optional correlation shift | Figure/table rendering |
+| L3 Features | Runtime | Source, lag, seasonal lag, MA, MARX, concat, scale, log/diff/log_diff/pct_change, polynomial, interaction, season dummy, trend, target_construction, McCracken-Ng PCA, cascade pipelines | -- |
+| L3.5 Feature diagnostics | Runtime artifact | Raw/clean/features comparison, feature summary, lineage summary, correlation, lag/factor/selection flags | Factor scree / loadings / selection-stability figure rendering |
+| L4 Forecasting | Runtime | Expanding/rolling fit for 35+ families: linear (ols, ridge, lasso, elastic_net, bayesian_ridge, huber, ar_p, factor_augmented_ar), tree (random_forest, extra_trees, gradient_boosting, decision_tree, xgboost, lightgbm, catboost, bagging, quantile_regression_forest, mrf), kernel/NN (svr, mlp, lstm, gru, transformer via `[deep]`), VAR family (var, bvar_minnesota, bvar_normal_inverse_wishart, factor_augmented_var, dfm_mixed_mariano_murasawa), GARCH via `[arch]`; point/quantile/density forecasts; benchmark flag propagation | -- |
+| L4.5 Generator diagnostics | Runtime artifact | Forecast/model/training/fit/window summaries; tuning traces; ensemble weight tables | Residual figure rendering |
+| L5 Evaluation | Runtime | Point (MSE, RMSE, MAE, MedAE, MAPE, Theil U1/U2), relative (relative_mse, relative_mae, mse_reduction, r2_oos), density (log_score, CRPS, interval_score, coverage_rate), direction (success_ratio, Pesaran-Timmermann); per_subperiod, by_predictor_block (Shapley-share), per_horizon_then_mean, top_k_worst aggregations | -- |
+| L6 Statistical tests | Runtime | DM (HLN), Giacomini-White, Diebold-Mariano-Pesaran multi-horizon, HLN encompassing; Clark-West nested; Giacomini-Rossi 2010 (simulated CV) + Rossi-Sekhposyan; Hansen MCS, SPA, White Reality Check, Romano-Wolf StepM; Newey-West / Andrews / Parzen HAC; Engle-Manganelli DQ density | -- |
+| L7 Interpretation | Runtime | 30 importance ops: model-native (linear_coef, tree MDI), permutation (BFR/Strobl, LOFO), SHAP (tree/kernel/linear/interaction/deep), gradient (gradient_shap, integrated_gradients, saliency, deep_lift via `[deep]`+captum), effect (PDP, ALE, Friedman H^2), stability (lasso_inclusion_frequency, BVAR PIP, bootstrap_jackknife, rolling_recompute), VAR shock-decomposition (FEVD, historical_decomposition, orthogonalised_irf, generalized_irf), forecast_decomposition, group_aggregate, lineage_attribution, transformation_attribution, MRF GTVP, dual_decomposition, OShapley_VI, PBSV, attention_weights | -- |
+| L8 Output | Runtime | Output dir, manifest JSON/JSONL, recipe JSON, forecasts CSV, metrics_all_cells / ranking CSV, tests / importance / diagnostic JSON; LaTeX + Markdown table export | Parquet compression; full HTML report rendering |
 
 ## Practical Meaning
 
-Use the core runtime today when you need a reproducible, inspectable linear-model forecasting study with layer artifacts. It is appropriate for:
+Use the core runtime today when you need a reproducible, inspectable forecasting study with layer artifacts. It is appropriate for:
 
 - smoke tests for a full recipe shape,
 - custom-panel regression checks,
-- benchmark-relative point forecast evaluation,
-- lightweight statistical and importance artifacts,
+- benchmark-relative point/quantile/density forecast evaluation,
+- statistical-test horse races (Hansen MCS / SPA / Reality Check / Romano-Wolf StepM and friends),
+- model interpretation (linear / tree / permutation / SHAP / gradient / effect / VAR / temporal),
 - output-directory/provenance integration tests.
 
-Use legacy execution APIs or future specialized execution paths for:
-
-- large model horse races with tree/deep/VAR families,
-- exact paper-grade bootstrap statistical tests,
-- SHAP/NN/VAR interpretation backends,
-- rendered diagnostics and publication exports.
+The core runtime is the single execution surface in v0.9.0. Everything in the table above is reachable through `mf.run("recipe.yaml")` or the equivalent `mf.forecast(...)` / `mf.Experiment(...)` simple-API entry points.
 
 ## Minimal Core Runtime Example
 
 ```python
-from macroforecast.core import execute_minimal_forecast
+import macroforecast as mf
 
-result = execute_minimal_forecast(open("examples/recipes/l4_minimal_ridge.yaml").read())
+result = mf.run("examples/recipes/l4_minimal_ridge.yaml")
 
 print(result.sink("l5_evaluation_v1").metrics_table)
 ```

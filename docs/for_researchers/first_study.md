@@ -115,9 +115,9 @@ Fixed design:
 ## Execute
 
 ```python
-from macroforecast.core import execute_minimal_forecast
+import macroforecast as mf
 
-result = execute_minimal_forecast(open("my_study.yaml").read())
+result = mf.run("my_study.yaml")
 ```
 
 ## Inspect Results

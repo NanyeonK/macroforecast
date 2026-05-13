@@ -19,7 +19,7 @@ with one-line purpose, required extras, and smoke-test status.
   smoke suite parses + canonical-schema-validates every recipe and
   end-to-end runs the curated runnable subset.
 
-## L0 / L1 / L2 layer fragments (5)
+## L0 / L1 / L2 layer fragments (6)
 
 Recipes that exercise only one layer at a time. Useful for unit work;
 not standalone runnable (they expect upstream sinks).
@@ -33,7 +33,7 @@ not standalone runnable (they expect upstream sinks).
 | `l2_minimal.yaml` | L2 transform + outlier + impute pass-through | — |
 | `l2_fred_sd_alignment.yaml` | L2 with FRED-SD frequency filter | — |
 
-## L3 feature engineering DAG (5)
+## L3 feature engineering DAG (4)
 
 | Recipe | Purpose | Extras |
 |---|---|---|

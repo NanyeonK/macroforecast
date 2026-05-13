@@ -11,7 +11,7 @@ used for this generated page is `2026-03`:
 
 `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-03.xlsx`
 
-Generated: `2026-04-30`. Current data through: `2026-03`. Current
+Generated: `2026-05-13`. Current data through: `2026-03`. Current
 generated column count: `1428`. Native-frequency counts:
 monthly: 861, quarterly: 546, unknown: 21.
 

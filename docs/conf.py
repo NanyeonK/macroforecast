@@ -27,6 +27,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_copybutton",
+    "sphinx_design",
 ]
 
 source_suffix = {
@@ -60,25 +61,32 @@ myst_heading_anchors = 3
 
 # -- HTML output --------------------------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 html_title = "macroforecast"
-html_static_path: list[str] = []
+html_static_path: list[str] = ["_static"]
 html_extra_path: list[str] = []  # _html_extra removed with navigator_app (2026-05-13)
 
 html_theme_options = {
-    "navigation_depth": 4,
-    "collapse_navigation": True,
-    "sticky_navigation": True,
-    "titles_only": True,
-    "prev_next_buttons_location": "bottom",
+    "logo": {"text": "macroforecast"},
+    "github_url": "https://github.com/NanyeonK/macroforecast",
+    "use_edit_page_button": True,
+    "show_toc_level": 2,
+    "show_nav_level": 1,
+    "header_links_before_dropdown": 5,
+    "navigation_with_keys": True,
+    "icon_links": [
+        {"name": "PyPI", "url": "https://pypi.org/project/macroforecast/", "icon": "fa-brands fa-python"},
+    ],
+    "footer_start": ["copyright"],
+    "footer_end": ["sphinx-version"],
 }
 
 html_context = {
-    "display_github": True,
     "github_user": "NanyeonK",
     "github_repo": "macroforecast",
     "github_version": "main",
-    "conf_py_path": "/docs/",
+    "doc_path": "docs",
+    "default_mode": "auto",
 }
 
 # -- Autodoc ------------------------------------------------------------------

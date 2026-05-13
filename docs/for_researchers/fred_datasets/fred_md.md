@@ -8,7 +8,7 @@ macroforecast downloads the official current CSV from:
 
 `https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv`
 
-Generated: `2026-04-30`. Current data through: `2025-09`. Current column
+Generated: `2026-05-13`. Current data through: `2025-09`. Current column
 count excluding the date index: `126`.
 
 ## Column Contract

@@ -29,7 +29,7 @@ Downstream layers use Layer 0 through manifest/runtime context:
 
 | Consumer | Reads Layer 0 For |
 |---|---|
-| Compiler | default derivation, compatibility checks, manifest metadata |
+| Runtime | default derivation, compatibility checks, manifest metadata |
 | Sweep planner | parent study shape and failure/compute behavior |
 | Execution runner | seed application, continuation policy, parallel routing |
 | Navigator | setup defaults and target-cardinality guidance |
@@ -71,7 +71,7 @@ sets, express those comparisons in the owning downstream layer.
 ### `study_scope`
 
 `study_scope` is explicit in Navigator flows and may also be derived by the
-compiler from target structure and sweep shape.
+from target structure and sweep shape.
 
 | Value | Meaning |
 |---|---|
@@ -138,11 +138,11 @@ DAG node.
 
 ## Derived Manifest Fields
 
-Layer 0 records setup fields in compiler/runtime provenance.
+Layer 0 records setup fields in runtime provenance.
 
 | Field | Source |
 |---|---|
-| `study_scope` | explicit L0 axis or compiler derivation |
+| `study_scope` | explicit L0 axis or runtime derivation |
 | `execution_route` | currently `comparison_sweep` |
 | `failure_policy_spec` | L0 `failure_policy` |
 | `reproducibility_spec` | L0 `reproducibility_mode` plus seed details |

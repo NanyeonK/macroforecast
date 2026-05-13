@@ -23,7 +23,7 @@ larger design system.
 
 | Concept | User Sets It In Recipe? | Purpose |
 |---|---:|---|
-| `study_scope` | yes or compiler-derived | study shape |
+| `study_scope` | yes or runtime-derived | study shape |
 | `failure_policy` | yes | failure behavior |
 | `reproducibility_mode` | yes | seed policy |
 | `compute_mode` | yes | execution scheduling |

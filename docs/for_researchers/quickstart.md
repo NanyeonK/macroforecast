@@ -2,14 +2,14 @@
 
 Run a core layer-contract forecast in under 5 minutes.
 
-This quickstart uses `macroforecast.core.runtime.execute_minimal_forecast`. It is the current end-to-end runtime path for L1-L8 artifacts. It is intentionally narrower than the full schema registry: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.
+This quickstart uses `mf.run(...)`, the v0.9.0 public entry point. It executes the core L1-L8 runtime: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.
 
 For the exact support boundary, read [Runtime Support Matrix](runtime_support.md).
 
 ## Run A Minimal Core Recipe
 
 ```python
-from macroforecast.core import execute_minimal_forecast
+import macroforecast as mf
 
 recipe = """
 1_data:
@@ -70,10 +70,13 @@ recipe = """
     output_directory: ./macroforecast_output/quickstart/
 """
 
-result = execute_minimal_forecast(recipe)
+import macroforecast as mf
+result = mf.run(recipe)
 print(result.sink("l5_evaluation_v1").metrics_table)
 print(result.sink("l8_artifacts_v1").output_directory)
 ```
+
+`mf.run` accepts both YAML string and path.
 
 ## What Gets Materialized
 
@@ -136,20 +139,12 @@ Add these blocks when needed:
       global: linear_imp
 ```
 
-## Legacy Compiler Path
-
-Older docs and recipes that use `macroforecast.compiler.compile_recipe_yaml` still target the legacy experiment engine. Use that path for older Stage-style recipes. Use the core runtime path above for L0-L8 layer-contract recipes.
-
 ## Next Steps
 
-- [Runtime Support Matrix](runtime_support.md) — current support boundary
-- [Your First Study](first_study.md) — extend the quickstart to diagnostics, L6, L7, and L8 export
-- [Understanding Output](understanding_output.md) — output directory and artifact guide
+- [Runtime Support Matrix](runtime_support.md) -- current support boundary
+- [Your First Study](first_study.md) -- extend the quickstart to diagnostics, L6, L7, and L8 export
+- [Understanding Output](understanding_output.md) -- output directory and artifact guide
 
 ---
 
-**Note on output directory naming**: The examples above use
-`macroforecast_output/` as the output path. The runtime default (set in
-`macroforecast.core.types` and `core/layers/l8.py`) is the historical
-`macrocast_output/` for backward compatibility. Override it explicitly with
-`output_directory` in the `8_output.leaf_config` block, as shown above.
+**Note on output directory naming**: The runtime default is `./macrocast_output/<recipe_id>/<timestamp>/` (defined in `macroforecast.core.types` and `macroforecast.core.layers.l8`). To override, set `output_directory` in the `8_output.leaf_config` block, as the examples above do (`./macroforecast_output/quickstart/`). The historical `macrocast_output/` default is preserved for backward compatibility with v0.1-era manifests.

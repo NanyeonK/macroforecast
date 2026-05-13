@@ -51,11 +51,9 @@ values.
 
 ### Functions & features
 
-- Sample-period availability path: `macroforecast.execution.build._apply_sample_period_and_availability(raw_result, recipe, *, target)` implements `zero_fill_leading_predictor_gaps` and records `data_reports["availability"]`.
-- General missing policy path: `macroforecast.execution.build._apply_missing_availability(raw_result, rule, *, target, spec)`.
-- Called during dataset loading in `execute_recipe` after official transforms
-  have produced the selected frame and before researcher preprocessing runs.
-- Compile guard: `impute_predictors_only` without valid `leaf_config.x_imputation` raises `CompileValidationError`.
+- Axis spec + validation: `macroforecast.core.layers.l1` AxisSpec (`missing_availability` at line ~1016). The default (`zero_fill_leading_predictor_gaps`) applies when omitted from `1_data.fixed_axes`.
+- Operational behaviour: handled by the L1 data-contract runtime. Predictor leading missing values within the selected sample period are filled with 0 and recorded in `l1_5_diagnostic_v1` availability audit. Per-value semantics: `macroforecast.scaffold.option_docs.l1` entries `l1_c / missing_availability / <value>`.
+- Compile guard: `impute_predictors_only` requires `leaf_config.x_imputation` in {`mean`, `median`, `ffill`, `bfill`}; invalid combinations raise `CompileValidationError`.
 
 ### Dropped values
 
@@ -90,10 +88,10 @@ path:
 
 ### Functions & features
 
-- Runtime path: `macroforecast.execution.build._apply_raw_missing_policy(raw_result, rule, *, target, spec)`.
-- Called before `macroforecast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
-- Compile guard: `impute_raw_predictors` without valid `leaf_config.raw_x_imputation` raises `CompileValidationError`.
-- Provenance: runtime records `data_reports["raw_missing"]` with `before_official_transform: true`.
+- Axis spec + validation: `macroforecast.core.layers.l1` AxisSpec (`raw_missing_policy` at line ~1017). Applied to the raw FRED panel **before** official transforms / T-codes, so non-default values affect T-code construction.
+- Per-value semantics: `macroforecast.scaffold.option_docs.l1` entries `l1_c / raw_missing_policy / <value>`.
+- Compile guard: `impute_raw_predictors` requires `leaf_config.raw_x_imputation` in {`mean`, `median`, `ffill`, `bfill`}; otherwise `CompileValidationError`.
+- Provenance: `before_official_transform: true` is recorded in the L1.5 availability / cleaning report.
 
 ### Recipe usage
 
@@ -126,10 +124,10 @@ path:
 
 ### Functions & features
 
-- Runtime path: `macroforecast.execution.build._apply_raw_outlier_policy(raw_result, rule, *, spec)`.
-- Called before `macroforecast.execution.build._apply_tcode_preprocessing(...)`, so any changes affect T-code construction.
+- Axis spec + validation: `macroforecast.core.layers.l1` AxisSpec (`raw_outlier_policy` at line ~1018). Applied to the raw FRED panel **before** official transforms / T-codes, so non-default values affect T-code construction.
+- Per-value semantics: `macroforecast.scaffold.option_docs.l1` entries `l1_c / raw_outlier_policy / <value>`.
 - Optional column subset: `leaf_config.raw_outlier_columns`. If omitted, all raw numeric non-date columns are eligible.
-- Provenance: runtime records `data_reports["raw_outliers"]` with `before_official_transform: true`.
+- Provenance: `before_official_transform: true` is recorded in the L1.5 availability / cleaning report.
 
 ### Recipe usage
 
@@ -160,8 +158,8 @@ Three operational values.
 
 ### Functions & features
 
-- Module: `macroforecast.execution.build._apply_release_lag(raw_result, rule, *, spec)`.
-- Compile guard: `series_specific_lag` without a non-empty `leaf_config.release_lag_per_series` dict raises `CompileValidationError`.
+- Axis spec: `macroforecast.core.layers.l1` AxisSpec (`release_lag_rule` at line ~1019). Per-value semantics: `macroforecast.scaffold.option_docs.l1` entries `l1_c / release_lag_rule / <value>`.
+- Compile guard: `series_specific_lag` requires a non-empty `leaf_config.release_lag_per_series` dict; otherwise `CompileValidationError`.
 
 ### Dropped values
 
@@ -204,8 +202,8 @@ may enter the model. Two operational values.
 
 ### Functions & features
 
-- Wired inside `macroforecast.execution.build._build_raw_panel_training_data` — the axis value selects how `X_train` and `X_pred` align with the target.
-- Applies to raw-panel recipes only (target_lag_features uses target lags, so the axis is irrelevant there).
+- Axis spec: `macroforecast.core.layers.l1` AxisSpec (`contemporaneous_x_rule`). Under `forbid_same_period_predictors` (default), `X_pred` is taken at the forecast origin `t`; under `allow_same_period_predictors`, at the target date `t+h`.
+- Applies to raw-panel recipes only. `target_lag_features` builders use target lags exclusively, so the axis is inert for those recipes.
 
 ### Recipe usage
 

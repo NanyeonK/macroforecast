@@ -1603,3 +1603,115 @@ confined to `docs/navigator/index.md`, now cleaned.
 | Layer visualization | Static app list/graph toggle | Wizard left rail color-coded by `STAGE_BY_LAYER` |
 | DAG editor | Planned in static app | Planned in wizard P3 (React Flow embed) |
 | Pipeline viz | — | `macroforecast.adapters.kedro` + `kedro viz` (P1, future) |
+
+---
+
+## 2026-05-13 docs theme + content-audit cleanup
+
+### Theme switch
+
+Sphinx theme migrated from `sphinx-rtd-theme` to `pydata-sphinx-theme>=0.15`,
+with `sphinx-design>=0.5` enabled. The pydata family aligns macroforecast
+docs visual identity with statsmodels / numpy / pandas / sklearn (same
+statistical / forecasting domain). The JAX `sphinx-book-theme` was
+evaluated and rejected as too casual for a forecasting framework.
+
+| Concern | Before | After |
+|---------|--------|-------|
+| `[project.optional-dependencies].docs` | `sphinx-rtd-theme>=2.0` | `pydata-sphinx-theme>=0.15` + `sphinx-design>=0.5` |
+| `docs/conf.py` `html_theme` | `sphinx_rtd_theme` | `pydata_sphinx_theme` |
+| `docs/conf.py` `extensions` | (no sphinx_design) | appended `sphinx_design` |
+| `docs/conf.py` `html_static_path` | `[]` | `["_static"]` |
+| `docs/conf.py` `html_theme_options` | rtd nav-depth / collapse / sticky | pydata logo / github_url / use_edit_page_button / show_toc_level / show_nav_level / header_links_before_dropdown / icon_links / footer_start / footer_end |
+| `docs/conf.py` `html_context` | rtd `display_github` / `conf_py_path` | pydata `doc_path` / `default_mode=auto` |
+| `docs/_static/` | absent | created with `.gitkeep` |
+
+`sphinx-build -W --keep-going docs docs/_build/html` succeeds with zero
+warnings under the new theme.
+
+### Content-audit fixes (v0.9.0 stable)
+
+- **HIGH-1 / HIGH-2 dead-module purge** (`macroforecast.execution` and
+  `macroforecast.compiler` no longer exist; only `macroforecast.core` is
+  authoritative):
+  - `docs/for_researchers/runtime_support.md` -- full rewrite of the
+    Layer Support table; intro purged of `macroforecast.execution`
+    legacy-engine paragraph; closing "Use legacy execution APIs"
+    paragraph removed.
+  - `docs/for_researchers/understanding_output.md` -- legacy
+    `predictions.csv` / `metrics.json` paragraph removed; metric /
+    test / importance lists refreshed to v0.9.0 scope.
+  - `docs/for_researchers/quickstart.md` -- "Legacy Compiler Path"
+    section deleted; primary example switched from
+    `execute_minimal_forecast` to `mf.run(...)`.
+  - `docs/for_researchers/first_study.md` -- Execute block switched
+    from `execute_minimal_forecast` to `mf.run(...)`.
+  - `docs/for_recipe_authors/data_policies.md` -- 5 `_apply_*` policy
+    Functions & features blocks rewritten to abstract layer-contract
+    prose anchored to `macroforecast.core.layers.l1` AxisSpec and
+    `macroforecast.scaffold.option_docs.l1` per-value docstrings.
+  - `docs/for_recipe_authors/data/horizon.md` -- min_train_size /
+    training_start_rule / oos_period / overlap_handling Functions &
+    features rewritten to L1/L4/L6 runtime-contract prose.
+  - `docs/for_recipe_authors/data/benchmark.md` -- benchmark_family
+    / predictor_family / variable_universe / deterministic_components
+    Functions & features rewritten to L1/L4 runtime-contract prose.
+  - `docs/architecture/foundation.md` -- Current Authority block
+    rewritten to v0.9.0 `macroforecast.api` /
+    `macroforecast.core` / `macroforecast.scaffold` stack.
+  - `docs/architecture/layer0/{study_scope,axis_type,index}.md` --
+    role-noun "compiler" swapped to "runtime" (8 hits).
+
+- **HIGH-3 / HIGH-4 stale content refresh**:
+  - `runtime_support.md` Layer Support table -- L4 now lists 35+
+    families; L6 lists full Hansen MCS / SPA / Reality Check /
+    Romano-Wolf StepM + HAC kernels; L7 lists 30 importance ops
+    (incl. SHAP / gradient / effect / VAR / temporal); L1 lists all
+    five policy axes; L8 honestly notes Parquet / HTML rendering
+    still partial.
+  - `understanding_output.md` -- metrics_all_cells.csv now reflects
+    four metric families (point / relative / density / direction)
+    plus L5.B/C/D aggregations; tests_summary.json reflects
+    Giacomini-Rossi + Hansen MCS / SPA / RC / StepM + density DQ +
+    HAC kernels; importance_summary.json reflects SHAP / gradient /
+    effect / VAR / temporal / advanced families.
+
+- **HIGH-5 entry-point consolidation**: `quickstart.md` and
+  `first_study.md` switched from internal
+  `macroforecast.core.execute_minimal_forecast` to the public
+  `mf.run(...)`.
+
+- **MEDIUM**: `simple_api/index.md` API status v0.8.6 -> v0.9.0;
+  `quickstart.md` Note-on-output-dir clarified to document the
+  current code-side default (`./macrocast_output/`) without
+  endorsing it (source change deferred);
+  `architecture/layer2/index.md` dropped `(since v0.2.5)` /
+  `(since v0.8.6)` pre-release stamps;
+  `for_researchers/fred_datasets/*.md` `Generated:` stamp manually
+  bumped 2026-04-30 -> 2026-05-13 (autogen `tools/generate_fred_dataset_docs.py`
+  could not reach FRED endpoints from server1).
+
+- **LOW**: `recipe_gallery.md` heading counts L0/L1/L2 5 -> 6 and L3
+  5 -> 4 (table totals unchanged at 38);
+  `simple_api/quickstart.md` notes the simple-API `"ar"` string
+  corresponds to the canonical v0.9.0 `ar_p` model family.
+
+### Outstanding follow-ups (out of scope for 2026-05-13)
+
+- Logo asset for `docs/_static/` (only `.gitkeep` exists today; pydata
+  `html_theme_options["logo"]` falls back to text "macroforecast").
+- Version-switcher dropdown for pydata theme (requires versioned RTD
+  build infrastructure; deferred).
+- `docs/architecture/foundation.md` "Registry Migration Plan" /
+  "Capability Counts" sections are stylistically anachronistic now
+  that the legacy stack is gone -- next docs-only cycle can
+  restructure them.
+- `tools/generate_fred_dataset_docs.py` `OUT_DIR` currently points to
+  the legacy `docs/fred_dataset/` path; the live FRED docs tree is
+  at `docs/for_researchers/fred_datasets/`. The autogen tool needs
+  its OUT_DIR updated and re-tested when FRED endpoints are
+  reachable again.
+- `macroforecast.core.types` / `core/layers/l8.py` still default the
+  L8 output directory to `./macrocast_output/`. Docs now document
+  this honestly; a follow-up workflow-1 cycle can flip the default
+  to `./macroforecast_output/`.

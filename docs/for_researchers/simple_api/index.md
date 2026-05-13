@@ -2,7 +2,7 @@
 
 This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.
 
-> **API status (v0.8.6)**: every `mf.forecast` / `mf.Experiment` method
+> **API status (v0.9.0)**: every `mf.forecast` / `mf.Experiment` method
 > shown on these pages is implemented. The `Experiment.use_*` hooks
 > (`use_fred_sd_selection`, `use_fred_sd_state_group`,
 > `use_fred_sd_variable_group`, `use_mixed_frequency_representation`,

@@ -41,8 +41,8 @@ Declares **which observations count as training data, which count as OOS, and ho
 
 ### Functions & features
 
-- `macroforecast.raw.windowing._resolve_min_train_obs(spec, model_family, target, horizon)` — the dispatch implementation, re-used from the windowing module (previously dead code; live in v1.0).
-- `macroforecast.execution.build._minimum_train_size(recipe, *, horizon=None)` — the execution-layer entry point. Falls back to the largest recipe horizon when an explicit horizon is not supplied (conservative).
+- `macroforecast.raw.windowing._resolve_min_train_obs(spec, model_family, target, horizon)` — the dispatch implementation, re-used from the windowing module.
+- The L1 data-contract runtime calls the resolver per-cell with the active model family, target, and horizon. When no explicit horizon is supplied the largest recipe horizon is used (conservative).
 
 ### Recipe usage
 
@@ -77,8 +77,8 @@ path:
 
 ### Functions & features
 
-- Compiler-side validation in `macroforecast.compiler.build`'s `_execution_status` emits the guard.
-- `macroforecast.execution.build._build_predictions` resolves the date to an index floor via `target_series.index.searchsorted`, then applies it as a `max(base_start_idx, fixed_start_idx)` in `_rows_for_horizon`.
+- Compile-time validation runs in `macroforecast.core` recipe validation and emits the guard.
+- At runtime the L1 panel-builder resolves the date to an index floor via `target_series.index.searchsorted`, then applies it as a `max(base_start_idx, fixed_start_idx)` in the per-cell origin plan.
 
 ### Dropped values
 
@@ -116,9 +116,7 @@ path:
 
 ### Functions & features
 
-- `macroforecast.execution.nber.NBER_RECESSIONS` — frozen fixture of 12 recessions from 1948 to 2020 (NBER Business Cycle Dating Committee).
-- `macroforecast.execution.nber.is_recession(date)` / `is_expansion(date)` — scalar membership helpers.
-- `macroforecast.execution.nber.filter_origins_by_regime(origin_plan, index, regime)` — filters an `_rows_for_horizon` origin plan in place.
+- NBER recession fixture (12 recessions, 1948-2020) and the `is_recession` / `is_expansion` / `filter_origins_by_regime` helpers live in the L1 data-contract runtime. The fixture is sourced from the NBER Business Cycle Dating Committee.
 - The filter is applied after `origin_plan` is finalised and before per-origin computation, so refit_policy state is unaffected.
 
 ### Dropped values
@@ -157,8 +155,8 @@ path:
 
 ### Functions & features
 
-- Compiler-side guard in `macroforecast.compiler.build._execution_status`.
-- Stat test HAC path already implemented in `macroforecast.execution.build._compute_dm_hln_test` / `_compute_dm_modified_test` with `dependence_correction="nw_hac"`.
+- Compile-time guard runs in `macroforecast.core` recipe validation.
+- The HAC-adjusted DM (HLN / modified-DM) stat tests are computed by the L6 runtime with `dependence_correction="nw_hac"`.
 
 ### Dropped values
 

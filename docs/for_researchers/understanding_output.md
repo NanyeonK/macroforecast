@@ -1,10 +1,10 @@
 # Understanding Output
 
-This page documents the current `macroforecast.core.runtime` output shape. Older `macroforecast.execution` runs may still write legacy files such as `predictions.csv`, `metrics.json`, and `artifact_manifest.json`; the layer-contract runtime writes the L8 directory described here.
+This page documents the v0.9.0 L8 output directory written by `mf.run(...)` / `mf.forecast(...)` / `mf.Experiment(...)`. There is no legacy file layout to disambiguate against.
 
 ## L8 Directory Structure
 
-With `8_output` enabled, `execute_minimal_forecast` writes to `leaf_config.output_directory`.
+With `8_output` enabled, the runtime writes to `leaf_config.output_directory`.
 
 Typical directory:
 
@@ -45,17 +45,46 @@ One row per `(model_id, target, horizon, origin)` forecast.
 
 ## metrics_all_cells.csv
 
-L5 point and relative metrics. Current core runtime materializes:
+L5 metrics organised into four families.
+
+**Point metrics**
 
 | Metric | Definition |
 |---|---|
 | `mse` | Mean squared error |
 | `rmse` | Square root of MSE |
 | `mae` | Mean absolute error |
-| `relative_mse` | Model MSE divided by benchmark MSE, when exactly one benchmark exists |
-| `r2_oos` | `1 - relative_mse` |
+| `med_ae` | Median absolute error |
+| `mape` | Mean absolute percentage error |
+| `theil_u1` | Theil U1 |
+| `theil_u2` | Theil U2 |
+
+**Relative metrics** (require exactly one benchmark)
+
+| Metric | Definition |
+|---|---|
+| `relative_mse` | Model MSE divided by benchmark MSE |
 | `relative_mae` | Model MAE divided by benchmark MAE |
 | `mse_reduction` | Benchmark MSE minus model MSE |
+| `r2_oos` | `1 - relative_mse` |
+
+**Density metrics**
+
+| Metric | Definition |
+|---|---|
+| `log_score` | Mean log predictive density |
+| `crps` | Continuous Ranked Probability Score |
+| `interval_score` | Winkler interval score |
+| `coverage_rate` | Empirical coverage of prediction intervals |
+
+**Direction metrics**
+
+| Metric | Definition |
+|---|---|
+| `success_ratio` | Sign-match fraction |
+| `pesaran_timmermann` | Pesaran-Timmermann directional accuracy statistic |
+
+**Aggregations** controlled by L5.B/C/D axes: `per_subperiod`, `by_predictor_block` (Shapley-share), `per_horizon_then_mean`, `top_k_worst`.
 
 ## ranking.csv
 
@@ -65,29 +94,32 @@ The L5 ranking table sorted by the resolved ranking metric. For loss metrics, lo
 
 L6 writes a JSON representation of `L6TestsArtifact` when `saved_objects` includes `tests`.
 
-Current core runtime can populate:
+The runtime populates:
 
-- `equal_predictive_results`
-- `nested_results`
-- `cpa_results`
-- `multiple_model_results`
-- `direction_results`
-- `residual_results`
-
-The values are descriptive/minimal test dictionaries. Exact bootstrap MCS/SPA/RC/StepM, HAC critical values, and density/interval tests require specialized runtime support.
+- `equal_predictive_results` -- DM (HLN), Giacomini-White, Diebold-Mariano-Pesaran multi-horizon, HLN encompassing; Newey-West / Andrews / Parzen HAC kernels
+- `nested_results` -- Clark-West
+- `cpa_results` -- Giacomini-Rossi 2010 rolling fluctuation (simulated CV) + Rossi-Sekhposyan
+- `multiple_model_results` -- Hansen MCS, SPA, White Reality Check, Romano-Wolf StepM (stationary bootstrap, auto-tuned block length)
+- `density_results` -- Engle-Manganelli DQ, log_score / CRPS pair tests
+- `direction_results` -- Pesaran-Timmermann
+- `residual_results` -- autocorrelation, heteroskedasticity, normality diagnostics
 
 ## importance_summary.json
 
 L7 writes a JSON representation of `L7ImportanceArtifact` when `saved_objects` includes `importance`.
 
-Current core runtime can populate:
+The runtime populates:
 
-- `global_importance` from linear coefficients and permutation-style importance,
-- `group_importance` from `group_aggregate`,
-- `lineage_importance` from L3 metadata,
-- `L7TransformationAttributionArtifact` when `l7_transformation_attribution_v1` is requested.
+- `global_importance` -- linear coef, MDI tree, BFR permutation, Strobl unbiased permutation, LOFO
+- `shap_importance` -- SHAP tree / kernel / linear / interaction / deep (`[shap]` extra)
+- `gradient_importance` -- gradient_shap, integrated_gradients, saliency_map, deep_lift via captum (`[deep]` extra)
+- `effect_importance` -- partial_dependence, ALE, Friedman H^2
+- `var_decomposition` -- FEVD, historical_decomposition, orthogonalised_irf, generalized_irf
+- `group_importance` from `group_aggregate`; `lineage_importance` from `lineage_attribution`; `L7TransformationAttributionArtifact` from `transformation_attribution`
+- `temporal_importance` -- `rolling_recompute`, `bootstrap_jackknife`
+- Advanced: `mrf_gtvp`, `dual_decomposition`, `oshapley_vi`, `pbsv`, `attention_weights`
 
-Advanced SHAP backends, neural-gradient methods, VAR FEVD/IRF, and figure rendering are outside the current core runtime path.
+Figure rendering for these artifacts is governed by the L7.B `figure_type` / `figure_format` axes.
 
 ## Diagnostic JSON Files
 

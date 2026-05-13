@@ -31,6 +31,7 @@ The default profile is `macroforecast-default-v1`. It uses a conservative baseli
 - revised information set
 - expanding-window point forecast
 - `ar` model
+  - the simple-API string `"ar"` corresponds to the v0.9.0 `ar_p` model family in the L4 fit graph (declared in `macroforecast/defaults.py`; the L4 runtime and `api_high.py` key on the canonical `ar_p` name).
 - `zero_change` benchmark
 - `mse` primary metric
 - official FRED-MD/FRED-QD transformation codes when available
