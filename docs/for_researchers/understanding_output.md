@@ -9,7 +9,7 @@ With `8_output` enabled, `execute_minimal_forecast` writes to `leaf_config.outpu
 Typical directory:
 
 ```text
-macrocast_output/<name>/
+macroforecast_output/<name>/
   manifest.json              # L8 provenance and saved object inventory
   recipe.json                # JSON copy of the resolved input recipe
   summary/

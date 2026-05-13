@@ -67,7 +67,7 @@ recipe = """
   fixed_axes:
     saved_objects: [forecasts, metrics, ranking]
   leaf_config:
-    output_directory: ./macrocast_output/quickstart/
+    output_directory: ./macroforecast_output/quickstart/
 """
 
 result = execute_minimal_forecast(recipe)
@@ -89,7 +89,7 @@ output = result.sink("l8_artifacts_v1")
 With `8_output` enabled, the runtime writes:
 
 ```text
-macrocast_output/quickstart/
+macroforecast_output/quickstart/
   manifest.json
   recipe.json
   summary/
@@ -145,3 +145,11 @@ Older docs and recipes that use `macroforecast.compiler.compile_recipe_yaml` sti
 - [Runtime Support Matrix](runtime_support.md) — current support boundary
 - [Your First Study](first_study.md) — extend the quickstart to diagnostics, L6, L7, and L8 export
 - [Understanding Output](understanding_output.md) — output directory and artifact guide
+
+---
+
+**Note on output directory naming**: The examples above use
+`macroforecast_output/` as the output path. The runtime default (set in
+`macroforecast.core.types` and `core/layers/l8.py`) is the historical
+`macrocast_output/` for backward compatibility. Override it explicitly with
+`output_directory` in the `8_output.leaf_config` block, as shown above.

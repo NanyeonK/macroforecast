@@ -6,6 +6,7 @@
 [![ci-docs](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml)
 [![ci-typecheck](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-typecheck.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-typecheck.yml)
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
+[![docs](https://readthedocs.org/projects/macroforecast/badge/?version=latest)](https://macroforecast.readthedocs.io/en/latest/)
 
 > **v0.9.0a0** — 1329 tests passing locally as of 2026-05-12. The CI badges above
 > reflect live build status and replace the previously static

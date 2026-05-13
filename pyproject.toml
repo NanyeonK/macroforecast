@@ -21,6 +21,12 @@ dependencies = [
     "cvxpy>=1.4",
 ]
 
+[project.urls]
+Documentation = "https://macroforecast.readthedocs.io/"
+Repository = "https://github.com/NanyeonK/macroforecast"
+Issues = "https://github.com/NanyeonK/macroforecast/issues"
+Changelog = "https://github.com/NanyeonK/macroforecast/blob/main/CHANGELOG.md"
+
 [project.optional-dependencies]
 tuning = ["optuna>=3.0"]
 shap = ["shap>=0.47"]

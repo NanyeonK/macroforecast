@@ -14,7 +14,7 @@
 | Modify the package source / contribute | [Contributors](for_contributors/index.md) |
 | **Understand the design** — why layers / sub-layers / contracts are split this way (read top-to-bottom) | [Architecture](architecture/index.md) — design narrative, ~18 prose pages |
 | **Look up an option** — what does `apply_official_tcode` do, what models are L7 `shap_tree` compatible with, etc. (search / browse) | [Encyclopedia](encyclopedia/index.md) — auto-generated reference, 189 pages |
-| See replication studies (bundled examples + 4 research walkthroughs) | [Replications](replications/index.md) |
+| See replication studies (bundled examples + 3 research walkthroughs today, 4+ more in v0.9.1) | [Replications](replications/index.md) |
 | Visually explore the layer / DAG topology | [Navigator](navigator/index.md) |
 | Hit an error or something doesn't work | [Troubleshooting & FAQ](troubleshooting.md) |
 

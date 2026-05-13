@@ -11,6 +11,7 @@ Updated 2026-05-12 (Phase F-14-17: v0.9.0 stable prereq LOW batch — F-14 hard-
 Updated 2026-05-13 (Phase F-02: slot 02 phantom replace — Marcellino-Schumacher (2010) Factor MIDAS; new `factor_midas_nowcast()` helper; 1431 → 1432 tests; run `2026-05-13-phase-f02-fmidas-replace`).
 Updated 2026-05-13 (Phase DOCS-1: `_OP_U_MIDAS` description sync to F-07-R defaults; Sphinx csv→text fence fix; run `2026-05-13-phase-docs1-umidas-option-docs-sync`).
 Updated 2026-05-13 (Phase MC-RECAL: TEST-R4-01 paper-symmetric re-calibration — both U-MIDAS eq.(20) and MIDAS eq.(18) now include AR(1) y-lag; MIDAS baseline upgraded to full common-factor restriction `(1-β_1 L^k)`; mean_ratio 0.9928 → 0.9173 (paper anchor 0.91, 0.80% rel error); production code untouched; run `2026-05-13-phase-mc-recal-paper-symmetric`).
+Updated 2026-05-13 (Phase DOCS-CLEANUP: 6-item batch docs cleanup + RTD migration — archive 3 v0.89/v0.9 audit docs, remove 4 replication stubs, update example output paths to `macroforecast_output/`, update docs index, add RTD badge to README, add `[project.urls]` to pyproject.toml; run `2026-05-13-phase-docs-cleanup-and-rtd-migration`).
 
 ## Overview
 
