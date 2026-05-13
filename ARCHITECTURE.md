@@ -12,6 +12,7 @@ Updated 2026-05-13 (Phase F-02: slot 02 phantom replace — Marcellino-Schumache
 Updated 2026-05-13 (Phase DOCS-1: `_OP_U_MIDAS` description sync to F-07-R defaults; Sphinx csv→text fence fix; run `2026-05-13-phase-docs1-umidas-option-docs-sync`).
 Updated 2026-05-13 (Phase MC-RECAL: TEST-R4-01 paper-symmetric re-calibration — both U-MIDAS eq.(20) and MIDAS eq.(18) now include AR(1) y-lag; MIDAS baseline upgraded to full common-factor restriction `(1-β_1 L^k)`; mean_ratio 0.9928 → 0.9173 (paper anchor 0.91, 0.80% rel error); production code untouched; run `2026-05-13-phase-mc-recal-paper-symmetric`).
 Updated 2026-05-13 (Phase DOCS-CLEANUP: 6-item batch docs cleanup + RTD migration — archive 3 v0.89/v0.9 audit docs, remove 4 replication stubs, update example output paths to `macroforecast_output/`, update docs index, add RTD badge to README, add `[project.urls]` to pyproject.toml; run `2026-05-13-phase-docs-cleanup-and-rtd-migration`).
+Updated 2026-05-13 (Phase Stage Labels: new `macroforecast/core/stages.py` module — `STAGE_BY_LAYER` 13-entry dict + `stage_of()` helper + `StageLabel` type alias; 3 additive exports to `macroforecast.core`; 1432 → 1505 tests; run `2026-05-13-phase-stage-labels`).
 
 ## Overview
 
@@ -1189,3 +1190,156 @@ graph TD
 | `_u_midas` (`core/runtime.py:13722`) | Runtime implementation — unchanged | No |
 | `_bic_select_k` (`core/runtime.py:13634`) | BIC lag-order selection — unchanged | No |
 | `u_midas()` (`recipes/paper_methods.py:3117`) | Paper helper — unchanged | No |
+
+---
+
+## Phase Stage Labels: Layer → Stage Mapping (post-v0.9.0)
+
+> Run `2026-05-13-phase-stage-labels`. Workflow 1 (planner → builder → tester → reviewer → scriber → shipper).
+> Trigger: user request 2026-05-13 — establish a standard label system for the 13-layer architecture so the Kedro adapter (P1, future) and Wizard P2 (future) can assign `kedro viz` color bands and navigator rail color coding from a single authoritative dict.
+> Reviewer verdict: GO (PASS WITH NOTE) — 2 non-blocking notes: T-73 pre-existing env gap (hemisphere PyTorch) + future import-path validation advisory.
+
+### What Changed
+
+| File | Action | Lines | Description |
+|------|--------|-------|-------------|
+| `macroforecast/core/stages.py` | CREATE | 93 | `STAGE_BY_LAYER` dict + `stage_of()` helper + `StageLabel` type alias |
+| `macroforecast/core/__init__.py` | MODIFY | +5 | `from .stages import ...` + 3 `__all__` entries |
+| `tests/core/test_stages.py` | CREATE | 555 | 73 test scenarios (T-01 through T-73) |
+
+Test count: **1432 → 1505** (+73 new scenarios; zero new regressions).
+
+### Stage Label Mapping (13 entries, authoritative)
+
+| Layer ID | Stage Label | Category |
+|----------|-------------|----------|
+| `l0` | `meta` | base |
+| `l1` | `data` | base |
+| `l2` | `clean` | base |
+| `l3` | `features` | base |
+| `l4` | `forecasts` | base |
+| `l5` | `evaluation` | base |
+| `l6` | `tests` | base |
+| `l7` | `interpretation` | base |
+| `l8` | `artifacts` | base |
+| `l1_5` | `data_diagnostic` | diagnostic |
+| `l2_5` | `clean_diagnostic` | diagnostic |
+| `l3_5` | `features_diagnostic` | diagnostic |
+| `l4_5` | `model_diagnostic` | diagnostic |
+
+The mapping is a bijection: all 13 labels are distinct. Diagnostic layers (L1.5–L4.5) carry the `_diagnostic` suffix. The mapping is the authoritative source of truth; any future `LayerId` added to `dag.py` must also receive an entry here.
+
+### Module Structure (macroforecast/core — stages.py position)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    subgraph API["API layer"]
+        core_init["core/__init__.py<br/>(public exports)"]
+    end
+    subgraph Core["Core modules"]
+        stages["core/stages.py<br/>STAGE_BY_LAYER + stage_of"]
+        dag["core/dag.py<br/>LayerId Literal"]
+        types["core/types.py<br/>artifact dataclasses"]
+        layer_specs["core/layer_specs.py<br/>LayerImplementationSpec"]
+        registry["core/layers/registry.py<br/>LAYER_SINKS"]
+    end
+    subgraph Consumers["Future consumers (not yet implemented)"]
+        kedro["Kedro adapter (P1)<br/>kedro viz layer tag"]
+        wizard["Wizard P2<br/>navigator color coding"]
+    end
+
+    core_init --> stages
+    stages --> dag
+    kedro -.-> stages
+    wizard -.-> stages
+    registry -.-> stages
+
+    style stages fill:#1e90ff,stroke:#1565c0,color:#fff
+    style core_init fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Function Call Graph (stage_of)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    caller["caller: stage_of(layer_id=X)<br/>or stage_of(sink_name=Y)"]
+    validate["validate: exactly one arg provided<br/>raises ValueError if both or neither"]
+    path_a["Path A: layer_id lookup<br/>STAGE_BY_LAYER[layer_id]"]
+    path_b["Path B: prefix extraction<br/>parts = sink_name.split('_')"]
+    diag_check{"parts[1] == '5'?"}
+    build_diag["candidate = parts[0] + '_5'<br/>(diagnostic layer, e.g. l1_5)"]
+    build_reg["candidate = parts[0]<br/>(regular layer, e.g. l3)"]
+    lookup["STAGE_BY_LAYER[candidate]"]
+    found{"found?"}
+    ok["return StageLabel"]
+    err["raise ValueError<br/>(with !r input + sorted valid keys)"]
+
+    caller --> validate
+    validate --> path_a
+    validate --> path_b
+    path_b --> diag_check
+    diag_check -- yes --> build_diag
+    diag_check -- no --> build_reg
+    build_diag --> lookup
+    build_reg --> lookup
+    path_a --> found
+    lookup --> found
+    found -- yes --> ok
+    found -- no --> err
+
+    style caller fill:#1e90ff,stroke:#1565c0,color:#fff
+    style path_a fill:#1e90ff,stroke:#1565c0,color:#fff
+    style path_b fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Data Flow (sink name resolution)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    sink["sink_name: e.g. 'l1_5_diagnostic_v1'"]
+    split["split on '_'<br/>parts = ['l1', '5', 'diagnostic', 'v1']"]
+    prefix_check{"parts[0] matches ^l\\d+$ ?"}
+    bad_prefix["raise ValueError<br/>(non-layer prefix)"]
+    five_check{"parts[1] == '5' ?"}
+    diag_id["layer_id = parts[0] + '_5'<br/>e.g. 'l1_5'"]
+    base_id["layer_id = parts[0]<br/>e.g. 'l1'"]
+    sbl_lookup["STAGE_BY_LAYER[layer_id]"]
+    known{"known layer?"}
+    stage_out["return stage label<br/>e.g. 'data_diagnostic'"]
+    unknown_err["raise ValueError<br/>(layer not in mapping)"]
+
+    sink --> split
+    split --> prefix_check
+    prefix_check -- no --> bad_prefix
+    prefix_check -- yes --> five_check
+    five_check -- yes --> diag_id
+    five_check -- no --> base_id
+    diag_id --> sbl_lookup
+    base_id --> sbl_lookup
+    sbl_lookup --> known
+    known -- yes --> stage_out
+    known -- no --> unknown_err
+
+    style sink fill:#1e90ff,stroke:#1565c0,color:#fff
+    style stage_out fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Changed Modules / Functions Reference
+
+| Function/Module | Purpose | Key Dependencies | Changed in Stage Labels |
+|---|---|---|---|
+| `STAGE_BY_LAYER` (`core/stages.py`) | 13-entry bijective LayerId → StageLabel mapping | none (stdlib only) | Yes — NEW constant |
+| `stage_of` (`core/stages.py`) | Resolve layer_id or sink_name to StageLabel; raises ValueError on unknown input | `STAGE_BY_LAYER`, `re` (stdlib) | Yes — NEW function |
+| `StageLabel` (`core/stages.py`) | Type alias `str` for documentation and static analysis | none | Yes — NEW type alias |
+| `macroforecast.core.__init__` | Public API surface; `__all__` list | `stages.py` (new import) | Yes — +1 import line, +3 `__all__` entries |
+| `macroforecast.core.dag` | `LayerId` Literal (13 values) | — | No — unchanged; keys verified |
+| `macroforecast.core.layers.registry` | `LAYER_SINKS` dict with 18 sink contracts | — | No — unchanged; sinks verified |
+
+### Future Consumer Notes
+
+- **Kedro adapter (P1, not yet implemented)**: Call `STAGE_BY_LAYER[layer_id]` to obtain the Kedro `DataCatalog` `layer` metadata string. No additional interface beyond the existing dict is required.
+- **Wizard P2 (not yet implemented)**: Call `STAGE_BY_LAYER.get(layer_id)` to look up group keys for navigator rail color coding and Mosaic Cube grouping. Wizard defines its own color-to-stage mapping independently.
+- **Sink contract validation (future)**: New sink registration can call `stage_of(sink_name=new_sink)` to assert the sink belongs to a known layer, turning naming-convention violations into explicit `ValueError` at registration time.

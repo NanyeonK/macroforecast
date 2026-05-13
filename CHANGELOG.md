@@ -3,6 +3,40 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [Unreleased]
+
+### Added
+
+- `macroforecast.core.stages`: new module exposing `STAGE_BY_LAYER` (13-entry
+  `dict[str, str]` bijection mapping every `LayerId` value to its stage label),
+  `stage_of(*, layer_id, sink_name)` helper (resolves a layer ID or a sink
+  contract name to its stage label; raises `ValueError` on unknown input), and
+  `StageLabel` type alias (`str`). Three additive public exports added to
+  `macroforecast.core.__all__` — no breaking changes. Test count: 1432 → 1505
+  (+73 scenarios, T-01 through T-73; zero new regressions). Used by future Kedro
+  adapter (P1) for `kedro viz` layer tag assignment and Wizard P2 for navigator
+  rail color coding and Mosaic Cube grouping. Run: `2026-05-13-phase-stage-labels`.
+
+  **Stage labels** (9 base + 4 diagnostic):
+
+  | Layer | Stage label |
+  |-------|-------------|
+  | `l0` | `meta` |
+  | `l1` | `data` |
+  | `l2` | `clean` |
+  | `l3` | `features` |
+  | `l4` | `forecasts` |
+  | `l5` | `evaluation` |
+  | `l6` | `tests` |
+  | `l7` | `interpretation` |
+  | `l8` | `artifacts` |
+  | `l1_5` | `data_diagnostic` |
+  | `l2_5` | `clean_diagnostic` |
+  | `l3_5` | `features_diagnostic` |
+  | `l4_5` | `model_diagnostic` |
+
+---
+
 ## [0.9.0] -- 2026-05-13 -- "v0.9.0 stable cut (F-02 + DOCS-1 + MC-RECAL closure)"
 
 After the 16-paper full-coverage alpha pre-release (`v0.9.0a0`, 2026-05-12), the

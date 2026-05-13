@@ -96,6 +96,7 @@ from .validator import (
     validate_dag,
     validate_recipe,
 )
+from .stages import STAGE_BY_LAYER, StageLabel, stage_of
 from .yaml import LAYER_YAML_KEYS, LayerYamlSpec, RecipeMetadata, normalize_to_dag_form, parse_dag_form, parse_recipe_yaml
 
 __all__ = [
@@ -158,9 +159,11 @@ __all__ = [
     "Rule",
     "RuntimeEnvironment",
     "RuntimeResult",
+    "STAGE_BY_LAYER",
     "Series",
     "SourceContext",
     "SourceSelector",
+    "StageLabel",
     "SubLayerSpec",
     "SweepCombination",
     "SweepSpec",
@@ -211,6 +214,7 @@ __all__ = [
     "replicate",
     "replicate_recipe",
     "resolve_source_selector",
+    "stage_of",
     "validate_dag",
     "validate_recipe",
     "validate_sweepable_params",
