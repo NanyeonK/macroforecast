@@ -12,60 +12,39 @@
 :gutter: 3
 :class-container: pick-your-path
 
-:::{grid-item-card} 🚀 Researchers
-:link: for_researchers/index
+:::{grid-item-card} 🚀 Getting started
+:link: getting_started
 :link-type: doc
 
-Run a forecast on FRED data and read results.
+Install, quickstart, your first complete study.
 :::
 
-:::{grid-item-card} 📝 Recipe authors
-:link: for_recipe_authors/index
+:::{grid-item-card} 📝 User guide
+:link: user_guide
 :link-type: doc
 
-Write a custom recipe with your model and preprocessor.
+Recipe authoring, custom models, FRED & custom datasets.
 :::
 
-:::{grid-item-card} 🛠 Contributors
-:link: for_contributors/index
+:::{grid-item-card} 📖 Reference
+:link: reference
 :link-type: doc
 
-Modify the package source.
-:::
-
-:::{grid-item-card} 📐 Architecture
-:link: architecture/index
-:link-type: doc
-
-Why layers and contracts are split this way — design narrative.
-:::
-
-:::{grid-item-card} 📖 Encyclopedia
-:link: encyclopedia/index
-:link-type: doc
-
-Look up every recipe option (auto-generated, 189 pages).
+Encyclopedia of every option + architecture design narrative.
 :::
 
 :::{grid-item-card} 🔁 Replications
-:link: replications/index
+:link: replications
 :link-type: doc
 
-Bundled studies and research walkthroughs.
+Paper replications, recipe gallery, layer navigator.
 :::
 
-:::{grid-item-card} 🧭 Navigator
-:link: navigator/index
+:::{grid-item-card} 🆘 Help
+:link: help
 :link-type: doc
 
-Visually explore the layer and pipeline topology.
-:::
-
-:::{grid-item-card} 🆘 Troubleshooting
-:link: troubleshooting
-:link-type: doc
-
-Errors, FAQs, common fixes.
+Troubleshooting, contributing, conventions.
 :::
 
 ::::
@@ -106,14 +85,9 @@ MIT
 :hidden:
 :maxdepth: 1
 
-install
-for_researchers/index
-for_recipe_authors/index
-for_contributors/index
-architecture/index
-navigator/index
-replications/index
-encyclopedia/index
-troubleshooting
-CONVENTIONS
+getting_started
+user_guide
+reference
+replications
+help
 ```
