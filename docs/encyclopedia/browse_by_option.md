@@ -300,6 +300,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`mad_clip_raw`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`mae`](l5/axes/point_metrics.md) | L5 | `point_metrics` | operational |
 | [`mae`](l5/axes/primary_metric.md) | L5 | `primary_metric` | operational |
+| [`maf_per_variable_pca`](l3/axes/op.md) | L3 | `op` | operational |
 | [`manual_function`](l4_5/axes/back_transform_method.md) | L4.5 | `back_transform_method` | operational |
 | [`mape`](l5/axes/point_metrics.md) | L5 | `point_metrics` | operational |
 | [`mape`](l5/axes/primary_metric.md) | L5 | `primary_metric` | operational |
