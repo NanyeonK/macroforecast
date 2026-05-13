@@ -97,6 +97,40 @@ Run `2026-05-13-phase-f02-fmidas-replace`. Closes the F-02 MEDIUM prereq.
   (2011) "MIDAS vs. Mixed-Frequency VAR." The correct DOI for Marcellino-Schumacher
   (2010) is 10.1111/j.1468-0084.2010.00591.x (OBES). Corrected in all code references.
 
+### Phase DOCS-1 u_midas option_docs sync + Sphinx csv fix (2026-05-13)
+
+Run `2026-05-13-phase-docs1-umidas-option-docs-sync`. Closes the DOCS-1 LOW prereq (follow-on to F-02).
+
+* **DOCS-1** — `macroforecast/scaffold/option_docs/l3.py` `_OP_U_MIDAS` description
+  updated to reflect the F-07-R paper-faithful implementation. Key changes:
+  OLS is now documented as the default estimator (paper §3.2 p.11 "estimated by simple
+  OLS"); ridge is noted as an explicit opt-in via `regularization='ridge'`. BIC
+  lag-order selection (`n_lags_high='bic'` default, K_max = ceil(1.5 × freq_ratio))
+  documented per paper §3.2 p.11 + §3.5. AR(1) y-lag term (`include_y_lag=True`
+  helper default, μ₁ term of eq.(20)) documented. Stale wording "ridge / OLS / lasso"
+  and `n_lags_high = 6` removed. Reference block updated to combine the Bundesbank
+  Discussion Paper Series 1 No. 35/2011 and JRSS-A 178(1): 57-82 entries with
+  DOI 10.1111/rssa.12043.
+
+* **Sphinx warning** — `docs/for_researchers/user_data_workflow.md` line 31:
+  fenced code block language identifier changed from `csv` to `text`. Suppresses
+  `WARNING: Pygments lexer name 'csv' is not known [misc.highlighting_failure]`
+  at Sphinx build time without altering the rendered output.
+
+### Phase MC-RECAL paper-symmetric MC re-calibration (2026-05-13)
+
+Run `2026-05-13-phase-mc-recal-paper-symmetric`. Closes the MC-RECAL LOW prereq.
+
+* **MC-RECAL** — `tests/core/test_f07_umidas_tester.py` TEST-R4-01 (paper Table 2
+  anchor) updated to paper-symmetric comparison. Both U-MIDAS (eq.20) and MIDAS
+  baseline (eq.18) now include the AR(1) y-lag term. MIDAS baseline implements
+  the full common-factor restriction `(1 - β_1 L^k) B(L,θ) x_{τk-1}`:
+  `resid = y - β_0 - β_1·y_lag - β_2·agg_t + β_1·β_2·agg_tk` (5-parameter NLS).
+  mean_ratio: 0.9928 (asymmetric, F-07-R4 baseline) → 0.9173 (paper Table 2
+  anchor 0.91, 0.80% rel error). Tolerance [0.79, 1.03] UNCHANGED. Production
+  U-MIDAS code (`runtime.py`, `paper_methods.py`) untouched — F-07-R closure
+  preserved. (Foroni-Marcellino-Schumacher 2011/2015 OBES; Bundesbank DP 35/2011)
+
 ### Remaining v0.9.0 stable prereqs
 
 The following three items must be resolved before the `v0.9.0` stable tag is cut:
@@ -104,8 +138,8 @@ The following three items must be resolved before the `v0.9.0` stable tag is cut
 | Prereq | Severity | Status | Notes |
 |--------|----------|--------|-------|
 | F-02: slot 02 phantom citation — Marcellino-Schumacher 2010 | MEDIUM | CLOSED | `factor_midas_nowcast()` added; slot 02 remapped to OBES 72(4) 518-550. |
-| DOCS-1: `option_docs/l3.py` u_midas description sync + Sphinx csv warning | LOW | OPEN | `u_midas` description drift from v0.9.0a0 implementation; Sphinx warning from csv table. |
-| MC-RECAL: paper-exact symmetric MC re-calibration | LOW | OPEN | Current alpha uses asymmetric calibration; paper uses symmetric. No API change required. |
+| DOCS-1: `option_docs/l3.py` u_midas description sync + Sphinx csv warning | LOW | CLOSED | `_OP_U_MIDAS` description updated to F-07-R defaults (OLS default, BIC lag selection, AR(1) y-lag, DOI); csv→text fence fix. |
+| MC-RECAL: paper-exact symmetric MC re-calibration | LOW | CLOSED | TEST-R4-01 updated to symmetric comparison (both models with AR term); MIDAS baseline upgraded to full common-factor eq.(18) 5-param NLS; mean_ratio 0.9928 → 0.9173 (paper anchor 0.91). |
 
 ---
 

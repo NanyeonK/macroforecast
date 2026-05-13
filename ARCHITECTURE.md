@@ -9,6 +9,8 @@
 Updated 2026-05-12 (Phase D-2g: user_data_workflow.md + custom_function_quickstart.md guides, HEAD `949b6c78`).
 Updated 2026-05-12 (Phase F-14-17: v0.9.0 stable prereq LOW batch — F-14 hard-error / F-15 sparse_macro_factors_risk_premia / F-16 maf_per_variable_pca op / F-17 attach_eval_blocks smoke test; 1417 → 1431 tests, primary commit `c9285077`).
 Updated 2026-05-13 (Phase F-02: slot 02 phantom replace — Marcellino-Schumacher (2010) Factor MIDAS; new `factor_midas_nowcast()` helper; 1431 → 1432 tests; run `2026-05-13-phase-f02-fmidas-replace`).
+Updated 2026-05-13 (Phase DOCS-1: `_OP_U_MIDAS` description sync to F-07-R defaults; Sphinx csv→text fence fix; run `2026-05-13-phase-docs1-umidas-option-docs-sync`).
+Updated 2026-05-13 (Phase MC-RECAL: TEST-R4-01 paper-symmetric re-calibration — both U-MIDAS eq.(20) and MIDAS eq.(18) now include AR(1) y-lag; MIDAS baseline upgraded to full common-factor restriction `(1-β_1 L^k)`; mean_ratio 0.9928 → 0.9173 (paper anchor 0.91, 0.80% rel error); production code untouched; run `2026-05-13-phase-mc-recal-paper-symmetric`).
 
 ## Overview
 
@@ -913,6 +915,25 @@ graph TD
 | `_positive_param` (l3_ops.py) | L3 DAG validator sentinel check | — | Yes — accepts "bic"/"aic" |
 | `test_f07_umidas_tester.py` | Tester-owned MC + correctness tests (19 tests) | `_bic_select_k`, `_u_midas`, `u_midas` | Yes — NEW file |
 
+### MC-RECAL closure (2026-05-13)
+
+Run: `2026-05-13-phase-mc-recal-paper-symmetric`. Reviewer GO 2026-05-13. Closes the MC-RECAL LOW prereq.
+
+TEST-R4-01 paper-symmetric re-calibration (test file only — production code untouched):
+
+- `_compute_umidas_oos_mse`: `include_y_lag=True`; forecast row uses `y_lag1_fore = y_train[-1]` (explicit prepend, not inferred from stacked frame)
+- `_compute_midas_oos_mse_baseline`: 5-parameter NLS with paper eq.(18) full common-factor restriction `(1-β_1 L^k)`; NLS loss: `resid = y - β_0 - β_1 y_lag - β_2 agg_t + β_1 β_2 agg_tk`
+- mean_ratio: 0.9928 (asymmetric F-07-R4 baseline) → 0.9173 (paper Table 2 anchor 0.91, 0.80% rel error)
+- Tolerance [0.79, 1.03] UNCHANGED; F-07-R production closure (`e67f3aaf` + `722a8f3b`) preserved
+
+| Metric | Before (F-07-R4) | After (MC-RECAL) |
+|--------|-----------------|-----------------|
+| U-MIDAS AR term | `include_y_lag=False` | `include_y_lag=True` |
+| MIDAS NLS params | 4-param (no β_1 y-lag) | 5-param + common-factor `(1-β_1 L^k)` |
+| mean_ratio k=3 | 0.9928 | 0.9173 |
+| Tolerance [0.79, 1.03] | UNCHANGED | UNCHANGED |
+| Production code | untouched | untouched |
+
 ---
 
 ## Phase F-14-17: v0.9.0 Stable Prereq LOW Batch (F-14 / F-15 / F-16 / F-17)
@@ -1111,7 +1132,59 @@ graph TD
 | Prereq | Status |
 |--------|--------|
 | F-02: slot 02 phantom | **CLOSED** (this run) |
-| DOCS-1: option_docs/l3.py u_midas + Sphinx csv warning | OPEN |
+| DOCS-1: option_docs/l3.py u_midas + Sphinx csv warning | **CLOSED** (this run) |
 | MC-RECAL: symmetric MC re-calibration | OPEN |
 
-F-02 was the last MEDIUM prereq. Two LOW prereqs remain before v0.9.0 stable cut.
+F-02 was the last MEDIUM prereq. One LOW prereq remains before v0.9.0 stable cut.
+
+---
+
+## Phase DOCS-1 u_midas option_docs sync + Sphinx csv fix (2026-05-13)
+
+> Run `2026-05-13-phase-docs1-umidas-option-docs-sync` — docs-only workflow 3.
+> No source code changes. No test count change.
+
+### What Changed
+
+| File | Change |
+|------|--------|
+| `macroforecast/scaffold/option_docs/l3.py` | `_OP_U_MIDAS` long description, `when_not_to_use`, and `references` updated |
+| `docs/for_researchers/user_data_workflow.md` | Line 31: ` ```csv ` → ` ```text ` |
+| `CHANGELOG.md` | DOCS-1 phase entry added; prereq table row updated OPEN → CLOSED |
+| `ARCHITECTURE.md` | Header updated; prereq table row updated; this section added |
+
+### `_OP_U_MIDAS` Description Changes
+
+The `_OP_U_MIDAS` entry was written before the F-07-R algorithmic fix cycle. It contained stale wording:
+
+| Field | Before | After |
+|-------|--------|-------|
+| Estimator default | "ridge / OLS / lasso" (wrong order, lasso not offered) | OLS default explicit; ridge is explicit opt-in via `regularization='ridge'` |
+| `n_lags_high` default | `n_lags_high = 6` | `n_lags_high = 'bic'` (BIC lag-order selection) |
+| BIC selection | Not mentioned | Documented: K_max = ceil(1.5 × freq_ratio), OLS fit at each K, select K* = argmin BIC |
+| AR(1) y-lag | Not mentioned | Documented: `include_y_lag=True` helper default, μ₁ term of eq.(20) |
+| Regression formula | §2.3 eq.(14) form (no y-lag) | §3.2 eq.(20): `y_{t×k} = μ₀ + μ₁ y_{t×k−k} + ψ₀ x_{t×k−1} + … + ε_{t×k}` |
+| Reference DOI | Not included | DOI 10.1111/rssa.12043 added |
+| Bundesbank DP | Not mentioned | Bundesbank Discussion Paper Series 1, No. 35/2011 added |
+
+### Function Call Graph (DOCS-1 affected surface)
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    op_doc["_OP_U_MIDAS (option_docs/l3.py)"]
+    op_doc --> introspect["scaffold.introspect.operational_options()"]
+    op_doc --> sphinx["Sphinx reference docs"]
+    op_doc --> wizard["Wizard UI option display"]
+    op_doc --> test["test_layer_option_docs_complete[l3-True]"]
+
+    style op_doc fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+| Function/Module | Purpose | Changed in DOCS-1 |
+|---|---|---|
+| `_OP_U_MIDAS` (`option_docs/l3.py:855`) | Option metadata for `u_midas` L3 op — description, references, when_not_to_use | Yes — long_description + when_not_to_use + references |
+| `docs/for_researchers/user_data_workflow.md:31` | User guide CSV fence block | Yes — `csv` → `text` lexer identifier |
+| `_u_midas` (`core/runtime.py:13722`) | Runtime implementation — unchanged | No |
+| `_bic_select_k` (`core/runtime.py:13634`) | BIC lag-order selection — unchanged | No |
+| `u_midas()` (`recipes/paper_methods.py:3117`) | Paper helper — unchanged | No |
