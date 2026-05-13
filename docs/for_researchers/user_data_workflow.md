@@ -28,7 +28,7 @@ FRED panel, see [Merging with FRED-MD or FRED-QD](#merging-with-fred-md-or-fred-
 
 ### Monthly CSV
 
-```csv
+```text
 date,my_target,x1,x2
 1990-01-01,1.23,0.45,2.10
 1990-02-01,1.31,0.47,2.05

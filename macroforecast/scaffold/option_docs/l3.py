@@ -861,12 +861,28 @@ _OP_U_MIDAS = _o(
         "without imposing any weighting structure. For HF column "
         "``col`` and LF index position ``t·m``, emits "
         "``col_lag0, col_lag1, …, col_lag{K-1}`` where "
-        "``col_lagk[t] = frame[col].iloc[t·m − k]``. The downstream L4 "
-        "ridge / OLS / lasso recovers data-driven lag coefficients, "
-        "i.e. the *unrestricted* MIDAS regression ``y_t = α + Σ_k β_k "
-        "x_{t·m − k} + ε_t``.\n\n"
+        "``col_lagk[t] = frame[col].iloc[t·m − k]``.\n\n"
+        "The downstream L4 OLS estimator recovers data-driven lag "
+        "coefficients -- the *unrestricted* MIDAS regression "
+        "(paper §3.2 eq.(20)):\n\n"
+        "``y_{t×k} = μ₀ + μ₁ y_{t×k−k} + ψ₀ x_{t×k−1} + ψ₁ x_{t×k−2} "
+        "+ … + ψ_K x_{t×k−K} + ε_{t×k}``\n\n"
+        "where μ₀, μ₁, and ψ(L) are estimated by OLS (paper §3.2 p.11). "
+        "Ridge regularisation is available as an explicit opt-in via "
+        "``regularization='ridge'`` in the ``paper_methods.u_midas(...)`` "
+        "recipe; it deviates from the paper's estimator choice and is "
+        "not the default.\n\n"
+        "**Lag-order selection**: ``n_lags_high='bic'`` (default) runs "
+        "BIC over K ∈ {1, …, ceil(1.5 × freq_ratio)}, fitting OLS at "
+        "each candidate and selecting K* = argmin BIC (paper §3.2 p.11 + "
+        "§3.5). Pass an integer to fix K. ``'aic'`` is also accepted.\n\n"
+        "**AR(1) y-lag**: the ``paper_methods.u_midas(...)`` helper sets "
+        "``include_y_lag=True`` by default, prepending the lagged target "
+        "``y_lag1`` as the leftmost design-matrix column (μ₁ term of "
+        "eq.(20)). Set ``include_y_lag=False`` to match the simplified "
+        "§2.3 eq.(14) form with no AR component.\n\n"
         "**Defaults**: ``freq_ratio = 3`` (quarterly target / monthly "
-        "HF), ``n_lags_high = 6`` (≈ 2·m); ``target_freq = 'low'`` "
+        "HF), ``n_lags_high = 'bic'``; ``target_freq = 'low'`` "
         "subsamples the LF anchor dates. ``temporal_rule`` is required "
         "and rejects ``full_sample_once`` so the aggregation respects "
         "walk-forward boundaries.\n\n"
@@ -875,14 +891,33 @@ _OP_U_MIDAS = _o(
         "``paper_methods.u_midas(...)``."
     ),
     "Macro nowcasting with monthly predictors and quarterly targets; mixed-frequency feature engineering when no parametric weight kernel is desired.",
-    when_not_to_use="When ``n_lags_high · n_HF_columns`` exceeds T (use ``midas`` parametric weighting instead, or pair with downstream lasso).",
+    when_not_to_use=(
+        "When ``n_lags_high · n_HF_columns`` is large relative to T even "
+        "after BIC selects a small K -- BIC penalises over-parameterisation "
+        "but cannot reduce the number of predictor columns. Use "
+        "``midas`` parametric weighting instead, or pair with downstream "
+        "lasso / ridge (set ``regularization='ridge'``) to handle wide "
+        "design matrices."
+    ),
     references=(
         _REF_DESIGN_L3,
         Reference(
-            citation="Foroni, Marcellino & Schumacher (2015) 'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials', JRSS-A 178(1): 57-82."
+            citation=(
+                "Foroni, Marcellino & Schumacher (2011/2015) "
+                "'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions "
+                "With Unrestricted Lag Polynomials'. "
+                "Bundesbank Discussion Paper Series 1, No. 35/2011; "
+                "published as JRSS-A 178(1): 57-82. "
+                "DOI 10.1111/rssa.12043."
+            )
         ),
         Reference(
-            citation="Borup, Rapach & Schütte (2023) 'Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data', International Journal of Forecasting 39(3): 1122-1144."
+            citation=(
+                "Borup, Rapach & Schütte (2023) "
+                "'Mixed-frequency machine learning: Nowcasting and backcasting "
+                "weekly initial claims with daily internet search-volume data', "
+                "International Journal of Forecasting 39(3): 1122-1144."
+            )
         ),
     ),
     related_options=("midas", "lag", "ma_window"),
