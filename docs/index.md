@@ -1,9 +1,10 @@
 # macroforecast
 
-> What you can do: run reproducible macro-forecasting experiments with custom
-> preprocessing DAGs, 35+ models, statistical tests, importance interpretation,
-> and FRED-SD geographic visualization. One YAML recipe → bit-exact replicable
-> manifest, replayable bit-for-bit by `macroforecast.replicate(...)`.
+> What macroforecast does: run forecasting research on
+> **FRED-MD / FRED-QD / FRED-SD** with your own dataset, preprocessing,
+> and models — and benchmark them head-to-head against established methods.
+> One YAML recipe defines the full study; `macroforecast.replicate(...)`
+> regenerates every artifact identically from the recipe.
 
 ## Pick your path
 
@@ -33,7 +34,7 @@
 4-part design lives under `plans/design/` in the repo.
 
 ```text
-L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
+L0 -> L1 -> L2 -> L3(pipeline) -> L4(pipeline) -> L5 -> L6 -> L7(pipeline) -> L8
         |      |      |       |
        L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
