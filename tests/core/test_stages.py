@@ -12,7 +12,11 @@ Covers all 73 scenarios from test-spec.md:
 
 from __future__ import annotations
 
+import pathlib
 import pytest
+
+# Repo root: tests/core/test_stages.py -> tests/core/ -> tests/ -> repo root
+_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 # ---------------------------------------------------------------------------
@@ -523,7 +527,7 @@ def test_t72_existing_test_count_not_reduced():
          "--ignore=tests/core/test_stages.py"],
         capture_output=True,
         text=True,
-        cwd="/Users/nanyeon/code/macroforecast",
+        cwd=str(_ROOT),
     )
     # Extract collected count from last informational line, e.g. "1432 tests collected"
     output = result.stdout + result.stderr
@@ -544,7 +548,7 @@ def test_t73_no_existing_test_failures():
          "--tb=no"],
         capture_output=True,
         text=True,
-        cwd="/Users/nanyeon/code/macroforecast",
+        cwd=str(_ROOT),
         timeout=600,
     )
     output = result.stdout + result.stderr
