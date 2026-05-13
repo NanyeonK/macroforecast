@@ -145,6 +145,22 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_wizard(args: argparse.Namespace) -> int:
+    """Subcommand handler for ``macroforecast wizard``."""
+    try:
+        from macroforecast.wizard.cli import launch
+    except ImportError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    recipe_file = getattr(args, "recipe", None)
+    port: int = getattr(args, "port", 8765)
+    no_browser: bool = getattr(args, "no_browser", False)
+
+    launch(port=port, open_browser=not no_browser, recipe_path=recipe_file)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="macroforecast",
@@ -195,6 +211,31 @@ def main(argv: list[str] | None = None) -> int:
     val_p = sub.add_parser("validate", help="Parse + schema-validate a recipe (no execution).")
     val_p.add_argument("recipe", help="Path to the recipe YAML.")
     val_p.set_defaults(func=_cmd_validate)
+
+    wiz_p = sub.add_parser(
+        "wizard",
+        help="Launch the browser-based recipe authoring wizard (requires [wizard] extra).",
+    )
+    wiz_p.add_argument(
+        "recipe",
+        nargs="?",
+        default=None,
+        help="Optional path to an existing YAML recipe to load on startup.",
+    )
+    wiz_p.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="Local server port (default: 8765).",
+    )
+    wiz_p.add_argument(
+        "--no-browser",
+        action="store_true",
+        dest="no_browser",
+        default=False,
+        help="Start the server but do not open a browser tab.",
+    )
+    wiz_p.set_defaults(func=_cmd_wizard)
 
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):

@@ -52,7 +52,8 @@ docs = [
     "sphinx-copybutton>=0.5",
 ]
 typecheck = ["mypy>=1.13"]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy]"]
+wizard = ["solara>=1.30"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,wizard]"]
 ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 

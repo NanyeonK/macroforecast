@@ -304,6 +304,15 @@ def run_wizard(
     callers can still pass an explicit ``interactive_layers`` tuple to
     restrict the walk (e.g. ``("l0",)`` for the smoke test).
     """
+    import warnings
+
+    warnings.warn(
+        "macroforecast.scaffold.wizard (CLI wizard) is deprecated as of v0.9. "
+        "Use `macroforecast wizard` for the new browser-based wizard. "
+        "This module will be removed in v1.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     if interactive_layers is None:
         interactive_layers = _DEFAULT_INTERACTIVE_LAYERS
