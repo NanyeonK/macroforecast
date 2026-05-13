@@ -158,7 +158,7 @@
 <span class="s2">  fixed_axes:</span>
 <span class="s2">    saved_objects: [forecasts, metrics, ranking]</span>
 <span class="s2">  leaf_config:</span>
-<span class="s2">    output_directory: ./macrocast_output/quickstart/</span>
+<span class="s2">    output_directory: ./macroforecast_output/quickstart/</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">execute_minimal_forecast</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
@@ -177,7 +177,7 @@
 </pre></div>
 </div>
 <p>With <code class="docutils literal notranslate"><span class="pre">8_output</span></code> enabled, the runtime writes:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>macrocast_output/quickstart/
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>macroforecast_output/quickstart/
   manifest.json
   recipe.json
   summary/
@@ -235,6 +235,12 @@
 <li><p><a class="reference internal" href="first_study.html"><span class="std std-doc">Your First Study</span></a> — extend the quickstart to diagnostics, L6, L7, and L8 export</p></li>
 <li><p><a class="reference internal" href="understanding_output.html"><span class="std std-doc">Understanding Output</span></a> — output directory and artifact guide</p></li>
 </ul>
+<hr class="docutils" />
+<p><strong>Note on output directory naming</strong>: The examples above use
+<code class="docutils literal notranslate"><span class="pre">macroforecast_output/</span></code> as the output path. The runtime default (set in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.core.types</span></code> and <code class="docutils literal notranslate"><span class="pre">core/layers/l8.py</span></code>) is the historical
+<code class="docutils literal notranslate"><span class="pre">macrocast_output/</span></code> for backward compatibility. Override it explicitly with
+<code class="docutils literal notranslate"><span class="pre">output_directory</span></code> in the <code class="docutils literal notranslate"><span class="pre">8_output.leaf_config</span></code> block, as shown above.</p>
 </section>
 </section>
 

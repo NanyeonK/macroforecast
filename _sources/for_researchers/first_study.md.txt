@@ -109,7 +109,7 @@ Fixed design:
   fixed_axes:
     saved_objects: [forecasts, metrics, ranking, tests, importance, diagnostics_all]
   leaf_config:
-    output_directory: ./macrocast_output/first_study/
+    output_directory: ./macroforecast_output/first_study/
 ```
 
 ## Execute

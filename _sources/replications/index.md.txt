@@ -30,10 +30,8 @@ publication-grade replication study.
 
 ## Research replications
 
-- [Study 1](study_1.md) -- TBD
-- [Study 2](study_2.md) -- TBD
-- [Study 3](study_3.md) -- TBD
-- [Study 4](study_4.md) -- TBD
+Coming in v0.9.1 (additional 4+ replication walkthroughs covering published
+macro-forecasting papers).
 
 ```{toctree}
 :hidden:
@@ -41,8 +39,4 @@ publication-grade replication study.
 
 example_walkthrough
 goulet_coulombe_2021
-study_1
-study_2
-study_3
-study_4
 ```
