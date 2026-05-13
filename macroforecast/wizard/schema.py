@@ -80,6 +80,11 @@ def layer_form_schema(layer_id: str) -> list[FormField]:
     Raises:
         KeyError: if layer_id is unknown.
     """
+    from macroforecast.wizard.state import RecipeState
+
+    if layer_id not in RecipeState.LAYER_KEYS:
+        raise KeyError(f"wizard: unknown layer_id={layer_id!r}")
+
     try:
         all_axes = introspect.axes(layer_id)
     except KeyError:

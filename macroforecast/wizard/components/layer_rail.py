@@ -69,9 +69,10 @@ def LayerRail(
             else "cursor:pointer; padding:8px; border-radius:6px; margin-bottom:4px; "
                  "font-weight:bold; background:#ede9fe;"
         )
-        with solara.Row(
-            style=overview_style,
-            on_click=lambda: on_select("overview"),
+        with solara.v.Html(
+            tag="div",
+            style_=overview_style,
+            on_click=lambda *_: on_select("overview"),
         ):
             solara.Text("Overview")
 
@@ -97,9 +98,10 @@ def LayerRail(
             )
 
             _layer_id = layer_id  # capture loop variable
-            with solara.Row(
-                style=row_style,
-                on_click=lambda lid=_layer_id: on_select(lid),
+            with solara.v.Html(
+                tag="div",
+                style_=row_style,
+                on_click=lambda *_, lid=_layer_id: on_select(lid),
             ):
                 with solara.Column(gap="0px"):
                     label_style = "font-weight:bold; font-size:13px;" if is_active else "font-size:13px;"

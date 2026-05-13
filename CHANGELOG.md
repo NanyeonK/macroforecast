@@ -35,6 +35,35 @@ full per-version honesty-pass history embedded in repo documentation.
   | `l3_5` | `features_diagnostic` |
   | `l4_5` | `model_diagnostic` |
 
+- `macroforecast/wizard/` — Solara-based web UI for YAML recipe authoring (Phase
+  P2a MVP). Entry point: `macroforecast wizard [--port PORT] [--no-browser]
+  [recipe.yaml]` (default port 8765). 14 new modules implementing a 3-pane
+  Cursor-inspired layout: left layer rail (L0–L8, color-coded by
+  `STAGE_BY_LAYER`), center workspace (form or DAG placeholder), right live YAML
+  preview. The L0 form is fully wired via `option_docs` schema (`layer_form_schema`
+  + `OptionInput`); L1/L2/L5/L6 form infrastructure is generated but
+  gate-verified in P2b; L3/L4/L7 show a DAG placeholder until P3. Reactive state
+  (`RecipeState`, `current_recipe`, `yaml_text`) guarantees bidirectional
+  recipe ↔ YAML sync on every field edit. Optional install:
+  `pip install 'macroforecast[wizard]'` (adds `solara>=1.30`). Test count:
+  1505 → 1550 (+45 scenarios across 8 test files; 1 xfailed: LR-04 Solara click
+  simulation limitation, deferred to P2c). Run:
+  `2026-05-13-phase-wizard-p2-skeleton`.
+
+### Deprecated
+
+- `macroforecast/scaffold/wizard.py` (stdlib CLI wizard) — `run_wizard()` now
+  emits `DeprecationWarning` on every call:
+  `"macroforecast.scaffold.wizard (CLI wizard) is deprecated as of v0.9. Use macroforecast wizard for the new browser-based wizard. This module will be removed in v1.0."`
+  Use `macroforecast wizard` (Solara web UI) instead. Removal scheduled for v1.0.
+
+### Internal
+
+- Solara 1.57.3 + Starlette 0.41.3 tested and confirmed compatible. Starlette
+  `<1.0` upper bound not yet pinned in `pyproject.toml` — deferred to P2b.
+  Starlette `>=1.0` will break the `on_startup` interface used by
+  `wizard/cli.py`. Note in `wizard/cli.py` documents this pending constraint.
+
 ---
 
 ## [0.9.0] -- 2026-05-13 -- "v0.9.0 stable cut (F-02 + DOCS-1 + MC-RECAL closure)"

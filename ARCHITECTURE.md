@@ -13,6 +13,7 @@ Updated 2026-05-13 (Phase DOCS-1: `_OP_U_MIDAS` description sync to F-07-R defau
 Updated 2026-05-13 (Phase MC-RECAL: TEST-R4-01 paper-symmetric re-calibration — both U-MIDAS eq.(20) and MIDAS eq.(18) now include AR(1) y-lag; MIDAS baseline upgraded to full common-factor restriction `(1-β_1 L^k)`; mean_ratio 0.9928 → 0.9173 (paper anchor 0.91, 0.80% rel error); production code untouched; run `2026-05-13-phase-mc-recal-paper-symmetric`).
 Updated 2026-05-13 (Phase DOCS-CLEANUP: 6-item batch docs cleanup + RTD migration — archive 3 v0.89/v0.9 audit docs, remove 4 replication stubs, update example output paths to `macroforecast_output/`, update docs index, add RTD badge to README, add `[project.urls]` to pyproject.toml; run `2026-05-13-phase-docs-cleanup-and-rtd-migration`).
 Updated 2026-05-13 (Phase Stage Labels: new `macroforecast/core/stages.py` module — `STAGE_BY_LAYER` 13-entry dict + `stage_of()` helper + `StageLabel` type alias; 3 additive exports to `macroforecast.core`; 1432 → 1505 tests; run `2026-05-13-phase-stage-labels`).
+Updated 2026-05-13 (Phase Wizard P2a: new `macroforecast/wizard/` package — Solara-based 3-pane web UI for YAML recipe authoring; 14 new modules + 3 modified files; 1505 → 1550 tests (+45 wizard scenarios); run `2026-05-13-phase-wizard-p2-skeleton`).
 
 ## Overview
 
@@ -1341,5 +1342,219 @@ graph TD
 ### Future Consumer Notes
 
 - **Kedro adapter (P1, not yet implemented)**: Call `STAGE_BY_LAYER[layer_id]` to obtain the Kedro `DataCatalog` `layer` metadata string. No additional interface beyond the existing dict is required.
-- **Wizard P2 (not yet implemented)**: Call `STAGE_BY_LAYER.get(layer_id)` to look up group keys for navigator rail color coding and Mosaic Cube grouping. Wizard defines its own color-to-stage mapping independently.
+- **Wizard P2 (now implemented)**: Wizard P2a imports `STAGE_BY_LAYER` from `macroforecast.core.stages` to drive the `STAGE_COLOR_MAP` in `LayerRail`. See the Wizard P2a section below.
 - **Sink contract validation (future)**: New sink registration can call `stage_of(sink_name=new_sink)` to assert the sink belongs to a known layer, turning naming-convention violations into explicit `ValueError` at registration time.
+
+---
+
+## Phase Wizard P2a: Solara Web UI Skeleton (post-v0.9.0)
+
+**Trigger**: User decision (interactive review, 2026-05-13) — replaces the existing
+stdlib CLI wizard (`macroforecast/scaffold/wizard.py`) with a new browser-based
+navigator UX.
+
+**Date**: 2026-05-13
+**Run**: `2026-05-13-phase-wizard-p2-skeleton`
+**Reviewer verdict**: PASS WITH NOTE
+**Stack**: Solara 1.57.3 + Starlette 0.41.3 + uvicorn (web local server)
+**Entry point**: `macroforecast wizard [--port PORT] [--no-browser] [recipe.yaml]`
+**Optional install**: `pip install 'macroforecast[wizard]'` (adds `solara>=1.30`)
+
+### Phase split
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| **P2a** | 3-pane shell + L0 form fully wired + YAML preview (read-only) | **Done** |
+| P2b | L1+L2 form wiring + YAML bidirectional edit + starlette upper bound pin | Next |
+| P2c | L5+L6 form wiring + Mosaic Cube status indicators + LR-04 fix + scaffold/wizard.py removal prep | Later |
+| P3 | React Flow DAG editor embed (L3/L4/L7 placeholder → interactive DAG) | Future |
+
+### New module: `macroforecast/wizard/`
+
+Top-level peer of `macroforecast/scaffold/`. 14 new files:
+
+```
+macroforecast/wizard/
+    __init__.py             # Exports: launch(), WizardApp
+    cli.py                  # launch() blocking server + _cmd_wizard() CLI handler
+    app.py                  # WizardApp root component — 3-pane layout
+    state.py                # RecipeState + 5 reactive singletons
+    schema.py               # FormField dataclass + layer_form_schema() + option_doc_for()
+    components/
+        __init__.py
+        layer_rail.py       # LayerRail + STAGE_COLOR_MAP (13 hex entries)
+        yaml_preview.py     # YamlPreview — Markdown read-only + edit mode
+        option_input.py     # OptionInput — select/bool/int/float/text + "?" help
+    pages/
+        __init__.py
+        layer_form.py       # LayerForm — L0/L1/L2/L5/L6 schema-driven form
+        layer_dag.py        # LayerDagPlaceholder — P3 stub for L3/L4/L7
+        overview.py         # MosaicCubeOverview — 3x3 clickable tile grid
+```
+
+### Modified files (3)
+
+| File | Change |
+|------|--------|
+| `macroforecast/scaffold/cli.py` | Added `_cmd_wizard()` + `wizard` subparser (additive only) |
+| `macroforecast/scaffold/wizard.py` | Added `DeprecationWarning` in `run_wizard()` body |
+| `pyproject.toml` | Added `wizard = ["solara>=1.30"]` optional dependency |
+
+### 3-Pane Layout Architecture
+
+```
+┌────────────────────────────────────────────────────┐
+│  TopBar: brand + recipe path + Export + New Recipe  │
+├──────────┬───────────────────────────┬──────────────┤
+│LayerRail │    WorkspacePane          │ YamlPreview  │
+│ 200px    │  (LayerForm or            │  360px       │
+│ color by │   MosaicCubeOverview)     │  live YAML   │
+│ stage    │                           │  mirror      │
+└──────────┴───────────────────────────┴──────────────┘
+```
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    subgraph WizardApp["WizardApp (app.py)"]
+        topbar["TopBar<br/>brand + Export + New Recipe"]
+        subgraph panes["3-pane layout"]
+            rail["LayerRail<br/>(layer_rail.py)"]
+            workspace["WorkspacePane"]
+            yaml["YamlPreview<br/>(yaml_preview.py)"]
+        end
+    end
+
+    subgraph WorkspaceContent["WorkspacePane content (driven by selected_layer)"]
+        overview["MosaicCubeOverview<br/>(overview.py)"]
+        form["LayerForm<br/>(layer_form.py)"]
+        dag["LayerDagPlaceholder<br/>(layer_dag.py)"]
+    end
+
+    subgraph State["state.py — reactive singletons"]
+        recipe["current_recipe"]
+        selLayer["selected_layer"]
+        yamlText["yaml_text"]
+        valErrors["validation_errors"]
+        editMode["yaml_edit_mode"]
+    end
+
+    rail --> selLayer
+    selLayer --> workspace
+    workspace --> overview
+    workspace --> form
+    workspace --> dag
+    form --> recipe
+    recipe --> yamlText
+    yamlText --> yaml
+
+    style WizardApp fill:#f8f9fa
+    style WorkspaceContent fill:#f8f9fa
+    style State fill:#f8f9fa
+    style rail fill:#1e90ff,stroke:#1565c0,color:#fff
+    style form fill:#1e90ff,stroke:#1565c0,color:#fff
+    style recipe fill:#1e90ff,stroke:#1565c0,color:#fff
+    style yamlText fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### Reactive State Flow
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+graph TD
+    user["User edits form widget"]
+    set_axis["RecipeState.set_axis()"]
+    sync_yaml["sync_recipe_to_yaml()<br/>yaml.safe_dump()"]
+    yaml_text["yaml_text.value updated"]
+    preview["YamlPreview re-renders"]
+
+    yaml_edit["User edits YAML pane"]
+    sync_recipe["sync_yaml_to_recipe()<br/>yaml.safe_load()"]
+    run_val["run_validation()<br/>RecipeBuilder.validate()"]
+    recipe["current_recipe.value updated"]
+    form_rerenders["LayerForm re-renders"]
+    val_errors["validation_errors.value updated"]
+
+    user --> set_axis
+    set_axis --> recipe
+    set_axis --> sync_yaml
+    sync_yaml --> yaml_text
+    yaml_text --> preview
+
+    yaml_edit --> sync_recipe
+    sync_recipe --> recipe
+    sync_recipe --> run_val
+    run_val --> val_errors
+    recipe --> form_rerenders
+
+    style set_axis fill:#1e90ff,stroke:#1565c0,color:#fff
+    style sync_recipe fill:#1e90ff,stroke:#1565c0,color:#fff
+    style recipe fill:#1e90ff,stroke:#1565c0,color:#fff
+```
+
+### STAGE_COLOR_MAP (in `components/layer_rail.py`)
+
+Directly consumes `STAGE_BY_LAYER` from `macroforecast.core.stages` for layer →
+stage lookup; color is then applied from the local map:
+
+| Stage | Color | Hex |
+|-------|-------|-----|
+| `meta` | Indigo | `#6366f1` |
+| `data` | Sky blue | `#0ea5e9` |
+| `clean` | Emerald | `#10b981` |
+| `features` | Amber | `#f59e0b` |
+| `forecasts` | Red | `#ef4444` |
+| `evaluation` | Violet | `#8b5cf6` |
+| `tests` | Pink | `#ec4899` |
+| `interpretation` | Teal | `#14b8a6` |
+| `artifacts` | Stone | `#78716c` |
+| `data_diagnostic` | Light sky | `#7dd3fc` |
+| `clean_diagnostic` | Light emerald | `#6ee7b7` |
+| `features_diagnostic` | Light amber | `#fcd34d` |
+| `model_diagnostic` | Light red | `#fca5a5` |
+
+### Deprecation: `macroforecast/scaffold/wizard.py`
+
+`run_wizard()` (stdlib CLI wizard) now emits `DeprecationWarning` on first call.
+**Removal target: v1.0** (approximately 6 months from v0.9.0 release). Until then,
+the stdlib wizard remains callable for backward compatibility.
+
+```
+macroforecast.scaffold.wizard.run_wizard()
+  → DeprecationWarning: "Use `macroforecast wizard` instead. Removal in v1.0."
+```
+
+### PASS WITH NOTE Items (deferred)
+
+| # | Item | Deferred to |
+|---|------|-------------|
+| 1 | LR-04 on_select click simulation blocked by Solara 1.57.3 `fire_event` limitation for `solara.v.Html` elements. Component callback is functionally wired; only test infrastructure is blocked. | P2c (tester) |
+| 2 | `uvicorn.Server` used instead of `solara.run()` — public API not available in 1.57.3. Risk: future Solara version may change internal starlette integration. Recommended: add `solara>=1.30,<2.0` pin. | Pre-P2c |
+| 3 | Starlette upper bound: `solara>=1.30` extra does not pin `starlette<1.0`. Test env has starlette 0.41.3. Add `starlette>=0.27,<1.0` to `[wizard]` extra. | P2b |
+| 4 | scaffold/wizard.py removal timeline not tracked in any issue or TODO. | Scriber note (this entry) |
+
+### Test count
+
+| Suite | Before | After | Delta |
+|-------|--------|-------|-------|
+| Wizard tests | 0 | 45 PASS + 1 XFAIL | +46 items (8 files) |
+| Full suite | 1505 | 1550 | +45 passing |
+
+### Changed Modules / Functions Reference
+
+| Module / Function | Purpose | Key Dependencies | Changed in Wizard P2a |
+|---|---|---|---|
+| `wizard/__init__.py` | Public API: `launch()`, `WizardApp` | `wizard.app`, `wizard.cli` | Yes — NEW |
+| `wizard/cli.py` | `launch()` blocking Solara server + `_cmd_wizard()` | `solara`, `uvicorn`, `wizard.state` | Yes — NEW |
+| `wizard/app.py` | `WizardApp` root component — 3-pane layout | all components + pages, `wizard.state` | Yes — NEW |
+| `wizard/state.py` | `RecipeState` static helpers + 5 reactive singletons | `scaffold.builder`, `yaml` | Yes — NEW |
+| `wizard/schema.py` | `FormField` + `layer_form_schema()` + `option_doc_for()` | `scaffold.introspect`, `scaffold.option_docs`, `wizard.state` | Yes — NEW |
+| `wizard/components/layer_rail.py` | `LayerRail` + `STAGE_COLOR_MAP` (13-entry hex map) | `core.stages.STAGE_BY_LAYER` | Yes — NEW |
+| `wizard/components/yaml_preview.py` | `YamlPreview` — live YAML mirror + edit mode | `wizard.state` | Yes — NEW |
+| `wizard/components/option_input.py` | `OptionInput` — 5-widget-type form field + help panel | `wizard.schema`, `wizard.state` | Yes — NEW |
+| `wizard/pages/layer_form.py` | `LayerForm` — schema-driven form for L0..L6 | `wizard.schema`, `wizard.state`, `wizard.components` | Yes — NEW |
+| `wizard/pages/layer_dag.py` | `LayerDagPlaceholder` — P3 DAG stub for L3/L4/L7 | `solara` | Yes — NEW |
+| `wizard/pages/overview.py` | `MosaicCubeOverview` — 3x3 clickable tile grid | `wizard.state`, `core.stages` | Yes — NEW |
+| `scaffold/cli.py` | CLI entry: added `wizard` subparser + `_cmd_wizard()` | `wizard` (lazy import) | Yes — additive mod |
+| `scaffold/wizard.py` | Stdlib CLI wizard — added `DeprecationWarning` in `run_wizard()` | — | Yes — additive mod |
+| `pyproject.toml` | Added `wizard = ["solara>=1.30"]` optional extra | — | Yes — additive mod |
