@@ -579,13 +579,12 @@ def _generate_hf_var1(rho, delta_l, delta_h, k, T_lf, ES, seed):
 def _compute_umidas_oos_mse(y_lf, x_hf, k, T_lf, ES):
     """Recursive expanding-window U-MIDAS OOS MSE. test-spec.md §TEST-R4.
 
-    Builder v3 fix: uses include_y_lag=False to match paper §3 simulation.
-    The paper Table 2 Monte Carlo (§3.1) does NOT include the AR(1) y-lag —
-    the AR term (eq.(20)) is for the full empirical model (§3.2), not §3
-    simulation. Using include_y_lag=True gives U-MIDAS an unfair advantage
-    over the MIDAS baseline (which has no AR term), producing ratio ~0.54
-    instead of the paper's ~0.91. With include_y_lag=False, both models are
-    on equal footing and the ratio matches the paper (≈0.91 for k=3, ρ=0.9).
+    MC-RECAL symmetric fix: uses include_y_lag=True to match paper §3.2
+    eq.(20). Both U-MIDAS and MIDAS comparator now include the AR(1) y-lag
+    term, making the comparison paper-symmetric. BIC K selection uses
+    include_y_lag=False (K selection depends only on HF lag order).
+    Forecast step reuses the same frame and y_series as training to ensure
+    y_lag1 in the last row = y_train[-1] (correct look-ahead-free alignment).
     """
     mse_list = []
     for es in range(ES):
@@ -599,32 +598,41 @@ def _compute_umidas_oos_mse(y_lf, x_hf, k, T_lf, ES):
         frame = pd.DataFrame({"x": x_train}, index=pd.RangeIndex(train_hf_end))
         y_series = pd.Series(y_train, index=pd.RangeIndex(0, train_hf_end, k))
 
-        # Paper §3 simulation: no AR(1) y-lag in either model
+        # BIC K selection: include_y_lag=False (K selection over HF lag order only)
         K_star = _bic_select_k(frame, y_series, freq_ratio=k,
                                 include_y_lag=False, ic="bic")
         K_max = math.ceil(1.5 * k)
         K_star = min(K_star, K_max)
 
+        # Build design matrix WITH y-lag (paper eq.(20): μ_1 y_{τ-1} + ψ(L)x)
         stacked = _u_midas(frame, freq_ratio=k, n_lags_high=K_star,
-                           target_freq="low", include_y_lag=False)
+                           target_freq="low", include_y_lag=True,
+                           y_series=y_series)
         combined = pd.concat([y_series.rename("y"), stacked], axis=1).dropna()
         if len(combined) < K_star + 3:
             mse_list.append(np.nan)
             continue
 
         y_arr = combined["y"].to_numpy()
-        X_arr = combined.drop(columns="y").to_numpy()
+        X_arr = combined.drop(columns="y").to_numpy()  # includes y_lag1 as first col
         X_int = np.column_stack([np.ones(len(y_arr)), X_arr])
         beta, _, _, _ = np.linalg.lstsq(X_int, y_arr, rcond=None)
 
-        # Forecast: use last available training window
-        x_fore = x_hf[:train_hf_end]
-        frame_fore = pd.DataFrame({"x": x_fore}, index=pd.RangeIndex(len(x_fore)))
-        stacked_fore = _u_midas(frame_fore, freq_ratio=k, n_lags_high=K_star,
-                                target_freq="low", include_y_lag=False)
-        x_last = stacked_fore.iloc[[-1]].to_numpy()
+        # FORECAST STEP — alignment fix:
+        # Get HF lag features from the last row of stacked (without y-lag, same
+        # window), then manually set y_lag1 = y_train[-1] (the most recent known
+        # LF value) as the forecast-period AR conditioning value.
+        # We use include_y_lag=False here to get clean HF-only lag features,
+        # then prepend y_lag1 = y_train[-1] explicitly.
+        stacked_fore_hf = _u_midas(frame, freq_ratio=k, n_lags_high=K_star,
+                                   target_freq="low", include_y_lag=False)
+        # Last row contains HF lags for LF period train_lf_end-1 → forecast features
+        x_hf_last = stacked_fore_hf.iloc[[-1]].to_numpy()   # shape (1, K_star)
+        y_lag1_fore = np.array([[float(y_train[-1])]])       # shape (1, 1)
+        # Forecast row: [y_lag1, x_lag0, ..., x_lagK_star]
+        x_last = np.concatenate([y_lag1_fore, x_hf_last], axis=1)  # shape (1, K_star+1)
         x_last_int = np.column_stack([np.ones(1), x_last])
-        y_hat = float(x_last_int @ beta)
+        y_hat = float((x_last_int @ beta).flat[0])
         mse_list.append((y_hat - y_test) ** 2)
 
     valid = [v for v in mse_list if not np.isnan(v)]
@@ -632,24 +640,31 @@ def _compute_umidas_oos_mse(y_lf, x_hf, k, T_lf, ES):
 
 
 def _compute_midas_oos_mse_baseline(y_lf, x_hf, k, T_lf, ES):
-    """NLS exp-Almon MIDAS OOS MSE baseline. Paper §3.1 comparator.
+    """NLS exp-Almon MIDAS OOS MSE baseline. Paper §3.2 eq.(18) comparator.
 
-    Replaces the simplified OLS-stacked baseline with paper §3.1 NLS MIDAS:
-    - exp-Almon weighting with polynomial_order=2, K=ceil(1.5*k)
-    - NLS via scipy.optimize.minimize (Nelder-Mead, max_iter=200)
-    - alpha, beta jointly optimised in NLS loss (matches _midas runtime)
-    Mirrors macroforecast.core.runtime._midas(weighting='exp_almon',
-    polynomial_order=2) so the tolerance [0.79, 1.03] calibrated for the
-    paper's MIDAS comparator is valid.
+    MC-RECAL common-factor fix: implements paper eq.(18) WITH the common-factor
+    restriction (1 - β_1 L^k). The full expanded form is:
 
-    Builder v3 fix: TEST-R4-01 calibration (F-07-R4 NLS MIDAS baseline).
+        y_t = β_0 + β_1·y_{t-k} + β_2·B(L,θ)·x_{t-1}
+              - β_1·β_2·B(L,θ)·x_{t-k-1} + ε
+
+    where agg_t ≡ B(L,θ)·x_{t-1} and agg_tk ≡ B(L,θ)·x_{t-k-1}
+    (= agg_series shifted 1 LF period).
+
+    NLS loss: sum((y - b0 - b1*y_lag - b2*agg_t + b1*b2*agg_tk)^2)
+    Parameters: [θ_1, θ_2, β_0, β_1, β_2] (5-parameter NLS).
+    Grid-search initialization: θ_1 ∈ {-0.5, 0.0, 0.5} × θ_2 ∈
+    {-0.01, -0.1, -0.5, -1.0} with simplified-form OLS warm-start.
+    OOS forecast: b0 + b1*y_lag_last + b2*agg_test - b1*b2*agg_test_lagk
+    where agg_test_lagk = last training agg (= stacked.iloc[-2] @ w_hat,
+    i.e., B(L,θ) applied one LF period before the test window).
     """
     from scipy.optimize import minimize as _scipy_minimize
 
     K = math.ceil(1.5 * k)
 
     def _w_exp_almon(theta, K_):
-        """Exponential Almon weights (paper §3.1 MIDAS comparator)."""
+        """Exponential Almon weights (paper §3.2 MIDAS comparator)."""
         kk = np.arange(K_, dtype=float)
         z = float(theta[0]) * kk + float(theta[1]) * (kk ** 2)
         z = z - float(np.max(z))   # numerical-stability shift
@@ -672,40 +687,94 @@ def _compute_midas_oos_mse_baseline(y_lf, x_hf, k, T_lf, ES):
         stacked = _midas_lag_stack(frame, freq_ratio=k, n_lags_high=K,
                                    target_freq="low")
         y_series = pd.Series(y_train, index=pd.RangeIndex(0, train_hf_end, k))
-        combined = pd.concat([y_series.rename("y"), stacked], axis=1).dropna()
-        if len(combined) < K + 2:
+
+        # Build y-lag series (y_{τ-1}) aligned to LF index; NaN at τ=0
+        y_lag_series = y_series.shift(1)
+
+        # Build agg-lag series: agg_{τ-1} = B(L,θ)·x at LF period τ-1
+        # This is the common-factor term B(L,θ)·x_{t-k-1} in expanded eq.(18).
+        # stacked.shift(1) shifts each LF row back by 1 LF period → NaN at τ=0.
+        stacked_lagk = stacked.shift(1)
+
+        # Align all series; dropna removes first 2 rows (NaN y_lag and NaN agg_lagk)
+        combined = pd.concat(
+            [y_series.rename("y"), y_lag_series.rename("y_lag"),
+             stacked, stacked_lagk.add_suffix("_lk")],
+            axis=1
+        ).dropna()
+        if len(combined) < K + 3:
             mse_list.append(np.nan)
             continue
 
         y_arr = combined["y"].to_numpy()
-        Xk = combined.drop(columns="y").to_numpy()  # shape (T_eff, K)
+        y_lag_arr = combined["y_lag"].to_numpy()
+        # HF stacked cols: x_lag0..x_lag{K-1} (current period B(L,θ) inputs)
+        stacked_cols = [c for c in combined.columns if not c.endswith("_lk")
+                        and c not in ("y", "y_lag")]
+        lagk_cols = [c for c in combined.columns if c.endswith("_lk")]
+        Xk = combined[stacked_cols].to_numpy()     # shape (T_eff, K)
+        Xk_lk = combined[lagk_cols].to_numpy()    # shape (T_eff, K); agg_{τ-1}
 
         def loss(params):
-            theta_ = params[:2]
-            alpha_, beta_ = float(params[2]), float(params[3])
-            w = _w_exp_almon(theta_, K)
-            agg = Xk @ w
-            resid = y_arr - alpha_ - beta_ * agg
+            theta_1, theta_2, b0, b1, b2 = params
+            w = _w_exp_almon([theta_1, theta_2], K)
+            agg_t = Xk @ w
+            agg_tk = Xk_lk @ w
+            # Common-factor form: y = b0 + b1*y_lag + b2*agg_t - b1*b2*agg_tk
+            resid = y_arr - b0 - b1 * y_lag_arr - b2 * agg_t + b1 * b2 * agg_tk
             return float(np.sum(resid * resid))
 
-        x0 = np.array([0.0, 0.0, float(np.mean(y_arr)), 1.0])
+        # Grid-search initialization: simplified-form OLS warm-start for each θ pair
+        theta1_grid = [-0.5, 0.0, 0.5]
+        theta2_grid = [-0.01, -0.1, -0.5, -1.0]
+        best_loss = np.inf
+        best_x0 = np.array([0.0, -0.1, float(np.mean(y_arr)), 0.3, 1.0])
+        for t1 in theta1_grid:
+            for t2 in theta2_grid:
+                w0 = _w_exp_almon([t1, t2], K)
+                agg0 = Xk @ w0
+                # Simplified OLS (y ~ b0 + b1*y_lag + b2*agg) for warm-start
+                Z = np.column_stack([np.ones(len(y_arr)), y_lag_arr, agg0])
+                try:
+                    betas0, _, _, _ = np.linalg.lstsq(Z, y_arr, rcond=None)
+                    x0_cand = np.array([t1, t2, betas0[0], betas0[1], betas0[2]])
+                    l0 = loss(x0_cand)
+                    if l0 < best_loss:
+                        best_loss = l0
+                        best_x0 = x0_cand
+                except Exception:
+                    pass
+
         try:
             result = _scipy_minimize(
-                loss, x0=x0, method="Nelder-Mead",
-                options={"maxiter": 200, "xatol": 1e-6, "fatol": 1e-8},
+                loss, x0=best_x0, method="Nelder-Mead",
+                options={"maxiter": 500, "xatol": 1e-6, "fatol": 1e-8},
             )
             params_hat = result.x
         except Exception:
-            params_hat = x0
+            params_hat = best_x0
 
         theta_hat = params_hat[:2]
-        alpha_hat, beta_hat = float(params_hat[2]), float(params_hat[3])
-        weights_hat = _w_exp_almon(theta_hat, K)
+        b0_hat = float(params_hat[2])
+        b1_hat = float(params_hat[3])
+        b2_hat = float(params_hat[4])
+        w_hat = _w_exp_almon(theta_hat, K)
 
-        # OOS: apply fitted weights + linear coefficients to last training obs
-        stacked_last = stacked.iloc[[-1]].to_numpy()  # shape (1, K)
-        agg_test = float(stacked_last @ weights_hat)
-        y_hat = alpha_hat + beta_hat * agg_test
+        # OOS forecast (common-factor form):
+        #   y_hat = b0 + b1*y_lag_last + b2*agg_test - b1*b2*agg_test_lagk
+        # agg_test = B(L,θ)·x at LF period train_lf_end-1 → stacked.iloc[-1]
+        # agg_test_lagk = B(L,θ)·x at LF period train_lf_end-2 → stacked.iloc[-2]
+        #   (the common-factor term shifted 1 LF period relative to the forecast)
+        stacked_np = stacked.to_numpy()
+        agg_test = float((stacked_np[[-1]] @ w_hat).flat[0])
+        # Need at least 2 rows for the common-factor lag; fallback to 0 if not available
+        if len(stacked_np) >= 2:
+            agg_test_lagk = float((stacked_np[[-2]] @ w_hat).flat[0])
+        else:
+            agg_test_lagk = 0.0
+        y_lag_last = float(y_train[-1])    # y_{train_lf_end - 1}
+        y_hat = (b0_hat + b1_hat * y_lag_last
+                 + b2_hat * agg_test - b1_hat * b2_hat * agg_test_lagk)
         mse_list.append((y_hat - y_test) ** 2)
 
     valid = [v for v in mse_list if not np.isnan(v)]
@@ -719,6 +788,11 @@ class TestR4MonteCarlo:
     def test_r4_01_paper_table2_k3_persistent_umidas_wins(self):
         """TEST-R4-01: Paper Table 2, k=3, rho=0.9, U-MIDAS wins.
 
+        Paper §3.2: BOTH models include AR(1) y-lag term.
+        - U-MIDAS eq.(20): μ_0 + μ_1 y_{τ-1} + ψ(L) x_{τ-1} (OLS, BIC K)
+        - MIDAS eq.(18, common-factor): β_0 + β_1 y_{τ-1} + β_2(1-β_1 L^k)B(L,θ)x_{τ-1}
+          (NLS, K=1.5k, common-factor restriction fully implemented)
+        Paper Table 2 (rho=0.9, delta_l=0.5, k=3): mean=0.91, median=0.91.
         Spec: mean_ratio in [0.79, 1.03] and < 1.10.
         Seeds: 2026+r for r in range(100).
         """
@@ -754,7 +828,7 @@ class TestR4MonteCarlo:
             "Mean ratio {:.3f} >= 1.10: U-MIDAS badly underperforms MIDAS "
             "for k=3 persistent — paper expects U-MIDAS to win.".format(mean_ratio)
         )
-        print("\n[TEST-R4-01] mean_ratio={:.4f}, median_ratio={:.4f}, n_reps={}".format(
+        print("\n[TEST-R4-01 SYMMETRIC] mean_ratio={:.4f}, median_ratio={:.4f}, n_reps={}".format(
             mean_ratio, median_ratio, len(ratios)
         ))
 
