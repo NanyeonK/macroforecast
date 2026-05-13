@@ -1558,3 +1558,48 @@ macroforecast.scaffold.wizard.run_wizard()
 | `scaffold/cli.py` | CLI entry: added `wizard` subparser + `_cmd_wizard()` | `wizard` (lazy import) | Yes — additive mod |
 | `scaffold/wizard.py` | Stdlib CLI wizard — added `DeprecationWarning` in `run_wizard()` | — | Yes — additive mod |
 | `pyproject.toml` | Added `wizard = ["solara>=1.30"]` optional extra | — | Yes — additive mod |
+
+---
+
+## Navigator App Closure (2026-05-13)
+
+> Run `2026-05-13-phase-navigator-app-cleanup`. Workflow 3 (docs-only, scriber as
+> implementer). Trigger: post-P2a sauberung — static HTML/JS app superseded by
+> Solara wizard; docs/navigator/index.md repointed to new tooling.
+
+`docs/_html_extra/navigator_app/` (static HTML/JS, 116K: `app.js` 91K +
+`styles.css` 16K + `index.html` 2K) removed via `git rm`. Last meaningful
+commit: 2026-05-02 (abandoned redesign revert). The directory has been
+superseded by the Solara-based `macroforecast wizard` (P2a, 2026-05-13).
+
+`docs/_html_extra/` directory itself is retained — Sphinx `html_extra_path`
+references it in `conf.py` and other extra-path files may be added in future
+phases.
+
+`docs/navigator/index.md` restructured:
+
+- Removed: "Open the current MVP app" link to `../navigator_app/index.html`
+- Removed: `list` vs `graph` UI mode column and upstream sink inputs narrative
+  that assumed the static app
+- Retained: page title, layer system concept narrative, Canonical Layer Roles
+  table (L0–L8 + L1.5–L4.5), recommended flow, pages toctree
+- Added: layer flow text diagram
+- Added: "Authoring recipes with `macroforecast wizard`" section (P2a entry
+  point, 3-pane description, wizard module README link)
+- Added: "Visualization with Kedro-viz (future)" section (Phase P1 adapter
+  outline; `STAGE_BY_LAYER` as Kedro tag source)
+
+### Inbound reference audit
+
+`grep -rln "navigator_app" docs/ macroforecast/` (excluding `_build` and
+`_archive`) returns 0 results after this change. All inbound references were
+confined to `docs/navigator/index.md`, now cleaned.
+
+### Replacement tooling summary
+
+| Concern | Before | After |
+|---------|--------|-------|
+| Recipe authoring UI | `docs/_html_extra/navigator_app/` static app | `macroforecast wizard` (Solara P2a) |
+| Layer visualization | Static app list/graph toggle | Wizard left rail color-coded by `STAGE_BY_LAYER` |
+| DAG editor | Planned in static app | Planned in wizard P3 (React Flow embed) |
+| Pipeline viz | — | `macroforecast.adapters.kedro` + `kedro viz` (P1, future) |

@@ -57,6 +57,15 @@ full per-version honesty-pass history embedded in repo documentation.
   `"macroforecast.scaffold.wizard (CLI wizard) is deprecated as of v0.9. Use macroforecast wizard for the new browser-based wizard. This module will be removed in v1.0."`
   Use `macroforecast wizard` (Solara web UI) instead. Removal scheduled for v1.0.
 
+### Removed
+
+- `docs/_html_extra/navigator_app/` (116K static HTML/JS app: `app.js` 91K +
+  `styles.css` 16K + `index.html` 2K) — superseded by the new Solara-based
+  `macroforecast wizard` (P2a). Last meaningful update was 2026-05-02
+  (abandoned redesign revert). Future visualization in
+  `macroforecast.adapters.kedro` (P1, planned). Run:
+  `2026-05-13-phase-navigator-app-cleanup`.
+
 ### Internal
 
 - Solara 1.57.3 + Starlette 0.41.3 tested and confirmed compatible. Starlette
