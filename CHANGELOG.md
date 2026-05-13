@@ -3,12 +3,15 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
-## [Unreleased] — v0.9.0 stable cut prereqs (in progress)
+## [0.9.0] -- 2026-05-13 -- "v0.9.0 stable cut (F-02 + DOCS-1 + MC-RECAL closure)"
 
-After the 16-paper full-coverage alpha pre-release (`v0.9.0a0`, 2026-05-12), this
-section tracks the remaining items required before the v0.9.0 stable cut. Changes
-land in the working tree on server1 / Mac via StatsClaw audit-fix cycles and will be
-tagged as `v0.9.0` once all stable prereqs are closed.
+After the 16-paper full-coverage alpha pre-release (`v0.9.0a0`, 2026-05-12), the
+three remaining stable prereqs were closed: F-02 (phantom replaced with Marcellino-
+Schumacher 2010 Factor MIDAS), DOCS-1 (option_docs/l3.py u_midas description synced
+to F-07-R defaults + Sphinx csv fix), and MC-RECAL (paper-symmetric MC re-calibration;
+mean_ratio 0.9173 anchors paper Table 2 0.91). All 17 corpus papers reach paper-
+faithful or paper-anchored status. F-07-R closure preserved. Production code
+untouched by MC-RECAL.
 
 ### Phase F-14-17 LOW batch (2026-05-12)
 
