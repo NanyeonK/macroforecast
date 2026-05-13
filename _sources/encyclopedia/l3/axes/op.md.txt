@@ -16,7 +16,7 @@
 
 ## Operational status summary
 
-- Operational: 45 option(s)
+- Operational: 46 option(s)
 - Future: 5 option(s)
 
 ## Options
@@ -459,6 +459,41 @@ Smoothing noisy series; building short / medium / long-term momentum features.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
+### `maf_per_variable_pca`  --  operational
+
+Per-variable MAF via PCA on lag-panels -- Coulombe et al. (2021 IJF) Eq. (7).
+
+Implements the paper-exact Moving Average Factor (MAF) construction from Coulombe, Leroux, Stevanovic & Surprenant (2021 IJF) §2.2 Eq. (7). For each variable ``k = 1..K`` in the input panel:
+
+1. Build the ``T × (n_lags + 1)`` lag-panel ``[X_{t,k}, L X_{t,k}, ..., L^{n_lags} X_{t,k}]``.
+2. Run PCA retaining ``n_components_per_var`` components (paper default: 2).
+3. Append the resulting factor columns to the output.
+
+Output shape: ``(T, K · n_components_per_var)``. With defaults ``n_lags=12``, ``n_components_per_var=2`` the output is ``(T, 2K)`` -- paper footnote 11: 'We keep two MAFs for each series and they are obtained by PCA.'
+
+**Distinction from existing ``ma_increasing_order → pca(4)`` path**: the existing stacked-PCA MAF cell runs a single PCA over all MA columns at once (stacked, 4 global components). This op runs separate PCA per variable, yielding ``2K`` locally-structured factors rather than 4 global ones. Use this op when paper-Eq.7-exact replication is required.
+
+First ``n_lags`` rows per variable are NaN (lag-panel boundary). ``temporal_rule`` is required; ``full_sample_once`` is rejected to enforce walk-forward boundaries.
+
+Operational from v0.9.0 (phase-f16).
+
+**When to use**
+
+Paper-exact replication of Coulombe et al. (2021 IJF) MAF construction; when per-variable PCA factors are preferred over global stacked-PCA (4-component) path.
+
+**When NOT to use**
+
+When the 16-cell horse-race stacked-PCA MAF cell is sufficient (use ``ma_increasing_order`` → ``pca`` instead); or when K is large and 2K output columns would exceed T.
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data Transformations Matter', International Journal of Forecasting 37(4): 1338-1354. <https://doi.org/10.1016/j.ijforecast.2021.05.005>
+
+**Related options**: [`maf`](#maf), [`ma_increasing_order`](#ma-increasing-order), [`ma_window`](#ma-window)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
 ### `midas`  --  operational
 
 MIDAS Almon / Exp-Almon / Beta weighted lag polynomial (Ghysels-Sinko-Valkanov 2007).
@@ -786,7 +821,7 @@ sSUFF / Sliced inverse regression (scaled) -- supervised dimension reduction (Hu
 
 Supervised dimension reduction extending ``scaled_pca`` to non-linear y → X dependence. Pipeline: (1) standardise X; (2) optional column-wise predictive scaling (``scaling_method`` = ``scaled_pca`` reuses the Huang-Zhou OLS-slope; ``marginal_R2`` uses sign(β_j)·√R²_j; ``none`` skips); (3) sort rows by y and partition into ``n_slices`` H contiguous slices; (4) compute weighted between-slice covariance ``Σ_S = Σ_h (n_h/n) · m̄_h · m̄_h^⊤``; (5) take the top-``n_components`` eigenvectors as factor loadings; (6) project the full panel onto these directions. The sSUFF augmentation (Huang-Zhou-Tong 2022) recovers latent factors with higher correlation than plain SIR in the macro-panel regime where signals are sparse over predictors.
 
-Defaults: ``n_components = 2``, ``n_slices = 5``, ``scaling_method = 'scaled_pca'``. Requires a ``target_signal`` input port; ``temporal_rule`` is required and rejects ``full_sample_once``.
+Defaults: ``n_components = 2``, ``n_slices = 10``, ``scaling_method = 'scaled_pca'``. Requires a ``target_signal`` input port; ``temporal_rule`` is required and rejects ``full_sample_once``.
 
 **When to use**
 
@@ -940,9 +975,19 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Unrestricted MIDAS lag stack -- mixed-frequency aggregation primitive (Foroni-Marcellino-Schumacher 2015).
 
-Atomic mixed-frequency primitive: stacks ``K = n_lags_high`` high-frequency lags of each predictor at low-frequency dates without imposing any weighting structure. For HF column ``col`` and LF index position ``t·m``, emits ``col_lag0, col_lag1, …, col_lag{K-1}`` where ``col_lagk[t] = frame[col].iloc[t·m − k]``. The downstream L4 ridge / OLS / lasso recovers data-driven lag coefficients, i.e. the *unrestricted* MIDAS regression ``y_t = α + Σ_k β_k x_{t·m − k} + ε_t``.
+Atomic mixed-frequency primitive: stacks ``K = n_lags_high`` high-frequency lags of each predictor at low-frequency dates without imposing any weighting structure. For HF column ``col`` and LF index position ``t·m``, emits ``col_lag0, col_lag1, …, col_lag{K-1}`` where ``col_lagk[t] = frame[col].iloc[t·m − k]``.
 
-**Defaults**: ``freq_ratio = 3`` (quarterly target / monthly HF), ``n_lags_high = 6`` (≈ 2·m); ``target_freq = 'low'`` subsamples the LF anchor dates. ``temporal_rule`` is required and rejects ``full_sample_once`` so the aggregation respects walk-forward boundaries.
+The downstream L4 OLS estimator recovers data-driven lag coefficients -- the *unrestricted* MIDAS regression (paper §3.2 eq.(20)):
+
+``y_{t×k} = μ₀ + μ₁ y_{t×k−k} + ψ₀ x_{t×k−1} + ψ₁ x_{t×k−2} + … + ψ_K x_{t×k−K} + ε_{t×k}``
+
+where μ₀, μ₁, and ψ(L) are estimated by OLS (paper §3.2 p.11). Ridge regularisation is available as an explicit opt-in via ``regularization='ridge'`` in the ``paper_methods.u_midas(...)`` recipe; it deviates from the paper's estimator choice and is not the default.
+
+**Lag-order selection**: ``n_lags_high='bic'`` (default) runs BIC over K ∈ {1, …, ceil(1.5 × freq_ratio)}, fitting OLS at each candidate and selecting K* = argmin BIC (paper §3.2 p.11 + §3.5). Pass an integer to fix K. ``'aic'`` is also accepted.
+
+**AR(1) y-lag**: the ``paper_methods.u_midas(...)`` helper sets ``include_y_lag=True`` by default, prepending the lagged target ``y_lag1`` as the leftmost design-matrix column (μ₁ term of eq.(20)). Set ``include_y_lag=False`` to match the simplified §2.3 eq.(14) form with no AR component.
+
+**Defaults**: ``freq_ratio = 3`` (quarterly target / monthly HF), ``n_lags_high = 'bic'``; ``target_freq = 'low'`` subsamples the LF anchor dates. ``temporal_rule`` is required and rejects ``full_sample_once`` so the aggregation respects walk-forward boundaries.
 
 Surfaces the Borup-Rapach-Schütte (2023) mixed-frequency ML-nowcasting workflow as a 1-line recipe via ``paper_methods.u_midas(...)``.
 
@@ -952,12 +997,12 @@ Macro nowcasting with monthly predictors and quarterly targets; mixed-frequency 
 
 **When NOT to use**
 
-When ``n_lags_high · n_HF_columns`` exceeds T (use ``midas`` parametric weighting instead, or pair with downstream lasso).
+When ``n_lags_high · n_HF_columns`` is large relative to T even after BIC selects a small K -- BIC penalises over-parameterisation but cannot reduce the number of predictor columns. Use ``midas`` parametric weighting instead, or pair with downstream lasso / ridge (set ``regularization='ridge'``) to handle wide design matrices.
 
 **References**
 
 * macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Foroni, Marcellino & Schumacher (2015) 'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials', JRSS-A 178(1): 57-82.
+* Foroni, Marcellino & Schumacher (2011/2015) 'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials'. Bundesbank Discussion Paper Series 1, No. 35/2011; published as JRSS-A 178(1): 57-82. DOI 10.1111/rssa.12043.
 * Borup, Rapach & Schütte (2023) 'Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data', International Journal of Forecasting 39(3): 1122-1144.
 
 **Related options**: [`midas`](#midas), [`lag`](#lag), [`ma_window`](#ma-window)
