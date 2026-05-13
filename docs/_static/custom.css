@@ -1,0 +1,54 @@
+/* macroforecast docs — readability tweaks */
+
+/* === Section spacing === */
+.bd-main .bd-content h2 {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--pst-color-border);
+}
+
+.bd-main .bd-content h3 {
+    margin-top: 2rem;
+}
+
+/* First h2 on a page does not need the top rule (it abuts the page title) */
+.bd-main .bd-content > section > section:first-of-type > h2 {
+    margin-top: 1.5rem;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* === Top navbar item separators === */
+.bd-header .navbar-nav .nav-item {
+    padding: 0 0.75rem;
+    border-right: 1px solid var(--pst-color-border);
+}
+
+.bd-header .navbar-nav .nav-item:last-child {
+    border-right: none;
+    padding-right: 0;
+}
+
+.bd-header .navbar-nav .nav-link {
+    padding: 0.5rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.bd-header .navbar-nav .nav-link:hover {
+    background-color: var(--pst-color-surface);
+}
+
+.bd-header .navbar-nav .nav-link.active {
+    font-weight: 600;
+}
+
+/* === Grid card polish (used by Pick your path) === */
+.bd-main .sd-card {
+    transition: box-shadow 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.bd-main .sd-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}

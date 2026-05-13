@@ -8,16 +8,67 @@
 
 ## Pick your path
 
-| If you want to ... | Start here |
-|---|---|
-| Run a forecast on FRED data and read the results | [Researchers](for_researchers/index.md) |
-| Write a custom recipe with your model / preprocessor (incl. partial-layer debugging and custom hooks) | [Recipe authors](for_recipe_authors/index.md) |
-| Modify the package source / contribute | [Contributors](for_contributors/index.md) |
-| **Understand the design** — why layers / sub-layers / contracts are split this way (read top-to-bottom) | [Architecture](architecture/index.md) — design narrative, ~18 prose pages |
-| **Look up an option** — what does `apply_official_tcode` do, what models are L7 `shap_tree` compatible with, etc. (search / browse) | [Encyclopedia](encyclopedia/index.md) — auto-generated reference, 189 pages |
-| See replication studies (bundled examples + 3 research walkthroughs today, 4+ more in v0.9.1) | [Replications](replications/index.md) |
-| Visually explore the layer / DAG topology | [Navigator](navigator/index.md) |
-| Hit an error or something doesn't work | [Troubleshooting & FAQ](troubleshooting.md) |
+::::{grid} 1 2 2 3
+:gutter: 3
+:class-container: pick-your-path
+
+:::{grid-item-card} 🚀 Researchers
+:link: for_researchers/index
+:link-type: doc
+
+Run a forecast on FRED data and read results.
+:::
+
+:::{grid-item-card} 📝 Recipe authors
+:link: for_recipe_authors/index
+:link-type: doc
+
+Write a custom recipe with your model and preprocessor.
+:::
+
+:::{grid-item-card} 🛠 Contributors
+:link: for_contributors/index
+:link-type: doc
+
+Modify the package source.
+:::
+
+:::{grid-item-card} 📐 Architecture
+:link: architecture/index
+:link-type: doc
+
+Why layers and contracts are split this way — design narrative.
+:::
+
+:::{grid-item-card} 📖 Encyclopedia
+:link: encyclopedia/index
+:link-type: doc
+
+Look up every recipe option (auto-generated, 189 pages).
+:::
+
+:::{grid-item-card} 🔁 Replications
+:link: replications/index
+:link-type: doc
+
+Bundled studies and research walkthroughs.
+:::
+
+:::{grid-item-card} 🧭 Navigator
+:link: navigator/index
+:link-type: doc
+
+Visually explore the layer and pipeline topology.
+:::
+
+:::{grid-item-card} 🆘 Troubleshooting
+:link: troubleshooting
+:link-type: doc
+
+Errors, FAQs, common fixes.
+:::
+
+::::
 
 > **Architecture vs Encyclopedia**: same 12-layer system, two angles.
 > Architecture is **prose** — "why is L2 separated from L3", "how does

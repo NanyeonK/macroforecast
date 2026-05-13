@@ -64,6 +64,7 @@ myst_heading_anchors = 3
 html_theme = "pydata_sphinx_theme"
 html_title = "macroforecast"
 html_static_path: list[str] = ["_static"]
+html_css_files: list[str] = ["custom.css"]
 html_extra_path: list[str] = []  # _html_extra removed with navigator_app (2026-05-13)
 
 html_theme_options = {
