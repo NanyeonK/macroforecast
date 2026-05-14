@@ -25,6 +25,7 @@ import pandas as pd
 from .cache import canonical_dict
 from .runtime import RuntimeResult, execute_minimal_forecast
 from .yaml import parse_recipe_yaml
+from ..defaults import DEFAULT_RANDOM_SEED
 
 
 L0_KEY = "0_meta"
@@ -244,7 +245,7 @@ def _resolve_seed(recipe_root: dict[str, Any]) -> int | None:
     if "random_seed" in leaf:
         return int(leaf["random_seed"])
     repro = fixed.get("reproducibility_mode", "seeded_reproducible")
-    return 0 if repro == "seeded_reproducible" else None
+    return DEFAULT_RANDOM_SEED if repro == "seeded_reproducible" else None
 
 
 def _resolve_cache_root(

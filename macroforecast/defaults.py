@@ -23,7 +23,7 @@ DEFAULT_TRAINING_START_RULE: str = "expanding"
 DEFAULT_REFIT_POLICY: str = "every_origin"
 
 DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
-    "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
+    "mixed_frequency_representation": "calendar_aligned_frame",
     "target_missing_policy": "none",
     "x_missing_policy": "none",
     "target_outlier_policy": "none",
@@ -45,7 +45,7 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "benchmark_family": "zero_change",
     "feature_builder": "target_lag_features",
     "model_family": DEFAULT_MODEL_FAMILY,
-    "primary_metric": "msfe",
+    "primary_metric": "mse",
     "importance_method": "none",
     "reproducibility_mode": "seeded_reproducible",
     "failure_policy": "fail_fast",
@@ -250,9 +250,9 @@ def build_default_recipe_dict(
     framework: str = "expanding",
     benchmark_family: str = "zero_change",
     feature_builder: str = "target_lag_features",
-    model_family: str = "ar",
+    model_family: str = DEFAULT_MODEL_FAMILY,
     model_families: Iterable[str] | None = None,
-    primary_metric: str = "msfe",
+    primary_metric: str = "mse",
     importance_method: str = "none",
     reproducibility_mode: str = "seeded_reproducible",
     failure_policy: str = "fail_fast",
@@ -338,33 +338,31 @@ def build_default_recipe_dict(
 
     return {
         "recipe_id": resolved_recipe_id,
-        "path": {
-            "0_meta": {
-                "fixed_axes": {
-                    "study_scope": study_scope,
-                    "reproducibility_mode": reproducibility_mode,
-                    "failure_policy": failure_policy,
-                    "compute_mode": compute_mode,
-                },
-                "leaf_config": {
-                    "default_profile": default_profile,
-                    "random_seed": int(random_seed),
-                },
+        "0_meta": {
+            "fixed_axes": {
+                "study_scope": study_scope,
+                "reproducibility_mode": reproducibility_mode,
+                "failure_policy": failure_policy,
+                "compute_mode": compute_mode,
             },
-            "1_data_task": {
-                "fixed_axes": layer1_fixed_axes,
-                "leaf_config": data_leaf,
+            "leaf_config": {
+                "default_profile": default_profile,
+                "random_seed": int(random_seed),
             },
-            "2_preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
-            "3_training": training_block,
-            "4_evaluation": {"fixed_axes": {"primary_metric": primary_metric}},
-            "5_output_provenance": {
-                "leaf_config": {
-                    "manifest_mode": "full",
-                    "benchmark_config": resolved_benchmark_config,
-                }
-            },
-            "6_stat_tests": {"fixed_axes": {}},
-            "7_importance": {"fixed_axes": {"importance_method": importance_method}},
+        },
+        "1_data": {
+            "fixed_axes": layer1_fixed_axes,
+            "leaf_config": data_leaf,
+        },
+        "2_preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
+        "4_forecasting_model": training_block,
+        "5_evaluation": {"fixed_axes": {"primary_metric": primary_metric}},
+        "6_statistical_tests": {"fixed_axes": {}},
+        "7_interpretation": {"fixed_axes": {"importance_method": importance_method}},
+        "8_output": {
+            "leaf_config": {
+                "manifest_mode": "full",
+                "benchmark_config": resolved_benchmark_config,
+            }
         },
     }

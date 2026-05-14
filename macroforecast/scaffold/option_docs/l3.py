@@ -137,6 +137,19 @@ _OP_PCT_CHANGE = _o(
 # Lag / seasonal-lag family (2 ops)
 # ---------------------------------------------------------------------------
 
+_OP_LAG = _o(
+    "lag",
+    "Lagged target/predictor block.",
+    (
+        "Constructs a lagged matrix from inputs. ``params.n_lag`` sets "
+        "the lag depth. Standard predictor for autoregressive baselines."
+    ),
+    "Always when building AR features or lagged-X feature blocks.",
+    when_not_to_use="When the target itself is already differenced/lagged in L2 -- avoid double-lagging.",
+    related_options=("seasonal_lag", "target_construction"),
+)
+
+
 _OP_SEASONAL_LAG = _o(
     "seasonal_lag",
     "Lag at a seasonal period (e.g. y_{t-12} for monthly data).",
@@ -1049,6 +1062,7 @@ register(
     _OP_LOG,
     _OP_LOG_DIFF,
     _OP_PCT_CHANGE,
+    _OP_LAG,
     _OP_SEASONAL_LAG,
     _OP_MA_WINDOW,
     _OP_MA_INCREASING,

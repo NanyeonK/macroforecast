@@ -49,7 +49,7 @@ def concat(inputs, params):
 
 @register_op(
     name="lag",
-    layer_scope="universal",
+    layer_scope=("l2", "l3"),
     input_types={"default": (Panel, Series, Factor)},
     output_type=LaggedPanel,
     params_schema={

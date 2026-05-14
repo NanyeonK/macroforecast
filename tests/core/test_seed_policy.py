@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 from macroforecast.core.execution import _apply_seed, _resolve_seed
+from macroforecast.defaults import DEFAULT_RANDOM_SEED
 
 
 # ---------------------------------------------------------------------------
@@ -33,15 +34,16 @@ def test_resolve_seed_explicit_leaf_config_takes_precedence():
     assert _resolve_seed(root) == 42
 
 
-def test_resolve_seed_seeded_reproducible_default_returns_zero():
+def test_resolve_seed_seeded_reproducible_default_returns_default_random_seed():
     root = {"0_meta": {"fixed_axes": {"reproducibility_mode": "seeded_reproducible"}}}
-    assert _resolve_seed(root) == 0
+    assert _resolve_seed(root) == DEFAULT_RANDOM_SEED
 
 
-def test_resolve_seed_default_mode_returns_zero():
-    # No 0_meta block at all -> defaults to seeded_reproducible -> seed 0.
-    assert _resolve_seed({}) == 0
-    assert _resolve_seed({"0_meta": {}}) == 0
+def test_resolve_seed_default_mode_returns_default_random_seed():
+    # No 0_meta block at all -> defaults to seeded_reproducible ->
+    # DEFAULT_RANDOM_SEED (42) per Cycle 11b1.
+    assert _resolve_seed({}) == DEFAULT_RANDOM_SEED
+    assert _resolve_seed({"0_meta": {}}) == DEFAULT_RANDOM_SEED
 
 
 def test_resolve_seed_exploratory_returns_none():
@@ -55,6 +57,11 @@ def test_resolve_seed_unknown_mode_returns_none():
     # rejection upstream so this code path stays simple.
     root = {"0_meta": {"fixed_axes": {"reproducibility_mode": "strict"}}}
     assert _resolve_seed(root) is None
+
+
+def test_execution_seed_fallback_uses_default_random_seed():
+    recipe = {"0_meta": {"fixed_axes": {"reproducibility_mode": "seeded_reproducible"}, "leaf_config": {}}}
+    assert _resolve_seed(recipe) == DEFAULT_RANDOM_SEED
 
 
 # ---------------------------------------------------------------------------

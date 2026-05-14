@@ -132,7 +132,7 @@ def _rewire_l3_ops() -> None:
         )
         if "l3" not in scope:
             continue
-        if op_name in {"l3_feature_bundle", "l3_metadata_build"}:
+        if op_name in {"l3_feature_bundle", "l3_metadata_build", "lag"}:
             continue
         _OPS[op_name] = replace(spec, function=_delegate(op_name))
 
