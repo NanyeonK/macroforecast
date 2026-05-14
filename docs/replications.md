@@ -14,7 +14,7 @@ Reproduced research papers with end-to-end recipes.
 :::
 
 :::{grid-item-card} Recipe gallery
-:link: for_researchers/recipe_gallery
+:link: recipe_api/gallery
 :link-type: doc
 
 38 bundled recipes with one-line purpose and required extras.
@@ -34,6 +34,6 @@ Visually explore the layer and pipeline topology.
 :maxdepth: 2
 
 replications/index
-for_researchers/recipe_gallery
+recipe_api/gallery
 navigator/index
 ```

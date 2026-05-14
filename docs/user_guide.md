@@ -38,14 +38,15 @@ for_researchers/simple_api/run_experiment
 for_researchers/simple_api/compare_models
 for_researchers/simple_api/read_results
 for_researchers/simple_api/fred_sd
-for_researchers/recipe_gallery
-for_recipe_authors/design
-for_recipe_authors/data_policies
-for_recipe_authors/data/index
-for_recipe_authors/default_profiles
-for_researchers/runtime_support
-for_researchers/understanding_output
-for_researchers/fred_datasets/index
+recipe_api/index
+recipe_api/gallery
+recipe_api/layer_contract
+recipe_api/data
+recipe_api/data_policies
+recipe_api/defaults
+recipe_api/runtime_support
+recipe_api/output
+recipe_api/fred_datasets
 ```
 
 ```{toctree}

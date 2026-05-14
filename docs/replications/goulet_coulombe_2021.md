@@ -111,7 +111,7 @@ list.
 
 - [`example_walkthrough.md`](example_walkthrough.md) — line-by-line
   layer reading using the smaller `l4_minimal_ridge.yaml`.
-- [Recipe gallery](../for_researchers/recipe_gallery.md) — full
+- [Recipe gallery](../recipe_api/gallery.md) — full
   list of bundled recipes including GC2021.
 - [`encyclopedia/l4/axes/family.md`](../encyclopedia/l4/axes/family.md)
   — every L4 model family available for horse-race extension.

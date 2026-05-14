@@ -143,7 +143,7 @@ warning and the axis is ignored.
 ## A bundled example recipe fails with `ImportError: xgboost`
 
 Some recipes need extras. Check the
-[Recipe gallery](for_researchers/recipe_gallery.md) "Extras required"
+[Recipe gallery](recipe_api/gallery.md) "Extras required"
 column. To install everything:
 
 ```bash

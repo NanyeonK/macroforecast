@@ -4,7 +4,7 @@ macroforecast works with any time-series panel you supply. This guide covers
 monthly and quarterly CSV / Parquet files.
 
 If you prefer the official FRED-MD or FRED-QD panels, start with
-[FRED-MD](fred_datasets/fred_md.md) or [FRED-QD](fred_datasets/fred_qd.md)
+[FRED Datasets in Recipes](../recipe_api/fred_datasets.md)
 instead.
 
 > **FRED-MD/QD format note**: the raw FRED CSV files include a `Transform:`
@@ -222,12 +222,11 @@ before merging if the intent is to replace a FRED series.
 | `official_plus_custom` fails with date mismatch | Your extra file's date range does not overlap the FRED vintage dates. | Use `outer_join` or trim your sample dates to the intersection. |
 
 For FRED-MD / FRED-QD column definitions and T-code reference, see
-[FRED-MD](fred_datasets/fred_md.md) and [FRED-QD](fred_datasets/fred_qd.md).
+[FRED Datasets in Recipes](../recipe_api/fred_datasets.md).
 
 ## See also
 
-- [FRED-MD column dictionary](fred_datasets/fred_md.md) -- 126 monthly series, T-codes, groups
-- [FRED-QD column dictionary](fred_datasets/fred_qd.md) -- 245 quarterly series, T-codes
+- [FRED Datasets in Recipes](../recipe_api/fred_datasets.md) -- FRED-MD, FRED-QD, FRED-SD reference status
 - [Custom function quickstart](../for_recipe_authors/custom_function_quickstart.md) -- bring your own model, preprocessor, or target transformer
 - [Quickstart](quickstart.md) -- minimal recipe walkthrough
 - [First study](first_study.md) -- full study with diagnostics, tests, and output

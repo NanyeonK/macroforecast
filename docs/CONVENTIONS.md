@@ -80,4 +80,4 @@ If a completed axis has values scheduled for a future runtime, mark them `regist
 
 ## Template
 
-The current canonical example is `docs/for_recipe_authors/data/source.md`. New axis pages should mirror its structure. Deviations need a one-paragraph rationale.
+The current canonical example is `docs/recipe_api/data.md`. New axis pages should mirror its structure. Deviations need a one-paragraph rationale.

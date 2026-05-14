@@ -82,6 +82,5 @@ The authoritative change log is maintained by the St. Louis Fed in the appendix 
 
 ## See also
 
-- [FRED-QD](datasets_fred_qd.md) — sister quarterly database.
-- [FRED-SD](datasets_fred_sd.md) — state-level real-time database.
-- [Source & Frame (1.1)](source.md) — how `dataset`, `frequency`, `information_set_type`, and custom dataset schema interact at recipe compile time.
+- [FRED Datasets in Recipes](../../recipe_api/fred_datasets.md) — consolidated reference for FRED-MD, FRED-QD, and FRED-SD.
+- [Data layer](../../recipe_api/data.md) — how `dataset`, `frequency`, `information_set_type`, and custom dataset schema interact at recipe compile time.
