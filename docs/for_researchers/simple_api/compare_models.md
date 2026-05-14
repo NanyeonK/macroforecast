@@ -1,8 +1,6 @@
-# Compare Models
+# Compare models and parameters
 
-Model comparison is a first-class operation. Changing the model does not change the information set, sample split, benchmark, preprocessing defaults, or evaluation metric.
-
-In Layer 0 Simple, this call shape selects `study_scope = one_target_compare_methods`. Failure handling, reproducibility, and compute layout keep their Simple defaults unless you move to the Full YAML path.
+Use `compare_models(...)` to evaluate several model families under the same data, target, horizons, and sample window.
 
 ```python
 import macroforecast as mf
@@ -15,40 +13,19 @@ result = (
         end="2019-12",
         horizons=[1, 3, 6],
     )
-    .compare_models(["ar", "ridge", "lasso"])
-    .run()
+    .compare_models(["ar_p", "ridge", "lasso"])
+    .run(output_directory="outputs/indpro_model_compare")
 )
+
+metrics = result.metrics
+ranking = result.ranking
+summary = result.mean(metric="mse")
 ```
 
-The return value is an `ForecastResult`:
+For a parameter sweep, use `compare(axis_path, values)`. The default Simple API fit node is normalized to `fit_main`, so the L4 model-parameter path is stable for follow-up sweeps:
 
 ```python
-result.metrics
-result.metrics
-result.ranking  # or result.mean(metric="mse")
-result.forecasts
-result.manifest
-```
-
-For follow-up parameter sweeps the L4 fit node has the stable id
-``fit_main``, so chaining is predictable independent of the original
-``model_family=``:
-
-```python
-result = (
-    mf.Experiment(dataset="fred_md", target="INDPRO", horizons=[1])
-    .compare_models(["ridge"])
-    .compare("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
-    .run()
-)
-```
-
-`compare_models()` accepts built-in model names and registered custom model names.
-
-```python
-@mf.custom_model("my_model")
-def my_model(X_train, y_train, X_test, context):
-    ...
+import macroforecast as mf
 
 result = (
     mf.Experiment(
@@ -56,10 +33,27 @@ result = (
         target="INDPRO",
         start="1980-01",
         end="2019-12",
+        horizons=[1],
+        model_family="ridge",
     )
-    .compare_models(["ridge", "my_model"])
-    .run()
+    .compare("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0, 10.0])
+    .run(output_directory="outputs/indpro_ridge_alpha")
 )
+
+summary = result.mean(metric="mse")
 ```
 
-Each variant writes its own artifacts. The sweep root writes one manifest that records the axes that changed and the status of every variant.
+`sweep(axis_path, values)` is an alias for `compare(axis_path, values)`:
+
+```python
+exp = mf.Experiment(
+    dataset="fred_md",
+    target="INDPRO",
+    start="1980-01",
+    end="2019-12",
+    horizons=[1],
+    model_family="ridge",
+)
+
+exp.sweep("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
+```

@@ -1,4 +1,4 @@
-# Quickstart
+# Recipe API quickstart
 
 Run a core layer-contract forecast in under 5 minutes.
 

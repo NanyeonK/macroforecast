@@ -421,6 +421,10 @@ Compared with FRED-MD / FRED-QD the FRED-SD maintenance history is shorter (firs
    remain operational-narrow unless explicitly documented as built-in runtime
    families.
 
+## Simple API migration note
+
+Advanced FRED-SD mixed-frequency content (MIDAS, native-frequency block payloads, mixed-frequency adapters) was moved out of the Simple API in 2026-05-14 and will be republished here when the corresponding `api_high.py` helpers are stable. Until then, use the Recipe (YAML) grammar directly; the operational MIDAS / block-payload / adapter surface is documented above in this page.
+
 ## See also
 
 - [FRED-MD](datasets_fred_md.md), [FRED-QD](datasets_fred_qd.md) — sister databases.

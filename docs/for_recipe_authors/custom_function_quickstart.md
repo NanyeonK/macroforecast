@@ -241,5 +241,4 @@ print(mf.list_custom_target_transformers())
 - [Custom Extensions](custom_hooks.md) -- full five-hook reference with all contract details
 - [Target transformer](target_transformer.md) -- scale rules, runtime gate, inverse-transform contract
 - [Bring your own data](../for_researchers/user_data_workflow.md) -- CSV/Parquet data format and loading
-- [Simple API: add custom model](../for_researchers/simple_api/add_custom_model.md) -- `Experiment`-centric walkthrough
-- [Simple API: add custom preprocessor](../for_researchers/simple_api/add_custom_preprocessor.md) -- `Experiment.use_preprocessor` walkthrough
+- [Simple API](../for_researchers/simple_api/index.md) -- `Experiment` and `mf.forecast(...)` walkthrough

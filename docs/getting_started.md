@@ -13,11 +13,11 @@ diagnostics, statistical tests, and importance interpretation.
 Set up the package, verify the install, pick optional extras.
 :::
 
-:::{grid-item-card} Quickstart
+:::{grid-item-card} Recipe API quickstart
 :link: for_researchers/quickstart
 :link-type: doc
 
-Run a minimal ridge forecast on FRED-MD in under 5 minutes.
+Run a minimal core recipe with an inline custom panel.
 :::
 
 :::{grid-item-card} Your first study
