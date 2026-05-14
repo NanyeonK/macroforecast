@@ -30,16 +30,14 @@ transformer.
 ```{toctree}
 :hidden:
 :maxdepth: 2
-:caption: Simple API (high-level)
+:caption: 1. Using the package
 
 for_researchers/simple_api/index
-```
-
-```{toctree}
-:hidden:
-:maxdepth: 2
-:caption: Recipe API (YAML grammar)
-
+for_researchers/simple_api/quickstart
+for_researchers/simple_api/run_experiment
+for_researchers/simple_api/compare_models
+for_researchers/simple_api/read_results
+for_researchers/simple_api/fred_sd
 for_researchers/recipe_gallery
 for_recipe_authors/design
 for_recipe_authors/data_policies
@@ -47,13 +45,6 @@ for_recipe_authors/data/index
 for_recipe_authors/default_profiles
 for_researchers/runtime_support
 for_researchers/understanding_output
-```
-
-```{toctree}
-:hidden:
-:maxdepth: 2
-:caption: Reference data
-
 for_researchers/fred_datasets/index
 ```
 
