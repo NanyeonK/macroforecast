@@ -35,6 +35,11 @@ from .core.execution import (
     replicate_recipe,
 )
 from .scaffold.builder import RecipeBuilder
+from .defaults import (
+    DEFAULT_HORIZONS,
+    DEFAULT_MODEL_FAMILY,
+    DEFAULT_RANDOM_SEED,
+)
 
 __all__ = ["Experiment", "ForecastResult", "forecast"]
 
@@ -192,15 +197,15 @@ def _build_default_recipe(
 def forecast(
     dataset: str,
     target: str,
-    horizons: Sequence[int] = (1,),
+    horizons: Sequence[int] = DEFAULT_HORIZONS,
     *,
     frequency: str | None = None,
     start: str | None = None,
     end: str | None = None,
-    model_family: str = "ar_p",
+    model_family: str = DEFAULT_MODEL_FAMILY,
     output_directory: str | Path | None = None,
     cache_root: str | Path | None = None,
-    random_seed: int = 0,
+    random_seed: int = DEFAULT_RANDOM_SEED,
 ) -> "ForecastResult":
     """Run one default macroeconomic forecasting study.
 
@@ -225,13 +230,13 @@ def forecast(
         ISO sample window endpoints (e.g. ``"1985-01"``); written into L1
         ``sample_start_date`` / ``sample_end_date``.
     model_family
-        L4 ``fit_model`` family. Defaults to ``"ar_p"``.
+        L4 ``fit_model`` family. Defaults to ``"ar_p"`` (see ``macroforecast.defaults.DEFAULT_MODEL_FAMILY``).
     output_directory
         Directory to write ``manifest.json`` and per-cell artifacts.
     cache_root
         Shared raw-data cache root; forwarded to :func:`execute_recipe`.
     random_seed
-        L0 ``random_seed`` (default ``0``).
+        L0 ``random_seed`` (default ``42``, see ``macroforecast.defaults.DEFAULT_RANDOM_SEED``).
 
     Returns
     -------
@@ -439,13 +444,13 @@ class Experiment:
         self,
         dataset: str,
         target: str,
-        horizons: Sequence[int] = (1,),
+        horizons: Sequence[int] = DEFAULT_HORIZONS,
         *,
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
-        model_family: str = "ar_p",
-        random_seed: int = 0,
+        model_family: str = DEFAULT_MODEL_FAMILY,
+        random_seed: int = DEFAULT_RANDOM_SEED,
     ) -> None:
         self._dataset = dataset
         self._target = target

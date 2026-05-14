@@ -7,6 +7,21 @@ from typing import Any, Iterable
 
 DEFAULT_PROFILE_NAME = "macroforecast-default-v1"
 
+# Public defaults — single source of truth for user-facing API + recipe builder.
+# Any change here propagates to:
+#   - mf.forecast() / mf.Experiment() signatures (via import)
+#   - DEFAULT_PROFILE (below)
+#   - Docs (simple_api/quickstart.md etc.)
+DEFAULT_MODEL_FAMILY: str = "ar_p"
+DEFAULT_RANDOM_SEED: int = 42
+DEFAULT_HORIZONS: tuple[int, ...] = (1,)
+
+# Optional convenience constants for L4 schema-level forecast settings (these
+# are also the defaults at core/layers/l4.py:106-111 — kept in sync).
+DEFAULT_FORECAST_STRATEGY: str = "direct"
+DEFAULT_TRAINING_START_RULE: str = "expanding"
+DEFAULT_REFIT_POLICY: str = "every_origin"
+
 DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
     "fred_sd_mixed_frequency_representation": "calendar_aligned_frame",
     "target_missing_policy": "none",
@@ -26,16 +41,16 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "name": DEFAULT_PROFILE_NAME,
     "information_set_type": "final_revised_data",
     "target_structure": "single_target",
-    "framework": "expanding",
+    "framework": DEFAULT_TRAINING_START_RULE,
     "benchmark_family": "zero_change",
     "feature_builder": "target_lag_features",
-    "model_family": "ar",
+    "model_family": DEFAULT_MODEL_FAMILY,
     "primary_metric": "msfe",
     "importance_method": "none",
     "reproducibility_mode": "seeded_reproducible",
     "failure_policy": "fail_fast",
     "compute_mode": "serial",
-    "random_seed": 42,
+    "random_seed": DEFAULT_RANDOM_SEED,
     "benchmark_config": {"minimum_train_size": 5},
     "preprocessing": dict(DEFAULT_PREPROCESSING_AXES),
 }

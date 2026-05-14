@@ -50,6 +50,12 @@ full per-version honesty-pass history embedded in repo documentation.
   simulation limitation, deferred to P2c). Run:
   `2026-05-13-phase-wizard-p2-skeleton`.
 
+### Changed
+
+- **BREAKING (public API default)**: `mf.forecast()` and `mf.Experiment()` default `random_seed` changed from `0` → `42` to align with the `DEFAULT_PROFILE` source-of-truth in `macroforecast.defaults`. Users who relied on the old default seed for reproducibility must pass `random_seed=0` explicitly.
+- `macroforecast.defaults.DEFAULT_PROFILE` "model_family" key changed from `"ar"` (dead reference — not in L4 family registry) to `"ar_p"` (valid AR(p) family). User-facing behavior unchanged because `Experiment` signature already used `"ar_p"`; this fixes a silent internal inconsistency.
+- New public constants in `macroforecast.defaults`: `DEFAULT_MODEL_FAMILY`, `DEFAULT_RANDOM_SEED`, `DEFAULT_HORIZONS`, `DEFAULT_FORECAST_STRATEGY`, `DEFAULT_TRAINING_START_RULE`, `DEFAULT_REFIT_POLICY`. Use these instead of hardcoded literals when calling the Simple API programmatically.
+
 ### Deprecated
 
 - `macroforecast/scaffold/wizard.py` (stdlib CLI wizard) — `run_wizard()` now
