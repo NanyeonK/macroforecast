@@ -10,11 +10,11 @@ whether you register a Python callable.
 :gutter: 3
 
 :::{grid-item-card} 1. Using the package
-:link: for_researchers/quickstart
+:link: for_researchers/simple_api/index
 :link-type: doc
 
-Run forecasts with the bundled FRED panels and the 35+ built-in models. Read
-the results, sweep recipes, look up support boundaries.
+After the [Getting started](getting_started.md) intro: simple API, sweep
+recipes, support boundaries, output guide, FRED dictionaries, recipe grammar.
 :::
 
 :::{grid-item-card} 2. Bring your own
@@ -32,8 +32,6 @@ transformer.
 :maxdepth: 2
 :caption: 1. Using the package
 
-for_researchers/quickstart
-for_researchers/first_study
 for_researchers/simple_api/index
 for_researchers/recipe_gallery
 for_researchers/runtime_support
