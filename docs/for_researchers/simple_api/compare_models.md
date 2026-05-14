@@ -57,3 +57,28 @@ exp = mf.Experiment(
 
 exp.sweep("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
 ```
+
+
+You can also sweep the training-window rule itself:
+
+```python
+import macroforecast as mf
+
+result = (
+    mf.Experiment(
+        dataset="fred_md",
+        target="INDPRO",
+        start="1980-01",
+        end="2019-12",
+        horizons=[1],
+    )
+    .compare(
+        "4_forecasting_model.nodes.fit_main.params.training_start_rule",
+        ["expanding", "rolling"],
+    )
+    .run(output_directory="outputs/indpro_window_compare")
+)
+```
+
+Note: switching to `"rolling"` also requires setting `params.rolling_window` to
+the desired window size — use a full YAML recipe (Recipe API) for that.

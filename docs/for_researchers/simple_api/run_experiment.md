@@ -24,7 +24,25 @@ Constructor arguments:
 - `frequency`: required when `dataset="fred_sd"` alone
 - `start`, `end`: optional sample-window endpoints
 - `model_family`: default `"ar_p"`
-- `random_seed`: default `0`
+- `random_seed`: default `42`
+
+## Default forecast settings
+
+`Experiment` constructor only exposes the most common knobs. The rest are
+inherited from the L4 schema defaults (kept in sync with
+`macroforecast.defaults`):
+
+| Setting | Default | Where to change |
+|--------|--------|-----------------|
+| Forecast strategy | `direct` | `.compare("4_forecasting_model.nodes.fit_main.params.forecast_strategy", [...])` |
+| Training window | `expanding` | `.compare("4_forecasting_model.nodes.fit_main.params.training_start_rule", [...])` |
+| Refit policy | `every_origin` | `.compare("4_forecasting_model.nodes.fit_main.params.refit_policy", [...])` |
+| Benchmark min train size | 5 (zero_change benchmark) | Recipe API |
+
+`training_start_rule` accepts `"expanding"`, `"rolling"` (requires
+`params.rolling_window` size), or `"fixed"` (requires
+`params.fixed_training_end_date`). For full control over L0–L8 axes, write a
+YAML recipe and run it with `mf.run("recipe.yaml")`.
 
 Inspect the generated recipe before running:
 
