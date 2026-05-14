@@ -2,23 +2,6 @@
 
 This track is for researchers who want to run macroeconomic forecasting experiments without learning the internal recipe and registry system first.
 
-> **API status (v0.9.0)**: every `mf.forecast` / `mf.Experiment` method
-> shown on these pages is implemented. The `Experiment.use_*` hooks
-> (`use_fred_sd_selection`, `use_fred_sd_state_group`,
-> `use_fred_sd_variable_group`, `use_mixed_frequency_representation`,
-> `use_sd_inferred_tcodes`, `use_sd_empirical_tcodes`,
-> `use_preprocessor` -- now with both `applied_at='l2'` pre-pipeline
-> and `applied_at='l3'` post-pipeline routing),
-> `Experiment.variant`, and the rich `ForecastResult` accessors
-> (`forecasts`, `metrics`, `ranking`, `read_json`, `file_path`,
-> `mean`, `get`) all ship in this release. The L4 fit node carries
-> the stable id `fit_main` so chained `.compare(...)` follow-ups can
-> use a predictable dotted path.
->
-> The Detail (code): Full track is still the canonical reference for the
-> 12-layer YAML recipe surface and bit-exact replication contract; use
-> it whenever you need to step outside the simple-API defaults.
-
 The simple API is organized around `forecast` and `Experiment`.
 
 ```python

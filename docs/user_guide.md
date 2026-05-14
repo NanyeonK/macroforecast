@@ -13,8 +13,8 @@ whether you register a Python callable.
 :link: for_researchers/simple_api/index
 :link-type: doc
 
-After the [Getting started](getting_started.md) intro: simple API, sweep
-recipes, support boundaries, output guide, FRED dictionaries, recipe grammar.
+After the [Getting started](getting_started.md) intro: the high-level
+Simple API, the full Recipe (YAML) grammar, and FRED dataset references.
 :::
 
 :::{grid-item-card} 2. Bring your own
@@ -30,17 +30,31 @@ transformer.
 ```{toctree}
 :hidden:
 :maxdepth: 2
-:caption: 1. Using the package
+:caption: Simple API (high-level)
 
 for_researchers/simple_api/index
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 2
+:caption: Recipe API (YAML grammar)
+
 for_researchers/recipe_gallery
-for_researchers/runtime_support
-for_researchers/understanding_output
-for_researchers/fred_datasets/index
 for_recipe_authors/design
 for_recipe_authors/data_policies
 for_recipe_authors/data/index
 for_recipe_authors/default_profiles
+for_researchers/runtime_support
+for_researchers/understanding_output
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 2
+:caption: Reference data
+
+for_researchers/fred_datasets/index
 ```
 
 ```{toctree}
