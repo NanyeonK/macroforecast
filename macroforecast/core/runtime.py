@@ -10580,6 +10580,53 @@ def _l6_pair_list(
     ]
 
 
+
+# Cycle 15 M-3 fix: alias deprecation — hides decision_at_5pct from keys()/__iter__/len()
+class _L6ResultWithDeprecatedAlias(dict):
+    """L6 DM/CW result dict that keeps `decision_at_5pct` accessible for backward
+    compat but emits DeprecationWarning and hides it from keys()/__iter__/len()."""
+
+    _DEPRECATED_KEYS = ("decision_at_5pct",)
+
+    def __getitem__(self, key):
+        if key in self._DEPRECATED_KEYS:
+            warnings.warn(
+                f"'{key}' is deprecated; use 'decision' instead. "
+                "Will be removed in v1.0.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return super().__getitem__(key)
+
+    def get(self, key, default=None):
+        if key in self._DEPRECATED_KEYS:
+            warnings.warn(
+                f"'{key}' is deprecated; use 'decision' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return super().get(key, default)
+
+    def __iter__(self):
+        return iter(k for k in super().__iter__() if k not in self._DEPRECATED_KEYS)
+
+    def keys(self):
+        return [k for k in super().keys() if k not in self._DEPRECATED_KEYS]
+
+    def items(self):
+        return [(k, v) for k, v in super().items() if k not in self._DEPRECATED_KEYS]
+
+    def values(self):
+        return [v for k, v in super().items() if k not in self._DEPRECATED_KEYS]
+
+    def __len__(self):
+        return sum(1 for k in super().__iter__() if k not in self._DEPRECATED_KEYS)
+
+    def __contains__(self, key):
+        # `in` test still finds deprecated keys (backward compat for `if "x" in d`)
+        return super().__contains__(key)
+
+
 def _l6_equal_predictive_results(
     errors: pd.DataFrame,
     sub: dict[str, Any],
@@ -10652,7 +10699,7 @@ def _l6_equal_predictive_results(
                 stat, p_value = _diebold_mariano_test(
                     diff, horizon=int(horizon), hln=apply_hln, kernel=hac_kernel
                 )
-                results[(test_name, model_a, model_b, target, int(horizon))] = {
+                results[(test_name, model_a, model_b, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
                     "statistic": stat,
                     "p_value": p_value,
                     "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
@@ -10664,7 +10711,7 @@ def _l6_equal_predictive_results(
                     if not diff.empty
                     else None,
                     "hln_correction": apply_hln,
-                }
+                })
     # Stash the DMP joint-test results next to the DM per-horizon entries.
     for key, payload in dmp_results.items():
         results[key] = payload
@@ -10721,7 +10768,7 @@ def _l6_harvey_newbold_results(
             )
             out[
                 ("harvey_newbold_encompassing", model_a, model_b, target, int(horizon))
-            ] = {
+            ] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
                 "statistic": stat,
                 "p_value": p_value,
                 "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
@@ -10732,7 +10779,7 @@ def _l6_harvey_newbold_results(
                 "encompassing": "a_over_b",
                 "mean_d": float(np.nanmean(e_a * (e_a - e_b))) if e_a.size else None,
                 "hac_kernel": hac_kernel,
-            }
+            })
     return out
 
 
@@ -10818,7 +10865,7 @@ def _l6_dmp_multi_horizon(
             from scipy import stats as _stats
 
             p_value = float(2 * (1 - _stats.norm.cdf(abs(stat))))
-            out[("dmp_multi_horizon", model_a, model_b, target)] = {
+            out[("dmp_multi_horizon", model_a, model_b, target)] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
                 "statistic": stat,
                 "p_value": p_value,
                 "decision": bool(p_value < 0.05),  # Cycle 14 L1-5 fix:
@@ -10828,7 +10875,7 @@ def _l6_dmp_multi_horizon(
                 "n_obs_stacked": n,
                 "mean_loss_difference": mean_diff,
                 "hac_kernel": hac_kernel,
-            }
+            })
     return out
 
 
@@ -10878,7 +10925,7 @@ def _l6_nested_results(
                     if (p_value is not None and stat is not None and stat > 0)
                     else p_value
                 )
-                results[(test_name, small_model, large_model, target, int(horizon))] = {
+                results[(test_name, small_model, large_model, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
                     "statistic": stat,
                     "p_value": p_value,
                     "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
@@ -10890,7 +10937,7 @@ def _l6_nested_results(
                     if not f_value.empty
                     else None,
                     "cw_adjustment": apply_cw,
-                }
+                })
     return results
 
 

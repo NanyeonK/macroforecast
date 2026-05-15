@@ -7,6 +7,8 @@ Verifies that every L6 result dict has the three new fields:
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -99,6 +101,10 @@ def test_dm_backward_compat_decision_at_5pct():
     results = _l6_equal_predictive_results(errors, sub, leaf, l4_models)
     for key, val in results.items():
         assert "decision_at_5pct" in val, f"decision_at_5pct backward compat missing at {key}"
+        # decision_at_5pct now emits DeprecationWarning on __getitem__ — suppress here
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            legacy_val = val["decision_at_5pct"]
         # decision and decision_at_5pct should agree
-        assert val["decision"] == val["decision_at_5pct"], \
-            f"decision != decision_at_5pct at {key}: {val['decision']} vs {val['decision_at_5pct']}"
+        assert val["decision"] == legacy_val, \
+            f"decision != decision_at_5pct at {key}: {val['decision']} vs {legacy_val}"

@@ -34,6 +34,14 @@ full per-version honesty-pass history embedded in repo documentation.
 #### Deferred (NOT_REPRODUCIBLE / out of cycle scope)
 - **J-2** sweep markers via `mf.run(Path)` — Cycle 13 finding NOT_REPRODUCIBLE in current `ec388d17`. Path and string branches use identical recipe canonicalization. Deferred unless reproducer surfaces.
 
+#### Cross-model review patches (Cycle 15) — P1 corrections
+
+These three fixes address Cycle 14 issues that a single-model reviewer (Claude) missed but cross-model review (MiniMax M2.5 + Codex GPT-5.4 xhigh) caught.
+
+- **M-1** Manifest `sample_start_resolved` / `sample_end_resolved` now reflect the post-L2 sample window (was: pre-window raw panel index). Users with explicit `sample_start_rule=fixed_date` now see the resolved window in manifest provenance.
+- **M-2** Custom preprocessor: signature validation pre-call via `inspect.signature`; body TypeErrors no longer misattributed to "wrong signature".
+- **M-3** L6 DM/CW result: `decision_at_5pct` accessible for backward compat with `DeprecationWarning`, but excluded from `keys()` / `__iter__` / `len()` to avoid silent length change for code iterating keys.
+
 #### Internal / regression fixes
 - **L3** `_jsonable` now handles `np.generic` and `np.ndarray` (mirrors `_json_safe` pattern in `execution.py`). Fixes a regression introduced by L2-4 where panel data with `np.float64` cells caused `yaml.safe_dump` `RepresenterError` via the activated manifest write path.
 
