@@ -34,6 +34,9 @@ full per-version honesty-pass history embedded in repo documentation.
 #### Deferred (NOT_REPRODUCIBLE / out of cycle scope)
 - **J-2** sweep markers via `mf.run(Path)` — Cycle 13 finding NOT_REPRODUCIBLE in current `ec388d17`. Path and string branches use identical recipe canonicalization. Deferred unless reproducer surfaces.
 
+#### Internal / regression fixes
+- **L3** `_jsonable` now handles `np.generic` and `np.ndarray` (mirrors `_json_safe` pattern in `execution.py`). Fixes a regression introduced by L2-4 where panel data with `np.float64` cells caused `yaml.safe_dump` `RepresenterError` via the activated manifest write path.
+
 #### Notes
 - Cycle 14 ships as v0.9.1 per user decision. 1 BREAKING item (J-3) enumerated above.
 - 7 HANDOFF items deferred to v0.9.2 backlog: SHAP threshold customizability beyond 2000 default, cross-cell L2 memoization, `mf.replicate(override_recipe=...)`, P3 docs replication hash table refresh (scriber's domain in this cycle).
