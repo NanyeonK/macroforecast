@@ -13206,7 +13206,18 @@ def _try_custom_l2_preprocessor(
 ) -> pd.DataFrame | None:
     """Issue #251 -- dispatch to a user-registered preprocessor when ``name``
     matches a registered entry. Returns ``None`` to indicate fall-through
-    to built-in policies."""
+    to built-in policies.
+
+    Cycle 14 J-4 fix: silent skip bug removed.
+    The previous bare ``except Exception: return None`` swallowed TypeError
+    from a wrong function signature, silently skipping the preprocessor and
+    preventing manifest provenance from reflecting truth.  Now TypeError
+    surfaces as a clear ValueError.  Unexpected return types also raise
+    instead of silently falling through.
+
+    Contract: ``fn(X_train, y_train, X_test, context) -> (X_train, X_test)``
+    or ``-> pd.DataFrame``. The runtime substitutes ``X_train = X_test =
+    frame`` for the single-pass L2 hook."""
 
     try:
         from .. import custom as _custom_mod
@@ -13215,19 +13226,40 @@ def _try_custom_l2_preprocessor(
     if not _custom_mod.is_custom_preprocessor(str(name)):
         return None
     spec = _custom_mod.get_custom_preprocessor(str(name))
+    # Cycle 14 J-4 fix: silent skip bug.
+    # Do NOT wrap in bare except Exception -- TypeError from a wrong
+    # signature must surface, not be swallowed.
     try:
         # Documented contract: ``fn(X_train, y_train, X_test, context) ->
-        # (X_train, X_test)``. For the runtime hook we substitute ``X_train
-        # = X_test = frame`` so the callable can do a single-pass clean.
+        # (X_train, X_test)``.  For the runtime hook we substitute
+        # ``X_train = X_test = frame`` (single-pass L2 panel clean).
         result = spec.function(frame, None, frame, dict(leaf_config))
-        if isinstance(result, tuple) and result:
-            cleaned = result[0]
-            return cleaned if isinstance(cleaned, pd.DataFrame) else None
-        if isinstance(result, pd.DataFrame):
-            return result
-    except Exception:  # pragma: no cover
-        return None
-    return None
+    except TypeError as exc:
+        # Cycle 14 J-4 fix: TypeError almost always means wrong argument
+        # count in the user function.  Re-raise with a helpful message
+        # instead of silently skipping.
+        raise ValueError(
+            f"custom preprocessor {name!r} raised TypeError -- "
+            "check function signature: expected "
+            "fn(X_train, y_train, X_test, context) -> (X_train, X_test) "
+            "or pd.DataFrame. "
+            f"Original error: {exc}"
+        ) from exc
+    if isinstance(result, tuple) and result:
+        cleaned = result[0]
+        if not isinstance(cleaned, pd.DataFrame):
+            raise ValueError(
+                f"custom preprocessor {name!r} returned a tuple whose "
+                f"first element is not a DataFrame (got {type(cleaned).__name__!r})"
+            )
+        return cleaned
+    if isinstance(result, pd.DataFrame):
+        return result
+    raise ValueError(
+        f"custom preprocessor {name!r} returned an unexpected type "
+        f"{type(result).__name__!r}; expected pd.DataFrame or "
+        "(pd.DataFrame, pd.DataFrame)"
+    )
 
 
 
