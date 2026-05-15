@@ -15,6 +15,8 @@ result = mf.forecast(
 )
 ```
 
+> **Date formats**: `start` / `end` accept ISO date strings: full `YYYY-MM-DD`, or partial `YYYY-MM` (normalized to first/last of month), or `YYYY` (normalized to year-start/year-end).
+
 Use the table accessors for normal analysis:
 
 ```python

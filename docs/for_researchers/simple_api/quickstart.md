@@ -14,6 +14,8 @@ result = mf.forecast(
 )
 ```
 
+> **Date formats**: `start` / `end` accept ISO date strings: full `YYYY-MM-DD`, or partial `YYYY-MM` (normalized to first/last of month), or `YYYY` (normalized to year-start/year-end).
+
 The result is a `ForecastResult` facade over the runtime output:
 
 ```python

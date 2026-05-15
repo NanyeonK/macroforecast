@@ -8,9 +8,7 @@
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 [![docs](https://readthedocs.org/projects/macroforecast/badge/?version=latest)](https://macroforecast.readthedocs.io/en/latest/)
 
-> **v0.9.0a0** — 1329 tests passing locally as of 2026-05-12. The CI badges above
-> reflect live build status and replace the previously static
-> "tests-N passing / version-X" badges to keep the README from going stale.
+> **v0.9.0** — extensive test suite (counts vary by extras and Python version; see CI badges above).
 >
 > **Renamed from `macrocast` -> `macroforecast`** in v0.6.0 (PyPI
 > namespace ownership). See ``CHANGELOG.md`` for the migration diff.
@@ -28,7 +26,7 @@ pip install 'macroforecast[shap]'            # + shap package for richer L7 figu
 Or pin to a tagged release directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.0a0"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.0"
 ```
 
 For development:
@@ -106,7 +104,7 @@ L0 study setup → L1 data → L2 preprocess → L3 features (DAG, 37 ops)
                 ↓                                ↓
                 L1.5 / L2.5 / L3.5 (diagnostics, default-off)
                                                  ↓
-              L4 model (35+ families) → L4.5 → L5 evaluation → L6 tests
+              L4 model (40+ families) → L4.5 → L5 evaluation → L6 tests
                                                                     ↓
                                                   L7 interpretation → L8 output
 ```
@@ -121,7 +119,7 @@ See `plans/design/part1-4` for the canonical design tables.
 > through legacy/specialized paths or optional extras, not necessarily
 > through the minimal core runtime end-to-end.
 
-* **35+ L4 families** — linear (8), tree / boosting (8), SVM (3), kNN, MLP, deep
+* **40+ L4 families** — linear (8), tree / boosting (8), SVM (3), kNN, MLP, deep
   NN (3, opt-in via `[deep]`), AR_p, factor_augmented_ar, BVAR Minnesota / NIW,
   FAVAR, MRF GTVP (Coulombe 2024), DFM (Mariano-Murasawa MQ Kalman),
   quantile_regression_forest, bagging.

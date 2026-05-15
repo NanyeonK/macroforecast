@@ -16,6 +16,8 @@ result = mf.forecast(
 )
 ```
 
+> **Date formats**: `start` / `end` accept ISO date strings: full `YYYY-MM-DD`, or partial `YYYY-MM` (normalized to first/last of month), or `YYYY` (normalized to year-start/year-end).
+
 FRED-QD fixes the experiment frequency to quarterly:
 
 ```python

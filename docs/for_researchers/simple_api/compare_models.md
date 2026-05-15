@@ -22,6 +22,8 @@ ranking = result.ranking
 summary = result.mean(metric="mse")
 ```
 
+> **Date formats**: `start` / `end` accept ISO date strings: full `YYYY-MM-DD`, or partial `YYYY-MM` (normalized to first/last of month), or `YYYY` (normalized to year-start/year-end).
+
 For a parameter sweep, use `compare(axis_path, values)`. The default Simple API fit node is normalized to `fit_main`, so the L4 model-parameter path is stable for follow-up sweeps:
 
 ```python

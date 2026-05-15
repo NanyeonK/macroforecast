@@ -16,6 +16,8 @@ exp = mf.Experiment(
 result = exp.run()
 ```
 
+> **Date formats**: `start` / `end` accept ISO date strings: full `YYYY-MM-DD`, or partial `YYYY-MM` (normalized to first/last of month), or `YYYY` (normalized to year-start/year-end).
+
 Constructor arguments:
 
 - `dataset`: `"fred_md"`, `"fred_qd"`, `"fred_sd"`, `"fred_md+fred_sd"`, or `"fred_qd+fred_sd"`
