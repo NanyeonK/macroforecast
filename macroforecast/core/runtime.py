@@ -12678,6 +12678,11 @@ def _jsonable(value: Any) -> Any:
         return value.to_dict()
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
+    # Cycle 14 L3 fix: handle numpy scalar and array types
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, np.ndarray):
+        return [_jsonable(item) for item in value.tolist()]
     if isinstance(value, (date, datetime)):
         return value.isoformat()
     if isinstance(value, Path):
