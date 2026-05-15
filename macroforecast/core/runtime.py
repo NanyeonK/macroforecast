@@ -11871,17 +11871,27 @@ def materialize_l8_runtime(
                 _fred_data_revision = f"current@{_dt}"
     if _fred_data_revision and not data_revision:
         data_revision = _fred_data_revision
-    # Resolved sample window (first/last row of raw_panel after _apply_sample_window)
+    # Cycle 15 M-1 fix: post-L2 sample window
+    # Prefer l2_clean_panel_v1.panel.data (post-window) over raw_panel
     _sample_start_resolved = None
     _sample_end_resolved = None
-    if _l1_art is not None and hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
+    import pandas as _pd_k3
+    _l2_art = upstream_artifacts.get("l2_clean_panel_v1") if upstream_artifacts else None
+    _post_window_idx = None
+    if _l2_art is not None and hasattr(_l2_art, "panel") and _l2_art.panel is not None:
+        _l2_panel_data = getattr(_l2_art.panel, "data", None)
+        if _l2_panel_data is not None and hasattr(_l2_panel_data, "index") and len(_l2_panel_data.index):
+            _post_window_idx = _l2_panel_data.index
+    if _post_window_idx is None and _l1_art is not None and hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
+        # fallback to raw_panel if no L2 artifact
         _idx_data = getattr(_l1_art.raw_panel, "data", None)
         if _idx_data is not None and hasattr(_idx_data, "index") and len(_idx_data.index):
-            import pandas as _pd_k3
-            _valid_idx = _idx_data.index[_idx_data.index.notna()]
-            if len(_valid_idx):
-                _sample_start_resolved = str(_valid_idx[0])
-                _sample_end_resolved = str(_valid_idx[-1])
+            _post_window_idx = _idx_data.index
+    if _post_window_idx is not None:
+        _valid_idx = _post_window_idx[_post_window_idx.notna()]
+        if len(_valid_idx):
+            _sample_start_resolved = str(_valid_idx[0])
+            _sample_end_resolved = str(_valid_idx[-1])
     seed_used = _capture_random_seed_used(recipe_root)
     # ``runtime_duration_per_layer`` and ``cells_summary[*].exported_files``
     # are non-deterministic across runs (wall-clock + tmp paths). Keep them
