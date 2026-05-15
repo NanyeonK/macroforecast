@@ -147,4 +147,12 @@ Add these blocks when needed:
 
 ---
 
+**Note on FRED data and real-time vintages**: macroforecast v0.9.x uses final-revised FRED data
+(current vintage) when `custom_source_policy: official_only` is set. Real-time vintage tracking
+(ALFRED) is planned for v1.x; `vintage_policy: real_time_alfred` raises `NotImplementedError`
+in v0.9.x. For details and workarounds, see
+[Your First Study — Real-Time Data Caveat](first_study.md#real-time-data-caveat).
+
+---
+
 **Note on output directory naming**: The runtime default is `./macrocast_output/<recipe_id>/<timestamp>/` (defined in `macroforecast.core.types` and `macroforecast.core.layers.l8`). To override, set `output_directory` in the `8_output.leaf_config` block, as the examples above do (`./macroforecast_output/quickstart/`). The historical `macrocast_output/` default is preserved for backward compatibility with v0.1-era manifests.

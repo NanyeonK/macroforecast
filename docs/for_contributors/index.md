@@ -34,7 +34,7 @@ macroforecast/
   defaults.py             # default profile dict template
   tuning/                 # HP search engines (optional, integrated via L4)
 plans/design/             # 4-part canonical design (source of truth)
-tests/                    # ~953 tests, runs in <30s
+tests/                    # test suite (counts vary by extras; see CI badges)
 examples/recipes/         # YAML recipe examples per layer
 ```
 
@@ -44,7 +44,7 @@ examples/recipes/         # YAML recipe examples per layer
 python -m pytest tests/ -x -q -m "not deep"
 ```
 
-Expected: ~953 tests pass / ~12 skipped in <30 seconds. The `[deep]` extra (and
+Expected: tests pass / some skipped (counts vary by extras and Python version; see CI badges). The `[deep]` extra (and
 its tests) require torch.
 
 ## Typecheck

@@ -48,7 +48,7 @@ Run the test suite:
 python -m pytest tests/ -x -q -m "not deep"
 ```
 
-Expected: 1318 tests pass / 19 skipped / 4 deselected in ~85 seconds (local core baseline).
+Expected: tests pass (counts vary by extras and Python version; see CI badges at the top of README.md).
 
 ## Optional dependencies
 

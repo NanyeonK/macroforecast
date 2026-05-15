@@ -139,6 +139,33 @@ print(result.sink("l8_artifacts_v1").exported_files)
 - L7 adds importance artifacts when enabled.
 - L8 writes a directory that can be inspected without rerunning the study.
 
+## Real-Time Data Caveat
+
+The recipe above uses `custom_source_policy: custom_panel_only` and inline data. When switching
+to FRED data via `custom_source_policy: official_only`, macroforecast v0.9.x uses
+**final-revised FRED data** (current vintage) by default. It does **not** simulate real-time
+data availability.
+
+| `vintage_policy` | Status in v0.9.x | Notes |
+|---|---|---|
+| `current_vintage` (default) | Operational | Downloads the latest FRED revision; not a real-time vintage |
+| `real_time_alfred` | Not yet operational | Raises `NotImplementedError`; planned for v1.x |
+
+**What this means for your study:**
+
+- Walk-forward evaluation with `custom_source_policy: official_only` uses data as-of today,
+  not as-of each forecast origin date. This is appropriate for benchmarking models on a fixed
+  dataset but is **not** a real-time forecasting simulation.
+- Published macro-forecasting papers typically evaluate over real-time vintages (ALFRED).
+  To faithfully replicate such papers, you must supply your own vintage-specific panels via
+  `custom_panel_inline` or an external CSV, one panel per origin date.
+- The `data_revision_tag` field in the manifest records the FRED data-through date so you
+  can detect when the upstream FRED cache was refreshed between runs.
+
+For the real-time limitation context, see
+[`docs/CONVENTIONS.md`](../CONVENTIONS.md) and the
+[Goulet-Coulombe (2021) replication page](../replications/goulet_coulombe_2021.md).
+
 ## Next Steps
 
 - [Understanding Output](understanding_output.md) — every current core runtime artifact

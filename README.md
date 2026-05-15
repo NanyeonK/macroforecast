@@ -141,7 +141,7 @@ See `plans/design/part1-4` for the canonical design tables.
 
 ## Recipe gallery
 
-`examples/recipes/` ships ~50 reference recipes; new in v0.3:
+`examples/recipes/` ships 38 bundled reference recipes; new in v0.3:
 
 * `l4_minimal_ridge.yaml` — minimal ridge on a custom panel.
 * `l4_random_forest.yaml`, `l4_xgboost.yaml`, `l4_lightgbm.yaml` (when extras installed).

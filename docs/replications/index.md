@@ -24,9 +24,21 @@ publication-grade replication study.
 
 - [Example walkthrough -- minimal ridge](example_walkthrough.md)
 
+## Replication tier codes
+
+Each replication page carries a tier code:
+
+| Tier | Meaning |
+|---|---|
+| **SMOKE** | Recipe runs end-to-end on stock install; bit-exact replicate passes on bundled smoke panel |
+| **SCHEMA-FAITHFUL** | Recipe axes match the paper's experimental design at the YAML level |
+| **NUMERICAL** | Numerical results (MSEs, rankings) verified against paper-reported figures on full FRED data |
+
+A page may hold multiple tiers (e.g., SMOKE + SCHEMA-FAITHFUL).
+
 ## Bundled paper baselines
 
-- [Goulet-Coulombe (2021) -- The Macroeconomy as a Random Forest](goulet_coulombe_2021.md)
+- [Goulet-Coulombe (2021) -- The Macroeconomy as a Random Forest](goulet_coulombe_2021.md) — SMOKE + SCHEMA-FAITHFUL
 
 ## Research replications
 

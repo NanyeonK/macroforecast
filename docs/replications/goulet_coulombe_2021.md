@@ -1,10 +1,16 @@
 # Goulet-Coulombe (2021) — bundled paper baseline
 
-> Status: bundled paper-baseline replication. The recipe runs end-to-end
-> on a stock install with bit-exact replicate. Real FRED-MD figure
-> replication requires swapping the bundled 36-month sample panel for
-> the official 1960-onwards FRED-MD vintage (one-line edit in the
-> recipe; see "Real FRED-MD" section).
+> **Replication tier**: SMOKE — the bundled recipe runs end-to-end on a
+> stock install and bit-exact replicates between runs. It is **not** a full
+> numerical paper replication: the bundled panel is a 36-month smoke sample
+> (1960-1962). For a full numerical replication against paper-reported MSEs,
+> swap to real FRED-MD (see "Real FRED-MD" section).
+>
+> **Status codes**: SMOKE = end-to-end run + bit-exact replicate on smoke panel.
+> SCHEMA-FAITHFUL = schema matches paper design. NUMERICAL = numerical match to
+> paper-reported figures on full FRED-MD vintage.
+>
+> This page is: SMOKE + SCHEMA-FAITHFUL. NUMERICAL requires user-side real-FRED run.
 
 This page documents what the bundled
 [`examples/recipes/goulet_coulombe_2021_replication.yaml`](https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/goulet_coulombe_2021_replication.yaml)
@@ -42,24 +48,30 @@ macroforecast run examples/recipes/goulet_coulombe_2021_replication.yaml -o out/
 macroforecast replicate out/gc2021/manifest.json
 ```
 
-**Verified on v0.8.6** (server1, 2026-05-06):
+**Verified on v0.9.1** (server1, 2026-05-15, HEAD f37b1bad):
 
 ```
-run:        1.40s, cells=1, all_ok=True
-replicate:  recipe_match=True, sink_hashes_match=True
+run:        cells=1, all_ok=True
+replicate:  recipe_match=True, sink_hashes_match=True (content sinks only)
 
-cell sink hashes (deterministic across runs):
-  l1_data_definition_v1:   d164d15be5b3135c
+cell sink hashes — deterministic across runs (as of v0.9.1):
+  l1_data_definition_v1:   ef0097be59701c39  ← changed (J-3 path-dep fix)
   l1_regime_metadata_v1:   41cb7c29ec77d7c1
-  l2_clean_panel_v1:       effec065444a0ac4
-  l3_features_v1:          139853d1515cab8a
+  l2_clean_panel_v1:       4d1b3b68fc69bcdd  ← changed
+  l3_features_v1:          c331480b8e77ec35  ← changed
   l3_metadata_v1:          7c2368d756c4a66a
   l4_forecasts_v1:         395df3d0f5979dac
   l4_model_artifacts_v1:   0a2b7f63e1df2a31
   l4_training_metadata_v1: 62abd040e502ebdd
-  l5_evaluation_v1:        f5ac78c21ae68f7e
-  l6_tests_v1:             bc383c20f93143dd
+  l5_evaluation_v1:        c4309297939489ed  ← changed
+  l6_tests_v1:             1bb73b2ab5032c76  ← changed
+  l8_artifacts_v1:         (varies by output_directory — excluded from replicate)
 ```
+
+Note: 4 content sinks changed from v0.8.6 → v0.9.1 due to the J-3 sink hash
+path-dependence fix (cache_root now excluded from _stable_repr). Old v0.8.6
+manifests will report sink_hashes_match=False when replicated at v0.9.1; this
+is expected. Regenerate your manifest at v0.9.1 to establish the new baseline.
 
 Smoke regression: covered by
 [`tests/test_examples_smoke.py::test_recipe_runs_end_to_end[goulet_coulombe_2021_replication.yaml]`](https://github.com/NanyeonK/macroforecast/blob/main/tests/test_examples_smoke.py).
