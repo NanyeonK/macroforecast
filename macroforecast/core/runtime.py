@@ -7656,6 +7656,69 @@ class _HoltWintersWrapper:
             return np.full(steps, self._fallback_mean, dtype=float)
 
 
+def _add_l5_extended_metrics(metrics: "pd.DataFrame", errors: "pd.DataFrame") -> "pd.DataFrame":
+    """F-P1-8 fix: compute medae, theil_u1, theil_u2, success_ratio per (model_id, target, horizon).
+
+    ``errors`` must contain columns: model_id, target, horizon, y_true, y_pred, y_prev (y_prev may be None).
+    Formulas:
+      medae = median(|y_true - y_pred|)
+      theil_u1 = sqrt(mean((y_true - y_pred)^2)) / (sqrt(mean(y_true^2)) + sqrt(mean(y_pred^2)))
+      theil_u2 = sqrt(sum((y_pred - y_true)^2 / y_true_prev^2)) / sqrt(sum(((y_true - y_true_prev) / y_true_prev)^2))
+                 denominator = naive forecast (no-change) scaled error; NaN when fewer than 2 obs with y_prev available
+      success_ratio = mean(sign(y_pred - y_prev) == sign(y_true - y_prev)) for rows where y_prev is not None/NaN
+    """
+    import numpy as np
+
+    rows_extended: list[dict] = []
+    for (model_id, target, horizon), grp in errors.groupby(
+        ["model_id", "target", "horizon"]
+    ):
+        y_true = grp["y_true"].to_numpy(dtype=float)
+        y_pred = grp["y_pred"].to_numpy(dtype=float)
+        # medae
+        medae = float(np.median(np.abs(y_true - y_pred)))
+        # theil_u1
+        rmse_forecast = float(np.sqrt(np.mean((y_true - y_pred) ** 2)))
+        denom_u1 = float(np.sqrt(np.mean(y_true ** 2)) + np.sqrt(np.mean(y_pred ** 2)))
+        theil_u1 = rmse_forecast / denom_u1 if denom_u1 > 0 else float("nan")
+        # theil_u2 and success_ratio use y_prev — filter to rows where y_prev is available
+        if "y_prev" in grp.columns:
+            has_prev = grp["y_prev"].notna()
+            grp_prev = grp[has_prev]
+        else:
+            grp_prev = grp.iloc[0:0]  # empty
+        if len(grp_prev) >= 2:
+            yt = grp_prev["y_true"].to_numpy(dtype=float)
+            yp = grp_prev["y_pred"].to_numpy(dtype=float)
+            yp_prev = grp_prev["y_prev"].to_numpy(dtype=float)
+            # Avoid division by zero from zero y_prev
+            safe_prev = np.where(np.abs(yp_prev) > 0, yp_prev, float("nan"))
+            num_u2 = np.nansum(((yp - yt) / safe_prev) ** 2)
+            den_u2 = np.nansum(((yt - yp_prev) / safe_prev) ** 2)
+            theil_u2 = float(np.sqrt(num_u2 / den_u2)) if den_u2 > 0 else float("nan")
+            sign_pred = np.sign(yp - yp_prev)
+            sign_true = np.sign(yt - yp_prev)
+            success_ratio = float(np.mean(sign_pred == sign_true))
+        else:
+            theil_u2 = float("nan")
+            success_ratio = float("nan")
+        rows_extended.append(
+            {
+                "model_id": model_id,
+                "target": target,
+                "horizon": horizon,
+                "medae": medae,
+                "theil_u1": theil_u1,
+                "theil_u2": theil_u2,
+                "success_ratio": success_ratio,
+            }
+        )
+    if not rows_extended:
+        return metrics
+    ext = pd.DataFrame(rows_extended)
+    return metrics.merge(ext, on=["model_id", "target", "horizon"], how="left")
+
+
 def _add_l5_relative_metrics(
     metrics: pd.DataFrame, l4_models: L4ModelArtifactsArtifact | None
 ) -> pd.DataFrame:
@@ -7889,7 +7952,13 @@ def materialize_l5_minimal(
     for (model_id, target, horizon, origin), forecast in forecasts_raw.items():
         if origin not in actual.index:
             continue
-        error = float(actual.loc[origin]) - float(forecast)
+        y_true = float(actual.loc[origin])
+        y_pred = float(forecast)
+        error = y_true - y_pred
+        # F-P1-8 fix: store y_true/y_pred/y_prev for extended metrics (medae, theil, direction)
+        actual_index = actual.index
+        origin_pos = actual_index.get_loc(origin)
+        y_prev = float(actual.iloc[origin_pos - 1]) if origin_pos > 0 else None
         rows.append(
             {
                 "model_id": model_id,
@@ -7898,6 +7967,9 @@ def materialize_l5_minimal(
                 "origin": origin,
                 "squared_error": error**2,
                 "absolute_error": abs(error),
+                "y_true": y_true,
+                "y_pred": y_pred,
+                "y_prev": y_prev,
             }
         )
     if not rows:
@@ -7930,6 +8002,8 @@ def materialize_l5_minimal(
             mse=("squared_error", "mean"), mae=("absolute_error", "mean")
         )
         metrics["rmse"] = metrics["mse"] ** 0.5
+        # F-P1-8 fix: compute extended metrics (medae, theil_u1, theil_u2, success_ratio)
+        metrics = _add_l5_extended_metrics(metrics, errors)
         metrics = _add_l5_relative_metrics(metrics, l4_models)
     if metrics.empty:
         ranking = pd.DataFrame()
@@ -11959,18 +12033,61 @@ def _l8_export_artifacts(
         )
 
     if "forecasts" in saved and "l4_forecasts_v1" in upstream_artifacts:
-        rows = [
-            {
+        # F-P1-10 fix: compute forecast_date (origin + horizon offset) and actual
+        # Column order: model_id, target, horizon, origin, forecast, forecast_date, actual
+        _l1_art = upstream_artifacts.get("l1_data_definition_v1")
+        _l1_freq = getattr(_l1_art, "frequency", "monthly") if _l1_art is not None else "monthly"
+        _raw_panel_data = (
+            _l1_art.raw_panel.data
+            if _l1_art is not None and hasattr(_l1_art, "raw_panel")
+            else None
+        )
+
+        def _compute_forecast_date(origin, horizon: int, frequency: str):
+            """Return the date when horizon-step-ahead forecast materializes."""
+            try:
+                months = horizon * (3 if frequency == "quarterly" else 1)
+                return origin + pd.DateOffset(months=months)
+            except Exception:
+                return None
+
+        def _lookup_actual(forecast_date, target: str, panel_data):
+            """Return the realized value at forecast_date for target; NaN if unavailable."""
+            if panel_data is None or forecast_date is None:
+                return float("nan")
+            if target not in panel_data.columns:
+                return float("nan")
+            try:
+                # Try exact match first, then nearest
+                col = panel_data[target]
+                fd_ts = pd.Timestamp(forecast_date)
+                if fd_ts in col.index:
+                    val = col.loc[fd_ts]
+                    return float(val) if pd.notna(val) else float("nan")
+                # Try normalizing to period-end convention
+                idx_ts = col.index.asof(fd_ts)
+                if pd.isna(idx_ts):
+                    return float("nan")
+                val = col.loc[idx_ts]
+                return float(val) if pd.notna(val) else float("nan")
+            except Exception:
+                return float("nan")
+
+        rows = []
+        for (model_id, target, horizon, origin), forecast in upstream_artifacts[
+            "l4_forecasts_v1"
+        ].forecasts.items():
+            forecast_date = _compute_forecast_date(origin, int(horizon), _l1_freq)
+            actual_val = _lookup_actual(forecast_date, target, _raw_panel_data)
+            rows.append({
                 "model_id": model_id,
                 "target": target,
                 "horizon": horizon,
                 "origin": origin,
                 "forecast": forecast,
-            }
-            for (model_id, target, horizon, origin), forecast in upstream_artifacts[
-                "l4_forecasts_v1"
-            ].forecasts.items()
-        ]
+                "forecast_date": forecast_date,
+                "actual": actual_val,
+            })
         forecasts_frame = pd.DataFrame(rows)
         if (
             granularity in {"per_target", "per_horizon", "per_target_horizon"}
@@ -12012,21 +12129,39 @@ def _l8_export_artifacts(
             importance_artifact,
             "l7_importance_v1",
         )
+        # F-P1-11 fix: thread L7 figure axes (dpi, format, top_k, precision_digits) into render
+        _l7_axis_resolved = (
+            getattr(importance_artifact, "computation_metadata", {}) or {}
+        ).get("axis_resolved", {})
+        _fig_dpi = int(_l7_axis_resolved.get("figure_dpi", 300))
+        _fig_fmt = str(_l7_axis_resolved.get("figure_format", "pdf")).lower()
+        _top_k = int(_l7_axis_resolved.get("top_k_features_to_show", 20))
+        _precision = int(_l7_axis_resolved.get("precision_digits", 4))
+        # Map figure_format axis value to matplotlib format + file extension
+        _fmt_map = {"pdf": "pdf", "png": "png", "svg": "svg", "eps": "eps"}
+        _mpl_fmt = _fmt_map.get(_fig_fmt, "pdf")
         try:
             from .figures import render_default_for_op, render_us_state_choropleth
 
             figures_dir.mkdir(parents=True, exist_ok=True)
             sink_payloads = getattr(importance_artifact, "global_importance", {}) or {}
             for op_name, payload in sink_payloads.items():
-                figure_path = figures_dir / f"{op_name}.pdf"
+                figure_path = figures_dir / f"{op_name}.{_mpl_fmt}"
+                # Apply precision_digits formatting to importance column when available
+                if isinstance(payload, __import__("pandas").DataFrame) and "importance" in payload.columns:
+                    payload = payload.copy()
+                    payload["importance"] = payload["importance"].map(
+                        lambda v: round(float(v), _precision)
+                    )
                 rendered = render_default_for_op(
-                    op_name, payload, output_path=figure_path, title=f"L7 {op_name}"
+                    op_name, payload, output_path=figure_path, title=f"L7 {op_name}",
+                    dpi=_fig_dpi, top_k=_top_k,
                 )
                 if rendered is not None:
                     exported.append(
                         ExportedFile(
                             path=rendered,
-                            artifact_type="figure_pdf",
+                            artifact_type=f"figure_{_mpl_fmt}",
                             source_sink="l7_importance_v1",
                         )
                     )

@@ -23,7 +23,7 @@ def _ensure_matplotlib():
     return plt
 
 
-def render_bar_global(table: pd.DataFrame, *, output_path: Path, top_k: int = 20, title: str | None = None) -> Path:
+def render_bar_global(table: pd.DataFrame, *, output_path: Path, top_k: int = 20, title: str | None = None, dpi: int = 150) -> Path:
     plt = _ensure_matplotlib()
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -36,7 +36,7 @@ def render_bar_global(table: pd.DataFrame, *, output_path: Path, top_k: int = 20
     if title:
         ax.set_title(title)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=150)
+    fig.savefig(output_path, dpi=int(dpi))
     plt.close(fig)
     return output_path
 
@@ -168,17 +168,22 @@ def render_default_for_op(
     *,
     output_path: Path,
     title: str | None = None,
+    dpi: int = 150,
+    top_k: int = 20,
 ) -> Path | None:
-    """Dispatch helper used by L7 export to render a default figure per op."""
+    """Dispatch helper used by L7 export to render a default figure per op.
+
+    F-P1-11 fix: dpi and top_k are threaded from the L7 axis_resolved values.
+    """
 
     if isinstance(payload, pd.DataFrame) and "feature" in payload.columns and "importance" in payload.columns:
         if op in {"shap_tree", "shap_kernel", "shap_linear", "shap_deep"}:
-            return render_bar_global(payload, output_path=output_path, title=title)
+            return render_bar_global(payload, output_path=output_path, title=title, dpi=dpi, top_k=top_k)
         if op == "partial_dependence":
             return render_pdp_line(payload, output_path=output_path, title=title)
         if op in {"group_aggregate", "lineage_attribution"}:
-            return render_bar_global(payload.rename(columns={"group": "feature", "pipeline": "feature"}), output_path=output_path, title=title)
-        return render_bar_global(payload, output_path=output_path, title=title)
+            return render_bar_global(payload.rename(columns={"group": "feature", "pipeline": "feature"}), output_path=output_path, title=title, dpi=dpi, top_k=top_k)
+        return render_bar_global(payload, output_path=output_path, title=title, dpi=dpi, top_k=top_k)
     return None
 
 

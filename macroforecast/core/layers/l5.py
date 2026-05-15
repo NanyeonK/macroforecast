@@ -284,6 +284,28 @@ def _validate_metric_options(resolved: L5ResolvedAxes, context: dict[str, Any]) 
         issues.append(_issue("l5.decomposition_target", "by_state requires FRED-SD"))
     if resolved.get("decomposition_target") == "by_regime" and context.get("regime_definition", "none") == "none":
         issues.append(_issue("l5.decomposition_target", "by_regime requires active regime"))
+    # F-P1-9 fix: reject non-default values for axes not yet implemented in runtime.
+    # TODO: implement benchmark_window sub-period windowing in materialize_l5_minimal.
+    if resolved.get("benchmark_window", "full_oos") != "full_oos":
+        issues.append(_issue(
+            "l5.benchmark_window",
+            f"benchmark_window={resolved['benchmark_window']!r} is not yet implemented "
+            "(only 'full_oos' is supported). Set benchmark_window to 'full_oos' or omit it.",
+        ))
+    # TODO: implement benchmark_scope (per-target / per-horizon filtering) in materialize_l5_minimal.
+    if resolved.get("benchmark_scope", "all_targets_horizons") != "all_targets_horizons":
+        issues.append(_issue(
+            "l5.benchmark_scope",
+            f"benchmark_scope={resolved['benchmark_scope']!r} is not yet implemented "
+            "(only 'all_targets_horizons' is supported). Set benchmark_scope to 'all_targets_horizons' or omit it.",
+        ))
+    # TODO: implement per-regime metric reporting in materialize_l5_minimal.
+    if resolved.get("regime_metrics"):
+        issues.append(_issue(
+            "l5.regime_metrics",
+            "regime_metrics is not yet implemented; per-regime metric breakdown is a future feature. "
+            "Remove regime_metrics from the recipe or set regime_use='pooled'.",
+        ))
     return issues
 
 
