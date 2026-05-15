@@ -639,10 +639,18 @@ def _validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str
         issues.append(_issue("l1.frequency", "frequency must be quarterly for FRED-QD datasets"))
     if (dataset == "fred_sd" or custom_policy == "custom_panel_only") and frequency is None:
         issues.append(_issue("l1.frequency", "frequency must be explicitly set for fred_sd standalone or custom-only data"))
+    # Cycle 14 K-4 fix: hard-reject real_time_alfred in both fixed_axes and leaf_config
+    _vintage_from_leaf = leaf_config.get("vintage_policy")
+    if _vintage_from_leaf == "real_time_alfred":
+        issues.append(_issue(
+            "l1.vintage_policy",
+            "real_time_alfred is not yet implemented; future feature. Use current_vintage (default).",
+        ))
     if resolved.get("vintage_policy") == "real_time_alfred":
-        if "vintage_date_or_tag" not in leaf_config:
-            issues.append(_issue("l1.vintage_date_or_tag", "real_time_alfred requires leaf_config.vintage_date_or_tag"))
-        issues.append(_issue("l1.vintage_policy", "vintage_policy=real_time_alfred is future and not executable"))
+        issues.append(_issue(
+            "l1.vintage_policy",
+            "real_time_alfred is not yet implemented; future feature. Use current_vintage (default).",
+        ))
     return issues
 
 

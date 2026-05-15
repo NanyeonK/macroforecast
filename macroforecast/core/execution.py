@@ -622,6 +622,41 @@ class ManifestExecutionResult:
         )
 
         git_sha, git_branch = _capture_git_state()
+        # Cycle 14 K-3 fix: extract FRED data_through + resolved sample dates from l1 artifact
+        _data_revision_tag = _capture_data_revision_tag(self.recipe_root)
+        _sample_start_resolved = None
+        _sample_end_resolved = None
+        _l1_art = None
+        for _cell in self.cells:
+            if _cell.runtime_result is not None:
+                _arts = getattr(_cell.runtime_result, "artifacts", None) or {}
+                _l1_cand = _arts.get("l1_data_definition_v1")
+                if _l1_cand is not None:
+                    _l1_art = _l1_cand
+                    break
+        if _l1_art is not None:
+            # FRED data_through → auto-populate data_revision_tag when not already set
+            _raw_meta = {}
+            if hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
+                _raw_meta = (_l1_art.raw_panel.metadata.values or {}) if hasattr(_l1_art.raw_panel, "metadata") else {}
+            _dt = _raw_meta.get("data_through")
+            if _dt and not _data_revision_tag:
+                _dataset = getattr(_l1_art, "dataset", "") or ""
+                if "fred_qd" in _dataset:
+                    _data_revision_tag = f"fred-qd@{_dt}"
+                elif "fred" in _dataset:
+                    _data_revision_tag = f"fred-md@{_dt}"
+                else:
+                    _data_revision_tag = f"current@{_dt}"
+            # Resolved sample window: first/last valid index row of raw_panel
+            if hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
+                _idx_data = getattr(_l1_art.raw_panel, "data", None)
+                if _idx_data is not None and hasattr(_idx_data, "index") and len(_idx_data.index):
+                    import pandas as _pd_k3
+                    _valid_idx = _idx_data.index[_idx_data.index.notna()]
+                    if len(_valid_idx):
+                        _sample_start_resolved = str(_valid_idx[0])
+                        _sample_end_resolved = str(_valid_idx[-1])
         provenance = {
             "package_version": _capture_package_version(),
             "python_version": platform.python_version(),
@@ -629,11 +664,14 @@ class ManifestExecutionResult:
             "julia_version": _command_version_safe(("julia", "--version")),
             "git_commit_sha": git_sha,
             "git_branch_name": git_branch,
-            "data_revision_tag": _capture_data_revision_tag(self.recipe_root),
+            "data_revision_tag": _data_revision_tag,
             "random_seed_used": _capture_random_seed_used(self.recipe_root),
             "dependency_lockfile_paths": _dependency_lockfile_paths(),
             "dependency_lockfile_content": _capture_dependency_lockfile_content(),
             "runtime_environment": _json_safe(_capture_full_runtime_environment()),
+            # Cycle 14 K-3 fix: resolved sample start/end dates
+            "sample_start_resolved": _sample_start_resolved,
+            "sample_end_resolved": _sample_end_resolved,
         }
         return {
             "schema_version": "0.1.0",

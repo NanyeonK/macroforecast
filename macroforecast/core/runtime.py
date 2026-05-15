@@ -11826,6 +11826,33 @@ def materialize_l8_runtime(
     runtime_env = _capture_full_runtime_environment()
     lockfile_content = _capture_dependency_lockfile_content()
     data_revision = _capture_data_revision_tag(recipe_root)
+    # Cycle 14 K-3 fix: auto-capture FRED data_through and resolved sample dates
+    _l1_art = upstream_artifacts.get("l1_data_definition_v1") if upstream_artifacts else None
+    _fred_data_revision = ""
+    if _l1_art is not None:
+        _raw_meta = (_l1_art.raw_panel.metadata.values or {}) if hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel else {}
+        _dt = _raw_meta.get("data_through")
+        if _dt:
+            _dataset = getattr(_l1_art, "dataset", "") or ""
+            if "fred_qd" in _dataset:
+                _fred_data_revision = f"fred-qd@{_dt}"
+            elif "fred_md" in _dataset or "fred_sd" in _dataset or _dataset.startswith("fred"):
+                _fred_data_revision = f"fred-md@{_dt}"
+            else:
+                _fred_data_revision = f"current@{_dt}"
+    if _fred_data_revision and not data_revision:
+        data_revision = _fred_data_revision
+    # Resolved sample window (first/last row of raw_panel after _apply_sample_window)
+    _sample_start_resolved = None
+    _sample_end_resolved = None
+    if _l1_art is not None and hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
+        _idx_data = getattr(_l1_art.raw_panel, "data", None)
+        if _idx_data is not None and hasattr(_idx_data, "index") and len(_idx_data.index):
+            import pandas as _pd_k3
+            _valid_idx = _idx_data.index[_idx_data.index.notna()]
+            if len(_valid_idx):
+                _sample_start_resolved = str(_valid_idx[0])
+                _sample_end_resolved = str(_valid_idx[-1])
     seed_used = _capture_random_seed_used(recipe_root)
     # ``runtime_duration_per_layer`` and ``cells_summary[*].exported_files``
     # are non-deterministic across runs (wall-clock + tmp paths). Keep them
@@ -11873,6 +11900,9 @@ def materialize_l8_runtime(
         "exported_files": [file.path.as_posix() for file in exported_files],
         # F-P1-13 fix: cache_root provenance (additive, not breaking)
         "cache_root": recipe_root.get("1_data", {}).get("leaf_config", {}).get("cache_root"),
+        # Cycle 14 K-3 fix: resolved sample dates
+        "sample_start_resolved": _sample_start_resolved,
+        "sample_end_resolved": _sample_end_resolved,
     }
     if axes.get("manifest_format") == "json_lines":
         manifest_path.write_text(
