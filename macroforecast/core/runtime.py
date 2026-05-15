@@ -5,6 +5,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 import copy
 import math
+import hashlib
 import json
 from pathlib import Path
 import platform
@@ -11830,8 +11831,13 @@ def materialize_l8_runtime(
     # are non-deterministic across runs (wall-clock + tmp paths). Keep them
     # out of the hashed L8Manifest dataclass so bit-exact replicate still
     # passes; they are written to the on-disk JSON payload below.
+    # F-P1-12 fix: stable cross-process hash (BREAKING -- prior manifest values differ)
+    _canonical_json = json.dumps(
+        _jsonable(recipe_root), sort_keys=True, default=str, separators=(",", ":")
+    )
+    _recipe_hash_hex = hashlib.sha256(_canonical_json.encode()).hexdigest()[:16]
     manifest = L8Manifest(
-        recipe_hash=str(abs(hash(json.dumps(_jsonable(recipe_root), sort_keys=True)))),
+        recipe_hash=_recipe_hash_hex,
         package_version=package_version,
         python_version=platform.python_version(),
         r_version=_command_version_safe(("R", "--version")),
@@ -11865,6 +11871,8 @@ def materialize_l8_runtime(
         "dependency_lockfile_content": lockfile_content,
         "runtime_duration_per_layer": dict(runtime_durations or {}),
         "exported_files": [file.path.as_posix() for file in exported_files],
+        # F-P1-13 fix: cache_root provenance (additive, not breaking)
+        "cache_root": recipe_root.get("1_data", {}).get("leaf_config", {}).get("cache_root"),
     }
     if axes.get("manifest_format") == "json_lines":
         manifest_path.write_text(
@@ -13147,10 +13155,20 @@ def _apply_transform(
         return frame, {}
     if policy == "custom_tcode" and not tcode_map:
         raise ValueError("custom_tcode runtime requires custom_tcode_map")
+    # F-P1-14 fix: honour official_transform_scope (BREAKING)
+    scope = resolved.get("transform_scope", "target_and_predictors") or "target_and_predictors"
+    target_col = l1_leaf.get("target") or l2_leaf.get("target")
     transformed = frame.copy()
     applied: dict[str, int] = {}
+    if scope in ("none", "not_applicable"):
+        cleaning_log["steps"].append({"transform": policy, "applied": {}, "scope": scope})
+        return transformed, applied
     for column, tcode in tcode_map.items():
         if column not in transformed.columns:
+            continue
+        if scope == "target_only" and column != target_col:
+            continue
+        if scope == "predictors_only" and column == target_col:
             continue
         transformed[column] = _apply_tcode(transformed[column], int(tcode))
         applied[column] = int(tcode)

@@ -81,6 +81,33 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ---
 
+### Audit Phase fix bundle (Cycle 12) -- 15 source fixes from Codex audit checklist
+
+#### BREAKING
+- **F-P1-1** L1 `release_lag_rule` now enforced at runtime -- predictor columns shift forward by their declared lag; forecasts respect data-availability latency. Results computed with `release_lag_rule != "ignore_release_lag"` in prior versions may differ.
+- **F-P1-2** L2 imputation now computed per-origin (expanding window) when `imputation_temporal_rule = expanding_window_per_origin` (default). Removes lookahead from full-sample mean / EM / fill.
+- **F-P1-3** L2 outlier policies now computed per-origin under same rule. Removes lookahead from full-sample IQR / z-score / winsorize.
+- **F-P1-6** FRED-SD `sd_states` (state filter) is now applied -- previously validated but silently ignored.
+- **F-P1-7** FRED-SD `fred_sd_variable_group` is now applied -- variable groups resolve to actual variable lists via `raw/fred_sd_groups.py`.
+- **F-P1-9** L5 benchmark `benchmark_window`, `benchmark_scope`, `regime_metrics` axes now raise on non-default values (previously silently ignored). Future implementation tracked in TODO comments.
+- **F-P1-10** `forecasts.csv` schema gains two columns appended at end: `forecast_date` and `actual`. New order: `model_id, target, horizon, origin, forecast, forecast_date, actual`. JSON export updated to match.
+- **F-P1-11** L7 figure axes `figure_dpi`, `figure_format`, `top_k_features_to_show`, `precision_digits` are now honored. Previously hard-coded `.pdf` output is replaced by `figure_format` value.
+- **F-P1-12** Recipe hash algorithm changed from Python `hash()` (process-salted) to `hashlib.sha256(canonical_json)[:16]`. Recipe hashes are now stable across processes; prior manifest values will mismatch on re-run.
+- **F-P1-14** L2 `official_transform_scope` is now honored. Previously tcodes were applied to all series regardless of scope; results may differ for users who set non-default scope.
+
+#### Added
+- **F-P0-1** Simple-API `start=` / `end=` accept `YYYY` and `YYYY-MM` partial-ISO forms (normalized to first-of-month / last-of-month). Unblocks all `simple_api/*.md` documented examples.
+- **F-P1-4** L1 panels with duplicate dates now raise `RuntimeError` listing offending dates (was: silent coalesce / undefined behavior).
+- **F-P1-5** Custom CSV loader rejects FRED-official-format headers (`Transform:` first row) with a hint to use `dataset="fred_md"` instead (was: silent corruption of first data row).
+- **F-P1-8** L5 metric registry adds `medae`, `theil_u1`, `theil_u2`, `success_ratio`.
+- **F-P1-13** L8 manifest gains `cache_root` provenance field.
+
+#### Notes
+- Cycle 12 release stays at v0.9.1 (no v0.10 bump) per user decision; BREAKING items enumerated for visibility.
+- Documentation drift (`v0.9.0a0` -> `v0.9.0`, `35+ families` -> `40+ families`, `v0.9.4` -> `v0.9.0` in CONVENTIONS) handled by scriber as separate docs commit.
+
+---
+
 ## [0.9.0] -- 2026-05-13 -- "v0.9.0 stable cut (F-02 + DOCS-1 + MC-RECAL closure)"
 
 After the 16-paper full-coverage alpha pre-release (`v0.9.0a0`, 2026-05-12), the
