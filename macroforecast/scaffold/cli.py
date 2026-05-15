@@ -46,7 +46,9 @@ def _cmd_encyclopedia(args: argparse.Namespace) -> int:
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
+    # Cycle 14 L2-3 fix: print manifest path on success; show clean error for bad YAML/path
     import macroforecast
+    import yaml
 
     recipe_path = Path(args.recipe).resolve()
     if not recipe_path.exists():
@@ -54,13 +56,32 @@ def _cmd_run(args: argparse.Namespace) -> int:
         return 2
     output_dir = Path(args.output_directory).resolve()
     print(f"[macroforecast run] {recipe_path} -> {output_dir}", file=sys.stderr)
-    result = macroforecast.run(recipe_path, output_directory=output_dir)
+    try:
+        result = macroforecast.run(recipe_path, output_directory=output_dir)
+    except yaml.YAMLError as exc:
+        # Show first line of yaml error only; full multi-line yaml error is noisy
+        first_line = str(exc).splitlines()[0] if str(exc) else str(exc)
+        print(f"Error: invalid YAML in {recipe_path}: {first_line}", file=sys.stderr)
+        return 2
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001
+        print(f"Error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
     failed = [c for c in result.cells if c.error is not None]
     print(
         f"[macroforecast run] {len(result.cells)} cells "
         f"({len(result.cells) - len(failed)} ok, {len(failed)} failed)",
         file=sys.stderr,
     )
+    # Print manifest path and forecasts.csv path on success (Cycle 14 L2-3 fix)
+    manifest_path = output_dir / "manifest.json"
+    if manifest_path.exists():
+        print(f"\nManifest: {manifest_path}\n", file=sys.stderr)
+    forecasts_path = output_dir / "forecasts.csv"
+    if forecasts_path.exists():
+        print(f"Forecasts: {forecasts_path}\n", file=sys.stderr)
     if failed:
         for cell in failed:
             print(f"  ! {cell.cell_id}: {cell.error}", file=sys.stderr)

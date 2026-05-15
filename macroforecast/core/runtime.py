@@ -8496,8 +8496,11 @@ def _l7_xy(
     return X, y_in if isinstance(y_in, pd.Series) else None
 
 
+_SHAP_SUBSAMPLE_THRESHOLD = 2000  # Cycle 14 L2-5 fix: default subsampling threshold
+
+
 def _shap_importance_frame(
-    model: ModelArtifact, X: pd.DataFrame, *, kind: str
+    model: ModelArtifact, X: pd.DataFrame, *, kind: str, shap_subsample: int | None = None
 ) -> pd.DataFrame:
     """SHAP via the optional `shap` package; falls back to a coefficient or
     permutation proxy if `shap` is not installed."""
@@ -8508,19 +8511,33 @@ def _shap_importance_frame(
         if hasattr(model.fitted_object, "coef_"):
             return _linear_importance_frame(model, method=kind)
         return _permutation_importance_frame(model, X, None, method=kind)
+
+    # Cycle 14 L2-5 fix: subsample large panels to avoid slow SHAP computation
+    threshold = shap_subsample if shap_subsample is not None else _SHAP_SUBSAMPLE_THRESHOLD
+    X_shap = X
+    if len(X) > threshold:
+        import warnings
+        warnings.warn(
+            f"SHAP on {len(X)} rows is slow; subsampling to {threshold} rows. "
+            f"Override via SHAP op param.",
+            UserWarning,
+            stacklevel=3,
+        )
+        X_shap = X.sample(n=threshold, random_state=42)
+
     fitted = model.fitted_object
     try:
         if kind == "shap_linear" and hasattr(fitted, "coef_"):
-            explainer = shap.LinearExplainer(fitted, X.fillna(0.0))
+            explainer = shap.LinearExplainer(fitted, X_shap.fillna(0.0))
         elif kind in {"shap_tree", "shap_interaction"} and hasattr(
             fitted, "feature_importances_"
         ):
             explainer = shap.TreeExplainer(fitted)
         else:
             explainer = shap.KernelExplainer(
-                fitted.predict, shap.sample(X.fillna(0.0), min(50, len(X)))
+                fitted.predict, shap.sample(X_shap.fillna(0.0), min(50, len(X_shap)))
             )
-        values = explainer.shap_values(X.fillna(0.0))
+        values = explainer.shap_values(X_shap.fillna(0.0))
     except Exception:
         return _permutation_importance_frame(model, X, None, method=kind)
     importance = (

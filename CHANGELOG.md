@@ -5,6 +5,39 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Audit Phase fix bundle (Cycle 14) — 13 source fixes from Cycle 13 audit checklist
+
+#### BREAKING
+- **J-3** L1 sink hash (`l1_data_definition_v1`) no longer depends on `cache_root`. Same recipe run with different `output_directory` now produces identical L1 hash. `mf.replicate()` returns `sink_hashes_match=True` for standard usage. Pre-existing manifests will report mismatch on re-replicate; users must regenerate manifests once.
+
+#### Added (P1)
+- **J-1** FRED-QD loader is NaT-safe (`data_through` no longer crashes when last index is NaT).
+- **J-4** Custom preprocessor errors now surface (was: silent `except Exception` swallow + false `applied=True` in manifest).
+- **J-5** L3 `feature_selection` op now hard-rejects `temporal_rule: full_sample_once` matching the `scale`/`pca` pattern (runtime was already per-origin).
+- **K-1** `macroforecast.defaults` accessible at top level (was: `AttributeError`).
+- **K-2** `ManifestExecutionResult` now exposes `.forecasts`, `.metrics`, `.ranking`, `.manifest` as documented in `simple_api/quickstart.md`.
+- **K-3** Manifest provenance auto-captures `data_revision_tag` for FRED `current_vintage` + records `sample_start_resolved` / `sample_end_resolved`.
+
+#### Added (P2)
+- **K-4** `vintage_policy: real_time_alfred` hard-rejected as future feature.
+- **L1-1** RuntimeError messages now include layer name + recipe key path (L1, L4 coverage).
+- **L1-2** Manifest now captures `warnings` (top-level + per-cell).
+- **L1-3** Validator warns on unknown top-level recipe key + unknown `leaf_config` key (UserWarning, not raise).
+- **L1-4** L3.5 `selection_view: none` no longer triggers false "requires feature_selection" error.
+- **L1-5** DM/CW result dict now includes `decision`, `alternative`, `correction_method` fields (`decision_at_5pct` retained for backward compat).
+- **L2-1** `markdown_report` export: tabulate available (added to extras / clean ImportError).
+- **L2-2** `mf.run('/nonexistent.yaml')` now raises `FileNotFoundError` (was: confusing "YAML root must be a mapping").
+- **L2-3** CLI now prints manifest path on success; invalid YAML shows clean 1-3 line error (was: raw 20-line traceback).
+- **L2-4** `mf.run(output_directory=...)` kwarg now propagates to L8 `leaf_config.output_directory` (was: silently ignored unless recipe set it).
+- **L2-5** SHAP op subsamples to 2000 rows with `UserWarning` for larger panels.
+
+#### Deferred (NOT_REPRODUCIBLE / out of cycle scope)
+- **J-2** sweep markers via `mf.run(Path)` — Cycle 13 finding NOT_REPRODUCIBLE in current `ec388d17`. Path and string branches use identical recipe canonicalization. Deferred unless reproducer surfaces.
+
+#### Notes
+- Cycle 14 ships as v0.9.1 per user decision. 1 BREAKING item (J-3) enumerated above.
+- 7 HANDOFF items deferred to v0.9.2 backlog: SHAP threshold customizability beyond 2000 default, cross-cell L2 memoization, `mf.replicate(override_recipe=...)`, P3 docs replication hash table refresh (scriber's domain in this cycle).
+
 ### Added
 
 - `macroforecast.core.stages`: new module exposing `STAGE_BY_LAYER` (13-entry

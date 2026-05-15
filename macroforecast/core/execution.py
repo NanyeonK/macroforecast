@@ -881,6 +881,10 @@ def execute_recipe(
     started_at = datetime.now(timezone.utc).isoformat()
     started_clock = time.perf_counter()
 
+    # Cycle 14 L2-2 fix: raise FileNotFoundError before attempting YAML parse
+    if isinstance(recipe, Path) and not recipe.exists():
+        raise FileNotFoundError(f"recipe path does not exist: {recipe}")
+
     if isinstance(recipe, Path):
         recipe_root = parse_recipe_yaml(recipe.read_text(encoding="utf-8"))
     elif isinstance(recipe, str):
@@ -912,6 +916,15 @@ def execute_recipe(
     effective_cache_root = _resolve_cache_root(recipe_root, cache_root, output_directory)
     if effective_cache_root is not None:
         _inject_cache_root(recipe_root, effective_cache_root)
+
+    # Cycle 14 L2-4 fix: propagate output_directory kwarg into L8 leaf_config so
+    # that L8 artifacts (tests_summary.json, forecasts.csv, etc.) are written there
+    # when the user passes output_directory= to mf.run() without setting it in YAML.
+    if output_directory is not None:
+        l8_block = recipe_root.setdefault("8_output", {})
+        l8_leaf = l8_block.setdefault("leaf_config", {})
+        if "output_directory" not in l8_leaf:
+            l8_leaf["output_directory"] = str(Path(output_directory))
 
     fixed_axes = (recipe_root.get(L0_KEY, {}) or {}).get("fixed_axes", {}) or {}
     leaf = (recipe_root.get(L0_KEY, {}) or {}).get("leaf_config", {}) or {}

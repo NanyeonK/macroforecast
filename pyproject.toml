@@ -54,8 +54,10 @@ docs = [
 ]
 typecheck = ["mypy>=1.13"]
 wizard = ["solara>=1.30"]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,wizard]"]
-ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy]"]
+# Cycle 14 L2-1 fix: tabulate required for markdown_report export_format (DataFrame.to_markdown)
+markdown = ["tabulate>=0.9"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,wizard,markdown]"]
+ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy,markdown]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
