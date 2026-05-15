@@ -350,11 +350,25 @@ def _stable_repr(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_stable_repr(item) for item in value]
     if hasattr(value, "__dataclass_fields__"):
+        # Cycle 14 J-3 fix: cache_root path-dependence
+        # When hashing leaf_config dicts, strip cache_root so that
+        # different output_directory values do not change the sink hash.
+        # cache_root remains recorded in manifest provenance (Cycle 12 F-P1-13).
+        _HASH_SKIP_FIELDS = {"fitted_object", "raw_panel", "panel"}
+        _LEAF_CONFIG_HASH_EXCLUDE_KEYS = {"cache_root"}
+
+        def _get_field_val_for_hash(obj, fname):
+            v = getattr(obj, fname)
+            if fname == "leaf_config" and isinstance(v, dict):
+                return {k: val for k, val in v.items() if k not in _LEAF_CONFIG_HASH_EXCLUDE_KEYS}
+            return v
+
         return {
-            field_name: _stable_repr(getattr(value, field_name))
+            field_name: _stable_repr(_get_field_val_for_hash(value, field_name))
             for field_name in value.__dataclass_fields__
-            if field_name not in {"fitted_object", "raw_panel", "panel"}
-            # exclude unhashable fitted_object; panel data is captured via shape/columns elsewhere
+            if field_name not in _HASH_SKIP_FIELDS
+            # exclude unhashable fitted_object; panel data captured via shape/columns elsewhere
+            # exclude cache_root from leaf_config (path-dependent, stripped above)
         }
     if isinstance(value, Path):
         return value.as_posix()
