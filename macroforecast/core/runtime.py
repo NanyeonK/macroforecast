@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 import copy
+import inspect
 import math
 import hashlib
 import json
@@ -13300,25 +13301,43 @@ def _try_custom_l2_preprocessor(
     if not _custom_mod.is_custom_preprocessor(str(name)):
         return None
     spec = _custom_mod.get_custom_preprocessor(str(name))
-    # Cycle 14 J-4 fix: silent skip bug.
-    # Do NOT wrap in bare except Exception -- TypeError from a wrong
-    # signature must surface, not be swallowed.
+    # Cycle 15 M-2 fix: signature validation pre-call
+    # Use inspect.signature to validate arity BEFORE calling spec.function.
+    # This ensures a wrong-arity function raises ValueError with a clear hint,
+    # while any TypeError raised INSIDE the user's function body propagates
+    # naturally as TypeError (not misattributed to "wrong signature").
     try:
-        # Documented contract: ``fn(X_train, y_train, X_test, context) ->
-        # (X_train, X_test)``.  For the runtime hook we substitute
-        # ``X_train = X_test = frame`` (single-pass L2 panel clean).
-        result = spec.function(frame, None, frame, dict(leaf_config))
-    except TypeError as exc:
-        # Cycle 14 J-4 fix: TypeError almost always means wrong argument
-        # count in the user function.  Re-raise with a helpful message
-        # instead of silently skipping.
-        raise ValueError(
-            f"custom preprocessor {name!r} raised TypeError -- "
-            "check function signature: expected "
-            "fn(X_train, y_train, X_test, context) -> (X_train, X_test) "
-            "or pd.DataFrame. "
-            f"Original error: {exc}"
-        ) from exc
+        sig = inspect.signature(spec.function)
+        params = sig.parameters
+        _positional_kinds = (
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        )
+        has_var_positional = any(
+            p.kind == inspect.Parameter.VAR_POSITIONAL for p in params.values()
+        )
+        positional_count = len(
+            [p for p in params.values() if p.kind in _positional_kinds]
+        )
+        accepts_4_args = has_var_positional or positional_count >= 4
+        if not accepts_4_args:
+            raise ValueError(
+                f"custom preprocessor {name!r} has wrong signature. "
+                "Expected fn(X_train, y_train, X_test, context) -> "
+                "(X_train, X_test) or pd.DataFrame, "
+                f"got {sig}."
+            )
+    except (ValueError, TypeError) as _sig_err:
+        # inspect.signature may fail on C-implemented callables; re-raise
+        # only if it is our own signature-hint ValueError.
+        if isinstance(_sig_err, ValueError) and "wrong signature" in str(_sig_err):
+            raise
+        pass  # fall through to direct call for builtins/C callables
+    # Documented contract: ``fn(X_train, y_train, X_test, context) ->
+    # (X_train, X_test)``.  For the runtime hook we substitute
+    # ``X_train = X_test = frame`` (single-pass L2 panel clean).
+    # Body TypeErrors propagate naturally (no wrapping).
+    result = spec.function(frame, None, frame, dict(leaf_config))
     if isinstance(result, tuple) and result:
         cleaned = result[0]
         if not isinstance(cleaned, pd.DataFrame):
