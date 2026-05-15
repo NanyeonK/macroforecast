@@ -634,7 +634,22 @@ def target_construction(inputs, params):
     layer_scope=("l3",),
     input_types={"default": (Panel, LaggedPanel, Factor)},
     output_type=Panel,
-    params_schema={"n_features": {"type": object, "default": 0.5, "sweepable": True}},
+    # Cycle 14 J-5 fix: add temporal_rule schema matching scale/pca pattern
+    params_schema={
+        "n_features": {"type": object, "default": 0.5, "sweepable": True},
+        "temporal_rule": {
+            "type": str,
+            "default": "expanding_window_per_origin",
+            "sweepable": True,
+        },
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for feature_selection temporal_rule",
+        ),
+    ),
 )
 def feature_selection(inputs, params):
     _stub(inputs, params)
