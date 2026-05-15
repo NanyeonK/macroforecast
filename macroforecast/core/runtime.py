@@ -1773,11 +1773,11 @@ def materialize_l4_minimal(
         if isinstance(node, dict) and node.get("op") == "fit_model"
     ]
     if not fit_nodes:
-        raise ValueError("L4 runtime requires a fit_model node")
+        raise ValueError("[L4/4_forecasting_model.nodes] L4 runtime requires a fit_model node")  # Cycle 14 L1-1 fix:
     X = l3_features.X_final.data
     y = l3_features.y_final.metadata.values.get("data")
     if not isinstance(y, pd.Series):
-        raise ValueError("L4 runtime requires L3 y_final series data")
+        raise ValueError("[L4/4_forecasting_model.leaf_config] L4 runtime requires L3 y_final series data")  # Cycle 14 L1-1 fix:
     target = l3_features.y_final.name
     horizon = int(l3_features.horizon_set[0] if l3_features.horizon_set else 1)
     # Phase B-15 paper-15 F4: ``y_orig`` is the un-averaged source y stashed
@@ -10637,7 +10637,10 @@ def _l6_equal_predictive_results(
                 results[(test_name, model_a, model_b, target, int(horizon))] = {
                     "statistic": stat,
                     "p_value": p_value,
-                    "decision_at_5pct": p_value is not None and p_value < 0.05,
+                    "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
+                    "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
+                    "alternative": "two_sided",  # Cycle 14 L1-5 fix:
+                    "correction_method": "hln_nw" if apply_hln else "nw",  # Cycle 14 L1-5 fix:
                     "n_obs": int(diff.notna().sum()),
                     "mean_loss_difference": _float_or_none(diff.mean())
                     if not diff.empty
@@ -10703,7 +10706,10 @@ def _l6_harvey_newbold_results(
             ] = {
                 "statistic": stat,
                 "p_value": p_value,
-                "decision_at_5pct": p_value is not None and p_value < 0.05,
+                "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
+                "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
+                "alternative": "one_sided",  # Cycle 14 L1-5 fix: HN is one-sided (a encompasses b)
+                "correction_method": "hln_nw",  # Cycle 14 L1-5 fix: Harvey-Leybourne-Newbold small-sample
                 "n_obs": int(np.sum(np.isfinite(e_a) & np.isfinite(e_b))),
                 "encompassing": "a_over_b",
                 "mean_d": float(np.nanmean(e_a * (e_a - e_b))) if e_a.size else None,
@@ -10797,7 +10803,10 @@ def _l6_dmp_multi_horizon(
             out[("dmp_multi_horizon", model_a, model_b, target)] = {
                 "statistic": stat,
                 "p_value": p_value,
-                "decision_at_5pct": bool(p_value < 0.05),
+                "decision": bool(p_value < 0.05),  # Cycle 14 L1-5 fix:
+                "decision_at_5pct": bool(p_value < 0.05),  # kept for backward compat
+                "alternative": "two_sided",  # Cycle 14 L1-5 fix:
+                "correction_method": "nw",  # Cycle 14 L1-5 fix: DMP uses HAC kernel, no HLN
                 "n_obs_stacked": n,
                 "mean_loss_difference": mean_diff,
                 "hac_kernel": hac_kernel,
@@ -10854,7 +10863,10 @@ def _l6_nested_results(
                 results[(test_name, small_model, large_model, target, int(horizon))] = {
                     "statistic": stat,
                     "p_value": p_value,
-                    "decision_at_5pct": p_value is not None and p_value < 0.05,
+                    "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
+                    "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
+                    "alternative": "one_sided",  # Cycle 14 L1-5 fix: CW is one-sided (large improves on small)
+                    "correction_method": "nw",  # Cycle 14 L1-5 fix: HAC NW kernel, no HLN for nested
                     "n_obs": int(f_value.notna().sum()),
                     "mean_adjusted_improvement": _float_or_none(f_value.mean())
                     if not f_value.empty
@@ -12944,7 +12956,7 @@ def _validate_targets_present(
     targets = tuple(leaf_config.get("targets", ()) or ((target,) if target else ()))
     missing = [name for name in targets if name not in frame.columns]
     if missing:
-        raise ValueError(f"target columns missing from custom panel: {missing}")
+        raise ValueError(f"[L1/1_data.leaf_config.target] target columns missing from custom panel: {missing}")  # Cycle 14 L1-1 fix:
     if resolved.get("target_structure") == "single_target" and not target:
         raise ValueError("single_target runtime requires leaf_config.target")
 

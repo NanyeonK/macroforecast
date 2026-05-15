@@ -71,7 +71,7 @@ OPTIONS = {
     "correlation_view": {"full_matrix", "clustered_heatmap", "top_k"},
     "lag_view": {"autocorrelation_per_lag", "partial_autocorrelation", "lag_correlation_decay", "multi"},
     "marx_view": {"none", "weight_decay_visualization"},
-    "selection_view": {"selected_list", "selection_count_per_origin", "selection_stability", "multi"},
+    "selection_view": {"none", "selected_list", "selection_count_per_origin", "selection_stability", "multi"},  # Cycle 14 L1-4 fix: "none" disables selection diagnostics without error
     "stability_metric": {"jaccard", "kuncheva"},
     "diagnostic_format": {"png", "pdf", "html", "json", "latex_table", "csv", "multi"},
 }
@@ -235,7 +235,7 @@ def _validate_values(resolved: L3_5ResolvedAxes, fixed: dict[str, Any], context:
         issues.append(_issue("l3_5.lag_view", "lag_view requires a lag step in L3"))
     if "marx_view" in fixed and not context.get("has_marx_step", False):
         issues.append(_issue("l3_5.marx_view", "marx_view requires a ma_increasing_order step in L3"))
-    if "selection_view" in fixed and not context.get("has_feature_selection_step", False):
+    if "selection_view" in fixed and fixed.get("selection_view") not in {"none", None} and not context.get("has_feature_selection_step", False):  # Cycle 14 L1-4 fix: selection_view=none is a no-op, should not error
         issues.append(_issue("l3_5.selection_view", "selection_view requires a feature_selection step in L3"))
     return issues
 

@@ -30,6 +30,70 @@ from ..defaults import DEFAULT_RANDOM_SEED
 
 L0_KEY = "0_meta"
 
+# Cycle 14 L1-3 fix: canonical top-level recipe keys; unknown keys emit UserWarning
+_KNOWN_RECIPE_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
+    "0_meta",
+    "1_data",
+    "1_5_data_summary",
+    "2_preprocessing",
+    "2_5_pre_post_preprocessing",
+    "3_feature_engineering",
+    "3_5_feature_diagnostics",
+    "4_forecasting_model",
+    "4_5_generator_diagnostics",
+    "5_evaluation",
+    "6_statistical_tests",
+    "7_interpretation",
+    "8_output",
+    # Meta-keys used internally by sweep/variant expansion
+    "sweep",
+    "variants",
+    "_variant_name",
+})
+
+# Per-layer known leaf_config keys (non-exhaustive; covers fields the runtime reads)
+_KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
+    "0_meta": frozenset({"n_workers", "random_seed"}),
+    "1_data": frozenset({
+        "target", "targets", "dataset", "cache_root", "sample_start_date", "sample_end_date",
+        "sample_start_rule", "sample_end_rule", "vintage_policy", "fred_series", "custom_panel_path",
+        "custom_panel_format", "frequency", "data_through",
+        # inline / in-memory panel forms
+        "custom_panel_inline", "custom_panel_records", "custom_source_path",
+        # horizon config
+        "target_horizons",
+    }),
+    "4_forecasting_model": frozenset({
+        "n_jobs", "fit_kwargs", "predict_kwargs", "min_train_size", "n_horizon_models",
+    }),
+    "8_output": frozenset({
+        "output_directory", "manifest_format", "exported_files", "data_revision_tag",
+    }),
+}
+
+
+def _warn_unknown_recipe_keys(recipe_root: dict) -> None:
+    """Emit UserWarning for unrecognized top-level and leaf_config keys."""
+    import warnings as _w
+    for key in recipe_root:
+        if key not in _KNOWN_RECIPE_TOP_LEVEL_KEYS:
+            _w.warn(
+                f"[recipe] unknown top-level key {key!r} — it will be silently ignored. "
+                "Known keys: " + ", ".join(sorted(_KNOWN_RECIPE_TOP_LEVEL_KEYS)),
+                UserWarning,
+                stacklevel=4,
+            )
+        known_lc = _KNOWN_LEAF_CONFIG_KEYS.get(key)
+        if known_lc is not None:
+            lc = (recipe_root.get(key) or {}).get("leaf_config") or {}
+            for lc_key in lc:
+                if lc_key not in known_lc:
+                    _w.warn(
+                        f"[recipe.{key}.leaf_config] unknown key {lc_key!r} — it will be silently ignored.",
+                        UserWarning,
+                        stacklevel=4,
+                    )
+
 
 def _walk_sweep_paths(value: Any, path: tuple[Any, ...] = ()) -> list[tuple[tuple[Any, ...], list[Any]]]:
     """Find every ``{sweep: [...]}`` marker in a recipe-root tree.
@@ -453,6 +517,7 @@ class CellExecutionResult:
     sink_hashes: dict[str, str] = field(default_factory=dict)
     error: str | None = None
     traceback: str | None = None
+    captured_warnings: tuple[dict[str, Any], ...] = field(default_factory=tuple)  # Cycle 14 L1-2 fix:
 
     @property
     def succeeded(self) -> bool:
@@ -687,6 +752,11 @@ class ManifestExecutionResult:
                 "machine": platform.machine(),
             },
             "provenance": provenance,
+            "warnings": [  # Cycle 14 L1-2 fix: all warnings emitted during all cells
+                w
+                for cell in self.cells
+                for w in cell.captured_warnings
+            ],
             "cells": [
                 {
                     "cell_id": cell.cell_id,
@@ -698,6 +768,7 @@ class ManifestExecutionResult:
                     "error": cell.error,
                     "runtime_duration_per_layer": _per_layer_durations(cell),
                     "cell_resolved_axes": _per_cell_resolved_axes(cell),
+                    "warnings": list(cell.captured_warnings),  # Cycle 14 L1-2 fix:
                 }
                 for cell in self.cells
             ],
@@ -833,6 +904,9 @@ def execute_recipe(
     # regardless of YAML/JSON authoring order or roundtrip representation.
     recipe_root = _canonicalize_keys(recipe_root)
 
+    # Cycle 14 L1-3 fix: warn on unknown top-level and leaf_config keys
+    _warn_unknown_recipe_keys(recipe_root)
+
     # Resolve the effective raw cache root and inject it into every cell's L1
     # leaf_config so the raw loader picks it up.
     effective_cache_root = _resolve_cache_root(recipe_root, cache_root, output_directory)
@@ -902,19 +976,30 @@ def _run_single_cell(
 
     _apply_seed(seed)
     clock = time.perf_counter()
-    try:
-        runtime_result = execute_minimal_forecast(concrete_root)
-    except Exception as exc:  # noqa: BLE001
+    import warnings as _warnings_mod  # Cycle 14 L1-2 fix:
+    _captured: list[dict[str, Any]] = []
+    with _warnings_mod.catch_warnings(record=True) as _w_list:
+        _warnings_mod.simplefilter("always")
+        try:
+            runtime_result = execute_minimal_forecast(concrete_root)
+        except Exception as exc:  # noqa: BLE001
+            duration = time.perf_counter() - clock
+            return CellExecutionResult(
+                cell_id=cell_id,
+                index=index,
+                sweep_values=sweep_values,
+                duration_seconds=duration,
+                error=str(exc),
+                traceback=traceback_module.format_exc(),
+            )
         duration = time.perf_counter() - clock
-        return CellExecutionResult(
-            cell_id=cell_id,
-            index=index,
-            sweep_values=sweep_values,
-            duration_seconds=duration,
-            error=str(exc),
-            traceback=traceback_module.format_exc(),
-        )
-    duration = time.perf_counter() - clock
+        for _w in (_w_list or []):
+            _captured.append({
+                "category": _w.category.__name__,
+                "message": str(_w.message),
+                "filename": _w.filename,
+                "lineno": _w.lineno,
+            })
     sink_hashes = {name: _hash_sink(value) for name, value in runtime_result.artifacts.items()}
     return CellExecutionResult(
         cell_id=cell_id,
@@ -923,6 +1008,7 @@ def _run_single_cell(
         duration_seconds=duration,
         runtime_result=runtime_result,
         sink_hashes=sink_hashes,
+        captured_warnings=tuple(_captured),
     )
 
 
