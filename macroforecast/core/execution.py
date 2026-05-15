@@ -477,6 +477,138 @@ class ManifestExecutionResult:
     def failed(self) -> tuple[CellExecutionResult, ...]:
         return tuple(cell for cell in self.cells if not cell.succeeded)
 
+    # -- documented public API accessors (v0.9.1, K-2 fix) ----------------
+
+    @staticmethod
+    def _cell_artifact(cell, sink_name):
+        """Pull *sink_name* from cell.runtime_result.artifacts; None on miss."""
+        rt = cell.runtime_result
+        if rt is None:
+            return None
+        artifacts = getattr(rt, "artifacts", None) or {}
+        return artifacts.get(sink_name)
+
+    @property
+    def forecasts(self):
+        """Concatenate per-cell l4_forecasts_v1 rows.
+
+        Returns an empty DataFrame (with canonical columns) when no cells
+        produced forecast artifacts. Mirrors ForecastResult.forecasts.
+        """
+        import pandas as pd
+
+        rows = []
+        for cell in self.cells:
+            artifact = self._cell_artifact(cell, "l4_forecasts_v1")
+            if artifact is None:
+                continue
+            forecasts = getattr(artifact, "forecasts", None) or {}
+            intervals = getattr(artifact, "forecast_intervals", None) or {}
+            interval_lookup = {}
+            for key, value in intervals.items():
+                if not isinstance(key, tuple) or len(key) != 5:
+                    continue
+                model_id, target, horizon, origin, quantile = key
+                slot = interval_lookup.get(
+                    (model_id, target, horizon, origin), (float("nan"), float("nan"))
+                )
+                lo, hi = slot
+                try:
+                    qf = float(quantile)
+                except (TypeError, ValueError):
+                    continue
+                if qf <= 0.5:
+                    lo = float(value)
+                else:
+                    hi = float(value)
+                interval_lookup[(model_id, target, horizon, origin)] = (lo, hi)
+            for key, value in forecasts.items():
+                if not isinstance(key, tuple) or len(key) != 4:
+                    continue
+                model_id, target, horizon, origin = key
+                lo, hi = interval_lookup.get(
+                    (model_id, target, horizon, origin), (float("nan"), float("nan"))
+                )
+                rows.append({
+                    "cell_id": cell.cell_id,
+                    "model_id": model_id,
+                    "target": target,
+                    "horizon": horizon,
+                    "origin": origin,
+                    "y_pred": value,
+                    "y_pred_lo": lo,
+                    "y_pred_hi": hi,
+                })
+        if not rows:
+            return pd.DataFrame(
+                columns=[
+                    "cell_id", "model_id", "target", "horizon", "origin",
+                    "y_pred", "y_pred_lo", "y_pred_hi",
+                ]
+            )
+        return pd.DataFrame(rows)
+
+    @property
+    def metrics(self):
+        """Concatenate per-cell l5_evaluation_v1.metrics_table.
+
+        Adds a cell_id column. Returns an empty DataFrame when no cells
+        produced an L5 evaluation artifact. Mirrors ForecastResult.metrics.
+        """
+        import pandas as pd
+
+        frames = []
+        for cell in self.cells:
+            artifact = self._cell_artifact(cell, "l5_evaluation_v1")
+            if artifact is None:
+                continue
+            table = getattr(artifact, "metrics_table", None)
+            if table is None or not isinstance(table, pd.DataFrame) or table.empty:
+                continue
+            with_cell = table.copy()
+            with_cell.insert(0, "cell_id", cell.cell_id)
+            frames.append(with_cell)
+        if not frames:
+            return pd.DataFrame()
+        return pd.concat(frames, ignore_index=True)
+
+    @property
+    def ranking(self):
+        """Concatenate per-cell l5_evaluation_v1.ranking_table.
+
+        Adds a cell_id column. Returns an empty DataFrame when no cells
+        emitted a ranking table. Mirrors ForecastResult.ranking.
+        """
+        import pandas as pd
+
+        frames = []
+        for cell in self.cells:
+            artifact = self._cell_artifact(cell, "l5_evaluation_v1")
+            if artifact is None:
+                continue
+            table = getattr(artifact, "ranking_table", None)
+            if table is None or not isinstance(table, pd.DataFrame) or table.empty:
+                continue
+            with_cell = table.copy()
+            with_cell.insert(0, "cell_id", cell.cell_id)
+            frames.append(with_cell)
+        if not frames:
+            return pd.DataFrame()
+        return pd.concat(frames, ignore_index=True)
+
+    @property
+    def manifest(self):
+        """Return the manifest dict (same payload as to_manifest_dict).
+
+        Provides the .manifest accessor documented in quickstart.md so that
+        result = mf.run(...); result.manifest works as advertised.
+        Returns None when the manifest cannot be constructed.
+        """
+        try:
+            return self.to_manifest_dict()
+        except Exception:
+            return None
+
     def to_manifest_dict(self) -> dict[str, Any]:
         from .runtime import (
             _capture_data_revision_tag,

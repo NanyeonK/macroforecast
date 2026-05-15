@@ -130,7 +130,7 @@ _LAZY_EXPORTS = {
     "EvaluationScale": ".preprocessing",
 }
 
-_LAZY_MODULES: tuple[str, ...] = ("scaffold", "recipes")
+_LAZY_MODULES: tuple[str, ...] = ("defaults", "scaffold", "recipes")
 """Submodules exposed as ``macroforecast.<name>`` via lazy import."""
 
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
