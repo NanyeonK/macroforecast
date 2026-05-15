@@ -44,7 +44,7 @@ from .layers import l5 as l5_layer
 from .layers import l1 as l1_layer
 from .layers import l2 as l2_layer
 from ..raw import load_fred_md, load_fred_qd, load_fred_sd
-from ..raw.fred_sd_groups import FRED_SD_STATE_GROUPS
+from ..raw.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
     DiagnosticArtifact,
     L1DataDefinitionArtifact,
@@ -144,7 +144,7 @@ def execute_minimal_forecast(
     l1_artifact, regime_artifact, l1_axes = _timed("l1", lambda: materialize_l1(root))
     l2_artifact, l2_axes = _timed("l2", lambda: materialize_l2(root, l1_artifact))
     l3_features, l3_metadata = _timed(
-        "l3", lambda: materialize_l3_minimal(root, l1_artifact, l2_artifact)
+        "l3", lambda: materialize_l3_minimal(root, l1_artifact, l2_artifact, l2_resolved=l2_axes)
     )
     l4_forecasts, l4_models, l4_training = _timed(
         "l4", lambda: materialize_l4_minimal(root, l3_features)
@@ -257,6 +257,13 @@ def materialize_l1(
     leaf_config = raw.get("leaf_config", {}) or {}
     resolved = l1_layer.resolve_axes_from_raw(fixed_axes, leaf_config)
     raw_panel = _load_raw_panel(resolved, leaf_config)
+    _target_for_lag = leaf_config.get("target")
+    _lagged_data = _apply_release_lag(raw_panel.data, resolved, leaf_config, _target_for_lag)
+    if _lagged_data is not raw_panel.data:
+        raw_panel = _panel_from_frame(
+            _lagged_data,
+            metadata=dict(raw_panel.metadata.values) if raw_panel.metadata.values else {},
+        )
 
     target = leaf_config.get("target")
     targets = tuple(leaf_config.get("targets", ()) or ((target,) if target else ()))
@@ -282,6 +289,42 @@ def materialize_l1(
     regime = _materialize_regime(resolved, leaf_config, raw_panel.data.index)
     return artifact, regime, resolved
 
+
+
+def _apply_release_lag(
+    frame: pd.DataFrame,
+    resolved: dict[str, Any],
+    leaf_config: dict[str, Any],
+    target: str | None,
+) -> pd.DataFrame:
+    """Shift predictor columns forward by their release lag.
+
+    For a series with release lag k, the value at period t is only
+    observable at period t+k, so the column is shifted *down* by k rows
+    (NaN injected at the top). Target column is never shifted.
+    """
+    rule = resolved.get("release_lag_rule", "ignore_release_lag")
+    if rule == "ignore_release_lag":
+        return frame
+    targets = set()
+    if target:
+        targets.add(target)
+    for t in leaf_config.get("targets", []) or []:
+        targets.add(t)
+    result = frame.copy()
+    if rule == "fixed_lag_all_series":
+        lag = int(leaf_config.get("fixed_lag_periods", 0) or 0)
+        if lag <= 0:
+            return frame
+        for col in result.columns:
+            if col not in targets:
+                result[col] = result[col].shift(lag)
+    elif rule == "series_specific_lag":
+        lag_map = leaf_config.get("release_lag_per_series") or {}
+        for col, lag in lag_map.items():
+            if col in result.columns and col not in targets:
+                result[col] = result[col].shift(int(lag))
+    return result
 
 def materialize_l2(
     recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact
@@ -344,8 +387,20 @@ def materialize_l2(
     df, transform_map = _apply_transform(
         df, resolved, leaf_config, l1_leaf_for_l2, cleaning_log
     )
-    df, n_outliers = _apply_outlier_policy(df, resolved, leaf_config, cleaning_log)
-    df, n_imputed = _apply_imputation(df, resolved, cleaning_log)
+    # F-P1-2/F-P1-3 fix: skip full-sample outlier/imputation when temporal_rule
+    # is per-origin; the per-origin helpers are called inside the L3
+    # _per_origin_callable closure so stats are computed on data up to each
+    # origin only (no lookahead leakage).
+    _l2_imputation_temporal = resolved.get("imputation_temporal_rule", "expanding_window_per_origin")
+    if _l2_imputation_temporal == "expanding_window_per_origin":
+        # Deferred to per-origin closure in materialize_l3_minimal.
+        n_outliers = 0
+        n_imputed = 0
+        cleaning_log["steps"].append({"outlier_policy": "deferred_per_origin"})
+        cleaning_log["steps"].append({"imputation_policy": "deferred_per_origin"})
+    else:
+        df, n_outliers = _apply_outlier_policy(df, resolved, leaf_config, cleaning_log)
+        df, n_imputed = _apply_imputation(df, resolved, cleaning_log)
     df, n_truncated = _apply_frame_edge(df, resolved, cleaning_log)
 
     # Issue #251 -- post-pipeline custom L2 preprocessor hook.
@@ -1322,6 +1377,7 @@ def materialize_l3_minimal(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
     l2_artifact: L2CleanPanelArtifact,
+    l2_resolved: "l2_layer.L2ResolvedAxes | None" = None,
 ) -> tuple[L3FeaturesArtifact, L3MetadataArtifact]:
     raw = recipe_root.get("3_feature_engineering", {}) or {}
     report = l3_layer.validate_layer(raw, recipe_context=_l3_context(l1_artifact))
@@ -1404,6 +1460,16 @@ def materialize_l3_minimal(
         df_index = pd.Index(df_for_origin.index)
         aligned_index_snapshot = pd.Index(aligned_index)
 
+        # F-P1-2/F-P1-3 fix: capture l2 resolved axes for per-origin
+        # imputation/outlier application inside the closure.
+        _l3_l2_resolved_ref = l2_resolved
+        _l3_l2_leaf_config_ref = dict(l1_artifact.leaf_config or {})
+        _l3_l2_imputation_temporal = (
+            (l2_resolved or {}).get("imputation_temporal_rule", "expanding_window_per_origin")
+            if l2_resolved is not None
+            else "expanding_window_per_origin"
+        )
+
         def _per_origin_callable(origin_label: Any) -> pd.DataFrame:
             try:
                 origin_index = df_index.get_loc(origin_label)
@@ -1415,9 +1481,20 @@ def materialize_l3_minimal(
                     origin_index = origin_label
                 else:
                     raise
+            # F-P1-2/F-P1-3 fix: apply per-origin outlier/imputation on the
+            # expanding window slice so L3 DAG receives leak-free data.
+            df_origin_input = df_for_origin
+            if _l3_l2_imputation_temporal == "expanding_window_per_origin" and _l3_l2_resolved_ref is not None:
+                origin_ts = df_for_origin.index[origin_index]
+                df_origin_input = _apply_outlier_policy_per_origin(
+                    df_for_origin, _l3_l2_resolved_ref, _l3_l2_leaf_config_ref, origin_ts
+                )
+                df_origin_input = _apply_imputation_per_origin(
+                    df_origin_input, _l3_l2_resolved_ref, origin_ts
+                )
             X_origin_full = materialize_l3_per_origin(
                 dag,
-                df_for_origin,
+                df_origin_input,
                 target_name_for_closure,
                 origin_index=origin_index,
                 affected_node_ids=affected_node_ids,
@@ -12528,9 +12605,18 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
         )
     if dataset == "fred_sd":
         states = _resolve_fred_sd_states(resolved, leaf_config)
-        variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
-            "sd_variables"
-        )
+        # F-P1-7 fix: resolve variable group to actual variable list before
+        # passing to loader. Groups (e.g. "labor_market") are stored in
+        # raw/fred_sd_groups.py; resolve_fred_sd_variable_group returns the
+        # list (or None for "all_sd_variables").
+        _sd_var_group = resolved.get("fred_sd_variable_group") or leaf_config.get("fred_sd_variable_group")
+        if _sd_var_group and _sd_var_group not in ("all_sd_variables", None):
+            _resolved_vars, _ = _resolve_fred_sd_variable_group(_sd_var_group, leaf_config)
+            variables = _resolved_vars
+        else:
+            variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
+                "sd_variables"
+            )
         return load_fred_sd(
             vintage=vintage,
             cache_root=cache_root,
@@ -12546,9 +12632,15 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
             vintage=vintage, cache_root=cache_root, local_source=local_source
         )
         states = _resolve_fred_sd_states(resolved, leaf_config)
-        variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
-            "sd_variables"
-        )
+        # F-P1-7 fix: same variable group resolution as above
+        _sd_var_group = resolved.get("fred_sd_variable_group") or leaf_config.get("fred_sd_variable_group")
+        if _sd_var_group and _sd_var_group not in ("all_sd_variables", None):
+            _resolved_vars, _ = _resolve_fred_sd_variable_group(_sd_var_group, leaf_config)
+            variables = _resolved_vars
+        else:
+            variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
+                "sd_variables"
+            )
         regional = load_fred_sd(
             vintage=vintage,
             cache_root=cache_root,
@@ -12572,9 +12664,17 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
 def _resolve_fred_sd_states(
     resolved: dict[str, Any], leaf_config: dict[str, Any]
 ) -> list[str] | None:
-    explicit = leaf_config.get("fred_sd_states") or leaf_config.get("state_selection")
-    if explicit:
+    # F-P1-6 fix: also check "sd_states" key (used by the L1 validator at
+    # l1.py:716) in addition to "fred_sd_states" and "state_selection".
+    explicit = (
+        leaf_config.get("sd_states")
+        or leaf_config.get("fred_sd_states")
+        or leaf_config.get("state_selection")
+    )
+    if explicit and isinstance(explicit, (list, tuple)):
         return list(explicit)
+    if explicit and isinstance(explicit, str) and explicit != "all_states" and explicit != "selected_states":
+        return [explicit]
     group_key = resolved.get("fred_sd_state_group") or leaf_config.get(
         "fred_sd_state_group"
     )
@@ -12593,6 +12693,20 @@ def _read_custom_panel_path(path: Path) -> pd.DataFrame:
     if path.suffix.lower() in {".parquet", ".pq"}:
         return pd.read_parquet(path)
     if path.suffix.lower() in {".csv", ".txt"}:
+        # F-P1-5 fix: detect FRED official CSV format (Transform: row) and
+        # raise instead of silently corrupting the panel.
+        with open(path, "r", encoding="utf-8", errors="replace") as _f:
+            _first_line = _f.readline()
+        _cells = _first_line.split(",")
+        if _cells and (
+            str(_cells[0]).strip().startswith("Transform:")
+            or str(_cells[0]).strip().startswith("transform_code:")
+        ):
+            raise RuntimeError(
+                f"Custom CSV at {path!r} appears to be an official FRED-MD/QD CSV "
+                f"(first row starts with {_cells[0].strip()!r}). "
+                "Use dataset=fred_md or dataset=fred_qd instead of a custom panel path."
+            )
         return pd.read_csv(path)
     raise ValueError(
         f"unsupported custom panel format {path.suffix!r}; use CSV or Parquet"
@@ -12616,6 +12730,13 @@ def _normalize_datetime_index(
         frame.index = pd.to_datetime(frame.index)
     frame = frame.sort_index()
     frame.index = pd.DatetimeIndex(frame.index)
+    # F-P1-4 fix: detect duplicate dates and raise instead of silently coalescing.
+    if not frame.index.is_unique:
+        dupes = frame.index[frame.index.duplicated()].tolist()
+        raise RuntimeError(
+            f"duplicate dates detected in custom panel: {dupes[:5]}"
+            + (" (and more)" if len(dupes) > 5 else "")
+        )
     return frame
 
 
@@ -12632,12 +12753,14 @@ def _apply_sample_window(
         if first_observed is not None and pd.notna(first_observed):
             result = result.loc[first_observed:]
     elif start_rule == "fixed_date":
-        result = result.loc[pd.Timestamp(leaf_config["sample_start_date"]) :]
+        _start_norm = l1_layer._normalize_iso_partial(leaf_config["sample_start_date"], end_of_period=False) or leaf_config["sample_start_date"]
+        result = result.loc[pd.Timestamp(_start_norm) :]
     if end_rule == "latest_available":
         # default: keep as-is
         pass
     elif end_rule == "fixed_date":
-        result = result.loc[: pd.Timestamp(leaf_config["sample_end_date"])]
+        _end_norm = l1_layer._normalize_iso_partial(leaf_config["sample_end_date"], end_of_period=True) or leaf_config["sample_end_date"]
+        result = result.loc[: pd.Timestamp(_end_norm)]
     return result
 
 
@@ -12953,6 +13076,94 @@ def _try_custom_l2_preprocessor(
         return None
     return None
 
+
+
+def _apply_outlier_policy_per_origin(
+    frame: pd.DataFrame,
+    resolved: "l2_layer.L2ResolvedAxes",
+    leaf_config: dict[str, Any],
+    cutoff_ts: Any,
+) -> pd.DataFrame:
+    """Apply outlier policy using only data up to cutoff_ts for threshold computation.
+
+    Prevents lookahead leakage for per_origin temporal rule.
+    """
+    policy = resolved.get("outlier_policy")
+    action = resolved.get("outlier_action", "flag_as_nan")
+    if policy == "none":
+        return frame
+    result = frame.copy()
+    numeric = result.select_dtypes("number")
+    if numeric.empty:
+        return result
+    # Stats computed on expanding window up to cutoff only
+    train = numeric.loc[:cutoff_ts] if cutoff_ts is not None else numeric
+    if train.empty:
+        train = numeric
+    if policy == "mccracken_ng_iqr":
+        threshold = float(leaf_config.get("outlier_iqr_threshold", 10.0))
+        median = train.median()
+        iqr = train.quantile(0.75) - train.quantile(0.25)
+        mask = (numeric - median).abs() > threshold * iqr.replace(0, pd.NA)
+    elif policy == "zscore_threshold":
+        threshold = float(leaf_config.get("zscore_threshold_value", 3.0))
+        mask = (
+            (numeric - train.mean()) / train.std(ddof=0).replace(0, pd.NA)
+        ).abs() > threshold
+    elif policy == "winsorize":
+        low, high = leaf_config.get("winsorize_quantiles", [0.01, 0.99])
+        lo_val = train.quantile(low)
+        hi_val = train.quantile(high)
+        clipped = numeric.clip(lo_val, hi_val, axis=1)
+        result[numeric.columns] = clipped
+        return result
+    else:
+        return frame
+    if action == "flag_as_nan":
+        result[numeric.columns] = numeric.mask(mask)
+    elif action == "replace_with_median":
+        result[numeric.columns] = numeric.mask(mask, train.median(), axis=1)
+    elif action == "replace_with_cap_value":
+        upper = train.quantile(0.99)
+        lower = train.quantile(0.01)
+        capped = numeric.clip(lower=lower, upper=upper, axis=1)
+        result[numeric.columns] = numeric.where(~mask.fillna(False), capped)
+    else:
+        result[numeric.columns] = numeric.mask(mask)
+    return result
+
+
+def _apply_imputation_per_origin(
+    frame: pd.DataFrame,
+    resolved: "l2_layer.L2ResolvedAxes",
+    cutoff_ts: Any,
+) -> pd.DataFrame:
+    """Apply imputation using stats computed only up to cutoff_ts.
+
+    Prevents lookahead leakage for per_origin temporal rule.
+    """
+    policy = resolved.get("imputation_policy")
+    if policy == "none_propagate":
+        return frame
+    # Stats/fit computed on expanding window up to cutoff only
+    train = frame.loc[:cutoff_ts] if cutoff_ts is not None else frame
+    if train.empty:
+        train = frame
+    if policy == "mean":
+        fill_values = train.mean(numeric_only=True)
+        return frame.fillna(fill_values)
+    elif policy in {"em_factor", "em_multivariate"}:
+        # For per-origin EM, fit on training window and apply imputation to full frame
+        train_imputed = _pca_em_imputation(train, n_factors=8 if policy == "em_factor" else None, max_iter=20)
+        # Build fill values from train imputed mean
+        fill_values = train_imputed.mean(numeric_only=True)
+        return frame.fillna(fill_values)
+    elif policy == "forward_fill":
+        return frame.ffill()
+    elif policy == "linear_interpolation":
+        return frame.interpolate(method="linear")
+    else:
+        return frame
 
 def _apply_outlier_policy(
     frame: pd.DataFrame,

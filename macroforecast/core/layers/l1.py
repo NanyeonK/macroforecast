@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from calendar import monthrange
+import re
 from datetime import date
 from typing import Any, Literal
 
@@ -749,7 +751,7 @@ def _validate_sample_window(leaf_config: dict[str, Any], resolved: dict[str, Any
         issues.append(_issue("l1.sample_start_date", "fixed_date sample_start_rule requires ISO sample_start_date"))
     if resolved["sample_end_rule"] == "fixed_date" and not _is_iso_date(end):
         issues.append(_issue("l1.sample_end_date", "fixed_date sample_end_rule requires ISO sample_end_date"))
-    if _is_iso_date(start) and _is_iso_date(end) and date.fromisoformat(end) < date.fromisoformat(start):
+    if _is_iso_date(start) and _is_iso_date(end) and date.fromisoformat(_normalize_iso_partial(end)) < date.fromisoformat(_normalize_iso_partial(start)):
         issues.append(_issue("l1.sample_end_date", "sample_end_date must be >= sample_start_date"))
     return issues
 
@@ -943,14 +945,31 @@ def _positive_int_list(value: Any) -> bool:
     return isinstance(value, list) and bool(value) and all(isinstance(item, int) and item > 0 for item in value)
 
 
-def _is_iso_date(value: Any) -> bool:
+def _normalize_iso_partial(value: Any, *, end_of_period: bool = False) -> str | None:
+    """Accept YYYY, YYYY-MM, YYYY-MM-DD; normalize to YYYY-MM-DD."""
     if not isinstance(value, str):
-        return False
+        return None
+    # Full ISO date
     try:
         date.fromisoformat(value)
+        return value
     except ValueError:
-        return False
-    return True
+        pass
+    # YYYY-MM
+    if re.match(r"^\d{4}-\d{2}$", value):
+        y, m = int(value[:4]), int(value[5:7])
+        if not (1 <= m <= 12):
+            return None
+        d = monthrange(y, m)[1] if end_of_period else 1
+        return f"{y:04d}-{m:02d}-{d:02d}"
+    # YYYY
+    if re.match(r"^\d{4}$", value):
+        return f"{value}-12-31" if end_of_period else f"{value}-01-01"
+    return None
+
+
+def _is_iso_date(value: Any) -> bool:
+    return _normalize_iso_partial(value) is not None
 
 
 def _is_sweep_marker(value: Any) -> bool:
