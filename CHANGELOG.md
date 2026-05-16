@@ -5,6 +5,14 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 21 -- L1.E + L1.F + L1.G batch -- L1 audit complete
+
+- **C21-E** L1.E sample window: `sample_start_rule=fixed_date` -> `sample_start_date` ParameterDoc (partial-ISO acceptance per C12 F-P0-1); `sample_end_rule=fixed_date` -> `sample_end_date` ParameterDoc (ISO date, must-be-gte-start constraint documented).
+- **C21-F** L1.F horizon_set: `single` -> `target_horizons` ParameterDoc (optional, defaults to [1]); `custom_list` -> `target_horizons` ParameterDoc (required, non-empty list); `range_up_to_h` -> `max_horizon` ParameterDoc (required positive int; expands to [1..max_horizon]). `max_horizon` added to `_KNOWN_LEAF_CONFIG_KEYS["1_data"]`.
+- **C21-G** L1.G regime_definition: `external_user_provided` -> 3 ParameterDocs (regime_indicator_path XOR regime_dates_list, plus n_regimes); `estimated_markov_switching` -> n_regimes ParameterDoc; `estimated_threshold` -> threshold_variable (required) + n_thresholds ParameterDocs; `estimated_structural_break` -> max_breaks + break_ic_criterion ParameterDocs. 10 new keys added to `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` (regime_indicator_path, regime_dates_list, n_regimes, threshold_variable, n_thresholds, max_breaks, break_ic_criterion, regime_rolling_window_size, block_recompute_interval, max_horizon).
+- **L1 audit complete**: all 7 sub-layers (L1.A-L1.G) are Tier-1 with ParameterDoc populated for conditional leaf_config keys. Module docstring updated to reflect completion.
+- 22 new unit tests in `tests/scaffold/test_l1efg_parameter_doc.py`.
+
 ### Cycle 20 — L1.D Geography encyclopedia complete
 
 - **C20** L1.D 6 axes: ParameterDoc populated for 6 conditional leaf_config keys (target_states, predictor_states, sd_states, sd_variables, sd_state_group_members/sd_state_groups, sd_variable_group_members/sd_variable_groups). `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` extended with 8 keys. Docstring updated to confirm L1.D Tier-1 coverage (all 6 axes).

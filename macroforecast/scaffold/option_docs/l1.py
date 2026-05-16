@@ -16,9 +16,12 @@ Tier-1-complete sub-layers (all axes Tier-1 unless noted):
 * L1.D -- all 6 axes (target_geography_scope, predictor_geography_scope,
   fred_sd_state_group, fred_sd_variable_group, state_selection,
   sd_variable_selection) -- Cycle 20
-* L1.E -- sample_start_rule / sample_end_rule
-* L1.F -- horizon_set
-* L1.G -- regime_definition
+* L1.E -- sample_start_rule / sample_end_rule (Cycle 21)
+* L1.F -- horizon_set (Cycle 21)
+* L1.G -- regime_definition / regime_estimation_temporal_rule (Cycle 21)
+
+L1 audit complete: all 7 sub-layers (L1.A-L1.G) are Tier-1 with
+ParameterDoc populated for conditional leaf_config keys.
 """
 from __future__ import annotations
 
@@ -941,6 +944,49 @@ _L1E_END_FIXED = _entry(
     related_options=("latest_available",),
 )
 
+# C21-E: ParameterDoc for sample_start_rule=fixed_date
+_L1E_START_FIXED = _L1E_START_FIXED.__class__(
+    **dict(_L1E_START_FIXED.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="sample_start_date",
+                   type="str",
+                   default=None,
+                   constraint=(
+                       "Required when sample_start_rule=fixed_date. "
+                       "ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized "
+                       "to first of month per C12 F-P0-1), or YYYY (normalized to Jan 1)."
+                   ),
+                   description=(
+                       "Explicit panel start date. The L1 loader trims the panel "
+                       "to this date verbatim after partial-ISO normalization."
+                   ),
+               ),
+           ))
+)
+
+# C21-E: ParameterDoc for sample_end_rule=fixed_date
+_L1E_END_FIXED = _L1E_END_FIXED.__class__(
+    **dict(_L1E_END_FIXED.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="sample_end_date",
+                   type="str",
+                   default=None,
+                   constraint=(
+                       "Required when sample_end_rule=fixed_date. "
+                       "ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized "
+                       "to last day of month), or YYYY (normalized to Dec 31). "
+                       "Must be >= sample_start_date when both are fixed."
+                   ),
+                   description=(
+                       "Explicit panel end date. The L1 loader trims the panel "
+                       "so that no observation falls after this date."
+                   ),
+               ),
+           ))
+)
+
 
 # ---------------------------------------------------------------------------
 # L1.F horizon_set
@@ -1007,6 +1053,70 @@ _L1F_HORIZON_RANGE = _entry(
     when_to_use="Dense horizon studies with direct-h forecasting.",
     references=(_REF_DESIGN_L1,),
     related_options=("custom_list", "standard_md"),
+)
+
+# C21-F: ParameterDoc for horizon_set=single
+_L1F_HORIZON_SINGLE = _L1F_HORIZON_SINGLE.__class__(
+    **dict(_L1F_HORIZON_SINGLE.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="target_horizons",
+                   type="list[int]",
+                   default=None,
+                   constraint=(
+                       "Optional when horizon_set=single. If provided, must be a "
+                       "list of exactly one positive integer. "
+                       "If omitted, runtime defaults to [1]."
+                   ),
+                   description=(
+                       "Single-element horizon list. The one value sets the "
+                       "forecasting horizon h for all models in the cell loop."
+                   ),
+               ),
+           ))
+)
+
+# C21-F: ParameterDoc for horizon_set=custom_list
+_L1F_HORIZON_CUSTOM = _L1F_HORIZON_CUSTOM.__class__(
+    **dict(_L1F_HORIZON_CUSTOM.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="target_horizons",
+                   type="list[int]",
+                   default=None,
+                   constraint=(
+                       "Required when horizon_set=custom_list. "
+                       "Non-empty list of positive integers. "
+                       "Duplicate values are silently de-duplicated; order preserved."
+                   ),
+                   description=(
+                       "Explicit list of forecasting horizons h. One model fit per "
+                       "horizon per cell when forecast_strategy=direct."
+                   ),
+               ),
+           ))
+)
+
+# C21-F: ParameterDoc for horizon_set=range_up_to_h
+_L1F_HORIZON_RANGE = _L1F_HORIZON_RANGE.__class__(
+    **dict(_L1F_HORIZON_RANGE.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="max_horizon",
+                   type="int",
+                   default=None,
+                   constraint=(
+                       "Required when horizon_set=range_up_to_h. "
+                       "Must be a positive integer >= 1. "
+                       "Produces horizons [1, 2, ..., max_horizon]."
+                   ),
+                   description=(
+                       "Upper bound of the dense horizon range. "
+                       "The runtime expands this into tuple(range(1, max_horizon+1)) "
+                       "before building the cell loop."
+                   ),
+               ),
+           ))
 )
 
 
@@ -1115,6 +1225,144 @@ _L1G_REGIME_BREAK = _entry(
     when_to_use="Studies hypothesising structural change (e.g., pre/post Volcker, pre/post Great Moderation).",
     references=(_REF_DESIGN_L1, _REF_BAI_PERRON_1998),
     related_options=("estimated_markov_switching", "estimated_threshold", "max_breaks"),
+)
+
+# C21-G: ParameterDoc for regime_definition=external_user_provided
+_L1G_REGIME_USER = _L1G_REGIME_USER.__class__(
+    **dict(_L1G_REGIME_USER.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="regime_indicator_path",
+                   type="str | Path",
+                   default=None,
+                   constraint=(
+                       "Exactly one of {regime_indicator_path, regime_dates_list} "
+                       "must be set when regime_definition=external_user_provided."
+                   ),
+                   description=(
+                       "Filesystem path to a CSV or Parquet file with columns "
+                       "'date' (ISO date strings) and 'regime_label' (str or int). "
+                       "Aligned to the panel date index by the L1 runtime."
+                   ),
+               ),
+               ParameterDoc(
+                   name="regime_dates_list",
+                   type="list[dict]",
+                   default=None,
+                   constraint=(
+                       "Exactly one of {regime_indicator_path, regime_dates_list} "
+                       "must be set when regime_definition=external_user_provided. "
+                       "Each dict must have keys: start (ISO date), end (ISO date), "
+                       "label (str)."
+                   ),
+                   description=(
+                       "Inline regime-date specification as a list of "
+                       "{start, end, label} dicts. Dates are interpreted as "
+                       "inclusive bounds. Gaps between ranges receive label None."
+                   ),
+               ),
+               ParameterDoc(
+                   name="n_regimes",
+                   type="int",
+                   default=2,
+                   constraint="Positive integer. Informational only for external_user_provided.",
+                   description=(
+                       "Declared number of distinct regime labels in the user-supplied "
+                       "series. Used by downstream metrics and L5 by_regime decomposition."
+                   ),
+               ),
+           ))
+)
+
+# C21-G: ParameterDoc for regime_definition=estimated_markov_switching
+_L1G_REGIME_MS = _L1G_REGIME_MS.__class__(
+    **dict(_L1G_REGIME_MS.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="n_regimes",
+                   type="int",
+                   default=2,
+                   constraint=(
+                       "Positive integer >= 2. "
+                       "Passed to statsmodels MarkovRegression as k_regimes."
+                   ),
+                   description=(
+                       "Number of Markov-switching regimes. Defaults to 2 "
+                       "(expansion/recession). Higher values increase estimation "
+                       "cost quadratically."
+                   ),
+               ),
+           ))
+)
+
+# C21-G: ParameterDoc for regime_definition=estimated_threshold (SETAR)
+_L1G_REGIME_THRESH = _L1G_REGIME_THRESH.__class__(
+    **dict(_L1G_REGIME_THRESH.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="threshold_variable",
+                   type="str",
+                   default=None,
+                   constraint=(
+                       "Required when regime_definition=estimated_threshold. "
+                       "Must be a column name present in the panel or 'lagged_target'."
+                   ),
+                   description=(
+                       "Series used to determine regime membership. Each observation "
+                       "is assigned to a regime based on whether threshold_variable "
+                       "exceeds the estimated threshold value."
+                   ),
+               ),
+               ParameterDoc(
+                   name="n_thresholds",
+                   type="int",
+                   default=1,
+                   constraint=(
+                       "Optional. Positive integer; n_thresholds+1 regimes are created. "
+                       "Must be >= 1."
+                   ),
+                   description=(
+                       "Number of threshold breakpoints to estimate. "
+                       "1 threshold -> 2 regimes (low/high). "
+                       "2 thresholds -> 3 regimes (low/mid/high), etc."
+                   ),
+               ),
+           ))
+)
+
+# C21-G: ParameterDoc for regime_definition=estimated_structural_break (Bai-Perron)
+_L1G_REGIME_BREAK = _L1G_REGIME_BREAK.__class__(
+    **dict(_L1G_REGIME_BREAK.__dict__,
+           parameters=(
+               ParameterDoc(
+                   name="max_breaks",
+                   type="int",
+                   default=5,
+                   constraint=(
+                       "Optional. Positive integer; upper bound on break count "
+                       "searched by the Bai-Perron dynamic program."
+                   ),
+                   description=(
+                       "Maximum number of structural breaks to detect. BIC selects "
+                       "the final break count <= max_breaks. Larger values increase "
+                       "computation time."
+                   ),
+               ),
+               ParameterDoc(
+                   name="break_ic_criterion",
+                   type="str",
+                   default="bic",
+                   constraint=(
+                       "Optional. One of {'aic', 'bic'}. "
+                       "Controls model-selection criterion for break-count choice."
+                   ),
+                   description=(
+                       "Information criterion used to select the number of breaks. "
+                       "'bic' (default) penalises extra breaks more heavily; "
+                       "'aic' is less conservative."
+                   ),
+               ),
+           ))
 )
 
 

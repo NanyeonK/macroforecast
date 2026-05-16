@@ -84,6 +84,19 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "sd_state_groups",
         "sd_variable_group_members",
         "sd_variable_groups",
+        # L1.F horizon_set=range_up_to_h conditional key (Cycle 21)
+        "max_horizon",
+        # L1.G regime_definition conditional leaf_config keys (Cycle 21)
+        "regime_indicator_path",
+        "regime_dates_list",
+        "n_regimes",
+        "threshold_variable",
+        "n_thresholds",
+        "max_breaks",
+        "break_ic_criterion",
+        # regime_estimation_temporal_rule conditional keys
+        "regime_rolling_window_size",
+        "block_recompute_interval",
     }),
     "4_forecasting_model": frozenset({
         "n_jobs", "fit_kwargs", "predict_kwargs", "min_train_size", "n_horizon_models",
