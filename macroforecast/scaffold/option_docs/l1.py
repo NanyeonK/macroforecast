@@ -26,7 +26,7 @@ ParameterDoc populated for conditional leaf_config keys.
 from __future__ import annotations
 
 from . import register
-from .types import CodeExample, OptionDoc, ParameterDoc, Reference
+from .types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"
@@ -247,7 +247,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _L1A_SOURCE_CUSTOM_PANEL.__class__(
            ParameterDoc(
                name="custom_source_path",
                type="str | Path",
-               default=None,
+               default=REQUIRED,
                constraint=(
                    "Exactly one of {custom_source_path, custom_panel_inline, "
                    "custom_panel_records} must be set."
@@ -260,7 +260,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _L1A_SOURCE_CUSTOM_PANEL.__class__(
            ParameterDoc(
                name="custom_panel_inline",
                type="dict",
-               default=None,
+               default=REQUIRED,
                constraint=(
                    "Exactly one of {custom_source_path, custom_panel_inline, "
                    "custom_panel_records} must be set."
@@ -274,7 +274,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _L1A_SOURCE_CUSTOM_PANEL.__class__(
            ParameterDoc(
                name="custom_panel_records",
                type="list[dict]",
-               default=None,
+               default=REQUIRED,
                constraint=(
                    "Exactly one of {custom_source_path, custom_panel_inline, "
                    "custom_panel_records} must be set."
@@ -295,7 +295,7 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM.__class__(
            ParameterDoc(
                name="custom_source_path",
                type="str | Path",
-               default=None,
+               default=REQUIRED,
                constraint="Required when custom_source_policy=official_plus_custom.",
                description=(
                    "Filesystem path (CSV or Parquet) to the auxiliary panel to merge "
@@ -305,7 +305,7 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM.__class__(
            ParameterDoc(
                name="custom_merge_rule",
                type="str",
-               default=None,
+               default=REQUIRED,
                constraint=(
                    "Required when custom_source_policy=official_plus_custom. "
                    "Must be one of: 'left_join', 'inner_join', 'outer_join'."
@@ -637,7 +637,7 @@ _L1B_TARGET_SINGLE = _L1B_TARGET_SINGLE.__class__(
            ParameterDoc(
                name="target",
                type="str",
-               default=None,
+               default=REQUIRED,
                constraint="Required when target_structure=single_target.",
                description=(
                    "FRED series ID of the variable to forecast (e.g., CPIAUCSL, UNRATE). "
@@ -655,7 +655,7 @@ _L1B_TARGET_MULTI = _L1B_TARGET_MULTI.__class__(
            ParameterDoc(
                name="targets",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="Required when target_structure=multi_target. Must have length >= 1.",
                description=(
                    "List of FRED series IDs to forecast jointly. Each element is a "
@@ -744,7 +744,7 @@ _L1C_VARS_EXPLICIT = _L1C_VARS_EXPLICIT.__class__(
            ParameterDoc(
                name="variable_universe_columns",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="Required when variable_universe=explicit_variable_list; must be non-empty.",
                description=(
                    "Explicit list of column names from the data source to use as the predictor "
@@ -817,7 +817,7 @@ _L1D_GEO_SINGLE = _L1D_GEO_SINGLE.__class__(
            ParameterDoc(
                name="target_state",
                type="str",
-               default=None,
+               default=REQUIRED,
                constraint="required US state code or 'US' when target_geography_scope=single_state",
                description=(
                    "Single target state code (e.g. 'CA', 'TX') or 'US' for national target. "
@@ -863,7 +863,7 @@ _L1D_GEO_SELECTED = _L1D_GEO_SELECTED.__class__(
            ParameterDoc(
                name="target_states",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="non-empty list required; each element a valid US state code or DC",
                description="Explicit target state list when target_geography_scope=selected_states.",
            ),
@@ -951,7 +951,7 @@ _L1E_START_FIXED = _L1E_START_FIXED.__class__(
                ParameterDoc(
                    name="sample_start_date",
                    type="str",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Required when sample_start_rule=fixed_date. "
                        "ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized "
@@ -972,7 +972,7 @@ _L1E_END_FIXED = _L1E_END_FIXED.__class__(
                ParameterDoc(
                    name="sample_end_date",
                    type="str",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Required when sample_end_rule=fixed_date. "
                        "ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized "
@@ -1083,7 +1083,7 @@ _L1F_HORIZON_CUSTOM = _L1F_HORIZON_CUSTOM.__class__(
                ParameterDoc(
                    name="target_horizons",
                    type="list[int]",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Required when horizon_set=custom_list. "
                        "Non-empty list of positive integers. "
@@ -1104,7 +1104,7 @@ _L1F_HORIZON_RANGE = _L1F_HORIZON_RANGE.__class__(
                ParameterDoc(
                    name="max_horizon",
                    type="int",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Required when horizon_set=range_up_to_h. "
                        "Must be a positive integer >= 1. "
@@ -1234,7 +1234,7 @@ _L1G_REGIME_USER = _L1G_REGIME_USER.__class__(
                ParameterDoc(
                    name="regime_indicator_path",
                    type="str | Path",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Exactly one of {regime_indicator_path, regime_dates_list} "
                        "must be set when regime_definition=external_user_provided."
@@ -1248,7 +1248,7 @@ _L1G_REGIME_USER = _L1G_REGIME_USER.__class__(
                ParameterDoc(
                    name="regime_dates_list",
                    type="list[dict]",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Exactly one of {regime_indicator_path, regime_dates_list} "
                        "must be set when regime_definition=external_user_provided. "
@@ -1302,7 +1302,7 @@ _L1G_REGIME_THRESH = _L1G_REGIME_THRESH.__class__(
                ParameterDoc(
                    name="threshold_variable",
                    type="str",
-                   default=None,
+                   default=REQUIRED,
                    constraint=(
                        "Required when regime_definition=estimated_threshold. "
                        "Must be a column name present in the panel or 'lagged_target'."
@@ -1556,7 +1556,7 @@ _L1C_MISSING_IMPUTE_PREDICTORS = _L1C_MISSING_IMPUTE_PREDICTORS.__class__(
            ParameterDoc(
                name="x_imputation",
                type="str",
-               default=None,
+               default=REQUIRED,
                constraint="required; one of ['bfill', 'ffill', 'mean', 'median'].",
                description=(
                    "Imputation method applied to predictor missings at L1. Used only when "
@@ -1601,7 +1601,7 @@ _L1C_RAW_MISSING_IMPUTE = _L1C_RAW_MISSING_IMPUTE.__class__(
            ParameterDoc(
                name="raw_x_imputation",
                type="str",
-               default=None,
+               default=REQUIRED,
                constraint="required; one of ['bfill', 'ffill', 'mean', 'median'].",
                description=(
                    "Imputation method applied to raw predictor NaNs at L1. Used only when "
@@ -1790,7 +1790,7 @@ _L1C_RELEASE_LAG_SPECIFIC = _L1C_RELEASE_LAG_SPECIFIC.__class__(
            ParameterDoc(
                name="release_lag_per_series",
                type="dict[str, int]",
-               default=None,
+               default=REQUIRED,
                constraint="Required when release_lag_rule=series_specific_lag; non-empty dict.",
                description=(
                    "Per-series release lag in periods. Maps series name to a non-negative integer. "
@@ -1879,7 +1879,7 @@ _L1D_PRED_GEO_SELECTED_PATCHED = _L1D_PRED_GEO_SELECTED.__class__(
            ParameterDoc(
                name="predictor_states",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="non-empty list required",
                description="Explicit predictor state list. Independent of target_states; permits cross-state-pair studies.",
            ),
@@ -2074,14 +2074,14 @@ _L1D_STATE_GROUP_CUSTOM_PATCHED = _L1D_STATE_GROUP_CUSTOM.__class__(
            ParameterDoc(
                name="sd_state_group_members",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="exactly one of {sd_state_group_members, sd_state_groups} required",
                description="Flat list of US state codes constituting the custom group.",
            ),
            ParameterDoc(
                name="sd_state_groups",
                type="dict[str, list[str]]",
-               default=None,
+               default=REQUIRED,
                constraint="exactly one of {sd_state_group_members, sd_state_groups} required",
                description="Named subgroups: maps group-label to state-code list. For multi-named-subgroup studies.",
            ),
@@ -2236,14 +2236,14 @@ _L1D_VAR_GROUP_CUSTOM_PATCHED = _L1D_VAR_GROUP_CUSTOM.__class__(
            ParameterDoc(
                name="sd_variable_group_members",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="exactly one of {sd_variable_group_members, sd_variable_groups} required",
                description="Flat list of FRED-SD variable names constituting the custom group.",
            ),
            ParameterDoc(
                name="sd_variable_groups",
                type="dict[str, list[str]]",
-               default=None,
+               default=REQUIRED,
                constraint="exactly one of {sd_variable_group_members, sd_variable_groups} required",
                description="Named subgroups for variables: maps group-label to variable-name list.",
            ),
@@ -2279,7 +2279,7 @@ _L1D_STATE_SEL_SELECTED_PATCHED = _L1D_STATE_SEL_SELECTED.__class__(
            ParameterDoc(
                name="sd_states",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="non-empty list required",
                description="Filter FRED-SD panel to listed states only. Applied AFTER state_group resolution (i.e., intersect).",
            ),
@@ -2313,7 +2313,7 @@ _L1D_VAR_SEL_SELECTED_PATCHED = _L1D_VAR_SEL_SELECTED.__class__(
            ParameterDoc(
                name="sd_variables",
                type="list[str]",
-               default=None,
+               default=REQUIRED,
                constraint="non-empty list required",
                description="Filter FRED-SD variables to listed names only. Applied AFTER variable_group resolution.",
            ),
