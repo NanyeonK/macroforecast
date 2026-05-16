@@ -14188,6 +14188,17 @@ def _bic_select_k(
     import warnings
 
     K_max = max(1, math.ceil(1.5 * freq_ratio))
+    # Cycle 15.6 fix: BIC intractability warning
+    _BIC_K_MAX_WARNING_THRESHOLD = 30  # empirical threshold above which BIC search becomes slow
+    if K_max > _BIC_K_MAX_WARNING_THRESHOLD:
+        warnings.warn(
+            f"U-MIDAS BIC search will enumerate K_max={K_max} candidates "
+            f"(freq_ratio={freq_ratio}). For freq_ratio > {_BIC_K_MAX_WARNING_THRESHOLD / 1.5:.0f}, "
+            "this may take hours. Consider setting `n_lags_high` manually in the L3 op params "
+            "to bypass BIC search, or use a coarser frequency representation.",
+            UserWarning,
+            stacklevel=2,
+        )
     best_ic_val = np.inf
     best_K = 1
     any_valid = False
