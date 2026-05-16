@@ -53,7 +53,7 @@ _KNOWN_RECIPE_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
 
 # Per-layer known leaf_config keys (non-exhaustive; covers fields the runtime reads)
 _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
-    "0_meta": frozenset({"n_workers", "random_seed"}),
+    "0_meta": frozenset({"n_workers", "random_seed", "parallel_unit"}),
     "1_data": frozenset({
         "target", "targets", "dataset", "cache_root", "sample_start_date", "sample_end_date",
         "sample_start_rule", "sample_end_rule", "vintage_policy", "fred_series", "custom_panel_path",

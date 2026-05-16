@@ -118,7 +118,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`official_transform_policy`](l1/axes/official_transform_policy.md) | L1 | `l1_c` | operational | no | 2 |
 | [`official_transform_scope`](l1/axes/official_transform_scope.md) | L1 | `l1_c` | operational | no | 4 |
 | [`oos_period`](l5/axes/oos_period.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |
-| [`op`](l3/axes/op.md) | L3 | `L3_A_step_op` | operational | no | 51 |
+| [`op`](l3/axes/op.md) | L3 | `L3_A_step_op` | operational | no | 52 |
 | [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 40 |
 | [`outlier_action`](l2/axes/outlier_action.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_policy`](l2/axes/outlier_policy.md) | L2 | `l2_c` | operational | yes | 4 |
@@ -157,7 +157,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`sd_tcode_policy`](l2/axes/sd_tcode_policy.md) | L2 | `l2_b` | operational | yes | 3 |
 | [`sd_variable_selection`](l1/axes/sd_variable_selection.md) | L1 | `l1_d` | operational | no | 2 |
 | [`search_algorithm`](l4/axes/search_algorithm.md) | L4 | `L4_D_tuning` | operational | yes | 6 |
-| [`selection_view`](l3_5/axes/selection_view.md) | L3.5 | `L3_5_E_selected_features_post_selection` | operational | no | 4 |
+| [`selection_view`](l3_5/axes/selection_view.md) | L3.5 | `L3_5_E_selected_features_post_selection` | operational | no | 5 |
 | [`spa_studentization`](l6/axes/spa_studentization.md) | L6 | `L6_D_multiple_model` | operational | no | 0 |
 | [`stability_metric`](l3_5/axes/stability_metric.md) | L3.5 | `L3_5_E_selected_features_post_selection` | operational | no | 2 |
 | [`state_selection`](l1/axes/state_selection.md) | L1 | `l1_d` | operational | no | 2 |

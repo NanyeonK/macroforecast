@@ -170,6 +170,18 @@ def _render_option_body(option: OptionInfo, doc: OptionDoc | None, *, layer_id: 
             lines.append(example.code)
             lines.append("```")
             lines.append("")
+    if doc.parameters:
+        lines.append("**Parameters**")
+        lines.append("")
+        lines.append("| name | type | default | constraint | description |")
+        lines.append("|---|---|---|---|---|")
+        for p in doc.parameters:
+            default_cell = f"`{p.default!r}`" if p.default is not None else "—"
+            constraint_cell = p.constraint if p.constraint else "—"
+            lines.append(
+                f"| `{p.name}` | `{p.type}` | {default_cell} | {constraint_cell} | {p.description} |"
+            )
+        lines.append("")
     if option.leaf_config_required:
         lines.append(
             "**Required leaf-config keys**: "

@@ -16,7 +16,7 @@
 
 ## Operational status summary
 
-- Operational: 4 option(s)
+- Operational: 5 option(s)
 - Future: 0 option(s)
 
 ## Options
@@ -40,6 +40,12 @@ Default rich audit. Activates the ``multi`` branch on L3.5.selection_view; combi
 **Related options**: [`selected_list`](#selected-list), [`selection_count_per_origin`](#selection-count-per-origin), [`selection_stability`](#selection-stability)
 
 _Last reviewed 2026-05-05 by macroforecast author._
+
+### `none`  --  operational
+
+_(no schema description for `none`)_
+
+> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3_5.py`` are welcome.
 
 ### `selected_list`  --  operational
 

@@ -23,13 +23,13 @@
 
 ### `all`  --  operational
 
-Emit every supported export format together.
+Emit every supported tabular/markup export format together.
 
-Comprehensive option emitting JSON + CSV + Parquet + LaTeX + Markdown + HTML for every applicable artifact. Largest disk footprint but covers every downstream consumer in one run.
+Comprehensive option emitting JSON + CSV + Parquet + LaTeX + Markdown for every applicable artifact. The HTML report is NOT included in ``all`` -- request ``export_format = html_report`` separately when a browser-renderable bundle is required. Largest disk footprint among the tabular/markup formats and covers every downstream consumer that reads structured tables in one run.
 
 **When to use**
 
-Comprehensive reproducibility / sharing -- single run that covers every audience.
+Comprehensive reproducibility / sharing -- single run that covers every tabular/markup audience.
 
 **References**
 

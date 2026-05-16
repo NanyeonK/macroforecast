@@ -100,14 +100,11 @@ Recipes that mutate global state (e.g., a custom L3 op that writes to a shared f
 
 ```
 
-*Sub-cell parallel over fit_model nodes*
+**Parameters**
 
-```yaml
-0_meta:
-  fixed_axes:
-    compute_mode: parallel
-    parallel_unit: models
-
-```
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `parallel_unit` | `str enum {cells, models, horizons, targets, oos_dates}` | — | required when compute_mode=parallel; validator hard-rejects missing | Parallelization granularity. ``cells`` runs each sweep cell in a ProcessPoolExecutor worker; ``models``/``horizons``/``targets``/``oos_dates`` use sub-cell ThreadPoolExecutor at L4. |
+| `n_workers` | `int | None` | — | None -> os.cpu_count() (or smaller per system); positive int caps the pool | Process or thread pool size. Currently consumed by cell-level ProcessPoolExecutor; sub-cell pool uses an internal default. |
 
 _Last reviewed 2026-05-04 by macroforecast author._

@@ -58,13 +58,19 @@ Stochastic exploration where the explicit goal is to characterise the variabilit
 
 ```
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `random_seed` | `int` | `42` | >=0; must be int; validator rejects non-int or presence when exploratory | RNG seed propagated to random.seed, numpy.random.seed, torch.manual_seed (if installed), and PYTHONHASHSEED. Per-L4-node random_state overrides this. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `exploratory`  --  operational
 
 Do not fix stochastic seeds; each run draws fresh randomness.
 
-Skips the global RNG seeding that ``seeded_reproducible`` performs. Each cell pulls its own randomness from the OS entropy pool; downstream estimators that take an explicit ``random_state`` still use whatever the recipe sets per node, but the L0 default of ``0`` is *not* propagated.
+Skips the global RNG seeding that ``seeded_reproducible`` performs. Each cell pulls its own randomness from the OS entropy pool; downstream estimators that take an explicit ``random_state`` still use whatever the recipe sets per node, but the L0 default of ``42`` is *not* propagated.
 
 ``replicate()`` cannot guarantee bit-exact sink hashes under this mode -- the recipe still re-runs and produces structurally identical manifests, but the numeric forecasts will differ run-over-run.
 

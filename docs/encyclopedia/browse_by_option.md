@@ -264,6 +264,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`l3_feature_bundle`](l3/axes/op.md) | L3 | `op` | operational |
 | [`l3_metadata_build`](l3/axes/op.md) | L3 | `op` | operational |
 | [`labor_market_core`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
+| [`lag`](l3/axes/op.md) | L3 | `op` | operational |
 | [`lag_correlation_decay`](l3_5/axes/lag_view.md) | L3.5 | `lag_view` | operational |
 | [`lasso`](l4/axes/family.md) | L4 | `family` | operational |
 | [`lasso_inclusion_frequency`](l7/axes/op.md) | L7 | `op` | operational |
@@ -381,6 +382,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`none`](l3_5/axes/dfm_diagnostics.md) | L3.5 | `dfm_diagnostics` | operational |
 | [`none`](l3_5/axes/feature_correlation.md) | L3.5 | `feature_correlation` | operational |
 | [`none`](l3_5/axes/marx_view.md) | L3.5 | `marx_view` | operational |
+| [`none`](l3_5/axes/selection_view.md) | L3.5 | `selection_view` | operational |
 | [`none`](l4/axes/pi_correction.md) | L4 | `pi_correction` | operational |
 | [`none`](l4/axes/search_algorithm.md) | L4 | `search_algorithm` | operational |
 | [`none`](l8/axes/compression.md) | L8 | `compression` | operational |

@@ -9,7 +9,7 @@ them right at recipe-authoring time matters.
 from __future__ import annotations
 
 from . import register
-from .types import CodeExample, OptionDoc, Reference
+from .types import CodeExample, OptionDoc, ParameterDoc, Reference
 
 
 _REVIEWED = "2026-05-04"
@@ -67,6 +67,7 @@ _FAILURE_POLICY_FAIL_FAST = OptionDoc(
             ),
         ),
     ),
+    parameters=(),
     last_reviewed=_REVIEWED,
     reviewer=_REVIEWER,
 )
@@ -119,6 +120,7 @@ _FAILURE_POLICY_CONTINUE = OptionDoc(
             ),
         ),
     ),
+    parameters=(),
     last_reviewed=_REVIEWED,
     reviewer=_REVIEWER,
 )
@@ -181,6 +183,19 @@ _REPRODUCIBILITY_SEEDED = OptionDoc(
             ),
         ),
     ),
+    parameters=(
+        ParameterDoc(
+            name="random_seed",
+            type="int",
+            default=42,
+            constraint=">=0; must be int; validator rejects non-int or presence when exploratory",
+            description=(
+                "RNG seed propagated to random.seed, numpy.random.seed, "
+                "torch.manual_seed (if installed), and PYTHONHASHSEED. "
+                "Per-L4-node random_state overrides this."
+            ),
+        ),
+    ),
     last_reviewed=_REVIEWED,
     reviewer=_REVIEWER,
 )
@@ -196,7 +211,7 @@ _REPRODUCIBILITY_EXPLORATORY = OptionDoc(
         "Skips the global RNG seeding that ``seeded_reproducible`` performs. "
         "Each cell pulls its own randomness from the OS entropy pool; "
         "downstream estimators that take an explicit ``random_state`` still "
-        "use whatever the recipe sets per node, but the L0 default of ``0`` "
+        "use whatever the recipe sets per node, but the L0 default of ``42`` "
         "is *not* propagated.\n\n"
         "``replicate()`` cannot guarantee bit-exact sink hashes under this "
         "mode -- the recipe still re-runs and produces structurally identical "
@@ -230,6 +245,7 @@ _REPRODUCIBILITY_EXPLORATORY = OptionDoc(
             ),
         ),
     ),
+    parameters=(),  # No parameters: random_seed is rejected when exploratory
     last_reviewed=_REVIEWED,
     reviewer=_REVIEWER,
 )
@@ -286,6 +302,7 @@ _COMPUTE_SERIAL = OptionDoc(
             ),
         ),
     ),
+    parameters=(),  # No parameters: serial mode accepts no conditional leaf_config
     last_reviewed=_REVIEWED,
     reviewer=_REVIEWER,
 )
@@ -350,6 +367,28 @@ _COMPUTE_PARALLEL = OptionDoc(
                 "    n_workers: 4\n"
             ),
         ),
+    ),
+    parameters=(
+        ParameterDoc(
+            name="parallel_unit",
+            type="str enum {cells, models, horizons, targets, oos_dates}",
+            default=None,
+            constraint="required when compute_mode=parallel; validator hard-rejects missing",
+            description=(
+                "Parallelization granularity. ``cells`` runs each sweep cell in a "
+                "ProcessPoolExecutor worker; ``models``/``horizons``/``targets``/"
+                "``oos_dates`` use sub-cell ThreadPoolExecutor at L4."
+            ),
+        ),
+        ParameterDoc(
+            name="n_workers",
+            type="int | None",
+            default=None,
+            constraint="None -> os.cpu_count() (or smaller per system); positive int caps the pool",
+            description=(
+                "Process or thread pool size. Currently consumed by cell-level "
+                "ProcessPoolExecutor; sub-cell pool uses an internal default."
+            ),
         ),
     ),
     last_reviewed=_REVIEWED,

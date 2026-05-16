@@ -16,7 +16,7 @@
 
 ## Operational status summary
 
-- Operational: 46 option(s)
+- Operational: 47 option(s)
 - Future: 5 option(s)
 
 ## Options
@@ -348,6 +348,28 @@ Never authored directly -- inserted by the cascade builder when L7 lineage hooks
 * macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`l3_feature_bundle`](#l3-feature-bundle)
+
+_Last reviewed 2026-05-05 by macroforecast author._
+
+### `lag`  --  operational
+
+Lagged target/predictor block.
+
+Constructs a lagged matrix from inputs. ``params.n_lag`` sets the lag depth. Standard predictor for autoregressive baselines.
+
+**When to use**
+
+Always when building AR features or lagged-X feature blocks.
+
+**When NOT to use**
+
+When the target itself is already differenced/lagged in L2 -- avoid double-lagging.
+
+**References**
+
+* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+
+**Related options**: [`seasonal_lag`](#seasonal-lag), [`target_construction`](#target-construction)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 

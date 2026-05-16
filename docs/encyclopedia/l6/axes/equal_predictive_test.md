@@ -19,44 +19,6 @@
 - Operational: 5 option(s)
 - Future: 0 option(s)
 
-## Assumptions
-
-The statistical validity of the equal-predictive-ability tests on this axis depends on the following conditions. Violations do not prevent the runtime from producing a result, but they affect inferential validity.
-
-### DM and DMP (covariance stationarity)
-
-The Diebold-Mariano test and the DMP multi-horizon variant assume that the loss differential series
-`d_t = L(e_{a,t}) - L(e_{b,t})` is **covariance-stationary** (weakly stationary). Specifically:
-
-- The mean of `d_t` must be constant over time.
-- The autocovariance of `d_t` must depend only on the lag, not on calendar time.
-
-If forecast performance shifts over the evaluation window (e.g., structural breaks, regime changes,
-or expanding evaluation windows with changing sample composition), stationarity may not hold.
-In such cases, prefer the Giacomini-White test (`gw_giacomini_white`), which is valid under
-non-stationary loss differentials via the conditional predictive ability framework.
-
-The Newey-West HAC standard error (default `dependence_correction: newey_west`) corrects for
-serial correlation and heteroskedasticity in `d_t`, but does not correct for non-stationarity.
-The HLN small-sample correction adjusts the test statistic for finite-sample bias at horizon `h > 1`
-but similarly does not address non-stationarity.
-
-### GW (rolling window requirement)
-
-The Giacomini-White test requires that forecasts are produced from a **rolling** or **fixed** estimation
-window of bounded size. It is not valid when the estimation window grows without bound (expanding
-window), because the asymptotic theory requires that the estimation error vanishes at a controlled
-rate. If `training_start_rule: expanding` is used, GW results should be interpreted cautiously.
-
-### MCS bootstrap (stationarity of loss matrix)
-
-When `multiple_model_test: mcs_hansen` is used (L6_D_multiple_model sub-layer), the stationary
-bootstrap requires that the loss matrix rows are **weakly stationary**. The `bootstrap_block_length`
-parameter (`auto` by default) is set to approximately `T^{1/3}` following Hansen, Lunde & Nason
-(2011). If the evaluation window is short (T < 50), bootstrap inference may be unreliable regardless
-of block length. In such cases, increase `bootstrap_n_replications` and treat MCS p-values as
-approximate.
-
 ## Options
 
 ### `dm_diebold_mariano`  --  operational

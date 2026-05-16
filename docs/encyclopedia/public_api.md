@@ -49,5 +49,5 @@ Figure rendering (matplotlib + stylized US state choropleth) is in
 ## Operational coverage
 
 See [`CLAUDE.md`](https://github.com/NanyeonK/macroforecast/blob/main/CLAUDE.md) at the repo root for the operational
-matrix: 40+ model families, 37 L3 ops, 7 L6 sub-layers, 29 L7 importance
+matrix: 30+ model families, 37 L3 ops, 7 L6 sub-layers, 29 L7 importance
 ops, FRED-SD US state choropleth, parquet/latex/markdown export.

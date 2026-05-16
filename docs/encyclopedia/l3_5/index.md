@@ -6,7 +6,7 @@
 - Category: `diagnostic`
 - Sub-layers: 6
 - Axes: 15
-- Options across axes: 49
+- Options across axes: 50
 
 ## Sub-layers
 

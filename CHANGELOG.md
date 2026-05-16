@@ -47,6 +47,13 @@ These three fixes address Cycle 14 issues that a single-model reviewer (Claude) 
 - **C15.5** `test_r4_02_paper_table2_k60_midas_wins` marked `@pytest.mark.deep` to prevent hour-scale runs in non-deep CI/local pytest. Test logic unchanged; computationally infeasible at k=60 (135,000 lstsq calls). Use `pytest -m deep` to run explicitly.
 - **C15.6** U-MIDAS BIC lag selection: emit `UserWarning` when `K_max > 30` (computed as `ceil(1.5 × freq_ratio)`). At very high frequency ratios (e.g., k=60), brute-force BIC enumeration is computationally intractable. Warning suggests setting `n_lags_high` manually to bypass search. Algorithm unchanged — paper-faithful behavior preserved when warning is suppressed or user overrides.
 
+
+#### Cycle 16 — L0 encyclopedia docs/code sync + Parameters section
+
+- **N-1** L0 docs sync: random_seed default 42 (was: "default 0" mistext); removed phantom `n_workers_inner` examples; renamed `parallel_unit` description from "sub-axis" to "conditional leaf_config key" for consistency with implementation.
+- **N-2** L0 `parallel_unit: cells` now operational. Was previously documented but rejected by validator (`PARALLEL_UNIT_OPTIONS` enum). Cell-level ProcessPoolExecutor honors deterministic per-cell seed schedule.
+- **N-3** Encyclopedia structure: `OptionDoc` and `AxisSpec` now carry a `parameters: tuple[ParameterDoc, ...]` field; encyclopedia pages render `**Parameters**` table when non-empty. Distinguishes axis-as-categorical-switch from option-as-function-with-params. L0 3 axes populated (reproducibility_mode/seeded_reproducible: random_seed; compute_mode/parallel: parallel_unit + n_workers); L1-L8 will be filled in subsequent docs cycles. Validator `_KNOWN_LEAF_CONFIG_KEYS["0_meta"]` gains `parallel_unit` so L1-3 unknown-key warning no longer fires on legitimate L0 `fixed_axes` leaf_config.
+
 #### Notes
 - Cycle 14 ships as v0.9.1 per user decision. 1 BREAKING item (J-3) enumerated above.
 - 7 HANDOFF items deferred to v0.9.2 backlog: SHAP threshold customizability beyond 2000 default, cross-cell L2 memoization, `mf.replicate(override_recipe=...)`, P3 docs replication hash table refresh (scriber's domain in this cycle).

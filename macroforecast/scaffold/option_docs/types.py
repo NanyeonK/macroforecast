@@ -6,6 +6,8 @@ Three types:
 * :class:`CodeExample` -- a runnable code snippet illustrating an option.
 * :class:`OptionDoc` -- the full per-option documentation entry,
   consumed by the wizard UI and the sphinx reference docs.
+* :class:`ParameterDoc` -- documents a single function-arg parameter
+  accepted by an option (distinct from the axis categorical switch).
 
 Two completeness tiers:
 
@@ -17,6 +19,7 @@ Two completeness tiers:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -49,6 +52,33 @@ class CodeExample:
 
 
 @dataclass(frozen=True)
+class ParameterDoc:
+    """Per-option (function-arg) parameter documentation.
+
+    Distinguishes the categorical axis switch from the function's
+    own parameters that the chosen option accepts.
+
+    Attributes:
+        name:        Keyword-argument name in the option's runtime call or
+                     the ``leaf_config`` key that configures the option.
+        type:        Human-readable type hint (e.g. ``"int"``, ``"str"``,
+                     ``"float"``, ``"tuple[str, ...]"``, or an enum
+                     abbreviation like ``"str enum {cells, models}"``).
+        default:     Default value, or ``None`` when the parameter has no
+                     default (i.e. it is *required* when the option is active).
+        constraint:  Free-text constraint description (e.g. ``">=0"``,
+                     ``"must be set if compute_mode=parallel"``).
+        description: One-line summary of what the parameter controls.
+    """
+
+    name: str
+    type: str
+    default: Any = None
+    constraint: str | None = None
+    description: str = ""
+
+
+@dataclass(frozen=True)
 class OptionDoc:
     """Documentation for a single (layer, sub-layer, axis, option) tuple.
 
@@ -74,6 +104,9 @@ class OptionDoc:
     examples: tuple[CodeExample, ...] = ()
     gates_required: tuple[str, ...] = ()
     gates_blocked: tuple[str, ...] = ()
+
+    # Parameters (for options that accept function-level / leaf_config arguments)
+    parameters: tuple[ParameterDoc, ...] = ()
 
     # Provenance
     last_reviewed: str = ""
@@ -103,4 +136,4 @@ class OptionDoc:
         return (self.layer, self.sublayer, self.axis, self.option)
 
 
-__all__ = ["CodeExample", "OptionDoc", "Reference"]
+__all__ = ["CodeExample", "OptionDoc", "ParameterDoc", "Reference"]

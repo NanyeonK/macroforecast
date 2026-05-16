@@ -27,6 +27,10 @@ class AxisSpec:
     gate: GatePredicate | None = None
     dynamic_default_rule: Callable[..., Any] | None = None
     leaf_config_keys: tuple[str, ...] = ()
+    # Optional parameter documentation for axis-level conditional leaf_config keys.
+    # Set via macroforecast.scaffold.option_docs.types.ParameterDoc when the
+    # axis acts as a categorical gate that unlocks further leaf_config fields.
+    parameters: tuple["ParameterDoc", ...] = ()
 
 
 @dataclass(frozen=True)
