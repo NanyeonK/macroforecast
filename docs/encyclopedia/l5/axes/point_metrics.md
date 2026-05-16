@@ -141,24 +141,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Theil's U1 inequality coefficient -- bounded in ``[0, 1]``.
 
-Point-forecast metric ``theil_u1``. ``U₁ = √MSE / (√(1/N Σ y²) + √(1/N Σ ŷ²))``. Bounded between 0 (perfect forecast) and 1 (worst possible). Theil's original 1966 metric; less commonly used today than U2 because the denominator's interpretation is less intuitive.
-
-**When to use**
-
-Long-run macro forecasting tradition; comparability with Theil-1966-era papers.
-
-**When NOT to use**
-
-Modern reporting -- U2 is more interpretable as a ratio against the no-change benchmark.
-
-**References**
-
-* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
-* Theil (1966) 'Applied Economic Forecasting', North-Holland (Chapter 2: Inequality coefficients).
-
-**Related options**: [`mse`](#mse), [`rmse`](#rmse), [`mae`](#mae), [`medae`](#medae), [`mape`](#mape), [`theil_u2`](#theil-u2)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [theil_u1 function page](../point_metrics/theil_u1.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.theil_u1``.
 
 ### `theil_u2`  --  operational
 

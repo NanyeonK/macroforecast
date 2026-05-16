@@ -14,6 +14,10 @@ full per-version honesty-pass history embedded in repo documentation.
 - 17 new unit tests in tests/functions/ + tests/scaffold/test_op_page_render.py.
 - Pattern validates for L3/L4/L5/L6/L7 migration in subsequent cycles.
 - **v0.10.0 candidate**
+- **C22 known limitations** (deferred to C23 pre-expansion fixup):
+  - `ParameterDoc.default=None` sentinel conflicts with parameters that legitimately default to None (vol_model, random_state). Per-op page renderer misclassifies as required positional.
+  - Rendered `## Function signature` omits data positional args (X, y / y_true, y_pred); not copy-pasteable.
+  - Both flagged by C22 reviewer (a2c0179f89ea5a688). Bit-exact POC correctness unaffected.
 
 
 ### Cycle 21 -- L1.E + L1.F + L1.G batch -- L1 audit complete
