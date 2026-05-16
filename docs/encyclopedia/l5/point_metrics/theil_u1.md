@@ -11,7 +11,7 @@
 mf.functions.theil_u1(
     y_true: np.ndarray | pd.Series,
     y_pred: np.ndarray | pd.Series,
-) -> float
+)
 ```
 
 ## Parameters

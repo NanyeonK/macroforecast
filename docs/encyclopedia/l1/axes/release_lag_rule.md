@@ -59,7 +59,7 @@ Coarse real-time approximations.
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `fixed_lag_periods` | `int` | `None` | >=0; optional; defaults to 0 if not set. | Uniform release lag in periods applied to every predictor series. A value of 1 means each series is available one period after the period it was observed. |
+| `fixed_lag_periods` | `int` | — | >=0; optional; defaults to 0 if not set. | Uniform release lag in periods applied to every predictor series. A value of 1 means each series is available one period after the period it was observed. |
 
 _Last reviewed 2026-05-05 by macroforecast author._
 

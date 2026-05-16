@@ -81,7 +81,7 @@ One-shot studies (h=1 nowcasting, h=12 long-horizon ablation).
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `target_horizons` | `list[int]` | `None` | Optional when horizon_set=single. If provided, must be a list of exactly one positive integer. If omitted, runtime defaults to [1]. | Single-element horizon list. The one value sets the forecasting horizon h for all models in the cell loop. |
+| `target_horizons` | `list[int]` | — | Optional when horizon_set=single. If provided, must be a list of exactly one positive integer. If omitted, runtime defaults to [1]. | Single-element horizon list. The one value sets the forecasting horizon h for all models in the cell loop. |
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
