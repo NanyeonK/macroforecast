@@ -9,24 +9,28 @@
 
 ```python
 mf.functions.ridge_fit(
-    vol_model: str enum {"ewma", "garch11"} | None,
-    random_state: int | None,
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
     *,
     alpha: float = 1.0,
     prior: str enum {"none", "random_walk", "shrink_to_target", "fused_difference"} = 'none',
     coefficient_constraint: str enum {"none", "nonneg"} = 'none',
-)
+    vol_model: str enum {"ewma", "garch11"} | None = None,
+    random_state: int | None = None,
+) -> RidgeFitResult
 ```
 
 ## Parameters
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
+| `X` | `np.ndarray | pd.DataFrame` | — | — | Feature matrix. Shape (n_samples, n_features). Accepts numpy arrays or DataFrames. |
+| `y` | `np.ndarray | pd.Series` | — | — | Target vector. Shape (n_samples,). Accepts numpy arrays or Series. |
 | `alpha` | `float` | `1.0` | >=0 | L2 regularisation strength. Larger values shrink coefficients more aggressively toward zero. |
 | `prior` | `str enum {"none", "random_walk", "shrink_to_target", "fused_difference"}` | `'none'` | — | Coefficient prior. ``none`` = standard ridge. ``random_walk`` = Goulet Coulombe (2025 IJF) TVP-as-ridge two-step estimator. ``shrink_to_target`` = Albacore_comps Variant A (simplex non-neg + target penalty). ``fused_difference`` = Albacore_ranks Variant B (fused-difference penalty). |
 | `coefficient_constraint` | `str enum {"none", "nonneg"}` | `'none'` | — | Sign / cone constraint. ``nonneg`` enforces β >= 0 via augmented NNLS (Assemblage Regression, Coulombe et al. 2024). Ignored when ``prior`` is ``shrink_to_target`` or ``fused_difference`` (those priors handle non-negativity internally). |
-| `vol_model` | `str enum {"ewma", "garch11"} | None` | — | only used when prior='random_walk' | Volatility model for step-2 Omega_eps reconstruction in the random-walk estimator. ``ewma`` = RiskMetrics lambda=0.94 (no extra deps). ``garch11`` = GARCH(1,1) via the ``arch`` package; auto-falls back to EWMA if unavailable. |
-| `random_state` | `int | None` | — | — | Random seed for stochastic sub-steps (currently unused in the standard ridge path; reserved for future Monte Carlo extensions). |
+| `vol_model` | `str enum {"ewma", "garch11"} | None` | `None` | only used when prior='random_walk' | Volatility model for step-2 Omega_eps reconstruction in the random-walk estimator. ``ewma`` = RiskMetrics lambda=0.94 (no extra deps). ``garch11`` = GARCH(1,1) via the ``arch`` package; auto-falls back to EWMA if unavailable. |
+| `random_state` | `int | None` | `None` | — | Random seed for stochastic sub-steps (currently unused in the standard ridge path; reserved for future Monte Carlo extensions). |
 
 ## Behavior
 
