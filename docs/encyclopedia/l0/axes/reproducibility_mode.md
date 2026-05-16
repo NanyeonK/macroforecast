@@ -26,7 +26,7 @@
 
 Fix a deterministic seed and propagate it through every RNG.
 
-The cell-loop reads ``leaf_config.random_seed`` (default ``0``) and applies it to ``random.seed``, ``numpy.random.seed``, ``torch.manual_seed`` (when torch is installed), and the ``PYTHONHASHSEED`` environment variable for the current process. Each L4 estimator inherits the seed via its ``params.random_state`` key (issue #215); per-fit-node ``random_state`` overrides the L0 seed when present.
+The cell-loop reads ``leaf_config.random_seed`` (default ``42``) and applies it to ``random.seed``, ``numpy.random.seed``, ``torch.manual_seed`` (when torch is installed), and the ``PYTHONHASHSEED`` environment variable for the current process. Each L4 estimator inherits the seed via its ``params.random_state`` key (issue #215); per-fit-node ``random_state`` overrides the L0 seed when present.
 
 This is the only mode under which ``macroforecast.replicate(manifest)`` can verify bit-exact sink hashes. Use it for every study you intend to publish, share, or compare against later.
 

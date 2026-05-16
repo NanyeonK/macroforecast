@@ -61,14 +61,14 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Distribute work over multiple workers; pick the unit via parallel_unit.
 
-Activates the parallel cell loop. The granularity is controlled by the ``parallel_unit`` sub-axis:
+Activates the parallel cell loop. The granularity is controlled by the ``parallel_unit`` conditional leaf_config key:
 
 * ``cells`` -- one process per sweep cell (``ProcessPoolExecutor``).   Cell-level parallelism is the safest path because cells are by   construction independent.
 * ``models`` -- threads over ``fit_model`` nodes inside a single   cell (issue #204). Sklearn-family estimators release the GIL; the   thread pool avoids the pickling overhead of processes.
 * ``oos_dates`` -- threads over walk-forward origins inside a fit   node (issue #250). Per-origin RNG state is derived deterministically   from ``base_seed + position`` (issue #279) so thread scheduling   cannot affect the forecasts.
 * ``horizons`` / ``targets`` -- map to the same fan-out when L4   produces single-horizon / single-target output per fit node.
 
-``leaf_config.n_workers`` (cell-level) and ``n_workers_inner`` (sub-cell) cap the pool sizes.
+``leaf_config.n_workers`` caps the pool size.
 
 **When to use**
 
@@ -107,8 +107,6 @@ Recipes that mutate global state (e.g., a custom L3 op that writes to a shared f
   fixed_axes:
     compute_mode: parallel
     parallel_unit: models
-  leaf_config:
-    n_workers_inner: 8
 
 ```
 

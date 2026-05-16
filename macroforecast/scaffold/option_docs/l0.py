@@ -135,7 +135,7 @@ _REPRODUCIBILITY_SEEDED = OptionDoc(
     option="seeded_reproducible",
     summary="Fix a deterministic seed and propagate it through every RNG.",
     description=(
-        "The cell-loop reads ``leaf_config.random_seed`` (default ``0``) and "
+        "The cell-loop reads ``leaf_config.random_seed`` (default ``42``) and "
         "applies it to ``random.seed``, ``numpy.random.seed``, "
         "``torch.manual_seed`` (when torch is installed), and the "
         "``PYTHONHASHSEED`` environment variable for the current process. "
@@ -299,7 +299,7 @@ _COMPUTE_PARALLEL = OptionDoc(
     summary="Distribute work over multiple workers; pick the unit via parallel_unit.",
     description=(
         "Activates the parallel cell loop. The granularity is controlled by "
-        "the ``parallel_unit`` sub-axis:\n\n"
+        "the ``parallel_unit`` conditional leaf_config key:\n\n"
         "* ``cells`` -- one process per sweep cell (``ProcessPoolExecutor``). "
         "  Cell-level parallelism is the safest path because cells are by "
         "  construction independent.\n"
@@ -312,8 +312,7 @@ _COMPUTE_PARALLEL = OptionDoc(
         "  cannot affect the forecasts.\n"
         "* ``horizons`` / ``targets`` -- map to the same fan-out when L4 "
         "  produces single-horizon / single-target output per fit node.\n\n"
-        "``leaf_config.n_workers`` (cell-level) and ``n_workers_inner`` "
-        "(sub-cell) cap the pool sizes."
+        "``leaf_config.n_workers`` caps the pool size."
     ),
     when_to_use=(
         "Long sweeps on multi-core machines. Validate the manifest under "
@@ -351,16 +350,6 @@ _COMPUTE_PARALLEL = OptionDoc(
                 "    n_workers: 4\n"
             ),
         ),
-        CodeExample(
-            title="Sub-cell parallel over fit_model nodes",
-            code=(
-                "0_meta:\n"
-                "  fixed_axes:\n"
-                "    compute_mode: parallel\n"
-                "    parallel_unit: models\n"
-                "  leaf_config:\n"
-                "    n_workers_inner: 8\n"
-            ),
         ),
     ),
     last_reviewed=_REVIEWED,
