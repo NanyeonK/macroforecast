@@ -150,8 +150,12 @@ def test_l1c_ignore_release_lag_has_no_params():
 
 
 def test_l1c_missing_availability_no_params():
-    """missing_availability options have no conditional leaf_config parameters."""
-    for option in ("require_complete_rows", "keep_available_rows", "impute_predictors_only",
+    """missing_availability options without conditional parameters.
+
+    Note: impute_predictors_only has x_imputation ParameterDoc -- see
+    test_l1c_impute_predictors_only_has_x_imputation_param below.
+    """
+    for option in ("require_complete_rows", "keep_available_rows",
                    "zero_fill_leading_predictor_gaps"):
         doc = OPTION_DOCS[("l1", "l1_c", "missing_availability", option)]
         assert doc.parameters == (), f"{option} should have parameters=()"
@@ -214,3 +218,59 @@ def test_l1c_encyclopedia_page_contains_parameters_tables():
     assert "**Parameters**" in lag_page
     assert "fixed_lag_periods" in lag_page
     assert "release_lag_per_series" in lag_page
+
+
+# ---------------------------------------------------------------------------
+# missing_availability / raw_missing_policy conditional keys (C19 follow-up)
+# ---------------------------------------------------------------------------
+
+
+def test_l1c_impute_predictors_only_has_x_imputation_param():
+    """impute_predictors_only has 1 ParameterDoc for x_imputation."""
+    doc = OPTION_DOCS[("l1", "l1_c", "missing_availability", "impute_predictors_only")]
+    assert isinstance(doc.parameters, tuple)
+    assert len(doc.parameters) == 1
+    p = doc.parameters[0]
+    assert p.name == "x_imputation"
+    assert p.type == "str"
+    assert p.default is None  # required
+    assert p.constraint is not None
+    assert "required" in p.constraint.lower()
+    for method in ("bfill", "ffill", "mean", "median"):
+        assert method in p.constraint
+
+
+def test_l1c_impute_raw_predictors_has_raw_x_imputation_param():
+    """impute_raw_predictors has 1 ParameterDoc for raw_x_imputation."""
+    doc = OPTION_DOCS[("l1", "l1_c", "raw_missing_policy", "impute_raw_predictors")]
+    assert isinstance(doc.parameters, tuple)
+    assert len(doc.parameters) == 1
+    p = doc.parameters[0]
+    assert p.name == "raw_x_imputation"
+    assert p.type == "str"
+    assert p.default is None  # required
+    assert p.constraint is not None
+    assert "required" in p.constraint.lower()
+    for method in ("bfill", "ffill", "mean", "median"):
+        assert method in p.constraint
+
+
+def test_l1c_fixed_lag_periods_constraint_is_optional():
+    """fixed_lag_periods constraint says optional/defaults-to-0, not required."""
+    doc = OPTION_DOCS[("l1", "l1_c", "release_lag_rule", "fixed_lag_all_series")]
+    p = doc.parameters[0]
+    assert p.name == "fixed_lag_periods"
+    # Must NOT say "required" (that was the incorrect constraint)
+    assert "required" not in p.constraint.lower(), (
+        f"fixed_lag_periods constraint should not say required; got: {p.constraint!r}"
+    )
+    # Must say optional / defaults
+    assert "optional" in p.constraint.lower() or "default" in p.constraint.lower()
+
+
+def test_known_leaf_config_keys_includes_c19_followup_keys():
+    """_KNOWN_LEAF_CONFIG_KEYS[1_data] includes x_imputation and raw_x_imputation."""
+    from macroforecast.core.execution import _KNOWN_LEAF_CONFIG_KEYS
+    keys = _KNOWN_LEAF_CONFIG_KEYS["1_data"]
+    assert "x_imputation" in keys, "x_imputation missing from _KNOWN_LEAF_CONFIG_KEYS[1_data]"
+    assert "raw_x_imputation" in keys, "raw_x_imputation missing from _KNOWN_LEAF_CONFIG_KEYS[1_data]"

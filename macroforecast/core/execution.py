@@ -71,6 +71,9 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "outlier_iqr_threshold",
         "zscore_threshold_value",
         "winsorize_quantiles",
+        # missing_availability / raw_missing_policy conditional keys (C19 follow-up)
+        "x_imputation",
+        "raw_x_imputation",
     }),
     "4_forecasting_model": frozenset({
         "n_jobs", "fit_kwargs", "predict_kwargs", "min_train_size", "n_horizon_models",

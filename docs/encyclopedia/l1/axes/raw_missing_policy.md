@@ -77,6 +77,12 @@ Pipelines that use ``no_transform`` t-codes and need cleaning at L1.
 
 **Related options**: [`preserve_raw_missing`](#preserve-raw-missing), [`drop_raw_missing_rows`](#drop-raw-missing-rows)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `raw_x_imputation` | `str` | — | required; one of ['bfill', 'ffill', 'mean', 'median']. | Imputation method applied to raw predictor NaNs at L1. Used only when raw_missing_policy=impute_raw_predictors. |
+
 _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `drop_raw_missing_rows`  --  operational

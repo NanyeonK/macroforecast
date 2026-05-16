@@ -77,6 +77,12 @@ Recipes where the target should be the ground-truth signal and never imputed.
 
 **Related options**: [`keep_available_rows`](#keep-available-rows)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `x_imputation` | `str` | — | required; one of ['bfill', 'ffill', 'mean', 'median']. | Imputation method applied to predictor missings at L1. Used only when missing_availability=impute_predictors_only. |
+
 _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `zero_fill_leading_predictor_gaps`  --  operational

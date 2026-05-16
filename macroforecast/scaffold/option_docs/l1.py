@@ -1265,6 +1265,29 @@ _L1A_FRED_SD_FREQ = (
 )
 
 # L1.C missing_availability
+_L1C_MISSING_IMPUTE_PREDICTORS = _t1(
+    "l1_c", "missing_availability", "impute_predictors_only",
+    "Impute predictor missings at L1; never impute the target.",
+    "Restricts imputation to the predictor block at L1 stage and forbids any target imputation in subsequent layers. Avoids accidentally back-filling the target via L2.D.",
+    "Recipes where the target should be the ground-truth signal and never imputed.",
+    related=("keep_available_rows",),
+)
+_L1C_MISSING_IMPUTE_PREDICTORS = _L1C_MISSING_IMPUTE_PREDICTORS.__class__(
+    **{**_L1C_MISSING_IMPUTE_PREDICTORS.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="x_imputation",
+               type="str",
+               default=None,
+               constraint="required; one of ['bfill', 'ffill', 'mean', 'median'].",
+               description=(
+                   "Imputation method applied to predictor missings at L1. Used only when "
+                   "missing_availability=impute_predictors_only."
+               ),
+           ),
+       ),
+    }
+)
 _L1C_MISSING = (
     _t1("l1_c", "missing_availability", "require_complete_rows",
         "Drop any row containing a missing value.",
@@ -1277,11 +1300,7 @@ _L1C_MISSING = (
         "Default; passes interior predictor NaNs through to L2.D for imputation. Ensures the maximum sample size while letting downstream imputation handle holes.",
         "Default for FRED-MD / -QD recipes where L2.D EM imputation is the canonical workflow.",
         related=("require_complete_rows", "impute_predictors_only")),
-    _t1("l1_c", "missing_availability", "impute_predictors_only",
-        "Impute predictor missings at L1; never impute the target.",
-        "Restricts imputation to the predictor block at L1 stage and forbids any target imputation in subsequent layers. Avoids accidentally back-filling the target via L2.D.",
-        "Recipes where the target should be the ground-truth signal and never imputed.",
-        related=("keep_available_rows",)),
+    _L1C_MISSING_IMPUTE_PREDICTORS,
     _t1("l1_c", "missing_availability", "zero_fill_leading_predictor_gaps",
         "Zero-fill leading predictor NaNs; preserve interior gaps.",
         "Replaces leading NaNs (before the predictor's first observation) with zero so the panel has a uniform start date. Interior NaNs pass through to L2.D unchanged.",
@@ -1291,6 +1310,29 @@ _L1C_MISSING = (
 )
 
 # L1.C raw_missing_policy
+_L1C_RAW_MISSING_IMPUTE = _t1(
+    "l1_c", "raw_missing_policy", "impute_raw_predictors",
+    "Impute raw predictor NaNs at L1 (before any L2 stage).",
+    "Runs a simple per-series imputation (mean / median / forward-fill) at L1. Useful when L2.D is disabled or when the user wants to pre-clean raw data before the t-code stage.",
+    "Pipelines that use ``no_transform`` t-codes and need cleaning at L1.",
+    related=("preserve_raw_missing", "drop_raw_missing_rows"),
+)
+_L1C_RAW_MISSING_IMPUTE = _L1C_RAW_MISSING_IMPUTE.__class__(
+    **{**_L1C_RAW_MISSING_IMPUTE.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="raw_x_imputation",
+               type="str",
+               default=None,
+               constraint="required; one of ['bfill', 'ffill', 'mean', 'median'].",
+               description=(
+                   "Imputation method applied to raw predictor NaNs at L1. Used only when "
+                   "raw_missing_policy=impute_raw_predictors."
+               ),
+           ),
+       ),
+    }
+)
 _L1C_RAW_MISSING = (
     _t1("l1_c", "raw_missing_policy", "preserve_raw_missing",
         "Pass raw NaN values through unchanged.",
@@ -1304,11 +1346,7 @@ _L1C_RAW_MISSING = (
         "Tcode 1 / 2 / 5 / 6 pipelines where leading NaNs would propagate after differencing.",
         when_not_to_use="When zero is a meaningful value for the predictor.",
         related=("preserve_raw_missing",)),
-    _t1("l1_c", "raw_missing_policy", "impute_raw_predictors",
-        "Impute raw predictor NaNs at L1 (before any L2 stage).",
-        "Runs a simple per-series imputation (mean / median / forward-fill) at L1. Useful when L2.D is disabled or when the user wants to pre-clean raw data before the t-code stage.",
-        "Pipelines that use ``no_transform`` t-codes and need cleaning at L1.",
-        related=("preserve_raw_missing", "drop_raw_missing_rows")),
+    _L1C_RAW_MISSING_IMPUTE,
     _t1("l1_c", "raw_missing_policy", "drop_raw_missing_rows",
         "Drop rows containing any raw missing predictor.",
         "Aggressive listwise deletion at the raw stage. Reduces panel size before any cleaning runs.",
@@ -1451,7 +1489,7 @@ _L1C_RELEASE_LAG_FIXED = _L1C_RELEASE_LAG_FIXED.__class__(
                name="fixed_lag_periods",
                type="int",
                default=None,
-               constraint=">=0; required when release_lag_rule=fixed_lag_all_series.",
+               constraint=">=0; optional; defaults to 0 if not set.",
                description=(
                    "Uniform release lag in periods applied to every predictor series. A value of 1 means each "
                    "series is available one period after the period it was observed."
