@@ -5,6 +5,10 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 20 — L1.D Geography encyclopedia complete
+
+- **C20** L1.D 6 axes: ParameterDoc populated for 6 conditional leaf_config keys (target_states, predictor_states, sd_states, sd_variables, sd_state_group_members/sd_state_groups, sd_variable_group_members/sd_variable_groups). `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` extended with 8 keys. Docstring updated to confirm L1.D Tier-1 coverage (all 6 axes).
+
 ### Cycle 19 — L1.C Predictor Universe encyclopedia complete
 
 - **P-1** Fixed outdated docstring at top of `option_docs/l1.py` falsely claiming L1.C axes carry placeholder entries — all 8 axes are Tier-1 (reviewed 2026-05-05). Tier-1-complete sub-layer list updated to reflect actual coverage through Cycle 19.

@@ -55,4 +55,10 @@ Custom regional studies that need a non-standard state subset.
 
 **Related options**: [`all_states`](#all-states)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `sd_states` | `list[str]` | — | non-empty list required | Filter FRED-SD panel to listed states only. Applied AFTER state_group resolution (i.e., intersect). |
+
 _Last reviewed 2026-05-05 by macroforecast author._

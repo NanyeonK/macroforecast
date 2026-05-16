@@ -75,4 +75,10 @@ Region-specific studies (Northeast vs. Midwest), Census-division comparisons.
 
 **Related options**: [`all_states`](#all-states), [`fred_sd_state_group`](#fred-sd-state-group)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target_states` | `list[str]` | — | non-empty list required; each element a valid US state code or DC | Explicit target state list when target_geography_scope=selected_states. |
+
 _Last reviewed 2026-05-04 by macroforecast author._

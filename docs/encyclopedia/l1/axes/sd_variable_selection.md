@@ -57,4 +57,10 @@ Targeted studies that focus on specific FRED-SD series.
 
 **Related options**: [`all_sd_variables`](#all-sd-variables)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `sd_variables` | `list[str]` | — | non-empty list required | Filter FRED-SD variables to listed names only. Applied AFTER variable_group resolution. |
+
 _Last reviewed 2026-05-05 by macroforecast author._

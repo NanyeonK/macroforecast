@@ -74,6 +74,15 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         # missing_availability / raw_missing_policy conditional keys (C19 follow-up)
         "x_imputation",
         "raw_x_imputation",
+        # L1.D Geography conditional leaf_config keys (Cycle 20)
+        "target_states",
+        "predictor_states",
+        "sd_states",
+        "sd_variables",
+        "sd_state_group_members",
+        "sd_state_groups",
+        "sd_variable_group_members",
+        "sd_variable_groups",
     }),
     "4_forecasting_model": frozenset({
         "n_jobs", "fit_kwargs", "predict_kwargs", "min_train_size", "n_horizon_models",

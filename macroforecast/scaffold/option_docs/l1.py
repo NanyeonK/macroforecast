@@ -13,14 +13,12 @@ Tier-1-complete sub-layers (all axes Tier-1 unless noted):
   raw_missing_policy, raw_outlier_policy, release_lag_rule,
   contemporaneous_x_rule, official_transform_policy,
   official_transform_scope) -- Cycle 19
-* L1.D -- target_geography_scope / predictor_geography_scope (2 of 3)
+* L1.D -- all 6 axes (target_geography_scope, predictor_geography_scope,
+  fred_sd_state_group, fred_sd_variable_group, state_selection,
+  sd_variable_selection) -- Cycle 20
 * L1.E -- sample_start_rule / sample_end_rule
 * L1.F -- horizon_set
 * L1.G -- regime_definition
-
-Remaining long-tail axes (L1.D fred_sd_state_group etc.) are scaffolded
-with machine-readable summaries; their ``last_reviewed`` field is empty
-so the v1.0 docs gauntlet flags them.
 """
 from __future__ import annotations
 
@@ -837,6 +835,20 @@ _L1D_GEO_SELECTED = _entry(
     references=(_REF_DESIGN_L1,),
     related_options=("all_states", "fred_sd_state_group"),
 )
+# Cycle 20 L1.D fix: ParameterDoc for target_states
+_L1D_GEO_SELECTED = _L1D_GEO_SELECTED.__class__(
+    **{**_L1D_GEO_SELECTED.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="target_states",
+               type="list[str]",
+               default=None,
+               constraint="non-empty list required; each element a valid US state code or DC",
+               description="Explicit target state list when target_geography_scope=selected_states.",
+           ),
+       ),
+    }
+)
 
 
 # ---------------------------------------------------------------------------
@@ -1590,6 +1602,28 @@ _L1D_PRED_GEO = (
         when_not_to_use="State-level forecasts where regional predictors carry signal.",
         related=("all_states", "match_target")),
 )
+# Cycle 20 L1.D fix: ParameterDoc for predictor_states
+_L1D_PRED_GEO_SELECTED = next(
+    d for d in _L1D_PRED_GEO
+    if d.axis == "predictor_geography_scope" and d.option == "selected_states"
+)
+_L1D_PRED_GEO_SELECTED_PATCHED = _L1D_PRED_GEO_SELECTED.__class__(
+    **{**_L1D_PRED_GEO_SELECTED.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="predictor_states",
+               type="list[str]",
+               default=None,
+               constraint="non-empty list required",
+               description="Explicit predictor state list. Independent of target_states; permits cross-state-pair studies.",
+           ),
+       ),
+    }
+)
+_L1D_PRED_GEO = tuple(
+    _L1D_PRED_GEO_SELECTED_PATCHED if d.option == "selected_states" else d
+    for d in _L1D_PRED_GEO
+)
 
 # L1.D fred_sd_state_group (16 Census Bureau region / division groupings)
 _REF_CENSUS_REGIONS = Reference(
@@ -1763,6 +1797,35 @@ _L1D_STATE_GROUP = tuple(
         references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2020, _REF_CENSUS_REGIONS))
     for option, (summary, desc, when) in _STATE_GROUP_DOCS.items()
 )
+# Cycle 20 L1.D fix: ParameterDoc for custom_state_group (OR: sd_state_group_members / sd_state_groups)
+_L1D_STATE_GROUP_CUSTOM = next(
+    d for d in _L1D_STATE_GROUP
+    if d.axis == "fred_sd_state_group" and d.option == "custom_state_group"
+)
+_L1D_STATE_GROUP_CUSTOM_PATCHED = _L1D_STATE_GROUP_CUSTOM.__class__(
+    **{**_L1D_STATE_GROUP_CUSTOM.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="sd_state_group_members",
+               type="list[str]",
+               default=None,
+               constraint="exactly one of {sd_state_group_members, sd_state_groups} required",
+               description="Flat list of US state codes constituting the custom group.",
+           ),
+           ParameterDoc(
+               name="sd_state_groups",
+               type="dict[str, list[str]]",
+               default=None,
+               constraint="exactly one of {sd_state_group_members, sd_state_groups} required",
+               description="Named subgroups: maps group-label to state-code list. For multi-named-subgroup studies.",
+           ),
+       ),
+    }
+)
+_L1D_STATE_GROUP = tuple(
+    _L1D_STATE_GROUP_CUSTOM_PATCHED if d.option == "custom_state_group" else d
+    for d in _L1D_STATE_GROUP
+)
 
 # L1.D fred_sd_variable_group (12 categorical groupings)
 _VAR_GROUP_DOCS: dict[str, tuple[str, str, str]] = {
@@ -1896,6 +1959,35 @@ _L1D_VAR_GROUP = tuple(
         references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2020))
     for option, (summary, desc, when) in _VAR_GROUP_DOCS.items()
 )
+# Cycle 20 L1.D fix: ParameterDoc for custom_sd_variable_group (OR: sd_variable_group_members / sd_variable_groups)
+_L1D_VAR_GROUP_CUSTOM = next(
+    d for d in _L1D_VAR_GROUP
+    if d.axis == "fred_sd_variable_group" and d.option == "custom_sd_variable_group"
+)
+_L1D_VAR_GROUP_CUSTOM_PATCHED = _L1D_VAR_GROUP_CUSTOM.__class__(
+    **{**_L1D_VAR_GROUP_CUSTOM.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="sd_variable_group_members",
+               type="list[str]",
+               default=None,
+               constraint="exactly one of {sd_variable_group_members, sd_variable_groups} required",
+               description="Flat list of FRED-SD variable names constituting the custom group.",
+           ),
+           ParameterDoc(
+               name="sd_variable_groups",
+               type="dict[str, list[str]]",
+               default=None,
+               constraint="exactly one of {sd_variable_group_members, sd_variable_groups} required",
+               description="Named subgroups for variables: maps group-label to variable-name list.",
+           ),
+       ),
+    }
+)
+_L1D_VAR_GROUP = tuple(
+    _L1D_VAR_GROUP_CUSTOM_PATCHED if d.option == "custom_sd_variable_group" else d
+    for d in _L1D_VAR_GROUP
+)
 
 # L1.D state_selection / sd_variable_selection (binary axes)
 _L1D_STATE_SEL = (
@@ -1910,6 +2002,28 @@ _L1D_STATE_SEL = (
         "Custom regional studies that need a non-standard state subset.",
         related=("all_states",)),
 )
+# Cycle 20 L1.D fix: ParameterDoc for sd_states
+_L1D_STATE_SEL_SELECTED = next(
+    d for d in _L1D_STATE_SEL
+    if d.axis == "state_selection" and d.option == "selected_states"
+)
+_L1D_STATE_SEL_SELECTED_PATCHED = _L1D_STATE_SEL_SELECTED.__class__(
+    **{**_L1D_STATE_SEL_SELECTED.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="sd_states",
+               type="list[str]",
+               default=None,
+               constraint="non-empty list required",
+               description="Filter FRED-SD panel to listed states only. Applied AFTER state_group resolution (i.e., intersect).",
+           ),
+       ),
+    }
+)
+_L1D_STATE_SEL = tuple(
+    _L1D_STATE_SEL_SELECTED_PATCHED if d.option == "selected_states" else d
+    for d in _L1D_STATE_SEL
+)
 _L1D_VAR_SEL = (
     _t1("l1_d", "sd_variable_selection", "all_sd_variables",
         "Auto-select every variable in ``fred_sd_variable_group``.",
@@ -1921,6 +2035,28 @@ _L1D_VAR_SEL = (
         "Reads ``leaf_config.selected_sd_variables`` -- a subset of the active variable group.",
         "Targeted studies that focus on specific FRED-SD series.",
         related=("all_sd_variables",)),
+)
+# Cycle 20 L1.D fix: ParameterDoc for sd_variables
+_L1D_VAR_SEL_SELECTED = next(
+    d for d in _L1D_VAR_SEL
+    if d.axis == "sd_variable_selection" and d.option == "selected_sd_variables"
+)
+_L1D_VAR_SEL_SELECTED_PATCHED = _L1D_VAR_SEL_SELECTED.__class__(
+    **{**_L1D_VAR_SEL_SELECTED.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="sd_variables",
+               type="list[str]",
+               default=None,
+               constraint="non-empty list required",
+               description="Filter FRED-SD variables to listed names only. Applied AFTER variable_group resolution.",
+           ),
+       ),
+    }
+)
+_L1D_VAR_SEL = tuple(
+    _L1D_VAR_SEL_SELECTED_PATCHED if d.option == "selected_sd_variables" else d
+    for d in _L1D_VAR_SEL
 )
 
 # L1.G regime_estimation_temporal_rule

@@ -271,4 +271,11 @@ Bespoke variable selections not captured by built-in groupings.
 
 **Related options**: [`all_sd_variables`](#all-sd-variables), [`labor_market_core`](#labor-market-core), [`employment_sector`](#employment-sector)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `sd_variable_group_members` | `list[str]` | — | exactly one of {sd_variable_group_members, sd_variable_groups} required | Flat list of FRED-SD variable names constituting the custom group. |
+| `sd_variable_groups` | `dict[str, list[str]]` | — | exactly one of {sd_variable_group_members, sd_variable_groups} required | Named subgroups for variables: maps group-label to variable-name list. |
+
 _Last reviewed 2026-05-05 by macroforecast author._
