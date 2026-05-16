@@ -55,6 +55,25 @@ _REF_NBER = Reference(
     citation="National Bureau of Economic Research, 'US Business Cycle Expansions and Contractions'.",
     url="https://www.nber.org/research/business-cycle-dating",
 )
+_REF_ALFRED = Reference(
+    citation="Federal Reserve Bank of St. Louis, 'ALFRED: Archival Federal Reserve Economic Data' -- real-time vintage archive of FRED series.",
+    url="https://alfred.stlouisfed.org/",
+)
+_REF_CROUSHORE_STARK_2001 = Reference(
+    citation="Croushore & Stark (2001) 'A real-time data set for macroeconomists', Journal of Econometrics 105(1).",
+    doi="10.1016/S0304-4076(01)00072-0",
+)
+_REF_STARK_CROUSHORE_2002 = Reference(
+    citation="Stark & Croushore (2002) 'Forecasting with a real-time data set for macroeconomists', Journal of Macroeconomics 24(4).",
+    doi="10.1016/S0164-0704(02)00041-0",
+)
+_REF_FAUST_WRIGHT_2009 = Reference(
+    citation="Faust & Wright (2009) 'Comparing Greenbook and reduced form forecasts using a large realtime dataset', Journal of Business & Economic Statistics 27(4).",
+    doi="10.1198/jbes.2009.06043",
+)
+_REF_FRED_SD = Reference(
+    citation="macroforecast PR #251 (use_sd_inferred_tcodes) -- FRED-SD integration, state-level frequency-policy design.",
+)
 
 
 def _entry(
@@ -309,37 +328,52 @@ _L1A_FRED_QD_SD = _dataset_entry(
 
 _L1A_FREQ_MONTHLY = _entry(
     "l1_a", "frequency", "monthly",
-    summary="Sample at monthly cadence; pairs with FRED-MD / monthly custom panels.",
+    summary="Monthly observation frequency.",
     description=(
-        "Sets the canonical sampling frequency to monthly. Affects "
-        "horizon resolution (1 = one month ahead), L2 frequency-alignment "
-        "rules (only applicable when datasets mix), and the "
-        "``standard_md`` horizon set.\n\n"
-        "The default is ``derived``: macroforecast infers the frequency from "
-        "``dataset`` (fred_md → monthly, fred_qd → quarterly). Setting "
-        "frequency explicitly is required for custom panels."
+        "Pinned monthly frequency. Sets the canonical sampling cadence to "
+        "one calendar month per observation, so horizon h=1 means "
+        "one-month-ahead and ``standard_md`` horizons h ∈ {1, 3, 6, 9, 12, "
+        "18, 24} are interpreted in months.\n\n"
+        "Compatible with ``dataset=fred_md`` and "
+        "``dataset=fred_md+fred_sd``. When ``frequency`` is unset, the "
+        "default ``'derived'`` sentinel resolves to ``monthly`` for FRED-MD "
+        "datasets via ``_derived_frequency()`` at L1 normalization -- "
+        "setting it explicitly is redundant for FRED-MD but required for "
+        "custom panels that carry monthly observations."
     ),
     when_to_use=(
-        "Custom panels with monthly observations; explicit override of the "
-        "FRED-MD default for clarity."
+        "Monthly macro forecasting (industrial production, payrolls, CPI, "
+        "etc.); custom panels with monthly observations; explicit override "
+        "of the FRED-MD default for documentation clarity."
     ),
+    references=(_REF_MCCRACKEN_NG_2016,),
     related_options=("quarterly", "dataset", "horizon_set"),
+    last_reviewed="2026-05-16",
+    reviewer="macroforecast author",
 )
 
 _L1A_FREQ_QUARTERLY = _entry(
     "l1_a", "frequency", "quarterly",
-    summary="Sample at quarterly cadence; pairs with FRED-QD / quarterly custom panels.",
+    summary="Quarterly observation frequency.",
     description=(
-        "Sets the sampling frequency to quarterly. Activates the "
-        "``standard_qd`` horizon set (h ∈ {1, 2, 4, 8} quarters) and "
-        "monthly→quarterly aggregation rules in L2.A when the panel "
-        "mixes frequencies."
+        "Pinned quarterly frequency. Sets the canonical sampling cadence to "
+        "one calendar quarter per observation, so horizon h=1 means "
+        "one-quarter-ahead and ``standard_qd`` horizons h ∈ {1, 2, 4, 8} "
+        "are interpreted in quarters.\n\n"
+        "Compatible with ``dataset=fred_qd`` and "
+        "``dataset=fred_qd+fred_sd``. The ``'derived'`` default resolves to "
+        "``quarterly`` when ``dataset=fred_qd`` via ``_derived_frequency()``. "
+        "Setting it explicitly is required for custom panels that carry "
+        "quarterly observations."
     ),
     when_to_use=(
-        "GDP / NIPA-style targets; quarterly custom panels; FRED-QD-based "
-        "studies."
+        "Quarterly macro forecasting (GDP, productivity, NIPA-style targets); "
+        "quarterly custom panels; FRED-QD-based studies."
     ),
+    references=(_REF_MCCRACKEN_NG_2020,),
     related_options=("monthly", "dataset", "horizon_set"),
+    last_reviewed="2026-05-16",
+    reviewer="macroforecast author",
 )
 
 
@@ -359,8 +393,44 @@ _L1A_VINTAGE_CURRENT = _entry(
         "#XXX."
     ),
     when_to_use="Default for any pseudo-out-of-sample study using revised data.",
-    when_not_to_use="Real-time forecasting evaluations -- those need ALFRED vintages.",
-    related_options=("information_set_type",),
+    when_not_to_use="Real-time forecasting evaluations -- those need ALFRED vintages (future feature; see real_time_alfred).",
+    related_options=("real_time_alfred", "information_set_type"),
+    last_reviewed="2026-05-16",
+    reviewer="macroforecast author",
+)
+
+_L1A_VINTAGE_REAL_TIME_ALFRED = _entry(
+    "l1_a", "vintage_policy", "real_time_alfred",
+    summary="Real-time ALFRED vintage policy (not yet implemented).",
+    description=(
+        "ALFRED (Archival FRED) is the St. Louis Fed's real-time data "
+        "archive. It stores historical vintages of every FRED series, "
+        "allowing researchers to reconstruct the information set that was "
+        "actually available at any past date -- before subsequent data "
+        "revisions occurred.\n\n"
+        "Future macroforecast support will pull the historical-as-of "
+        "vintage for each forecast origin from the ALFRED API, enabling "
+        "true real-time replication studies where the model never sees "
+        "data that was not yet released at the forecast origin.\n\n"
+        "**Current behavior**: selecting ``real_time_alfred`` raises a "
+        "hard ``ValueError`` at recipe validation with the message "
+        "``'real_time_alfred is not yet implemented; future feature. "
+        "Use current_vintage (default).'`` (Cycle 14 K-4). "
+        "No partial execution occurs."
+    ),
+    when_to_use=(
+        "Future. For now, use ``current_vintage`` and document the "
+        "data-revision context via ``data_revision_tag`` in manifest "
+        "provenance (Cycle 14 K-3 auto-captures ``fred-md@YYYY-MM``)."
+    ),
+    when_not_to_use=(
+        "Any current recipe -- this option is hard-rejected at validation "
+        "in all released versions up to and including v0.9.x."
+    ),
+    references=(_REF_ALFRED, _REF_CROUSHORE_STARK_2001),
+    related_options=("current_vintage",),
+    last_reviewed="2026-05-16",
+    reviewer="macroforecast author",
 )
 
 
@@ -370,31 +440,67 @@ _L1A_VINTAGE_CURRENT = _entry(
 
 _L1A_INFOSET_FINAL = _entry(
     "l1_a", "information_set_type", "final_revised_data",
-    summary="Each origin sees fully revised data; standard pseudo-OOS protocol.",
+    summary="Use the final, currently-published revised data series.",
     description=(
-        "At every walk-forward origin, the model has access to the *current* "
-        "revised values for every observation up to that origin. This is "
-        "the standard pseudo-out-of-sample protocol used by McCracken-Ng "
-        "and most published forecasting comparisons.\n\n"
-        "Pros: simple, comparable across studies, no real-time data dep. "
-        "Cons: optimistic about real-time forecast performance because "
-        "later revisions correct early-vintage measurement error."
+        "Standard pseudo-OOS evaluation protocol: at each forecast origin "
+        "the entire time series uses today's revised (currently-published) "
+        "data -- that is, revisions that occurred after the origin date "
+        "are still incorporated. The model never sees the data as it "
+        "existed in real time.\n\n"
+        "This is the canonical approach used by McCracken & Ng (2016) and "
+        "most published forecasting benchmark studies. It is fast, simple, "
+        "and directly comparable across papers. The acknowledged "
+        "limitation -- noted by Stark & Croushore (2002) and Faust & "
+        "Wright (2009) -- is that it overstates real-time forecast accuracy "
+        "for heavily-revised series (e.g., GDP, payrolls) because "
+        "subsequent revisions correct early-vintage measurement error that "
+        "a real forecaster would have faced.\n\n"
+        "Pairs naturally with ``vintage_policy: current_vintage``."
     ),
-    when_to_use="Default for any benchmark study; comparable to published work.",
+    when_to_use=(
+        "Benchmark and methods studies where vintage realism is not the "
+        "primary focus; replication of published FRED-MD/QD benchmarks; "
+        "any study comparing models on the same revised data."
+    ),
+    when_not_to_use=(
+        "Real-time evaluation papers where data revisions materially "
+        "affect conclusions -- use ``real_time_alfred`` when it becomes "
+        "available (currently a future feature, Cycle 14 K-4)."
+    ),
+    references=(_REF_STARK_CROUSHORE_2002, _REF_FAUST_WRIGHT_2009, _REF_MCCRACKEN_NG_2016),
     related_options=("pseudo_oos_on_revised_data", "vintage_policy"),
+    last_reviewed="2026-05-16",
+    reviewer="macroforecast author",
 )
 
 _L1A_INFOSET_PSEUDO = _entry(
     "l1_a", "information_set_type", "pseudo_oos_on_revised_data",
-    summary="Pseudo-OOS with revised data -- equivalent to final_revised_data for v1.0.",
+    summary="Pseudo out-of-sample using revised series; explicit acknowledgement of using post-hoc data.",
     description=(
-        "Synonym for ``final_revised_data`` in v1.0 (no ALFRED vintage "
-        "tracking yet). Both options produce identical forecasts; the axis "
-        "is exposed so future versions can route real-time vintages "
-        "without breaking existing recipes."
+        "Numerically identical to ``final_revised_data`` in all released "
+        "versions (v0.9.x and earlier): both options produce the same "
+        "forecasts from the same revised data. The distinction is purely "
+        "semantic -- selecting ``pseudo_oos_on_revised_data`` records the "
+        "explicit recipe-author acknowledgement that revised data is being "
+        "used for out-of-sample evaluation.\n\n"
+        "This axis value is exposed so that future versions can route "
+        "real-time vintage requests through the same axis without breaking "
+        "existing recipes. Studies that compare pseudo-OOS-on-revised "
+        "against real-time ALFRED vintages (once Cycle 14 K-4 is "
+        "implemented) will use this option to label the revised-data "
+        "branch explicitly.\n\n"
+        "Pairs with ``vintage_policy: current_vintage``."
     ),
-    when_to_use="When the recipe wants to make the pseudo-OOS protocol explicit (e.g., for clarity in published replication scripts).",
-    related_options=("final_revised_data",),
+    when_to_use=(
+        "Studies explicitly contrasting pseudo-OOS-on-revised-data vs "
+        "real-time vintage performance (once ``real_time_alfred`` is "
+        "implemented); recipe scripts that want to make the revised-data "
+        "protocol visible in the YAML rather than relying on the default."
+    ),
+    references=(_REF_STARK_CROUSHORE_2002, _REF_FAUST_WRIGHT_2009),
+    related_options=("final_revised_data", "vintage_policy"),
+    last_reviewed="2026-05-16",
+    reviewer="macroforecast author",
 )
 
 
@@ -867,26 +973,158 @@ def _t1(sublayer: str, axis: str, option: str,
 
 # L1.A fred_sd_frequency_policy
 _L1A_FRED_SD_FREQ = (
-    _t1("l1_a", "fred_sd_frequency_policy", "report_only",
-        "Report mixed-frequency status; do not gate.",
-        "Lifts mixed-frequency information to L1.5 diagnostics but allows the panel to proceed regardless of the frequency mix. The runtime defers alignment decisions to L2.A.",
-        "Exploratory work where mixed-frequency status is informative but should not block execution.",
-        related=("allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency")),
-    _t1("l1_a", "fred_sd_frequency_policy", "allow_mixed_frequency",
-        "Permit mixed-frequency panels; rely on L2.A alignment.",
-        "Default for FRED-SD recipes that combine monthly and quarterly state series. The downstream L2.A frequency-alignment rules render the mixed panel onto a single grid.",
-        "Standard FRED-SD pipelines that need both monthly and quarterly variables.",
-        related=("report_only", "reject_mixed_known_frequency", "require_single_known_frequency")),
-    _t1("l1_a", "fred_sd_frequency_policy", "reject_mixed_known_frequency",
-        "Reject the panel when explicit mixed-frequency variables coexist.",
-        "Hard-rejects panels where a series is declared at one frequency and another at a different known frequency. Useful as a safety gate when the recipe author expects a single-frequency panel.",
-        "Defensive recipes that should fail loudly if FRED-SD upstream changes deliver mixed frequencies.",
-        related=("require_single_known_frequency",)),
-    _t1("l1_a", "fred_sd_frequency_policy", "require_single_known_frequency",
-        "Hard-require every variable to declare the same frequency.",
-        "Strictest setting -- the gate fails unless every series shares an identical declared frequency. Distinct from ``reject_mixed_known_frequency`` in that it also rejects unknown-frequency series.",
-        "Strictly mono-frequency studies (e.g. monthly-only).",
-        related=("reject_mixed_known_frequency",)),
+    _entry(
+        "l1_a", "fred_sd_frequency_policy", "report_only",
+        summary="Log frequency mismatches in manifest; do not gate execution.",
+        description=(
+            "Default policy. When the FRED-SD pull contains variables with "
+            "differing declared frequencies (e.g., monthly QCEW payroll "
+            "series alongside quarterly income data), the runtime logs a "
+            "diagnostic entry in the L1.5 manifest but allows the panel "
+            "to proceed unchanged. No records are dropped and no error is "
+            "raised.\n\n"
+            "Alignment of the mixed-frequency panel is deferred entirely to "
+            "L2.A (frequency-alignment rules). This is the appropriate "
+            "choice for exploratory or default pipelines where the recipe "
+            "author has not yet decided how to handle the frequency "
+            "mismatch -- the manifest diagnostic surfaces the issue "
+            "without blocking execution."
+        ),
+        when_to_use=(
+            "Default for most FRED-SD recipes; exploratory work where "
+            "mixed-frequency status should be visible in the manifest but "
+            "should not stop execution; any pipeline that handles alignment "
+            "in L2.A."
+        ),
+        when_not_to_use=(
+            "Recipes that require strict frequency homogeneity -- use "
+            "``reject_mixed_known_frequency`` or "
+            "``require_single_known_frequency`` to gate early."
+        ),
+        references=(_REF_FRED_SD,),
+        related_options=(
+            "allow_mixed_frequency",
+            "reject_mixed_known_frequency",
+            "require_single_known_frequency",
+            "mixed_frequency_representation",
+        ),
+        last_reviewed="2026-05-16",
+        reviewer="macroforecast author",
+    ),
+    _entry(
+        "l1_a", "fred_sd_frequency_policy", "allow_mixed_frequency",
+        summary="Explicitly permit mixed frequencies; downstream layers must handle alignment.",
+        description=(
+            "Records an explicit recipe-author decision to accept a "
+            "mixed-frequency FRED-SD panel. Unlike ``report_only``, "
+            "selecting this option signals to downstream layers (L2.A "
+            "frequency-alignment, L3 feature DAG) that the mixed-frequency "
+            "structure is intentional and should be handled -- not silently "
+            "passed through.\n\n"
+            "The actual frequency-alignment logic (e.g., temporal "
+            "aggregation of monthly series to quarterly, or Kalman-filter "
+            "mixed-frequency representation) is delegated to "
+            "``mixed_frequency_representation`` in L2.A. Use this option "
+            "when the recipe is designed to combine monthly FRED-SD "
+            "predictors (e.g., QCEW payrolls) with quarterly FRED-SD "
+            "targets (e.g., GSP) and an explicit alignment strategy is "
+            "configured in L2."
+        ),
+        when_to_use=(
+            "Standard FRED-SD pipelines that intentionally combine monthly "
+            "and quarterly state series; recipes where "
+            "``mixed_frequency_representation`` is configured in L2.A."
+        ),
+        when_not_to_use=(
+            "Pipelines that want to hard-reject mixed frequencies rather "
+            "than align them -- use ``reject_mixed_known_frequency``."
+        ),
+        references=(_REF_FRED_SD,),
+        related_options=(
+            "report_only",
+            "reject_mixed_known_frequency",
+            "require_single_known_frequency",
+            "mixed_frequency_representation",
+        ),
+        last_reviewed="2026-05-16",
+        reviewer="macroforecast author",
+    ),
+    _entry(
+        "l1_a", "fred_sd_frequency_policy", "reject_mixed_known_frequency",
+        summary="Hard-reject if pulled variables span more than one declared frequency.",
+        description=(
+            "Safety gate: raises a ``ValueError`` at L1 validation if any "
+            "two variables in the FRED-SD pull carry different *known* "
+            "frequency declarations (e.g., one series is declared monthly "
+            "and another declared quarterly). Variables with unknown "
+            "frequency (i.e., series for which FRED-SD does not declare a "
+            "frequency) are tolerated -- only explicit mismatches between "
+            "known frequencies trigger the error.\n\n"
+            "Useful when the recipe author expects a single-frequency panel "
+            "and wants to fail loudly if FRED-SD upstream changes (new "
+            "series additions, metadata corrections) introduce an unexpected "
+            "frequency mix. The error message names the conflicting series "
+            "and their declared frequencies."
+        ),
+        when_to_use=(
+            "Defensive recipes where frequency homogeneity is part of the "
+            "study design; CI checks that should fail loudly if new FRED-SD "
+            "series at a different frequency are inadvertently pulled."
+        ),
+        when_not_to_use=(
+            "Pipelines designed to work with mixed frequencies (use "
+            "``allow_mixed_frequency``); pipelines where unknown-frequency "
+            "series should also be rejected (use "
+            "``require_single_known_frequency``)."
+        ),
+        references=(_REF_FRED_SD,),
+        related_options=(
+            "report_only",
+            "allow_mixed_frequency",
+            "require_single_known_frequency",
+        ),
+        last_reviewed="2026-05-16",
+        reviewer="macroforecast author",
+    ),
+    _entry(
+        "l1_a", "fred_sd_frequency_policy", "require_single_known_frequency",
+        summary="Enforce single frequency; reject if any variable has unknown or differing frequency.",
+        description=(
+            "Strictest setting. The L1 gate passes only if every variable "
+            "in the FRED-SD pull (a) has a declared known frequency, and "
+            "(b) all declared frequencies are identical. Two distinct "
+            "failure modes raise ``ValueError``:\n\n"
+            "1. A variable carries frequency ``'unknown'`` in FRED-SD "
+            "   metadata -- this would pass ``reject_mixed_known_frequency`` "
+            "   but fails here.\n"
+            "2. Two or more variables carry different *known* frequencies "
+            "   (same condition as ``reject_mixed_known_frequency``).\n\n"
+            "This is the appropriate gate for strictly mono-frequency studies "
+            "(e.g., monthly-only payroll analyses) that must also enforce "
+            "that all series have a documented cadence -- no 'we don't know "
+            "the frequency' series are permitted."
+        ),
+        when_to_use=(
+            "Strictly mono-frequency studies (e.g., monthly-only state-level "
+            "employment analyses); pipelines that must guarantee every "
+            "series has a known frequency declaration in the FRED-SD "
+            "metadata."
+        ),
+        when_not_to_use=(
+            "Pipelines that include FRED-SD series with undeclared "
+            "frequencies (use ``reject_mixed_known_frequency`` to only block "
+            "explicit mismatches, not unknown frequencies); mixed-frequency "
+            "pipelines (use ``allow_mixed_frequency``)."
+        ),
+        references=(_REF_FRED_SD,),
+        related_options=(
+            "report_only",
+            "allow_mixed_frequency",
+            "reject_mixed_known_frequency",
+        ),
+        last_reviewed="2026-05-16",
+        reviewer="macroforecast author",
+    ),
 )
 
 # L1.C missing_availability
@@ -1429,7 +1667,7 @@ register(
     _L1A_SOURCE_OFFICIAL_ONLY, _L1A_SOURCE_CUSTOM_PANEL, _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM,
     _L1A_FRED_MD, _L1A_FRED_QD, _L1A_FRED_SD, _L1A_FRED_MD_SD, _L1A_FRED_QD_SD,
     _L1A_FREQ_MONTHLY, _L1A_FREQ_QUARTERLY,
-    _L1A_VINTAGE_CURRENT,
+    _L1A_VINTAGE_CURRENT, _L1A_VINTAGE_REAL_TIME_ALFRED,
     _L1A_INFOSET_FINAL, _L1A_INFOSET_PSEUDO,
     _L1B_TARGET_SINGLE, _L1B_TARGET_MULTI,
     _L1C_VARS_ALL, _L1C_VARS_CORE, _L1C_VARS_CATEGORY, _L1C_VARS_TARGET_SPEC, _L1C_VARS_EXPLICIT,
