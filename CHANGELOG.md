@@ -44,6 +44,7 @@ These three fixes address Cycle 14 issues that a single-model reviewer (Claude) 
 
 #### Internal / regression fixes
 - **L3** `_jsonable` now handles `np.generic` and `np.ndarray` (mirrors `_json_safe` pattern in `execution.py`). Fixes a regression introduced by L2-4 where panel data with `np.float64` cells caused `yaml.safe_dump` `RepresenterError` via the activated manifest write path.
+- **C15.5** `test_r4_02_paper_table2_k60_midas_wins` marked `@pytest.mark.deep` to prevent hour-scale runs in non-deep CI/local pytest. Test logic unchanged; computationally infeasible at k=60 (135,000 lstsq calls). Use `pytest -m deep` to run explicitly.
 
 #### Notes
 - Cycle 14 ships as v0.9.1 per user decision. 1 BREAKING item (J-3) enumerated above.

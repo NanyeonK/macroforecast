@@ -833,6 +833,7 @@ class TestR4MonteCarlo:
         ))
 
     @pytest.mark.slow
+    @pytest.mark.deep
     def test_r4_02_paper_table2_k60_midas_wins(self):
         """TEST-R4-02: Paper Table 2, k=60, rho=0.9, MIDAS wins (ratio > 0.95).
 
