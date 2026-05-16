@@ -19,25 +19,7 @@ Two completeness tiers:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Final
-
-
-# ---------------------------------------------------------------------------
-# Sentinel for required parameters (no default value)
-# ---------------------------------------------------------------------------
-
-REQUIRED: Final = object()
-"""Sentinel indicating a :class:`ParameterDoc` field has no default value.
-
-Use ``default=REQUIRED`` (or omit ``default=``) to mark a parameter as
-required.  Distinguishes "no default" from "default is ``None``" (which
-is a valid actual runtime default for optional kwargs like ``vol_model``
-and ``random_state``).
-
-The renderer checks ``p.default is REQUIRED`` (identity, not equality) and
-renders such parameters as required positionals (no ``= ...`` suffix) or
-with a ``—`` in the default column of the parameters table.
-"""
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -82,11 +64,8 @@ class ParameterDoc:
         type:        Human-readable type hint (e.g. ``"int"``, ``"str"``,
                      ``"float"``, ``"tuple[str, ...]"``, or an enum
                      abbreviation like ``"str enum {cells, models}"``).
-        default:     Default value for this parameter.  Use :data:`REQUIRED` (or
-                     omit ``default=``) when the parameter has no default and is
-                     required when the option is active.  Use ``default=None``
-                     when the actual runtime default is ``None`` (e.g., optional
-                     kwargs like ``vol_model`` and ``random_state``).
+        default:     Default value, or ``None`` when the parameter has no
+                     default (i.e. it is *required* when the option is active).
         constraint:  Free-text constraint description (e.g. ``">=0"``,
                      ``"must be set if compute_mode=parallel"``).
         description: One-line summary of what the parameter controls.
@@ -94,7 +73,7 @@ class ParameterDoc:
 
     name: str
     type: str
-    default: Any = REQUIRED
+    default: Any = None
     constraint: str | None = None
     description: str = ""
 
@@ -106,18 +85,6 @@ class OptionDoc:
     Used by both the CLI wizard (where it surfaces on ``?`` expansion at
     prompt time) and the sphinx reference docs (where it's auto-emitted
     as RST).
-
-    Attributes added in Cycle 23:
-        data_args:   Positional data-input parameters (X/y or y_true/y_pred),
-                     rendered before the ``*,`` separator in the per-op
-                     signature block.  Each entry is a :class:`ParameterDoc`
-                     with ``default=REQUIRED``.  Stored separately from
-                     ``parameters`` so the renderer emits them as positional
-                     arguments before the keyword-only group.
-        return_type: Return-type annotation string rendered as
-                     ``-> {return_type}`` after the closing ``)`` in the
-                     ``## Function signature`` block.  Leave empty string for
-                     options without a standalone callable return annotation.
     """
 
     layer: str
@@ -140,18 +107,6 @@ class OptionDoc:
 
     # Parameters (for options that accept function-level / leaf_config arguments)
     parameters: tuple[ParameterDoc, ...] = ()
-
-    # Data arguments for per-op page signature (Cycle 23)
-    # Positional data inputs (X/y, y_true/y_pred, etc.) that precede the * separator
-    # in the rendered function signature.  Each entry is a ParameterDoc with
-    # default=REQUIRED (always positional).  Stored separately from ``parameters``
-    # so the renderer can emit them before the ``*,`` group.
-    data_args: tuple["ParameterDoc", ...] = ()
-
-    # Return type annotation for the per-op page signature (Cycle 23).
-    # Non-empty string causes ``-> {return_type}`` to appear after the closing ``)``
-    # in the rendered ## Function signature block.
-    return_type: str = ""
 
     # Per-op page (Cycle 22 POC)
     # When True, render_encyclopedia.py emits a dedicated page at
@@ -192,4 +147,4 @@ class OptionDoc:
         return (self.layer, self.sublayer, self.axis, self.option)
 
 
-__all__ = ["CodeExample", "OptionDoc", "ParameterDoc", "Reference", "REQUIRED"]
+__all__ = ["CodeExample", "OptionDoc", "ParameterDoc", "Reference"]
