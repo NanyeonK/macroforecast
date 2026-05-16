@@ -9,7 +9,7 @@ them right at recipe-authoring time matters.
 from __future__ import annotations
 
 from . import register
-from .types import CodeExample, OptionDoc, ParameterDoc, Reference
+from .types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
 
 
 _REVIEWED = "2026-05-04"
@@ -372,7 +372,7 @@ _COMPUTE_PARALLEL = OptionDoc(
         ParameterDoc(
             name="parallel_unit",
             type="str enum {cells, models, horizons, targets, oos_dates}",
-            default=None,
+            default=REQUIRED,
             constraint="required when compute_mode=parallel; validator hard-rejects missing",
             description=(
                 "Parallelization granularity. ``cells`` runs each sweep cell in a "

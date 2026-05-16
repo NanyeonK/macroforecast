@@ -5,6 +5,7 @@ internal adapter, allowing partial use of macroforecast operations
 without constructing a full recipe.
 
 Cycle 22 POC: ``ridge_fit`` + ``theil_u1`` + ``theil_u2``.
+Cycle 26: ``FitResultBase`` Protocol added.
 Subsequent cycles will extend to L3 ops, L4 families, L5 metrics,
 L6 tests, L7 importance.
 
@@ -20,13 +21,15 @@ Example usage::
     result = mf.functions.ridge_fit(X, y, alpha=0.5)
     print(result.coef_)          # array of coefficients
     print(result.predict(X))     # predictions
+    print(result.summary())      # statsmodels-style text table
 
     u1 = mf.functions.theil_u1(np.array([1, 2, 3]), np.array([1.5, 2.5, 3.5]))
     print(u1)                    # 0.1044...
 """
 from __future__ import annotations
 
+from ._base import FitResultBase
 from .ridge import RidgeFitResult, ridge_fit
 from .theil_u import theil_u1, theil_u2
 
-__all__ = ["RidgeFitResult", "ridge_fit", "theil_u1", "theil_u2"]
+__all__ = ["FitResultBase", "RidgeFitResult", "ridge_fit", "theil_u1", "theil_u2"]

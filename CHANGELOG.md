@@ -5,6 +5,43 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 26 — Paradigm Foundation: REQUIRED sentinel + FitResultBase + per-op page v2
+
+#### Breaking Changes
+- `ParameterDoc.default` now defaults to `REQUIRED` sentinel instead of
+  `None`.  **BREAKING (internal)**: code instantiating `ParameterDoc`
+  without `default=` previously received `default=None`; it now receives
+  `default=REQUIRED`.  All existing callers in the codebase use explicit
+  `default=` and are unaffected.  External code must add `default=None`
+  for genuine-None defaults.
+
+#### Added
+- `REQUIRED` singleton sentinel exported from
+  `macroforecast.scaffold.option_docs.types`.
+  `from macroforecast.scaffold.option_docs.types import REQUIRED`
+- `OptionDoc.data_args: tuple[ParameterDoc, ...]` — positional data-input
+  parameters for per-op encyclopedia pages. Defaults to `()`.
+- `OptionDoc.return_type: str` — return-type annotation rendered as
+  `-> {return_type}` in per-op signature block. Defaults to `""`.
+- `OptionDoc.returns_attrs: tuple[tuple[str, str, str], ...]` — return-value
+  attribute table for `## Returns` section. Defaults to `()`.
+- `macroforecast.functions.FitResultBase` — `@runtime_checkable` Protocol
+  declaring `.summary() -> str` and `.predict(X) -> np.ndarray` as the
+  structural contract for all L4 fit-result objects.
+- `RidgeFitResult.summary()` — minimal statsmodels-style text table
+  showing alpha, predictor count, intercept, and coefficient vector.
+  Std errors deferred to Cycle 28.
+
+#### Docs
+- `docs/encyclopedia/l4/family/ridge.md` signature now shows `X`, `y`
+  positional args and `-> RidgeFitResult` return type; `## Returns`
+  table lists all result attributes.
+- `docs/encyclopedia/l5/point_metrics/theil_u1.md` signature now shows
+  `-> float` return type; `## Returns` section emitted.
+- Per-op page renderer (`_render_op_page`) updated: data_args rendered
+  before `*,`; `## Returns` section added; `—` default in tables uses
+  REQUIRED sentinel identity (not `is None`).
+
 ### Cycle 22 — POC: per-op page + mf.functions namespace (v0.10 candidate)
 
 - OptionDoc.op_page field: render_encyclopedia emits a separate per-op Markdown page for each op that declares one.

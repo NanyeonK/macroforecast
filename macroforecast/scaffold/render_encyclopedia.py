@@ -35,6 +35,7 @@ from typing import Iterable
 from . import introspect
 from .introspect import AxisInfo, LayerInfo, OptionInfo
 from .option_docs import OPTION_DOCS, OptionDoc
+from .option_docs.types import REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -123,23 +124,32 @@ def _render_op_page(layer_id: str, axis: str, option: OptionInfo, doc: OptionDoc
     parts.append("")
 
     # Function signature
-    # ParameterDoc.default=None means "required" (no default in the table).
-    # For standalone functions in mf.functions, positional data args (no
-    # default) are rendered first; optional keyword-only args (with defaults)
-    # are grouped after *.
+    # data_args = positional data inputs (X/y, y_true/y_pred) -- always before *.
+    # parameters = keyword-only tuning args -- default=REQUIRED means no default
+    #              (positional required kwarg); default=None means actual None.
     parts.append("## Function signature")
     parts.append("")
-    if doc.parameters:
-        sig_lines = [f"mf.functions.{func_name}("]
-        required = [p for p in doc.parameters if p.default is None]
-        optional = [p for p in doc.parameters if p.default is not None]
-        for p in required:
+    has_data_args = bool(doc.data_args)
+    has_params = bool(doc.parameters)
+    if has_data_args or has_params:
+        callable_name = f"mf.functions.{func_name}"
+        sig_lines = [f"{callable_name}("]
+        # Positional data args -- always first, never show a default.
+        for p in doc.data_args:
             sig_lines.append(f"    {p.name}: {p.type},")
-        if optional:
+        # Keyword-only separator only when there are keyword params.
+        if has_params:
             sig_lines.append("    *,")
-            for p in optional:
-                sig_lines.append(f"    {p.name}: {p.type} = {p.default!r},")
-        sig_lines.append(")")
+            for p in doc.parameters:
+                if p.default is REQUIRED:
+                    sig_lines.append(f"    {p.name}: {p.type},")
+                else:
+                    sig_lines.append(f"    {p.name}: {p.type} = {p.default!r},")
+        # Close paren, optionally with return type.
+        if doc.return_type:
+            sig_lines.append(f") -> {doc.return_type}")
+        else:
+            sig_lines.append(")")
         parts.append("```python")
         parts.extend(sig_lines)
         parts.append("```")
@@ -150,18 +160,36 @@ def _render_op_page(layer_id: str, axis: str, option: OptionInfo, doc: OptionDoc
     parts.append("")
 
     # Parameters table
-    if doc.parameters:
+    all_params = list(doc.data_args) + list(doc.parameters)
+    if all_params:
         parts.append("## Parameters")
         parts.append("")
         parts.append("| name | type | default | constraint | description |")
         parts.append("|---|---|---|---|---|")
-        for p in doc.parameters:
-            default_cell = f"`{p.default!r}`" if p.default is not None else "—"
+        for p in all_params:
+            default_cell = "—" if p.default is REQUIRED else f"`{p.default!r}`"
             constraint_cell = p.constraint if p.constraint else "—"
             parts.append(
                 f"| `{p.name}` | `{p.type}` | {default_cell} | {constraint_cell} | {p.description} |"
             )
         parts.append("")
+
+    # Returns section
+    if doc.return_type:
+        parts.append("## Returns")
+        parts.append("")
+        if doc.returns_attrs:
+            parts.append(f"`{doc.return_type}` — frozen dataclass with fit results.")
+            parts.append("")
+            parts.append("| Attribute | Type | Description |")
+            parts.append("|-----------|------|-------------|")
+            for attr_name, attr_type, attr_desc in doc.returns_attrs:
+                parts.append(f"| `{attr_name}` | `{attr_type}` | {attr_desc} |")
+            parts.append("")
+        else:
+            # Scalar return (e.g., float) -- one-line description.
+            parts.append(f"`{doc.return_type}` — scalar result.")
+            parts.append("")
 
     # Behavior
     parts.append("## Behavior")
@@ -357,7 +385,7 @@ def _render_option_body(option: OptionInfo, doc: OptionDoc | None, *, layer_id: 
         lines.append("| name | type | default | constraint | description |")
         lines.append("|---|---|---|---|---|")
         for p in doc.parameters:
-            default_cell = f"`{p.default!r}`" if p.default is not None else "—"
+            default_cell = "—" if p.default is REQUIRED else f"`{p.default!r}`"
             constraint_cell = p.constraint if p.constraint else "—"
             lines.append(
                 f"| `{p.name}` | `{p.type}` | {default_cell} | {constraint_cell} | {p.description} |"

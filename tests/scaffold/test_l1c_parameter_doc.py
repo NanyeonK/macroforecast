@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc
+from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def test_l1c_explicit_variable_list_has_columns_param():
     p = doc.parameters[0]
     assert p.name == "variable_universe_columns"
     assert "list" in p.type
-    assert p.default is None  # required
+    assert p.default is REQUIRED  # REQUIRED sentinel (C26)
     assert p.constraint is not None
     assert "required" in p.constraint.lower() or "non-empty" in p.constraint.lower()
 
@@ -133,7 +133,7 @@ def test_l1c_series_specific_lag_has_map_param():
     p = doc.parameters[0]
     assert p.name == "release_lag_per_series"
     assert "dict" in p.type
-    assert p.default is None  # required
+    assert p.default is REQUIRED  # REQUIRED sentinel (C26)
     assert p.constraint is not None
     assert "required" in p.constraint.lower() or "non-empty" in p.constraint.lower()
 
@@ -233,7 +233,7 @@ def test_l1c_impute_predictors_only_has_x_imputation_param():
     p = doc.parameters[0]
     assert p.name == "x_imputation"
     assert p.type == "str"
-    assert p.default is None  # required
+    assert p.default is REQUIRED  # REQUIRED sentinel (C26)
     assert p.constraint is not None
     assert "required" in p.constraint.lower()
     for method in ("bfill", "ffill", "mean", "median"):
@@ -248,7 +248,7 @@ def test_l1c_impute_raw_predictors_has_raw_x_imputation_param():
     p = doc.parameters[0]
     assert p.name == "raw_x_imputation"
     assert p.type == "str"
-    assert p.default is None  # required
+    assert p.default is REQUIRED  # REQUIRED sentinel (C26)
     assert p.constraint is not None
     assert "required" in p.constraint.lower()
     for method in ("bfill", "ffill", "mean", "median"):

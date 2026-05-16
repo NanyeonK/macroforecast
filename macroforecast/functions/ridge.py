@@ -34,6 +34,49 @@ class RidgeFitResult:
     alpha: float
     _model: Any  # internal; not part of public contract
 
+    def summary(self) -> str:
+        """Return a human-readable text summary of the ridge regression result.
+
+        Returns
+        -------
+        str
+            Statsmodels-style table showing regularisation strength,
+            observation/predictor counts, and fitted coefficients.
+
+        Note
+        ----
+        Std errors, t-statistics, and p-values are deferred to Cycle 28
+        (GCV-based SE estimation for ridge regression).
+        """
+        k = len(self.coef_)
+        # Try to get feature names from the underlying model.
+        feat_names: list[str] = []
+        if hasattr(self._model, "feature_names_in_"):
+            feat_names = list(self._model.feature_names_in_)
+        if not feat_names:
+            feat_names = [f"x{i}" for i in range(k)]
+
+        sep = "=" * 78
+        dash = "-" * 78
+        lines: list[str] = [
+            sep,
+            f"{'Ridge Regression Results':^78}",
+            sep,
+            f"{'alpha (regularisation):':35s} {self.alpha:>20.4f}",
+            f"{'No. Predictors:':35s} {k:>20d}",
+            sep,
+            f"{'':30s} {'coef':>12s}",
+            dash,
+            f"{'const':30s} {self.intercept_:>12.6f}",
+        ]
+        for name, coef in zip(feat_names, self.coef_):
+            lines.append(f"{name:30s} {coef:>12.6f}")
+        lines.append(sep)
+        lines.append(
+            "Note: Std errors / t-stats / p-values deferred to Cycle 28."
+        )
+        return "\n".join(lines)
+
     def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
         """Predict using the fitted model.
 
@@ -140,3 +183,4 @@ def ridge_fit(
         alpha=float(alpha),
         _model=model,
     )
+

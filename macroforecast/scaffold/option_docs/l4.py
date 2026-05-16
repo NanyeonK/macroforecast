@@ -15,7 +15,7 @@ when_to_use + when_not_to_use + key references.
 from __future__ import annotations
 
 from . import register
-from .types import OptionDoc, ParameterDoc, Reference
+from .types import OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"
@@ -37,6 +37,9 @@ def _f(
     op_page: bool = False,
     op_func_name: str = "",
     parameters: tuple[ParameterDoc, ...] = (),
+    data_args: tuple[ParameterDoc, ...] = (),
+    return_type: str = "",
+    returns_attrs: tuple[tuple[str, str, str], ...] = (),
 ) -> OptionDoc:
     return OptionDoc(
         layer="l4",
@@ -52,6 +55,9 @@ def _f(
         op_page=op_page,
         op_func_name=op_func_name,
         parameters=parameters,
+        data_args=data_args,
+        return_type=return_type,
+        returns_attrs=returns_attrs,
         last_reviewed=_REVIEWED,
         reviewer=_REVIEWER,
     )
@@ -182,6 +188,28 @@ _F_RIDGE = _f(
             default=None,
             description="Random seed for stochastic sub-steps (currently unused in the standard ridge path; reserved for future Monte Carlo extensions).",
         ),
+    ),
+    data_args=(
+        ParameterDoc(
+            name="X",
+            type="np.ndarray | pd.DataFrame",
+            default=REQUIRED,
+            description="Feature matrix. Shape (n_samples, n_features). Accepts numpy arrays or DataFrames.",
+        ),
+        ParameterDoc(
+            name="y",
+            type="np.ndarray | pd.Series",
+            default=REQUIRED,
+            description="Target vector. Shape (n_samples,). Accepts numpy arrays or Series.",
+        ),
+    ),
+    return_type="RidgeFitResult",
+    returns_attrs=(
+        (".coef_", "np.ndarray", "Fitted coefficient vector, shape (n_features,)."),
+        (".intercept_", "float", "Fitted intercept scalar."),
+        (".alpha", "float", "Regularisation strength used."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Human-readable text table of fit results."),
     ),
 )
 
