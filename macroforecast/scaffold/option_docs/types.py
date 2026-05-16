@@ -19,7 +19,25 @@ Two completeness tiers:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Final
+
+
+# ---------------------------------------------------------------------------
+# Sentinel for required parameters (no default value)
+# ---------------------------------------------------------------------------
+
+REQUIRED: Final = object()
+"""Sentinel indicating a :class:`ParameterDoc` field has no default value.
+
+Use ``default=REQUIRED`` (or omit ``default=``) to mark a parameter as
+required.  Distinguishes "no default" from "default is ``None``" (which
+is a valid actual runtime default for optional kwargs like ``vol_model``
+and ``random_state``).
+
+The renderer checks ``p.default is REQUIRED`` (identity, not equality)
+and renders such parameters as positional required (no ``= ...`` suffix)
+or with a ``—`` in the default column of the parameters table.
+"""
 
 
 @dataclass(frozen=True)
@@ -73,7 +91,7 @@ class ParameterDoc:
 
     name: str
     type: str
-    default: Any = None
+    default: Any = REQUIRED
     constraint: str | None = None
     description: str = ""
 
@@ -107,6 +125,25 @@ class OptionDoc:
 
     # Parameters (for options that accept function-level / leaf_config arguments)
     parameters: tuple[ParameterDoc, ...] = ()
+
+    # Data arguments for per-op page signature (Cycle 26)
+    # Positional data inputs (X/y, y_true/y_pred, etc.) that precede the *
+    # separator in the rendered function signature.  Each entry is a
+    # ParameterDoc with default=REQUIRED (always positional).  Stored
+    # separately from ``parameters`` so the renderer can emit them before
+    # the ``*,`` group.
+    data_args: tuple["ParameterDoc", ...] = ()
+
+    # Return type annotation for the per-op page signature (Cycle 26).
+    # Non-empty string causes ``-> {return_type}`` to appear after the
+    # closing ``)`` in the rendered ## Function signature block.
+    return_type: str = ""
+
+    # Return-value attribute table for the ## Returns section (Cycle 26).
+    # Each entry is a (attr_name, type_str, description) triple rendered
+    # as a markdown table row.  Empty tuple = only the return_type header
+    # line is emitted (for scalar returns like ``float``).
+    returns_attrs: tuple[tuple[str, str, str], ...] = ()
 
     # Per-op page (Cycle 22 POC)
     # When True, render_encyclopedia.py emits a dedicated page at
@@ -147,4 +184,5 @@ class OptionDoc:
         return (self.layer, self.sublayer, self.axis, self.option)
 
 
-__all__ = ["CodeExample", "OptionDoc", "ParameterDoc", "Reference"]
+__all__ = ["CodeExample", "OptionDoc", "ParameterDoc", "Reference", "REQUIRED"]
+

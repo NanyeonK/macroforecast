@@ -32,7 +32,7 @@ from __future__ import annotations
 import pytest
 
 from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc
+from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ def test_l1e_start_fixed_date_has_sample_start_date():
     p = doc.parameters[0]
     assert p.name == "sample_start_date"
     assert p.type == "str"
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     assert "required" in p.constraint.lower() or "fixed_date" in p.constraint.lower()
     assert "ISO" in p.constraint or "YYYY" in p.constraint
@@ -82,7 +82,7 @@ def test_l1e_end_fixed_date_has_sample_end_date():
     p = doc.parameters[0]
     assert p.name == "sample_end_date"
     assert p.type == "str"
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     assert "required" in p.constraint.lower() or "fixed_date" in p.constraint.lower()
 
@@ -138,7 +138,7 @@ def test_l1f_range_up_to_h_has_max_horizon():
     p = doc.parameters[0]
     assert p.name == "max_horizon"
     assert "int" in p.type
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     assert "required" in p.constraint.lower()
     assert "positive" in p.constraint.lower()
@@ -213,7 +213,7 @@ def test_l1g_estimated_threshold_variable_required():
     """threshold_variable is required (default=None, required mention in constraint)."""
     doc = OPTION_DOCS[("l1", "l1_g", "regime_definition", "estimated_threshold")]
     p = next(p for p in doc.parameters if p.name == "threshold_variable")
-    assert p.default is None
+    assert p.default is REQUIRED
     assert "required" in p.constraint.lower()
 
 

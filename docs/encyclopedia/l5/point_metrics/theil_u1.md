@@ -11,7 +11,7 @@
 mf.functions.theil_u1(
     y_true: np.ndarray | pd.Series,
     y_pred: np.ndarray | pd.Series,
-)
+) -> float
 ```
 
 ## Parameters
@@ -20,6 +20,10 @@ mf.functions.theil_u1(
 |---|---|---|---|---|
 | `y_true` | `np.ndarray | pd.Series` | — | — | Actual (realised) values. 1-D array of length N. |
 | `y_pred` | `np.ndarray | pd.Series` | — | — | Forecast values. Must be the same length as y_true. |
+
+## Returns
+
+`float` — scalar result.
 
 ## Behavior
 

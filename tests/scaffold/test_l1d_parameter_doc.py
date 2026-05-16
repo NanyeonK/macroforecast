@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc
+from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def test_l1d_target_geography_selected_states_has_target_states():
     p = doc.parameters[0]
     assert p.name == "target_states"
     assert "list" in p.type
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     assert "non-empty" in p.constraint.lower() or "required" in p.constraint.lower()
 
@@ -52,7 +52,7 @@ def test_l1d_target_geography_single_state_has_target_state():
     p = doc.parameters[0]
     assert p.name == "target_state"
     assert p.type == "str"
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     assert "required" in p.constraint.lower() or "single_state" in p.constraint.lower()
     assert "CA" in p.description or "TX" in p.description
@@ -71,7 +71,7 @@ def test_l1d_predictor_geography_selected_states_has_predictor_states():
     p = doc.parameters[0]
     assert p.name == "predictor_states"
     assert "list" in p.type
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     # Description must mention independence from target_states
     assert "independent" in p.description.lower() or "cross-state" in p.description.lower()
@@ -97,7 +97,7 @@ def test_l1d_state_selection_selected_states_has_sd_states():
     p = doc.parameters[0]
     assert p.name == "sd_states"
     assert "list" in p.type
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
     # Description must mention AFTER / intersect semantics
     assert "after" in p.description.lower() or "intersect" in p.description.lower()
@@ -122,7 +122,7 @@ def test_l1d_sd_variable_selection_selected_has_sd_variables():
     p = doc.parameters[0]
     assert p.name == "sd_variables"
     assert "list" in p.type
-    assert p.default is None
+    assert p.default is REQUIRED
     assert p.constraint is not None
 
 

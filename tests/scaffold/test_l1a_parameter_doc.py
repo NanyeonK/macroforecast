@@ -8,7 +8,7 @@ from __future__ import annotations
 import pytest
 
 from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc
+from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ def test_l1a_custom_panel_only_all_params_default_none():
     """All custom_panel_only parameters default to None (they are required conditionally)."""
     doc = OPTION_DOCS[("l1", "l1_a", "custom_source_policy", "custom_panel_only")]
     for p in doc.parameters:
-        assert p.default is None, f"Expected default=None for {p.name}, got {p.default}"
+        assert p.default is REQUIRED, f"Expected default=REQUIRED for {p.name}, got {p.default}"
 
 
 def test_l1a_custom_panel_only_params_have_constraint():
@@ -70,7 +70,7 @@ def test_l1a_official_plus_custom_merge_rule_type():
     doc = OPTION_DOCS[("l1", "l1_a", "custom_source_policy", "official_plus_custom")]
     mr = next(p for p in doc.parameters if p.name == "custom_merge_rule")
     assert mr.type == "str"
-    assert mr.default is None  # required — no default
+    assert mr.default is REQUIRED  # REQUIRED sentinel (C26)
     assert mr.constraint is not None
     # Constraint should enumerate the allowed join values
     assert "left_join" in mr.constraint
@@ -83,7 +83,7 @@ def test_l1a_official_plus_custom_source_path_type():
     doc = OPTION_DOCS[("l1", "l1_a", "custom_source_policy", "official_plus_custom")]
     sp = next(p for p in doc.parameters if p.name == "custom_source_path")
     assert "str" in sp.type
-    assert sp.default is None  # required — no default
+    assert sp.default is REQUIRED  # REQUIRED sentinel (C26)
 
 
 # ---------------------------------------------------------------------------
