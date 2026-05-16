@@ -5,6 +5,26 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 23 -- ParameterDoc REQUIRED sentinel + OptionDoc data_args/return_type (BREAKING)
+
+#### Changed
+- `ParameterDoc.default` now defaults to `REQUIRED` sentinel instead of `None`.
+  **BREAKING (internal)**: code that instantiates `ParameterDoc` without `default=`
+  previously received `default=None`; it now receives `default=REQUIRED`. All existing
+  callers in the codebase use explicit `default=` and are unaffected. External code
+  (if any) must add `default=None` for genuine-None defaults.
+
+#### Added
+- `REQUIRED` sentinel exported from `macroforecast.scaffold.option_docs.types`.
+  Import via `from macroforecast.scaffold.option_docs.types import REQUIRED`.
+- `OptionDoc.data_args: tuple[ParameterDoc, ...]` -- positional data-input parameters
+  for per-op encyclopedia pages (X/y, y_true/y_pred). Defaults to `()`.
+- `OptionDoc.return_type: str` -- return-type annotation string for per-op pages.
+  Defaults to `""`.
+- `ridge.md` per-op page now shows correct full signature including `X`, `y` positional
+  args and `-> RidgeFitResult` return type.
+- `theil_u1.md` per-op page now shows `-> float` return type explicitly.
+
 ### Cycle 22 — POC: per-op page + mf.functions namespace (v0.10 candidate)
 
 - OptionDoc.op_page field: render_encyclopedia emits a separate per-op Markdown page for each op that declares one.
