@@ -75,6 +75,7 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "x_imputation",
         "raw_x_imputation",
         # L1.D Geography conditional leaf_config keys (Cycle 20)
+        "target_state",  # singular, for target_geography_scope=single_state (C20 follow-up)
         "target_states",
         "predictor_states",
         "sd_states",

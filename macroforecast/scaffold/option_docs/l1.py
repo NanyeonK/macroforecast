@@ -807,6 +807,24 @@ _L1D_GEO_SINGLE = _entry(
     related_options=("all_states", "selected_states", "predictor_geography_scope"),
 )
 
+# C20 follow-up: ParameterDoc for target_state (singular, single_state option).
+_L1D_GEO_SINGLE = _L1D_GEO_SINGLE.__class__(
+    **{**_L1D_GEO_SINGLE.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="target_state",
+               type="str",
+               default=None,
+               constraint="required US state code or 'US' when target_geography_scope=single_state",
+               description=(
+                   "Single target state code (e.g. 'CA', 'TX') or 'US' for national target. "
+                   "Must be a valid two-letter postal code present in FRED-SD."
+               ),
+           ),
+       ),
+    }
+)
+
 _L1D_GEO_ALL = _entry(
     "l1_d", "target_geography_scope", "all_states",
     summary="Forecast every state's series jointly (50+DC targets).",

@@ -8,6 +8,7 @@ full per-version honesty-pass history embedded in repo documentation.
 ### Cycle 20 — L1.D Geography encyclopedia complete
 
 - **C20** L1.D 6 axes: ParameterDoc populated for 6 conditional leaf_config keys (target_states, predictor_states, sd_states, sd_variables, sd_state_group_members/sd_state_groups, sd_variable_group_members/sd_variable_groups). `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` extended with 8 keys. Docstring updated to confirm L1.D Tier-1 coverage (all 6 axes).
+- **C20 follow-up**: Added `target_state` (singular, target_geography_scope=single_state) to ParameterDoc + `_KNOWN_LEAF_CONFIG_KEYS["1_data"]`. Pre-existing gap surfaced by reviewer grep-audit.
 
 ### Cycle 19 — L1.C Predictor Universe encyclopedia complete
 

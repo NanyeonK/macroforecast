@@ -37,6 +37,12 @@ State-level case studies (e.g., CA / TX / NY-specific forecasts).
 
 **Related options**: [`all_states`](#all-states), [`selected_states`](#selected-states), [`predictor_geography_scope`](#predictor-geography-scope)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target_state` | `str` | — | required US state code or 'US' when target_geography_scope=single_state | Single target state code (e.g. 'CA', 'TX') or 'US' for national target. Must be a valid two-letter postal code present in FRED-SD. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `all_states`  --  operational

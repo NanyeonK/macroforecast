@@ -36,10 +36,26 @@ def test_l1d_target_geography_selected_states_has_target_states():
 
 
 def test_l1d_target_geography_other_options_no_params():
-    """single_state and all_states have no conditional parameters."""
-    for option in ("single_state", "all_states"):
-        doc = OPTION_DOCS[("l1", "l1_d", "target_geography_scope", option)]
-        assert doc.parameters == (), f"{option} should have parameters=()"
+    """all_states has no conditional parameters."""
+    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_scope", "all_states")]
+    assert doc.parameters == (), "all_states should have parameters=()"
+
+
+def test_l1d_target_geography_single_state_has_target_state():
+    """single_state has 1 ParameterDoc for target_state (singular).
+
+    C20 follow-up: pre-existing gap surfaced by reviewer cross-model grep.
+    """
+    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_scope", "single_state")]
+    assert isinstance(doc.parameters, tuple)
+    assert len(doc.parameters) == 1
+    p = doc.parameters[0]
+    assert p.name == "target_state"
+    assert p.type == "str"
+    assert p.default is None
+    assert p.constraint is not None
+    assert "required" in p.constraint.lower() or "single_state" in p.constraint.lower()
+    assert "CA" in p.description or "TX" in p.description
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +218,7 @@ def test_known_leaf_config_keys_extended_with_l1d_geography_keys():
     from macroforecast.core.execution import _KNOWN_LEAF_CONFIG_KEYS
     keys = _KNOWN_LEAF_CONFIG_KEYS["1_data"]
     expected = {
+        "target_state",
         "target_states",
         "predictor_states",
         "sd_states",
