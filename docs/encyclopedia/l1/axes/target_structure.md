@@ -50,6 +50,12 @@ Default. Any standard forecasting benchmark.
 
 ```
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target` | `str` | — | Required when target_structure=single_target. | FRED series ID of the variable to forecast (e.g., CPIAUCSL, UNRATE). Must be present in the chosen dataset after any transformation step. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `multi_target`  --  operational
@@ -73,5 +79,11 @@ Independent per-target studies -- those are usually clearer as separate sweep ce
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: [`single_target`](#single-target)
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `targets` | `list[str]` | — | Required when target_structure=multi_target. Must have length >= 1. | List of FRED series IDs to forecast jointly. Each element is a separate target; the model is fit per-(target, horizon) tuple. |
 
 _Last reviewed 2026-05-04 by macroforecast author._

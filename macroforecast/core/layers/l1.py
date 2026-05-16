@@ -19,7 +19,7 @@ CustomSourcePolicy = Literal["official_only", "custom_panel_only", "official_plu
 Dataset = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
 Frequency = Literal["monthly", "quarterly"]
 VintagePolicy = Literal["current_vintage", "real_time_alfred"]
-TargetStructure = Literal["single_target", "multi_target", "multi_series_target"]
+TargetStructure = Literal["single_target", "multi_target"]
 VariableUniverse = Literal[
     "all_variables",
     "core_variables",
@@ -366,7 +366,7 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
                 "custom_panel_only makes FRED-specific axes inactive",
             )
         )
-    if resolved.get("target_structure") in {"multi_series_target", "multi_target"} and len(leaf_config.get("targets", ()) or ()) == 1:
+    if resolved.get("target_structure") in {"multi_target"} and len(leaf_config.get("targets", ()) or ()) == 1:
         issues.append(
             Issue(
                 "l1_target_structure",
@@ -523,7 +523,7 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
         "frequency": {"monthly", "quarterly"},
         "information_set_type": {"final_revised_data", "pseudo_oos_on_revised_data"},
         "vintage_policy": {"current_vintage", "real_time_alfred"},
-        "target_structure": {"single_target", "multi_series_target", "multi_target"},
+        "target_structure": {"single_target", "multi_target"},
         "variable_universe": {
             "all_variables",
             "core_variables",
@@ -920,8 +920,6 @@ def _targets_from_leaf_config(leaf_config: dict[str, Any], resolved: dict[str, A
 
 
 def _canonical_target_structure(value: Any) -> Any:
-    if value == "multi_series_target":
-        return "multi_target"
     return value
 
 

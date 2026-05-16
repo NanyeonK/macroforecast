@@ -627,6 +627,42 @@ _L1B_TARGET_MULTI = _entry(
     related_options=("single_target",),
 )
 
+# ParameterDoc for single_target: leaf_config.target key.
+_L1B_TARGET_SINGLE = _L1B_TARGET_SINGLE.__class__(
+    **{**_L1B_TARGET_SINGLE.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="target",
+               type="str",
+               default=None,
+               constraint="Required when target_structure=single_target.",
+               description=(
+                   "FRED series ID of the variable to forecast (e.g., CPIAUCSL, UNRATE). "
+                   "Must be present in the chosen dataset after any transformation step."
+               ),
+           ),
+       ),
+    }
+)
+
+# ParameterDoc for multi_target: leaf_config.targets key.
+_L1B_TARGET_MULTI = _L1B_TARGET_MULTI.__class__(
+    **{**_L1B_TARGET_MULTI.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="targets",
+               type="list[str]",
+               default=None,
+               constraint="Required when target_structure=multi_target. Must have length >= 1.",
+               description=(
+                   "List of FRED series IDs to forecast jointly. Each element is a "
+                   "separate target; the model is fit per-(target, horizon) tuple."
+               ),
+           ),
+       ),
+    }
+)
+
 
 # ---------------------------------------------------------------------------
 # L1.C variable_universe

@@ -159,7 +159,15 @@ def test_l1_target_structure_rules():
         target_structure: single_target
       leaf_config: {}
     """
+    # C18: multi_series_target removed; multi_target is the valid option
     multi_valid = """
+    1_data:
+      fixed_axes:
+        target_structure: multi_target
+      leaf_config:
+        targets: [CPIAUCSL, INDPRO]
+    """
+    multi_series_ghost = """
     1_data:
       fixed_axes:
         target_structure: multi_series_target
@@ -168,6 +176,8 @@ def test_l1_target_structure_rules():
     """
     assert validate_layer(parse_layer_yaml(single_missing)).has_hard_errors
     assert not validate_layer(parse_layer_yaml(multi_valid)).has_hard_errors
+    # BREAKING (C18): multi_series_target is now an unknown option
+    assert validate_layer(parse_layer_yaml(multi_series_ghost)).has_hard_errors
 
 
 def test_l1_variable_universe_required_keys():
@@ -187,7 +197,7 @@ def test_l1_target_specific_must_cover_targets():
     yaml_text = """
     1_data:
       fixed_axes:
-        target_structure: multi_series_target
+        target_structure: multi_target
         variable_universe: target_specific_variables
       leaf_config:
         targets: [CPIAUCSL, INDPRO]

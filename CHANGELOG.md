@@ -48,6 +48,11 @@ These three fixes address Cycle 14 issues that a single-model reviewer (Claude) 
 - **C15.6** U-MIDAS BIC lag selection: emit `UserWarning` when `K_max > 30` (computed as `ceil(1.5 × freq_ratio)`). At very high frequency ratios (e.g., k=60), brute-force BIC enumeration is computationally intractable. Warning suggests setting `n_lags_high` manually to bypass search. Algorithm unchanged — paper-faithful behavior preserved when warning is suppressed or user overrides.
 
 
+#### Cycle 18 — L1.B Target definition encyclopedia complete
+
+- **C18-A** `target_structure`: removed `multi_series_target` ghost option from `TargetStructure` Literal, validator set, and runtime canonicalization. Code had silent alias to `multi_target`; per user-driven L1.B review, alias removed for clarity. **BREAKING**: recipes using `target_structure: multi_series_target` now fail. Migration: switch to `multi_target`.
+- **C18-B** `target_structure` ParameterDoc populated: `single_target` → `target: str`, `multi_target` → `targets: list[str]`.
+
 #### Cycle 17.5 — fred_sd_frequency_policy reject/require enforcement (BREAKING)
 
 - **C17.5** L1.A `fred_sd_frequency_policy`: `reject_mixed_known_frequency` and `require_single_known_frequency` now actually raise ValueError at L1 validation (was: silently aligned). Honors OptionDoc per LOW-A2 review finding. BREAKING for recipes that previously relied on silent alignment under reject/require policies; use `allow_mixed_frequency` to preserve old behavior.
