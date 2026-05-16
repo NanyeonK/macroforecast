@@ -5,6 +5,17 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 22 — POC: per-op page + mf.functions namespace (v0.10 candidate)
+
+- OptionDoc.op_page field: render_encyclopedia emits a separate per-op Markdown page for each op that declares one.
+- macroforecast/functions/ module: ridge_fit (RidgeFitResult, sklearn-style) + theil_u1 + theil_u2 standalone wrappers.
+- l4/family/ridge.md + l5/point_metrics/theil_u1.md per-op pages with Function signature + Parameters sections.
+- mf.functions exposed via _LAZY_MODULES (Cycle 16 K-1 lazy-namespace pattern).
+- 17 new unit tests in tests/functions/ + tests/scaffold/test_op_page_render.py.
+- Pattern validates for L3/L4/L5/L6/L7 migration in subsequent cycles.
+- **v0.10.0 candidate**
+
+
 ### Cycle 21 -- L1.E + L1.F + L1.G batch -- L1 audit complete
 
 - **C21-E** L1.E sample window: `sample_start_rule=fixed_date` -> `sample_start_date` ParameterDoc (partial-ISO acceptance per C12 F-P0-1); `sample_end_rule=fixed_date` -> `sample_end_date` ParameterDoc (ISO date, must-be-gte-start constraint documented).

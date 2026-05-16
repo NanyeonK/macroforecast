@@ -15,7 +15,7 @@ when_to_use + when_not_to_use + key references.
 from __future__ import annotations
 
 from . import register
-from .types import OptionDoc, Reference
+from .types import OptionDoc, ParameterDoc, Reference
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"
@@ -34,6 +34,9 @@ def _f(
     when_not_to_use: str = "",
     references: tuple[Reference, ...] = (_REF_DESIGN_L4,),
     related_options: tuple[str, ...] = (),
+    op_page: bool = False,
+    op_func_name: str = "",
+    parameters: tuple[ParameterDoc, ...] = (),
 ) -> OptionDoc:
     return OptionDoc(
         layer="l4",
@@ -46,6 +49,9 @@ def _f(
         when_not_to_use=when_not_to_use,
         references=references,
         related_options=related_options,
+        op_page=op_page,
+        op_func_name=op_func_name,
+        parameters=parameters,
         last_reviewed=_REVIEWED,
         reviewer=_REVIEWER,
     )
@@ -128,6 +134,55 @@ _F_RIDGE = _f(
         ),
     ),
     related_options=("lasso", "elastic_net", "lasso_path"),
+    op_page=True,
+    op_func_name="ridge_fit",
+    parameters=(
+        ParameterDoc(
+            name="alpha",
+            type="float",
+            default=1.0,
+            constraint=">=0",
+            description="L2 regularisation strength. Larger values shrink coefficients more aggressively toward zero.",
+        ),
+        ParameterDoc(
+            name="prior",
+            type='str enum {"none", "random_walk", "shrink_to_target", "fused_difference"}',
+            default="none",
+            description=(
+                "Coefficient prior. ``none`` = standard ridge. "
+                "``random_walk`` = Goulet Coulombe (2025 IJF) TVP-as-ridge two-step estimator. "
+                "``shrink_to_target`` = Albacore_comps Variant A (simplex non-neg + target penalty). "
+                "``fused_difference`` = Albacore_ranks Variant B (fused-difference penalty)."
+            ),
+        ),
+        ParameterDoc(
+            name="coefficient_constraint",
+            type='str enum {"none", "nonneg"}',
+            default="none",
+            description=(
+                "Sign / cone constraint. ``nonneg`` enforces β >= 0 via augmented NNLS "
+                "(Assemblage Regression, Coulombe et al. 2024). Ignored when ``prior`` is "
+                "``shrink_to_target`` or ``fused_difference`` (those priors handle non-negativity internally)."
+            ),
+        ),
+        ParameterDoc(
+            name="vol_model",
+            type='str enum {"ewma", "garch11"} | None',
+            default=None,
+            constraint="only used when prior='random_walk'",
+            description=(
+                "Volatility model for step-2 Omega_eps reconstruction in the random-walk estimator. "
+                "``ewma`` = RiskMetrics lambda=0.94 (no extra deps). "
+                "``garch11`` = GARCH(1,1) via the ``arch`` package; auto-falls back to EWMA if unavailable."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int | None",
+            default=None,
+            description="Random seed for stochastic sub-steps (currently unused in the standard ridge path; reserved for future Monte Carlo extensions).",
+        ),
+    ),
 )
 
 _F_LASSO = _f(

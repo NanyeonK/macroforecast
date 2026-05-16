@@ -13,7 +13,7 @@ coefficients).
 from __future__ import annotations
 
 from . import register
-from .types import OptionDoc, Reference
+from .types import OptionDoc, ParameterDoc, Reference
 
 _REVIEWED = "2026-05-05"
 _REVIEWER = "macroforecast author"
@@ -54,12 +54,18 @@ _REF_WINKLER_1972 = Reference(
 def _e(axis: str, option: str, summary: str, description: str, when_to_use: str,
        *, when_not_to_use: str = "",
        references: tuple[Reference, ...] = (_REF_DESIGN_L5,),
-       related: tuple[str, ...] = ()) -> OptionDoc:
+       related: tuple[str, ...] = (),
+       op_page: bool = False,
+       op_func_name: str = "",
+       parameters: tuple[ParameterDoc, ...] = ()) -> OptionDoc:
     return OptionDoc(
         layer="l5", sublayer="L5_A_metric_specification", axis=axis, option=option,
         summary=summary, description=description, when_to_use=when_to_use,
         when_not_to_use=when_not_to_use, references=references,
         related_options=related,
+        op_page=op_page,
+        op_func_name=op_func_name,
+        parameters=parameters,
         last_reviewed=_REVIEWED, reviewer=_REVIEWER,
     )
 
@@ -357,6 +363,22 @@ for option, doc in _ALL.items():
         related=tuple(k for k in _PRIMARY_REFS_BY_OPTION if k != option)[:4]))
 
 
+# ParameterDocs for theil_u1 function-op (Cycle 22 POC).
+_THEIL_U1_PARAMS: tuple[ParameterDoc, ...] = (
+    ParameterDoc(
+        name="y_true",
+        type="np.ndarray | pd.Series",
+        default=None,
+        description="Actual (realised) values. 1-D array of length N.",
+    ),
+    ParameterDoc(
+        name="y_pred",
+        type="np.ndarray | pd.Series",
+        default=None,
+        description="Forecast values. Must be the same length as y_true.",
+    ),
+)
+
 # Multi-select axes
 _POINT = []
 for option, (summary, desc, when, when_not) in POINT.items():
@@ -365,10 +387,15 @@ for option, (summary, desc, when, when_not) in POINT.items():
         refs = refs + (_REF_HYNDMAN_KOEHLER_2006,)
     if option in ("theil_u1", "theil_u2"):
         refs = (_REF_DESIGN_L5, _REF_THEIL_1966)
+    # Cycle 22 POC: theil_u1 gets a dedicated per-op encyclopedia page.
+    _op_page = option == "theil_u1"
+    _op_func_name = "theil_u1" if option == "theil_u1" else ""
+    _params: tuple[ParameterDoc, ...] = _THEIL_U1_PARAMS if option == "theil_u1" else ()
     _POINT.append(_e("point_metrics", option, summary,
         f"Point-forecast metric ``{option}``. {desc}",
         when, when_not_to_use=when_not, references=refs,
-        related=tuple(k for k in POINT if k != option)))
+        related=tuple(k for k in POINT if k != option),
+        op_page=_op_page, op_func_name=_op_func_name, parameters=_params))
 
 _DENSITY = []
 for option, (summary, desc, when) in DENSITY.items():

@@ -68,6 +68,174 @@ def _status_badge(status: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Per-op page helpers (Cycle 22 POC)
+# ---------------------------------------------------------------------------
+
+
+def _op_page_rel_path(*, layer_id: str, axis: str, option: str) -> str:
+    """Relative path from the axis page to the per-op page.
+
+    Axis page lives at ``<layer_id>/axes/<axis_slug>.md``.
+    Per-op page lives at ``<layer_id>/<axis_slug>/<option_slug>.md``.
+    Relative path: ``../<axis_slug>/<option_slug>.md``.
+    """
+    axis_slug = _slug(axis)
+    option_slug = _slug(option)
+    return f"../{axis_slug}/{option_slug}.md"
+
+
+def _render_op_page(layer_id: str, axis: str, option: OptionInfo, doc: OptionDoc) -> str:
+    """Render the dedicated per-op encyclopedia page for a function-op.
+
+    Page location: ``<layer_id>/<axis_slug>/<option_slug>.md``
+
+    Includes:
+      - Header with layer / axis / sublayer context
+      - ## Function signature  (Python code block)
+      - ## Parameters         (table from OptionDoc.parameters)
+      - ## Behavior           (from OptionDoc.description + when_to_use)
+      - ## In recipe context  (YAML example stub or from OptionDoc.examples)
+      - ## References
+      - ## Related ops
+    """
+    layer_disp = _layer_display(layer_id)
+    axis_slug = _slug(axis)
+    func_name = doc.op_func_name or option.value
+
+    parts: list[str] = []
+    # Header
+    parts.append(f"# `{option.value}` -- {doc.summary}")
+    parts.append("")
+    parts.append(
+        f"[Back to `{axis}` axis](../axes/{axis_slug}.md) | "
+        f"[Back to {layer_disp}](../index.md) | "
+        f"[Browse all options](../../browse_by_option.md)"
+    )
+    parts.append("")
+    parts.append(
+        f"> Operational op under axis `{axis}`, sub-layer `{doc.sublayer}`, "
+        f"layer `{layer_id}`."
+    )
+    if func_name:
+        parts.append(
+            f"> Standalone callable: `mf.functions.{func_name}`."
+        )
+    parts.append("")
+
+    # Function signature
+    # ParameterDoc.default=None means "required" (no default in the table).
+    # For standalone functions in mf.functions, positional data args (no
+    # default) are rendered first; optional keyword-only args (with defaults)
+    # are grouped after *.
+    parts.append("## Function signature")
+    parts.append("")
+    if doc.parameters:
+        sig_lines = [f"mf.functions.{func_name}("]
+        required = [p for p in doc.parameters if p.default is None]
+        optional = [p for p in doc.parameters if p.default is not None]
+        for p in required:
+            sig_lines.append(f"    {p.name}: {p.type},")
+        if optional:
+            sig_lines.append("    *,")
+            for p in optional:
+                sig_lines.append(f"    {p.name}: {p.type} = {p.default!r},")
+        sig_lines.append(")")
+        parts.append("```python")
+        parts.extend(sig_lines)
+        parts.append("```")
+    else:
+        parts.append("```python")
+        parts.append(f"mf.functions.{func_name}(...)")
+        parts.append("```")
+    parts.append("")
+
+    # Parameters table
+    if doc.parameters:
+        parts.append("## Parameters")
+        parts.append("")
+        parts.append("| name | type | default | constraint | description |")
+        parts.append("|---|---|---|---|---|")
+        for p in doc.parameters:
+            default_cell = f"`{p.default!r}`" if p.default is not None else "—"
+            constraint_cell = p.constraint if p.constraint else "—"
+            parts.append(
+                f"| `{p.name}` | `{p.type}` | {default_cell} | {constraint_cell} | {p.description} |"
+            )
+        parts.append("")
+
+    # Behavior
+    parts.append("## Behavior")
+    parts.append("")
+    if doc.description:
+        for paragraph in doc.description.split("\n\n"):
+            parts.append(paragraph.strip())
+            parts.append("")
+    if doc.when_to_use:
+        parts.append("**When to use**")
+        parts.append("")
+        parts.append(doc.when_to_use)
+        parts.append("")
+    if doc.when_not_to_use:
+        parts.append("**When NOT to use**")
+        parts.append("")
+        parts.append(doc.when_not_to_use)
+        parts.append("")
+
+    # In recipe context
+    parts.append("## In recipe context")
+    parts.append("")
+    if doc.examples:
+        for example in doc.examples:
+            parts.append(f"*{example.title}*")
+            parts.append("")
+            parts.append(f"```{example.language}")
+            parts.append(example.code)
+            parts.append("```")
+            parts.append("")
+    else:
+        # Auto-generate minimal YAML recipe snippet.
+        parts.append(
+            f"Set ``params.{axis} = \"{option.value}\"`` in the relevant layer "
+            f"to activate this op within a recipe:"
+        )
+        parts.append("")
+        parts.append("```yaml")
+        parts.append(f"# Layer {layer_id.upper()} recipe fragment")
+        parts.append(f"params:")
+        parts.append(f"  {axis}: {option.value}")
+        parts.append("```")
+        parts.append("")
+
+    # References
+    if doc.references:
+        parts.append("## References")
+        parts.append("")
+        for ref in doc.references:
+            text = ref.citation
+            if ref.doi:
+                text += f" (doi:{ref.doi})"
+            if ref.url:
+                text += f" <{ref.url}>"
+            parts.append(f"* {text}")
+        parts.append("")
+
+    # Related ops
+    if doc.related_options:
+        parts.append("## Related ops")
+        parts.append("")
+        rel = ", ".join(f"`{name}`" for name in doc.related_options)
+        parts.append(f"See also: {rel} (on the same axis).")
+        parts.append("")
+
+    if doc.last_reviewed:
+        suffix = f" by {doc.reviewer}" if doc.reviewer else ""
+        parts.append(f"_Last reviewed {doc.last_reviewed}{suffix}._")
+        parts.append("")
+
+    return "\n".join(parts).rstrip() + "\n"
+
+
+# ---------------------------------------------------------------------------
 # Per-option rendering (markdown body for one option on one axis page)
 # ---------------------------------------------------------------------------
 
@@ -110,6 +278,19 @@ def _render_option_body(option: OptionInfo, doc: OptionDoc | None, *, layer_id: 
                 + ", ".join(f"`{k}`" for k in option.leaf_config_optional)
             )
             lines.append("")
+        return "\n".join(lines)
+
+    # Per-op page: emit a 1-2 line stub + link instead of the full body.
+    if doc.op_page:
+        op_dir = _op_page_rel_path(layer_id=layer_id, axis=axis, option=option.value)
+        stub_link = f"[{option.value} function page]({op_dir})"
+        func_note = ""
+        if doc.op_func_name:
+            func_note = f" Standalone: ``mf.functions.{doc.op_func_name}``."
+        lines.append(doc.summary)
+        lines.append("")
+        lines.append(f"See {stub_link} for full documentation + parameters + standalone usage.{func_note}")
+        lines.append("")
         return "\n".join(lines)
 
     # Full OptionDoc.
@@ -667,6 +848,23 @@ def write_all(out_dir: str | Path) -> list[Path]:
             seen_files.add(axis_path)
             axis_path.write_text(_render_axis_page(layer_id, ax), encoding="utf-8")
             written.append(axis_path)
+
+            # Cycle 22 POC: emit per-op page for options with op_page=True.
+            for option in ax.options:
+                doc = OPTION_DOCS.get(
+                    (layer_id, ax.sublayer, ax.name, option.value)
+                )
+                if doc is None or not doc.op_page:
+                    continue
+                op_dir = layer_dir / slug
+                op_dir.mkdir(parents=True, exist_ok=True)
+                op_slug = _slug(option.value)
+                op_page_path = op_dir / f"{op_slug}.md"
+                op_page_path.write_text(
+                    _render_op_page(layer_id, ax.name, option, doc),
+                    encoding="utf-8",
+                )
+                written.append(op_page_path)
 
     return written
 

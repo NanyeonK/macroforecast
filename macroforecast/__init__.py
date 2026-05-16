@@ -130,8 +130,12 @@ _LAZY_EXPORTS = {
     "EvaluationScale": ".preprocessing",
 }
 
-_LAZY_MODULES: tuple[str, ...] = ("defaults", "scaffold", "recipes")
-"""Submodules exposed as ``macroforecast.<name>`` via lazy import."""
+_LAZY_MODULES: tuple[str, ...] = ("defaults", "scaffold", "recipes", "functions")
+"""Submodules exposed as ``macroforecast.<name>`` via lazy import.
+
+Cycle 22: ``functions`` added for the per-op standalone callable namespace
+(``mf.functions.ridge_fit``, ``mf.functions.theil_u1``, etc.).
+"""
 
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
 

@@ -108,6 +108,17 @@ class OptionDoc:
     # Parameters (for options that accept function-level / leaf_config arguments)
     parameters: tuple[ParameterDoc, ...] = ()
 
+    # Per-op page (Cycle 22 POC)
+    # When True, render_encyclopedia.py emits a dedicated page at
+    # ``docs/encyclopedia/<layer>/<axis>/<option>.md`` with Function signature
+    # + Parameters table + Behavior + In recipe context + References sections.
+    # The axis page's option section is replaced by a 1-2 line stub + link.
+    op_page: bool = False
+
+    # Standalone callable name in ``mf.functions`` namespace (used in per-op
+    # page header). E.g. ``"ridge_fit"`` for the ridge OptionDoc.
+    op_func_name: str = ""
+
     # Provenance
     last_reviewed: str = ""
     reviewer: str = ""
