@@ -12,12 +12,12 @@ from ..types import L0MetaArtifact
 FailurePolicy = Literal["fail_fast", "continue_on_failure"]
 ReproducibilityMode = Literal["seeded_reproducible", "exploratory"]
 ComputeMode = Literal["serial", "parallel"]
-ParallelUnit = Literal["models", "horizons", "targets", "oos_dates"]
+ParallelUnit = Literal["cells", "models", "horizons", "targets", "oos_dates"]
 
 FAILURE_POLICY_OPTIONS: tuple[FailurePolicy, ...] = ("fail_fast", "continue_on_failure")
 REPRODUCIBILITY_MODE_OPTIONS: tuple[ReproducibilityMode, ...] = ("seeded_reproducible", "exploratory")
 COMPUTE_MODE_OPTIONS: tuple[ComputeMode, ...] = ("serial", "parallel")
-PARALLEL_UNIT_OPTIONS: tuple[ParallelUnit, ...] = ("models", "horizons", "targets", "oos_dates")
+PARALLEL_UNIT_OPTIONS: tuple[ParallelUnit, ...] = ("cells", "models", "horizons", "targets", "oos_dates")  # Cycle 16 N-2 fix: parallel_unit=cells operational
 L0_AXIS_NAMES: tuple[str, ...] = ("failure_policy", "reproducibility_mode", "compute_mode")
 
 DEFAULT_FIXED_AXES: dict[str, str] = {

@@ -884,9 +884,8 @@ def execute_recipe(
     * ``parallel`` -- dispatch cells to a ``ProcessPoolExecutor`` of size
       ``leaf_config.n_workers`` (default = ``min(8, os.cpu_count() - 1)``).
       Each worker re-applies ``base_seed + cell_index`` so determinism is
-      preserved. ``parallel_unit`` is accepted at the schema level but
-      currently always interpreted as cell-level (sub-cell parallelism is
-      tracked as a follow-up).
+      preserved. ``parallel_unit: cells`` (Cycle 16 N-2) dispatches whole cells in parallel.
+      Sub-cell parallelism (models/horizons/targets/oos_dates) is a follow-up milestone.
     """
 
     started_at = datetime.now(timezone.utc).isoformat()
