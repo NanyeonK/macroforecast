@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
+from macroforecast.scaffold.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference
 from macroforecast.scaffold.option_docs import OPTION_DOCS
 from macroforecast.scaffold.render_encyclopedia import _render_option_body
 from macroforecast.scaffold.introspect import OptionInfo
@@ -129,7 +129,7 @@ def test_l0_parallel_has_parallel_unit_and_n_workers():
     assert "parallel_unit" in names
     assert "n_workers" in names
     pu = next(p for p in doc.parameters if p.name == "parallel_unit")
-    assert pu.default is REQUIRED
+    assert pu.default is None
     assert "cells" in pu.type
     nw = next(p for p in doc.parameters if p.name == "n_workers")
     assert "int" in nw.type
@@ -215,12 +215,12 @@ def test_render_option_body_no_parameters_table_when_empty():
     assert "**Parameters**" not in rendered
 
 
-def test_render_option_body_required_default_renders_dash():
-    """Parameters with default=REQUIRED render as '—' in the table."""
+def test_render_option_body_none_default_renders_dash():
+    """Parameters with default=None render as '—' in the table."""
     p = ParameterDoc(
         name="parallel_unit",
         type="str",
-        default=REQUIRED,
+        default=None,
         constraint="required",
         description="The parallel unit.",
     )
