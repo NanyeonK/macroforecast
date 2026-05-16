@@ -18,7 +18,7 @@ _RECIPE = """
     custom_source_policy: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
-    target_structure: multi_series_target
+    target_structure: multi_target
   leaf_config:
     targets: [y, z]
     target_horizons: [1, 2]
