@@ -48,6 +48,10 @@ These three fixes address Cycle 14 issues that a single-model reviewer (Claude) 
 - **C15.6** U-MIDAS BIC lag selection: emit `UserWarning` when `K_max > 30` (computed as `ceil(1.5 × freq_ratio)`). At very high frequency ratios (e.g., k=60), brute-force BIC enumeration is computationally intractable. Warning suggests setting `n_lags_high` manually to bypass search. Algorithm unchanged — paper-faithful behavior preserved when warning is suppressed or user overrides.
 
 
+#### Cycle 17.5 — fred_sd_frequency_policy reject/require enforcement (BREAKING)
+
+- **C17.5** L1.A `fred_sd_frequency_policy`: `reject_mixed_known_frequency` and `require_single_known_frequency` now actually raise ValueError at L1 validation (was: silently aligned). Honors OptionDoc per LOW-A2 review finding. BREAKING for recipes that previously relied on silent alignment under reject/require policies; use `allow_mixed_frequency` to preserve old behavior.
+
 #### Cycle 17 — L1.A Source Selection encyclopedia complete
 
 - **O-1** Tier-2 -> Tier-1 OptionDoc promotion for `frequency` (2 ops + `'derived'` sentinel), `information_set_type` (2 ops), `vintage_policy/real_time_alfred` (Cycle 14 K-4 hard-reject documented with ALFRED future intent), `fred_sd_frequency_policy` (4 ops). 10 entries marked last_reviewed=2026-05-16.

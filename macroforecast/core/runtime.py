@@ -13113,6 +13113,74 @@ def _chow_lin_disaggregate(
     return monthly
 
 
+
+
+# Cycle 17.5 LOW-A2 fix: enforce fred_sd_frequency_policy at validation time.
+def _enforce_fred_sd_frequency_policy(
+    policy: str,
+    series_freq_map: dict,
+    columns: list,
+) -> None:
+    """Raise ValueError when fred_sd_frequency_policy conditions are violated.
+
+    Parameters
+    ----------
+    policy:
+        The resolved fred_sd_frequency_policy axis value.
+    series_freq_map:
+        Mapping of column name to frequency string (e.g. "monthly", "quarterly").
+        Only columns present in *columns* are examined.
+    columns:
+        Ordered list of column names in the panel (df.columns).
+
+    Raises
+    ------
+    ValueError
+        For reject_mixed_known_frequency when more than one distinct known
+        frequency is detected across the panel columns.
+        For require_single_known_frequency when more than one distinct known
+        frequency is detected OR any column has an unknown/missing frequency.
+    """
+    if policy in ("report_only", "allow_mixed_frequency"):
+        return  # No enforcement for permissive policies.
+
+    known_freqs = set()
+    unknown_cols = []
+    for col in columns:
+        raw = str(series_freq_map.get(col, "")).strip().lower()
+        if raw in ("monthly", "quarterly"):
+            known_freqs.add(raw)
+        else:
+            unknown_cols.append(col)
+
+    if policy == "reject_mixed_known_frequency":
+        if len(known_freqs) > 1:
+            raise ValueError(
+                "fred_sd_frequency_policy='reject_mixed_known_frequency': panel contains "
+                f"columns at multiple known frequencies {sorted(known_freqs)!r}. "
+                "Use allow_mixed_frequency or report_only to permit mixed panels, or "
+                "filter to a single frequency with sd_series_frequency_filter."
+            )
+
+    elif policy == "require_single_known_frequency":
+        errors = []
+        if len(known_freqs) > 1:
+            errors.append(
+                f"columns at multiple known frequencies {sorted(known_freqs)!r}"
+            )
+        if unknown_cols:
+            errors.append(
+                f"{len(unknown_cols)} column(s) with unknown/missing frequency "
+                f"(first few: {unknown_cols[:5]!r})"
+            )
+        if errors:
+            raise ValueError(
+                "fred_sd_frequency_policy='require_single_known_frequency': "
+                + "; ".join(errors)
+                + ". Use allow_mixed_frequency or report_only to permit such panels."
+            )
+
+
 def _apply_fred_sd_frequency_alignment(
     df: pd.DataFrame,
     resolved: dict[str, Any],
@@ -13147,6 +13215,12 @@ def _apply_fred_sd_frequency_alignment(
     quarterly_cols = [
         c for c in df.columns if str(series_freq_map.get(c, "")).lower() == "quarterly"
     ]
+    # Cycle 17.5 LOW-A2 fix: enforce fred_sd_frequency_policy BEFORE alignment.
+    _enforce_fred_sd_frequency_policy(
+        resolved.get("fred_sd_frequency_policy", "report_only"),
+        series_freq_map,
+        list(df.columns),
+    )
     sd_filter = resolved.get("sd_series_frequency_filter", "both")
     qm_rule = resolved.get("quarterly_to_monthly_rule", "step_backward")
     mq_rule = resolved.get("monthly_to_quarterly_rule", "quarterly_average")
