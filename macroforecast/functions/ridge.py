@@ -45,8 +45,8 @@ class RidgeFitResult:
 
         Note
         ----
-        Std errors, t-statistics, and p-values are deferred to Cycle 28
-        (GCV-based SE estimation for ridge regression).
+        Inferential statistics (GCV-based SE estimation) are deferred
+        to a future cycle.
         """
         k = len(self.coef_)
         # Try to get feature names from the underlying model.
@@ -73,7 +73,7 @@ class RidgeFitResult:
             lines.append(f"{name:30s} {coef:>12.6f}")
         lines.append(sep)
         lines.append(
-            "Note: Std errors / t-stats / p-values deferred to Cycle 28."
+            "Note: inferential statistics are deferred to a future cycle."
         )
         return "\n".join(lines)
 
