@@ -2,23 +2,25 @@
 
 L1 is the largest layer: 26 axes spanning data source, target structure,
 variable universe, geography (FRED-SD), sample window, horizons, and
-regime definition. This module ships Tier-1 documentation for the
-**core authoring axes** -- the ones every recipe needs to set
-explicitly. Long-tail axes (release_lag_rule, fred_sd_frequency_policy,
-etc.) carry placeholder entries that surface the schema description in
-the wizard until a follow-up Tier-1 review pass.
+regime definition. This module ships Tier-1 documentation for all L1
+axes that have been through a reviewer-stamped review pass.
 
-Tier-1-complete entries (manually written, reviewer-stamped):
-* L1.A custom_source_policy / dataset / vintage_policy
-* L1.B target_structure
-* L1.C variable_universe / official_transform_policy
-* L1.D target_geography_scope / predictor_geography_scope
-* L1.E sample_start_rule / sample_end_rule
-* L1.F horizon_set
-* L1.G regime_definition
+Tier-1-complete sub-layers (all axes Tier-1 unless noted):
+* L1.A -- all 6 axes (custom_source_policy, dataset, vintage_policy,
+  frequency, information_set_type, fred_sd_frequency_policy) -- Cycle 17
+* L1.B -- target_structure (1 axis) -- Cycle 18
+* L1.C -- all 8 axes (variable_universe, missing_availability,
+  raw_missing_policy, raw_outlier_policy, release_lag_rule,
+  contemporaneous_x_rule, official_transform_policy,
+  official_transform_scope) -- Cycle 19
+* L1.D -- target_geography_scope / predictor_geography_scope (2 of 3)
+* L1.E -- sample_start_rule / sample_end_rule
+* L1.F -- horizon_set
+* L1.G -- regime_definition
 
-Long-tail axes are scaffolded with machine-readable summaries; their
-``last_reviewed`` field is empty so the v1.0 docs gauntlet flags them.
+Remaining long-tail axes (L1.D fred_sd_state_group etc.) are scaffolded
+with machine-readable summaries; their ``last_reviewed`` field is empty
+so the v1.0 docs gauntlet flags them.
 """
 from __future__ import annotations
 
@@ -735,6 +737,22 @@ _L1C_VARS_EXPLICIT = _variable_universe(
     ),
     "Replication scripts that need an exact predictor set; ablations.",
 )
+_L1C_VARS_EXPLICIT = _L1C_VARS_EXPLICIT.__class__(
+    **{**_L1C_VARS_EXPLICIT.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="variable_universe_columns",
+               type="list[str]",
+               default=None,
+               constraint="Required when variable_universe=explicit_variable_list; must be non-empty.",
+               description=(
+                   "Explicit list of column names from the data source to use as the predictor "
+                   "universe. Validator rejects missing or empty list."
+               ),
+           ),
+       ),
+    }
+)
 
 
 # ---------------------------------------------------------------------------
@@ -1276,7 +1294,8 @@ _L1C_MISSING = (
 _L1C_RAW_MISSING = (
     _t1("l1_c", "raw_missing_policy", "preserve_raw_missing",
         "Pass raw NaN values through unchanged.",
-        "Default; raw missingness flows into L2.D imputation. Required for the McCracken-Ng EM-factor imputation workflow.",
+        "Default; raw missingness flows into L2.D imputation. Required for the McCracken-Ng EM-factor imputation workflow. "
+        "See also: L2 ``imputation_policy`` (same surface, different stage: raw vs post-tcode).",
         "Default; required when L2.D will run EM-factor or similar global imputation.",
         related=("zero_fill_leading_predictor_missing_before_tcode", "impute_raw_predictors", "drop_raw_missing_rows")),
     _t1("l1_c", "raw_missing_policy", "zero_fill_leading_predictor_missing_before_tcode",
@@ -1299,57 +1318,176 @@ _L1C_RAW_MISSING = (
 )
 
 # L1.C raw_outlier_policy
+_L1C_RAW_OUTLIER_PRESERVE = _t1(
+    "l1_c", "raw_outlier_policy", "preserve_raw_outliers",
+    "Pass raw outliers through to L2.C.",
+    "Default; relies on L2.C McCracken-Ng IQR detection and the configured ``outlier_action`` to handle "
+    "extreme values. See also: L2 ``outlier_policy`` / ``outlier_action`` (same surface, different stage: "
+    "raw vs post-tcode).",
+    "Default; the canonical workflow.",
+    related=("winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing"),
+)
+_L1C_RAW_OUTLIER_WINSORIZE = _t1(
+    "l1_c", "raw_outlier_policy", "winsorize_raw",
+    "Winsorise raw series at quantile cutpoints (default p1 / p99).",
+    "Caps extreme values at the specified quantile before t-coding. Preserves observation count but compresses "
+    "tails. Configured via ``leaf_config.winsorize_quantiles`` (default [0.01, 0.99]). Compare: L2 "
+    "``outlier_policy=winsorize`` operates on the post-tcode panel.",
+    "Heavy-tailed financial / macro series where extreme observations would dominate downstream estimates.",
+    related=("preserve_raw_outliers", "iqr_clip_raw"),
+)
+_L1C_RAW_OUTLIER_WINSORIZE = _L1C_RAW_OUTLIER_WINSORIZE.__class__(
+    **{**_L1C_RAW_OUTLIER_WINSORIZE.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="winsorize_quantiles",
+               type="list[float, float]",
+               default="[0.01, 0.99]",
+               constraint="0 <= low < high <= 1; both elements required.",
+               description=(
+                   "Lower and upper quantile clip thresholds. Defaults to symmetric 1%/99% winsorization. "
+                   "Values outside [low, high] quantile bounds are clipped to the bound value."
+               ),
+           ),
+       ),
+    }
+)
+_L1C_RAW_OUTLIER_IQR = _t1(
+    "l1_c", "raw_outlier_policy", "iqr_clip_raw",
+    "Clip raw observations beyond k×IQR thresholds.",
+    "Clips values outside ``Q1 - k·IQR``, ``Q3 + k·IQR`` (k default 10.0, matching McCracken-Ng). Robust to "
+    "non-Gaussian distributions. Configured via ``leaf_config.outlier_iqr_threshold``. Compare: L2 "
+    "``outlier_policy=mccracken_ng_iqr`` uses the same k but on the post-tcode panel.",
+    "Robust outlier handling on non-normal series.",
+    related=("winsorize_raw", "mad_clip_raw", "zscore_clip_raw"),
+)
+_L1C_RAW_OUTLIER_IQR = _L1C_RAW_OUTLIER_IQR.__class__(
+    **{**_L1C_RAW_OUTLIER_IQR.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="outlier_iqr_threshold",
+               type="float",
+               default="10.0",
+               constraint=">0",
+               description=(
+                   "IQR multiplier above which raw observations are clipped. McCracken-Ng default is 10.0. "
+                   "Observations satisfying |x - median| > k * IQR are clipped to the band boundary."
+               ),
+           ),
+       ),
+    }
+)
+_L1C_RAW_OUTLIER_MAD = _t1(
+    "l1_c", "raw_outlier_policy", "mad_clip_raw",
+    "Clip raw observations beyond k×MAD thresholds.",
+    "Median Absolute Deviation -based clipping; even more robust than IQR. Default k = 3 maps to roughly 3σ "
+    "for normal data.",
+    "Highly non-Gaussian series with sparse outliers.",
+    related=("iqr_clip_raw", "zscore_clip_raw"),
+)
+_L1C_RAW_OUTLIER_ZSCORE = _t1(
+    "l1_c", "raw_outlier_policy", "zscore_clip_raw",
+    "Clip raw observations beyond k standard deviations.",
+    "Standard z-score rule (typically k = 3). Cheapest option but assumes approximate normality. Configured via "
+    "``leaf_config.zscore_threshold_value``.",
+    "Approximately Gaussian series; quick baseline.",
+    when_not_to_use="Heavy-tailed series -- use ``iqr_clip_raw`` or ``mad_clip_raw``.",
+    related=("iqr_clip_raw", "mad_clip_raw"),
+)
+_L1C_RAW_OUTLIER_ZSCORE = _L1C_RAW_OUTLIER_ZSCORE.__class__(
+    **{**_L1C_RAW_OUTLIER_ZSCORE.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="zscore_threshold_value",
+               type="float",
+               default="3.0",
+               constraint=">0",
+               description=(
+                   "Z-score threshold; observations with |z| > threshold are clipped to the threshold boundary. "
+                   "z is computed as (x - mean) / std over the series."
+               ),
+           ),
+       ),
+    }
+)
+_L1C_RAW_OUTLIER_SET_MISSING = _t1(
+    "l1_c", "raw_outlier_policy", "set_raw_outliers_to_missing",
+    "Set raw outliers to NaN and defer to L2.D imputation.",
+    "Replaces flagged outliers with NaN. The L2.D imputation method then fills the resulting gaps; preserves "
+    "observation count for downstream stages.",
+    "Pipelines where outliers should be re-imputed coherently with other missing data.",
+    related=("preserve_raw_outliers", "winsorize_raw"),
+)
 _L1C_RAW_OUTLIER = (
-    _t1("l1_c", "raw_outlier_policy", "preserve_raw_outliers",
-        "Pass raw outliers through to L2.C.",
-        "Default; relies on L2.C McCracken-Ng IQR detection and the configured ``outlier_action`` to handle extreme values.",
-        "Default; the canonical workflow.",
-        related=("winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing")),
-    _t1("l1_c", "raw_outlier_policy", "winsorize_raw",
-        "Winsorise raw series at quantile cutpoints (default p1 / p99).",
-        "Caps extreme values at the specified quantile before t-coding. Preserves observation count but compresses tails.",
-        "Heavy-tailed financial / macro series where extreme observations would dominate downstream estimates.",
-        related=("preserve_raw_outliers", "iqr_clip_raw")),
-    _t1("l1_c", "raw_outlier_policy", "iqr_clip_raw",
-        "Clip raw observations beyond k×IQR thresholds.",
-        "Clips values outside ``Q1 - k·IQR``, ``Q3 + k·IQR`` (k typically 1.5 or 3). Robust to non-Gaussian distributions.",
-        "Robust outlier handling on non-normal series.",
-        related=("winsorize_raw", "mad_clip_raw", "zscore_clip_raw")),
-    _t1("l1_c", "raw_outlier_policy", "mad_clip_raw",
-        "Clip raw observations beyond k×MAD thresholds.",
-        "Median Absolute Deviation -based clipping; even more robust than IQR. Default k = 3 maps to roughly 3σ for normal data.",
-        "Highly non-Gaussian series with sparse outliers.",
-        related=("iqr_clip_raw", "zscore_clip_raw")),
-    _t1("l1_c", "raw_outlier_policy", "zscore_clip_raw",
-        "Clip raw observations beyond k standard deviations.",
-        "Standard z-score rule (typically k = 3). Cheapest option but assumes approximate normality.",
-        "Approximately Gaussian series; quick baseline.",
-        when_not_to_use="Heavy-tailed series -- use ``iqr_clip_raw`` or ``mad_clip_raw``.",
-        related=("iqr_clip_raw", "mad_clip_raw")),
-    _t1("l1_c", "raw_outlier_policy", "set_raw_outliers_to_missing",
-        "Set raw outliers to NaN and defer to L2.D imputation.",
-        "Replaces flagged outliers with NaN. The L2.D imputation method then fills the resulting gaps; preserves observation count for downstream stages.",
-        "Pipelines where outliers should be re-imputed coherently with other missing data.",
-        related=("preserve_raw_outliers", "winsorize_raw")),
+    _L1C_RAW_OUTLIER_PRESERVE,
+    _L1C_RAW_OUTLIER_WINSORIZE,
+    _L1C_RAW_OUTLIER_IQR,
+    _L1C_RAW_OUTLIER_MAD,
+    _L1C_RAW_OUTLIER_ZSCORE,
+    _L1C_RAW_OUTLIER_SET_MISSING,
 )
 
 # L1.C release_lag_rule
+_L1C_RELEASE_LAG_IGNORE = _t1(
+    "l1_c", "release_lag_rule", "ignore_release_lag",
+    "Treat every observation as available at its calendar period.",
+    "Pseudo-real-time mode: ignores the release-lag distinction; every variable is assumed to be available the "
+    "moment the period closes.",
+    "Backtests where real-time vintage data is unavailable.",
+    related=("fixed_lag_all_series", "series_specific_lag"),
+)
+_L1C_RELEASE_LAG_FIXED = _t1(
+    "l1_c", "release_lag_rule", "fixed_lag_all_series",
+    "Apply a single release lag to every series.",
+    "All series shift by ``leaf_config.fixed_lag_periods`` periods. Approximates real-time availability without "
+    "per-series detail.",
+    "Coarse real-time approximations.",
+    related=("series_specific_lag",),
+)
+_L1C_RELEASE_LAG_FIXED = _L1C_RELEASE_LAG_FIXED.__class__(
+    **{**_L1C_RELEASE_LAG_FIXED.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="fixed_lag_periods",
+               type="int",
+               default=None,
+               constraint=">=0; required when release_lag_rule=fixed_lag_all_series.",
+               description=(
+                   "Uniform release lag in periods applied to every predictor series. A value of 1 means each "
+                   "series is available one period after the period it was observed."
+               ),
+           ),
+       ),
+    }
+)
+_L1C_RELEASE_LAG_SPECIFIC = _t1(
+    "l1_c", "release_lag_rule", "series_specific_lag",
+    "Use per-series release lags from leaf_config.",
+    "Honours the published release-lag table in ``leaf_config.release_lag_per_series``. Most accurate option "
+    "for true real-time studies.",
+    "Real-time / nowcasting studies that respect publication delays.",
+    related=("fixed_lag_all_series",),
+)
+_L1C_RELEASE_LAG_SPECIFIC = _L1C_RELEASE_LAG_SPECIFIC.__class__(
+    **{**_L1C_RELEASE_LAG_SPECIFIC.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="release_lag_per_series",
+               type="dict[str, int]",
+               default=None,
+               constraint="Required when release_lag_rule=series_specific_lag; non-empty dict.",
+               description=(
+                   "Per-series release lag in periods. Maps series name to a non-negative integer. "
+                   "Series not present in the dict are treated as zero-lag (available immediately)."
+               ),
+           ),
+       ),
+    }
+)
 _L1C_RELEASE_LAG = (
-    _t1("l1_c", "release_lag_rule", "ignore_release_lag",
-        "Treat every observation as available at its calendar period.",
-        "Pseudo-real-time mode: ignores the release-lag distinction; every variable is assumed to be available the moment the period closes.",
-        "Backtests where real-time vintage data is unavailable.",
-        related=("fixed_lag_all_series", "series_specific_lag")),
-    _t1("l1_c", "release_lag_rule", "fixed_lag_all_series",
-        "Apply a single release lag to every series.",
-        "All series shift by ``leaf_config.release_lag_periods``. Approximates real-time availability without per-series detail.",
-        "Coarse real-time approximations.",
-        related=("series_specific_lag",)),
-    _t1("l1_c", "release_lag_rule", "series_specific_lag",
-        "Use per-series release lags from leaf_config.",
-        "Honours the published release-lag table in ``leaf_config.release_lag_map``. Most accurate option for true real-time studies.",
-        "Real-time / nowcasting studies that respect publication delays.",
-        related=("fixed_lag_all_series",)),
+    _L1C_RELEASE_LAG_IGNORE,
+    _L1C_RELEASE_LAG_FIXED,
+    _L1C_RELEASE_LAG_SPECIFIC,
 )
 
 # L1.C contemporaneous_x_rule

@@ -114,4 +114,10 @@ Replication scripts that need an exact predictor set; ablations.
 
 **Related options**: [`missing_availability`](#missing-availability), [`official_transform_policy`](#official-transform-policy)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `variable_universe_columns` | `list[str]` | — | Required when variable_universe=explicit_variable_list; must be non-empty. | Explicit list of column names from the data source to use as the predictor universe. Validator rejects missing or empty list. |
+
 _Last reviewed 2026-05-04 by macroforecast author._

@@ -5,6 +5,12 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 19 — L1.C Predictor Universe encyclopedia complete
+
+- **P-1** Fixed outdated docstring at top of `option_docs/l1.py` falsely claiming L1.C axes carry placeholder entries — all 8 axes are Tier-1 (reviewed 2026-05-05). Tier-1-complete sub-layer list updated to reflect actual coverage through Cycle 19.
+- **P-2** ParameterDoc populated for L1.C 8 axes: 6 conditional leaf_config keys documented (variable_universe_columns, fixed_lag_periods, release_lag_per_series, outlier_iqr_threshold, zscore_threshold_value, winsorize_quantiles). Options without conditional leaf_config carry explicit `parameters=()`.
+- **P-3** Cross-references added in descriptions for `raw_outlier_policy` options pointing to L2 `outlier_policy`/`outlier_action` (same surface, different stage: raw vs post-tcode), and for `raw_missing_policy/preserve_raw_missing` pointing to L2 `imputation_policy`. `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` extended with the 6 conditional keys to suppress false unknown-key warnings.
+
 ### Audit Phase fix bundle (Cycle 14) — 13 source fixes from Cycle 13 audit checklist
 
 #### BREAKING

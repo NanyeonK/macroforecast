@@ -25,7 +25,7 @@
 
 Pass raw NaN values through unchanged.
 
-Default; raw missingness flows into L2.D imputation. Required for the McCracken-Ng EM-factor imputation workflow.
+Default; raw missingness flows into L2.D imputation. Required for the McCracken-Ng EM-factor imputation workflow. See also: L2 ``imputation_policy`` (same surface, different stage: raw vs post-tcode).
 
 **When to use**
 

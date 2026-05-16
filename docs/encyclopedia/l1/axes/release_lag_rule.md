@@ -43,7 +43,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Apply a single release lag to every series.
 
-All series shift by ``leaf_config.release_lag_periods``. Approximates real-time availability without per-series detail.
+All series shift by ``leaf_config.fixed_lag_periods`` periods. Approximates real-time availability without per-series detail.
 
 **When to use**
 
@@ -55,13 +55,19 @@ Coarse real-time approximations.
 
 **Related options**: [`series_specific_lag`](#series-specific-lag)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `fixed_lag_periods` | `int` | — | >=0; required when release_lag_rule=fixed_lag_all_series. | Uniform release lag in periods applied to every predictor series. A value of 1 means each series is available one period after the period it was observed. |
+
 _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `series_specific_lag`  --  operational
 
 Use per-series release lags from leaf_config.
 
-Honours the published release-lag table in ``leaf_config.release_lag_map``. Most accurate option for true real-time studies.
+Honours the published release-lag table in ``leaf_config.release_lag_per_series``. Most accurate option for true real-time studies.
 
 **When to use**
 
@@ -72,5 +78,11 @@ Real-time / nowcasting studies that respect publication delays.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: [`fixed_lag_all_series`](#fixed-lag-all-series)
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `release_lag_per_series` | `dict[str, int]` | — | Required when release_lag_rule=series_specific_lag; non-empty dict. | Per-series release lag in periods. Maps series name to a non-negative integer. Series not present in the dict are treated as zero-lag (available immediately). |
 
 _Last reviewed 2026-05-05 by macroforecast author._

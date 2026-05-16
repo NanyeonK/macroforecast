@@ -25,7 +25,7 @@
 
 Pass raw outliers through to L2.C.
 
-Default; relies on L2.C McCracken-Ng IQR detection and the configured ``outlier_action`` to handle extreme values.
+Default; relies on L2.C McCracken-Ng IQR detection and the configured ``outlier_action`` to handle extreme values. See also: L2 ``outlier_policy`` / ``outlier_action`` (same surface, different stage: raw vs post-tcode).
 
 **When to use**
 
@@ -43,7 +43,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Winsorise raw series at quantile cutpoints (default p1 / p99).
 
-Caps extreme values at the specified quantile before t-coding. Preserves observation count but compresses tails.
+Caps extreme values at the specified quantile before t-coding. Preserves observation count but compresses tails. Configured via ``leaf_config.winsorize_quantiles`` (default [0.01, 0.99]). Compare: L2 ``outlier_policy=winsorize`` operates on the post-tcode panel.
 
 **When to use**
 
@@ -55,13 +55,19 @@ Heavy-tailed financial / macro series where extreme observations would dominate 
 
 **Related options**: [`preserve_raw_outliers`](#preserve-raw-outliers), [`iqr_clip_raw`](#iqr-clip-raw)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `winsorize_quantiles` | `list[float, float]` | `'[0.01, 0.99]'` | 0 <= low < high <= 1; both elements required. | Lower and upper quantile clip thresholds. Defaults to symmetric 1%/99% winsorization. Values outside [low, high] quantile bounds are clipped to the bound value. |
+
 _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `iqr_clip_raw`  --  operational
 
 Clip raw observations beyond k×IQR thresholds.
 
-Clips values outside ``Q1 - k·IQR``, ``Q3 + k·IQR`` (k typically 1.5 or 3). Robust to non-Gaussian distributions.
+Clips values outside ``Q1 - k·IQR``, ``Q3 + k·IQR`` (k default 10.0, matching McCracken-Ng). Robust to non-Gaussian distributions. Configured via ``leaf_config.outlier_iqr_threshold``. Compare: L2 ``outlier_policy=mccracken_ng_iqr`` uses the same k but on the post-tcode panel.
 
 **When to use**
 
@@ -72,6 +78,12 @@ Robust outlier handling on non-normal series.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: [`winsorize_raw`](#winsorize-raw), [`mad_clip_raw`](#mad-clip-raw), [`zscore_clip_raw`](#zscore-clip-raw)
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `outlier_iqr_threshold` | `float` | `'10.0'` | >0 | IQR multiplier above which raw observations are clipped. McCracken-Ng default is 10.0. Observations satisfying |x - median| > k * IQR are clipped to the band boundary. |
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -97,7 +109,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Clip raw observations beyond k standard deviations.
 
-Standard z-score rule (typically k = 3). Cheapest option but assumes approximate normality.
+Standard z-score rule (typically k = 3). Cheapest option but assumes approximate normality. Configured via ``leaf_config.zscore_threshold_value``.
 
 **When to use**
 
@@ -112,6 +124,12 @@ Heavy-tailed series -- use ``iqr_clip_raw`` or ``mad_clip_raw``.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: [`iqr_clip_raw`](#iqr-clip-raw), [`mad_clip_raw`](#mad-clip-raw)
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `zscore_threshold_value` | `float` | `'3.0'` | >0 | Z-score threshold; observations with |z| > threshold are clipped to the threshold boundary. z is computed as (x - mean) / std over the series. |
 
 _Last reviewed 2026-05-05 by macroforecast author._
 

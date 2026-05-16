@@ -64,6 +64,13 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "custom_merge_rule",
         # horizon config
         "target_horizons",
+        # L1.C conditional leaf_config keys (Cycle 19 P-3)
+        "variable_universe_columns",
+        "fixed_lag_periods",
+        "release_lag_per_series",
+        "outlier_iqr_threshold",
+        "zscore_threshold_value",
+        "winsorize_quantiles",
     }),
     "4_forecasting_model": frozenset({
         "n_jobs", "fit_kwargs", "predict_kwargs", "min_train_size", "n_horizon_models",
