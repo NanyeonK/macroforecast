@@ -23,7 +23,7 @@ Long-tail axes are scaffolded with machine-readable summaries; their
 from __future__ import annotations
 
 from . import register
-from .types import CodeExample, OptionDoc, Reference
+from .types import CodeExample, OptionDoc, ParameterDoc, Reference
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"
@@ -234,6 +234,89 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _entry(
     ),
 )
 
+
+
+# ParameterDoc for custom_panel_only: three mutually-exclusive leaf_config keys.
+# OptionDoc is frozen; replace() produces a new instance with parameters populated.
+_L1A_SOURCE_CUSTOM_PANEL = _L1A_SOURCE_CUSTOM_PANEL.__class__(
+    **{**_L1A_SOURCE_CUSTOM_PANEL.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="custom_source_path",
+               type="str | Path",
+               default=None,
+               constraint=(
+                   "Exactly one of {custom_source_path, custom_panel_inline, "
+                   "custom_panel_records} must be set."
+               ),
+               description=(
+                   "Filesystem path (CSV or Parquet) to user-provided panel data. "
+                   "The path is resolved relative to the recipe working directory."
+               ),
+           ),
+           ParameterDoc(
+               name="custom_panel_inline",
+               type="dict",
+               default=None,
+               constraint=(
+                   "Exactly one of {custom_source_path, custom_panel_inline, "
+                   "custom_panel_records} must be set."
+               ),
+               description=(
+                   "Inline panel as a dict with key 'date' (list of ISO date strings) "
+                   "and one key per series (name -> list of float). Convenient for "
+                   "unit tests and small synthetic examples without a file on disk."
+               ),
+           ),
+           ParameterDoc(
+               name="custom_panel_records",
+               type="list[dict]",
+               default=None,
+               constraint=(
+                   "Exactly one of {custom_source_path, custom_panel_inline, "
+                   "custom_panel_records} must be set."
+               ),
+               description=(
+                   "Row-records form of the panel. Each dict must have a 'date' key "
+                   "plus one key per series. Equivalent to pandas 'records' orient."
+               ),
+           ),
+       ),
+    }
+)
+
+# ParameterDoc for official_plus_custom: custom_source_path + custom_merge_rule.
+_L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM.__class__(
+    **{**_L1A_SOURCE_OFFICIAL_PLUS_CUSTOM.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="custom_source_path",
+               type="str | Path",
+               default=None,
+               constraint="Required when custom_source_policy=official_plus_custom.",
+               description=(
+                   "Filesystem path (CSV or Parquet) to the auxiliary panel to merge "
+                   "onto the official FRED panel. Joined on the date index."
+               ),
+           ),
+           ParameterDoc(
+               name="custom_merge_rule",
+               type="str",
+               default=None,
+               constraint=(
+                   "Required when custom_source_policy=official_plus_custom. "
+                   "Must be one of: 'left_join', 'inner_join', 'outer_join'."
+               ),
+               description=(
+                   "How to merge the official FRED panel (left) with the custom panel "
+                   "(right) on the date index. 'left_join' keeps all FRED dates; "
+                   "'inner_join' keeps only dates present in both panels; 'outer_join' "
+                   "keeps all dates from either panel, filling missing values with NaN."
+               ),
+           ),
+       ),
+    }
+)
 
 # ---------------------------------------------------------------------------
 # L1.A dataset

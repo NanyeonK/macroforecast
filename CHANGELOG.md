@@ -48,6 +48,11 @@ These three fixes address Cycle 14 issues that a single-model reviewer (Claude) 
 - **C15.6** U-MIDAS BIC lag selection: emit `UserWarning` when `K_max > 30` (computed as `ceil(1.5 × freq_ratio)`). At very high frequency ratios (e.g., k=60), brute-force BIC enumeration is computationally intractable. Warning suggests setting `n_lags_high` manually to bypass search. Algorithm unchanged — paper-faithful behavior preserved when warning is suppressed or user overrides.
 
 
+#### Cycle 17 — L1.A Source Selection encyclopedia complete
+
+- **O-1** Tier-2 -> Tier-1 OptionDoc promotion for `frequency` (2 ops + `'derived'` sentinel), `information_set_type` (2 ops), `vintage_policy/real_time_alfred` (Cycle 14 K-4 hard-reject documented with ALFRED future intent), `fred_sd_frequency_policy` (4 ops). 10 entries marked last_reviewed=2026-05-16.
+- **O-2** ParameterDoc population for L1.A custom_source_policy: `custom_panel_only` gains 3 ParameterDoc entries (`custom_source_path`, `custom_panel_inline`, `custom_panel_records` -- mutually exclusive, required); `official_plus_custom` gains 2 entries (`custom_source_path`, `custom_merge_rule` -- both required; merge rule enum: `left_join` / `inner_join` / `outer_join`). `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` extended with `custom_merge_rule`. All other L1.A options carry `parameters=()` (no conditional leaf_config). Encyclopedia regenerated (190 pages, no new pages -- same axis count). L1.B-L1.G ParameterDoc population deferred to next cycles.
+
 #### Cycle 16 — L0 encyclopedia docs/code sync + Parameters section
 
 - **N-1** L0 docs sync: random_seed default 42 (was: "default 0" mistext); removed phantom `n_workers_inner` examples; renamed `parallel_unit` description from "sub-axis" to "conditional leaf_config key" for consistency with implementation.

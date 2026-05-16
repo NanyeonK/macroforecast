@@ -60,6 +60,8 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "custom_panel_format", "frequency", "data_through",
         # inline / in-memory panel forms
         "custom_panel_inline", "custom_panel_records", "custom_source_path",
+        # official_plus_custom merge rule (Cycle 17 O-2)
+        "custom_merge_rule",
         # horizon config
         "target_horizons",
     }),

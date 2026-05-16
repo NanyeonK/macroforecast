@@ -103,6 +103,14 @@ When McCracken-Ng's curation (t-codes, group tags) is part of the study design -
 
 ```
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `custom_source_path` | `str | Path` | — | Exactly one of {custom_source_path, custom_panel_inline, custom_panel_records} must be set. | Filesystem path (CSV or Parquet) to user-provided panel data. The path is resolved relative to the recipe working directory. |
+| `custom_panel_inline` | `dict` | — | Exactly one of {custom_source_path, custom_panel_inline, custom_panel_records} must be set. | Inline panel as a dict with key 'date' (list of ISO date strings) and one key per series (name -> list of float). Convenient for unit tests and small synthetic examples without a file on disk. |
+| `custom_panel_records` | `list[dict]` | — | Exactly one of {custom_source_path, custom_panel_inline, custom_panel_records} must be set. | Row-records form of the panel. Each dict must have a 'date' key plus one key per series. Equivalent to pandas 'records' orient. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `official_plus_custom`  --  operational
@@ -142,5 +150,12 @@ Pure custom panels (use ``custom_panel_only``); pure official panels (use ``offi
     custom_merge_rule: left_join
 
 ```
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `custom_source_path` | `str | Path` | — | Required when custom_source_policy=official_plus_custom. | Filesystem path (CSV or Parquet) to the auxiliary panel to merge onto the official FRED panel. Joined on the date index. |
+| `custom_merge_rule` | `str` | — | Required when custom_source_policy=official_plus_custom. Must be one of: 'left_join', 'inner_join', 'outer_join'. | How to merge the official FRED panel (left) with the custom panel (right) on the date index. 'left_join' keeps all FRED dates; 'inner_join' keeps only dates present in both panels; 'outer_join' keeps all dates from either panel, filling missing values with NaN. |
 
 _Last reviewed 2026-05-04 by macroforecast author._
