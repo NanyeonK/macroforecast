@@ -77,6 +77,12 @@ One-shot studies (h=1 nowcasting, h=12 long-horizon ablation).
 
 **Related options**: [`standard_md`](#standard-md), [`standard_qd`](#standard-qd), [`custom_list`](#custom-list)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target_horizons` | `list[int]` | — | Optional when horizon_set=single. If provided, must be a list of exactly one positive integer. If omitted, runtime defaults to [1]. | Single-element horizon list. The one value sets the forecasting horizon h for all models in the cell loop. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `custom_list`  --  operational
@@ -95,6 +101,12 @@ Replication of papers with non-standard horizon sets; ablation studies.
 
 **Related options**: [`standard_md`](#standard-md), [`standard_qd`](#standard-qd), [`range_up_to_h`](#range-up-to-h)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target_horizons` | `list[int]` | — | Required when horizon_set=custom_list. Non-empty list of positive integers. Duplicate values are silently de-duplicated; order preserved. | Explicit list of forecasting horizons h. One model fit per horizon per cell when forecast_strategy=direct. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `range_up_to_h`  --  operational
@@ -112,5 +124,11 @@ Dense horizon studies with direct-h forecasting.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: [`custom_list`](#custom-list), [`standard_md`](#standard-md)
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `max_horizon` | `int` | — | Required when horizon_set=range_up_to_h. Must be a positive integer >= 1. Produces horizons [1, 2, ..., max_horizon]. | Upper bound of the dense horizon range. The runtime expands this into tuple(range(1, max_horizon+1)) before building the cell loop. |
 
 _Last reviewed 2026-05-04 by macroforecast author._
