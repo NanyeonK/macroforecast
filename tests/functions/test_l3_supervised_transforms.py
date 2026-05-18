@@ -497,12 +497,13 @@ class TestBLK4PLSClamp:
     """BLK-4: partial_least_squares_transform clamps n_components before sklearn."""
 
     def test_rng42_50x5_clamp(self):
-        # RNG-42 50x5 panel: T_clean=50, K_clean=5 -> max_components = min(49,4) = 4
+        # RNG-42 50x5 panel: T_clean=50, K_clean=5
+        # NOTE-A fix: clamp = min(T_clean-1, K_clean) = min(49, 5) = 5
         rng = np.random.RandomState(42)
         panel50x5 = pd.DataFrame(rng.randn(50, 5), columns=[f"x{i}" for i in range(5)])
         target50 = pd.Series(rng.randn(50), name="y")
         out = partial_least_squares_transform(panel50x5, target50, n_components=100)
-        assert out.shape[1] <= 4, f"Expected <= 4 columns, got {out.shape[1]}"
+        assert out.shape[1] == 5, f"Expected == 5 columns (min(49,5)), got {out.shape[1]}"
 
     def test_clamp_preserves_small_n_components(self):
         out = partial_least_squares_transform(PANEL, TARGET, n_components=2)
