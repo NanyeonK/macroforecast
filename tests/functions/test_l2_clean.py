@@ -860,3 +860,129 @@ class TestNamespaceCompleteness:
         for name in self.EXPECTED_NAMES:
             fn = getattr(mf.functions, name)
             assert callable(fn), f"{name} is not callable"
+
+
+# ===========================================================================
+# BLK fixup verification tests (C34 fixup)
+# ===========================================================================
+
+
+class TestBLKF1IqrConstantColumn:
+    """BLK F-1: iqr_outlier_clean must not raise TypeError on constant column."""
+
+    def test_constant_column_no_typeerror(self):
+        """Constant column (IQR=0) must not raise TypeError (pd.NA comparison bug)."""
+        panel = pd.DataFrame({
+            "const": [5.0] * 20,
+            "normal": np.random.RandomState(7).randn(20),
+        })
+        # Must not raise TypeError (pandas 3.x: boolean value of NA is ambiguous)
+        out = iqr_outlier_clean(panel, threshold=10.0)
+        assert out.shape == panel.shape
+
+    def test_constant_column_zero_outlier_flags(self):
+        """Constant column must produce exactly zero outlier flags (no NaN introduced)."""
+        panel = pd.DataFrame({
+            "const": [3.14] * 30,
+            "with_outlier": list(np.random.RandomState(11).randn(30)),
+        })
+        panel.loc[0, "with_outlier"] = 999.0
+        out = iqr_outlier_clean(panel, threshold=10.0)
+        # const column: zero flags (IQR=0, threshold*IQR=0, no value exceeds threshold*0=0)
+        assert out["const"].isna().sum() == 0
+        # Verify the constant values are unchanged
+        np.testing.assert_array_equal(out["const"].values, panel["const"].values)
+
+    def test_normal_column_still_flags_outlier(self):
+        """Bit-exact normal-column behavior preserved after np.nan fix."""
+        panel = pd.DataFrame({
+            "const": [1.0] * 50,
+            "outlier_col": np.random.RandomState(42).randn(50),
+        })
+        panel.loc[5, "outlier_col"] = 500.0
+        out = iqr_outlier_clean(panel, threshold=10.0)
+        # The extreme outlier in outlier_col must be flagged
+        assert np.isnan(out.loc[5, "outlier_col"])
+        # Constant column must have zero NaN
+        assert out["const"].isna().sum() == 0
+
+
+class TestBLKF2MonthlyToQuarterlyDownsample:
+    """BLK F-2: freq_align_monthly_to_quarterly_clean must downsample to quarterly."""
+
+    def test_60month_returns_20_quarters(self):
+        """60-row monthly input must return 20-row quarterly output (not 60)."""
+        rng = np.random.RandomState(17)
+        idx = pd.date_range("2015-01-01", periods=60, freq="MS")
+        panel = pd.DataFrame({"m": rng.randn(60), "other": rng.randn(60)}, index=idx)
+        out = freq_align_monthly_to_quarterly_clean(panel, ["m"])
+        assert len(out) == len(panel) // 3, (
+            f"Expected {len(panel) // 3} quarterly rows, got {len(out)}"
+        )
+
+    def test_quarterly_index_on_output(self):
+        """Output has length T // 3 for monthly input."""
+        idx = pd.date_range("2010-01-01", periods=24, freq="MS")
+        rng = np.random.RandomState(23)
+        panel = pd.DataFrame({"m": rng.randn(24)}, index=idx)
+        out = freq_align_monthly_to_quarterly_clean(panel, ["m"])
+        assert len(out) == 8  # 24 // 3
+
+    def test_all_rules_downsample(self):
+        """All three aggregation rules return len == T // 3."""
+        idx = pd.date_range("2020-01-01", periods=12, freq="MS")
+        rng = np.random.RandomState(31)
+        panel = pd.DataFrame({"m": rng.randn(12)}, index=idx)
+        for rule in ["quarterly_average", "quarterly_endpoint", "quarterly_sum"]:
+            out = freq_align_monthly_to_quarterly_clean(panel, ["m"], rule=rule)
+            assert len(out) == 4, f"rule={rule}: expected 4, got {len(out)}"
+
+    def test_quarterly_input_unchanged_length(self):
+        """Quarterly-indexed panel (4 rows) still returns 4 rows after fix."""
+        idx = pd.date_range("2020-03-31", periods=4, freq="QE")
+        panel = pd.DataFrame(
+            {"m": [1.0, 2.0, 3.0, 4.0], "other": [10.0, 20.0, 30.0, 40.0]},
+            index=idx,
+        )
+        out = freq_align_monthly_to_quarterly_clean(panel, ["m"])
+        assert len(out) == 4
+
+
+class TestBLKF3EmSvdRng99:
+    """BLK F-3: EM impute handles RNG-99 50x20 10pct NaN without LinAlgError."""
+
+    @classmethod
+    def _make_rng99_panel(cls):
+        rng = np.random.RandomState(99)
+        panel = pd.DataFrame(rng.randn(50, 20))
+        n_missing = int(0.10 * 50 * 20)
+        idx_r = rng.randint(0, 50, n_missing)
+        idx_c = rng.randint(0, 20, n_missing)
+        for r, c in zip(idx_r, idx_c):
+            panel.iloc[r, c] = np.nan
+        return panel
+
+    def test_em_factor_rng99_no_error(self):
+        """em_factor_impute_clean must not raise LinAlgError on RNG-99 50x20 10pct NaN."""
+        panel = self._make_rng99_panel()
+        out = em_factor_impute_clean(panel, n_factors=8, max_iter=20, tol=1e-4)
+        assert out.shape == panel.shape
+
+    def test_em_factor_rng99_no_remaining_nan(self):
+        """em_factor_impute_clean must fill all NaN on RNG-99 50x20 10pct NaN."""
+        panel = self._make_rng99_panel()
+        out = em_factor_impute_clean(panel, n_factors=8, max_iter=20, tol=1e-4)
+        assert out.isna().sum().sum() == 0
+
+    def test_em_multivariate_rng99_no_error(self):
+        """em_multivariate_impute_clean must not raise LinAlgError on RNG-99 50x20 10pct NaN."""
+        panel = self._make_rng99_panel()
+        out = em_multivariate_impute_clean(panel, max_iter=20, tol=1e-4)
+        assert out.shape == panel.shape
+
+    def test_em_multivariate_rng99_no_remaining_nan(self):
+        """em_multivariate_impute_clean must fill all NaN on RNG-99 50x20 10pct NaN."""
+        panel = self._make_rng99_panel()
+        out = em_multivariate_impute_clean(panel, max_iter=20, tol=1e-4)
+        assert out.isna().sum().sum() == 0
+

@@ -26,6 +26,7 @@ each function body to avoid circular imports).
 """
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 
@@ -83,7 +84,7 @@ def iqr_outlier_clean(
     ``policy="mccracken_ng_iqr"``):
 
     1. Compute per-column median and IQR = q(0.75) - q(0.25).
-    2. ``iqr.replace(0, pd.NA)`` ensures zero-IQR columns never flag any
+    2. ``iqr.replace(0, np.nan)`` ensures zero-IQR columns never flag any
        value.
     3. Flag ``|x - median| > threshold * IQR``.
 
@@ -128,9 +129,13 @@ def iqr_outlier_clean(
 
     median = numeric.median()
     iqr = numeric.quantile(0.75) - numeric.quantile(0.25)
-    # Critical: replace zero-IQR columns with pd.NA before masking so that
-    # constant-valued columns never flag any observation.
-    mask = (numeric - median).abs() > threshold * iqr.replace(0, pd.NA)
+    # Critical: replace zero-IQR columns with np.nan (not pd.NA) before masking
+    # so that constant-valued columns never flag any observation.
+    # Using np.nan avoids the TypeError raised by pandas 3.x when pd.NA participates
+    # in a boolean comparison ("boolean value of NA is ambiguous").
+    iqr_safe = iqr.replace(0, np.nan)
+    mask = (numeric - median).abs() > threshold * iqr_safe
+    mask = mask.fillna(False)  # NaN comparison result -> False (no outlier flag)
 
     if action == "flag_as_nan":
         result[numeric.columns] = numeric.mask(mask)
@@ -1024,9 +1029,20 @@ def freq_align_monthly_to_quarterly_clean(
     else:  # quarterly_sum
         agg = result[monthly_cols_present].resample("QE").sum()
 
+    # Aggregate all remaining columns to quarterly cadence as well, then join.
+    # Returning the quarterly-indexed frame (not reindexing back to the monthly
+    # input index) gives len(result) == len(panel) // 3 for a standard monthly input.
     other_cols = [c for c in result.columns if c not in monthly_cols_present]
-    df_q = result[other_cols]
-    result_out = df_q.join(agg, how="left").reindex(df_q.index)
+    if other_cols:
+        if rule == "quarterly_average":
+            other_agg = result[other_cols].resample("QE").mean()
+        elif rule == "quarterly_endpoint":
+            other_agg = result[other_cols].resample("QE").last()
+        else:  # quarterly_sum
+            other_agg = result[other_cols].resample("QE").sum()
+        result_out = other_agg.join(agg)
+    else:
+        result_out = agg
     return result_out
 
 
