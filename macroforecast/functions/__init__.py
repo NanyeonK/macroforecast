@@ -52,6 +52,16 @@ from .metrics import (
     success_ratio,
     pesaran_timmermann_metric,
 )
+from .linear import (
+    OLSFitResult, ols_fit,
+    LassoFitResult, lasso_fit,
+    ElasticNetFitResult, elastic_net_fit,
+    LassoPathFitResult, lasso_path_fit,
+    BayesianRidgeFitResult, bayesian_ridge_fit,
+    HuberFitResult, huber_fit,
+    GLMBoostFitResult, glmboost_fit,
+)
+
 
 __all__ = [
     "FitResultBase",
@@ -72,4 +82,18 @@ __all__ = [
     "coverage_rate",
     "success_ratio",
     "pesaran_timmermann_metric",
+    "OLSFitResult",
+    "ols_fit",
+    "LassoFitResult",
+    "lasso_fit",
+    "ElasticNetFitResult",
+    "elastic_net_fit",
+    "LassoPathFitResult",
+    "lasso_path_fit",
+    "BayesianRidgeFitResult",
+    "bayesian_ridge_fit",
+    "HuberFitResult",
+    "huber_fit",
+    "GLMBoostFitResult",
+    "glmboost_fit",
 ]
