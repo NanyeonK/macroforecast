@@ -512,3 +512,67 @@ class TestCatBoostFit:
     def test_namespace_wiring(self):
         assert "catboost_fit" in mf.functions.__all__
         assert "CatBoostFitResult" in mf.functions.__all__
+
+
+# ---------------------------------------------------------------------------
+# C35 Fixup Gate-6: percent-format smoke tests
+# ---------------------------------------------------------------------------
+
+class TestSummaryPercentFormat:
+    """Gate 6 fixup: LightGBM and CatBoost summary() must use percent format."""
+
+    def test_lightgbm_summary_contains_percent_symbol(self):
+        rng = np.random.RandomState(42)
+        X = rng.randn(100, 5)
+        y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+        r = mf.functions.lightgbm_fit(X, y)
+        s = r.summary()
+        assert "%" in s, f"LightGBM summary must contain % symbol; got:\n{s}"
+
+    def test_lightgbm_summary_no_raw_float(self):
+        """Ensure LightGBM does not display raw split counts like 46.000000."""
+        rng = np.random.RandomState(42)
+        X = rng.randn(100, 5)
+        y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+        r = mf.functions.lightgbm_fit(X, y)
+        s = r.summary()
+        # raw split counts produce 6-decimal floats without %; verify absent
+        import re
+        raw_floats = re.findall(r"\d+\.\d{6}", s)
+        assert not raw_floats, (
+            f"LightGBM summary contains raw floats (not %) {raw_floats}; summary:\n{s}"
+        )
+
+    def test_lightgbm_summary_percent_values_in_range(self):
+        """Each percent value shown must be in (0, 100]."""
+        import re
+        rng = np.random.RandomState(42)
+        X = rng.randn(100, 5)
+        y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+        r = mf.functions.lightgbm_fit(X, y)
+        s = r.summary()
+        vals = [float(v) for v in re.findall(r"([\d.]+)%", s)]
+        assert vals, "No percent values found in LightGBM summary"
+        for v in vals:
+            assert 0.0 < v <= 100.0, f"Percent value out of (0,100]: {v}"
+
+    def test_catboost_summary_contains_percent_symbol(self):
+        rng = np.random.RandomState(42)
+        X = rng.randn(100, 5)
+        y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+        r = mf.functions.catboost_fit(X, y, n_estimators=50)
+        s = r.summary()
+        assert "%" in s, f"CatBoost summary must contain % symbol; got:\n{s}"
+
+    def test_catboost_summary_percent_values_in_range(self):
+        """Each percent value shown must be in (0, 100]."""
+        import re
+        rng = np.random.RandomState(42)
+        X = rng.randn(100, 5)
+        y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+        r = mf.functions.catboost_fit(X, y, n_estimators=50)
+        s = r.summary()
+        vals = [float(v) for v in re.findall(r"([\d.]+)%", s)]
+        assert vals, "No percent values found in CatBoost summary"
+        for v in vals:
+            assert 0.0 < v <= 100.0, f"Percent value out of (0,100]: {v}"

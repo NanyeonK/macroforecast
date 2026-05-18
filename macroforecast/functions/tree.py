@@ -378,7 +378,7 @@ class LightGBMFitResult:
         -------
         str
             Statsmodels-style table showing ensemble size and top feature
-            importances.
+            importances as a percentage of total split counts.
         """
         k = len(self.feature_importances_)
         feat_names: list[str] = []
@@ -390,6 +390,7 @@ class LightGBMFitResult:
         dash = "-" * 78
         top_n = min(3, k)
         idx_sorted = np.argsort(self.feature_importances_)[::-1]
+        total = self.feature_importances_.sum()
         lines: list[str] = [
             sep,
             f"{'LightGBM Results':^78}",
@@ -402,8 +403,9 @@ class LightGBMFitResult:
         ]
         for i in range(top_n):
             fi = idx_sorted[i]
+            fi_pct = self.feature_importances_[fi] / total * 100 if total > 0 else 0.0
             lines.append(
-                f"{feat_names[fi]:30s} {self.feature_importances_[fi]:>12.6f}"
+                f"{feat_names[fi]:30s} {fi_pct:>11.2f}%"
             )
         if k > top_n:
             lines.append(f"{'... (top 3 shown)':30s}")
@@ -455,7 +457,8 @@ class CatBoostFitResult:
         -------
         str
             Statsmodels-style table showing ensemble size and top feature
-            importances.
+            importances as a percentage (CatBoost PredictionValuesChange
+            natively sums to 100; displayed with ``%`` suffix).
         """
         k = len(self.feature_importances_)
         feat_names: list[str] = []
@@ -467,6 +470,7 @@ class CatBoostFitResult:
         dash = "-" * 78
         top_n = min(3, k)
         idx_sorted = np.argsort(self.feature_importances_)[::-1]
+        total = self.feature_importances_.sum()
         lines: list[str] = [
             sep,
             f"{'CatBoost Results':^78}",
@@ -479,8 +483,9 @@ class CatBoostFitResult:
         ]
         for i in range(top_n):
             fi = idx_sorted[i]
+            fi_pct = self.feature_importances_[fi] / total * 100 if total > 0 else 0.0
             lines.append(
-                f"{feat_names[fi]:30s} {self.feature_importances_[fi]:>12.6f}"
+                f"{feat_names[fi]:30s} {fi_pct:>11.2f}%"
             )
         if k > top_n:
             lines.append(f"{'... (top 3 shown)':30s}")
