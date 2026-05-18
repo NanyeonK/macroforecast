@@ -5,6 +5,59 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 38 -- L7 importance standalone callables (8 ops)
+
+**New standalone callables** in `mf.functions` (all return a frozen dataclass):
+
+**importance.py (8 ops):**
+`model_native_linear_coef_importance(result, X)` -> `NativeImportanceResult` (method="linear_coef")
+`model_native_tree_importance(result, X)` -> `NativeImportanceResult` (method="tree_native")
+`permutation_importance(result, X, y, *, n_repeats=10, random_state=None)` -> `PermutationImportanceResult`
+`cond_permutation_importance(result, X, y, *, n_repeats=10, random_state=None)` -> `CondPermutationImportanceResult`
+`partial_dependence_importance(result, X, *, grid_resolution=20)` -> `PDPImportanceResult`
+`ale_importance(result, X, *, n_bins=20)` -> `ALEImportanceResult`
+`shap_tree_importance(result, X)` -> `SHAPImportanceResult` (requires shap)
+`shap_linear_importance(result, X)` -> `SHAPImportanceResult` (requires shap)
+
+**UX pattern**: callables take a `FitResultBase`-conforming result object (any L4 standalone
+callable return value) and extract `result._model` internally to call runtime helpers.
+
+**`random_state=None`** for permutation ops uses deterministic reverse-order permutation
+(bit-exact with `_permutation_importance_frame`). Integer seed draws random permutations.
+
+**ALE**: cumsum + center (subtract mean of local effects) + L1 norm of centred ALE function.
+
+**SHAP ops**: `import shap` inside function body only. `skipif(shap not installed)` at test level.
+
+**predict() failures**: try/except returning 0.0 for PDP/ALE grid points that fail.
+
+**Result dataclasses** (frozen): each exposes `.summary(top_n=10) -> str`.
+- `NativeImportanceResult`: `importances_`, `feature_names_`, `method`
+- `PermutationImportanceResult`: `importances_mean_`, `importances_std_`, `feature_names_`, `n_repeats`
+- `CondPermutationImportanceResult`: similar + `method="strobl"`
+- `PDPImportanceResult`: `importances_`, `feature_names_`, `pdp_values_`, `grid_values_`
+- `ALEImportanceResult`: `importances_`, `feature_names_`, `ale_values_`
+- `SHAPImportanceResult`: `shap_values_`, `expected_value_`, `feature_names_`, `explainer_type`
+
+All 14 names (8 callables + 6 result types) added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l7_a.py`):
+- 8 entries updated with `op_page=True`, `op_func_name`, `data_args`, `return_type`, `returns_attrs`.
+- New constants: `_L7_RESULT_X_DATA_ARGS`, `_L7_RESULT_XY_DATA_ARGS`.
+- `_o()` factory extended to accept op_page / op_func_name / data_args / return_type / returns_attrs.
+
+**Encyclopedia**: 300 -> 308 pages (8 new L7 op pages).
+
+**Tests** (`tests/functions/test_l7_importance.py`): 64 passed, 2 skipped (no-shap guard).
+- Bit-exact vs runtime helpers for all 6 non-SHAP ops.
+- Family compat: linear ops on tree raise ValueError; tree ops on linear raise ValueError.
+- `random_state=None` -> reverse-order deterministic (bit-exact with `_permutation_importance_frame`).
+- ALE centering verified; L1 norm non-negative.
+- predict-failure -> 0.0 contribution (PDP).
+- SHAP: skipif when shap not installed.
+
+**New file**: `macroforecast/functions/importance.py`.
+
 ### Cycle 37 -- L4 timeseries + misc family standalone-ization (20 ops)
 
 **New standalone callables** in `mf.functions` (all return a frozen dataclass):
