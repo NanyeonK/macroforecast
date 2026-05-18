@@ -25,20 +25,7 @@
 
 Autoregressive AR(p) on the target.
 
-Pure autoregression -- predictor matrix is the lagged target (no exogenous regressors). ``params.n_lag`` sets p. Useful as a non-trivial benchmark in macro forecasting where the lagged target captures most of the predictability.
-
-**When to use**
-
-Default benchmark in any forecasting horse race; replication of papers reporting AR baselines.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Stock & Watson (2007) 'Why Has US Inflation Become Harder to Forecast?', JMCB 39.
-
-**Related options**: [`var`](#var), [`factor_augmented_ar`](#factor-augmented-ar)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [ar_p function page](../family/ar_p.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.ar_fit``.
 
 ### `ols`  --  operational
 
@@ -92,61 +79,19 @@ See [huber function page](../family/huber.md) for full documentation + parameter
 
 Vector autoregression VAR(p).
 
-Joint AR(p) over the target plus its predictors. Uses statsmodels' ``VAR`` and forecasts the target component of the joint system. Captures cross-series dynamics that single-equation AR misses.
-
-**When to use**
-
-Multi-series joint forecasting; impulse-response decomposition (paired with L7 ``orthogonalised_irf`` for Cholesky-identified shocks; ``generalized_irf`` reserved for the future Pesaran-Shin 1998 order-invariant variant).
-
-**When NOT to use**
-
-High-dimensional panels (VAR scales O(p²)); use BVAR shrinkage instead.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1).
-
-**Related options**: [`bvar_minnesota`](#bvar-minnesota), [`factor_augmented_var`](#factor-augmented-var), [`ar_p`](#ar-p)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [var function page](../family/var.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.var_fit``.
 
 ### `factor_augmented_ar`  --  operational
 
 Factor-augmented AR (PCA factors + AR lags on target).
 
-Stock-Watson (2002) FAR: extract the first ``params.n_factors`` principal components from the predictor panel, augment with AR(``params.n_lag``) lags of the target, run OLS. Standard high-dimensional macro forecasting baseline.
-
-**When to use**
-
-High-dimensional macro panels (FRED-MD/QD); diffusion-index baselines.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460).
-
-**Related options**: [`factor_augmented_var`](#factor-augmented-var), [`principal_component_regression`](#principal-component-regression), [`ar_p`](#ar-p)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [factor_augmented_ar function page](../family/factor_augmented_ar.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.far_fit``.
 
 ### `principal_component_regression`  --  operational
 
 Principal component regression (PCA → OLS).
 
-Identical to ``factor_augmented_ar`` without the AR lags. Useful when the target's own lags add noise (rare but happens for highly seasonal series).
-
-**When to use**
-
-Diffusion-index forecasts where AR augmentation hurts performance.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-
-**Related options**: [`factor_augmented_ar`](#factor-augmented-ar)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [principal_component_regression function page](../family/principal_component_regression.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.pcr_fit``.
 
 ### `decision_tree`  --  operational
 
@@ -221,84 +166,25 @@ See [catboost function page](../family/catboost.md) for full documentation + par
 
 Support vector regression with linear kernel.
 
-ε-insensitive loss + L2 regularisation. Sparse in support vectors.
-
-Configures the ``family`` axis on ``L4_A_model_selection`` (layer ``l4``); the ``svr_linear`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
-
-**When to use**
-
-Robust linear baselines; comparison against ridge.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Drucker, Burges, Kaufman, Smola & Vapnik (1997) 'Support Vector Regression Machines', NeurIPS.
-
-**Related options**: [`svr_rbf`](#svr-rbf), [`svr_poly`](#svr-poly), [`ridge`](#ridge)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [svr_linear function page](../family/svr_linear.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.svr_linear_fit``.
 
 ### `svr_rbf`  --  operational
 
 Support vector regression with RBF kernel.
 
-Non-linear regression via kernel trick. Slow on large panels (O(n³)).
-
-Configures the ``family`` axis on ``L4_A_model_selection`` (layer ``l4``); the ``svr_rbf`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
-
-**When to use**
-
-Small / medium-dim non-linear regression; kernel-method ablations.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-
-**Related options**: [`svr_linear`](#svr-linear), [`svr_poly`](#svr-poly), [`random_forest`](#random-forest)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [svr_rbf function page](../family/svr_rbf.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.svr_rbf_fit``.
 
 ### `svr_poly`  --  operational
 
 Support vector regression with polynomial kernel.
 
-Polynomial-kernel SVR. Useful for studies that want explicit polynomial features without manual expansion.
-
-**When to use**
-
-Polynomial-kernel ablations. Selecting ``svr_poly`` on ``l4.family`` activates this branch of the layer's runtime.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-
-**Related options**: [`svr_rbf`](#svr-rbf), [`svr_linear`](#svr-linear)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [svr_poly function page](../family/svr_poly.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.svr_poly_fit``.
 
 ### `kernel_ridge`  --  operational
 
 Kernel Ridge Regression -- closed-form non-linear ridge in the dual.
 
-Ridge regression with a non-linear kernel: ``ŷ(x) = Σ_i α_i K(x, x_i) + b`` where the dual coefficients ``α = (K + λ I)⁻¹ y`` are recovered in closed form. Operational v0.9.1 dev-stage v0.9.0F (audit-fix). Surfaces as a first-class L4 family because Coulombe / Surprenant / Leroux / Stevanovic (2022 JAE) 'How is Machine Learning Useful for Macroeconomic Forecasting?' Eq. 16 / §3.1.1 uses KRR as the headline non-linearity feature in the macro horse race.
-
-**Tunable params**: ``alpha`` (= ridge penalty λ; default 1.0); ``kernel`` ('rbf' default / 'linear' / 'poly' / 'sigmoid' / 'laplacian' / 'chi2' -- any sklearn-supported kernel); ``gamma`` (RBF bandwidth, default sklearn auto = 1/n_features); ``degree`` (poly kernel only, default 3); ``coef0`` (poly / sigmoid, default 1.0).
-
-Distinct from ``svr_rbf`` (ε-insensitive loss, sparsity in support vectors) and from ``ridge`` (linear). The dual representation also pairs with the L7 ``dual_decomposition`` op for kernel-weighted training-target attribution.
-
-**When to use**
-
-Non-linear macro forecasting baselines; KRR vs SVR-RBF / RF ablations; replicating Coulombe et al. (2022) Feature 1 nonlinearity test.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Saunders, Gammerman & Vovk (1998) 'Ridge Regression Learning Algorithm in Dual Variables', ICML.
-* Coulombe, Leroux, Stevanovic & Surprenant (2022) 'How is Machine Learning Useful for Macroeconomic Forecasting?', Journal of Applied Econometrics 37(5): 920-964 -- Eq. 16 + §3.1.1.
-
-**Related options**: [`ridge`](#ridge), [`svr_rbf`](#svr-rbf), [`dual_decomposition`](#dual-decomposition)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [kernel_ridge function page](../family/kernel_ridge.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.kernel_ridge_fit``.
 
 ### `mlp`  --  operational
 
@@ -328,81 +214,25 @@ See [transformer function page](../family/transformer.md) for full documentation
 
 k-nearest-neighbours regression.
 
-Memorises training data; predicts via nearest-neighbour averaging. Cheap, non-parametric.
-
-**When to use**
-
-Non-parametric baselines; sensitivity studies.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Cover & Hart (1967) 'Nearest neighbor pattern classification', IEEE Trans. on Information Theory 13(1).
-
-**Related options**: [`random_forest`](#random-forest), [`svr_rbf`](#svr-rbf)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [knn function page](../family/knn.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.knn_fit``.
 
 ### `bvar_minnesota`  --  operational
 
 Bayesian VAR with Minnesota prior shrinkage.
 
-Litterman (1986) Minnesota prior: shrinks each equation toward a univariate random walk. ``params.minnesota_lambda1`` controls overall tightness; ``params.minnesota_lambda_decay`` controls lag decay; ``params.minnesota_lambda_cross`` controls cross-equation shrinkage.
-
-Returns a closed-form posterior mean -- no MCMC. Cheap and deterministic.
-
-**When to use**
-
-Multi-series forecasting where standard VAR overfits; macro panels with strong unit-root behaviour.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Litterman (1986) 'Forecasting With Bayesian Vector Autoregressions -- Five Years of Experience', JBES 4(1).
-
-**Related options**: [`bvar_normal_inverse_wishart`](#bvar-normal-inverse-wishart), [`var`](#var), [`factor_augmented_var`](#factor-augmented-var)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [bvar_minnesota function page](../family/bvar_minnesota.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.bvar_minnesota_fit``.
 
 ### `bvar_normal_inverse_wishart`  --  operational
 
 Bayesian VAR with Normal-Inverse-Wishart prior.
 
-Conjugate Normal-IW prior on (β, Σ); the posterior mean of β has the same closed form as Minnesota but with the prior tightness scaled to reflect parameter-uncertainty inflation. Slightly less aggressive than the bare Minnesota prior.
-
-**When to use**
-
-Studies preferring a fully-conjugate prior over Litterman's hand-tuned shrinkage.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Kadiyala & Karlsson (1997) 'Numerical Methods for Estimation and Inference in Bayesian VAR-models', Journal of Applied Econometrics 12(2).
-
-**Related options**: [`bvar_minnesota`](#bvar-minnesota), [`var`](#var)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [bvar_normal_inverse_wishart function page](../family/bvar_normal_inverse_wishart.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.bvar_niw_fit``.
 
 ### `factor_augmented_var`  --  operational
 
 Factor-augmented VAR (Bernanke-Boivin-Eliasz 2005).
 
-Two-stage estimator: PCA factors from the predictor panel + VAR(``params.n_lag``) on (factors, target). Captures dynamic interactions between latent factors and the target series.
-
-Useful for monetary-policy studies where the factors stand in for unobserved economic state.
-
-**When to use**
-
-Monetary-policy / macro-state studies; diffusion-index VAR baselines.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Bernanke, Boivin & Eliasz (2005) 'Measuring the Effects of Monetary Policy: A Factor-Augmented Vector Autoregressive Approach', QJE 120(1).
-
-**Related options**: [`var`](#var), [`factor_augmented_ar`](#factor-augmented-ar), [`bvar_minnesota`](#bvar-minnesota)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [factor_augmented_var function page](../family/factor_augmented_var.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.favar_fit``.
 
 ### `macroeconomic_random_forest`  --  operational
 
@@ -434,20 +264,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Mariano-Murasawa-style mixed-frequency dynamic factor model.
 
-Linear-Gaussian state-space model with monthly-aggregator observation equation. Routes to ``statsmodels.tsa.statespace.dynamic_factor_mq.DynamicFactorMQ`` when ``params.mixed_frequency = True`` and per-column frequency tags are supplied; otherwise falls back to the single-frequency ``DynamicFactor`` estimator (Kalman MLE).
-
-**When to use**
-
-Mixed-frequency nowcasting (e.g., quarterly GDP from monthly indicators).
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Mariano & Murasawa (2010) 'A coincident index, common factors, and monthly real GDP', Oxford Bulletin of Economics and Statistics 72(1).
-
-**Related options**: [`factor_augmented_ar`](#factor-augmented-ar), [`factor_augmented_var`](#factor-augmented-var)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [dfm_mixed_mariano_murasawa function page](../family/dfm_mixed_mariano_murasawa.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.dfm_fit``.
 
 ### `quantile_regression_forest`  --  operational
 
@@ -499,184 +316,43 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Multivariate Adaptive Regression Splines (Friedman 1991).
 
-Greedy forward / backward selection of piecewise-linear hinge basis functions ``max(0, x - c)`` and their products. Atomic primitive -- sklearn does not provide a MARS implementation. Runtime wraps ``pyearth`` as an optional dep; install via ``pip install macroforecast[mars]``. Required as the base learner for the Coulombe (2024) 'MARSquake' recipe (``bagging(base_family=mars, ...)``).
-
-Operational from v0.9.0; raises ``NotImplementedError`` with an install hint when ``pyearth`` is not present (mirrors the xgboost / lightgbm / catboost optional-dep error pattern).
-
-**When to use**
-
-Non-linear regression with interpretable basis functions; MARSquake recipe base learner.
-
-**When NOT to use**
-
-Without ``[mars]`` extra installed -- raises a clear NotImplementedError.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Friedman (1991) 'Multivariate Adaptive Regression Splines', Annals of Statistics 19(1).
-
-**Related options**: [`gradient_boosting`](#gradient-boosting), [`decision_tree`](#decision-tree), [`bagging`](#bagging)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [mars function page](../family/mars.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.mars_fit``.
 
 ### `garch11`  --  operational
 
 GARCH(1,1) univariate conditional-variance model (Bollerslev 1986).
 
-Standard GARCH(1,1) volatility model: ``σ²_t = ω + α · ε²_{t-1} + β · σ²_{t-1}``. The L4 wrapper treats ``y`` as the return-like series and ignores ``X``; ``predict(X)`` returns the conditional mean (μ broadcast over ``len(X)``) and the variance forecast is exposed via ``predict_variance(h_steps)`` for L7 inspection.
-
-**Defaults** (paper-faithful, Bollerslev 1986 §3): ``p = q = 1``, ``mean_model = 'constant'``, ``dist = 'normal'``. Wraps ``arch.arch_model`` -- requires the optional ``[arch]`` extra (``pip install macroforecast[arch]``); raises ``NotImplementedError`` with an install hint when missing.
-
-**When to use**
-
-Macro / financial volatility forecasting; baseline GARCH benchmark; volatility-targeting risk applications.
-
-**When NOT to use**
-
-Without ``[arch]`` extra installed -- raises a clear NotImplementedError.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Bollerslev (1986) 'Generalized Autoregressive Conditional Heteroskedasticity', Journal of Econometrics 31(3): 307-327.
-* Engle (1982) 'Autoregressive Conditional Heteroscedasticity with Estimates of the Variance of United Kingdom Inflation', Econometrica 50(4): 987-1007.
-
-**Related options**: [`egarch`](#egarch), [`realized_garch_with_rv_exog`](#realized-garch-with-rv-exog)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [garch11 function page](../family/garch11.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.garch11_fit``.
 
 ### `egarch`  --  operational
 
 Exponential GARCH with leverage asymmetry (Nelson 1991).
 
-EGARCH(p, o, q) on log-variance: ``ln σ²_t = ω + Σ α_i (|z_{t-i}| − E|z|) + Σ γ_i z_{t-i} + Σ β_j ln σ²_{t-j}``. The asymmetry term ``γ`` captures the leverage effect (negative shocks raise volatility more than positive ones), and the log specification removes any need for non-negativity constraints on the parameters.
-
-**Defaults** (Nelson 1991 §3): ``p = o = q = 1``, ``mean_model = 'constant'``, ``dist = 'normal'``. Wraps ``arch.arch_model(vol='EGARCH')`` -- requires ``[arch]`` extra.
-
-**When to use**
-
-Asymmetric / leverage volatility; equity returns where bad news amplifies vol; macro variables with sign-asymmetric volatility responses.
-
-**When NOT to use**
-
-Without ``[arch]`` extra installed; symmetric volatility series where GARCH(1,1) is sufficient (parsimony).
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Nelson (1991) 'Conditional Heteroskedasticity in Asset Returns: A New Approach', Econometrica 59(2): 347-370.
-
-**Related options**: [`garch11`](#garch11), [`realized_garch_with_rv_exog`](#realized-garch-with-rv-exog)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [egarch function page](../family/egarch.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.egarch_fit``.
 
 ### `realized_garch_with_rv_exog`  --  operational
 
 GARCH(1,1) with realised-variance series fed as the exogenous regressor (NOT Hansen-Huang-Shek 2012 joint MLE).
 
-Phase C-3 audit-fix (M9) honest rename. The L4 wrapper consumes ``params['realized_variance']`` (a column name in ``X``) as the RV series and feeds it as the **exogenous regressor** ``x=`` into a vanilla GARCH(1,1) spec. This is useful in practice (RV improves volatility forecasts), but it is **NOT** the Hansen-Huang-Shek (2012) joint return + measurement-equation MLE: there is no ``ξ``, ``φ``, ``δ_1``, ``δ_2`` measurement-equation parameters in the fitted output. The proper RealizedGARCH spec is reserved as FUTURE under the name ``realized_garch`` (awaiting native ``arch.RealizedGARCH`` API or manual joint-MLE implementation).
-
-Returns the conditional mean as the point forecast; ``predict_variance(h_steps)`` exposes the variance path.
-
-**Defaults**: ``mean_model = 'constant'``, ``dist = 'normal'``. Falls back to a squared-returns proxy when the RV column is unavailable.
-
-**When to use**
-
-Volatility forecasting when intraday realised variance is observable as a leading indicator (RV-as-exogenous improves vol forecast); honest baseline labelling for studies that need to distinguish from the proper Hansen-Huang-Shek MLE.
-
-**When NOT to use**
-
-When the proper joint-MLE Realized GARCH is required (the family name ``realized_garch`` is FUTURE / unrunnable until upstream supports it); without ``[arch]`` extra installed; without an RV measurement available.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Hansen, Huang & Shek (2012) 'Realized GARCH: A Joint Model for Returns and Realized Measures of Volatility', Journal of Applied Econometrics 27(6): 877-906 — the *target* spec, not implemented here.
-
-**Related options**: [`garch11`](#garch11), [`egarch`](#egarch)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [realized_garch_with_rv_exog function page](../family/realized_garch_with_rv_exog.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.realized_garch_fit``.
 
 ### `ets`  --  operational
 
 Exponential Smoothing State-Space (Hyndman-Koehler-Ord-Snyder 2008) -- ETS family.
 
-Exponential-smoothing state-space framework: ``error_trend_seasonal`` is a 3-character code ``ETS`` where ``E ∈ {A, M}`` (additive / multiplicative error), ``T ∈ {A, M, N}`` (additive / multiplicative / no trend), ``S ∈ {A, M, N}`` (additive / multiplicative / no seasonality). Wraps ``statsmodels.tsa.exponential_smoothing.ets.ETSModel`` (MLE fitting; auto-selects the closed-form initialisation per Hyndman 2008 §5.4).
-
-**Defaults**: ``error_trend_seasonal = 'AAN'`` (additive error, additive trend, no seasonal -- the workhorse non-seasonal spec), ``seasonal_periods = 12`` (monthly), ``initialization_method = 'estimated'``. Auto-disables seasonal fitting when ``len(y) < 2 · seasonal_periods``.
-
-**When to use**
-
-M-competition baseline; non-seasonal / seasonal univariate forecasting where a state-space exponential-smoothing model is the natural reference.
-
-**When NOT to use**
-
-Multivariate or covariate-driven forecasting (ETS ignores ``X``); short series where seasonal estimation is unstable.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Hyndman, Koehler, Ord & Snyder (2008) 'Forecasting with Exponential Smoothing: The State Space Approach', Springer.
-* Hyndman & Athanasopoulos (2018) 'Forecasting: Principles and Practice', 2nd ed., OTexts §7.
-
-**Related options**: [`theta_method`](#theta-method), [`holt_winters`](#holt-winters), [`ar_p`](#ar-p)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [ets function page](../family/ets.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.ets_fit``.
 
 ### `theta_method`  --  operational
 
 Theta method (Assimakopoulos-Nikolopoulos 2000) -- M3-competition winning baseline.
 
-Hand-coded Theta(2) closed-form forecast: blends a long-run linear-trend regression with a short-run simple-exponential-smoothing (SES) level. For ``θ = 2`` (M3 winner), the h-step-ahead forecast is ``ŷ_{T+h} = 0.5 · (a + b · (T+h)) + 0.5 · ℓ_T``, where ``(a, b)`` are the OLS trend slope/intercept on time index and ``ℓ_T`` is the SES level at time T (smoothing parameter ``α`` selected via ``scipy.optimize.minimize_scalar`` minimising the in-sample 1-step MSE).
-
-**Defaults**: ``theta = 2.0`` (M3 winner), ``seasonal = False``, ``seasonal_periods = 12``. The constructor exposes ``theta`` for forward compatibility; only the θ=2 closed form is exercised in v0.9.0 -- general θ requires a θ-line decomposition out of scope for this run.
-
-**When to use**
-
-M3 / M4-style univariate baselines; quick reference forecast against more elaborate models.
-
-**When NOT to use**
-
-Strongly seasonal series (use ``holt_winters`` or seasonally-adjusted target); covariate-driven forecasting.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Assimakopoulos & Nikolopoulos (2000) 'The theta model: a decomposition approach to forecasting', International Journal of Forecasting 16(4): 521-530.
-* Hyndman & Billah (2003) 'Unmasking the Theta method', International Journal of Forecasting 19(2): 287-290.
-* Petropoulos et al. (2022) 'Forecasting: theory and practice', International Journal of Forecasting 38(3): 705-871.
-
-**Related options**: [`ets`](#ets), [`holt_winters`](#holt-winters), [`ar_p`](#ar-p)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [theta_method function page](../family/theta_method.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.theta_fit``.
 
 ### `holt_winters`  --  operational
 
 Holt-Winters additive / multiplicative seasonal exponential smoothing.
 
-Wraps ``statsmodels.tsa.holtwinters.ExponentialSmoothing``. Fits level / trend / seasonal smoothing parameters by MLE (``optimized=True``). Supports additive and multiplicative trend and seasonal components plus an optional damped trend (Hyndman et al. 2008 §3).
-
-**Defaults**: ``seasonal = 'add'``, ``seasonal_periods = 12``, ``trend = 'add'``, ``damped_trend = False``. Auto-disables seasonal fitting when ``len(y) < 2 · seasonal_periods``.
-
-**When to use**
-
-Seasonal univariate baselines; M-competition style benchmarking; standard reference forecast for monthly / quarterly macro series.
-
-**When NOT to use**
-
-Without a clear seasonal pattern (use ``ets`` AAN instead); covariate-driven forecasting.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Holt (2004 / orig. 1957) 'Forecasting seasonals and trends by exponentially weighted moving averages', International Journal of Forecasting 20(1): 5-10.
-* Winters (1960) 'Forecasting Sales by Exponentially Weighted Moving Averages', Management Science 6(3): 324-342.
-* Hyndman & Athanasopoulos (2018) 'Forecasting: Principles and Practice', 2nd ed., OTexts §7.
-
-**Related options**: [`ets`](#ets), [`theta_method`](#theta-method), [`ar_p`](#ar-p)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [holt_winters function page](../family/holt_winters.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.holt_winters_fit``.
 
 ### `midas_almon`  --  future
 

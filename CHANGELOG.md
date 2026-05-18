@@ -5,6 +5,52 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 37 -- L4 timeseries + misc family standalone-ization (20 ops)
+
+**New standalone callables** in `mf.functions` (all return a frozen dataclass):
+
+**timeseries.py (14 ops):**
+`var_fit(X, y, *, n_lags=1)` -> `VARFitResult`
+`bvar_minnesota_fit(X, y, *, n_lags=1, lambda1=0.2)` -> `BVARMinnesotaFitResult`
+`bvar_niw_fit(X, y, *, n_lags=1)` -> `BVARNIWFitResult`
+`ar_fit(X, y, *, n_lags=1)` -> `ARFitResult`
+`far_fit(X, y, *, n_factors=3, n_lags=1)` -> `FARFitResult`
+`pcr_fit(X, y, *, n_components=3)` -> `PCRFitResult`
+`favar_fit(X, y, *, n_factors=3, n_lags=1)` -> `FAVARFitResult`
+`garch11_fit(X, y)` -> `GARCH11FitResult` (requires arch)
+`egarch_fit(X, y)` -> `EGARCHFitResult` (requires arch)
+`realized_garch_fit(X, y, rv)` -> `RealizedGARCHFitResult` (requires arch)
+`ets_fit(X, y)` -> `ETSFitResult`
+`theta_fit(X, y)` -> `ThetaFitResult`
+`holt_winters_fit(X, y)` -> `HoltWintersFitResult`
+`dfm_fit(X, y, *, n_factors=3)` -> `DFMFitResult`
+
+**misc.py (6 ops):**
+`svr_linear_fit(X, y, *, C=1.0)` -> `SVRLinearFitResult`
+`svr_rbf_fit(X, y, *, C=1.0, gamma="scale")` -> `SVRRBFFitResult`
+`svr_poly_fit(X, y, *, C=1.0, degree=3)` -> `SVRPolyFitResult`
+`knn_fit(X, y, *, n_neighbors=5)` -> `KNNFitResult`
+`kernel_ridge_fit(X, y, *, alpha=1.0, kernel="rbf", gamma=None)` -> `KernelRidgeFitResult`
+`mars_fit(X, y)` -> `MARSFitResult` (requires pyearth)
+
+Each result dataclass exposes family-specific attrs + `._model` + `.predict(X)` + `.summary()`.
+GARCH results also expose `.predict_variance(h_steps)`. `realized_garch_fit` accepts an
+explicit `rv` (realised-variance) Series as third positional argument.
+
+Paradigm (C28 lazy-import): each callable calls `_build_l4_model("<family>", params)` directly.
+
+**New files**: `macroforecast/functions/timeseries.py` (14 ops) + `macroforecast/functions/misc.py` (6 ops).
+
+All 40 names (20 callables + 20 result types) added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l4.py`):
+- 20 entries updated with `op_page=True`, `op_func_name`, `data_args=_L4_DATA_ARGS`, `return_type`, `returns_attrs`.
+
+**Encyclopedia**: 280 -> 300 pages (20 new L4 op pages).
+
+**Tests**: `tests/functions/test_l4_timeseries.py` (80 passed, 16 skipped arch-guarded),
+`tests/functions/test_l4_misc.py` (41 passed, 6 skipped pyearth-guarded).
+
 ### Cycle 36 -- L4 deep family standalone-ization (4 ops)
 
 **New standalone callables** in `mf.functions` (all return a frozen dataclass):
