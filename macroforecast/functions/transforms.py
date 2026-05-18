@@ -1619,7 +1619,7 @@ def partial_least_squares_transform(
         is empty.
     n_components : int, default 3
         Number of PLS latent components. Must be >= 1. Clamped
-        internally to ``min(T_clean - 1, K_clean - 1)``.
+        internally to ``min(T_clean - 1, K_clean)``.
 
     Returns
     -------
@@ -1681,10 +1681,10 @@ def partial_least_squares_transform(
             index=frame.index,
             columns=[f"pls_{i + 1}" for i in range(n_components)],
         )
-    # BLK-4: clamp n_components to min(T_clean-1, K_clean-1)
+    # BLK-4: clamp n_components to min(T_clean-1, K_clean) [NOTE-A fix: K_clean not K_clean-1]
     T_clean = len(aligned_check)
     K_clean = aligned_check.shape[1] - 1  # exclude target column
-    n_components = min(n_components, min(T_clean - 1, K_clean - 1))
+    n_components = min(n_components, min(T_clean - 1, K_clean))
     n_components = max(1, n_components)
     return _partial_least_squares(frame, target=target, n_components=n_components)
 
@@ -1953,3 +1953,531 @@ def feature_selection_transform(
     frame = _as_frame(panel)
     _require_non_empty(frame)
     return _feature_selection(frame, target=target, n_features=n_features, method=method)
+
+
+# ---------------------------------------------------------------------------
+# 29. sparse_pca_transform
+# ---------------------------------------------------------------------------
+
+def sparse_pca_transform(
+    panel: pd.DataFrame,
+    *,
+    n_components: int = 8,
+) -> pd.DataFrame:
+    """L1-penalised Sparse PCA factor extraction (Zou-Hastie-Tibshirani 2006).
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    n_components : int, default 8
+        Number of sparse principal components to extract. Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor scores panel; columns named ``factor_1``, ``factor_2``,
+        ..., ``factor_{n_components}``. Rows dropped for NaN are filled
+        back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_pca_factors`` from ``macroforecast.core.runtime`` with
+    ``variant="sparse_pca"``.  Applies sklearn's ``SparsePCA`` (dictionary
+    learning with L1 penalty) to yield interpretable factors that load on
+    a small subset of predictors.  For the Chen-Rohe (2023) non-diagonal-D
+    SCA variant, use ``sparse_pca_chen_rohe_transform`` instead.
+    Equivalent recipe configuration::
+
+        op: sparse_pca
+        params:
+          n_components: 8
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = sparse_pca_transform(panel, n_components=3)
+    >>> out.shape
+    (50, 3)
+    >>> list(out.columns)
+    ['factor_1', 'factor_2', 'factor_3']
+
+    References
+    ----------
+    Zou, Hastie & Tibshirani (2006) 'Sparse Principal Component Analysis',
+    Journal of Computational and Graphical Statistics 15(2): 265-286.
+    """
+    from macroforecast.core.runtime import _as_frame, _pca_factors  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("sparse_pca_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _pca_factors(frame, n_components=n_components, variant="sparse_pca")
+
+
+# ---------------------------------------------------------------------------
+# 30. sparse_pca_chen_rohe_transform
+# ---------------------------------------------------------------------------
+
+def sparse_pca_chen_rohe_transform(
+    panel: pd.DataFrame,
+    *,
+    n_components: int = 4,
+    zeta: float = 0.0,
+    max_iter: int = 200,
+    var_innovations: bool = False,
+    random_state: int = 0,
+) -> pd.DataFrame:
+    """Chen-Rohe (2023) Sparse Component Analysis (SCA) -- non-diagonal D variant.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    n_components : int, default 4
+        Number of sparse components (= J in the SCA objective). Must be >= 1.
+    zeta : float, default 0.0
+        L1 budget for loadings Theta. A value of ``0.0`` routes to
+        ``zeta = n_components`` (the most-binding boundary the paper finds
+        optimal in cross-validation). Must be >= 0.
+    max_iter : int, default 200
+        Maximum number of alternating-maximisation iterations. Must be >= 1.
+    var_innovations : bool, default False
+        If ``True``, fit a VAR(1) on the SCA scores and return the residuals
+        as sparse macro-finance factors (Rapach-Zhou 2025 Strategy step 2).
+    random_state : int, default 0
+        Seed for NumPy random number generator (used for Z/Theta init).
+
+    Returns
+    -------
+    pd.DataFrame
+        SCA factor scores; columns named ``sca_1``, ..., ``sca_{n_components}``.
+        Rows dropped for NaN are filled back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_sparse_pca_chen_rohe`` from ``macroforecast.core.runtime``.
+    Solves the bilinear convex-hull form
+    ``max_{Z,Theta} ||Z' X Theta||_F`` s.t. ``Z in H(T,J)``,
+    ``Theta in H(M,J)``, ``||Theta||_1 <= zeta`` (Rapach-Zhou 2025 eq. 4).
+    Used as the macro-side stage in Rapach & Zhou (2025) Sparse Macro-Finance
+    Factors.  Equivalent recipe configuration::
+
+        op: sparse_pca_chen_rohe
+        params:
+          n_components: 4
+          zeta: 0.0
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = sparse_pca_chen_rohe_transform(panel, n_components=2)
+    >>> out.shape
+    (50, 2)
+
+    References
+    ----------
+    Chen & Rohe (2023) 'A New Basis for Sparse Principal Component Analysis',
+    Journal of Computational and Graphical Statistics. arXiv:2007.00596.
+    Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper, eqs. (3)-(4).
+    """
+    from macroforecast.core.runtime import _as_frame, _sparse_pca_chen_rohe  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("sparse_pca_chen_rohe_transform requires n_components >= 1")
+    if zeta < 0:
+        raise ValueError("sparse_pca_chen_rohe_transform requires zeta >= 0")
+    if max_iter < 1:
+        raise ValueError("sparse_pca_chen_rohe_transform requires max_iter >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _sparse_pca_chen_rohe(
+        frame,
+        n_components=n_components,
+        zeta=zeta,
+        max_iter=max_iter,
+        var_innovations=var_innovations,
+        random_state=random_state,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 31. varimax_transform
+# ---------------------------------------------------------------------------
+
+def varimax_transform(panel: pd.DataFrame) -> pd.DataFrame:
+    """Varimax-rotated factor scores via orthogonal rotation.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel of factor scores (e.g., output of ``pca_transform``).
+        Each column is a factor; rows are time periods. Series is promoted
+        to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+
+    Returns
+    -------
+    pd.DataFrame
+        Varimax-rotated factor scores; columns named ``varimax_1``,
+        ..., ``varimax_{K}``. Rows dropped for NaN are filled back with
+        NaN on output.
+
+    Notes
+    -----
+    Calls ``_varimax_rotation`` from ``macroforecast.core.runtime``.
+    Applies an iterative orthogonal rotation that maximises the variance
+    of squared loadings within each factor, producing sparser (more
+    interpretable) loading patterns than plain PCA.  Equivalent recipe
+    configuration::
+
+        op: varimax
+        params: {}
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 3), columns=list("abc"))
+    >>> out = varimax_transform(panel)
+    >>> out.shape
+    (50, 3)
+
+    References
+    ----------
+    Kaiser (1958) 'The varimax criterion for analytic rotation in factor
+    analysis', Psychometrika 23(3): 187-200.
+    """
+    from macroforecast.core.runtime import _as_frame, _varimax_rotation  # noqa: PLC0415
+
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _varimax_rotation(frame)
+
+
+# ---------------------------------------------------------------------------
+# 32. random_projection_transform
+# ---------------------------------------------------------------------------
+
+def random_projection_transform(
+    panel: pd.DataFrame,
+    *,
+    n_components: int = 8,
+) -> pd.DataFrame:
+    """Johnson-Lindenstrauss random Gaussian projection.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    n_components : int, default 8
+        Number of output dimensions. Clamped internally to
+        ``min(n_components, K)`` where K is the number of panel columns.
+        Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Projected panel; columns named ``rp_1``, ``rp_2``,
+        ..., ``rp_{n_components}``. Rows dropped for NaN are filled back
+        with NaN on output.
+
+    Notes
+    -----
+    Calls ``_random_projection`` from ``macroforecast.core.runtime``.
+    Multiplies the panel by a random Gaussian matrix (sklearn's
+    ``GaussianRandomProjection``) scaled to approximately preserve pairwise
+    distances (Johnson-Lindenstrauss lemma).  Useful as a cheap baseline
+    against structured reductions (PCA, sparse PCA).  Equivalent recipe
+    configuration::
+
+        op: random_projection
+        params:
+          n_components: 8
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = random_projection_transform(panel, n_components=3)
+    >>> out.shape
+    (50, 3)
+    >>> list(out.columns)
+    ['rp_1', 'rp_2', 'rp_3']
+
+    References
+    ----------
+    Johnson & Lindenstrauss (1984) 'Extensions of Lipschitz mappings into a
+    Hilbert space', Contemporary Mathematics 26: 189-206.
+    """
+    from macroforecast.core.runtime import _as_frame, _random_projection  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("random_projection_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _random_projection(frame, n_components=n_components)
+
+
+# ---------------------------------------------------------------------------
+# 33. kernel_features_transform
+# ---------------------------------------------------------------------------
+
+def kernel_features_transform(
+    panel: pd.DataFrame,
+    *,
+    kind: str = "rbf",
+    gamma: float = 1.0,
+) -> pd.DataFrame:
+    """Exact kernel Gram matrix -- RBF or polynomial pairwise similarities.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    kind : str, default "rbf"
+        Kernel type.  One of ``"rbf"`` (radial basis function / Gaussian
+        kernel) or ``"polynomial"`` (degree-2 polynomial kernel).
+    gamma : float, default 1.0
+        Kernel bandwidth / scale parameter.  For ``"rbf"``:
+        ``K(x, z) = exp(-gamma * ||x - z||^2)``.  For ``"polynomial"``:
+        ``K(x, z) = (gamma * <x, z> + 1)^2``.  Must be > 0.
+
+    Returns
+    -------
+    pd.DataFrame
+        Gram matrix of shape ``(T_clean, T_clean)`` where ``T_clean`` is
+        the number of rows without any NaN.  Columns named ``kernel_1``,
+        ..., ``kernel_{T_clean}``.  Rows dropped for NaN are **not**
+        reindexed back (the output is square over the clean rows only).
+
+    Notes
+    -----
+    Calls ``_kernel_features`` from ``macroforecast.core.runtime``.  The
+    output is the *exact* T_clean x T_clean Gram matrix -- not an
+    approximation.  For large panels use ``nystroem_transform`` (Nystroem
+    low-rank approximation) or random Fourier features instead.
+    Equivalent recipe configuration::
+
+        op: kernel_features
+        params:
+          kind: rbf
+          gamma: 1.0
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = kernel_features_transform(panel, kind="rbf", gamma=0.5)
+    >>> out.shape
+    (50, 50)
+
+    References
+    ----------
+    Rahimi & Recht (2007) 'Random Features for Large-Scale Kernel Machines',
+    NeurIPS.
+    """
+    from macroforecast.core.runtime import _as_frame, _kernel_features  # noqa: PLC0415
+
+    _VALID_KINDS = {"rbf", "polynomial"}
+    if kind not in _VALID_KINDS:
+        raise ValueError(
+            f"kernel_features_transform: unknown kind {kind!r}. "
+            f"Expected one of {sorted(_VALID_KINDS)}."
+        )
+    if gamma <= 0:
+        raise ValueError("kernel_features_transform requires gamma > 0")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _kernel_features(frame, kind=kind, gamma=gamma)
+
+
+# ---------------------------------------------------------------------------
+# 34. nystroem_transform
+# ---------------------------------------------------------------------------
+
+def nystroem_transform(
+    panel: pd.DataFrame,
+    *,
+    n_components: int = 32,
+) -> pd.DataFrame:
+    """Nystroem low-rank kernel approximation feature map.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    n_components : int, default 32
+        Number of landmark points for the Nystroem approximation.
+        Clamped internally to ``min(n_components, T_clean)``.
+        Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Nystroem feature map; columns named ``nystroem_1``,
+        ..., ``nystroem_{n_components}``. Rows dropped for NaN are filled
+        back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_nystroem_features`` from ``macroforecast.core.runtime``.
+    Uses sklearn's ``Nystroem`` with ``random_state=0`` for reproducibility.
+    Constructs a low-rank approximation of the RBF kernel matrix using a
+    random subsample of training points (landmark points).  More accurate
+    than Random Fourier Features for non-RBF kernels but with larger memory
+    footprint.  Equivalent recipe configuration::
+
+        op: nystroem_features
+        params:
+          n_components: 32
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = nystroem_transform(panel, n_components=10)
+    >>> out.shape
+    (50, 10)
+    >>> list(out.columns[:3])
+    ['nystroem_1', 'nystroem_2', 'nystroem_3']
+
+    References
+    ----------
+    Williams & Seeger (2001) 'Using the Nystroem method to speed up kernel
+    machines', NeurIPS.
+    """
+    from macroforecast.core.runtime import _as_frame, _nystroem_features  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("nystroem_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _nystroem_features(frame, n_components=n_components)
+
+
+# ---------------------------------------------------------------------------
+# 35. time_trend_transform
+# ---------------------------------------------------------------------------
+
+def time_trend_transform(panel: pd.DataFrame) -> pd.DataFrame:
+    """Deterministic linear time trend (t = 1, 2, ..., T).
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        The panel index is used only to align the output; actual trend
+        values are positional (1-indexed).
+
+    Returns
+    -------
+    pd.DataFrame
+        Single-column DataFrame with column ``"t"`` containing
+        ``1, 2, ..., T`` as float64.  Shape is ``(T, 1)`` where T is
+        ``len(panel)``.
+
+    Notes
+    -----
+    Generated inline via ``np.arange(1, T + 1)`` -- no runtime helper
+    is required for this trivial deterministic feature.  Equivalent
+    recipe configuration::
+
+        op: time_trend
+        params: {}
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(5, 2), columns=list("ab"))
+    >>> out = time_trend_transform(panel)
+    >>> out.shape
+    (5, 1)
+    >>> list(out["t"])
+    [1.0, 2.0, 3.0, 4.0, 5.0]
+
+    References
+    ----------
+    macroforecast design Part 2, L3: step library, ``time_trend`` op.
+    """
+    from macroforecast.core.runtime import _as_frame  # noqa: PLC0415
+
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    T = len(frame)
+    trend = np.arange(1, T + 1, dtype=float)
+    return pd.DataFrame({"t": trend}, index=frame.index)
+
+
+# ---------------------------------------------------------------------------
+# 36. holiday_transform
+# ---------------------------------------------------------------------------
+
+def holiday_transform(panel: pd.DataFrame) -> pd.DataFrame:
+    """US federal holiday indicator column (0/1) over the panel index.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        When the panel index is a ``pd.DatetimeIndex``, dates matching
+        US federal holidays are flagged ``1.0``; all other dates are
+        ``0.0``.  Non-DatetimeIndex inputs always return all zeros.
+
+    Returns
+    -------
+    pd.DataFrame
+        Single-column DataFrame with column ``"is_holiday"`` containing
+        ``0.0`` or ``1.0``.  Shape is ``(T, 1)`` where T is
+        ``len(panel)``.
+
+    Notes
+    -----
+    Calls ``_holiday_indicator`` from ``macroforecast.core.runtime``.
+    Uses ``pd.tseries.offsets.USFederalHolidayCalendar`` for holiday
+    detection.  Equivalent recipe configuration::
+
+        op: holiday
+        params: {}
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 2), columns=list("ab"))
+    >>> out = holiday_transform(panel)
+    >>> out.shape
+    (50, 1)
+    >>> out.columns.tolist()
+    ['is_holiday']
+
+    References
+    ----------
+    macroforecast design Part 2, L3: step library, ``holiday`` op.
+    """
+    from macroforecast.core.runtime import _as_frame, _holiday_indicator  # noqa: PLC0415
+
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _holiday_indicator(frame)

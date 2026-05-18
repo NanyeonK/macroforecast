@@ -12,6 +12,7 @@ Cycle 29: L6 statistical tests standalone-ization (7 ops).
 Cycle 30: L3 basic panel transforms standalone-ization (10 ops).
 Cycle 31: L3 advanced panel transforms standalone-ization (12 ops).
 Cycle 32: L3 supervised/mixed transforms standalone-ization (6 ops).
+Cycle 33: L3 final B1 transforms standalone-ization (8 ops).
 
 Example usage::
 
@@ -111,6 +112,15 @@ from .transforms import (
     sliced_inverse_regression_transform,
     dfm_transform,
     feature_selection_transform,
+    # Cycle 33: L3 final B1 transforms
+    sparse_pca_transform,
+    sparse_pca_chen_rohe_transform,
+    varimax_transform,
+    random_projection_transform,
+    kernel_features_transform,
+    nystroem_transform,
+    time_trend_transform,
+    holiday_transform,
 )
 
 __all__ = [
@@ -191,4 +201,13 @@ __all__ = [
     "sliced_inverse_regression_transform",
     "dfm_transform",
     "feature_selection_transform",
+    # Cycle 33: L3 final B1 transforms
+    "sparse_pca_transform",
+    "sparse_pca_chen_rohe_transform",
+    "varimax_transform",
+    "random_projection_transform",
+    "kernel_features_transform",
+    "nystroem_transform",
+    "time_trend_transform",
+    "holiday_transform",
 ]
