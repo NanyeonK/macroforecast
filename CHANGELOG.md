@@ -5,6 +5,43 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 35 -- L4 tree/ensemble family standalone-ization (6 ops) + C34 backlog
+
+**New standalone callables** in `mf.functions` (all return a frozen dataclass):
+
+`random_forest_fit(X, y, *, n_estimators=200, max_depth=None, min_samples_leaf=1, random_state=0, n_jobs=1)` -> `RandomForestFitResult`
+`extra_trees_fit(X, y, *, n_estimators=200, max_depth=None, min_samples_leaf=1, random_state=0, n_jobs=1)` -> `ExtraTreesFitResult`
+`gradient_boosting_fit(X, y, *, n_estimators=200, learning_rate=0.1, max_depth=3, random_state=0)` -> `GradientBoostingFitResult`
+`xgboost_fit(X, y, *, n_estimators=300, learning_rate=0.1, max_depth=6, subsample=1.0, random_state=0)` -> `XGBoostFitResult`
+`lightgbm_fit(X, y, *, n_estimators=300, learning_rate=0.1, max_depth=-1, num_leaves=31, random_state=0)` -> `LightGBMFitResult`
+`catboost_fit(X, y, *, n_estimators=300, learning_rate=0.1, max_depth=6, random_state=0)` -> `CatBoostFitResult`
+
+Each result dataclass exposes: `.feature_importances_` (raw per-family importances), `.n_estimators_used`, `._model`, `.predict(X)`, `.summary()`.
+
+Paradigm (C28 lazy-import pattern): each wrapper calls `_build_l4_model("<family>", params)` from `macroforecast.core.runtime` inside the function body -- no formula duplication. `n_jobs` overridden post-construction for RF/ET only. `num_leaves` and `subsample` set via `set_params()` post-construction for LightGBM/XGBoost (not exposed in `_build_l4_model`).
+
+**New file**: `macroforecast/functions/tree.py` (6 ops).
+
+All 6 names added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l4.py`):
+- 6 tree/ensemble family entries updated with `op_page=True`, `op_func_name`, `data_args=_L4_DATA_ARGS`, `return_type`, `returns_attrs`.
+
+**Encyclopedia**: 270 -> ~276 pages (6 new L4 tree op pages).
+
+**C34 backlog fixes**:
+- `macroforecast/functions/clean.py` Notes docstring: replaced stale `.reindex(df_q.index)` description with accurate `other_agg.join(agg)` returning quarterly-indexed frame directly.
+- CHANGELOG C34 entry: `iqr.replace(0, pd.NA)` -> `iqr.replace(0, np.nan)` (correctness constraint text).
+- CHANGELOG C34 entry: test count corrected `131 passed` -> `142 passed`.
+
+**Tests** (`tests/functions/test_l4_tree_family.py`): ~36 passed.
+- Bit-exact vs `_build_l4_model("<family>", params)` direct call on RNG-42 100x5 panel.
+- `.predict()` correctness vs recipe path.
+- `.summary()` content (family name, top-3 features).
+- Protocol structural conformance (FitResultBase).
+- LightGBM: max_depth=-1 valid; max_depth=0 raises ValueError; max_depth=-2 raises ValueError.
+- CatBoost: prediction shape guaranteed 1-D after `.ravel()`.
+
 ### Cycle 34 -- L2 clean panel ops standalone-ization (14 ops)
 
 **New standalone callables** in `mf.functions` (all return `pd.DataFrame`):
@@ -28,7 +65,7 @@ Paradigm (C29 lazy-import recipe-path): each wrapper imports the runtime helper
 inside the function body -- no formula duplication.
 
 **Critical correctness constraints**:
-- `iqr_outlier_clean`: `iqr.replace(0, pd.NA)` precedes mask computation (zero-IQR columns not flagged).
+- `iqr_outlier_clean`: `iqr.replace(0, np.nan)` precedes mask computation (zero-IQR columns not flagged).
 - `freq_align_quarterly_to_monthly_clean` step_backward: `.bfill().ffill()` order (NOT `.ffill().bfill()`).
 - `zero_fill_leading_clean`: fills ALL NaN with 0 (name misleading but matches runtime).
 - `em_multivariate_impute_clean` passes `n_factors=None` -> `rank = min(T, K) // 2`.
@@ -45,7 +82,7 @@ All 14 names added to `mf.functions.__all__`.
 
 **Encyclopedia**: 256 -> 270 pages (14 new L2 op pages).
 
-**Tests** (`tests/functions/test_l2_clean.py`): 131 passed.
+**Tests** (`tests/functions/test_l2_clean.py`): 142 passed.
 - Bit-exact vs runtime for all applicable ops.
 - Correctness: shape, column/index preservation, outlier flagging, imputation fill, tcode transforms.
 - Input validation: empty panel, threshold ranges, invalid actions/rules/tcodes.
