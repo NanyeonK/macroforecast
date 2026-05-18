@@ -1475,7 +1475,15 @@ def scaled_pca_transform(
     """
     from macroforecast.core.runtime import _as_frame, _pca_factors  # noqa: PLC0415
 
-    if n_components < 1:
+    if isinstance(n_components, str):
+        if n_components == "all":
+            pass  # "all" is a valid passthrough; runtime handles it
+        else:
+            raise ValueError(
+                f"scaled_pca_transform: n_components string value must be \"all\"; "
+                f"got {n_components!r}"
+            )
+    elif n_components < 1:
         raise ValueError("scaled_pca_transform requires n_components >= 1")
     frame = _as_frame(panel)
     _require_non_empty(frame)
@@ -1503,6 +1511,7 @@ def supervised_pca_transform(
     target: pd.Series,
     *,
     n_components: int = 3,
+    q: float = 0.5,
 ) -> pd.DataFrame:
     """Giglio-Xiu-Zhang (2025) Supervised PCA -- screen-then-PCA factor extraction.
 
@@ -1518,6 +1527,10 @@ def supervised_pca_transform(
         raises ``ValueError`` if the intersection is empty.
     n_components : int, default 3
         Number of supervised principal components (P). Must be >= 1.
+    q : float, default 0.5
+        Fraction of panel columns to retain after univariate correlation
+        screening. Must satisfy ``0 < q < 1``; raises ``ValueError``
+        outside this range. Forwarded to ``_supervised_pca``.
 
     Returns
     -------
@@ -1574,7 +1587,11 @@ def supervised_pca_transform(
             "supervised_pca_transform: target and panel share no common index values; "
             "cannot align supervisory signal with panel rows."
         )
-    return _supervised_pca(frame, target=target, n_components=n_components)
+    if not (0.0 < q < 1.0):
+        raise ValueError(
+            f"supervised_pca_transform: q must satisfy 0 < q < 1; got {q!r}"
+        )
+    return _supervised_pca(frame, target=target, n_components=n_components, q=q)
 
 
 # ---------------------------------------------------------------------------
@@ -1656,6 +1673,19 @@ def partial_least_squares_transform(
             "partial_least_squares_transform: target and panel share no common "
             "index values; cannot align supervisory signal with panel rows."
         )
+    # BLK-6: guard against small-N (fewer than 2 clean rows)
+    aligned_check = pd.concat([frame, target.rename("__target__")], axis=1).dropna()
+    if len(aligned_check) < 2:
+        return pd.DataFrame(
+            np.full((len(frame), n_components), np.nan),
+            index=frame.index,
+            columns=[f"pls_{i + 1}" for i in range(n_components)],
+        )
+    # BLK-4: clamp n_components to min(T_clean-1, K_clean-1)
+    T_clean = len(aligned_check)
+    K_clean = aligned_check.shape[1] - 1  # exclude target column
+    n_components = min(n_components, min(T_clean - 1, K_clean - 1))
+    n_components = max(1, n_components)
     return _partial_least_squares(frame, target=target, n_components=n_components)
 
 
@@ -1669,6 +1699,7 @@ def sliced_inverse_regression_transform(
     *,
     n_components: int = 3,
     n_slices: int = 10,
+    scaling_method: str = "scaled_pca",
 ) -> pd.DataFrame:
     """Fan-Xue-Yao (2017) Sliced Inverse Regression with Huang-Zhou predictive scaling.
 
@@ -1687,6 +1718,11 @@ def sliced_inverse_regression_transform(
     n_slices : int, default 10
         Number of contiguous slices of the target distribution. Must
         be >= 2. Clamped internally to the number of aligned rows.
+    scaling_method : str, default ``"scaled_pca"``
+        Predictive scaling variant forwarded to ``_sliced_inverse_regression``.
+        Allowed values: ``"scaled_pca"`` (Huang-Zhou 2022 sSUFF augmentation)
+        and ``"none"`` (plain SIR without predictive scaling). Raises
+        ``ValueError`` for any other value.
 
     Returns
     -------
@@ -1751,11 +1787,18 @@ def sliced_inverse_regression_transform(
             "sliced_inverse_regression_transform: target and panel share no common "
             "index values; cannot align supervisory signal with panel rows."
         )
+    _ALLOWED_SCALING_METHODS = {"scaled_pca", "none"}
+    if scaling_method not in _ALLOWED_SCALING_METHODS:
+        raise ValueError(
+            f"sliced_inverse_regression_transform: scaling_method must be one of "
+            f"{sorted(_ALLOWED_SCALING_METHODS)!r}; got {scaling_method!r}"
+        )
     return _sliced_inverse_regression(
         frame,
         target=target,
         n_components=n_components,
         n_slices=n_slices,
+        scaling_method=scaling_method,
     )
 
 
@@ -1823,7 +1866,8 @@ def dfm_transform(
         raise ValueError("dfm_transform requires n_factors >= 1")
     frame = _as_frame(panel)
     _require_non_empty(frame)
-    return _dfm_factors(frame, n_factors=n_factors)
+    result = _dfm_factors(frame, n_factors=n_factors)
+    return result.reindex(frame.index)
 
 
 # ---------------------------------------------------------------------------
