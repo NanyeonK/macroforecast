@@ -16,10 +16,68 @@ docs surface only the *what* and *when*.
 from __future__ import annotations
 
 from . import register
-from .types import OptionDoc, Reference
+from .types import OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-05"
 _REVIEWER = "macroforecast author"
+
+# ---------------------------------------------------------------------------
+# Shared data-argument docs for C38 L7 importance standalone callables
+# ---------------------------------------------------------------------------
+
+_L7_RESULT_X_DATA_ARGS = (
+    ParameterDoc(
+        name="result",
+        type="FitResultBase",
+        default=REQUIRED,
+        description=(
+            "Fitted result object exposing ._model (the raw sklearn estimator). "
+            "Returned by any L4 standalone callable such as mf.functions.ridge_fit, "
+            "mf.functions.random_forest_fit, etc."
+        ),
+    ),
+    ParameterDoc(
+        name="X",
+        type="np.ndarray | pd.DataFrame",
+        default=REQUIRED,
+        description=(
+            "Feature matrix used for importance computation. "
+            "Shape (n_samples, n_features). Accepts numpy arrays or DataFrames."
+        ),
+    ),
+)
+
+_L7_RESULT_XY_DATA_ARGS = (
+    ParameterDoc(
+        name="result",
+        type="FitResultBase",
+        default=REQUIRED,
+        description=(
+            "Fitted result object exposing ._model (the raw sklearn estimator). "
+            "Returned by any L4 standalone callable."
+        ),
+    ),
+    ParameterDoc(
+        name="X",
+        type="np.ndarray | pd.DataFrame",
+        default=REQUIRED,
+        description=(
+            "Feature matrix used for importance computation. "
+            "Shape (n_samples, n_features)."
+        ),
+    ),
+    ParameterDoc(
+        name="y",
+        type="np.ndarray | pd.Series",
+        default=REQUIRED,
+        description=(
+            "Target vector. Shape (n_samples,). "
+            "Used to compute baseline and permuted MSE losses."
+        ),
+    ),
+)
+
+
 
 _REF_DESIGN_L7 = Reference(
     citation="macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'",
@@ -35,6 +93,12 @@ def _o(
     when_not_to_use: str = "",
     references: tuple[Reference, ...] = (_REF_DESIGN_L7,),
     related: tuple[str, ...] = (),
+    op_page: bool = False,
+    op_func_name: str = "",
+    parameters: tuple = (),
+    data_args: tuple = (),
+    return_type: str = "",
+    returns_attrs: tuple = (),
 ) -> OptionDoc:
     return OptionDoc(
         layer="l7",
@@ -47,6 +111,12 @@ def _o(
         when_not_to_use=when_not_to_use,
         references=references,
         related_options=related,
+        op_page=op_page,
+        op_func_name=op_func_name,
+        parameters=parameters,
+        data_args=data_args,
+        return_type=return_type,
+        returns_attrs=returns_attrs,
         last_reviewed=_REVIEWED,
         reviewer=_REVIEWER,
     )
@@ -77,6 +147,17 @@ _MODEL_NATIVE_LINEAR_COEF = _o(
         ),
     ),
     related=("model_native_tree_importance", "lasso_inclusion_frequency"),
+
+    op_page=True,
+    op_func_name='model_native_linear_coef_importance',
+    data_args=_L7_RESULT_X_DATA_ARGS,
+    return_type='NativeImportanceResult',
+    returns_attrs=(
+        (".importances_", "np.ndarray", "Absolute coefficient values |coef_j|, shape (n_features,)."),
+        (".feature_names_", "list[str]", "Feature names matching importances_."),
+        (".method", "str", "'linear_coef' -- method descriptor."),
+        (".summary(top_n=10)", "str", "Human-readable text table sorted by descending importance."),
+    ),
 )
 
 _MODEL_NATIVE_TREE_IMPORTANCE = _o(
@@ -105,6 +186,17 @@ _MODEL_NATIVE_TREE_IMPORTANCE = _o(
         ),
     ),
     related=("permutation_importance", "permutation_importance_strobl"),
+
+    op_page=True,
+    op_func_name='model_native_tree_importance',
+    data_args=_L7_RESULT_X_DATA_ARGS,
+    return_type='NativeImportanceResult',
+    returns_attrs=(
+        (".importances_", "np.ndarray", "MDI feature_importances_ values, shape (n_features,)."),
+        (".feature_names_", "list[str]", "Feature names matching importances_."),
+        (".method", "str", "'tree_native' -- method descriptor."),
+        (".summary(top_n=10)", "str", "Human-readable text table sorted by descending importance."),
+    ),
 )
 
 
@@ -137,6 +229,18 @@ _PERMUTATION_IMPORTANCE = _o(
         ),
     ),
     related=("permutation_importance_strobl", "lofo", "model_native_tree_importance"),
+
+    op_page=True,
+    op_func_name='permutation_importance',
+    data_args=_L7_RESULT_XY_DATA_ARGS,
+    return_type='PermutationImportanceResult',
+    returns_attrs=(
+        (".importances_mean_", "np.ndarray", "Mean importance over n_repeats, shape (n_features,)."),
+        (".importances_std_", "np.ndarray", "Std deviation over n_repeats, shape (n_features,)."),
+        (".feature_names_", "list[str]", "Feature names."),
+        (".n_repeats", "int", "Number of permutation repeats used."),
+        (".summary(top_n=10)", "str", "Human-readable text table with mean and std."),
+    ),
 )
 
 _PERMUTATION_IMPORTANCE_STROBL = _o(
@@ -158,6 +262,18 @@ _PERMUTATION_IMPORTANCE_STROBL = _o(
         ),
     ),
     related=("permutation_importance",),
+
+    op_page=True,
+    op_func_name='cond_permutation_importance',
+    data_args=_L7_RESULT_XY_DATA_ARGS,
+    return_type='CondPermutationImportanceResult',
+    returns_attrs=(
+        (".importances_mean_", "np.ndarray", "Mean conditional permutation importance, shape (n_features,)."),
+        (".importances_std_", "np.ndarray", "Std deviation over n_repeats, shape (n_features,)."),
+        (".feature_names_", "list[str]", "Feature names."),
+        (".method", "str", "'strobl' -- Strobl (2008) conditional permutation."),
+        (".summary(top_n=10)", "str", "Human-readable text table."),
+    ),
 )
 
 _LOFO = _o(
@@ -215,6 +331,18 @@ _SHAP_TREE = _o(
         ),
     ),
     related=("shap_kernel", "shap_linear", "shap_interaction", "shap_deep"),
+
+    op_page=True,
+    op_func_name='shap_tree_importance',
+    data_args=_L7_RESULT_X_DATA_ARGS,
+    return_type='SHAPImportanceResult',
+    returns_attrs=(
+        (".shap_values_", "np.ndarray", "SHAP values, shape (n_samples, n_features)."),
+        (".expected_value_", "float", "SHAP base value (expected model output)."),
+        (".feature_names_", "list[str]", "Feature names."),
+        (".explainer_type", "str", "Explainer used (TreeExplainer / KernelExplainer)."),
+        (".summary(top_n=10)", "str", "Table of mean absolute SHAP values."),
+    ),
 )
 
 _SHAP_KERNEL = _o(
@@ -244,6 +372,18 @@ _SHAP_LINEAR = _o(
     "Linear models when the SHAP per-row decomposition is needed (otherwise ``model_native_linear_coef`` suffices).",
     references=(_REF_DESIGN_L7, _REF_SHAP_LUNDBERG),
     related=("model_native_linear_coef", "shap_tree", "shap_kernel"),
+
+    op_page=True,
+    op_func_name='shap_linear_importance',
+    data_args=_L7_RESULT_X_DATA_ARGS,
+    return_type='SHAPImportanceResult',
+    returns_attrs=(
+        (".shap_values_", "np.ndarray", "SHAP values, shape (n_samples, n_features)."),
+        (".expected_value_", "float", "SHAP base value (expected model output)."),
+        (".feature_names_", "list[str]", "Feature names."),
+        (".explainer_type", "str", "Explainer used (LinearExplainer / KernelExplainer)."),
+        (".summary(top_n=10)", "str", "Table of mean absolute SHAP values."),
+    ),
 )
 
 _SHAP_INTERACTION = _o(
@@ -398,6 +538,18 @@ _PARTIAL_DEPENDENCE = _o(
         ),
     ),
     related=("accumulated_local_effect", "friedman_h_interaction"),
+
+    op_page=True,
+    op_func_name='partial_dependence_importance',
+    data_args=_L7_RESULT_X_DATA_ARGS,
+    return_type='PDPImportanceResult',
+    returns_attrs=(
+        (".importances_", "np.ndarray", "PDP range (max - min) per feature, shape (n_features,)."),
+        (".feature_names_", "list[str]", "Feature names."),
+        (".pdp_values_", "dict[str, np.ndarray]", "Mean predictions at grid points per feature."),
+        (".grid_values_", "dict[str, np.ndarray]", "Grid evaluation points per feature."),
+        (".summary(top_n=10)", "str", "Human-readable text table."),
+    ),
 )
 
 _ACCUMULATED_LOCAL_EFFECT = _o(
@@ -417,6 +569,17 @@ _ACCUMULATED_LOCAL_EFFECT = _o(
         ),
     ),
     related=("partial_dependence",),
+
+    op_page=True,
+    op_func_name='ale_importance',
+    data_args=_L7_RESULT_X_DATA_ARGS,
+    return_type='ALEImportanceResult',
+    returns_attrs=(
+        (".importances_", "np.ndarray", "Mean absolute centred ALE (L1 norm) per feature."),
+        (".feature_names_", "list[str]", "Feature names."),
+        (".ale_values_", "dict[str, np.ndarray]", "Centred cumulative ALE values per feature."),
+        (".summary(top_n=10)", "str", "Human-readable text table."),
+    ),
 )
 
 _FRIEDMAN_H_INTERACTION = _o(
