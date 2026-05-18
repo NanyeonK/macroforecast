@@ -14,6 +14,7 @@ Cycle 31: L3 advanced panel transforms standalone-ization (12 ops).
 Cycle 32: L3 supervised/mixed transforms standalone-ization (6 ops).
 Cycle 33: L3 final B1 transforms standalone-ization (8 ops).
 Cycle 34: L2 clean panel ops standalone-ization (14 ops).
+Cycle 35: L4 tree/ensemble family standalone-ization (6 ops).
 
 Example usage::
 
@@ -143,6 +144,16 @@ from .clean import (
     freq_align_monthly_to_quarterly_clean,
 )
 
+# Cycle 35: L4 tree/ensemble family
+from .tree import (
+    RandomForestFitResult, random_forest_fit,
+    ExtraTreesFitResult, extra_trees_fit,
+    GradientBoostingFitResult, gradient_boosting_fit,
+    XGBoostFitResult, xgboost_fit,
+    LightGBMFitResult, lightgbm_fit,
+    CatBoostFitResult, catboost_fit,
+)
+
 __all__ = [
     "FitResultBase",
     "RidgeFitResult",
@@ -245,4 +256,17 @@ __all__ = [
     "apply_tcode_transform",
     "freq_align_quarterly_to_monthly_clean",
     "freq_align_monthly_to_quarterly_clean",
+    # Cycle 35: L4 tree/ensemble family
+    "RandomForestFitResult",
+    "random_forest_fit",
+    "ExtraTreesFitResult",
+    "extra_trees_fit",
+    "GradientBoostingFitResult",
+    "gradient_boosting_fit",
+    "XGBoostFitResult",
+    "xgboost_fit",
+    "LightGBMFitResult",
+    "lightgbm_fit",
+    "CatBoostFitResult",
+    "catboost_fit",
 ]
