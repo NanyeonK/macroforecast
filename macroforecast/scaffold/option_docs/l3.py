@@ -413,6 +413,19 @@ _OP_PCA = _o(
         "dfm",
         "partial_least_squares",
     ),
+    op_page=True,
+    op_func_name="pca_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_components",
+            type="int",
+            default=3,
+            constraint=">= 1",
+            description="Number of principal components to extract. Clamped to min(T, K) - 1 internally.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_SPARSE_PCA = _o(
@@ -623,6 +636,26 @@ _OP_FOURIER = _o(
     ),
     "Smooth seasonality (annual / weekly cycles) where dummies would over-fit.",
     related_options=("season_dummy", "wavelet"),
+    op_page=True,
+    op_func_name="fourier_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_terms",
+            type="int",
+            default=4,
+            constraint=">= 1",
+            description="Number of harmonic pairs (sin + cos) to generate. Total output columns: 2 * n_terms.",
+        ),
+        ParameterDoc(
+            name="period",
+            type="int",
+            default=12,
+            constraint=">= 1",
+            description="Fundamental period of the seasonal pattern (e.g., 12 for monthly annual cycle, 4 for quarterly).",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_WAVELET = _o(
@@ -637,6 +670,25 @@ _OP_WAVELET = _o(
     "Series with localised oscillations or non-stationary cycles (financial / climate macro).",
     when_not_to_use="Smooth seasonal patterns -- use ``fourier`` instead.",
     related_options=("fourier",),
+    op_page=True,
+    op_func_name="wavelet_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="wavelet",
+            type="str",
+            default='"db4"',
+            description="Wavelet family name (e.g., \"db4\", \"haar\"). Accepted for API consistency; runtime uses a rolling-mean low-pass approximation.",
+        ),
+        ParameterDoc(
+            name="n_levels",
+            type="int",
+            default=3,
+            constraint=">= 1",
+            description="Number of decomposition levels. Each level produces an approximation (_wA{level}) and detail (_wD{level}) pair.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -662,6 +714,19 @@ _OP_HP_FILTER = _o(
         ),
     ),
     related_options=("hamilton_filter", "diff"),
+    op_page=True,
+    op_func_name="hp_filter_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="lambda_",
+            type="float",
+            default=1600,
+            constraint="> 0",
+            description="HP smoothing parameter. Convention: 1600 for quarterly, 129600 for monthly (Ravn-Uhlig 2002).",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_HAMILTON_FILTER = _o(
@@ -681,6 +746,26 @@ _OP_HAMILTON_FILTER = _o(
         ),
     ),
     related_options=("hp_filter",),
+    op_page=True,
+    op_func_name="hamilton_filter_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="h",
+            type="int",
+            default=8,
+            constraint=">= 1",
+            description="Forecast horizon (periods ahead). Hamilton (2018) recommends h=8 for quarterly, h=24 for monthly.",
+        ),
+        ParameterDoc(
+            name="p",
+            type="int",
+            default=4,
+            constraint=">= 1",
+            description="Number of lags used in the regression.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -711,6 +796,19 @@ _OP_POLYNOMIAL_EXPANSION = _o(
     ),
     "Pipelines that explicitly stage `expand → reduce` sequences.",
     related_options=("polynomial",),
+    op_page=True,
+    op_func_name="polynomial_expansion_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="degree",
+            type="int",
+            default=2,
+            constraint=">= 1",
+            description="Maximum polynomial degree. Degree 1 returns the panel unchanged; degree 2 appends _pow2 columns; etc.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_INTERACTION = _o(
@@ -724,6 +822,11 @@ _OP_INTERACTION = _o(
     ),
     "Capturing predictor-pair complementarities in linear models.",
     related_options=("polynomial",),
+    op_page=True,
+    op_func_name="interaction_terms_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_KERNEL = _o(
@@ -812,6 +915,18 @@ _OP_SEASON_DUMMY = _o(
     ),
     "Capturing calendar seasonality in linear models when a smooth Fourier basis would over-shrink discrete jumps.",
     related_options=("fourier", "seasonal_lag"),
+    op_page=True,
+    op_func_name="season_dummy_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="season",
+            type='str enum {"quarter", "month"}',
+            default='"quarter"',
+            description='Seasonal granularity hint. "quarter" for 4-quarter dummies; "month" for 12-month dummies.',
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_TIME_TREND = _o(
@@ -943,6 +1058,25 @@ _OP_SAVITZKY_GOLAY_FILTER = _o(
         ),
     ),
     related_options=("hp_filter", "hamilton_filter", "ma_window", "adaptive_ma_rf"),
+    op_page=True,
+    op_func_name="savitzky_golay_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="window",
+            type="int",
+            default=7,
+            constraint=">= 3",
+            description="Length of the smoothing window. If even, rounded up to next odd integer (scipy requirement).",
+        ),
+        ParameterDoc(
+            name="polyorder",
+            type="int",
+            default=3,
+            description="Degree of the polynomial fit within each window. Must be < window.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_ASYMMETRIC_TRIM = _o(
@@ -972,6 +1106,11 @@ _OP_ASYMMETRIC_TRIM = _o(
         ),
     ),
     related_options=("ma_window", "ma_increasing_order", "scaled_pca"),
+    op_page=True,
+    op_func_name="asymmetric_trim_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -1011,6 +1150,26 @@ _OP_ADAPTIVE_MA_RF = _o(
         "hp_filter",
         "ma_window",
     ),
+    op_page=True,
+    op_func_name="adaptive_ma_rf_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_estimators",
+            type="int",
+            default=100,
+            constraint=">= 1",
+            description="Number of trees in the RF ensemble. Paper recommends 500; 100 is the default for speed.",
+        ),
+        ParameterDoc(
+            name="min_samples_leaf",
+            type="int",
+            default=40,
+            constraint=">= 1",
+            description="Minimum samples per leaf; lower-bounds the effective adaptive window length (paper default: 40).",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -1166,6 +1325,19 @@ _OP_MAF_PER_VARIABLE_PCA = _o(
         ),
     ),
     related_options=("maf", "ma_increasing_order", "ma_window"),
+    op_page=True,
+    op_func_name="maf_per_variable_pca_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_components_per_var",
+            type="int",
+            default=2,
+            constraint=">= 1",
+            description="Number of PCA components per variable. Paper default: 2 (footnote 11).",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
