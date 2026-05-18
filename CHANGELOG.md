@@ -5,6 +5,9 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+
+## [0.9.1] -- 2026-05-18 -- "audit fixes C12-C22 + paradigm foundation (REQUIRED sentinel, FitResultBase)"
+
 ### Cycle 26 — Paradigm Foundation: REQUIRED sentinel + FitResultBase + per-op page v2
 
 #### Breaking Changes
