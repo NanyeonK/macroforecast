@@ -467,7 +467,7 @@ class TestScaleTransform:
         np.testing.assert_allclose(out.values, expected.values, rtol=1e-12, atol=1e-14)
 
     def test_invalid_method(self):
-        with pytest.raises(NotImplementedError, match="method="):
+        with pytest.raises(ValueError, match="Unknown method"):
             scale_transform(PANEL_RAW, method="l2norm")
 
     def test_shape_preserved(self):

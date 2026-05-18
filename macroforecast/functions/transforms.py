@@ -162,7 +162,10 @@ def log_diff_transform(panel: pd.DataFrame, *, periods: int = 1) -> pd.DataFrame
     Notes
     -----
     Applies ``np.log`` after ``_as_frame``, then calls ``_diff_like``
-    from ``macroforecast.core.runtime``.  Equivalent recipe
+    from ``macroforecast.core.runtime``.  Values <= 0 are not silently
+    coerced; callers must ensure positivity.  The recipe-path uses a
+    cell-by-cell guard (``pd.NA`` on <= 0 cells) whereas this standalone
+    uses ``np.log`` directly to preserve NaN propagation.  Equivalent recipe
     configuration::
 
         op: log_diff
@@ -589,10 +592,797 @@ def scale_transform(
 
     _VALID_METHODS = {"zscore", "standard", "standardize", "robust", "minmax"}
     if method not in _VALID_METHODS:
-        raise NotImplementedError(
-            f"scale_transform does not support method={method!r}; "
-            f"choose from {sorted(_VALID_METHODS)}"
+        raise ValueError(
+            f"Unknown method: {method!r}. Expected zscore/robust/minmax/winsorize/quantile."
         )
     frame = _as_frame(panel)
     _require_non_empty(frame)
     return _scale_frame(frame, method=method)
+
+
+# ---------------------------------------------------------------------------
+# 11. hp_filter_transform
+# ---------------------------------------------------------------------------
+
+def hp_filter_transform(
+    panel: pd.DataFrame,
+    *,
+    lambda_: float = 1600,
+) -> pd.DataFrame:
+    """Extract the cyclical component of a panel using the Hodrick-Prescott filter.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    lambda_ : float, default 1600
+        HP smoothing parameter (``lambda``/``lam`` in statsmodels).
+        Convention: 1600 for quarterly, 129600 for monthly (Ravn-Uhlig 2002).
+        Must be > 0.
+
+    Returns
+    -------
+    pd.DataFrame
+        Cyclical component panel; columns suffixed ``_hp_cycle``.
+        Trend component is discarded.  Rows with fewer than 4 non-NaN
+        observations in a column become NaN in the output.
+
+    Notes
+    -----
+    Calls ``_hp_filter`` from ``macroforecast.core.runtime`` with
+    ``lam=lambda_``.  Runtime delegates to
+    ``statsmodels.tsa.filters.hp_filter.hpfilter``.  Note that the
+    standalone uses the parameter name ``lambda_`` (trailing underscore
+    avoids shadowing the Python built-in) while the runtime expects
+    ``lam``.  Equivalent recipe configuration::
+
+        op: hp_filter
+        params:
+          lamb: 1600
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 2), columns=["a", "b"])
+    >>> out = hp_filter_transform(panel)
+    >>> "a_hp_cycle" in out.columns
+    True
+
+    References
+    ----------
+    Hodrick & Prescott (1997) 'Postwar U.S. Business Cycles: An Empirical
+    Investigation', Journal of Money, Credit and Banking 29(1): 1-16.
+
+    Ravn & Uhlig (2002) 'On Adjusting the Hodrick-Prescott Filter for the
+    Frequency of Observations', Review of Economics and Statistics 84(2):
+    371-376.
+    """
+    from macroforecast.core.runtime import _as_frame, _hp_filter  # noqa: PLC0415
+
+    if lambda_ <= 0:
+        raise ValueError("hp_filter_transform requires lambda_ > 0")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _hp_filter(frame, lam=lambda_)
+
+
+# ---------------------------------------------------------------------------
+# 12. hamilton_filter_transform
+# ---------------------------------------------------------------------------
+
+def hamilton_filter_transform(
+    panel: pd.DataFrame,
+    *,
+    h: int = 8,
+    p: int = 4,
+) -> pd.DataFrame:
+    """Extract the cyclical component of a panel using the Hamilton (2018) filter.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    h : int, default 8
+        Forecast horizon (number of periods ahead).  Hamilton (2018) uses
+        h=8 for quarterly data (2 years) and h=24 for monthly data.
+        Must be >= 1.
+    p : int, default 4
+        Number of lags used in the regression.  Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Cyclical component panel; columns suffixed ``_hamilton_cycle``.
+        The leading ``h + p`` rows will contain NaN (lag-panel boundary).
+
+    Notes
+    -----
+    Calls ``_hamilton_filter`` from ``macroforecast.core.runtime`` with
+    ``n_horizon=h``, ``n_lags=p``.  Algorithm: regress ``y_{t+h}`` on
+    ``[y_t, y_{t-1}, ..., y_{t-p+1}]``; the residuals are the cycle.
+    Equivalent recipe configuration::
+
+        op: hamilton_filter
+        params:
+          h: 8
+          p: 4
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(60, 2), columns=["a", "b"])
+    >>> out = hamilton_filter_transform(panel)
+    >>> "a_hamilton_cycle" in out.columns
+    True
+
+    References
+    ----------
+    Hamilton (2018) 'Why You Should Never Use the Hodrick-Prescott Filter',
+    Review of Economics and Statistics 100(5): 831-843.
+    """
+    from macroforecast.core.runtime import _as_frame, _hamilton_filter  # noqa: PLC0415
+
+    if h < 1:
+        raise ValueError("hamilton_filter_transform requires h >= 1")
+    if p < 1:
+        raise ValueError("hamilton_filter_transform requires p >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _hamilton_filter(frame, n_horizon=h, n_lags=p)
+
+
+# ---------------------------------------------------------------------------
+# 13. savitzky_golay_transform
+# ---------------------------------------------------------------------------
+
+def savitzky_golay_transform(
+    panel: pd.DataFrame,
+    *,
+    window: int = 7,
+    polyorder: int = 3,
+) -> pd.DataFrame:
+    """Smooth a panel column-by-column with the Savitzky-Golay polynomial filter.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    window : int, default 7
+        Length of the smoothing window.  Must be >= 3.  If even, the
+        runtime rounds up to the next odd integer (scipy requirement).
+    polyorder : int, default 3
+        Degree of the polynomial used to fit within each window.
+        Must be < ``window``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Smoothed panel; columns suffixed ``_savgol``.  Shape is the same
+        as the input (no rows dropped).
+
+    Notes
+    -----
+    Calls ``_savitzky_golay_filter`` from ``macroforecast.core.runtime``
+    with ``window_length=window``.  Runtime delegates to
+    ``scipy.signal.savgol_filter``; scipy is a required dependency.
+    Note: the standalone uses ``window`` while the runtime parameter is
+    ``window_length`` -- the wrapper maps accordingly.  Equivalent recipe
+    configuration::
+
+        op: savitzky_golay_filter
+        params:
+          window_length: 7
+          polyorder: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(30, 2), columns=["a", "b"])
+    >>> out = savitzky_golay_transform(panel)
+    >>> "a_savgol" in out.columns
+    True
+
+    References
+    ----------
+    Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by
+    Simplified Least Squares Procedures', Analytical Chemistry 36(8).
+    """
+    from macroforecast.core.runtime import _as_frame, _savitzky_golay_filter  # noqa: PLC0415
+
+    if window < 3:
+        raise ValueError("savitzky_golay_transform requires window >= 3")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _savitzky_golay_filter(frame, window_length=window, polyorder=polyorder)
+
+
+# ---------------------------------------------------------------------------
+# 14. polynomial_expansion_transform
+# ---------------------------------------------------------------------------
+
+def polynomial_expansion_transform(
+    panel: pd.DataFrame,
+    *,
+    degree: int = 2,
+) -> pd.DataFrame:
+    """Expand a panel with polynomial powers up to the specified degree.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    degree : int, default 2
+        Maximum polynomial degree.  Must be >= 1.  Degree 1 returns the
+        panel unchanged; degree 2 appends ``col_pow2`` columns; degree 3
+        also appends ``col_pow3``; and so on.
+
+    Returns
+    -------
+    pd.DataFrame
+        Expanded panel.  Shape: ``(T, K * degree)``.  Original columns are
+        preserved; new columns are suffixed ``_pow{k}`` for k = 2..degree.
+
+    Notes
+    -----
+    Calls ``_polynomial_expansion`` from ``macroforecast.core.runtime``.
+    Equivalent recipe configuration::
+
+        op: polynomial_expansion
+        params:
+          degree: 2
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> panel = pd.DataFrame({"a": [1.0, 2.0, 3.0], "b": [2.0, 3.0, 4.0]})
+    >>> out = polynomial_expansion_transform(panel, degree=3)
+    >>> out.columns.tolist()
+    ['a', 'b', 'a_pow2', 'b_pow2', 'a_pow3', 'b_pow3']
+
+    References
+    ----------
+    Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data
+    Transformations Matter', International Journal of Forecasting 37(4):
+    1338-1354.
+    """
+    from macroforecast.core.runtime import _as_frame, _polynomial_expansion  # noqa: PLC0415
+
+    if degree < 1:
+        raise ValueError("polynomial_expansion_transform requires degree >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _polynomial_expansion(frame, degree=degree)
+
+
+# ---------------------------------------------------------------------------
+# 15. interaction_terms_transform
+# ---------------------------------------------------------------------------
+
+def interaction_terms_transform(panel: pd.DataFrame) -> pd.DataFrame:
+    """Compute all pairwise interaction terms for a panel.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Requires at least 2 columns to produce any output.
+
+    Returns
+    -------
+    pd.DataFrame
+        Interaction-terms panel.  Contains one column ``{left}_x_{right}``
+        for each unique unordered pair (left, right) of input columns.
+        Shape: ``(T, K*(K-1)/2)`` where K is the input column count.
+        Returns an empty DataFrame (zero columns) when K < 2.
+
+    Notes
+    -----
+    Calls ``_interaction_terms`` from ``macroforecast.core.runtime``.
+    Equivalent recipe configuration::
+
+        op: interaction
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> panel = pd.DataFrame({"a": [1.0, 2.0], "b": [3.0, 4.0], "c": [5.0, 6.0]})
+    >>> out = interaction_terms_transform(panel)
+    >>> out.columns.tolist()
+    ['a_x_b', 'a_x_c', 'b_x_c']
+
+    References
+    ----------
+    Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data
+    Transformations Matter', International Journal of Forecasting 37(4):
+    1338-1354.
+    """
+    from macroforecast.core.runtime import _as_frame, _interaction_terms  # noqa: PLC0415
+
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _interaction_terms(frame)
+
+
+# ---------------------------------------------------------------------------
+# 16. pca_transform
+# ---------------------------------------------------------------------------
+
+def pca_transform(
+    panel: pd.DataFrame,
+    *,
+    n_components: int = 3,
+) -> pd.DataFrame:
+    """Extract principal components from a panel (standard PCA, Stock-Watson 2002).
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    n_components : int, default 3
+        Number of principal components to extract.  Clamped internally to
+        ``min(T, K) - 1`` where T is the number of clean rows and K is
+        the column count.  Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor scores panel; columns named ``factor_1``, ``factor_2``,
+        ..., ``factor_{n_components}``.  Rows dropped for NaN are filled
+        back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_pca_factors`` from ``macroforecast.core.runtime`` with
+    ``variant="pca"``.  Runtime uses sklearn ``PCA(random_state=0)``
+    on the centred data matrix.  Equivalent recipe configuration::
+
+        op: pca
+        params:
+          n_components: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = pca_transform(panel, n_components=2)
+    >>> out.shape
+    (50, 2)
+    >>> out.columns.tolist()
+    ['factor_1', 'factor_2']
+
+    References
+    ----------
+    Stock & Watson (2002) 'Forecasting Using Principal Components from a
+    Large Number of Predictors', JASA 97(460): 1167-1179.
+    """
+    from macroforecast.core.runtime import _as_frame, _pca_factors  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("pca_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _pca_factors(frame, n_components=n_components, variant="pca")
+
+
+# ---------------------------------------------------------------------------
+# 17. maf_per_variable_pca_transform
+# ---------------------------------------------------------------------------
+
+def maf_per_variable_pca_transform(
+    panel: pd.DataFrame,
+    *,
+    n_components_per_var: int = 2,
+) -> pd.DataFrame:
+    """Per-variable PCA MAF -- Coulombe et al. (2021 IJF) Eq. (7).
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    n_components_per_var : int, default 2
+        Number of PCA components per variable.  Paper default is 2
+        (footnote 11: 'We keep two MAFs for each series and they are
+        obtained by PCA.').  Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor panel; shape ``(T, K * n_components_per_var)``.  Columns
+        named ``{col}_maf1``, ``{col}_maf2``, ..., for each input column.
+        The leading ``n_lags`` rows (default 12) per variable are NaN.
+
+    Notes
+    -----
+    Calls ``_maf_per_variable_pca`` from ``macroforecast.core.runtime``
+    with default ``n_lags=12`` (paper default).  For each variable k, a
+    ``(T, n_lags+1)`` lag-panel is built, NaN rows dropped, then PCA is
+    fit and projected back to the full T-length index.  Equivalent recipe
+    configuration::
+
+        op: maf_per_variable_pca
+        params:
+          n_components_per_var: 2
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 3), columns=["a", "b", "c"])
+    >>> out = maf_per_variable_pca_transform(panel)
+    >>> out.shape[1]
+    6
+
+    References
+    ----------
+    Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data
+    Transformations Matter', International Journal of Forecasting 37(4):
+    1338-1354.
+    """
+    from macroforecast.core.runtime import _as_frame, _maf_per_variable_pca  # noqa: PLC0415
+
+    if n_components_per_var < 1:
+        raise ValueError("maf_per_variable_pca_transform requires n_components_per_var >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _maf_per_variable_pca(frame, n_components_per_var=n_components_per_var)
+
+
+# ---------------------------------------------------------------------------
+# 18. adaptive_ma_rf_transform
+# ---------------------------------------------------------------------------
+
+def adaptive_ma_rf_transform(
+    panel: pd.DataFrame,
+    *,
+    n_estimators: int = 100,
+    min_samples_leaf: int = 40,
+) -> pd.DataFrame:
+    """Adaptive Moving Average via Random Forest -- AlbaMA smoother.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    n_estimators : int, default 100
+        Number of trees in the forest.  Paper recommends 500 for final
+        results; 100 is the default here for speed.  Must be >= 1.
+    min_samples_leaf : int, default 40
+        Minimum samples per leaf (lower-bounds the effective window
+        length).  Paper default: 40.  Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Smoothed panel; columns suffixed ``_albama``.  Shape matches input.
+
+    Notes
+    -----
+    Calls ``_adaptive_ma_rf`` from ``macroforecast.core.runtime`` with
+    ``sided="two"`` (full-sample, retrospective smoother) and
+    ``random_state=0``.  The sole regressor is the time index; CART
+    splitting learns the adaptive bandwidth per observation.  Equivalent
+    recipe configuration::
+
+        op: adaptive_ma_rf
+        params:
+          n_estimators: 100
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 2), columns=["a", "b"])
+    >>> out = adaptive_ma_rf_transform(panel)
+    >>> "a_albama" in out.columns
+    True
+
+    References
+    ----------
+    Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for
+    Macroeconomic Monitoring', arXiv:2501.13222.
+    """
+    from macroforecast.core.runtime import _as_frame, _adaptive_ma_rf  # noqa: PLC0415
+
+    if n_estimators < 1:
+        raise ValueError("adaptive_ma_rf_transform requires n_estimators >= 1")
+    if min_samples_leaf < 1:
+        raise ValueError("adaptive_ma_rf_transform requires min_samples_leaf >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _adaptive_ma_rf(
+        frame,
+        n_estimators=n_estimators,
+        min_samples_leaf=min_samples_leaf,
+        random_state=0,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 19. wavelet_transform
+# ---------------------------------------------------------------------------
+
+def wavelet_transform(
+    panel: pd.DataFrame,
+    *,
+    wavelet: str = "db4",
+    n_levels: int = 3,
+) -> pd.DataFrame:
+    """Multi-resolution wavelet decomposition of a panel.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    wavelet : str, default "db4"
+        Wavelet family name (e.g., ``"db4"`` for Daubechies-4, ``"haar"``).
+        This parameter is accepted for API consistency with the recipe
+        interface; the runtime uses a rolling-mean approximation that is
+        family-independent (see Notes).
+    n_levels : int, default 3
+        Number of decomposition levels.  Must be >= 1.  Each level
+        produces an approximation (``_wA{level}``) and detail
+        (``_wD{level}``) pair.
+
+    Returns
+    -------
+    pd.DataFrame
+        Multi-resolution features panel.  Columns: ``{col}_wA{level}``
+        (approximation) and ``{col}_wD{level}`` (detail) for each input
+        column and each level from 1 to ``n_levels``.
+        Shape: ``(T, 2 * K * n_levels)``.
+
+    Notes
+    -----
+    Calls ``_wavelet_decomposition`` from ``macroforecast.core.runtime``
+    with ``n_levels=n_levels``.  The runtime uses a rolling-mean
+    low-pass approximation (window = 2^level) rather than a true DWT;
+    the ``wavelet`` parameter is stored for recipe compatibility but does
+    not affect computation.  Equivalent recipe configuration::
+
+        op: wavelet
+        params:
+          wavelet: db4
+          n_levels: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(30, 2), columns=["a", "b"])
+    >>> out = wavelet_transform(panel, n_levels=2)
+    >>> out.shape
+    (30, 8)
+
+    References
+    ----------
+    Mallat (1989) 'A Theory for Multiresolution Signal Decomposition',
+    IEEE Transactions on Pattern Analysis and Machine Intelligence 11(7):
+    674-693.
+    """
+    from macroforecast.core.runtime import _as_frame, _wavelet_decomposition  # noqa: PLC0415
+
+    if n_levels < 1:
+        raise ValueError("wavelet_transform requires n_levels >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _wavelet_decomposition(frame, n_levels=n_levels)
+
+
+# ---------------------------------------------------------------------------
+# 20. fourier_transform
+# ---------------------------------------------------------------------------
+
+def fourier_transform(
+    panel: pd.DataFrame,
+    *,
+    n_terms: int = 4,
+    period: int = 12,
+) -> pd.DataFrame:
+    """Generate Fourier basis (sin/cos) features for a panel.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        The index is used to compute phase positions (positional for
+        non-DatetimeIndex; day-offset for DatetimeIndex).
+    n_terms : int, default 4
+        Number of harmonic pairs (sin + cos) to generate.  Must be >= 1.
+        Total output columns: ``2 * n_terms``.
+    period : int, default 12
+        Fundamental period of the seasonal pattern (e.g., 12 for monthly
+        data with annual cycle, 4 for quarterly).  Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Fourier feature panel independent of input columns (same set of
+        features regardless of the number of input variables); columns
+        named ``fourier_sin_{k}`` and ``fourier_cos_{k}`` for
+        k = 1..n_terms.  Shape: ``(T, 2 * n_terms)``.
+
+    Notes
+    -----
+    Calls ``_fourier_features`` from ``macroforecast.core.runtime``.
+    The output does not depend on the *values* of the input panel --
+    only the index and shape are used.  Equivalent recipe configuration::
+
+        op: fourier
+        params:
+          n_terms: 4
+          period: 12
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> panel = pd.DataFrame({"a": np.ones(12)})
+    >>> out = fourier_transform(panel, n_terms=2, period=12)
+    >>> out.shape
+    (12, 4)
+    >>> list(out.columns)
+    ['fourier_sin_1', 'fourier_cos_1', 'fourier_sin_2', 'fourier_cos_2']
+
+    References
+    ----------
+    Harvey & Shephard (1993) 'Structural Time Series Models', in
+    Handbook of Statistics 11, Elsevier, 261-302.
+    """
+    from macroforecast.core.runtime import _as_frame, _fourier_features  # noqa: PLC0415
+
+    if n_terms < 1:
+        raise ValueError("fourier_transform requires n_terms >= 1")
+    if period < 1:
+        raise ValueError("fourier_transform requires period >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _fourier_features(frame, n_terms=n_terms, period=period)
+
+
+# ---------------------------------------------------------------------------
+# 21. asymmetric_trim_transform
+# ---------------------------------------------------------------------------
+
+def asymmetric_trim_transform(panel: pd.DataFrame) -> pd.DataFrame:
+    """Per-period rank-space transformation (Albacore-family asymmetric trim).
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel ``(T, K)`` of contemporaneous component series.
+        Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Requires at least 2 columns for the rank-sort to be meaningful.
+
+    Returns
+    -------
+    pd.DataFrame
+        Rank-sorted panel of the same shape ``(T, K)``.  Column
+        ``rank_{r+1}`` (for r = 0..K-1) contains the r-th ascending
+        order statistic at each period.  Downstream nonneg-ridge learns
+        rank-position weights that yield asymmetric trimming.
+
+    Notes
+    -----
+    Calls ``_asymmetric_trim`` from ``macroforecast.core.runtime`` with
+    default ``smooth_window=0`` (no centred MA post-processing).  To
+    apply a smoothing window, chain with ``ma_window_transform``.
+    Equivalent recipe configuration::
+
+        op: asymmetric_trim
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> panel = pd.DataFrame({"a": [3.0, 1.0], "b": [1.0, 3.0], "c": [2.0, 2.0]})
+    >>> out = asymmetric_trim_transform(panel)
+    >>> out.iloc[0].tolist()
+    [1.0, 2.0, 3.0]
+
+    References
+    ----------
+    Goulet Coulombe, Klieber, Barrette & Goebel (2024) 'Maximally
+    Forward-Looking Core Inflation', technical report (R package:
+    assemblage).
+    """
+    from macroforecast.core.runtime import _as_frame, _asymmetric_trim  # noqa: PLC0415
+
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _asymmetric_trim(frame)
+
+
+# ---------------------------------------------------------------------------
+# 22. season_dummy_transform
+# ---------------------------------------------------------------------------
+
+def season_dummy_transform(
+    panel: pd.DataFrame,
+    *,
+    season: str = "quarter",
+) -> pd.DataFrame:
+    """Generate calendar dummy variables from the panel index.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        The index is used to extract the seasonal period; column values
+        are not used.
+    season : str, default "quarter"
+        Seasonal granularity hint.  Accepted values: ``"quarter"`` and
+        ``"month"``.  When the panel index is a ``DatetimeIndex``,
+        the runtime extracts the month (1-12) directly regardless of
+        this parameter.  For non-DatetimeIndex (including PeriodIndex),
+        ``season`` controls the modulo base: ``"quarter"`` uses modulo 4
+        for 4-quarter dummies; ``"month"`` uses the default modulo-12
+        path of the runtime.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dummy-variable panel.  For ``DatetimeIndex``, columns are
+        ``month_1`` through ``month_12`` (one-hot).  For
+        non-DatetimeIndex with ``season="month"``, columns are
+        ``season_1`` through ``season_12``.  For
+        non-DatetimeIndex with ``season="quarter"``, columns are
+        ``qtr_1`` through ``qtr_4``.
+
+    Notes
+    -----
+    Calls ``_season_dummy`` from ``macroforecast.core.runtime`` for
+    ``DatetimeIndex`` and ``season="month"`` cases.  Quarter-dummy logic
+    is handled in this wrapper (modulo-4 PeriodIndex or position-based).
+    Equivalent recipe configuration::
+
+        op: season_dummy
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> idx = pd.period_range("2000-01", periods=12, freq="M")
+    >>> panel = pd.DataFrame({"a": np.ones(12)}, index=idx)
+    >>> out = season_dummy_transform(panel, season="month")
+    >>> out.shape
+    (12, 12)
+
+    References
+    ----------
+    macroforecast design Part 2, L3: step library, ``season_dummy`` op.
+    """
+    from macroforecast.core.runtime import _as_frame, _season_dummy  # noqa: PLC0415
+
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+
+    _VALID_SEASONS = {"quarter", "month"}
+    if season not in _VALID_SEASONS:
+        raise ValueError(
+            f"Unknown season: {season!r}. Expected one of {sorted(_VALID_SEASONS)}."
+        )
+
+    if season == "quarter" and not isinstance(frame.index, pd.DatetimeIndex):
+        # Quarter dummies: modulo 4 on the position (0-indexed), yielding qtr_1..qtr_4
+        positions = pd.Series(range(len(frame)), index=frame.index) % 4
+        dummies = pd.get_dummies(positions, prefix="qtr", dtype=float)
+        dummies.columns = [f"qtr_{int(c.split("_")[1]) + 1}" for c in dummies.columns]
+        dummies.index = frame.index
+        return dummies
+
+    # DatetimeIndex (any season) or non-DatetimeIndex month path
+    return _season_dummy(frame)

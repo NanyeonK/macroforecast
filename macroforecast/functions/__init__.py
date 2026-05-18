@@ -10,6 +10,7 @@ Cycle 27: L5 metrics bulk standalone-ization (13 new ops).
 Cycle 28: L4 linear family standalone-ization (7 ops).
 Cycle 29: L6 statistical tests standalone-ization (7 ops).
 Cycle 30: L3 basic panel transforms standalone-ization (10 ops).
+Cycle 31: L3 advanced panel transforms standalone-ization (12 ops).
 
 Example usage::
 
@@ -89,6 +90,19 @@ from .transforms import (
     seasonal_lag_matrix,
     ma_increasing_order_transform,
     scale_transform,
+    # Cycle 31: L3 advanced transforms
+    hp_filter_transform,
+    hamilton_filter_transform,
+    savitzky_golay_transform,
+    polynomial_expansion_transform,
+    interaction_terms_transform,
+    pca_transform,
+    maf_per_variable_pca_transform,
+    adaptive_ma_rf_transform,
+    wavelet_transform,
+    fourier_transform,
+    asymmetric_trim_transform,
+    season_dummy_transform,
 )
 
 __all__ = [
@@ -149,4 +163,17 @@ __all__ = [
     "seasonal_lag_matrix",
     "ma_increasing_order_transform",
     "scale_transform",
+    # Cycle 31: L3 advanced panel transforms
+    "hp_filter_transform",
+    "hamilton_filter_transform",
+    "savitzky_golay_transform",
+    "polynomial_expansion_transform",
+    "interaction_terms_transform",
+    "pca_transform",
+    "maf_per_variable_pca_transform",
+    "adaptive_ma_rf_transform",
+    "wavelet_transform",
+    "fourier_transform",
+    "asymmetric_trim_transform",
+    "season_dummy_transform",
 ]
