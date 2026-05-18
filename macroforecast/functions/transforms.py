@@ -1355,28 +1355,26 @@ def season_dummy_transform(
         are not used.
     season : str, default "quarter"
         Seasonal granularity hint.  Accepted values: ``"quarter"`` and
-        ``"month"``.  When the panel index is a ``DatetimeIndex``,
-        the runtime extracts the month (1-12) directly regardless of
-        this parameter.  For non-DatetimeIndex (including PeriodIndex),
-        ``season`` controls the modulo base: ``"quarter"`` uses modulo 4
-        for 4-quarter dummies; ``"month"`` uses the default modulo-12
-        path of the runtime.
+        ``"month"``.  Currently validated but has no effect on output
+        (deprecated -- kept for API compatibility).  The runtime output
+        is driven solely by the index type: ``DatetimeIndex`` inputs
+        produce ``month_*`` columns; all other index types produce
+        ``season_*`` columns.
 
     Returns
     -------
     pd.DataFrame
-        Dummy-variable panel.  For ``DatetimeIndex``, columns are
-        ``month_1`` through ``month_12`` (one-hot).  For
-        non-DatetimeIndex with ``season="month"``, columns are
-        ``season_1`` through ``season_12``.  For
-        non-DatetimeIndex with ``season="quarter"``, columns are
-        ``qtr_1`` through ``qtr_4``.
+        Dummy-variable panel.  For ``DatetimeIndex`` inputs, columns are
+        ``month_1`` through ``month_12`` (one-hot).  For all other index
+        types, columns are ``season_1`` through ``season_12``.
 
     Notes
     -----
-    Calls ``_season_dummy`` from ``macroforecast.core.runtime`` for
-    ``DatetimeIndex`` and ``season="month"`` cases.  Quarter-dummy logic
-    is handled in this wrapper (modulo-4 PeriodIndex or position-based).
+    Delegates unconditionally to recipe ``_season_dummy``
+    (``macroforecast.core.runtime``).  The ``season`` kwarg is validated
+    but has no effect on output -- it is retained for API compatibility
+    only.  Non-DatetimeIndex inputs produce ``season_*`` columns;
+    DatetimeIndex inputs produce ``month_*`` columns.
     Equivalent recipe configuration::
 
         op: season_dummy

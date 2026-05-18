@@ -15,8 +15,8 @@ full per-version honesty-pass history embedded in repo documentation.
 `polynomial_expansion_transform(panel, *, degree=2)` -> `pd.DataFrame`
 `interaction_terms_transform(panel)` -> `pd.DataFrame`
 `pca_transform(panel, *, n_components=3)` -> `pd.DataFrame`
-`maf_per_variable_pca_transform(panel, *, n_components_per_var=2)` -> `pd.DataFrame`
-`adaptive_ma_rf_transform(panel, *, n_estimators=100, min_samples_leaf=40)` -> `pd.DataFrame`
+`maf_per_variable_pca_transform(panel, *, n_lags=12, n_components_per_var=2)` -> `pd.DataFrame`
+`adaptive_ma_rf_transform(panel, *, n_estimators=100, min_samples_leaf=40, sided="two", random_state=0)` -> `pd.DataFrame`
 `wavelet_transform(panel, *, wavelet="db4", n_levels=3)` -> `pd.DataFrame`
 `fourier_transform(panel, *, n_terms=4, period=12)` -> `pd.DataFrame`
 `asymmetric_trim_transform(panel)` -> `pd.DataFrame`
@@ -28,7 +28,6 @@ Parameter alignment with runtime helpers (C29 paradigm: lazy import, no duplicat
 - `savitzky_golay_transform`: `window` maps to runtime `window_length`
 - `adaptive_ma_rf_transform`: exposes `n_estimators` + `min_samples_leaf` (no `max_depth` -- not in runtime)
 - `wavelet_transform`: `wavelet` accepted for API consistency; runtime uses rolling-mean approximation
-- `season_dummy_transform`: `season="quarter"` produces modulo-4 dummies for non-DatetimeIndex
 
 All 12 names added to `mf.functions.__all__`.
 
@@ -49,7 +48,7 @@ fourier, asymmetric_trim, season_dummy). Total: 242 pages (was 230).
   to match project convention (invalid user input = ValueError).
   Updated `tests/functions/test_l3_basic_transforms.py` assertion accordingly.
 
-**Tests**: `tests/functions/test_l3_advanced_transforms.py` -- 96 tests, all pass.
+**Tests**: `tests/functions/test_l3_advanced_transforms.py` -- 103 tests, all pass.
 Bit-exact assertions (rtol=1e-12, atol=1e-14) on 10 deterministic ops;
 structural checks for RF-based op (adaptive_ma_rf_transform).
 NOTE-1 docstring guard + NOTE-2 ValueError coverage included.

@@ -922,7 +922,7 @@ _OP_SEASON_DUMMY = _o(
             name="season",
             type='str enum {"quarter", "month"}',
             default='"quarter"',
-            description='Seasonal granularity hint. "quarter" for 4-quarter dummies; "month" for 12-month dummies.',
+            description='Seasonal granularity hint. Accepted values: "quarter" and "month". Currently validated but has no effect on output (deprecated -- kept for API compatibility). Non-DatetimeIndex inputs produce season_* columns; DatetimeIndex inputs produce month_* columns.',
         ),
     ),
     return_type="pd.DataFrame",

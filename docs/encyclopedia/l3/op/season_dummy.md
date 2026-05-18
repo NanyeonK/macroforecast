@@ -19,7 +19,7 @@ mf.functions.season_dummy_transform(
 | name | type | default | constraint | description |
 |---|---|---|---|---|
 | `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
-| `season` | `str enum {"quarter", "month"}` | `'"quarter"'` | — | Seasonal granularity hint. "quarter" for 4-quarter dummies; "month" for 12-month dummies. |
+| `season` | `str enum {"quarter", "month"}` | `'"quarter"'` | — | Seasonal granularity hint. Accepted values: "quarter" and "month". Currently validated but has no effect on output (deprecated -- kept for API compatibility). Non-DatetimeIndex inputs produce season_* columns; DatetimeIndex inputs produce month_* columns. |
 
 ## Returns
 
