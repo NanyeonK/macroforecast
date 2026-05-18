@@ -7,7 +7,8 @@ without constructing a full recipe.
 Cycle 22 POC: ``ridge_fit`` + ``theil_u1`` + ``theil_u2``.
 Cycle 26: ``FitResultBase`` Protocol added.
 Cycle 27: L5 metrics bulk standalone-ization (13 new ops).
-Subsequent cycles will extend to L3 ops, L4 families, L6 tests, L7 importance.
+Cycle 28: L4 linear family standalone-ization (7 ops).
+Cycle 29: L6 statistical tests standalone-ization (7 ops).
 
 Example usage::
 
@@ -62,6 +63,15 @@ from .linear import (
     GLMBoostFitResult, glmboost_fit,
 )
 
+from .tests import (
+    DMTestResult, dm_test,
+    GWTestResult, gw_test,
+    DMPTestResult, dmp_test,
+    HNTestResult, hn_test,
+    CWTestResult, cw_test,
+    EncNewTestResult, enc_new_test,
+    EncTTestResult, enc_t_test,
+)
 
 __all__ = [
     "FitResultBase",
@@ -96,4 +106,18 @@ __all__ = [
     "huber_fit",
     "GLMBoostFitResult",
     "glmboost_fit",
+    "DMTestResult",
+    "dm_test",
+    "GWTestResult",
+    "gw_test",
+    "DMPTestResult",
+    "dmp_test",
+    "HNTestResult",
+    "hn_test",
+    "CWTestResult",
+    "cw_test",
+    "EncNewTestResult",
+    "enc_new_test",
+    "EncTTestResult",
+    "enc_t_test",
 ]
