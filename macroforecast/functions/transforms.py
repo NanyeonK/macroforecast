@@ -1409,3 +1409,503 @@ def season_dummy_transform(
     # _season_dummy is index-type-driven.  Spec §3.12.3 requires 'season_*'
     # or 'month_*' prefixes only -- no 'qtr_*' prefix is produced.
     return _season_dummy(frame)
+
+
+# ---------------------------------------------------------------------------
+# 23. scaled_pca_transform
+# ---------------------------------------------------------------------------
+
+def scaled_pca_transform(
+    panel: pd.DataFrame,
+    target: pd.Series,
+    *,
+    n_components: int = 3,
+) -> pd.DataFrame:
+    """Huang/Jiang/Li/Tong/Zhou (2022) Scaled PCA -- target-supervised factor extraction.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    target : pd.Series
+        Supervisory signal used to compute per-column OLS slopes beta_j.
+        Must share at least one index value with ``panel``; raises
+        ``ValueError`` if the intersection is empty.
+    n_components : int, default 3
+        Number of principal components to extract. Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor scores panel; columns named ``factor_1``, ``factor_2``,
+        ..., ``factor_{n_components}``. Rows dropped for NaN are filled
+        back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_pca_factors`` from ``macroforecast.core.runtime`` with
+    ``variant="scaled_pca"`` and ``target_signal=target``.  Implements
+    the Huang-Jiang-Li-Tong-Zhou (2022) sPCAest algorithm: standardise X
+    column-wise, compute univariate OLS slope beta_j per column against the
+    target, scale each column by its signed beta_j, then run PCA on the
+    scaled matrix.  Equivalent recipe configuration::
+
+        op: scaled_pca
+        params:
+          n_components: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> target = pd.Series(rng.randn(50), name="y")
+    >>> out = scaled_pca_transform(panel, target, n_components=2)
+    >>> out.shape
+    (50, 2)
+    >>> list(out.columns[:2])
+    ['factor_1', 'factor_2']
+
+    References
+    ----------
+    Huang, Jiang, Li, Tong & Zhou (2022) 'Scaled PCA: A New Approach to
+    Dimension Reduction', Management Science 68(3): 1678-1695.
+    """
+    from macroforecast.core.runtime import _as_frame, _pca_factors  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("scaled_pca_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    if not isinstance(target, pd.Series):
+        raise TypeError(
+            "scaled_pca_transform requires target to be a pd.Series; "
+            f"got {type(target).__name__}"
+        )
+    if frame.index.intersection(target.index).empty:
+        raise ValueError(
+            "scaled_pca_transform: target and panel share no common index values; "
+            "cannot align supervisory signal with panel rows."
+        )
+    return _pca_factors(
+        frame, n_components=n_components, variant="scaled_pca", target_signal=target
+    )
+
+
+# ---------------------------------------------------------------------------
+# 24. supervised_pca_transform
+# ---------------------------------------------------------------------------
+
+def supervised_pca_transform(
+    panel: pd.DataFrame,
+    target: pd.Series,
+    *,
+    n_components: int = 3,
+) -> pd.DataFrame:
+    """Giglio-Xiu-Zhang (2025) Supervised PCA -- screen-then-PCA factor extraction.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    target : pd.Series
+        Supervisory signal used to rank panel columns by univariate
+        correlation. Must share at least one index value with ``panel``;
+        raises ``ValueError`` if the intersection is empty.
+    n_components : int, default 3
+        Number of supervised principal components (P). Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor scores panel; columns named ``spca_1``, ``spca_2``,
+        ..., ``spca_{n_components}``. Rows dropped for NaN are filled
+        back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_supervised_pca`` from ``macroforecast.core.runtime``.
+    Two-stage procedure: (1) rank panel columns by univariate Pearson
+    correlation with the target, keep the top q-fraction (default
+    q=0.5); (2) run PCA on the screened sub-panel via SVD.  Distinct
+    from ``partial_least_squares`` (NIPALS over all columns) and
+    ``scaled_pca`` (column-weight scaling before PCA).  Equivalent
+    recipe configuration::
+
+        op: supervised_pca
+        params:
+          n_components: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> target = pd.Series(rng.randn(50), name="y")
+    >>> out = supervised_pca_transform(panel, target, n_components=2)
+    >>> out.shape[1]
+    2
+    >>> out.columns[0]
+    'spca_1'
+
+    References
+    ----------
+    Giglio, Xiu & Zhang (2025) 'Test Assets and Weak Factors', Journal of
+    Finance, forthcoming.
+    Rapach & Zhou (2025) 'Sparse Macro-Finance Factors', working paper.
+    """
+    from macroforecast.core.runtime import _as_frame, _supervised_pca  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("supervised_pca_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    if not isinstance(target, pd.Series):
+        raise TypeError(
+            "supervised_pca_transform requires target to be a pd.Series; "
+            f"got {type(target).__name__}"
+        )
+    if frame.index.intersection(target.index).empty:
+        raise ValueError(
+            "supervised_pca_transform: target and panel share no common index values; "
+            "cannot align supervisory signal with panel rows."
+        )
+    return _supervised_pca(frame, target=target, n_components=n_components)
+
+
+# ---------------------------------------------------------------------------
+# 25. partial_least_squares_transform
+# ---------------------------------------------------------------------------
+
+def partial_least_squares_transform(
+    panel: pd.DataFrame,
+    target: pd.Series,
+    *,
+    n_components: int = 3,
+) -> pd.DataFrame:
+    """Partial least squares regression -- supervised factor extraction.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    target : pd.Series
+        Supervisory signal whose covariance with latent components is
+        maximised by the NIPALS algorithm. Must share at least one index
+        value with ``panel``; raises ``ValueError`` if the intersection
+        is empty.
+    n_components : int, default 3
+        Number of PLS latent components. Must be >= 1. Clamped
+        internally to ``min(T_clean - 1, K_clean - 1)``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Latent-component scores panel; columns named ``pls_1``,
+        ``pls_2``, ..., ``pls_{n_components}``. Rows dropped for NaN
+        are filled back with NaN on output.
+
+    Notes
+    -----
+    Calls ``_partial_least_squares`` from ``macroforecast.core.runtime``.
+    Uses sklearn ``PLSRegression`` (NIPALS) on the jointly-aligned
+    (panel, target) matrix after listwise NaN deletion.  Distinct from
+    ``scaled_pca`` (column beta-scaling then PCA) and ``supervised_pca``
+    (hard-screen by correlation then PCA).  Equivalent recipe
+    configuration::
+
+        op: partial_least_squares
+        params:
+          n_components: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> target = pd.Series(rng.randn(50), name="y")
+    >>> out = partial_least_squares_transform(panel, target, n_components=2)
+    >>> out.columns.tolist()
+    ['pls_1', 'pls_2']
+
+    References
+    ----------
+    Wold, Sjostrom & Eriksson (2001) 'PLS-regression: a basic tool of
+    chemometrics', Chemometrics and Intelligent Laboratory Systems
+    58(2): 109-130.
+    """
+    from macroforecast.core.runtime import _as_frame, _partial_least_squares  # noqa: PLC0415
+
+    if n_components < 1:
+        raise ValueError("partial_least_squares_transform requires n_components >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    if not isinstance(target, pd.Series):
+        raise TypeError(
+            "partial_least_squares_transform requires target to be a pd.Series; "
+            f"got {type(target).__name__}"
+        )
+    if frame.index.intersection(target.index).empty:
+        raise ValueError(
+            "partial_least_squares_transform: target and panel share no common "
+            "index values; cannot align supervisory signal with panel rows."
+        )
+    return _partial_least_squares(frame, target=target, n_components=n_components)
+
+
+# ---------------------------------------------------------------------------
+# 26. sliced_inverse_regression_transform
+# ---------------------------------------------------------------------------
+
+def sliced_inverse_regression_transform(
+    panel: pd.DataFrame,
+    target: pd.Series,
+    *,
+    n_components: int = 3,
+    n_slices: int = 10,
+) -> pd.DataFrame:
+    """Fan-Xue-Yao (2017) Sliced Inverse Regression with Huang-Zhou predictive scaling.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    target : pd.Series
+        Supervisory signal used to sort rows into slices. Must share at
+        least one index value with ``panel``; raises ``ValueError`` if
+        the intersection is empty.
+    n_components : int, default 3
+        Number of SIR directions (effective rank of the between-slice
+        covariance matrix). Must be >= 1.
+    n_slices : int, default 10
+        Number of contiguous slices of the target distribution. Must
+        be >= 2. Clamped internally to the number of aligned rows.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor scores panel; columns named ``factor_1``, ``factor_2``,
+        ..., ``factor_{n_components}``. Rows without a valid aligned
+        target value are filled with zeros on output (runtime convention
+        for SIR).
+
+    Notes
+    -----
+    Calls ``_sliced_inverse_regression`` from
+    ``macroforecast.core.runtime`` with ``scaling_method="scaled_pca"``
+    (sSUFF variant; Huang-Jiang-Li-Tong-Zhou 2022 augmentation applies
+    a univariate predictive slope weight per column before slicing).
+    Equivalent recipe configuration::
+
+        op: sliced_inverse_regression
+        params:
+          n_components: 3
+          n_slices: 10
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> target = pd.Series(rng.randn(50), name="y")
+    >>> out = sliced_inverse_regression_transform(panel, target, n_components=2)
+    >>> out.shape
+    (50, 2)
+    >>> out.columns[0]
+    'factor_1'
+
+    References
+    ----------
+    Li (1991) 'Sliced Inverse Regression for Dimension Reduction',
+    JASA 86(414): 316-327.
+    Fan, Xue & Yao (2017) 'Sufficient forecasting using factor models',
+    Journal of Econometrics 201(2): 292-306.
+    Huang, Jiang, Li, Tong & Zhou (2022) 'Scaled PCA: A New Approach to
+    Dimension Reduction', Management Science 68(3): 1678-1695.
+    """
+    from macroforecast.core.runtime import (  # noqa: PLC0415
+        _as_frame,
+        _sliced_inverse_regression,
+    )
+
+    if n_components < 1:
+        raise ValueError("sliced_inverse_regression_transform requires n_components >= 1")
+    if n_slices < 2:
+        raise ValueError("sliced_inverse_regression_transform requires n_slices >= 2")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    if not isinstance(target, pd.Series):
+        raise TypeError(
+            "sliced_inverse_regression_transform requires target to be a pd.Series; "
+            f"got {type(target).__name__}"
+        )
+    if frame.index.intersection(target.index).empty:
+        raise ValueError(
+            "sliced_inverse_regression_transform: target and panel share no common "
+            "index values; cannot align supervisory signal with panel rows."
+        )
+    return _sliced_inverse_regression(
+        frame,
+        target=target,
+        n_components=n_components,
+        n_slices=n_slices,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 27. dfm_transform
+# ---------------------------------------------------------------------------
+
+def dfm_transform(
+    panel: pd.DataFrame,
+    *,
+    n_factors: int = 3,
+) -> pd.DataFrame:
+    """Static dynamic factor model approximation via PCA on standardised panel.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+        Rows with any NaN are dropped before fitting (listwise deletion).
+    n_factors : int, default 3
+        Number of latent dynamic factors to extract. Must be >= 1.
+
+    Returns
+    -------
+    pd.DataFrame
+        Factor scores panel; columns named ``dfm_1``, ``dfm_2``,
+        ..., ``dfm_{n_factors}``. Rows dropped for NaN are filled back
+        with NaN on output.
+
+    Notes
+    -----
+    Calls ``_dfm_factors`` from ``macroforecast.core.runtime``.  Static
+    approximation: standardise the panel column-wise (zero mean, unit
+    standard deviation with ddof=0), then apply PCA.  Renames factor
+    columns from ``factor_{k}`` to ``dfm_{k}`` to distinguish from
+    plain ``pca_transform`` output.  No target required -- fully
+    unsupervised.  Equivalent recipe configuration::
+
+        op: dfm
+        params:
+          n_factors: 3
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 5), columns=list("abcde"))
+    >>> out = dfm_transform(panel, n_factors=2)
+    >>> out.shape
+    (50, 2)
+    >>> out.columns.tolist()
+    ['dfm_1', 'dfm_2']
+
+    References
+    ----------
+    Mariano & Murasawa (2003) 'A new coincident index of business cycles
+    based on monthly and quarterly series', JAE 18(4): 427-443.
+    Stock & Watson (2002) 'Forecasting Using Principal Components from a
+    Large Number of Predictors', JASA 97(460): 1167-1179.
+    """
+    from macroforecast.core.runtime import _as_frame, _dfm_factors  # noqa: PLC0415
+
+    if n_factors < 1:
+        raise ValueError("dfm_transform requires n_factors >= 1")
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _dfm_factors(frame, n_factors=n_factors)
+
+
+# ---------------------------------------------------------------------------
+# 28. feature_selection_transform
+# ---------------------------------------------------------------------------
+
+def feature_selection_transform(
+    panel: pd.DataFrame,
+    target: "pd.Series | None" = None,
+    *,
+    n_features: "int | float" = 0.5,
+    method: str = "variance",
+) -> pd.DataFrame:
+    """Filter panel columns by variance, target correlation, or lasso pre-screen.
+
+    Parameters
+    ----------
+    panel : pd.DataFrame
+        Input panel. Each column is a variable; rows are time periods.
+        Series is promoted to a single-column DataFrame internally.
+    target : pd.Series or None, default None
+        Supervisory signal required by ``method="correlation"`` and
+        ``method="lasso"``.  Ignored for ``method="variance"``.
+        Raises ``ValueError`` when a supervised method is requested but
+        ``target is None``.
+    n_features : int or float, default 0.5
+        Number of features to keep.  If a float in ``(0, 1]``, treated
+        as a fraction of the total column count.  If an integer, used
+        as a direct count (clamped to ``[1, K]``).
+    method : str, default "variance"
+        Selection criterion.  One of ``"variance"``, ``"correlation"``,
+        or ``"lasso"``.  ``"correlation"`` and ``"lasso"`` require
+        ``target is not None``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Subset of input ``panel`` columns selected by the criterion.
+        Row count and index are unchanged.
+
+    Notes
+    -----
+    Calls ``_feature_selection`` from ``macroforecast.core.runtime``.
+    The ``variance`` path is purely unsupervised; ``correlation`` and
+    ``lasso`` require the target signal.  Equivalent recipe
+    configuration::
+
+        op: feature_selection
+        params:
+          n_features: 0.5
+          method: variance
+
+    Examples
+    --------
+    >>> import pandas as pd, numpy as np
+    >>> rng = np.random.RandomState(42)
+    >>> panel = pd.DataFrame(rng.randn(50, 8), columns=[f"x{i}" for i in range(8)])
+    >>> target = pd.Series(rng.randn(50), name="y")
+    >>> out = feature_selection_transform(panel)
+    >>> out.shape
+    (50, 4)
+    >>> out2 = feature_selection_transform(panel, target, method="correlation")
+    >>> out2.shape
+    (50, 4)
+
+    References
+    ----------
+    macroforecast design Part 2, L3: step library, ``feature_selection`` op.
+    """
+    from macroforecast.core.runtime import _as_frame, _feature_selection  # noqa: PLC0415
+
+    _VALID_METHODS = {"variance", "correlation", "lasso"}
+    if method not in _VALID_METHODS:
+        raise ValueError(
+            f"feature_selection_transform: unknown method {method!r}. "
+            f"Expected one of {sorted(_VALID_METHODS)}."
+        )
+    if method in {"correlation", "lasso"} and target is None:
+        raise ValueError(
+            f"feature_selection_transform: method={method!r} requires target; "
+            "pass a pd.Series as the target argument."
+        )
+    frame = _as_frame(panel)
+    _require_non_empty(frame)
+    return _feature_selection(frame, target=target, n_features=n_features, method=method)

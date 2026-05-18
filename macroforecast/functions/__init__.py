@@ -11,6 +11,7 @@ Cycle 28: L4 linear family standalone-ization (7 ops).
 Cycle 29: L6 statistical tests standalone-ization (7 ops).
 Cycle 30: L3 basic panel transforms standalone-ization (10 ops).
 Cycle 31: L3 advanced panel transforms standalone-ization (12 ops).
+Cycle 32: L3 supervised/mixed transforms standalone-ization (6 ops).
 
 Example usage::
 
@@ -103,6 +104,13 @@ from .transforms import (
     fourier_transform,
     asymmetric_trim_transform,
     season_dummy_transform,
+    # Cycle 32: L3 supervised/mixed transforms
+    scaled_pca_transform,
+    supervised_pca_transform,
+    partial_least_squares_transform,
+    sliced_inverse_regression_transform,
+    dfm_transform,
+    feature_selection_transform,
 )
 
 __all__ = [
@@ -176,4 +184,11 @@ __all__ = [
     "fourier_transform",
     "asymmetric_trim_transform",
     "season_dummy_transform",
+    # Cycle 32: L3 supervised/mixed transforms
+    "scaled_pca_transform",
+    "supervised_pca_transform",
+    "partial_least_squares_transform",
+    "sliced_inverse_regression_transform",
+    "dfm_transform",
+    "feature_selection_transform",
 ]
