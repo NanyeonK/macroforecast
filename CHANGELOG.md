@@ -5,6 +5,47 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 30 -- L3 basic transforms standalone (10 ops) + C29 docstring fix
+
+**New standalone callables** in `mf.functions` (all return `pd.DataFrame`):
+
+`diff_transform(panel, *, periods=1)` -> `pd.DataFrame`
+`log_transform(panel)` -> `pd.DataFrame`
+`log_diff_transform(panel, *, periods=1)` -> `pd.DataFrame`
+`pct_change_transform(panel, *, periods=1)` -> `pd.DataFrame`
+`cumsum_transform(panel)` -> `pd.DataFrame`
+`ma_window_transform(panel, *, window=3)` -> `pd.DataFrame`
+`lag_matrix(panel, *, n_lag=4, include_contemporaneous=False)` -> `pd.DataFrame`
+`seasonal_lag_matrix(panel, *, seasonal_period=12, n_seasonal_lags=1)` -> `pd.DataFrame`
+`ma_increasing_order_transform(panel, *, max_order=12)` -> `pd.DataFrame`
+`scale_transform(panel, *, method="zscore")` -> `pd.DataFrame`
+
+Each callable lazy-imports the corresponding runtime primitive from `macroforecast.core.runtime`
+(`_as_frame`, `_diff_like`, `_pct_change_like`, `_lagged_predictors`,
+`_seasonal_lagged_predictors`, `_ma_increasing_order`, `_scale_frame`)
+to ensure bit-exact numerical results with the recipe-path dispatch.
+
+All 10 names added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l3.py`):
+- Extended `_o()` helper to accept `op_page`, `op_func_name`, `data_args`, `return_type`, `returns_attrs`
+- Added shared `_L3_PANEL_DATA_ARG` constant for the common `panel: pd.DataFrame` argument doc
+- All 10 L3 basic transform ops set to `op_page=True` with full parameter documentation
+- Updated import to include `ParameterDoc` and `REQUIRED`
+
+**Encyclopedia**: 10 new per-op pages under `docs/encyclopedia/l3/op/`
+(diff, log, log_diff, pct_change, cumsum, ma_window, lag,
+seasonal_lag, ma_increasing_order, scale). Total: 230 pages (was 220).
+
+**C29 backlog fix** (`macroforecast/functions/tests.py`): removed `_l6_dmp_multi_horizon`
+from module docstring helper list (it is a private runtime function, not a helper exposed
+by the standalone module).
+
+**Tests**: `tests/functions/test_l3_basic_transforms.py` -- 77 tests, all pass.
+Bit-exact assertions (rtol=1e-12, atol=1e-14) on all 10 ops.
+Coverage: shape, NaN pattern, runtime parity, edge cases, namespace wiring.
+
+
 ### Cycle 29 — L6 statistical tests bulk standalone-ization (7 ops)
 
 **New standalone callables** in `mf.functions` (all return a frozen dataclass with `.summary()`):

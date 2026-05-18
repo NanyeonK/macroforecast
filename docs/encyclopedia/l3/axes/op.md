@@ -83,19 +83,7 @@ _(no schema description for `boruta_selection`)_
 
 Cumulative sum of a series.
 
-Running total ``Σ_{s ≤ t} y_s``. Inverts ``diff`` (modulo an initial constant). Used to recover level forecasts from differenced predictions or to build cumulative-shock features.
-
-**When to use**
-
-Building cumulative-impact features; recovering levels from differenced forecasts.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`diff`](#diff), [`level`](#level)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [cumsum function page](../op/cumsum.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.cumsum_transform``.
 
 ### `dfm`  --  operational
 
@@ -122,23 +110,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 First difference: ``y_t - y_{t-1}``.
 
-Computes the simple first difference on the input column. The first observation becomes NaN. Combine with ``lag`` to recover level features when the L2 layer already differenced the panel.
-
-**When to use**
-
-I(1) variables that need a stationary representation in addition to the L2-applied tcode.
-
-**When NOT to use**
-
-When the panel is already differenced by L2.B (avoids double-differencing).
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`level`](#level), [`log_diff`](#log-diff), [`pct_change`](#pct-change)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [diff function page](../op/diff.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.diff_transform``.
 
 ### `feature_selection`  --  operational
 
@@ -355,23 +327,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Lagged target/predictor block.
 
-Constructs a lagged matrix from inputs. ``params.n_lag`` sets the lag depth. Standard predictor for autoregressive baselines.
-
-**When to use**
-
-Always when building AR features or lagged-X feature blocks.
-
-**When NOT to use**
-
-When the target itself is already differenced/lagged in L2 -- avoid double-lagging.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`seasonal_lag`](#seasonal-lag), [`target_construction`](#target-construction)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [lag function page](../op/lag.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.lag_matrix``.
 
 ### `lasso_path_selection`  --  future
 
@@ -401,85 +357,25 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Natural logarithm: ``ln(y)``.
 
-Element-wise natural log. Strictly positive series only; raises if any input is non-positive. Often paired with ``diff`` to produce log-changes (which are approximately equal to percentage changes for small movements).
-
-**When to use**
-
-Strictly-positive macro series (price levels, employment counts, GDP) before differencing.
-
-**When NOT to use**
-
-Series that can be negative or zero (rates, growth rates, balances).
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`log_diff`](#log-diff), [`level`](#level), [`pct_change`](#pct-change)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [log function page](../op/log.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.log_transform``.
 
 ### `log_diff`  --  operational
 
 Log first difference: ``ln(y_t) - ln(y_{t-1})``.
 
-Composite of ``log`` then ``diff``. The standard FRED-MD transformation code 5/6 representation; produces a stationary approximation of the percentage change and is symmetric in expansions vs contractions.
-
-**When to use**
-
-Strictly-positive trending series (real GDP, employment, prices); FRED-MD tcode 5/6 default.
-
-**When NOT to use**
-
-Series that take non-positive values.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4): 574-589. <https://doi.org/10.1080/07350015.2015.1086655>
-
-**Related options**: [`log`](#log), [`diff`](#diff), [`pct_change`](#pct-change)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [log_diff function page](../op/log_diff.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.log_diff_transform``.
 
 ### `ma_increasing_order`  --  operational
 
 MARX -- moving averages of increasing order (Coulombe 2024).
 
-Stacks moving averages with windows ``[1, 2, 4, 8, ..., w_max]`` into a multi-column block. Captures multi-scale persistence in a single op; popular feature in macroeconomic random forest pipelines.
-
-Implements the MARX (Moving-Average-of-Random-eXogeneous) trick from Coulombe (2024).
-
-**When to use**
-
-Tree / RF models that benefit from multi-scale temporal features without manual lag selection.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Coulombe (2024) 'The Macroeconomic Random Forest', Journal of Applied Econometrics 39(7): 1190-1209.
-
-**Related options**: [`ma_window`](#ma-window), [`lag`](#lag)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [ma_increasing_order function page](../op/ma_increasing_order.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.ma_increasing_order_transform``.
 
 ### `ma_window`  --  operational
 
 Trailing moving average over a fixed window.
 
-Computes ``mean(y_{t-w+1..t})`` for a user-specified window ``params.window``. ``temporal_rule`` controls expanding vs rolling vs block-wise refit semantics. The first ``w-1`` rows are NaN.
-
-**When to use**
-
-Smoothing noisy series; building short / medium / long-term momentum features.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`ma_increasing_order`](#ma-increasing-order), [`diff`](#diff), [`scale`](#scale)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [ma_window function page](../op/ma_window.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.ma_window_transform``.
 
 ### `maf_per_variable_pca`  --  operational
 
@@ -629,23 +525,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Period-over-period percentage change: ``(y_t / y_{t-1}) - 1``.
 
-Strict simple growth rate; not equivalent to log_diff for large movements. Returns NaN where the previous observation is zero or NaN.
-
-**When to use**
-
-When a literal percentage interpretation is required (returns, inflation rates).
-
-**When NOT to use**
-
-Trend-following analysis where log_diff's symmetry is preferable.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`log_diff`](#log-diff), [`diff`](#diff)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [pct_change function page](../op/pct_change.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.pct_change_transform``.
 
 ### `polynomial`  --  operational
 
@@ -758,23 +638,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Standardise to zero mean and unit variance.
 
-Computes ``(y - μ) / σ`` over the temporal_rule window (``expanding_window_per_origin`` by default to avoid look-ahead). Required pre-step for distance-based learners (kNN, SVM, NN); ridge/lasso also benefit when columns are on different scales.
-
-**When to use**
-
-Pre-conditioning for distance-based or regularised learners; mandatory for SVM/NN.
-
-**When NOT to use**
-
-Tree-based models (RF/XGBoost/LightGBM) -- scale-invariant by construction.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`pca`](#pca), [`kernel_features`](#kernel-features)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [scale function page](../op/scale.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.scale_transform``.
 
 ### `scaled_pca`  --  operational
 
@@ -819,23 +683,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Lag at a seasonal period (e.g. y_{t-12} for monthly data).
 
-Standard ``lag`` op restricted to the seasonal index (``params.lag = 12`` for monthly, ``4`` for quarterly). Useful for year-over-year features and seasonal AR terms.
-
-**When to use**
-
-Capturing year-over-year persistence; seasonal AR baselines.
-
-**When NOT to use**
-
-When season_dummy or X-13 deseasonalisation is preferred over lag-based seasonality.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`season_dummy`](#season-dummy), [`ma_window`](#ma-window)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [seasonal_lag function page](../op/seasonal_lag.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.seasonal_lag_matrix``.
 
 ### `sliced_inverse_regression`  --  operational
 
