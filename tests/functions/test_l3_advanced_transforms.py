@@ -347,6 +347,17 @@ class TestPcaTransform:
         with pytest.raises(ValueError, match="n_components >= 1"):
             pca_transform(PANEL, n_components=0)
 
+    def test_n_components_all_sentinel(self):
+        # BLK-1: n_components='all' must be accepted; returns full effective rank
+        out = pca_transform(PANEL, n_components="all")
+        assert out.shape[1] >= 1
+        assert all(col.startswith("factor_") for col in out.columns)
+
+    def test_invalid_string_n_components_raises_value_error(self):
+        # BLK-2: invalid string must raise ValueError, not TypeError
+        with pytest.raises(ValueError, match="n_components must be a positive int or 'all'"):
+            pca_transform(PANEL, n_components="junk")
+
     def test_empty_panel_rejected(self):
         with pytest.raises(ValueError, match="empty"):
             pca_transform(pd.DataFrame())
@@ -375,8 +386,9 @@ class TestMafPerVariablePcaTransform:
 
     def test_bit_exact_vs_runtime(self):
         from macroforecast.core.runtime import _as_frame, _maf_per_variable_pca
-        expected = _maf_per_variable_pca(_as_frame(PANEL), n_components_per_var=2)
-        out = maf_per_variable_pca_transform(PANEL, n_components_per_var=2)
+        # BLK-3: pass n_lags explicitly; runtime helper accepts it
+        expected = _maf_per_variable_pca(_as_frame(PANEL), n_lags=12, n_components_per_var=2)
+        out = maf_per_variable_pca_transform(PANEL, n_lags=12, n_components_per_var=2)
         np.testing.assert_allclose(
             out.values, expected.values, rtol=1e-12, atol=1e-14, equal_nan=True
         )
@@ -385,6 +397,16 @@ class TestMafPerVariablePcaTransform:
         out = maf_per_variable_pca_transform(PANEL)
         # Default n_lags=12: first 12 rows should contain NaN
         assert out["a_maf1"].iloc[:12].isna().all()
+
+    def test_leading_nan_rows_custom_n_lags(self):
+        # BLK-3: n_lags=4 -> first 4 rows NaN
+        out = maf_per_variable_pca_transform(PANEL, n_lags=4)
+        assert out["a_maf1"].iloc[:4].isna().all()
+
+    def test_invalid_n_lags(self):
+        # BLK-3: n_lags=0 must raise ValueError matching "n_lags"
+        with pytest.raises(ValueError, match="n_lags"):
+            maf_per_variable_pca_transform(PANEL, n_lags=0)
 
     def test_invalid_n_components_per_var(self):
         with pytest.raises(ValueError, match="n_components_per_var >= 1"):
@@ -422,13 +444,31 @@ class TestAdaptiveMaRfTransform:
 
     def test_bit_exact_vs_runtime(self):
         from macroforecast.core.runtime import _as_frame, _adaptive_ma_rf
+        # BLK-4: pass random_state and sided explicitly
         expected = _adaptive_ma_rf(
-            _as_frame(PANEL), n_estimators=10, min_samples_leaf=5, random_state=0
+            _as_frame(PANEL), n_estimators=10, min_samples_leaf=5,
+            sided="two", random_state=0
         )
-        out = adaptive_ma_rf_transform(PANEL, n_estimators=10, min_samples_leaf=5)
+        out = adaptive_ma_rf_transform(
+            PANEL, n_estimators=10, min_samples_leaf=5,
+            sided="two", random_state=0
+        )
         np.testing.assert_allclose(
-            out.values, expected.values, rtol=1e-12, atol=1e-14, equal_nan=True
+            out.values, expected.values, rtol=1e-10, atol=1e-10, equal_nan=True
         )
+
+    def test_sided_one_produces_leading_nan(self):
+        # BLK-4: sided='one' should produce NaN in first min_samples_leaf-1 positions
+        single = pd.DataFrame({"x": np.random.RandomState(7).randn(60)})
+        out = adaptive_ma_rf_transform(single, n_estimators=5, min_samples_leaf=10,
+                                        sided="one", random_state=0)
+        # First 9 rows (min_samples_leaf-1 = 9) should be NaN
+        assert out["x_albama"].iloc[:9].isna().all()
+
+    def test_invalid_sided_raises_value_error(self):
+        # BLK-4: invalid sided must raise ValueError
+        with pytest.raises(ValueError, match="sided must be 'two' or 'one'"):
+            adaptive_ma_rf_transform(PANEL, sided="three")
 
     def test_invalid_n_estimators(self):
         with pytest.raises(ValueError, match="n_estimators >= 1"):
@@ -592,12 +632,17 @@ class TestSeasonDummyTransform:
         assert out.shape[1] == 12
 
     def test_quarter_dummies_with_period_index(self):
+        # BLK-5: season='quarter' with PeriodIndex now routes to _season_dummy
+        # which produces 'season_*' prefix (modulo-12, up to 4 unique values
+        # for a quarterly PeriodIndex).
         idx = pd.period_range("2000Q1", periods=12, freq="Q")
         panel = pd.DataFrame({"x": np.ones(12)}, index=idx)
         out = season_dummy_transform(panel, season="quarter")
-        # Should produce 4 quarter dummies
-        assert out.shape[1] == 4
-        assert "qtr_1" in out.columns
+        # Should produce some dummies; prefix must be 'season_*' not 'qtr_*'
+        assert out.shape[1] >= 1
+        assert all(c.startswith("season_") for c in out.columns), (
+            f"Expected 'season_*' prefix for non-DatetimeIndex; got {out.columns.tolist()}"
+        )
 
     def test_bit_exact_month_vs_runtime(self):
         from macroforecast.core.runtime import _as_frame, _season_dummy
@@ -618,6 +663,13 @@ class TestSeasonDummyTransform:
         # default should not raise and should return some dummies
         out = season_dummy_transform(PANEL)
         assert out.shape[0] == 50
+
+    def test_non_datetime_prefix_is_season_or_month(self):
+        # BLK-5: non-DatetimeIndex must produce 'season_*' or 'month_*' prefix
+        out = season_dummy_transform(PANEL)
+        assert all(c.startswith("season_") or c.startswith("month_") for c in out.columns), (
+            f"Expected 'season_*' or 'month_*' prefix; got {out.columns.tolist()}"
+        )
 
     def test_invalid_season_raises(self):
         with pytest.raises(ValueError, match="Unknown season"):

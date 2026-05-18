@@ -10,7 +10,7 @@
 ```python
 mf.functions.pca_transform(
     panel: pd.DataFrame,
-    n_components: int,
+    n_components: int | str,
 ) -> pd.DataFrame
 ```
 
@@ -19,7 +19,7 @@ mf.functions.pca_transform(
 | name | type | default | constraint | description |
 |---|---|---|---|---|
 | `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
-| `n_components` | `int` | `3` | >= 1 | Number of principal components to extract. Clamped to min(T, K) - 1 internally. |
+| `n_components` | `int | str` | `3` | >= 1 or 'all' | Number of principal components to extract. Clamped to min(T, K) - 1 internally. Sentinel 'all' extracts full effective rank min(T, K). |
 
 ## Returns
 

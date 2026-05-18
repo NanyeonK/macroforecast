@@ -918,7 +918,7 @@ def interaction_terms_transform(panel: pd.DataFrame) -> pd.DataFrame:
 def pca_transform(
     panel: pd.DataFrame,
     *,
-    n_components: int = 3,
+    n_components: "int | str" = 3,
 ) -> pd.DataFrame:
     """Extract principal components from a panel (standard PCA, Stock-Watson 2002).
 
@@ -928,10 +928,11 @@ def pca_transform(
         Input panel. Each column is a variable; rows are time periods.
         Series is promoted to a single-column DataFrame internally.
         Rows with any NaN are dropped before fitting (listwise deletion).
-    n_components : int, default 3
+    n_components : int or 'all', default 3
         Number of principal components to extract.  Clamped internally to
         ``min(T, K) - 1`` where T is the number of clean rows and K is
-        the column count.  Must be >= 1.
+        the column count.  Must be >= 1.  Sentinel ``'all'`` extracts the
+        full effective rank ``min(T_clean, K)`` (no safety margin).
 
     Returns
     -------
@@ -968,8 +969,15 @@ def pca_transform(
     """
     from macroforecast.core.runtime import _as_frame, _pca_factors  # noqa: PLC0415
 
-    if n_components < 1:
-        raise ValueError("pca_transform requires n_components >= 1")
+    if isinstance(n_components, str):
+        if n_components != "all":
+            raise ValueError(
+                f"pca_transform: n_components must be a positive int or 'all'; got {n_components!r}"
+            )
+        # 'all' sentinel: pass through to runtime which resolves to min(T_clean, K)
+    else:
+        if n_components < 1:
+            raise ValueError("pca_transform requires n_components >= 1")
     frame = _as_frame(panel)
     _require_non_empty(frame)
     return _pca_factors(frame, n_components=n_components, variant="pca")
@@ -982,6 +990,7 @@ def pca_transform(
 def maf_per_variable_pca_transform(
     panel: pd.DataFrame,
     *,
+    n_lags: int = 12,
     n_components_per_var: int = 2,
 ) -> pd.DataFrame:
     """Per-variable PCA MAF -- Coulombe et al. (2021 IJF) Eq. (7).
@@ -991,6 +1000,9 @@ def maf_per_variable_pca_transform(
     panel : pd.DataFrame
         Input panel. Each column is a variable; rows are time periods.
         Series is promoted to a single-column DataFrame internally.
+    n_lags : int, default 12
+        Number of lags to include in the lag-panel per variable.  Paper
+        default is 12 (monthly data).  Must be >= 1.
     n_components_per_var : int, default 2
         Number of PCA components per variable.  Paper default is 2
         (footnote 11: 'We keep two MAFs for each series and they are
@@ -1006,10 +1018,10 @@ def maf_per_variable_pca_transform(
     Notes
     -----
     Calls ``_maf_per_variable_pca`` from ``macroforecast.core.runtime``
-    with default ``n_lags=12`` (paper default).  For each variable k, a
-    ``(T, n_lags+1)`` lag-panel is built, NaN rows dropped, then PCA is
-    fit and projected back to the full T-length index.  Equivalent recipe
-    configuration::
+    forwarding ``n_lags`` and ``n_components_per_var``.  For each
+    variable k, a ``(T, n_lags+1)`` lag-panel is built, NaN rows
+    dropped, then PCA is fit and projected back to the full T-length
+    index.  Equivalent recipe configuration::
 
         op: maf_per_variable_pca
         params:
@@ -1032,11 +1044,13 @@ def maf_per_variable_pca_transform(
     """
     from macroforecast.core.runtime import _as_frame, _maf_per_variable_pca  # noqa: PLC0415
 
+    if n_lags < 1:
+        raise ValueError("maf_per_variable_pca_transform requires n_lags >= 1")
     if n_components_per_var < 1:
         raise ValueError("maf_per_variable_pca_transform requires n_components_per_var >= 1")
     frame = _as_frame(panel)
     _require_non_empty(frame)
-    return _maf_per_variable_pca(frame, n_components_per_var=n_components_per_var)
+    return _maf_per_variable_pca(frame, n_lags=n_lags, n_components_per_var=n_components_per_var)
 
 
 # ---------------------------------------------------------------------------
@@ -1048,6 +1062,8 @@ def adaptive_ma_rf_transform(
     *,
     n_estimators: int = 100,
     min_samples_leaf: int = 40,
+    sided: str = "two",
+    random_state: "int | None" = 0,
 ) -> pd.DataFrame:
     """Adaptive Moving Average via Random Forest -- AlbaMA smoother.
 
@@ -1062,6 +1078,14 @@ def adaptive_ma_rf_transform(
     min_samples_leaf : int, default 40
         Minimum samples per leaf (lower-bounds the effective window
         length).  Paper default: 40.  Must be >= 1.
+    sided : str, default "two"
+        ``"two"`` fits the forest once on the full sample (retrospective
+        smoother).  ``"one"`` fits an expanding-window forest per time
+        index t (real-time / nowcasting variant; O(T) RF fits per column).
+        Must be ``"two"`` or ``"one"``.
+    random_state : int or None, default 0
+        RNG seed for sklearn ``RandomForestRegressor``.  Pass ``None``
+        for non-reproducible results.
 
     Returns
     -------
@@ -1070,11 +1094,11 @@ def adaptive_ma_rf_transform(
 
     Notes
     -----
-    Calls ``_adaptive_ma_rf`` from ``macroforecast.core.runtime`` with
-    ``sided="two"`` (full-sample, retrospective smoother) and
-    ``random_state=0``.  The sole regressor is the time index; CART
-    splitting learns the adaptive bandwidth per observation.  Equivalent
-    recipe configuration::
+    Calls ``_adaptive_ma_rf`` from ``macroforecast.core.runtime``
+    forwarding all four parameters.  The sole regressor is the time
+    index; CART splitting learns the adaptive bandwidth per observation.
+    Performance note: ``sided='one'`` is O(T) RF fits per column and
+    is slow for large T.  Equivalent recipe configuration::
 
         op: adaptive_ma_rf
         params:
@@ -1100,13 +1124,18 @@ def adaptive_ma_rf_transform(
         raise ValueError("adaptive_ma_rf_transform requires n_estimators >= 1")
     if min_samples_leaf < 1:
         raise ValueError("adaptive_ma_rf_transform requires min_samples_leaf >= 1")
+    if sided not in {"two", "one"}:
+        raise ValueError(
+            f"adaptive_ma_rf_transform: sided must be 'two' or 'one'; got {sided!r}"
+        )
     frame = _as_frame(panel)
     _require_non_empty(frame)
     return _adaptive_ma_rf(
         frame,
         n_estimators=n_estimators,
         min_samples_leaf=min_samples_leaf,
-        random_state=0,
+        sided=sided,
+        random_state=random_state,
     )
 
 
@@ -1376,13 +1405,9 @@ def season_dummy_transform(
             f"Unknown season: {season!r}. Expected one of {sorted(_VALID_SEASONS)}."
         )
 
-    if season == "quarter" and not isinstance(frame.index, pd.DatetimeIndex):
-        # Quarter dummies: modulo 4 on the position (0-indexed), yielding qtr_1..qtr_4
-        positions = pd.Series(range(len(frame)), index=frame.index) % 4
-        dummies = pd.get_dummies(positions, prefix="qtr", dtype=float)
-        dummies.columns = [f"qtr_{int(c.split("_")[1]) + 1}" for c in dummies.columns]
-        dummies.index = frame.index
-        return dummies
-
-    # DatetimeIndex (any season) or non-DatetimeIndex month path
+    # Delegate to _season_dummy for all paths.
+    # DatetimeIndex -> month_1..month_12; non-DatetimeIndex -> season_1..season_12.
+    # The season kwarg is validated above but does not alter runtime output;
+    # _season_dummy is index-type-driven.  Spec §3.12.3 requires 'season_*'
+    # or 'month_*' prefixes only -- no 'qtr_*' prefix is produced.
     return _season_dummy(frame)

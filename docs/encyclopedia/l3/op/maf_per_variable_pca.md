@@ -10,6 +10,7 @@
 ```python
 mf.functions.maf_per_variable_pca_transform(
     panel: pd.DataFrame,
+    n_lags: int,
     n_components_per_var: int,
 ) -> pd.DataFrame
 ```
@@ -19,6 +20,7 @@ mf.functions.maf_per_variable_pca_transform(
 | name | type | default | constraint | description |
 |---|---|---|---|---|
 | `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
+| `n_lags` | `int` | `12` | >= 1 | Number of lags in the per-variable lag-panel. Paper default: 12 (monthly data). |
 | `n_components_per_var` | `int` | `2` | >= 1 | Number of PCA components per variable. Paper default: 2 (footnote 11). |
 
 ## Returns

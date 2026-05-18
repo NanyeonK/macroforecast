@@ -418,10 +418,10 @@ _OP_PCA = _o(
     data_args=_L3_PANEL_DATA_ARG + (
         ParameterDoc(
             name="n_components",
-            type="int",
+            type="int | str",
             default=3,
-            constraint=">= 1",
-            description="Number of principal components to extract. Clamped to min(T, K) - 1 internally.",
+            constraint=">= 1 or 'all'",
+            description="Number of principal components to extract. Clamped to min(T, K) - 1 internally. Sentinel 'all' extracts full effective rank min(T, K).",
         ),
     ),
     return_type="pd.DataFrame",
@@ -1167,6 +1167,20 @@ _OP_ADAPTIVE_MA_RF = _o(
             constraint=">= 1",
             description="Minimum samples per leaf; lower-bounds the effective adaptive window length (paper default: 40).",
         ),
+        ParameterDoc(
+            name="sided",
+            type="str",
+            default="two",
+            constraint="'two' or 'one'",
+            description="'two' fits one forest on the full sample (retrospective); 'one' fits an expanding-window forest per time index t (real-time variant, O(T) RF fits).",
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int | None",
+            default=0,
+            constraint="int or None",
+            description="RNG seed for sklearn RandomForestRegressor. None gives non-reproducible results.",
+        ),
     ),
     return_type="pd.DataFrame",
     returns_attrs=(),
@@ -1328,6 +1342,13 @@ _OP_MAF_PER_VARIABLE_PCA = _o(
     op_page=True,
     op_func_name="maf_per_variable_pca_transform",
     data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_lags",
+            type="int",
+            default=12,
+            constraint=">= 1",
+            description="Number of lags in the per-variable lag-panel. Paper default: 12 (monthly data).",
+        ),
         ParameterDoc(
             name="n_components_per_var",
             type="int",

@@ -12,6 +12,8 @@ mf.functions.adaptive_ma_rf_transform(
     panel: pd.DataFrame,
     n_estimators: int,
     min_samples_leaf: int,
+    sided: str,
+    random_state: int | None,
 ) -> pd.DataFrame
 ```
 
@@ -22,6 +24,8 @@ mf.functions.adaptive_ma_rf_transform(
 | `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
 | `n_estimators` | `int` | `100` | >= 1 | Number of trees in the RF ensemble. Paper recommends 500; 100 is the default for speed. |
 | `min_samples_leaf` | `int` | `40` | >= 1 | Minimum samples per leaf; lower-bounds the effective adaptive window length (paper default: 40). |
+| `sided` | `str` | `'two'` | 'two' or 'one' | 'two' fits one forest on the full sample (retrospective); 'one' fits an expanding-window forest per time index t (real-time variant, O(T) RF fits). |
+| `random_state` | `int | None` | `0` | int or None | RNG seed for sklearn RandomForestRegressor. None gives non-reproducible results. |
 
 ## Returns
 
