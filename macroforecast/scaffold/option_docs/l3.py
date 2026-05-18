@@ -6,6 +6,9 @@ detrend / expansion / auxiliary / target / selection / combine
 families. Each op is a node in the DAG; ops chain via ``inputs`` and
 the cascade-depth gate (``cascade_max_depth``) bounds recursion.
 
+Cycle 30: 10 basic transform ops updated with op_page=True, op_func_name,
+data_args, and return_type to support per-op encyclopedia pages.
+
 This module ships Tier-1 docs for every operational L3 ``op`` choice.
 The only L3 axis exposed via :data:`introspect.operational_options` is
 ``L3.A.op``; the ``inputs`` / ``params`` / ``temporal_rule`` keys are
@@ -16,7 +19,7 @@ schema axes.
 from __future__ import annotations
 
 from . import register
-from .types import OptionDoc, Reference
+from .types import OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-05"
 _REVIEWER = "macroforecast author"
@@ -33,6 +36,20 @@ _REF_STOCK_WATSON_2002 = Reference(
 )
 
 
+# Shared data-argument doc for all L3 panel-transform standalone callables (Cycle 30).
+_L3_PANEL_DATA_ARG: tuple[ParameterDoc, ...] = (
+    ParameterDoc(
+        name="panel",
+        type="pd.DataFrame",
+        default=REQUIRED,
+        description=(
+            "Input panel. Each column is a variable; rows are time periods. "
+            "Series is promoted to a single-column DataFrame internally."
+        ),
+    ),
+)
+
+
 def _o(
     option: str,
     summary: str,
@@ -42,6 +59,11 @@ def _o(
     when_not_to_use: str = "",
     references: tuple[Reference, ...] = (_REF_DESIGN_L3,),
     related_options: tuple[str, ...] = (),
+    op_page: bool = False,
+    op_func_name: str = "",
+    data_args: tuple[ParameterDoc, ...] = (),
+    return_type: str = "",
+    returns_attrs: tuple[tuple[str, str, str], ...] = (),
 ) -> OptionDoc:
     return OptionDoc(
         layer="l3",
@@ -54,6 +76,11 @@ def _o(
         when_not_to_use=when_not_to_use,
         references=references,
         related_options=related_options,
+        op_page=op_page,
+        op_func_name=op_func_name,
+        data_args=data_args,
+        return_type=return_type,
+        returns_attrs=returns_attrs,
         last_reviewed=_REVIEWED,
         reviewer=_REVIEWER,
     )
@@ -88,6 +115,19 @@ _OP_DIFF = _o(
     "I(1) variables that need a stationary representation in addition to the L2-applied tcode.",
     when_not_to_use="When the panel is already differenced by L2.B (avoids double-differencing).",
     related_options=("level", "log_diff", "pct_change"),
+    op_page=True,
+    op_func_name="diff_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="periods",
+            type="int",
+            default=1,
+            constraint=">= 1",
+            description="Number of lag periods to difference.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_LOG = _o(
@@ -102,6 +142,11 @@ _OP_LOG = _o(
     "Strictly-positive macro series (price levels, employment counts, GDP) before differencing.",
     when_not_to_use="Series that can be negative or zero (rates, growth rates, balances).",
     related_options=("log_diff", "level", "pct_change"),
+    op_page=True,
+    op_func_name="log_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_LOG_DIFF = _o(
@@ -117,6 +162,19 @@ _OP_LOG_DIFF = _o(
     when_not_to_use="Series that take non-positive values.",
     references=(_REF_DESIGN_L3, _REF_MCCRACKEN_NG),
     related_options=("log", "diff", "pct_change"),
+    op_page=True,
+    op_func_name="log_diff_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="periods",
+            type="int",
+            default=1,
+            constraint=">= 1",
+            description="Number of lag periods to difference after taking logs.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_PCT_CHANGE = _o(
@@ -130,6 +188,19 @@ _OP_PCT_CHANGE = _o(
     "When a literal percentage interpretation is required (returns, inflation rates).",
     when_not_to_use="Trend-following analysis where log_diff's symmetry is preferable.",
     related_options=("log_diff", "diff"),
+    op_page=True,
+    op_func_name="pct_change_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="periods",
+            type="int",
+            default=1,
+            constraint=">= 1",
+            description="Number of lag periods for the percentage change.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -147,6 +218,25 @@ _OP_LAG = _o(
     "Always when building AR features or lagged-X feature blocks.",
     when_not_to_use="When the target itself is already differenced/lagged in L2 -- avoid double-lagging.",
     related_options=("seasonal_lag", "target_construction"),
+    op_page=True,
+    op_func_name="lag_matrix",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_lag",
+            type="int",
+            default=4,
+            constraint=">= 1",
+            description="Number of lags. Output has K * n_lag columns.",
+        ),
+        ParameterDoc(
+            name="include_contemporaneous",
+            type="bool",
+            default=False,
+            description="If True, also include lag 0 (the contemporaneous column).",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -161,6 +251,26 @@ _OP_SEASONAL_LAG = _o(
     "Capturing year-over-year persistence; seasonal AR baselines.",
     when_not_to_use="When season_dummy or X-13 deseasonalisation is preferred over lag-based seasonality.",
     related_options=("season_dummy", "ma_window"),
+    op_page=True,
+    op_func_name="seasonal_lag_matrix",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="seasonal_period",
+            type="int",
+            default=12,
+            constraint=">= 2",
+            description="Seasonal cycle length (12 for monthly, 4 for quarterly).",
+        ),
+        ParameterDoc(
+            name="n_seasonal_lags",
+            type="int",
+            default=1,
+            constraint=">= 1",
+            description="Number of seasonal lags. Shifts by seasonal_period * i.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -179,6 +289,19 @@ _OP_MA_WINDOW = _o(
     ),
     "Smoothing noisy series; building short / medium / long-term momentum features.",
     related_options=("ma_increasing_order", "diff", "scale"),
+    op_page=True,
+    op_func_name="ma_window_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="window",
+            type="int",
+            default=3,
+            constraint=">= 1",
+            description="Rolling window size in periods. First window-1 rows are NaN.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_MA_INCREASING = _o(
@@ -200,6 +323,19 @@ _OP_MA_INCREASING = _o(
         ),
     ),
     related_options=("ma_window", "lag"),
+    op_page=True,
+    op_func_name="ma_increasing_order_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="max_order",
+            type="int",
+            default=12,
+            constraint=">= 2",
+            description="Maximum window order. Generates windows 2, 3, ..., max_order.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_CUMSUM = _o(
@@ -212,6 +348,11 @@ _OP_CUMSUM = _o(
     ),
     "Building cumulative-impact features; recovering levels from differenced forecasts.",
     related_options=("diff", "level"),
+    op_page=True,
+    op_func_name="cumsum_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -231,6 +372,18 @@ _OP_SCALE = _o(
     "Pre-conditioning for distance-based or regularised learners; mandatory for SVM/NN.",
     when_not_to_use="Tree-based models (RF/XGBoost/LightGBM) -- scale-invariant by construction.",
     related_options=("pca", "kernel_features"),
+    op_page=True,
+    op_func_name="scale_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="method",
+            type='str enum {"zscore", "standard", "standardize", "robust", "minmax"}',
+            default="zscore",
+            description='Scaling method. "zscore"/"standard"/"standardize" for zero-mean/unit-std; "robust" for median/IQR; "minmax" for [0, 1] range.',
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
