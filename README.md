@@ -38,6 +38,36 @@ pip install -e ".[dev]"
 pip install -e ".[typecheck]"  # optional: local mypy baseline
 ```
 
+## Quick standalone use
+
+Use individual operations directly as Python callables — no YAML needed:
+
+```python
+import macroforecast as mf
+import numpy as np
+
+rng = np.random.RandomState(42)
+X = rng.randn(100, 5)
+y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+
+# L4: fit a ridge model
+result = mf.functions.ridge_fit(X, y, alpha=1.0)
+print(result.summary())
+print(result.coef_)
+
+# L5: compute a metric
+u1 = mf.functions.theil_u1(y, result.predict(X))
+print(f"Theil U1 = {u1:.4f}")
+
+# L7: permutation importance (planned for post-Cycle-22 expansion)
+# imp = mf.functions.permutation_importance(result, X, y, n_repeats=30, random_state=42)
+# print(imp.importances_mean)
+```
+
+> Or use the recipe DSL for full reproducible studies — see
+> [docs/index.md](docs/index.md) and
+> [docs/two_entry_points.md](docs/two_entry_points.md) for a decision guide.
+
 ## 5-line quickstart
 
 ```python

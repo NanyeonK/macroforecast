@@ -5,6 +5,10 @@
 > and models — and benchmark them head-to-head against established methods.
 > One YAML recipe defines the full study; `macroforecast.replicate(...)`
 > regenerates every artifact identically from the recipe.
+>
+> macroforecast also exposes every operation as a **standalone callable**
+> (`mf.functions.<name>(...)`) for use in notebooks and scripts — no YAML
+> needed. See [two entry points](two_entry_points.md) for a decision guide.
 
 ## Pick your path
 
@@ -47,6 +51,13 @@ Paper replications, recipe gallery, layer navigator.
 Troubleshooting, contributing, conventions.
 :::
 
+:::{grid-item-card} 🧩 Standalone functions
+:link: standalone_functions/index
+:link-type: doc
+
+Use L2–L7 ops as Python callables without a YAML recipe.
+:::
+
 ::::
 
 > **Architecture vs Encyclopedia**: same 12-layer system, two angles.
@@ -87,7 +98,22 @@ MIT
 
 getting_started
 user_guide
+two_entry_points
+standalone_functions/index
 reference
 replications
 help
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+:caption: Standalone functions
+
+standalone_functions/l2_clean
+standalone_functions/l3_transforms
+standalone_functions/l4_fit
+standalone_functions/l5_metrics
+standalone_functions/l6_tests
+standalone_functions/l7_importance
 ```

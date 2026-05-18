@@ -5,6 +5,23 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+## [0.9.2b0] -- 2026-05-19 -- "docs visibility for standalone callables (paradigm beta)"
+
+### Added
+- New docs section `docs/standalone_functions/` — namespace overview + per-layer
+  reference pages (l2_clean / l3_transforms / l4_fit / l5_metrics / l6_tests /
+  l7_importance) cataloging the 117 standalone callables shipped in v0.9.2.
+- New `docs/two_entry_points.md` decision guide: when to use the recipe DSL
+  vs the standalone `mf.functions.<name>` callables.
+- `README.md` "Quick standalone use" section showing 3-line examples for
+  `ols_fit` / `mse` / `permutation_importance` before the recipe quickstart.
+- `docs/index.md` "Pick your path" grid now includes a "🧩 Standalone
+  functions" card linking to the new docs section.
+
+### Changed
+- Version 0.9.2 → 0.9.2b0 (PEP 440 beta) to publish docs-visibility update
+  as a beta of v0.9.2 paradigm shift.
+
 ## [0.9.2] -- 2026-05-18 -- "paradigm shift: 109 new standalone callables across L2/L3/L4/L5/L6/L7 (sm.ols-style API)"
 
 ### Cycle 38 -- L7 importance standalone callables (8 ops)

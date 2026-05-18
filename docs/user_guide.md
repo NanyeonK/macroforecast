@@ -27,6 +27,12 @@ transformer.
 
 ::::
 
+> **New in v0.9.2b0**: macroforecast also exposes individual operations as
+> standalone Python callables via `mf.functions.<name>(...)`. See
+> [Two entry points](two_entry_points.md) for a decision guide and
+> [Standalone functions](standalone_functions/index.md) for per-layer
+> references.
+
 ```{toctree}
 :hidden:
 :maxdepth: 2
