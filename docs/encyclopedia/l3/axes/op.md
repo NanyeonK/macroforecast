@@ -85,23 +85,7 @@ See [hamilton_filter function page](../op/hamilton_filter.md) for full documenta
 
 Holiday / event dummy variables.
 
-0/1 indicators for calendar holidays (US federal by default; ``params.country`` selects locale via the ``holidays`` package). For business / financial macro series.
-
-**When to use**
-
-Daily / weekly business-cycle series where holidays create discrete level shifts.
-
-**When NOT to use**
-
-Pure macro series at monthly+ frequency where holidays are absorbed by ``season_dummy``.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`season_dummy`](#season-dummy)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [holiday function page](../op/holiday.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.holiday_transform``.
 
 ### `hp_filter`  --  operational
 
@@ -119,42 +103,13 @@ See [interaction function page](../op/interaction.md) for full documentation + p
 
 Kernel-feature pre-step (Random Fourier / Nyström handle).
 
-Generic handle for an explicit kernel-feature embedding; concrete dispatch is determined by ``params.kernel`` (``rbf`` / ``poly`` / ``laplacian``). For named variants use ``kernel_features`` (RBF Random Fourier) or ``nystroem``.
-
-**When to use**
-
-Kernel-augmented linear / SVM pipelines.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`kernel_features`](#kernel-features), [`nystroem`](#nystroem)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [kernel function page](../op/kernel.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.kernel_features_transform``.
 
 ### `kernel_features`  --  operational
 
 Random Fourier features -- approximate RBF kernel via random projection.
 
-sklearn ``RBFSampler``: maps inputs to ``params.n_components`` random Fourier features whose dot product approximates the RBF kernel. Enables linear models to fit RBF-kernelised responses at training-set-size linear cost.
-
-**When to use**
-
-Kernel-augmented ridge / SVM at scale (n > 10k).
-
-**When NOT to use**
-
-Small-sample problems where exact kernel SVM is feasible.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Rahimi & Recht (2007) 'Random Features for Large-Scale Kernel Machines', NeurIPS.
-
-**Related options**: [`kernel`](#kernel), [`nystroem`](#nystroem)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [kernel_features function page](../op/kernel_features.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.kernel_features_transform``.
 
 ### `l3_feature_bundle`  --  operational
 
@@ -291,37 +246,13 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Nyström kernel approximation -- subset-based feature map.
 
-sklearn ``Nystroem`` constructs a low-rank approximation of an arbitrary kernel matrix using a random subsample of training points. More accurate than Random Fourier features for non-RBF kernels but with a larger memory footprint.
-
-**When to use**
-
-Non-RBF kernel-augmented linear models (poly / sigmoid).
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`kernel_features`](#kernel-features), [`kernel`](#kernel)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [nystroem function page](../op/nystroem.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.nystroem_transform``.
 
 ### `nystroem_features`  --  operational
 
 Alias for ``nystroem`` -- explicit feature-stage name.
 
-Identical to ``nystroem``; preferred when a multi-stage pipeline names its kernel approximation explicitly in the lineage graph.
-
-**When to use**
-
-Multi-stage pipelines that separate kernel approximation from downstream linear fits.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`nystroem`](#nystroem)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [nystroem_features function page](../op/nystroem_features.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.nystroem_transform``.
 
 ### `partial_least_squares`  --  operational
 
@@ -345,23 +276,7 @@ See [pct_change function page](../op/pct_change.md) for full documentation + par
 
 Polynomial basis expansion -- degree-d powers of input.
 
-sklearn ``PolynomialFeatures`` of degree ``params.degree``. Includes interaction terms by default; set ``params.interaction_only=True`` for products without pure powers.
-
-**When to use**
-
-Capturing low-order non-linearity for linear / kernel models.
-
-**When NOT to use**
-
-High dimension (degree > 3 with many predictors) -- explodes the design matrix; use kernel methods instead.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`interaction`](#interaction), [`kernel_features`](#kernel-features), [`polynomial_expansion`](#polynomial-expansion)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [polynomial function page](../op/polynomial.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.polynomial_expansion_transform``.
 
 ### `polynomial_expansion`  --  operational
 
@@ -373,19 +288,7 @@ See [polynomial_expansion function page](../op/polynomial_expansion.md) for full
 
 Johnson-Lindenstrauss random Gaussian projection.
 
-Reduces dimensionality by multiplying with a random Gaussian matrix scaled to (approximately) preserve pairwise distances. Cheap baseline for dimensionality reduction; sklearn's ``GaussianRandomProjection``.
-
-**When to use**
-
-Sweep baselines / sanity checks against PCA's structured reduction.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`pca`](#pca), [`kernel_features`](#kernel-features)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [random_projection function page](../op/random_projection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.random_projection_transform``.
 
 ### `recursive_feature_elimination`  --  future
 
@@ -451,51 +354,13 @@ See [sliced_inverse_regression function page](../op/sliced_inverse_regression.md
 
 Sparse PCA -- L1-penalised factor loadings (sklearn / Zou-Hastie-Tibshirani 2006).
 
-Variant of PCA where loadings are pushed toward zero by an L1 penalty (``params.alpha``). Yields more interpretable factors at the cost of a small reconstruction loss; uses sklearn's ``SparsePCA``.
-
-**When to use**
-
-When you want factor loadings to map cleanly onto a small subset of original predictors (interpretability).
-
-**When NOT to use**
-
-When pure variance maximisation is more important than interpretability -- use plain ``pca``. For the Chen-Rohe (2023) SCA variant used in Zhou-Rapach (2025) Sparse Macro-Finance Factors, use ``sparse_pca_chen_rohe`` instead.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`pca`](#pca), [`scaled_pca`](#scaled-pca), [`sparse_pca_chen_rohe`](#sparse-pca-chen-rohe), [`supervised_pca`](#supervised-pca)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [sparse_pca function page](../op/sparse_pca.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.sparse_pca_transform``.
 
 ### `sparse_pca_chen_rohe`  --  operational
 
 Chen-Rohe (2023) Sparse Component Analysis -- non-diagonal D variant.
 
-Sparse component analysis solving ``min_{Z,D,Θ} ‖X − Z D Θ'‖_F`` s.t. ``Z ∈ S(T,J)``, ``Θ ∈ S(M,J)``, ``‖Θ‖_1 ≤ ζ`` (Chen-Rohe 2023; Rapach & Zhou 2025 eq. 3). Differs from ``sparse_pca`` (sklearn / Zou-Hastie-Tibshirani 2006) in two ways: (1) the central matrix D is *not* restricted to be diagonal, which lets SCA explain more total variation for a given sparsity budget; (2) the single hyperparameter ``ζ ∈ [J, J√M]`` enters as an ℓ_1 budget *constraint* rather than a Lagrangian penalty.
-
-Implementation: alternating maximisation of the equivalent bilinear convex-hull form ``max_{Z,Θ} ‖Z' X Θ‖_F`` over ``H(T,J) × H(M,J)`` (Zhou-Rapach 2025 eq. 4), iterating SVD-projection of Z and L1-budget projection of Θ. Used as the macro-side stage in Rapach & Zhou (2025) Sparse Macro-Finance Factors. Operational v0.9.1 dev-stage v0.9.0C-3.
-
-Hyperparams: ``n_components`` (= J; default 4), ``zeta`` (= L1 budget; ``0.0`` defaults to J = most-binding boundary the paper finds optimal in CV), ``max_iter`` (default 200), ``random_state``.
-
-**When to use**
-
-Sparse macro-finance factor extraction with non-diagonal D; the Rapach-Zhou (2025) macro-side procedure.
-
-**When NOT to use**
-
-When sklearn-style L1-penalised loadings are sufficient -- prefer the cheaper ``sparse_pca``.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Chen & Rohe (2023) 'A New Basis for Sparse Principal Component Analysis', Journal of Computational and Graphical Statistics. arXiv:2007.00596.
-* Rapach & Zhou (2025) 'Sparse Macro-Finance Factors' working paper -- §2.1 eqs. (3)-(4).
-
-**Related options**: [`sparse_pca`](#sparse-pca), [`supervised_pca`](#supervised-pca), [`scaled_pca`](#scaled-pca), [`pca`](#pca)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [sparse_pca_chen_rohe function page](../op/sparse_pca_chen_rohe.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.sparse_pca_chen_rohe_transform``.
 
 ### `stability_selection`  --  future
 
@@ -533,23 +398,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Deterministic linear time trend (``t = 1, 2, ...``).
 
-Adds a column ``t`` to the panel; with ``params.degree > 1`` appends polynomial trends. Deterministic complement to stochastic detrending (HP / Hamilton).
-
-**When to use**
-
-Trend-stationary linear models where a deterministic trend is part of the DGP.
-
-**When NOT to use**
-
-Series with structural breaks -- use ``regime_indicator`` or stochastic detrending instead.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`hp_filter`](#hp-filter), [`hamilton_filter`](#hamilton-filter)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [time_trend function page](../op/time_trend.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.time_trend_transform``.
 
 ### `u_midas`  --  operational
 
@@ -593,37 +442,13 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Varimax-rotated factors (orthogonal rotation for interpretability).
 
-Applies a varimax rotation to PCA loadings, maximising the variance of squared loadings within each factor. Produces factors that load heavily on a small subset of original predictors -- useful for naming / labelling factors.
-
-**When to use**
-
-Factor analysis where downstream interpretation requires distinct, well-named factors.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`pca`](#pca), [`sparse_pca`](#sparse-pca)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [varimax function page](../op/varimax.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.varimax_transform``.
 
 ### `varimax_rotation`  --  operational
 
 Alias for ``varimax`` -- rotation step in a multi-stage factor pipeline.
 
-Identical operation to ``varimax`` but registered separately so a cascading L3 pipeline can declare ``pca → varimax_rotation`` as two visible nodes in its lineage.
-
-**When to use**
-
-Multi-stage pipelines that explicitly separate factor extraction from rotation.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`varimax`](#varimax), [`pca`](#pca)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [varimax_rotation function page](../op/varimax_rotation.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.varimax_transform``.
 
 ### `wavelet`  --  operational
 

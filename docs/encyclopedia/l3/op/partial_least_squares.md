@@ -21,7 +21,7 @@ mf.functions.partial_least_squares_transform(
 |---|---|---|---|---|
 | `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
 | `target` | `pd.Series` | — | — | Supervisory signal aligned to the panel index. Must share at least one index value with panel; raises ValueError if the intersection is empty. |
-| `n_components` | `int` | `3` | >= 1 | Number of PLS latent components. Clamped internally to min(T_clean - 1, K_clean - 1). |
+| `n_components` | `int` | `3` | >= 1 | Number of PLS latent components. Clamped internally to min(T_clean - 1, K_clean). |
 
 ## Returns
 

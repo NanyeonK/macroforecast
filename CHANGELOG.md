@@ -5,6 +5,52 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 33 -- L3 final B1 transforms standalone (8 ops) + C32 backlog
+
+**New standalone callables** in `mf.functions` (all return `pd.DataFrame`):
+
+`sparse_pca_transform(panel, *, n_components=8)` -> `pd.DataFrame`
+`sparse_pca_chen_rohe_transform(panel, *, n_components=4, zeta=0.0, max_iter=200, var_innovations=False, random_state=0)` -> `pd.DataFrame`
+`varimax_transform(panel)` -> `pd.DataFrame`
+`random_projection_transform(panel, *, n_components=8)` -> `pd.DataFrame`
+`kernel_features_transform(panel, *, kind="rbf", gamma=1.0)` -> `pd.DataFrame`
+`nystroem_transform(panel, *, n_components=32)` -> `pd.DataFrame`
+`time_trend_transform(panel)` -> `pd.DataFrame`
+`holiday_transform(panel)` -> `pd.DataFrame`
+
+Paradigm (C29 lazy-import recipe-path): each wrapper imports the runtime helper
+inside the function body -- no formula duplication. `time_trend_transform` uses
+inline `np.arange(1, T+1)` (no runtime helper required for trivial generation).
+
+`kernel_features_transform` returns a T_clean x T_clean Gram matrix (exact kernel,
+not an approximation). See function Notes for large-panel guidance.
+
+`holiday_transform` delegates to `_holiday_indicator` which uses
+`USFederalHolidayCalendar`. Known runtime bug: `pd.tseries.offsets.USFederalHolidayCalendar`
+was moved to `pd.tseries.holiday` in pandas >= 2.x; DatetimeIndex path raises
+`AttributeError`. Non-DatetimeIndex path returns all zeros correctly (tracked in mailbox.md).
+
+All 8 names added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l3.py`):
+- 8 canonical ops set to `op_page=True` with `op_func_name`, `data_args`, `return_type`, `returns_attrs`.
+- 4 alias entries set to `op_page=True` pointing to canonical callables:
+  `varimax_rotation` -> `varimax_transform`, `kernel` -> `kernel_features_transform`,
+  `nystroem_features` -> `nystroem_transform`, `polynomial` -> `polynomial_expansion_transform`.
+
+**Encyclopedia**: 248 -> 260 pages (12 new L3 op pages).
+
+**C32 backlog fixes**:
+- **NOTE-A** (BLK-4 PLS clamp): `min(T_clean-1, K_clean-1)` -> `min(T_clean-1, K_clean)`.
+  Test assertion updated: `<= 4` -> `== 5` for RNG-42 50x5 panel.
+- **NOTE-B** (CHANGELOG drift): C32 entry test count corrected: 59 -> 84.
+
+**Tests** (`tests/functions/test_l3_final_b1_transforms.py`): 66 passed, 3 xfailed.
+- 66 passing: bit-exact vs runtime for all 8 ops (RNG-42, `rtol=1e-12, atol=1e-14`).
+- Correctness: shape, column names, index preservation, input validation, namespace wiring.
+- 3 xfailed: `TestHolidayTransform` DatetimeIndex tests expose pre-existing
+  `_holiday_indicator` runtime bug (`pd.tseries.offsets` -> should be `pd.tseries.holiday`).
+
 ### Cycle 32 -- L3 supervised/mixed transforms standalone (6 ops)
 
 **New standalone callables** in `mf.functions` (all return `pd.DataFrame`):
@@ -39,7 +85,7 @@ All 6 names added to `mf.functions.__all__`.
 
 **Encyclopedia**: 242 → 248 pages (6 new L3 op pages).
 
-**Tests** (`tests/functions/test_l3_supervised_transforms.py`): 59 tests, all pass.
+**Tests** (`tests/functions/test_l3_supervised_transforms.py`): 84 tests, all pass (59 original + 25 from C32-fixup BLK items: BLK-3 SIR scaling_method / BLK-4 PLS clamp / BLK-5 DFM reindex / BLK-6 supervised_pca q-clamp).
 - Bit-exact vs runtime helper for all 6 ops (RNG-42, `rtol=1e-12, atol=1e-14`).
 - Target alignment `ValueError` on disjoint indices (4 supervised ops).
 - `feature_selection_transform` method/target combo validation.
