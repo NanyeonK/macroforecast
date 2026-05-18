@@ -185,126 +185,37 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Random forest (sklearn).
 
-Bagged collection of decorrelated trees. ``params.n_estimators`` (default 200) controls the ensemble size; ``params.max_depth`` controls tree complexity. Standard non-linear baseline.
-
-**When to use**
-
-Default non-linear benchmark; non-stationary series where linear models fail.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Breiman (2001) 'Random Forests', Machine Learning 45(1).
-
-**Related options**: [`extra_trees`](#extra-trees), [`gradient_boosting`](#gradient-boosting), [`xgboost`](#xgboost), [`macroeconomic_random_forest`](#macroeconomic-random-forest), [`quantile_regression_forest`](#quantile-regression-forest)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [random_forest function page](../family/random_forest.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.random_forest_fit``.
 
 ### `extra_trees`  --  operational
 
 Extremely randomized trees (sklearn).
 
-Like RF but splits at random thresholds (no greedy search). Faster than RF; sometimes lower variance.
-
-**v0.9 sub-axis**:
-* ``params.max_features`` -- number of predictors considered at each split. ``"sqrt"`` (default) matches sklearn; ``1`` (operational, v0.9) implements Coulombe (2024) 'To Bag is to Prune' Perfectly Random Forest baseline (one random feature per split, fully random structure).
-
-**When to use**
-
-Quick non-linear baseline; large ensemble experiments; PRF baseline (max_features=1).
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Geurts, Ernst & Wehenkel (2006) 'Extremely randomized trees', Machine Learning 63(1).
-
-**Related options**: [`random_forest`](#random-forest), [`gradient_boosting`](#gradient-boosting)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [extra_trees function page](../family/extra_trees.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.extra_trees_fit``.
 
 ### `gradient_boosting`  --  operational
 
 Gradient-boosted regression trees (sklearn).
 
-Sklearn ``GradientBoostingRegressor``. Sequential boosting with shallow trees. ``params.n_estimators`` (default 200) and ``params.learning_rate`` (default 0.05) trade variance for bias.
-
-**When to use**
-
-Default boosted baseline when xgboost / lightgbm are unavailable.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Friedman (2001) 'Greedy function approximation: A gradient boosting machine', Annals of Statistics 29(5).
-
-**Related options**: [`xgboost`](#xgboost), [`lightgbm`](#lightgbm), [`catboost`](#catboost)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [gradient_boosting function page](../family/gradient_boosting.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.gradient_boosting_fit``.
 
 ### `xgboost`  --  operational
 
 XGBoost gradient-boosted trees (optional dependency).
 
-Requires ``pip install macroforecast[xgboost]``. Histogram-based tree construction; native quantile loss; GPU support. Standard production-grade boosting library.
-
-**When to use**
-
-Production sweeps where xgboost's speed matters; quantile forecasting (xgb 2.0+).
-
-**When NOT to use**
-
-Lightweight installs (no extra installed) -- raises ImportError.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Chen & Guestrin (2016) 'XGBoost: A Scalable Tree Boosting System', KDD.
-
-**Related options**: [`gradient_boosting`](#gradient-boosting), [`lightgbm`](#lightgbm), [`catboost`](#catboost)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [xgboost function page](../family/xgboost.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.xgboost_fit``.
 
 ### `lightgbm`  --  operational
 
 LightGBM gradient-boosted trees (optional dependency).
 
-Requires ``pip install macroforecast[lightgbm]``. Leaf-wise tree growth; fast on wide / categorical-heavy panels.
-
-**When to use**
-
-Wide categorical panels; production sweeps where lightgbm's speed matters.
-
-**When NOT to use**
-
-Lightweight installs (no extra installed) -- raises ImportError.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Ke et al. (2017) 'LightGBM: A Highly Efficient Gradient Boosting Decision Tree', NeurIPS.
-
-**Related options**: [`xgboost`](#xgboost), [`gradient_boosting`](#gradient-boosting)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [lightgbm function page](../family/lightgbm.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.lightgbm_fit``.
 
 ### `catboost`  --  operational
 
 CatBoost gradient-boosted trees (optional dependency).
 
-Requires ``pip install macroforecast[catboost]``. Ordered boosting + native categorical handling.
-
-**When to use**
-
-Categorical-heavy panels; ordered-boosting research.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Prokhorenkova et al. (2018) 'CatBoost: unbiased boosting with categorical features', NeurIPS.
-
-**Related options**: [`xgboost`](#xgboost), [`lightgbm`](#lightgbm)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [catboost function page](../family/catboost.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.catboost_fit``.
 
 ### `svr_linear`  --  operational
 

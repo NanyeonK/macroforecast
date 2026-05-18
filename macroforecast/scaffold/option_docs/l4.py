@@ -729,6 +729,16 @@ _F_RF = _f(
         "macroeconomic_random_forest",
         "quantile_regression_forest",
     ),
+    op_page=True,
+    op_func_name="random_forest_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="RandomForestFitResult",
+    returns_attrs=(
+        (".feature_importances_", "np.ndarray", "Mean decrease in impurity per feature, shape (n_features,). Sums to 1.0."),
+        (".n_estimators_used", "int", "Number of trees grown (= n_estimators parameter)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Human-readable table of fit results including top-3 feature importances."),
+    ),
 )
 
 _F_EXTRA_TREES = _f(
@@ -749,6 +759,16 @@ _F_EXTRA_TREES = _f(
         ),
     ),
     related_options=("random_forest", "gradient_boosting"),
+    op_page=True,
+    op_func_name="extra_trees_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="ExtraTreesFitResult",
+    returns_attrs=(
+        (".feature_importances_", "np.ndarray", "Mean decrease in impurity per feature, shape (n_features,). Sums to 1.0."),
+        (".n_estimators_used", "int", "Number of trees grown (= n_estimators parameter)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Human-readable table of fit results including top-3 feature importances."),
+    ),
 )
 
 _F_GB = _f(
@@ -768,6 +788,16 @@ _F_GB = _f(
         ),
     ),
     related_options=("xgboost", "lightgbm", "catboost"),
+    op_page=True,
+    op_func_name="gradient_boosting_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="GradientBoostingFitResult",
+    returns_attrs=(
+        (".feature_importances_", "np.ndarray", "Feature importances from the GBM, shape (n_features,). Sums to 1.0."),
+        (".n_estimators_used", "int", "Number of boosting iterations (= n_estimators parameter)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Human-readable table of fit results including top-3 feature importances."),
+    ),
 )
 
 _F_XGB = _f(
@@ -787,6 +817,16 @@ _F_XGB = _f(
         ),
     ),
     related_options=("gradient_boosting", "lightgbm", "catboost"),
+    op_page=True,
+    op_func_name="xgboost_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="XGBoostFitResult",
+    returns_attrs=(
+        (".feature_importances_", "np.ndarray", "Feature importances (gain-based) from XGBoost, shape (n_features,)."),
+        (".n_estimators_used", "int", "Number of boosting rounds (= n_estimators parameter)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Human-readable table of fit results including top-3 feature importances."),
+    ),
 )
 
 _F_LGBM = _f(
@@ -805,6 +845,16 @@ _F_LGBM = _f(
         ),
     ),
     related_options=("xgboost", "gradient_boosting"),
+    op_page=True,
+    op_func_name="lightgbm_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="LightGBMFitResult",
+    returns_attrs=(
+        (".feature_importances_", "np.ndarray", "Feature importances (split count) from LightGBM, shape (n_features,)."),
+        (".n_estimators_used", "int", "Number of boosting rounds (= n_estimators parameter)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Human-readable table of fit results including top-3 feature importances."),
+    ),
 )
 
 _F_CAT = _f(
@@ -819,6 +869,16 @@ _F_CAT = _f(
         ),
     ),
     related_options=("xgboost", "lightgbm"),
+    op_page=True,
+    op_func_name="catboost_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="CatBoostFitResult",
+    returns_attrs=(
+        (".feature_importances_", "np.ndarray", "Feature importances from CatBoost (percentage-based), shape (n_features,)."),
+        (".n_estimators_used", "int", "Number of boosting iterations (= n_estimators parameter)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, guaranteed 1-D via .ravel()."),
+        (".summary()", "str", "Human-readable table of fit results including top-3 feature importances."),
+    ),
 )
 
 _F_MRF = _f(
