@@ -9,7 +9,7 @@ plus a scope axis controlling which series the stage applies to
 from __future__ import annotations
 
 from . import register
-from .types import CodeExample, OptionDoc, Reference
+from .types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"
@@ -34,14 +34,54 @@ _REF_CHOW_LIN_1971 = Reference(
 
 def _e(sublayer: str, axis: str, option: str, summary: str, description: str, when_to_use: str,
        *, when_not_to_use: str = "", references: tuple[Reference, ...] = (_REF_DESIGN_L2,),
-       related_options: tuple[str, ...] = (), examples: tuple[CodeExample, ...] = ()) -> OptionDoc:
+       related_options: tuple[str, ...] = (), examples: tuple[CodeExample, ...] = (),
+       op_page: bool = False, op_func_name: str = "", data_args: tuple = (),
+       return_type: str = "", returns_attrs: tuple = ()) -> OptionDoc:
     return OptionDoc(
         layer="l2", sublayer=sublayer, axis=axis, option=option,
         summary=summary, description=description, when_to_use=when_to_use,
         references=references, when_not_to_use=when_not_to_use,
         related_options=related_options, examples=examples,
+        op_page=op_page, op_func_name=op_func_name, data_args=data_args,
+        return_type=return_type, returns_attrs=returns_attrs,
         last_reviewed=_REVIEWED, reviewer=_REVIEWER,
     )
+
+
+# ---------------------------------------------------------------------------
+# Cycle 34: shared data-argument constants for L2 clean panel standalone ops
+# ---------------------------------------------------------------------------
+_L2_PANEL_DATA_ARG: tuple[ParameterDoc, ...] = (
+    ParameterDoc(
+        name="panel",
+        type="pd.DataFrame",
+        default=REQUIRED,
+        description=(
+            "Input panel. Each column is a variable; rows are time periods. "
+            "Series is promoted to a single-column DataFrame internally."
+        ),
+    ),
+)
+
+_panel_arg_l2 = ParameterDoc(
+    name="panel",
+    type="pd.DataFrame",
+    default=REQUIRED,
+    description=(
+        "Input panel. Each column is a variable; rows are time periods. "
+        "Series is promoted to a single-column DataFrame internally."
+    ),
+)
+_tcode_map_arg = ParameterDoc(
+    name="tcode_map",
+    type="dict[str, int]",
+    default=REQUIRED,
+    description=(
+        "Mapping from column name to McCracken-Ng t-code integer 1..7. "
+        "Columns not in tcode_map are passed through unchanged."
+    ),
+)
+_L2_PANEL_TCODE_DATA_ARGS: tuple[ParameterDoc, ...] = (_panel_arg_l2, _tcode_map_arg)
 
 
 # L2.B transform_policy
@@ -64,7 +104,10 @@ _L2B_OFFICIAL = _e(
     "Default for FRED-based studies. Canonical replication path.",
     references=(_REF_DESIGN_L2, _REF_MCCRACKEN_NG_2016),
     related_options=("no_transform", "custom_tcode", "transform_scope"),
-)
+    op_page=True,
+    op_func_name="apply_tcode_transform",
+    data_args=_L2_PANEL_TCODE_DATA_ARGS,
+    return_type="pd.DataFrame")
 
 _L2B_NO_TRANSFORM = _e(
     "l2_b", "transform_policy", "no_transform",
@@ -111,7 +154,10 @@ _L2C_MCCRACKEN_IQR = _e(
     "Default for FRED-based studies. Canonical replication path.",
     references=(_REF_DESIGN_L2, _REF_MCCRACKEN_NG_2016),
     related_options=("winsorize", "zscore_threshold", "none", "outlier_action"),
-)
+    op_page=True,
+    op_func_name="iqr_outlier_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2C_WINSORIZE = _e(
     "l2_c", "outlier_policy", "winsorize",
@@ -125,7 +171,10 @@ _L2C_WINSORIZE = _e(
     "Studies that want a bounded but non-NaN outlier handler; alternative-rule comparisons.",
     references=(_REF_DESIGN_L2, _REF_TUKEY_1977),
     related_options=("mccracken_ng_iqr", "zscore_threshold"),
-)
+    op_page=True,
+    op_func_name="winsorize_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2C_ZSCORE = _e(
     "l2_c", "outlier_policy", "zscore_threshold",
@@ -138,7 +187,10 @@ _L2C_ZSCORE = _e(
     "Approximately-Gaussian series; quick sanity-check sweeps.",
     references=(_REF_DESIGN_L2,),
     related_options=("mccracken_ng_iqr", "winsorize"),
-)
+    op_page=True,
+    op_func_name="zscore_outlier_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2C_NONE = _e(
     "l2_c", "outlier_policy", "none",
@@ -201,7 +253,10 @@ _L2D_EM_FACTOR = _e(
     "Default for FRED-MD/QD high-dimensional panels.",
     references=(_REF_DESIGN_L2, _REF_STOCK_WATSON_2002),
     related_options=("em_multivariate", "mean", "forward_fill", "linear_interpolation"),
-)
+    op_page=True,
+    op_func_name="em_factor_impute_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2D_EM_MULTI = _e(
     "l2_d", "imputation_policy", "em_multivariate",
@@ -215,7 +270,10 @@ _L2D_EM_MULTI = _e(
     "Smaller panels (≤ 50 series) where the full covariance is tractable.",
     references=(_REF_DESIGN_L2,),
     related_options=("em_factor", "mean"),
-)
+    op_page=True,
+    op_func_name="em_multivariate_impute_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2D_MEAN = _e(
     "l2_d", "imputation_policy", "mean",
@@ -224,7 +282,10 @@ _L2D_MEAN = _e(
     "Sparse missingness; quick smoke tests.",
     references=(_REF_DESIGN_L2,),
     related_options=("em_factor", "forward_fill"),
-)
+    op_page=True,
+    op_func_name="mean_impute_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2D_FFILL = _e(
     "l2_d", "imputation_policy", "forward_fill",
@@ -233,7 +294,10 @@ _L2D_FFILL = _e(
     "Slowly-moving series (interest rates, ratios); release-lag handling.",
     references=(_REF_DESIGN_L2,),
     related_options=("linear_interpolation", "em_factor"),
-)
+    op_page=True,
+    op_func_name="forward_fill_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2D_LINEAR = _e(
     "l2_d", "imputation_policy", "linear_interpolation",
@@ -242,7 +306,10 @@ _L2D_LINEAR = _e(
     "Interior missing observations in well-behaved series.",
     references=(_REF_DESIGN_L2, _REF_CHOW_LIN_1971),
     related_options=("forward_fill", "em_factor"),
-)
+    op_page=True,
+    op_func_name="linear_interpolate_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2D_NONE = _e(
     "l2_d", "imputation_policy", "none_propagate",
@@ -266,7 +333,10 @@ _L2E_TRUNCATE = _e(
     "Default for high-dimensional studies; pairs with em_factor imputation for the interior.",
     references=(_REF_DESIGN_L2, _REF_STOCK_WATSON_2002),
     related_options=("drop_unbalanced_series", "keep_unbalanced", "zero_fill_leading"),
-)
+    op_page=True,
+    op_func_name="truncate_to_balanced_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2E_DROP_SERIES = _e(
     "l2_e", "frame_edge_policy", "drop_unbalanced_series",
@@ -275,7 +345,10 @@ _L2E_DROP_SERIES = _e(
     "Long-history studies (1959-) where late-introduction series should be excluded.",
     references=(_REF_DESIGN_L2,),
     related_options=("truncate_to_balanced", "keep_unbalanced"),
-)
+    op_page=True,
+    op_func_name="drop_unbalanced_series_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2E_KEEP_UNBAL = _e(
     "l2_e", "frame_edge_policy", "keep_unbalanced",
@@ -293,7 +366,10 @@ _L2E_ZERO_FILL = _e(
     "Studies that want the early sample but accept zero-fill on leading edges.",
     references=(_REF_DESIGN_L2,),
     related_options=("truncate_to_balanced", "keep_unbalanced"),
-)
+    op_page=True,
+    op_func_name="zero_fill_leading_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 
 # L2.A FRED-SD frequency rules (one example each — most users default)
@@ -309,7 +385,10 @@ _L2A_QM_BACKWARD = _e(
     "Default for FRED-SD mixed-frequency studies.",
     references=(_REF_DESIGN_L2,),
     related_options=("step_forward", "linear_interpolation", "chow_lin"),
-)
+    op_page=True,
+    op_func_name="freq_align_quarterly_to_monthly_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2A_QM_LINEAR = _e(
     "l2_a", "quarterly_to_monthly_rule", "linear_interpolation",
@@ -342,7 +421,10 @@ _L2A_MQ_AVG = _e(
     "Default. Stock variables (interest rates, prices, employment levels).",
     references=(_REF_DESIGN_L2,),
     related_options=("quarterly_endpoint", "quarterly_sum"),
-)
+    op_page=True,
+    op_func_name="freq_align_monthly_to_quarterly_clean",
+    data_args=_L2_PANEL_DATA_ARG,
+    return_type="pd.DataFrame")
 
 _L2A_MQ_END = _e(
     "l2_a", "monthly_to_quarterly_rule", "quarterly_endpoint",
