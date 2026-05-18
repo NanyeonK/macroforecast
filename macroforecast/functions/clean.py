@@ -981,8 +981,9 @@ def freq_align_monthly_to_quarterly_clean(
     ``_apply_fred_sd_frequency_alignment``):
 
     Resamples *monthly_columns* to quarterly frequency via
-    ``resample("QE").{mean,last,sum}()``, then re-aligns to the input
-    index via ``df_q.join(agg, how="left").reindex(df_q.index)``.
+    ``resample("QE").{mean,last,sum}()``, then joins non-monthly columns
+    via ``other_agg.join(agg)`` returning a quarterly-indexed frame
+    directly (no secondary reindex step).
 
     Equivalent recipe configuration::
 
