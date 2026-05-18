@@ -479,6 +479,22 @@ _OP_SPARSE_PCA = _o(
     "When you want factor loadings to map cleanly onto a small subset of original predictors (interpretability).",
     when_not_to_use="When pure variance maximisation is more important than interpretability -- use plain ``pca``. For the Chen-Rohe (2023) SCA variant used in Zhou-Rapach (2025) Sparse Macro-Finance Factors, use ``sparse_pca_chen_rohe`` instead.",
     related_options=("pca", "scaled_pca", "sparse_pca_chen_rohe", "supervised_pca"),
+    op_page=True,
+    op_func_name="sparse_pca_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_components",
+            type="int",
+            default=8,
+            constraint=">= 1",
+            description=(
+                "Number of sparse principal components to extract. "
+                "Clamped internally to min(T_clean, K) - 1."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_SPARSE_PCA_CHEN_ROHE = _o(
@@ -517,6 +533,54 @@ _OP_SPARSE_PCA_CHEN_ROHE = _o(
         ),
     ),
     related_options=("sparse_pca", "supervised_pca", "scaled_pca", "pca"),
+    op_page=True,
+    op_func_name="sparse_pca_chen_rohe_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_components",
+            type="int",
+            default=4,
+            constraint=">= 1",
+            description=(
+                "Number of sparse components (= J in the SCA objective). "
+                "Clamped internally to min(T_clean, K)."
+            ),
+        ),
+        ParameterDoc(
+            name="zeta",
+            type="float",
+            default=0.0,
+            constraint=">= 0",
+            description=(
+                "L1 budget for loadings Theta. 0.0 routes to "
+                "zeta = n_components (paper CV-optimal boundary)."
+            ),
+        ),
+        ParameterDoc(
+            name="max_iter",
+            type="int",
+            default=200,
+            constraint=">= 1",
+            description="Maximum alternating-maximisation iterations.",
+        ),
+        ParameterDoc(
+            name="var_innovations",
+            type="bool",
+            default="False",
+            description=(
+                "If True, fit VAR(1) on SCA scores and return residuals "
+                "as sparse macro-finance factors (Rapach-Zhou 2025 step 2)."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            description="Seed for NumPy RNG used in Z/Theta initialisation.",
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_SUPERVISED_PCA = _o(
@@ -662,6 +726,11 @@ _OP_VARIMAX = _o(
     ),
     "Factor analysis where downstream interpretation requires distinct, well-named factors.",
     related_options=("pca", "sparse_pca"),
+    op_page=True,
+    op_func_name="varimax_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_VARIMAX_ROTATION = _o(
@@ -674,6 +743,11 @@ _OP_VARIMAX_ROTATION = _o(
     ),
     "Multi-stage pipelines that explicitly separate factor extraction from rotation.",
     related_options=("varimax", "pca"),
+    op_page=True,
+    op_func_name="varimax_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_PARTIAL_LEAST_SQUARES = _o(
@@ -702,7 +776,7 @@ _OP_PARTIAL_LEAST_SQUARES = _o(
             constraint=">= 1",
             description=(
                 "Number of PLS latent components. Clamped internally to "
-                "min(T_clean - 1, K_clean - 1)."
+                "min(T_clean - 1, K_clean)."
             ),
         ),
     ),
@@ -721,6 +795,22 @@ _OP_RANDOM_PROJECTION = _o(
     ),
     "Sweep baselines / sanity checks against PCA's structured reduction.",
     related_options=("pca", "kernel_features"),
+    op_page=True,
+    op_func_name="random_projection_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_components",
+            type="int",
+            default=8,
+            constraint=">= 1",
+            description=(
+                "Number of random projection output dimensions. "
+                "Clamped internally to min(n_components, K)."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -888,6 +978,11 @@ _OP_POLYNOMIAL = _o(
     "Capturing low-order non-linearity for linear / kernel models.",
     when_not_to_use="High dimension (degree > 3 with many predictors) -- explodes the design matrix; use kernel methods instead.",
     related_options=("interaction", "kernel_features", "polynomial_expansion"),
+    op_page=True,
+    op_func_name="polynomial_expansion_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_POLYNOMIAL_EXPANSION = _o(
@@ -943,6 +1038,11 @@ _OP_KERNEL = _o(
     ),
     "Kernel-augmented linear / SVM pipelines.",
     related_options=("kernel_features", "nystroem"),
+    op_page=True,
+    op_func_name="kernel_features_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_KERNEL_FEATURES = _o(
@@ -963,6 +1063,31 @@ _OP_KERNEL_FEATURES = _o(
         ),
     ),
     related_options=("kernel", "nystroem"),
+    op_page=True,
+    op_func_name="kernel_features_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="kind",
+            type='str enum {"rbf", "polynomial"}',
+            default='"rbf"',
+            description=(
+                "Kernel type. 'rbf' for Gaussian kernel; 'polynomial' "
+                "for degree-2 polynomial kernel."
+            ),
+        ),
+        ParameterDoc(
+            name="gamma",
+            type="float",
+            default=1.0,
+            constraint="> 0",
+            description=(
+                "Kernel bandwidth. For rbf: exp(-gamma * ||x-z||^2). "
+                "For polynomial: (gamma * <x,z> + 1)^2."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_NYSTROEM = _o(
@@ -976,6 +1101,22 @@ _OP_NYSTROEM = _o(
     ),
     "Non-RBF kernel-augmented linear models (poly / sigmoid).",
     related_options=("kernel_features", "kernel"),
+    op_page=True,
+    op_func_name="nystroem_transform",
+    data_args=_L3_PANEL_DATA_ARG + (
+        ParameterDoc(
+            name="n_components",
+            type="int",
+            default=32,
+            constraint=">= 1",
+            description=(
+                "Number of landmark points for Nystroem approximation. "
+                "Clamped internally to min(n_components, T_clean)."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_NYSTROEM_FEATURES = _o(
@@ -988,6 +1129,11 @@ _OP_NYSTROEM_FEATURES = _o(
     ),
     "Multi-stage pipelines that separate kernel approximation from downstream linear fits.",
     related_options=("nystroem",),
+    op_page=True,
+    op_func_name="nystroem_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
@@ -1043,6 +1189,11 @@ _OP_TIME_TREND = _o(
     "Trend-stationary linear models where a deterministic trend is part of the DGP.",
     when_not_to_use="Series with structural breaks -- use ``regime_indicator`` or stochastic detrending instead.",
     related_options=("hp_filter", "hamilton_filter"),
+    op_page=True,
+    op_func_name="time_trend_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 _OP_HOLIDAY = _o(
@@ -1056,6 +1207,11 @@ _OP_HOLIDAY = _o(
     "Daily / weekly business-cycle series where holidays create discrete level shifts.",
     when_not_to_use="Pure macro series at monthly+ frequency where holidays are absorbed by ``season_dummy``.",
     related_options=("season_dummy",),
+    op_page=True,
+    op_func_name="holiday_transform",
+    data_args=_L3_PANEL_DATA_ARG,
+    return_type="pd.DataFrame",
+    returns_attrs=(),
 )
 
 
