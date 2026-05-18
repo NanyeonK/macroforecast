@@ -5,6 +5,56 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 31 -- L3 advanced transforms standalone (12 ops) + C30 backlog fixes
+
+**New standalone callables** in `mf.functions` (all return `pd.DataFrame`):
+
+`hp_filter_transform(panel, *, lambda_=1600)` -> `pd.DataFrame`
+`hamilton_filter_transform(panel, *, h=8, p=4)` -> `pd.DataFrame`
+`savitzky_golay_transform(panel, *, window=7, polyorder=3)` -> `pd.DataFrame`
+`polynomial_expansion_transform(panel, *, degree=2)` -> `pd.DataFrame`
+`interaction_terms_transform(panel)` -> `pd.DataFrame`
+`pca_transform(panel, *, n_components=3)` -> `pd.DataFrame`
+`maf_per_variable_pca_transform(panel, *, n_components_per_var=2)` -> `pd.DataFrame`
+`adaptive_ma_rf_transform(panel, *, n_estimators=100, min_samples_leaf=40)` -> `pd.DataFrame`
+`wavelet_transform(panel, *, wavelet="db4", n_levels=3)` -> `pd.DataFrame`
+`fourier_transform(panel, *, n_terms=4, period=12)` -> `pd.DataFrame`
+`asymmetric_trim_transform(panel)` -> `pd.DataFrame`
+`season_dummy_transform(panel, *, season="quarter")` -> `pd.DataFrame`
+
+Parameter alignment with runtime helpers (C29 paradigm: lazy import, no duplicate formulas):
+- `hp_filter_transform`: `lambda_` maps to runtime `lam`
+- `hamilton_filter_transform`: `h`/`p` map to runtime `n_horizon`/`n_lags`
+- `savitzky_golay_transform`: `window` maps to runtime `window_length`
+- `adaptive_ma_rf_transform`: exposes `n_estimators` + `min_samples_leaf` (no `max_depth` -- not in runtime)
+- `wavelet_transform`: `wavelet` accepted for API consistency; runtime uses rolling-mean approximation
+- `season_dummy_transform`: `season="quarter"` produces modulo-4 dummies for non-DatetimeIndex
+
+All 12 names added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l3.py`):
+- All 12 L3 advanced transform ops set to `op_page=True` with full parameter documentation
+
+**Encyclopedia**: 12 new per-op pages under `docs/encyclopedia/l3/op/`
+(hp_filter, hamilton_filter, savitzky_golay_filter, polynomial_expansion,
+interaction, pca, maf_per_variable_pca, adaptive_ma_rf, wavelet,
+fourier, asymmetric_trim, season_dummy). Total: 242 pages (was 230).
+
+**C30 backlog fixes**:
+- NOTE-1 (`log_diff_transform`): Added 2 sentences to Notes section documenting
+  `np.log` vs recipe `pd.NA` guard divergence on non-positive cells.
+  Identical pattern to `log_transform`. Numerics unchanged.
+- NOTE-2 (`scale_transform`): Changed `raise NotImplementedError(...)` to
+  `raise ValueError(f"Unknown method: {method!r}. Expected zscore/robust/minmax/winsorize/quantile.")`
+  to match project convention (invalid user input = ValueError).
+  Updated `tests/functions/test_l3_basic_transforms.py` assertion accordingly.
+
+**Tests**: `tests/functions/test_l3_advanced_transforms.py` -- 96 tests, all pass.
+Bit-exact assertions (rtol=1e-12, atol=1e-14) on 10 deterministic ops;
+structural checks for RF-based op (adaptive_ma_rf_transform).
+NOTE-1 docstring guard + NOTE-2 ValueError coverage included.
+
+
 ### Cycle 30 -- L3 basic transforms standalone (10 ops) + C29 docstring fix
 
 **New standalone callables** in `mf.functions` (all return `pd.DataFrame`):

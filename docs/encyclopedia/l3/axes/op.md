@@ -25,53 +25,13 @@
 
 AlbaMA -- RF-driven adaptive moving average smoother for a single time series.
 
-Goulet Coulombe & Klieber (2025) 'Adaptive Moving Average for Macroeconomic Monitoring' (arXiv:2501.13222 §2). A random forest fit with a *single* regressor -- the time index -- on the target series ``y`` (i.e. ``RF(y_t ~ t)``). Per-observation leaf membership induces a weight matrix ``w_τt`` whose row sums to 1, so the smoother is a learned-bandwidth moving average of ``y``; the realised window adapts to local volatility / regime. Paper p.8 defaults: ``n_estimators = B = 500``, ``min_samples_leaf = 40``, ``max_features = 1``. ``sided = 'two'`` (default) fits one forest on the full sample (retrospective smoother); ``sided = 'one'`` fits an expanding-window forest per ``t`` (real-time nowcasting variant, paper §3.3 / p.10).
-
-Atomic primitive: existing ``ma_window`` uses a fixed length; ``hamilton_filter`` is a regression on lags rather than a moving average; neither composes into AlbaMA without a learned window selector.
-
-**When to use**
-
-Replicating AlbaMA recipes; macro indicator monitoring under regime shifts.
-
-**When NOT to use**
-
-Multivariate denoising of a predictor panel (AlbaMA smooths a single target series).
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for Macroeconomic Monitoring', arXiv:2501.13222.
-
-**Related options**: [`savitzky_golay_filter`](#savitzky-golay-filter), [`hamilton_filter`](#hamilton-filter), [`hp_filter`](#hp-filter), [`ma_window`](#ma-window)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [adaptive_ma_rf function page](../op/adaptive_ma_rf.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.adaptive_ma_rf_transform``.
 
 ### `asymmetric_trim`  --  operational
 
 Albacore-family rank-space transformation (Goulet Coulombe et al. 2024).
 
-Per-period sort: panel ``Π`` of shape ``(T, K)`` is mapped to ``O`` where ``O[t, r] = sort(Π[t, :])[r]`` (ascending). Asymmetric trimming emerges in the *downstream* nonneg ridge (``ridge(coefficient_constraint=nonneg)``) that learns rank-position weights -- this op does the rank-space transformation only.
-
-Optional ``smooth_window > 0`` applies a centred moving average to each rank-position time series (paper §3 mentions 3-month MA for noisy components; users can chain ``ma_window`` explicitly when they want a different window).
-
-Operational from v0.8.9 (B-6). Layer scope ``(l2, l3)`` so the L3 DAG can dispatch it at recipe time. Algorithm spec: ``docs/replications/maximally_forward_looking_algorithm_notes.md``.
-
-**When to use**
-
-Building Albacore_ranks-style core inflation indicators; supervised asymmetric trimming where the band is learned from data.
-
-**When NOT to use**
-
-Symmetric trimmed-mean targets (use a fixed-window ``ma_window`` instead).
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Goulet Coulombe, Klieber, Barrette & Goebel (2024) 'Maximally Forward-Looking Core Inflation', technical report (R package: assemblage).
-
-**Related options**: [`ma_window`](#ma-window), [`ma_increasing_order`](#ma-increasing-order), [`scaled_pca`](#scaled-pca)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [asymmetric_trim function page](../op/asymmetric_trim.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.asymmetric_trim_transform``.
 
 ### `boruta_selection`  --  future
 
@@ -142,19 +102,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Fourier basis features -- sin/cos at fixed harmonics.
 
-Generates sin/cos pairs at harmonic frequencies of the calendar period (``params.period``, ``params.n_harmonics``). Captures smooth periodic patterns without the indicator-explosion of season_dummy.
-
-**When to use**
-
-Smooth seasonality (annual / weekly cycles) where dummies would over-fit.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`season_dummy`](#season-dummy), [`wavelet`](#wavelet)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [fourier function page](../op/fourier.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.fourier_transform``.
 
 ### `genetic_algorithm_selection`  --  future
 
@@ -166,20 +114,7 @@ _(no schema description for `genetic_algorithm_selection`)_
 
 Hamilton (2018) regression-based detrend (HP-filter alternative).
 
-Regression-based two-sided alternative to the HP filter advocated by Hamilton (2018) for its better real-time properties. Default lookback h = 8 (quarterly) / 24 (monthly). Uses statsmodels ``hamilton_filter``.
-
-**When to use**
-
-Real-time / one-sided detrending where HP's two-sided smoothing is inappropriate.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Hamilton (2018) 'Why You Should Never Use the Hodrick-Prescott Filter', RES 100(5): 831-843.
-
-**Related options**: [`hp_filter`](#hp-filter)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [hamilton_filter function page](../op/hamilton_filter.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.hamilton_filter_transform``.
 
 ### `holiday`  --  operational
 
@@ -207,42 +142,13 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Hodrick-Prescott filter -- trend / cycle decomposition.
 
-statsmodels ``hpfilter`` with smoothing parameter ``params.lamb`` (1600 for quarterly, 129600 for monthly per Ravn-Uhlig 2002). Returns the cyclical component by default; the trend can also be returned via ``params.return = 'trend'``.
-
-**When to use**
-
-Extracting business-cycle gaps from trending series.
-
-**When NOT to use**
-
-Real-time / one-sided forecasting -- HP introduces look-ahead bias unless restricted to ``expanding_window_per_origin``.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Hodrick & Prescott (1997) 'Postwar U.S. Business Cycles: An Empirical Investigation', JMCB 29(1): 1-16.
-
-**Related options**: [`hamilton_filter`](#hamilton-filter), [`diff`](#diff)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [hp_filter function page](../op/hp_filter.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.hp_filter_transform``.
 
 ### `interaction`  --  operational
 
 Pairwise interaction terms only (no pure powers).
 
-Subset of polynomial degree-2 features that contains only pairwise products ``x_i · x_j`` for ``i ≠ j``. Cheaper than full polynomial expansion when interaction structure (not non-linearity in single inputs) is the target.
-
-**When to use**
-
-Capturing predictor-pair complementarities in linear models.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`polynomial`](#polynomial)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [interaction function page](../op/interaction.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.interaction_terms_transform``.
 
 ### `kernel`  --  operational
 
@@ -381,36 +287,7 @@ See [ma_window function page](../op/ma_window.md) for full documentation + param
 
 Per-variable MAF via PCA on lag-panels -- Coulombe et al. (2021 IJF) Eq. (7).
 
-Implements the paper-exact Moving Average Factor (MAF) construction from Coulombe, Leroux, Stevanovic & Surprenant (2021 IJF) §2.2 Eq. (7). For each variable ``k = 1..K`` in the input panel:
-
-1. Build the ``T × (n_lags + 1)`` lag-panel ``[X_{t,k}, L X_{t,k}, ..., L^{n_lags} X_{t,k}]``.
-2. Run PCA retaining ``n_components_per_var`` components (paper default: 2).
-3. Append the resulting factor columns to the output.
-
-Output shape: ``(T, K · n_components_per_var)``. With defaults ``n_lags=12``, ``n_components_per_var=2`` the output is ``(T, 2K)`` -- paper footnote 11: 'We keep two MAFs for each series and they are obtained by PCA.'
-
-**Distinction from existing ``ma_increasing_order → pca(4)`` path**: the existing stacked-PCA MAF cell runs a single PCA over all MA columns at once (stacked, 4 global components). This op runs separate PCA per variable, yielding ``2K`` locally-structured factors rather than 4 global ones. Use this op when paper-Eq.7-exact replication is required.
-
-First ``n_lags`` rows per variable are NaN (lag-panel boundary). ``temporal_rule`` is required; ``full_sample_once`` is rejected to enforce walk-forward boundaries.
-
-Operational from v0.9.0 (phase-f16).
-
-**When to use**
-
-Paper-exact replication of Coulombe et al. (2021 IJF) MAF construction; when per-variable PCA factors are preferred over global stacked-PCA (4-component) path.
-
-**When NOT to use**
-
-When the 16-cell horse-race stacked-PCA MAF cell is sufficient (use ``ma_increasing_order`` → ``pca`` instead); or when K is large and 2K output columns would exceed T.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data Transformations Matter', International Journal of Forecasting 37(4): 1338-1354. <https://doi.org/10.1016/j.ijforecast.2021.05.005>
-
-**Related options**: [`maf`](#maf), [`ma_increasing_order`](#ma-increasing-order), [`ma_window`](#ma-window)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [maf_per_variable_pca function page](../op/maf_per_variable_pca.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.maf_per_variable_pca_transform``.
 
 ### `midas`  --  operational
 
@@ -504,22 +381,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Principal component analysis -- linear factor extraction.
 
-Eigendecomposition of the column covariance; returns the top ``params.n_components`` principal components. Implements the Stock-Watson (2002) diffusion-index workflow used throughout FRED-MD applications.
-
-Combine with ``factor_augmented_ar`` or ``factor_augmented_var`` at L4 to build the diffusion-index forecaster. ``temporal_rule`` controls whether components are re-fit per origin (default: ``expanding_window_per_origin``).
-
-**When to use**
-
-Reducing FRED-MD's 100+ predictors to a handful of latent factors; factor-augmented forecasts.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Stock & Watson (2002) 'Forecasting Using Principal Components from a Large Number of Predictors', JASA 97(460): 1167-1179.
-
-**Related options**: [`sparse_pca`](#sparse-pca), [`scaled_pca`](#scaled-pca), [`varimax`](#varimax), [`dfm`](#dfm), [`partial_least_squares`](#partial-least-squares)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [pca function page](../op/pca.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.pca_transform``.
 
 ### `pct_change`  --  operational
 
@@ -553,19 +415,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Alias for ``polynomial`` -- explicit expansion node in cascade pipelines.
 
-Identical to ``polynomial`` but with a name that reads more clearly as a stage in a multi-step expansion pipeline.
-
-**When to use**
-
-Pipelines that explicitly stage `expand → reduce` sequences.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`polynomial`](#polynomial)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [polynomial_expansion function page](../op/polynomial_expansion.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.polynomial_expansion_transform``.
 
 ### `random_projection`  --  operational
 
@@ -613,26 +463,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Polynomial-fit smoothing filter (Savitzky & Golay 1964).
 
-Local polynomial regression smoothing: each output value is the polynomial-fit centre value of a moving window. ``window_length`` (default 5) and ``polyorder`` (default 2) parameterise the kernel. Operational: runtime delegates to ``scipy.signal.savgol_filter`` (scipy is a hard dependency).
-
-Used as the fixed-window baseline against which Goulet Coulombe & Klieber (2025) AlbaMA's adaptive-window estimator is compared in the v0.9.x replication recipe.
-
-**When to use**
-
-Smoothing macro indicator series for monitoring; AlbaMA replication baseline.
-
-**When NOT to use**
-
-Series with strong non-linear trends -- the polynomial fit smooths them out.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-* Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by Simplified Least Squares Procedures', Analytical Chemistry 36(8).
-
-**Related options**: [`hp_filter`](#hp-filter), [`hamilton_filter`](#hamilton-filter), [`ma_window`](#ma-window), [`adaptive_ma_rf`](#adaptive-ma-rf)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [savitzky_golay_filter function page](../op/savitzky_golay_filter.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.savitzky_golay_transform``.
 
 ### `scale`  --  operational
 
@@ -665,19 +496,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Calendar dummy variables (month-of-year, quarter-of-year).
 
-Generates ``params.n - 1`` 0/1 indicators for the calendar period (drops one to avoid multicollinearity with intercept). Standard frequentist seasonality control.
-
-**When to use**
-
-Capturing calendar seasonality in linear models when a smooth Fourier basis would over-shrink discrete jumps.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`fourier`](#fourier), [`seasonal_lag`](#seasonal-lag)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [season_dummy function page](../op/season_dummy.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.season_dummy_transform``.
 
 ### `seasonal_lag`  --  operational
 
@@ -919,20 +738,4 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Discrete wavelet transform -- multi-scale time-frequency features.
 
-Decomposes the series into wavelet detail and approximation coefficients at several scales (``params.wavelet``, ``params.level``). Captures localised time-frequency patterns that Fourier basis cannot.
-
-**When to use**
-
-Series with localised oscillations or non-stationary cycles (financial / climate macro).
-
-**When NOT to use**
-
-Smooth seasonal patterns -- use ``fourier`` instead.
-
-**References**
-
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
-
-**Related options**: [`fourier`](#fourier)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [wavelet function page](../op/wavelet.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.wavelet_transform``.
