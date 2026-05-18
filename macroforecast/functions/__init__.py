@@ -15,6 +15,7 @@ Cycle 32: L3 supervised/mixed transforms standalone-ization (6 ops).
 Cycle 33: L3 final B1 transforms standalone-ization (8 ops).
 Cycle 34: L2 clean panel ops standalone-ization (14 ops).
 Cycle 35: L4 tree/ensemble family standalone-ization (6 ops).
+Cycle 38: L7 importance standalone callables (8 ops).
 
 Example usage::
 
@@ -192,6 +193,24 @@ from .misc import (
     MARSFitResult, mars_fit,
 )
 
+# Cycle 38: L7 importance standalone callables
+from .importance import (
+    NativeImportanceResult,
+    PermutationImportanceResult,
+    CondPermutationImportanceResult,
+    PDPImportanceResult,
+    ALEImportanceResult,
+    SHAPImportanceResult,
+    model_native_linear_coef_importance,
+    model_native_tree_importance,
+    permutation_importance,
+    cond_permutation_importance,
+    partial_dependence_importance,
+    ale_importance,
+    shap_tree_importance,
+    shap_linear_importance,
+)
+
 __all__ = [
     "FitResultBase",
     "RidgeFitResult",
@@ -360,4 +379,19 @@ __all__ = [
     "kernel_ridge_fit",
     "MARSFitResult",
     "mars_fit",
+    # Cycle 38: L7 importance standalone callables
+    "NativeImportanceResult",
+    "PermutationImportanceResult",
+    "CondPermutationImportanceResult",
+    "PDPImportanceResult",
+    "ALEImportanceResult",
+    "SHAPImportanceResult",
+    "model_native_linear_coef_importance",
+    "model_native_tree_importance",
+    "permutation_importance",
+    "cond_permutation_importance",
+    "partial_dependence_importance",
+    "ale_importance",
+    "shap_tree_importance",
+    "shap_linear_importance",
 ]
