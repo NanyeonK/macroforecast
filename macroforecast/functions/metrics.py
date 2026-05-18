@@ -937,7 +937,5 @@ def pesaran_timmermann_metric(
         + ((2.0 * p_x - 1.0) ** 2 * p_y * (1.0 - p_y)) / n
         + (4.0 * p_y * p_x * (1.0 - p_y) * (1.0 - p_x)) / (n * n)
     )
-    denom = var_p - var_p_star
-    if denom <= 1e-12:
-        return float("nan")
+    denom = max(var_p - var_p_star, 1e-12)
     return float((success - p_star) / math.sqrt(denom))
