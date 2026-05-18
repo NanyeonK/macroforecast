@@ -504,6 +504,38 @@ def _build_l6_fallback() -> tuple[AxisInfo, ...]:
             ),
             has_gate=False,
         ),
+        # Cycle 29: L6.B nested model tests axis (clark_west / enc_new / enc_t)
+        AxisInfo(
+            layer="l6",
+            sublayer="L6_B_nested",
+            name="nested_test",
+            default="clark_west",
+            status="operational",
+            sweepable=True,
+            options=(
+                OptionInfo(
+                    "clark_west",
+                    "Clark-West (2007)",
+                    "MSE-adjusted nested-model test with CW penalty.",
+                ),
+                OptionInfo(
+                    "enc_new",
+                    "Enc-New (Clark-McCracken 2001)",
+                    "Encompassing test, no CW adjustment.",
+                ),
+                OptionInfo(
+                    "enc_t",
+                    "Enc-T (Ericsson 1992)",
+                    "T-form encompassing test, identical computation to Enc-New.",
+                ),
+                OptionInfo(
+                    "multi",
+                    "All of the above",
+                    "Run clark_west + enc_new + enc_t.",
+                ),
+            ),
+            has_gate=False,
+        ),
     )
 
 

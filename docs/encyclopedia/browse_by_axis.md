@@ -114,7 +114,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`multiple_model_test`](l6/axes/multiple_model_test.md) | L6 | `L6_D_multiple_model` | operational | no | 4 |
 | [`naming_convention`](l8/axes/naming_convention.md) | L8 | `L8_D_artifact_granularity` | operational | no | 4 |
 | [`nested_pair_strategy`](l6/axes/nested_pair_strategy.md) | L6 | `L6_B_nested` | operational | no | 0 |
-| [`nested_test`](l6/axes/nested_test.md) | L6 | `L6_B_nested` | operational | no | 0 |
+| [`nested_test`](l6/axes/nested_test.md) | L6 | `L6_B_nested` | operational | no | 4 |
 | [`official_transform_policy`](l1/axes/official_transform_policy.md) | L1 | `l1_c` | operational | no | 2 |
 | [`official_transform_scope`](l1/axes/official_transform_scope.md) | L1 | `l1_c` | operational | no | 4 |
 | [`oos_period`](l5/axes/oos_period.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |

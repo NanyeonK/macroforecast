@@ -5,6 +5,38 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 29 — L6 statistical tests bulk standalone-ization (7 ops)
+
+**New standalone callables** in `mf.functions` (all return a frozen dataclass with `.summary()`):
+
+`dm_test(loss_a, loss_b, *, horizon, correction, kernel)` -> `DMTestResult`
+`gw_test(loss_a, loss_b, *, horizon, correction, kernel)` -> `GWTestResult`
+`dmp_test(loss_differentials, *, kernel)` -> `DMPTestResult`
+`hn_test(e_a, e_b, *, horizon, kernel, small_sample)` -> `HNTestResult`
+`cw_test(loss_small, loss_large, f_small, f_large, *, horizon, kernel)` -> `CWTestResult`
+`enc_new_test(loss_small, loss_large, *, horizon, kernel)` -> `EncNewTestResult`
+`enc_t_test(loss_small, loss_large, *, horizon, kernel)` -> `EncTTestResult`
+
+Each callable lazy-imports the corresponding runtime primitive from `macroforecast.core.runtime`
+(`_diebold_mariano_test`, `_harvey_newbold_test`, `_l6_dmp_multi_horizon`, `_long_run_variance`)
+to ensure bit-exact numerical results with the recipe-path dispatch.
+
+All 14 names (7 result classes + 7 callables) added to `mf.functions.__all__`.
+
+**OptionDoc updates** (`macroforecast/scaffold/option_docs/l6.py`):
+- Extended `_e()` helper to accept `op_page`, `op_func_name`, `data_args`, `return_type`, `returns_attrs`
+- Shared `data_args` constants: `_L6_LOSS_PAIR_DATA_ARGS`, `_L6_DMP_DATA_ARGS`, `_L6_HN_DATA_ARGS`, `_L6_CW_DATA_ARGS`, `_L6_ENC_DATA_ARGS`
+- All 7 L6 ops (4 L6.A + 3 L6.B) set to `op_page=True` with full parameter documentation
+- Added L6.B nested_test section (clark_west, enc_new, enc_t, multi) which was previously empty
+
+**L6.B nested_test axis fix** (`macroforecast/scaffold/introspect.py`):
+- Added `L6_B_nested` `AxisInfo` to `_build_l6_fallback()` so encyclopedia renders clark_west, enc_new, enc_t, multi option pages
+- Result: 220 encyclopedia pages (was 217; +3 nested_test option pages)
+
+**Tests**: `tests/functions/test_l6_tests.py` — 60 tests, all pass.
+Bit-exact assertions (rtol=1e-12, atol=1e-14) on stat and pvalue for all 7 ops.
+
+
 ### Cycle 28 -- L4 linear family standalone-ization (~7 ops)
 
 **New standalone callables** in `mf.functions` (all return a `FitResultBase`-conformant frozen dataclass):

@@ -65,6 +65,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`census_region_south`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
 | [`census_region_west`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
 | [`chow_lin`](l2/axes/quarterly_to_monthly_rule.md) | L2 | `quarterly_to_monthly_rule` | future |
+| [`clark_west`](l6/axes/nested_test.md) | L6 | `nested_test` | operational |
 | [`clean_panel`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`cleaned_vs_features`](l3_5/axes/comparison_stages.md) | L3.5 | `comparison_stages` | operational |
 | [`clustered_heatmap`](l1_5/axes/correlation_view.md) | L1.5 | `correlation_view` | operational |
@@ -130,6 +131,8 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`em_multivariate`](l2/axes/imputation_policy.md) | L2 | `imputation_policy` | operational |
 | [`empirical`](l2/axes/sd_tcode_policy.md) | L2 | `sd_tcode_policy` | operational |
 | [`employment_sector`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
+| [`enc_new`](l6/axes/nested_test.md) | L6 | `nested_test` | operational |
+| [`enc_t`](l6/axes/nested_test.md) | L6 | `nested_test` | operational |
 | [`estimated_markov_switching`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
 | [`estimated_structural_break`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
 | [`estimated_threshold`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
@@ -359,6 +362,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`multi`](l4_5/axes/window_view.md) | L4.5 | `window_view` | operational |
 | [`multi`](l6/axes/cpa_test.md) | L6 | `cpa_test` | operational |
 | [`multi`](l6/axes/equal_predictive_test.md) | L6 | `equal_predictive_test` | operational |
+| [`multi`](l6/axes/nested_test.md) | L6 | `nested_test` | operational |
 | [`multi_stage`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`multi_target`](l1/axes/target_structure.md) | L1 | `target_structure` | operational |
 | [`n_imputed_per_series`](l2_5/axes/cleaning_summary_view.md) | L2.5 | `cleaning_summary_view` | operational |
