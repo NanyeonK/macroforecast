@@ -25,7 +25,7 @@ mf.functions.time_trend_transform(
 
 ## Behavior
 
-Adds a column ``t`` to the panel; with ``params.degree > 1`` appends polynomial trends. Deterministic complement to stochastic detrending (HP / Hamilton).
+Adds a column ``time_trend`` to the panel; with ``params.degree > 1`` appends polynomial trends. Deterministic complement to stochastic detrending (HP / Hamilton).
 
 **When to use**
 

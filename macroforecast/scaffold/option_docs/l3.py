@@ -737,6 +737,8 @@ _OP_VARIMAX_ROTATION = _o(
     "varimax_rotation",
     "Alias for ``varimax`` -- rotation step in a multi-stage factor pipeline.",
     (
+        "**Alias** -- no dedicated function page. See canonical "
+        "``varimax`` (`op/varimax.md`) for full documentation + standalone usage.\n\n"
         "Identical operation to ``varimax`` but registered separately "
         "so a cascading L3 pipeline can declare ``pca → varimax_rotation`` "
         "as two visible nodes in its lineage."
@@ -970,6 +972,8 @@ _OP_POLYNOMIAL = _o(
     "polynomial",
     "Polynomial basis expansion -- degree-d powers of input.",
     (
+        "**Alias** -- no dedicated function page. See canonical "
+        "``polynomial_expansion`` (`op/polynomial_expansion.md`) for full documentation + standalone usage.\n\n"
         "sklearn ``PolynomialFeatures`` of degree ``params.degree``. "
         "Includes interaction terms by default; set "
         "``params.interaction_only=True`` for products without pure "
@@ -1031,6 +1035,8 @@ _OP_KERNEL = _o(
     "kernel",
     "Kernel-feature pre-step (Random Fourier / Nyström handle).",
     (
+        "**Alias** -- no dedicated function page. See canonical "
+        "``kernel_features`` (`op/kernel_features.md`) for full documentation + standalone usage.\n\n"
         "Generic handle for an explicit kernel-feature embedding; "
         "concrete dispatch is determined by ``params.kernel`` "
         "(``rbf`` / ``poly`` / ``laplacian``). For named variants use "
@@ -1123,6 +1129,8 @@ _OP_NYSTROEM_FEATURES = _o(
     "nystroem_features",
     "Alias for ``nystroem`` -- explicit feature-stage name.",
     (
+        "**Alias** -- no dedicated function page. See canonical "
+        "``nystroem`` (`op/nystroem.md`) for full documentation + standalone usage.\n\n"
         "Identical to ``nystroem``; preferred when a multi-stage "
         "pipeline names its kernel approximation explicitly in the "
         "lineage graph."
@@ -1182,7 +1190,7 @@ _OP_TIME_TREND = _o(
     "time_trend",
     "Deterministic linear time trend (``t = 1, 2, ...``).",
     (
-        "Adds a column ``t`` to the panel; with ``params.degree > 1`` "
+        "Adds a column ``time_trend`` to the panel; with ``params.degree > 1`` "
         "appends polynomial trends. Deterministic complement to "
         "stochastic detrending (HP / Hamilton)."
     ),

@@ -34,11 +34,11 @@ All 8 names added to `mf.functions.__all__`.
 
 **OptionDoc updates** (`macroforecast/scaffold/option_docs/l3.py`):
 - 8 canonical ops set to `op_page=True` with `op_func_name`, `data_args`, `return_type`, `returns_attrs`.
-- 4 alias entries set to `op_page=True` pointing to canonical callables:
+- 4 alias entries set to `op_page=False` (orphan pages deleted); catalog entries in `op.md` redirect readers to canonical pages:
   `varimax_rotation` -> `varimax_transform`, `kernel` -> `kernel_features_transform`,
   `nystroem_features` -> `nystroem_transform`, `polynomial` -> `polynomial_expansion_transform`.
 
-**Encyclopedia**: 248 -> 260 pages (12 new L3 op pages).
+**Encyclopedia**: 248 -> 256 pages (8 new canonical, 4 alias pages skipped).
 
 **C32 backlog fixes**:
 - **NOTE-A** (BLK-4 PLS clamp): `min(T_clean-1, K_clean-1)` -> `min(T_clean-1, K_clean)`.

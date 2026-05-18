@@ -103,6 +103,8 @@ See [interaction function page](../op/interaction.md) for full documentation + p
 
 Kernel-feature pre-step (Random Fourier / Nyström handle).
 
+**Alias** -- no dedicated function page. See canonical ``kernel_features`` (`op/kernel_features.md`) for full documentation + standalone usage.
+
 Generic handle for an explicit kernel-feature embedding; concrete dispatch is determined by ``params.kernel`` (``rbf`` / ``poly`` / ``laplacian``). For named variants use ``kernel_features`` (RBF Random Fourier) or ``nystroem``.
 
 **When to use**
@@ -264,6 +266,8 @@ See [nystroem function page](../op/nystroem.md) for full documentation + paramet
 
 Alias for ``nystroem`` -- explicit feature-stage name.
 
+**Alias** -- no dedicated function page. See canonical ``nystroem`` (`op/nystroem.md`) for full documentation + standalone usage.
+
 Identical to ``nystroem``; preferred when a multi-stage pipeline names its kernel approximation explicitly in the lineage graph.
 
 **When to use**
@@ -299,6 +303,8 @@ See [pct_change function page](../op/pct_change.md) for full documentation + par
 ### `polynomial`  --  operational
 
 Polynomial basis expansion -- degree-d powers of input.
+
+**Alias** -- no dedicated function page. See canonical ``polynomial_expansion`` (`op/polynomial_expansion.md`) for full documentation + standalone usage.
 
 sklearn ``PolynomialFeatures`` of degree ``params.degree``. Includes interaction terms by default; set ``params.interaction_only=True`` for products without pure powers.
 
@@ -487,6 +493,8 @@ See [varimax function page](../op/varimax.md) for full documentation + parameter
 ### `varimax_rotation`  --  operational
 
 Alias for ``varimax`` -- rotation step in a multi-stage factor pipeline.
+
+**Alias** -- no dedicated function page. See canonical ``varimax`` (`op/varimax.md`) for full documentation + standalone usage.
 
 Identical operation to ``varimax`` but registered separately so a cascading L3 pipeline can declare ``pca → varimax_rotation`` as two visible nodes in its lineage.
 

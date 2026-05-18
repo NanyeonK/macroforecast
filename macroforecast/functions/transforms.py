@@ -2392,7 +2392,7 @@ def time_trend_transform(panel: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pd.DataFrame
-        Single-column DataFrame with column ``"t"`` containing
+        Single-column DataFrame with column ``"time_trend"`` containing
         ``1, 2, ..., T`` as float64.  Shape is ``(T, 1)`` where T is
         ``len(panel)``.
 
@@ -2413,7 +2413,7 @@ def time_trend_transform(panel: pd.DataFrame) -> pd.DataFrame:
     >>> out = time_trend_transform(panel)
     >>> out.shape
     (5, 1)
-    >>> list(out["t"])
+    >>> list(out["time_trend"])
     [1.0, 2.0, 3.0, 4.0, 5.0]
 
     References
