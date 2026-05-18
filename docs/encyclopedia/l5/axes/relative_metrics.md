@@ -23,7 +23,7 @@
 
 ### `mse_reduction`  --  operational
 
-``1 - relative_mse`` -- positive means the candidate beats the benchmark.
+``MSE_benchmark - MSE_model`` (absolute MSE reduction) -- positive means the candidate beats the benchmark.
 
 See [mse_reduction function page](../relative_metrics/mse_reduction.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.mse_reduction``.
 

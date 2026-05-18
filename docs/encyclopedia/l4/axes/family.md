@@ -44,24 +44,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Ordinary least squares -- baseline linear regression.
 
-Closed-form linear regression with no regularisation. Cheapest linear estimator; appropriate when p << n and predictors are well-conditioned. Returns NaN coefficients when the design matrix is rank-deficient (sklearn raises an error in that case).
-
-**When to use**
-
-Low-dimensional baselines; sanity-check sweeps.
-
-**When NOT to use**
-
-High-dimensional panels (p ≈ n) -- use ridge / lasso instead.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Greene (2018) 'Econometric Analysis', 8th ed., Pearson.
-
-**Related options**: [`ridge`](#ridge), [`lasso`](#lasso), [`elastic_net`](#elastic-net), [`ar_p`](#ar-p)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [ols function page](../family/ols.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.ols_fit``.
 
 ### `ridge`  --  operational
 
@@ -73,113 +56,37 @@ See [ridge function page](../family/ridge.md) for full documentation + parameter
 
 Lasso regression (L1-regularised OLS).
 
-Iterative coordinate descent: minimises ``||y - Xβ||² + α||β||₁``. Forces a subset of coefficients to exactly zero, yielding a sparse solution. Uses sklearn's ``Lasso`` with ``max_iter=20000`` for stability.
-
-**When to use**
-
-Variable selection; sparse forecasts on high-dimensional panels.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Tibshirani (1996) 'Regression Shrinkage and Selection via the Lasso', JRSS-B 58(1).
-
-**Related options**: [`ridge`](#ridge), [`elastic_net`](#elastic-net), [`lasso_path`](#lasso-path)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [lasso function page](../family/lasso.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.lasso_fit``.
 
 ### `elastic_net`  --  operational
 
 Elastic net (L1 + L2 hybrid).
 
-Combines ridge and lasso penalties via ``params.l1_ratio`` (0 = ridge, 1 = lasso). Useful when predictors are correlated and pure lasso struggles with the selection.
-
-**When to use**
-
-Correlated predictor blocks where lasso alone gives unstable selection.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Zou & Hastie (2005) 'Regularization and variable selection via the elastic net', JRSS-B 67(2).
-
-**Related options**: [`ridge`](#ridge), [`lasso`](#lasso)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [elastic_net function page](../family/elastic_net.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.elastic_net_fit``.
 
 ### `lasso_path`  --  operational
 
 Lasso with CV-selected alpha (LassoCV).
 
-Wraps sklearn's ``LassoCV``. Picks α automatically from a regularisation path via k-fold CV (``params.cv``). Equivalent to setting ``family: lasso, search_algorithm: cv_path``.
-
-**When to use**
-
-When the recipe wants automatic α selection without an explicit search_algorithm.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-
-**Related options**: [`lasso`](#lasso), [`ridge`](#ridge)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [lasso_path function page](../family/lasso_path.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.lasso_path_fit``.
 
 ### `bayesian_ridge`  --  operational
 
 Bayesian ridge with empirical-Bayes prior.
 
-sklearn ``BayesianRidge``: gamma priors on noise + coefficient precision; type-II ML estimates of both. Returns posterior mean coefficients + posterior variance. Useful when the user wants a coefficient credible interval without bootstrapping.
-
-**When to use**
-
-Studies that need coefficient credible intervals; default-Bayesian baselines.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-
-**Related options**: [`ridge`](#ridge), [`bvar_minnesota`](#bvar-minnesota)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [bayesian_ridge function page](../family/bayesian_ridge.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.bayesian_ridge_fit``.
 
 ### `glmboost`  --  operational
 
 Componentwise L2-boosting with linear base learners.
 
-Bühlmann-Hothorn (2007) componentwise boosting: at each iteration picks the predictor most correlated with the residual and updates only its coefficient. Approximates lasso with a boosting interpretation.
-
-**When to use**
-
-Transparent feature-selection pathways; alternative to lasso.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Bühlmann & Hothorn (2007) 'Boosting algorithms: Regularization, prediction and model fitting', Statistical Science 22(4).
-
-**Related options**: [`lasso`](#lasso), [`elastic_net`](#elastic-net)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [glmboost function page](../family/glmboost.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.glmboost_fit``.
 
 ### `huber`  --  operational
 
 Huber regression (robust to outliers).
 
-Replaces squared loss with the Huber loss: quadratic for small residuals, linear for large ones. Down-weights outliers without removing them. ``params.epsilon`` (default 1.35) sets the transition point.
-
-**When to use**
-
-Series with sporadic outliers that aren't worth flagging in L2.
-
-**References**
-
-* macroforecast design Part 2, L4: 'forecasting model is the layer where every authoring iteration ends -- pick family, tune, repeat.'
-* Huber (1964) 'Robust Estimation of a Location Parameter', Annals of Mathematical Statistics 35(1).
-
-**Related options**: [`ols`](#ols), [`ridge`](#ridge)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [huber function page](../family/huber.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.huber_fit``.
 
 ### `var`  --  operational
 

@@ -1,4 +1,4 @@
-# `mse_reduction` -- ``1 - relative_mse`` -- positive means the candidate beats the benchmark.
+# `mse_reduction` -- ``MSE_benchmark - MSE_model`` (absolute MSE reduction) -- positive means the candidate beats the benchmark.
 
 [Back to `relative_metrics` axis](../axes/relative_metrics.md) | [Back to L5](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -29,7 +29,7 @@ mf.functions.mse_reduction(
 
 ## Behavior
 
-Relative-loss metric ``mse_reduction``. Convenience reformulation that flips the sign so positive numbers indicate improvement. Common in macro-forecasting papers (e.g. Stock-Watson 2002 reports MSE reduction in %). Equivalent to ``1 - MSE_model / MSE_benchmark``.
+Relative-loss metric ``mse_reduction``. Absolute difference: ``MSE_benchmark - MSE_model``. A positive value means the model produces lower MSE than the benchmark. Common in macro-forecasting papers (e.g. Stock-Watson 2002 reports MSE reduction in %). Note: some documentation describes this as ``1 - relative_mse`` (ratio form); the computation uses the absolute difference, matching the recipe-path runtime.
 
 **When to use**
 

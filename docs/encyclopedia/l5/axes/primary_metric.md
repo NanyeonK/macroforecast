@@ -155,9 +155,9 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `mse_reduction`  --  operational
 
-``1 - relative_mse`` -- positive means the candidate beats the benchmark.
+``MSE_benchmark - MSE_model`` (absolute MSE reduction) -- positive means the candidate beats the benchmark.
 
-Primary metric used for the L5.A summary table and the L5.E ranking. Convenience reformulation that flips the sign so positive numbers indicate improvement. Common in macro-forecasting papers (e.g. Stock-Watson 2002 reports MSE reduction in %). Equivalent to ``1 - MSE_model / MSE_benchmark``.
+Primary metric used for the L5.A summary table and the L5.E ranking. Absolute difference: ``MSE_benchmark - MSE_model``. A positive value means the model produces lower MSE than the benchmark. Common in macro-forecasting papers (e.g. Stock-Watson 2002 reports MSE reduction in %). Note: some documentation describes this as ``1 - relative_mse`` (ratio form); the computation uses the absolute difference, matching the recipe-path runtime.
 
 **When to use**
 

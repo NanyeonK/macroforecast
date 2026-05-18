@@ -5,6 +5,31 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 28 -- L4 linear family standalone-ization (~7 ops)
+
+**New standalone callables** in `mf.functions` (all return a `FitResultBase`-conformant frozen dataclass):
+
+`ols_fit` -> `OLSFitResult`
+`lasso_fit` -> `LassoFitResult`
+`elastic_net_fit` -> `ElasticNetFitResult`
+`lasso_path_fit` -> `LassoPathFitResult`
+`bayesian_ridge_fit` -> `BayesianRidgeFitResult`
+`huber_fit` -> `HuberFitResult`
+`glmboost_fit` -> `GLMBoostFitResult`
+
+All callables produce bit-exact output with the L4 recipe-path computation
+(`_build_l4_model` in `macroforecast.core.runtime`).
+
+Encyclopedia pages auto-emitted for all 7 new ops.
+
+Ridge sub-axis variants (NonNeg, TwoStageRandomWalk, ShrinkToTarget, FusedDifference)
+confirmed as sub-modes of the existing `ridge_fit`; no new callables needed.
+
+**Backlog fixes**:
+- B27-1: PT denom guard aligned to runtime behavior (clamped, not early-NaN).
+- B27-2: `mse_reduction` OptionDoc description corrected (absolute difference, not ratio).
+
+
 ### Cycle 27 -- L5 metrics bulk standalone-ization (~13 ops)
 
 **New standalone callables** in `mf.functions` (all return `float`):
