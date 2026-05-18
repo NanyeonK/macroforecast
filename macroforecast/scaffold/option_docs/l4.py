@@ -529,6 +529,17 @@ _F_AR_P = _f(
         ),
     ),
     related_options=("var", "factor_augmented_ar"),
+    op_page=True,
+    op_func_name="ar_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="ARFitResult",
+    returns_attrs=(
+        (".n_lags", "int", "AR lag order p."),
+        (".coef_", "np.ndarray", "Fitted AR coefficients, shape (n_lags,)."),
+        (".intercept_", "float", "Fitted intercept."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: AR order, intercept, per-lag coefficients."),
+    ),
 )
 
 _F_VAR = _f(
@@ -548,6 +559,16 @@ _F_VAR = _f(
         ),
     ),
     related_options=("bvar_minnesota", "factor_augmented_var", "ar_p"),
+    op_page=True,
+    op_func_name="var_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="VARFitResult",
+    returns_attrs=(
+        (".n_lags", "int", "VAR lag order p."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: lag order and observation count."),
+    ),
 )
 
 _F_FAR = _f(
@@ -567,6 +588,16 @@ _F_FAR = _f(
         ),
     ),
     related_options=("factor_augmented_var", "principal_component_regression", "ar_p"),
+    op_page=True,
+    op_func_name="far_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="FARFitResult",
+    returns_attrs=(
+        (".n_factors", "int", "Number of PCA factors extracted from X."),
+        (".n_lags", "int", "AR lag order p."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: factor count and lag order."),
+    ),
 )
 
 _F_PCR = _f(
@@ -580,6 +611,15 @@ _F_PCR = _f(
     "Diffusion-index forecasts where AR augmentation hurts performance.",
     references=(_REF_DESIGN_L4,),
     related_options=("factor_augmented_ar",),
+    op_page=True,
+    op_func_name="pcr_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="PCRFitResult",
+    returns_attrs=(
+        (".n_components", "int", "Number of principal components used in regression."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: component count."),
+    ),
 )
 
 _F_FAVAR = _f(
@@ -600,6 +640,16 @@ _F_FAVAR = _f(
         ),
     ),
     related_options=("var", "factor_augmented_ar", "bvar_minnesota"),
+    op_page=True,
+    op_func_name="favar_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="FAVARFitResult",
+    returns_attrs=(
+        (".n_factors", "int", "Number of PCA factors extracted from X."),
+        (".n_lags", "int", "VAR lag order p."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: factor count and lag order."),
+    ),
 )
 
 _F_BVAR_MIN = _f(
@@ -622,6 +672,17 @@ _F_BVAR_MIN = _f(
         ),
     ),
     related_options=("bvar_normal_inverse_wishart", "var", "factor_augmented_var"),
+    op_page=True,
+    op_func_name="bvar_minnesota_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="BVARMinnesotaFitResult",
+    returns_attrs=(
+        (".n_lags", "int", "VAR lag order p."),
+        (".lambda1", "float", "Minnesota prior tightness."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: lag order, tightness, observation count."),
+    ),
 )
 
 _F_BVAR_NIW = _f(
@@ -641,6 +702,16 @@ _F_BVAR_NIW = _f(
         ),
     ),
     related_options=("bvar_minnesota", "var"),
+    op_page=True,
+    op_func_name="bvar_niw_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="BVARNIWFitResult",
+    returns_attrs=(
+        (".n_lags", "int", "VAR lag order p."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: lag order and observation count."),
+    ),
 )
 
 _F_DFM_MM = _f(
@@ -662,6 +733,16 @@ _F_DFM_MM = _f(
         ),
     ),
     related_options=("factor_augmented_ar", "factor_augmented_var"),
+    op_page=True,
+    op_func_name="dfm_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="DFMFitResult",
+    returns_attrs=(
+        (".n_factors", "int", "Number of dynamic factors."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: factor count and observation count."),
+    ),
 )
 
 
@@ -1043,6 +1124,18 @@ _F_GARCH11 = _f(
         ),
     ),
     related_options=("egarch", "realized_garch_with_rv_exog"),
+    op_page=True,
+    op_func_name="garch11_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="GARCH11FitResult",
+    returns_attrs=(
+        (".conditional_mu", "float", "Fitted conditional mean mu."),
+        (".n_obs", "int", "Number of non-missing observations."),
+        (".params_", "dict", "Fitted GARCH parameters dict."),
+        (".predict(X)", "np.ndarray", "Conditional mean broadcast over len(X) rows."),
+        (".predict_variance(h)", "np.ndarray", "h-step-ahead variance forecast."),
+        (".summary()", "str", "Table: conditional mean and fitted parameters."),
+    ),
 )
 
 _F_EGARCH = _f(
@@ -1068,6 +1161,18 @@ _F_EGARCH = _f(
         ),
     ),
     related_options=("garch11", "realized_garch_with_rv_exog"),
+    op_page=True,
+    op_func_name="egarch_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="EGARCHFitResult",
+    returns_attrs=(
+        (".conditional_mu", "float", "Fitted conditional mean mu."),
+        (".n_obs", "int", "Number of non-missing observations."),
+        (".params_", "dict", "Fitted EGARCH parameters dict."),
+        (".predict(X)", "np.ndarray", "Conditional mean broadcast over len(X) rows."),
+        (".predict_variance(h)", "np.ndarray", "h-step-ahead variance forecast."),
+        (".summary()", "str", "Table: conditional mean and fitted parameters."),
+    ),
 )
 
 _F_REALIZED_GARCH_WITH_RV_EXOG = _f(
@@ -1100,6 +1205,18 @@ _F_REALIZED_GARCH_WITH_RV_EXOG = _f(
         ),
     ),
     related_options=("garch11", "egarch"),
+    op_page=True,
+    op_func_name="realized_garch_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="RealizedGARCHFitResult",
+    returns_attrs=(
+        (".conditional_mu", "float", "Fitted conditional mean mu."),
+        (".n_obs", "int", "Number of non-missing observations."),
+        (".params_", "dict", "Fitted model parameters dict."),
+        (".predict(X)", "np.ndarray", "Conditional mean broadcast over len(X) rows."),
+        (".predict_variance(h)", "np.ndarray", "h-step-ahead variance forecast."),
+        (".summary()", "str", "Table: conditional mean and fitted parameters."),
+    ),
 )
 
 _F_ETS = _f(
@@ -1132,6 +1249,16 @@ _F_ETS = _f(
         ),
     ),
     related_options=("theta_method", "holt_winters", "ar_p"),
+    op_page=True,
+    op_func_name="ets_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="ETSFitResult",
+    returns_attrs=(
+        (".error_trend_seasonal", "str", "3-character ETS code, e.g. AAN."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Forecast, len(X) steps ahead."),
+        (".summary()", "str", "Table: ETS code and observation count."),
+    ),
 )
 
 _F_THETA_METHOD = _f(
@@ -1168,6 +1295,17 @@ _F_THETA_METHOD = _f(
         ),
     ),
     related_options=("ets", "holt_winters", "ar_p"),
+    op_page=True,
+    op_func_name="theta_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="ThetaFitResult",
+    returns_attrs=(
+        (".theta", "float", "Theta parameter (default 2.0 = M3 winner)."),
+        (".alpha_", "float", "Fitted SES smoothing parameter."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Forecast, len(X) steps ahead."),
+        (".summary()", "str", "Table: theta, alpha, observation count."),
+    ),
 )
 
 _F_HOLT_WINTERS = _f(
@@ -1198,6 +1336,17 @@ _F_HOLT_WINTERS = _f(
         ),
     ),
     related_options=("ets", "theta_method", "ar_p"),
+    op_page=True,
+    op_func_name="holt_winters_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="HoltWintersFitResult",
+    returns_attrs=(
+        (".seasonal", "str", "Seasonal component type (add or mul)."),
+        (".seasonal_periods", "int", "Number of periods per season."),
+        (".n_obs", "int", "Number of observations."),
+        (".predict(X)", "np.ndarray", "Forecast, len(X) steps ahead."),
+        (".summary()", "str", "Table: seasonal type, periods, observation count."),
+    ),
 )
 
 
@@ -1225,6 +1374,16 @@ _F_MARS = _f(
         ),
     ),
     related_options=("gradient_boosting", "decision_tree", "bagging"),
+    op_page=True,
+    op_func_name="mars_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="MARSFitResult",
+    returns_attrs=(
+        (".n_terms", "int", "Number of MARS basis terms."),
+        (".n_features_in_", "int", "Number of input features."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: term count and feature count."),
+    ),
 )
 
 
@@ -1241,6 +1400,16 @@ _F_SVR_LINEAR = _f(
         ),
     ),
     related_options=("svr_rbf", "svr_poly", "ridge"),
+    op_page=True,
+    op_func_name="svr_linear_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="SVRLinearFitResult",
+    returns_attrs=(
+        (".C", "float", "Regularisation parameter used."),
+        (".n_support_vectors", "int", "Number of support vectors."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: C and support vector count."),
+    ),
 )
 
 _F_SVR_RBF = _f(
@@ -1250,6 +1419,17 @@ _F_SVR_RBF = _f(
     "Small / medium-dim non-linear regression; kernel-method ablations.",
     references=(_REF_DESIGN_L4,),
     related_options=("svr_linear", "svr_poly", "random_forest"),
+    op_page=True,
+    op_func_name="svr_rbf_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="SVRRBFFitResult",
+    returns_attrs=(
+        (".C", "float", "Regularisation parameter used."),
+        (".gamma", "str|float", "RBF bandwidth parameter."),
+        (".n_support_vectors", "int", "Number of support vectors."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: C, gamma, support vector count."),
+    ),
 )
 
 _F_SVR_POLY = _f(
@@ -1259,6 +1439,17 @@ _F_SVR_POLY = _f(
     "Polynomial-kernel ablations.",
     references=(_REF_DESIGN_L4,),
     related_options=("svr_rbf", "svr_linear"),
+    op_page=True,
+    op_func_name="svr_poly_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="SVRPolyFitResult",
+    returns_attrs=(
+        (".C", "float", "Regularisation parameter used."),
+        (".degree", "int", "Polynomial degree."),
+        (".n_support_vectors", "int", "Number of support vectors."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: C, degree, support vector count."),
+    ),
 )
 
 _F_KERNEL_RIDGE = _f(
@@ -1295,6 +1486,17 @@ _F_KERNEL_RIDGE = _f(
         ),
     ),
     related_options=("ridge", "svr_rbf", "dual_decomposition"),
+    op_page=True,
+    op_func_name="kernel_ridge_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="KernelRidgeFitResult",
+    returns_attrs=(
+        (".alpha", "float", "Ridge regularisation strength."),
+        (".kernel", "str", "Kernel type (e.g. rbf, linear)."),
+        (".n_features_in_", "int", "Number of input features."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: alpha, kernel, feature count."),
+    ),
 )
 
 _F_KNN = _f(
@@ -1309,6 +1511,17 @@ _F_KNN = _f(
         ),
     ),
     related_options=("random_forest", "svr_rbf"),
+    op_page=True,
+    op_func_name="knn_fit",
+    data_args=_L4_DATA_ARGS,
+    return_type="KNNFitResult",
+    returns_attrs=(
+        (".n_neighbors", "int", "Neighbour count k requested."),
+        (".n_neighbors_used", "int", "Actual k used (clipped to training set size)."),
+        (".n_features_in_", "int", "Number of input features."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_samples,)."),
+        (".summary()", "str", "Table: neighbour counts and feature count."),
+    ),
 )
 
 _F_MLP = _f(
