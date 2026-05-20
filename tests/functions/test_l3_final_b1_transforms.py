@@ -391,15 +391,6 @@ class TestHolidayTransform:
         out = holiday_transform(PANEL)
         assert np.allclose(out.fillna(0), expected.fillna(0), rtol=1e-12, atol=1e-14)
 
-    @pytest.mark.xfail(
-        reason=(
-            "runtime _holiday_indicator uses pd.tseries.offsets.USFederalHolidayCalendar "
-            "which was moved to pd.tseries.holiday in pandas >= 2.x; "
-            "the standalone function correctly delegates to the runtime -- "
-            "fix is in runtime.py, tracked in mailbox.md."
-        ),
-        strict=True,
-    )
     def test_datetime_index_flag(self):
         # New Year's Day 2023 is a US federal holiday (observed Monday Jan 2)
         idx = pd.DatetimeIndex(["2023-01-02", "2023-01-03", "2023-01-04"])
@@ -411,25 +402,11 @@ class TestHolidayTransform:
         assert out.loc["2023-01-03", "is_holiday"] == 0.0
         assert out.loc["2023-01-04", "is_holiday"] == 0.0
 
-    @pytest.mark.xfail(
-        reason=(
-            "runtime _holiday_indicator uses pd.tseries.offsets.USFederalHolidayCalendar "
-            "which was moved to pd.tseries.holiday in pandas >= 2.x; tracked in mailbox.md."
-        ),
-        strict=True,
-    )
     def test_datetime_panel_shape(self):
         out = holiday_transform(PANEL_DATES)
         assert out.shape == (50, 1)
         assert list(out.columns) == ["is_holiday"]
 
-    @pytest.mark.xfail(
-        reason=(
-            "runtime _holiday_indicator uses pd.tseries.offsets.USFederalHolidayCalendar "
-            "which was moved to pd.tseries.holiday in pandas >= 2.x; tracked in mailbox.md."
-        ),
-        strict=True,
-    )
     def test_bit_exact_datetime_vs_runtime(self):
         from macroforecast.core.runtime import _as_frame, _holiday_indicator
         frame = _as_frame(PANEL_DATES)

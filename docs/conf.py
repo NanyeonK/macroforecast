@@ -57,7 +57,7 @@ myst_enable_extensions = [
     "smartquotes",
 ]
 
-myst_heading_anchors = 3
+myst_heading_anchors = 4
 
 # -- HTML output --------------------------------------------------------------
 

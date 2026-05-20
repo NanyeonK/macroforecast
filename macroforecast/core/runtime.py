@@ -14744,7 +14744,8 @@ def _holiday_indicator(frame: pd.DataFrame) -> pd.DataFrame:
 
     if not isinstance(frame.index, pd.DatetimeIndex):
         return pd.DataFrame({"is_holiday": [0] * len(frame)}, index=frame.index)
-    holidays = pd.tseries.offsets.USFederalHolidayCalendar().holidays(
+    from pandas.tseries.holiday import USFederalHolidayCalendar as _USFedCal
+    holidays = _USFedCal().holidays(
         start=frame.index.min(), end=frame.index.max()
     )
     flags = frame.index.isin(holidays).astype(float)

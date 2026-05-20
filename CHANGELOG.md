@@ -52,6 +52,28 @@ full per-version honesty-pass history embedded in repo documentation.
   assets exist" CI steps (Fix 3). The `navigator_app` assets were removed in
   commit `09c79e11`; `docs/conf.py` already reflects `html_extra_path = []`.
 
+## [0.9.2b1] -- 2026-05-20 -- "introspection-based docs catalog + holiday pandas 2.x fix"
+
+### Changed
+- docs: all six per-layer pages under `docs/standalone_functions/` rewritten
+  from `inspect.signature` and live result-dataclass `dir()` introspection.
+  A previous v1 draft was REJECTED by cross-model review (Codex GPT-5.4) for
+  hallucinated signatures and attribute names; the v2 cycle regenerates every
+  callable entry from source via `tools/gen_standalone_docs.py`. No callable
+  signature or result attribute appearing in docs is hand-authored.
+- docs: `docs/conf.py` `myst_heading_anchors` raised from 3 to 4 so each H4
+  callable block (`#### `name(...)``) gets a deep-link anchor.
+
+### Fixed
+- runtime: `_holiday_indicator` now imports `USFederalHolidayCalendar` from
+  `pandas.tseries.holiday` (the v0.9.2 import path
+  `pd.tseries.offsets.USFederalHolidayCalendar` was removed in pandas 2.x).
+- tests: removed `@pytest.mark.xfail(strict=True)` decorators from three
+  holiday-transform tests in
+  `tests/functions/test_l3_final_b1_transforms.py`
+  (`test_datetime_index_flag`, `test_datetime_panel_shape`,
+  `test_bit_exact_datetime_vs_runtime`). They now pass with the runtime fix.
+
 ## [0.9.2b0] -- 2026-05-19 -- "docs visibility for standalone callables (paradigm beta)"
 
 ### Added

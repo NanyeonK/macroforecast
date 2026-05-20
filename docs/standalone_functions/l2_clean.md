@@ -1,46 +1,203 @@
-# Standalone functions — L2 preprocessing
+# Standalone functions: L2 clean (14 ops)
 
-L2 defines the cleaning contract for a raw panel before feature engineering.
-In the recipe DSL these are fixed-axis choices on `2_preprocessing`. In the
-standalone paradigm they are exposed as individual callables.
+L2 clean callables apply a single data-cleaning operation to a panel DataFrame and return a cleaned DataFrame. Each callable maps to a recipe axis option in the L2 preprocessing layer.
 
-> **Cycle 22 note** — L2 standalone callables are planned for a future cycle.
-> This page documents the 13 primary L2 axes so you can understand the
-> cleaning surface. The encyclopedia links below point to the full per-axis
-> reference.
+## Callables
 
-## L2 axes
+#### `apply_tcode_transform(panel: pd.DataFrame, tcode_map: dict[str, int]) -> pd.DataFrame`
 
-| Axis | One-liner | Encyclopedia |
-|---|---|---|
-| `transform_policy` | How to apply official FRED tcodes (none / official / custom) | [transform_policy](../encyclopedia/l2/axes/transform_policy.md) |
-| `outlier_policy` | Detection method: IQR / winsorize / z-score / none | [outlier_policy](../encyclopedia/l2/axes/outlier_policy.md) |
-| `imputation_policy` | Fill-in strategy: EM-factor / multivariate / mean / ffill / interpolate / none | [imputation_policy](../encyclopedia/l2/axes/imputation_policy.md) |
-| `frame_edge_policy` | How to handle ragged / unbalanced leading edges | [frame_edge_policy](../encyclopedia/l2/axes/frame_edge_policy.md) |
-| `transform_scope` | Which series to transform: both / predictors-only / target-only / N/A | [transform_scope](../encyclopedia/l2/axes/transform_scope.md) |
-| `outlier_scope` | Which series to outlier-screen | [outlier_scope](../encyclopedia/l2/axes/outlier_scope.md) |
-| `outlier_action` | What to do with detected outliers: flag / replace-median / cap | [outlier_action](../encyclopedia/l2/axes/outlier_action.md) |
-| `imputation_scope` | Which series to impute | [imputation_scope](../encyclopedia/l2/axes/imputation_scope.md) |
-| `imputation_temporal_rule` | Re-estimate imputation per-origin or block-recompute | [imputation_temporal_rule](../encyclopedia/l2/axes/imputation_temporal_rule.md) |
-| `mixed_frequency_representation` | How to represent mixed-frequency data in a common frame | [mixed_frequency_representation](../encyclopedia/l2/axes/mixed_frequency_representation.md) |
-| `monthly_to_quarterly_rule` | Aggregation rule when downsampling monthly to quarterly | [monthly_to_quarterly_rule](../encyclopedia/l2/axes/monthly_to_quarterly_rule.md) |
-| `quarterly_to_monthly_rule` | Interpolation rule when upsampling quarterly to monthly | [quarterly_to_monthly_rule](../encyclopedia/l2/axes/quarterly_to_monthly_rule.md) |
-| `sd_tcode_policy` | FRED-SD tcode application: none / inferred / empirical | [sd_tcode_policy](../encyclopedia/l2/axes/sd_tcode_policy.md) |
+Apply McCracken-Ng tcode transformations to each column via a tcode_map dict.
 
-## In recipe context
+Returns `pd.DataFrame` (same index as input unless noted).
 
-```yaml
-2_preprocessing:
-  fixed_axes:
-    transform_policy: apply_official_tcode
-    outlier_policy: mccracken_ng_iqr
-    imputation_policy: em_factor
-    frame_edge_policy: keep_unbalanced
+```python
+panel = pd.DataFrame({"a": [1.0, 2.0, 3.0]})
+out = mf.functions.apply_tcode_transform(panel, {"a": 2})
 ```
 
-## Related
+[Encyclopedia](../encyclopedia/l2/transform_policy/apply_official_tcode.md)
 
-- [L3 feature engineering](l3_transforms.md) — the cleaned panel becomes
-  the source panel for L3 DAG nodes.
-- [Encyclopedia L2 index](../encyclopedia/l2/index.md) — full axis × option
-  reference.
+#### `drop_unbalanced_series_clean(panel: pd.DataFrame) -> pd.DataFrame`
+
+Drop columns that are entirely NaN or below minimum coverage.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
+out = mf.functions.drop_unbalanced_series_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/frame_edge_policy/drop_unbalanced_series.md)
+
+#### `em_factor_impute_clean(panel: pd.DataFrame, *, n_factors: int = 8, max_iter: int = 20, tol: float = 0.0001) -> pd.DataFrame`
+
+EM-algorithm factor model imputation for missing values.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame(np.random.randn(60, 10))
+panel.iloc[5:8, 2] = np.nan
+out = mf.functions.em_factor_impute_clean(panel, n_factors=2)
+```
+
+[Encyclopedia](../encyclopedia/l2/imputation_policy/em_factor.md)
+
+#### `em_multivariate_impute_clean(panel: pd.DataFrame, *, max_iter: int = 20, tol: float = 0.0001) -> pd.DataFrame`
+
+EM-algorithm multivariate (full-covariance) imputation.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame(np.random.randn(60, 5))
+panel.iloc[5:8, 2] = np.nan
+out = mf.functions.em_multivariate_impute_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/imputation_policy/em_multivariate.md)
+
+#### `forward_fill_clean(panel: pd.DataFrame) -> pd.DataFrame`
+
+Forward-fill missing values (last observation carried forward).
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
+out = mf.functions.forward_fill_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/imputation_policy/forward_fill.md)
+
+#### `freq_align_monthly_to_quarterly_clean(panel: pd.DataFrame, monthly_columns: list[str], *, rule: str = quarterly_average) -> pd.DataFrame`
+
+Aggregate specified monthly columns to quarterly frequency.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+monthly_idx = pd.date_range('2020-01-01', periods=24, freq='MS')
+panel = pd.DataFrame({'gdp': range(24)}, index=monthly_idx)
+out = mf.functions.freq_align_monthly_to_quarterly_clean(panel, ['gdp'])
+```
+
+[Encyclopedia](../encyclopedia/l2/monthly_to_quarterly_rule/quarterly_average.md)
+
+#### `freq_align_quarterly_to_monthly_clean(panel: pd.DataFrame, quarterly_columns: list[str], *, rule: str = step_backward) -> pd.DataFrame`
+
+Expand specified quarterly columns to monthly frequency.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+q_idx = pd.date_range('2020-01-01', periods=8, freq='QS')
+panel = pd.DataFrame({'cpi': range(8)}, index=q_idx)
+out = mf.functions.freq_align_quarterly_to_monthly_clean(panel, ['cpi'])
+```
+
+[Encyclopedia](../encyclopedia/l2/quarterly_to_monthly_rule/step_backward.md)
+
+#### `iqr_outlier_clean(panel: pd.DataFrame, *, threshold: float = 10.0, action: str = flag_as_nan) -> pd.DataFrame`
+
+IQR-based outlier detection (McCracken-Ng convention), flags or winsorises extremes.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"x": np.random.randn(100)})
+out = mf.functions.iqr_outlier_clean(panel, threshold=3.0)
+```
+
+[Encyclopedia](../encyclopedia/l2/outlier_policy/mccracken_ng_iqr.md)
+
+#### `linear_interpolate_clean(panel: pd.DataFrame) -> pd.DataFrame`
+
+Linear interpolation for missing interior values.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
+out = mf.functions.linear_interpolate_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/imputation_policy/linear_interpolation.md)
+
+#### `mean_impute_clean(panel: pd.DataFrame) -> pd.DataFrame`
+
+Column-mean imputation for missing values.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
+out = mf.functions.mean_impute_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/imputation_policy/mean.md)
+
+#### `truncate_to_balanced_clean(panel: pd.DataFrame) -> pd.DataFrame`
+
+Truncate rows until the panel is balanced (no leading NaN).
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
+out = mf.functions.truncate_to_balanced_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/frame_edge_policy/truncate_to_balanced.md)
+
+#### `winsorize_clean(panel: pd.DataFrame, *, lower_quantile: float = 0.01, upper_quantile: float = 0.99) -> pd.DataFrame`
+
+Winsorise at specified quantile bounds (lower_quantile / upper_quantile).
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"x": [-10.0, 0.0, 1.0, 2.0, 100.0]})
+out = mf.functions.winsorize_clean(panel, lower_quantile=0.01, upper_quantile=0.99)
+```
+
+[Encyclopedia](../encyclopedia/l2/outlier_policy/winsorize.md)
+
+#### `zero_fill_leading_clean(panel: pd.DataFrame) -> pd.DataFrame`
+
+Fill leading NaN with zeros.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
+out = mf.functions.zero_fill_leading_clean(panel)
+```
+
+[Encyclopedia](../encyclopedia/l2/frame_edge_policy/zero_fill_leading.md)
+
+#### `zscore_outlier_clean(panel: pd.DataFrame, *, threshold: float = 3.0, action: str = flag_as_nan) -> pd.DataFrame`
+
+Z-score threshold outlier detection, flags or caps at ±threshold sigma.
+
+Returns `pd.DataFrame` (same index as input unless noted).
+
+```python
+panel = pd.DataFrame({"x": np.random.randn(100)})
+out = mf.functions.zscore_outlier_clean(panel, threshold=3.0)
+```
+
+[Encyclopedia](../encyclopedia/l2/outlier_policy/zscore_threshold.md)
+
+## Quick example
+
+```python
+import macroforecast as mf
+import pandas as pd
+import numpy as np
+
+panel = pd.DataFrame({"x1": [None, 1.0, 2.0, 3.0], "x2": [1.0, 2.0, None, 4.0]})
+clean = mf.functions.forward_fill_clean(panel)
+no_outliers = mf.functions.winsorize_clean(clean, lower_quantile=0.01, upper_quantile=0.99)
+```
