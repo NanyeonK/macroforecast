@@ -78,7 +78,7 @@ Category map example:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       variable_universe: category_variables
     leaf_config:
@@ -93,7 +93,7 @@ Explicit list example:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       target_structure: single_target
       variable_universe: explicit_variable_list
@@ -109,7 +109,7 @@ Target-specific example:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       target_structure: multi_target
       variable_universe: target_specific_variables

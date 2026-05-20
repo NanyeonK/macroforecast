@@ -47,7 +47,7 @@ YAML:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       information_set_type: final_revised_data
       release_lag_rule: ignore_release_lag
