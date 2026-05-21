@@ -106,13 +106,63 @@ examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 
 ---
 
+## Cycle 50 — real_time_alfred + L2 axes + lstm_hidden_state (2026-05-22)
+
+Cycle 50 is the **final v0.9.3 algorithmic honesty pass**. It promotes four
+schema items from `future` to `operational`. After C49 + C50 merge:
+`FUTURE_MODEL_FAMILIES = ()`, `FUTURE_OPS = ()`. The v0.9.3 pass is complete.
+
+| Item | Layer | Reference | Promoted in |
+|------|-------|-----------|-------------|
+| `real_time_alfred` | L1.A `vintage_policy` | Federal Reserve Bank of St. Louis, ALFRED API (alfred.stlouisfed.org); Croushore & Stark (2001) Journal of Econometrics 105(1) | C50 |
+| `chow_lin` | L2.A `quarterly_to_monthly_rule` | Chow & Lin (1971) Review of Economics and Statistics 53(4): 372-375, doi:10.2307/1928739 | C50 |
+| `keep_with_indicator` | L2.C `outlier_action` | macroforecast design Part 2, L2 | C50 |
+| `lstm_hidden_state` | L7.A `op` | Karpathy, Johnson & Fei-Fei (2015) "Visualizing and Understanding Recurrent Networks", arXiv:1506.02078 | C50 |
+
+### real_time_alfred
+
+`vintage_policy = real_time_alfred` loads the ALFRED (Archival FRED) historical
+vintage that was available at each walk-forward forecast origin, so the model
+never sees data that was not yet published. Two modes: `alfred_mode=local` reads
+pre-downloaded snapshots from `alfred_snapshot_dir`; `alfred_mode=api` queries
+the ALFRED REST API with `alfred_api_key` or the `FRED_API_KEY` env var.
+Runtime: `core/layers/l1.py` validator + `core/runtime.py` `_load_alfred_vintage`.
+
+### chow_lin
+
+`quarterly_to_monthly_rule = chow_lin` applies the Chow & Lin (1971)
+regression-based temporal disaggregation. A user-supplied monthly indicator
+(`leaf_config.chow_lin_indicator`) is regressed on the quarterly observations
+via GLS with AR(1) errors; the residuals are distributed across months so the
+quarterly sum-constraint is preserved. Runtime: `core/runtime.py`
+`_freq_align_chow_lin`.
+
+### keep_with_indicator
+
+`outlier_action = keep_with_indicator` retains the original outlier value and
+appends a binary column `{col}__outlier_flag` (1 = flagged, 0 = clean).
+Downstream feature engineering and estimation see both the original value and
+the indicator. Runtime: `core/runtime.py` `_apply_outlier_policy`.
+
+### lstm_hidden_state
+
+`op = lstm_hidden_state` extracts per-timestep hidden-state activations `h_t`
+from a fitted LSTM model via a PyTorch `register_forward_hook`, then renders
+them as a heatmap (rows = hidden units, columns = observations, color = mean
+`|h_t|`). Requires `macroforecast[deep]`; raises `NotImplementedError` for
+non-LSTM models. Output: `l7_importance_v1` key `hidden_state_activations`,
+DataFrame shape `(n_hidden_units, T)`. Runtime: `core/ops/l7_ops.py` +
+`core/runtime.py` `_execute_l7_step`.
+
+---
+
 ## Cycle 49 — realized_garch + Pesaran-Shin GIRF (2026-05-21)
 
 Cycle 49 promotes two items from `future` to `operational`: the Hansen-Huang-Shek
 (2012) Realized GARCH joint MLE (L4 family `realized_garch`) and the Pesaran-Shin
 (1998) generalized impulse-response function (L7 op `generalized_irf`). After this
-cycle, `FUTURE_MODEL_FAMILIES` is empty `()` and `FUTURE_OPS` contains only
-`lstm_hidden_state`.
+cycle, `FUTURE_MODEL_FAMILIES` is empty `()`; `FUTURE_OPS` contained only
+`lstm_hidden_state` (promoted in C50).
 
 | Item | Layer | Paper | Implementation | Changed in C49 |
 |------|-------|-------|----------------|----------------|
@@ -121,11 +171,11 @@ cycle, `FUTURE_MODEL_FAMILIES` is empty `()` and `FUTURE_OPS` contains only
 
 ### Count changes
 
-| Counter | Pre-C49 | Post-C49 |
-|---------|---------|---------|
-| L4 operational families | 46 | 47 |
-| L4 FUTURE_MODEL_FAMILIES | 1 (`realized_garch`) | 0 (empty) |
-| L7 FUTURE_OPS | 2 (`lstm_hidden_state`, `generalized_irf`) | 1 (`lstm_hidden_state`) |
+| Counter | Pre-C49 | Post-C49 | Post-C50 |
+|---------|---------|---------|---------|
+| L4 operational families | 46 | 47 | 47 |
+| L4 FUTURE_MODEL_FAMILIES | 1 (`realized_garch`) | 0 (empty) | 0 (empty) |
+| L7 FUTURE_OPS | 2 (`lstm_hidden_state`, `generalized_irf`) | 1 (`lstm_hidden_state`) | 0 (empty) |
 
 ### Hansen-Huang-Shek (2012) `_RealizedGARCHModel`
 
@@ -163,6 +213,8 @@ Distinct from `orthogonalised_irf` (Cholesky-identified; order-dependent; operat
   Measures of Volatility', Journal of Applied Econometrics 27(6): 877-906.
 - Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate
   models', Economics Letters 58(1): 17-29.
+
+---
 
 ## Cycle 48 — MIDAS Family Honesty Pass (2026-05-21)
 

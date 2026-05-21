@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 3 option(s)
-- Future: 1 option(s)
+- Operational: 4 option(s)
+- Future: 0 option(s)
 
 ## Options
 
@@ -65,8 +65,26 @@ Hindsight-feasible studies (e.g., counterfactual nowcasts).
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
-### `chow_lin`  --  future
+### `chow_lin`  --  operational
 
-_(no schema description for `chow_lin`)_
+Chow-Lin (1971) regression-based temporal disaggregation.
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l2.py`` are welcome.
+Implements the best linear unbiased interpolation procedure of Chow & Lin (1971). A monthly indicator series (``leaf_config.chow_lin_indicator``) is regressed on the quarterly observations using GLS with an AR(1) error structure; the fitted residuals are distributed proportionally across the three months of each quarter so the sum-constraint is preserved.
+
+This is the canonical temporal disaggregation method in the macroeconomics literature. It is more accurate than step-function or linear-interpolation approaches when an informative monthly indicator is available. Requires ``leaf_config.chow_lin_indicator`` to name the monthly indicator column present in the panel.
+
+**When to use**
+
+Quarterly-to-monthly disaggregation when a monthly indicator series is available (e.g., IP as indicator for GDP).
+
+**When NOT to use**
+
+When no suitable monthly indicator exists -- use step_backward (conservative) or linear_interpolation (smooth) instead.
+
+**References**
+
+* Chow & Lin (1971) 'Best Linear Unbiased Interpolation, Distribution, and Extrapolation of Time Series by Related Series', Review of Economics and Statistics 53(4): 372-375. (doi:10.2307/1928739)
+
+**Related options**: [`step_backward`](#step-backward), [`linear_interpolation`](#linear-interpolation)
+
+_Last reviewed 2026-05-04 by macroforecast author._

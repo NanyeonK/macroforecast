@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 35 option(s)
-- Future: 1 option(s)
+- Operational: 36 option(s)
+- Future: 0 option(s)
 
 ## Options
 
@@ -409,11 +409,37 @@ Wide panels (n_features > 200) -- prohibitive runtime.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
-### `lstm_hidden_state`  --  future
+### `lstm_hidden_state`  --  operational
 
-_(no schema description for `lstm_hidden_state`)_
+LSTM hidden-state activation heatmap (Karpathy et al. 2015).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
+Extracts the per-timestep hidden-state activations ``h_t`` from a fitted LSTM model and renders them as a heatmap: rows index hidden units, columns index observations, color encodes mean ``|h_t|``. The visualization follows the approach of Karpathy, Johnson & Fei-Fei (2015) for understanding which hidden units fire on which parts of the input sequence.
+
+Implementation details:
+
+* Requires ``macroforecast[deep]`` (PyTorch); a ``NotImplementedError`` is raised for non-torch models (``transformer``, ``gru`` without ``torch``, etc.).
+* State capture uses a forward hook registered on the LSTM layer via ``torch.nn.Module.register_forward_hook``.
+* Output: a DataFrame of shape ``(n_hidden_units, T)`` where ``T`` is the sequence length. Column names are observation dates when the input panel carries a DatetimeIndex; otherwise integer positions.
+* The ``l7_importance_v1`` sink carries the heatmap frame under the key ``hidden_state_activations``.
+
+Only compatible with the ``lstm`` model family in L4. The ``transformer`` family raises ``NotImplementedError`` because it has no recurrent hidden state; use ``attention_weights`` for transformer attribution.
+
+**When to use**
+
+Diagnosing LSTM sequence dynamics; identifying which hidden units respond to macro regime shifts.
+
+**When NOT to use**
+
+Non-LSTM models -- use attention_weights for transformers, shap_deep / gradient_shap / integrated_gradients for general deep-learning attribution.
+
+**References**
+
+* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
+* Karpathy, Johnson & Fei-Fei (2015) 'Visualizing and Understanding Recurrent Networks', arXiv:1506.02078. <https://arxiv.org/abs/1506.02078>
+
+**Related options**: [`attention_weights`](#attention-weights), [`shap_deep`](#shap-deep), [`gradient_shap`](#gradient-shap), [`integrated_gradients`](#integrated-gradients)
+
+_Last reviewed 2026-05-05 by macroforecast author._
 
 ### `model_native_linear_coef`  --  operational
 

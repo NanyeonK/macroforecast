@@ -63,3 +63,9 @@ Output:
 ## See encyclopedia
 
 For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l2/`](../../encyclopedia/l2/index.md).
+
+## Cycle 50 update (2026-05-22)
+
+Two new operational axis options:
+- `quarterly_to_monthly_rule: chow_lin` -- Chow & Lin (1971) regression-based temporal disaggregation using a monthly indicator series (`leaf_config.chow_lin_indicator`).
+- `outlier_action: keep_with_indicator` -- preserves the original outlier value and appends a `{col}__outlier_flag` binary column (1=flagged, 0=clean).

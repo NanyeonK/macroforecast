@@ -479,7 +479,7 @@ _L1A_VINTAGE_CURRENT = _entry(
         "#XXX."
     ),
     when_to_use="Default for any pseudo-out-of-sample study using revised data.",
-    when_not_to_use="Real-time forecasting evaluations -- those need ALFRED vintages (future feature; see real_time_alfred).",
+    when_not_to_use="Real-time forecasting evaluations -- those need ALFRED vintages; use real_time_alfred (operational since Cycle 50).",
     related_options=("real_time_alfred", "information_set_type"),
     last_reviewed="2026-05-16",
     reviewer="macroforecast author",
@@ -487,36 +487,84 @@ _L1A_VINTAGE_CURRENT = _entry(
 
 _L1A_VINTAGE_REAL_TIME_ALFRED = _entry(
     "l1_a", "vintage_policy", "real_time_alfred",
-    summary="Real-time ALFRED vintage policy (not yet implemented).",
+    summary="Real-time ALFRED vintage policy: uses historical vintage snapshots at each forecast origin.",
     description=(
         "ALFRED (Archival FRED) is the St. Louis Fed's real-time data "
         "archive. It stores historical vintages of every FRED series, "
         "allowing researchers to reconstruct the information set that was "
         "actually available at any past date -- before subsequent data "
-        "revisions occurred.\n\n"
-        "Future macroforecast support will pull the historical-as-of "
-        "vintage for each forecast origin from the ALFRED API, enabling "
-        "true real-time replication studies where the model never sees "
-        "data that was not yet released at the forecast origin.\n\n"
-        "**Current behavior**: selecting ``real_time_alfred`` raises a "
-        "hard ``ValueError`` at recipe validation with the message "
-        "``'real_time_alfred is not yet implemented; future feature. "
-        "Use current_vintage (default).'`` (Cycle 14 K-4). "
-        "No partial execution occurs."
+        "revisions occurred. Croushore & Stark (2001) established the "
+        "methodological case for real-time evaluation.\n\n"
+        "Operational since Cycle 50 (2026-05-22). Two modes are supported:\n\n"
+        "* ``alfred_mode=local`` (default): loads pre-downloaded vintage "
+        "snapshots from ``leaf_config.alfred_snapshot_dir``. The directory "
+        "must contain per-origin Parquet or CSV files named by date "
+        "(e.g., ``1999-01-01.parquet``). No network access at runtime.\n\n"
+        "* ``alfred_mode=api``: queries the ALFRED REST API at each origin "
+        "using ``leaf_config.alfred_api_key`` or the ``FRED_API_KEY`` "
+        "environment variable. Requires network access.\n\n"
+        "At each walk-forward origin the runtime selects the vintage "
+        "whose release date is the latest date not exceeding the origin "
+        "date, so the model never sees data that was not yet published."
     ),
     when_to_use=(
-        "Future. For now, use ``current_vintage`` and document the "
-        "data-revision context via ``data_revision_tag`` in manifest "
-        "provenance (Cycle 14 K-3 auto-captures ``fred-md@YYYY-MM``)."
+        "Real-time forecasting evaluations; replication of published studies "
+        "that used ALFRED vintages; studies that quantify the effect of "
+        "data revisions on forecast accuracy."
     ),
     when_not_to_use=(
-        "Any current recipe -- this option is hard-rejected at validation "
-        "in all released versions up to and including v0.9.x."
+        "Standard pseudo-OOS benchmarks using revised data -- use "
+        "``current_vintage`` (the default) for those."
     ),
-    references=(_REF_ALFRED, _REF_CROUSHORE_STARK_2001),
-    related_options=("current_vintage",),
-    last_reviewed="2026-05-16",
+    references=(_REF_ALFRED, _REF_CROUSHORE_STARK_2001, _REF_STARK_CROUSHORE_2002),
+    related_options=("current_vintage", "information_set_type"),
+    last_reviewed="2026-05-22",
     reviewer="macroforecast author",
+)
+
+# C50: ParameterDoc for real_time_alfred leaf_config keys (alfred_mode + alfred_snapshot_dir).
+_L1A_VINTAGE_REAL_TIME_ALFRED = _L1A_VINTAGE_REAL_TIME_ALFRED.__class__(
+    **{**_L1A_VINTAGE_REAL_TIME_ALFRED.__dict__,
+       "parameters": (
+           ParameterDoc(
+               name="alfred_mode",
+               type="str",
+               default="local",
+               constraint="One of: 'local', 'api'.",
+               description=(
+                   "Controls how ALFRED vintage data is accessed. 'local' loads "
+                   "pre-downloaded per-origin snapshots from ``alfred_snapshot_dir``. "
+                   "'api' queries the ALFRED REST API at runtime."
+               ),
+           ),
+           ParameterDoc(
+               name="alfred_snapshot_dir",
+               type="str | Path",
+               default=REQUIRED,
+               constraint=(
+                   "Required when alfred_mode='local'. Must be a directory containing "
+                   "per-date vintage files named YYYY-MM-DD.parquet or YYYY-MM-DD.csv."
+               ),
+               description=(
+                   "Directory of pre-downloaded ALFRED vintage snapshots. Each file "
+                   "represents the FRED panel as-published on that date. The runtime "
+                   "selects the latest file whose date does not exceed the forecast origin."
+               ),
+           ),
+           ParameterDoc(
+               name="alfred_api_key",
+               type="str",
+               default=None,
+               constraint=(
+                   "Required when alfred_mode='api' and FRED_API_KEY env var is not set."
+               ),
+               description=(
+                   "FRED/ALFRED API key. Alternatively, set the FRED_API_KEY "
+                   "environment variable. Obtain a free key at https://fred.stlouisfed.org/docs/api/api_key.html."
+               ),
+           ),
+       ),
+    }
 )
 
 

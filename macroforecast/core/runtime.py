@@ -10017,6 +10017,14 @@ def _execute_l7_step(
         X, _ = _l7_xy(inputs, l3_features)
         frame = _mrf_gtvp_coefficient_frame(model, X)
         return _attach_l7_attrs(frame, model, op, l3_features)
+    if op == "lstm_hidden_state":
+        # C50: Karpathy (2015) hidden-state activation importance.
+        # Gates on torch + lstm/gru model family; raises NotImplementedError
+        # for transformer family and when torch is unavailable.
+        model = _first_model_input(inputs)
+        X, _ = _l7_xy(inputs, l3_features)
+        frame = _lstm_hidden_state_frame(model, X)
+        return _attach_l7_attrs(frame, model, op, l3_features)
     raise NotImplementedError(f"L7 runtime does not support op {op!r}")
 
 
@@ -10769,6 +10777,94 @@ def _gradient_attribution_frame(
             "method": [kind] * len(X.columns),
         }
     )
+
+
+def _lstm_hidden_state_frame(
+    model: "ModelArtifact",
+    X: pd.DataFrame,
+) -> pd.DataFrame:
+    """C50 -- LSTM/GRU hidden-state activation importance (Karpathy 2015).
+
+    Registers a forward hook on the sequence cell (nn.LSTM or nn.GRU) of
+    the fitted _TorchSequenceModel to capture the full output tensor h_t
+    (shape: batch x seq_len x hidden_size) during a single forward pass
+    over the OOS feature matrix X.
+
+    Importance per hidden unit = mean(|h_t|) across all OOS observations.
+
+    Gates on torch availability: raises NotImplementedError with [deep]
+    install hint when torch is unavailable.
+
+    Raises NotImplementedError for transformer family (hidden state concept
+    does not apply to TransformerEncoder output in the same way; use
+    gradient_shap or integrated_gradients instead).
+
+    Reference: Karpathy, Andrej. "Visualizing and Understanding Recurrent
+    Networks." arXiv:1506.02078 (2015).
+    """
+    try:
+        import torch  # type: ignore
+    except ImportError as exc:
+        raise NotImplementedError(
+            "L7 op 'lstm_hidden_state' requires torch; "
+            "install with `pip install 'macroforecast[deep]'`."
+        ) from exc
+
+    fitted = model.fitted_object
+    if not hasattr(fitted, "_model") or fitted._model is None:
+        raise NotImplementedError(
+            "lstm_hidden_state: the underlying torch model is not fitted. "
+            "Ensure the recipe uses family='lstm' or family='gru' with [deep] installed."
+        )
+
+    # Verify family is lstm or gru (not transformer).
+    # The _TorchSequenceModel stores the kind on the wrapper instance.
+    if hasattr(fitted, "kind") and fitted.kind == "transformer":
+        raise NotImplementedError(
+            "lstm_hidden_state is not defined for the transformer family. "
+            "Use gradient_shap or integrated_gradients for TransformerEncoder attribution."
+        )
+
+    torch_model = fitted._model
+    # The inner _Sequence module exposes .cell (nn.LSTM or nn.GRU).
+    cell = torch_model.cell
+
+    # Capture hook output from the cell's forward pass.
+    _captured: list[Any] = []
+
+    def _hook(module: Any, input: Any, output: Any) -> None:
+        # nn.LSTM output: (out, (h_n, c_n)) -- out shape = (batch, seq_len, H)
+        # nn.GRU output:  (out, h_n)         -- out shape = (batch, seq_len, H)
+        # We capture out (index 0 of the output tuple).
+        _captured.append(output[0].detach().cpu())
+
+    handle = cell.register_forward_hook(_hook)
+    try:
+        torch_model.eval()
+        x_arr = X.fillna(0.0).to_numpy(dtype="float32")
+        # Shape: (N_observations, seq_len=1, n_features)
+        seq = x_arr.reshape(x_arr.shape[0], 1, x_arr.shape[1])
+        with torch.no_grad():
+            torch_model(torch.from_numpy(seq))
+    finally:
+        handle.remove()
+
+    if not _captured:
+        raise RuntimeError("lstm_hidden_state: hook did not capture any activations.")
+
+    # out shape: (N, seq_len=1, H) -- batch, seq_len, hidden_size.
+    out = _captured[0]
+    # Mean absolute activation per hidden unit across all N observations.
+    # Squeeze seq_len dim (always 1) then mean over observations.
+    importance = out.abs().mean(dim=0).squeeze(0)  # shape (H,)
+    hidden_size = importance.shape[0]
+
+    return pd.DataFrame({
+        "feature": [f"hidden_unit_{i}" for i in range(hidden_size)],
+        "importance": [float(v) for v in importance.numpy()],
+        "coefficient": [None] * hidden_size,
+        "method": ["lstm_hidden_state"] * hidden_size,
+    })
 
 
 def _mrf_gtvp_coefficient_frame(model: ModelArtifact, X: pd.DataFrame) -> pd.DataFrame:
@@ -14500,6 +14596,12 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
     frame = _normalize_datetime_index(frame, leaf_config)
     frame = _apply_sample_window(frame, resolved, leaf_config)
     _validate_targets_present(frame, leaf_config, resolved)
+    # C50: ALFRED vintage correction -- applies when vintage_policy="real_time_alfred".
+    # Replaces panel column values with vintage-correct ALFRED snapshots.
+    if resolved.get("vintage_policy") == "real_time_alfred":
+        from ..raw.alfred_adapter import apply_alfred_vintage_to_panel
+        frame = apply_alfred_vintage_to_panel(frame, resolved, leaf_config)
+        metadata["vintage_policy"] = "real_time_alfred"
     return _panel_from_frame(frame, metadata=metadata)
 
 
@@ -15177,6 +15279,15 @@ def _apply_outlier_policy_per_origin(
         lower = train.quantile(0.01)
         capped = numeric.clip(lower=lower, upper=upper, axis=1)
         result[numeric.columns] = numeric.where(~mask.fillna(False), capped)
+    elif action == "keep_with_indicator":
+        # C50: keep original values; append one binary indicator column per
+        # source numeric column that has at least one detected outlier.
+        # Naming convention: {col}__outlier_flag (double-underscore prefix).
+        result[numeric.columns] = numeric
+        for col in numeric.columns:
+            col_mask = mask[col].fillna(False)
+            if col_mask.any():
+                result[f"{col}__outlier_flag"] = col_mask.astype(float)
     else:
         result[numeric.columns] = numeric.mask(mask)
     return result
@@ -15269,6 +15380,16 @@ def _apply_outlier_policy(
         lower = numeric.quantile(0.01)
         capped = numeric.clip(lower=lower, upper=upper, axis=1)
         result[numeric.columns] = numeric.where(~mask.fillna(False), capped)
+    elif action == "keep_with_indicator":
+        # C50: keep original values; append one binary indicator column per
+        # source numeric column that has at least one detected outlier.
+        # count = total outlier cells (same as flag_as_nan count -- unchanged).
+        # Naming convention: {col}__outlier_flag (double-underscore prefix).
+        result[numeric.columns] = numeric
+        for col in numeric.columns:
+            col_mask = mask[col].fillna(False)
+            if col_mask.any():
+                result[f"{col}__outlier_flag"] = col_mask.astype(float)
     else:
         raise NotImplementedError(
             f"outlier_action={action!r} runtime is not implemented"

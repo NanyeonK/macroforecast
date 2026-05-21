@@ -234,7 +234,34 @@ _L2C_ACTION_CAP = _e(
     related_options=("flag_as_nan", "replace_with_median"),
 )
 
-# keep_with_indicator is status=future in v1.0 -- not registered.
+# C50: keep_with_indicator is now operational. OptionDoc added below.
+_L2C_ACTION_KEEP_WITH_INDICATOR = _e(
+    "l2_c", "outlier_action", "keep_with_indicator",
+    "Keep the outlier value but add a binary indicator column.",
+    (
+        "Leaves the flagged observation's value unchanged and instead "
+        "appends a new binary column named ``{col}__outlier_flag`` that "
+        "equals 1 for flagged rows and 0 otherwise. Downstream layers "
+        "can use the flag column as a covariate to let the model "
+        "decide whether and how to discount the outlier.\n\n"
+        "The ``{col}__outlier_flag`` semantics are:\n\n"
+        "* Column name pattern: original column name + ``__outlier_flag`` suffix.\n"
+        "* Value: 1 (flagged by the chosen outlier_policy), 0 (clean).\n"
+        "* The indicator is added to the panel before L2.D imputation "
+        "and is visible to all downstream feature engineering and "
+        "model estimation steps.\n\n"
+        "This action is appropriate when extreme observations may carry "
+        "genuine signal and the model should not lose the original value, "
+        "but the researcher wants to flag the observation's provenance."
+    ),
+    "Studies where outliers may be genuine signals (financial crises, policy events); missingness-as-feature studies.",
+    when_not_to_use=(
+        "When outliers are data errors that should be removed or replaced -- "
+        "use flag_as_nan, replace_with_median, or replace_with_cap_value instead."
+    ),
+    references=(_REF_DESIGN_L2,),
+    related_options=("flag_as_nan", "replace_with_median", "replace_with_cap_value"),
+)
 
 
 # L2.D imputation_policy
@@ -408,10 +435,36 @@ _L2A_QM_FORWARD = _e(
     related_options=("step_backward", "linear_interpolation"),
 )
 
-# chow_lin is status=future in v1.0 -- not registered. Tracked at issue
-# #255 (real Chow-Lin disaggregation landed in v0.25 at the runtime
-# level but the schema option remains future-flagged pending validator
-# acceptance work in v1.0+).
+# C50: chow_lin is now operational. OptionDoc added below.
+_L2A_QM_CHOW_LIN = _e(
+    "l2_a", "quarterly_to_monthly_rule", "chow_lin",
+    "Chow-Lin (1971) regression-based temporal disaggregation.",
+    (
+        "Implements the best linear unbiased interpolation procedure of "
+        "Chow & Lin (1971). A monthly indicator series (``leaf_config."
+        "chow_lin_indicator``) is regressed on the quarterly observations "
+        "using GLS with an AR(1) error structure; the fitted residuals are "
+        "distributed proportionally across the three months of each quarter "
+        "so the sum-constraint is preserved.\n\n"
+        "This is the canonical temporal disaggregation method in the "
+        "macroeconomics literature. It is more accurate than step-function "
+        "or linear-interpolation approaches when an informative monthly "
+        "indicator is available. Requires ``leaf_config.chow_lin_indicator`` "
+        "to name the monthly indicator column present in the panel."
+    ),
+    "Quarterly-to-monthly disaggregation when a monthly indicator series is available (e.g., IP as indicator for GDP).",
+    when_not_to_use=(
+        "When no suitable monthly indicator exists -- use step_backward "
+        "(conservative) or linear_interpolation (smooth) instead."
+    ),
+    references=(
+        Reference(
+            citation="Chow & Lin (1971) 'Best Linear Unbiased Interpolation, Distribution, and Extrapolation of Time Series by Related Series', Review of Economics and Statistics 53(4): 372-375.",
+            doi="10.2307/1928739",
+        ),
+    ),
+    related_options=("step_backward", "linear_interpolation"),
+)
 
 
 _L2A_MQ_AVG = _e(
@@ -577,10 +630,10 @@ register(
 register(
     _L2B_OFFICIAL, _L2B_NO_TRANSFORM, _L2B_CUSTOM,
     _L2C_MCCRACKEN_IQR, _L2C_WINSORIZE, _L2C_ZSCORE, _L2C_NONE,
-    _L2C_ACTION_NAN, _L2C_ACTION_MEDIAN, _L2C_ACTION_CAP,
+    _L2C_ACTION_NAN, _L2C_ACTION_MEDIAN, _L2C_ACTION_CAP, _L2C_ACTION_KEEP_WITH_INDICATOR,
     _L2D_EM_FACTOR, _L2D_EM_MULTI, _L2D_MEAN, _L2D_FFILL, _L2D_LINEAR, _L2D_NONE,
     _L2E_TRUNCATE, _L2E_DROP_SERIES, _L2E_KEEP_UNBAL, _L2E_ZERO_FILL,
-    _L2A_QM_BACKWARD, _L2A_QM_LINEAR, _L2A_QM_FORWARD,
+    _L2A_QM_BACKWARD, _L2A_QM_LINEAR, _L2A_QM_FORWARD, _L2A_QM_CHOW_LIN,
     _L2A_MQ_AVG, _L2A_MQ_END, _L2A_MQ_SUM,
 )
 

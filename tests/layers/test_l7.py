@@ -233,12 +233,17 @@ def test_l7_attention_weights_operational_after_b10_promotion():
     assert not report.has_hard_errors
 
 
-def test_l7_lstm_hidden_state_rejected_as_future():
-    assert validate_layer(
+def test_l7_lstm_hidden_state_now_operational():
+    # C50: lstm_hidden_state is now operational. The validator must accept it
+    # when paired with lstm model family; must NOT emit a "future" hard error.
+    report = validate_layer(
         parse_layer_yaml(
             make_l7_yaml(op="lstm_hidden_state", model_family="lstm"), "l7"
         )
-    ).has_hard_errors
+    )
+    assert not any(
+        "future" in issue.message.lower() for issue in report.hard_errors
+    ), "lstm_hidden_state must not be rejected as future after C50"
 
 
 def test_l7_boruta_selection_not_in_l7_scope():
@@ -347,20 +352,27 @@ def test_l7_future_ops_includes_design_remainder():
     # Cycle 47: boruta_selection / recursive_feature_elimination /
     # lasso_path_selection / stability_selection were removed from L7 scope
     # (they are now L3-only operational ops).
-    # Cycle 49: generalized_irf was promoted to operational (Pesaran-Shin 1998
-    # GIRF). Only 1 design-future op remains with L7 scope: lstm_hidden_state.
+    # Cycle 49: generalized_irf promoted to operational (Pesaran-Shin 1998
+    # GIRF). Cycle 50: lstm_hidden_state promoted to operational (Karpathy 2015
+    # torch forward-hook). Zero design-future ops remain with L7 scope.
     future_ops = [
         op
         for op in list_ops().values()
         if "l7" in op.layer_scope and op.status == "future"
     ]
-    assert len(future_ops) >= 1
-    # Verify generalized_irf is no longer future-gated.
+    assert len(future_ops) >= 0
+    # Verify generalized_irf is no longer future-gated (C49 promotion).
     assert not any(
         op.name == "generalized_irf"
         for op in list_ops().values()
         if op.status == "future"
     ), "generalized_irf must NOT be future after C49 promotion"
+    # Verify lstm_hidden_state is no longer future-gated (C50 promotion).
+    assert not any(
+        op.name == "lstm_hidden_state"
+        for op in list_ops().values()
+        if op.status == "future"
+    ), "lstm_hidden_state must NOT be future after C50 promotion"
 
 
 def test_l7_18_figure_types():

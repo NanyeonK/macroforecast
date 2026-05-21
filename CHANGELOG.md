@@ -5,10 +5,64 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added — Cycle 50 (2026-05-22) — Final v0.9.3 algorithmic cycle
+
+Promoted 4 schema items from `future` to `operational`, completing the v0.9.3
+algorithmic honesty pass. After C49 + C50 merge: `FUTURE_MODEL_FAMILIES = ()`,
+`FUTURE_OPS = ()`.
+
+- `real_time_alfred` (`vintage_policy` axis, L1.A): real-time ALFRED vintage
+  policy is now operational. Two modes: `alfred_mode=local` loads pre-downloaded
+  per-origin snapshots from `leaf_config.alfred_snapshot_dir`; `alfred_mode=api`
+  queries the ALFRED REST API using `leaf_config.alfred_api_key` or the
+  `FRED_API_KEY` environment variable. Reference: Croushore & Stark (2001)
+  Journal of Econometrics 105(1); Federal Reserve Bank of St. Louis ALFRED API
+  (https://alfred.stlouisfed.org/).
+
+- `chow_lin` (`quarterly_to_monthly_rule` axis, L2.A): regression-based temporal
+  disaggregation by Chow & Lin (1971). GLS with AR(1) errors using a monthly
+  indicator series specified in `leaf_config.chow_lin_indicator`. The quarterly
+  sum-constraint is preserved by construction. Reference: Chow & Lin (1971)
+  Review of Economics and Statistics 53(4), doi:10.2307/1928739.
+
+- `keep_with_indicator` (`outlier_action` axis, L2.C): keeps the original outlier
+  value unchanged and appends a binary `{col}__outlier_flag` column (1=flagged,
+  0=clean) for downstream use as a covariate.
+
+- `lstm_hidden_state` (L7.A importance op): LSTM hidden-state activation heatmap.
+  Extracts per-timestep `h_t` activations via a PyTorch forward hook; renders
+  as a heatmap (rows = hidden units, columns = observations, color = mean |h_t|).
+  Requires `macroforecast[deep]`. Raises `NotImplementedError` for transformer
+  (use `attention_weights` instead). Reference: Karpathy, Johnson & Fei-Fei
+  (2015) "Visualizing and Understanding Recurrent Networks", arXiv:1506.02078.
+
+### Changed — Cycle 50 (2026-05-22)
+
+- `macroforecast/core/layers/l1.py`: `VintagePolicy` Literal updated; validator
+  accepts `real_time_alfred` without hard-reject; soft validation checks
+  `alfred_snapshot_dir` (local mode) or `alfred_api_key` / `FRED_API_KEY` (api mode).
+- `macroforecast/core/layers/l2.py`: `chow_lin` added to `quarterly_to_monthly_rule`
+  valid set and `AxisSpec`; `keep_with_indicator` added to `outlier_action` valid
+  set and `AxisSpec`. Hard-reject guards for both removed.
+- `macroforecast/core/ops/l7_ops.py`: `lstm_hidden_state` added to
+  `DEFAULT_FIGURE_MAPPING` (heatmap) and is now in `OPERATIONAL_OPS` (not
+  `FUTURE_OPS`). After C49 + C50 merge `FUTURE_OPS = ()`.
+- `macroforecast/scaffold/option_docs/l1.py`: `_L1A_VINTAGE_REAL_TIME_ALFRED`
+  summary + description updated to reflect operational status; `ParameterDoc`
+  entries added for `alfred_mode`, `alfred_snapshot_dir`, `alfred_api_key`.
+- `macroforecast/scaffold/option_docs/l2.py`: `_L2A_QM_CHOW_LIN` and
+  `_L2C_ACTION_KEEP_WITH_INDICATOR` OptionDoc entries added and registered.
+- `macroforecast/scaffold/option_docs/l7_a.py`: `_LSTM_HIDDEN_STATE` OptionDoc
+  entry added and registered. `_REF_KARPATHY_2015` reference added.
+- `docs/architecture/layer{1,2,7}/index.md`: minimal Cycle 50 update notes.
+- `docs/encyclopedia/`: regenerated; new pages for `real_time_alfred` (L1),
+  `chow_lin` (L2 axis option), `keep_with_indicator` (L2 axis option),
+  `lstm_hidden_state` (L7); browse aggregates updated.
+
 ### Added — Cycle 49 (2026-05-21) — Realized GARCH + Pesaran-Shin GIRF
 
 Promoted 2 items from `future` to `operational`. `FUTURE_MODEL_FAMILIES` is now
-empty `()`; `FUTURE_OPS` contains only `lstm_hidden_state`.
+empty `()`; `FUTURE_OPS` contained only `lstm_hidden_state` (promoted in C50).
 
 - `realized_garch`: Hansen-Huang-Shek (2012) joint-MLE Realized GARCH. Three-equation
   system (return + log-variance + measurement); 11-parameter vector estimated by
@@ -44,7 +98,7 @@ empty `()`; `FUTURE_OPS` contains only `lstm_hidden_state`.
   is now empty `()`.
 - `macroforecast/core/ops/l7_ops.py`: added `generalized_irf: "irf_with_confidence_band"`
   to `DEFAULT_FIGURE_MAPPING`; removed `generalized_irf` from `FUTURE_OPS`. Only
-  `lstm_hidden_state` remains in `FUTURE_OPS`.
+  `lstm_hidden_state` remained in `FUTURE_OPS` (promoted in C50).
 - `macroforecast/core/runtime.py`: added `_RealizedGARCHModel` class (HHS 2012 joint
   MLE) and `_var_girf_frame` function (Pesaran-Shin 1998 GIRF); added dispatch
   branches for both; renamed `_GARCHFamily` internal variant from `"realized_garch"`

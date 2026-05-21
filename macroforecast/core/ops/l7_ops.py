@@ -482,6 +482,10 @@ DEFAULT_FIGURE_MAPPING = {
     # Path A (faithful per-origin refit) lands in v0.9.0E.
     "oshapley_vi": "bar_global",
     "pbsv": "bar_global",
+    # C50: LSTM hidden-state activation heatmap (Karpathy 2015, arXiv:1506.02078).
+    # Rows = hidden units, columns = observations; color = mean |h_t|.
+    # Gates on torch availability via try-import in the runtime helper.
+    "lstm_hidden_state": "heatmap",
 }
 
 # Ops whose v0.1 runtime did not faithfully implement the design's named
@@ -526,11 +530,6 @@ OPERATIONAL_OPS = tuple(
     name for name in DEFAULT_FIGURE_MAPPING if name not in HONESTY_DEMOTED_L7_OPS
 )
 FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
-    # ``attention_weights`` was future in v0.1-v0.9.0; promoted to
-    # OPERATIONAL_OPS in Phase B-10 (paper-10 Goulet Coulombe 2026
-    # "OLS as an Attention Mechanism", Eq. 3 closed form). See the
-    # DEFAULT_FIGURE_MAPPING entry above.
-    "lstm_hidden_state",
     # boruta_selection, recursive_feature_elimination, lasso_path_selection,
     # stability_selection were removed from FUTURE_OPS in Cycle 47 because
     # they were promoted to status="operational" in L3 (l3_ops.py). They are
@@ -547,6 +546,10 @@ FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
     # generalized_irf promoted to operational in C49 (Pesaran-Shin 1998
     # order-invariant GIRF). Removed from FUTURE_OPS here; now in
     # DEFAULT_FIGURE_MAPPING (therefore in OPERATIONAL_OPS).
+    # lstm_hidden_state promoted to operational in C50 (Karpathy 2015
+    # torch forward-hook implementation). Removed from FUTURE_OPS here.
+    # (``attention_weights`` was future in v0.1-v0.9.0; promoted to
+    # OPERATIONAL_OPS in Phase B-10 -- Goulet Coulombe 2026 Eq. 3 closed form.)
 )
 
 

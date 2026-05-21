@@ -127,13 +127,13 @@ class TestRegistration:
             "generalized_irf must NOT be in FUTURE_OPS after C49 promotion"
         )
 
-    def test_c49_lstm_hidden_state_still_future(self) -> None:
-        """R-2: lstm_hidden_state must still be in FUTURE_OPS (deferred to C50)."""
+    def test_c49_lstm_hidden_state_operational_after_c50(self) -> None:
+        """R-2: lstm_hidden_state promoted to OPERATIONAL in C50 (not future)."""
         future_names = {
             op.name if hasattr(op, "name") else str(op) for op in FUTURE_OPS
         }
-        assert "lstm_hidden_state" in future_names, (
-            "lstm_hidden_state must remain FUTURE after C49 (deferred to C50)"
+        assert "lstm_hidden_state" not in future_names, (
+            "lstm_hidden_state must NOT be FUTURE after C50 promotion"
         )
 
     def test_c49_generalized_irf_in_operational_ops(self) -> None:

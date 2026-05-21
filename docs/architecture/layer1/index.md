@@ -114,3 +114,7 @@ frame_availability
 ## See encyclopedia
 
 For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l1/`](../../encyclopedia/l1/index.md).
+
+## Cycle 50 update (2026-05-22)
+
+`vintage_policy: real_time_alfred` promoted to **operational** (was future). Two modes: `alfred_mode=local` (pre-downloaded snapshots from `alfred_snapshot_dir`) and `alfred_mode=api` (ALFRED REST API). See the encyclopedia entry for parameter details.

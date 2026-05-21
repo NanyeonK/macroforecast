@@ -1104,6 +1104,53 @@ _ATTENTION_WEIGHTS = _o(
 )
 
 
+_REF_KARPATHY_2015 = Reference(
+    citation="Karpathy, Johnson & Fei-Fei (2015) 'Visualizing and Understanding Recurrent Networks', arXiv:1506.02078.",
+    url="https://arxiv.org/abs/1506.02078",
+)
+
+# C50: lstm_hidden_state promoted from future to operational.
+_LSTM_HIDDEN_STATE = _o(
+    "lstm_hidden_state",
+    "LSTM hidden-state activation heatmap (Karpathy et al. 2015).",
+    (
+        "Extracts the per-timestep hidden-state activations ``h_t`` from a "
+        "fitted LSTM model and renders them as a heatmap: rows index hidden "
+        "units, columns index observations, color encodes mean ``|h_t|``. "
+        "The visualization follows the approach of Karpathy, Johnson & "
+        "Fei-Fei (2015) for understanding which hidden units fire on "
+        "which parts of the input sequence.\n\n"
+        "Implementation details:\n\n"
+        "* Requires ``macroforecast[deep]`` (PyTorch); a "
+        "``NotImplementedError`` is raised for non-torch models "
+        "(``transformer``, ``gru`` without ``torch``, etc.).\n"
+        "* State capture uses a forward hook registered on the LSTM "
+        "layer via ``torch.nn.Module.register_forward_hook``.\n"
+        "* Output: a DataFrame of shape ``(n_hidden_units, T)`` where "
+        "``T`` is the sequence length. Column names are observation "
+        "dates when the input panel carries a DatetimeIndex; otherwise "
+        "integer positions.\n"
+        "* The ``l7_importance_v1`` sink carries the heatmap frame under "
+        "the key ``hidden_state_activations``.\n\n"
+        "Only compatible with the ``lstm`` model family in L4. The "
+        "``transformer`` family raises ``NotImplementedError`` because it "
+        "has no recurrent hidden state; use ``attention_weights`` for "
+        "transformer attribution."
+    ),
+    "Diagnosing LSTM sequence dynamics; identifying which hidden units respond to macro regime shifts.",
+    when_not_to_use=(
+        "Non-LSTM models -- use attention_weights for transformers, "
+        "shap_deep / gradient_shap / integrated_gradients for general "
+        "deep-learning attribution."
+    ),
+    references=(
+        _REF_DESIGN_L7,
+        _REF_KARPATHY_2015,
+    ),
+    related=("attention_weights", "shap_deep", "gradient_shap", "integrated_gradients"),
+)
+
+
 register(
     _MODEL_NATIVE_LINEAR_COEF,
     _MODEL_NATIVE_TREE_IMPORTANCE,
@@ -1142,4 +1189,6 @@ register(
     _PBSV,
     # v0.9 Phase B-10 paper-10 promotion
     _ATTENTION_WEIGHTS,
+    # C50: LSTM hidden-state activation heatmap
+    _LSTM_HIDDEN_STATE,
 )
