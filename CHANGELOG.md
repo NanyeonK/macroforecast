@@ -33,11 +33,19 @@ full per-version honesty-pass history embedded in repo documentation.
   `key=lambda q: q_mse[q]` in `min()` call (Fix 9). Resolves 1 `[arg-type]`
   error.
 
-**Deferred (require separate design decision):**
-- `macroforecast/functions/transforms.py:1138` — `random_state: int | None`
-  vs `_adaptive_ma_rf(random_state: int)` mismatch (Deferred A).
-- `macroforecast/scaffold/option_docs/l1.py:1889/2289/2323` — tuple rebinding
-  loses fixed-length type (Deferred B, 3 errors).
+**spec_v3 additions (4 remaining issues closed, full CI green):**
+- `tests/wizard/conftest.py`: Created new conftest with `pytest.importorskip("solara")`
+  so the wizard test suite is skipped (not errored) when the `[wizard]` extra is absent
+  from the CI environment (Fix 10). Resolves pytest collection error.
+- `macroforecast/core/runtime.py`: Widened `_adaptive_ma_rf` parameter from
+  `random_state: int` to `random_state: int | None` (Fix 11). Resolves 1
+  `[arg-type]` error at `transforms.py:1138`.
+- `macroforecast/scaffold/option_docs/l1.py`: Added `tuple[OptionDoc, ...]`
+  annotation on `_L1D_PRED_GEO`, `_L1D_STATE_SEL`, and `_L1D_VAR_SEL` initial
+  declarations (Fix 12). Resolves 3 `[assignment]` errors caused by tuple
+  rebinding losing the fixed-length inferred type.
+
+**Total mypy errors resolved: 30 → 0. pytest collection: error → skipped.**
 
 **Sphinx fix:**
 - `.github/workflows/ci-docs.yml`: Removed two stale "Check navigator app
