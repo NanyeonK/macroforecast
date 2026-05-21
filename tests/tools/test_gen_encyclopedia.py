@@ -134,3 +134,48 @@ def test_gen_l3_op_count(tmp_path: Path) -> None:
         f"Expected 36 .md files in l3/op/, got {count}.\n"
         f"Files: {[f.name for f in md_files]}"
     )
+
+
+def test_gen_no_third_party_imports() -> None:
+    """gen_encyclopedia_docs.py must not import any third-party package at module level.
+
+    Uses ast.parse to walk the tool file's top-level Import and ImportFrom nodes.
+    Any imported name that is not a stdlib module or macroforecast is a failure.
+    Third-party imports are allowed inside function bodies (e.g., lazy imports for
+    ops registry bootstrapping), but not at module scope.
+    """
+    import ast
+    import sys
+
+    tool_path = _REPO_ROOT / "tools" / "gen_encyclopedia_docs.py"
+    source = tool_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(tool_path))
+
+    # Collect module-level import names only (direct children of Module body)
+    imported_names: list[str] = []
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imported_names.append(alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                imported_names.append(node.module.split(".")[0])
+
+    # Classify each name
+    stdlib_names = sys.stdlib_module_names  # available in Python 3.10+
+    third_party: list[str] = []
+    for name in imported_names:
+        if name in stdlib_names:
+            continue
+        if name.startswith("macroforecast"):
+            continue
+        if name == "__future__":
+            continue
+        if name.startswith("_"):
+            continue
+        third_party.append(name)
+
+    assert not third_party, (
+        f"gen_encyclopedia_docs.py has module-level third-party imports: {third_party}. "
+        "All tool-level imports must be stdlib-only."
+    )
