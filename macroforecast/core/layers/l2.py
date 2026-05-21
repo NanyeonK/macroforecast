@@ -371,8 +371,8 @@ def _validate_l2a_gates(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes, l1
         issues.append(_issue("l2.monthly_to_quarterly_rule", "monthly_to_quarterly_rule is inactive for this L1 frequency/filter"))
     if q_to_m_active and m_to_q_active:
         issues.append(_issue("l2.frequency_alignment", "quarterly_to_monthly_rule and monthly_to_quarterly_rule cannot both be active"))
-    if resolved.get("quarterly_to_monthly_rule") == "chow_lin":
-        issues.append(_issue("l2.quarterly_to_monthly_rule", "quarterly_to_monthly_rule=chow_lin is future and not executable"))
+    # C50: chow_lin is now operational. The runtime branch at runtime.py:14925
+    # was already wired; removing the hard-reject here activates it.
     return issues
 
 
@@ -433,8 +433,8 @@ def _validate_outlier(leaf_config: dict[str, Any], resolved: L2ResolvedAxes) -> 
         issues.append(_issue("l2.zscore_threshold_value", "zscore_threshold_value must be positive"))
     if action == "replace_with_cap_value" and policy != "winsorize":
         issues.append(_issue("l2.outlier_action", "replace_with_cap_value requires outlier_policy=winsorize"))
-    if action == "keep_with_indicator":
-        issues.append(_issue("l2.outlier_action", "outlier_action=keep_with_indicator is future and not executable"))
+    # C50: keep_with_indicator is now operational. Runtime branch added in
+    # _apply_outlier_policy and _apply_outlier_policy_per_origin.
     return issues
 
 
@@ -606,7 +606,7 @@ L2_LAYER_SPEC = LayerImplementationSpec(
                 )),
                 "calendar_aligned_frame",
             ),
-            "quarterly_to_monthly_rule": AxisSpec("quarterly_to_monthly_rule", _options(("linear_interpolation", "step_backward", "step_forward", "chow_lin"), future=("chow_lin",)), "step_backward"),
+            "quarterly_to_monthly_rule": AxisSpec("quarterly_to_monthly_rule", _options(("linear_interpolation", "step_backward", "step_forward", "chow_lin")), "step_backward"),
             "monthly_to_quarterly_rule": AxisSpec("monthly_to_quarterly_rule", _options(("quarterly_average", "quarterly_endpoint", "quarterly_sum")), "quarterly_average"),
         },
         "l2_b": {
@@ -616,7 +616,7 @@ L2_LAYER_SPEC = LayerImplementationSpec(
         },
         "l2_c": {
             "outlier_policy": AxisSpec("outlier_policy", _options(("mccracken_ng_iqr", "winsorize", "zscore_threshold", "none")), "mccracken_ng_iqr"),
-            "outlier_action": AxisSpec("outlier_action", _options(("flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator"), future=("keep_with_indicator",)), "flag_as_nan"),
+            "outlier_action": AxisSpec("outlier_action", _options(("flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator")), "flag_as_nan"),
             "outlier_scope": AxisSpec("outlier_scope", _options(("target_and_predictors", "predictors_only", "target_only", "not_applicable")), "derived"),
         },
         "l2_d": {

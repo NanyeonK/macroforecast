@@ -63,7 +63,9 @@ def test_l2_full_sample_once_rejected_for_imputation():
     assert report.has_hard_errors
 
 
-def test_l2_chow_lin_rejected_as_future():
+def test_l2_chow_lin_now_operational():
+    # C50: chow_lin is now operational. The validator must accept it
+    # without emitting the "future" rejection message.
     yaml_text = """
     1_data:
       fixed_axes:
@@ -76,11 +78,11 @@ def test_l2_chow_lin_rejected_as_future():
     """
     recipe = parse_recipe_yaml(yaml_text)
     report = validate_recipe(recipe)
-    assert report.has_hard_errors
-    assert any("future" in issue.message.lower() for issue in report.hard_errors)
+    assert not any("future" in issue.message.lower() for issue in report.hard_errors)
 
 
-def test_l2_keep_with_indicator_rejected_as_future():
+def test_l2_keep_with_indicator_now_operational():
+    # C50: keep_with_indicator is now operational. The validator must accept it.
     yaml_text = """
     2_preprocessing:
       fixed_axes:
@@ -88,7 +90,9 @@ def test_l2_keep_with_indicator_rejected_as_future():
     """
     layer = parse_layer_yaml(yaml_text, "l2")
     report = validate_layer(layer)
-    assert report.has_hard_errors
+    assert not any(
+        "future" in issue.message.lower() for issue in report.hard_errors
+    ), "keep_with_indicator must not be rejected as future after C50"
 
 
 def test_l2_a_inactive_when_no_fred_sd():
