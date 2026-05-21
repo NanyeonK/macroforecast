@@ -61,3 +61,7 @@ Outputs:
 ## See encyclopedia
 
 For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l7/`](../../encyclopedia/l7/index.md).
+
+## Cycle 50 update (2026-05-22)
+
+`lstm_hidden_state` promoted to **operational** (was future). Extracts per-timestep LSTM hidden-state activations via a PyTorch forward hook and renders them as a heatmap (rows = hidden units, columns = observations). Requires `macroforecast[deep]`. Reference: Karpathy, Johnson & Fei-Fei (2015) arXiv:1506.02078.

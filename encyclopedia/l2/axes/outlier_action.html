@@ -841,8 +841,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Operational: 3 option(s)</p></li>
-<li><p>Future: 1 option(s)</p></li>
+<li><p>Operational: 4 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -888,12 +888,27 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#flag-as-nan"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">flag_as_nan</span></code></span></a>, <a class="reference internal" href="#replace-with-median"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">replace_with_median</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
-<section id="keep-with-indicator-future">
-<h3><code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code>  –  future<a class="headerlink" href="#keep-with-indicator-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l2.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="keep-with-indicator-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code>  –  operational<a class="headerlink" href="#keep-with-indicator-operational" title="Link to this heading">#</a></h3>
+<p>Keep the outlier value but add a binary indicator column.</p>
+<p>Leaves the flagged observation’s value unchanged and instead appends a new binary column named <code class="docutils literal notranslate"><span class="pre">{col}__outlier_flag</span></code> that equals 1 for flagged rows and 0 otherwise. Downstream layers can use the flag column as a covariate to let the model decide whether and how to discount the outlier.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">{col}__outlier_flag</span></code> semantics are:</p>
+<ul class="simple">
+<li><p>Column name pattern: original column name + <code class="docutils literal notranslate"><span class="pre">__outlier_flag</span></code> suffix.</p></li>
+<li><p>Value: 1 (flagged by the chosen outlier_policy), 0 (clean).</p></li>
+<li><p>The indicator is added to the panel before L2.D imputation and is visible to all downstream feature engineering and model estimation steps.</p></li>
+</ul>
+<p>This action is appropriate when extreme observations may carry genuine signal and the model should not lose the original value, but the researcher wants to flag the observation’s provenance.</p>
+<p><strong>When to use</strong></p>
+<p>Studies where outliers may be genuine signals (financial crises, policy events); missingness-as-feature studies.</p>
+<p><strong>When NOT to use</strong></p>
+<p>When outliers are data errors that should be removed or replaced – use flag_as_nan, replace_with_median, or replace_with_cap_value instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L2: ‘preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.’</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#flag-as-nan"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">flag_as_nan</span></code></span></a>, <a class="reference internal" href="#replace-with-median"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">replace_with_median</span></code></span></a>, <a class="reference internal" href="#replace-with-cap-value"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">replace_with_cap_value</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
 </section>
 </section>
@@ -952,7 +967,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flag-as-nan-operational"><code class="docutils literal notranslate"><span class="pre">flag_as_nan</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replace-with-median-operational"><code class="docutils literal notranslate"><span class="pre">replace_with_median</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replace-with-cap-value-operational"><code class="docutils literal notranslate"><span class="pre">replace_with_cap_value</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-with-indicator-future"><code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-with-indicator-operational"><code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code>  –  operational</a></li>
 </ul>
 </li>
 </ul>

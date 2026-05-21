@@ -841,8 +841,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Operational: 3 option(s)</p></li>
-<li><p>Future: 1 option(s)</p></li>
+<li><p>Operational: 4 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -879,12 +879,21 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#step-backward"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">step_backward</span></code></span></a>, <a class="reference internal" href="#linear-interpolation"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
-<section id="chow-lin-future">
-<h3><code class="docutils literal notranslate"><span class="pre">chow_lin</span></code>  –  future<a class="headerlink" href="#chow-lin-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">chow_lin</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l2.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="chow-lin-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">chow_lin</span></code>  –  operational<a class="headerlink" href="#chow-lin-operational" title="Link to this heading">#</a></h3>
+<p>Chow-Lin (1971) regression-based temporal disaggregation.</p>
+<p>Implements the best linear unbiased interpolation procedure of Chow &amp; Lin (1971). A monthly indicator series (<code class="docutils literal notranslate"><span class="pre">leaf_config.chow_lin_indicator</span></code>) is regressed on the quarterly observations using GLS with an AR(1) error structure; the fitted residuals are distributed proportionally across the three months of each quarter so the sum-constraint is preserved.</p>
+<p>This is the canonical temporal disaggregation method in the macroeconomics literature. It is more accurate than step-function or linear-interpolation approaches when an informative monthly indicator is available. Requires <code class="docutils literal notranslate"><span class="pre">leaf_config.chow_lin_indicator</span></code> to name the monthly indicator column present in the panel.</p>
+<p><strong>When to use</strong></p>
+<p>Quarterly-to-monthly disaggregation when a monthly indicator series is available (e.g., IP as indicator for GDP).</p>
+<p><strong>When NOT to use</strong></p>
+<p>When no suitable monthly indicator exists – use step_backward (conservative) or linear_interpolation (smooth) instead.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>Chow &amp; Lin (1971) ‘Best Linear Unbiased Interpolation, Distribution, and Extrapolation of Time Series by Related Series’, Review of Economics and Statistics 53(4): 372-375. (doi:10.2307/1928739)</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#step-backward"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">step_backward</span></code></span></a>, <a class="reference internal" href="#linear-interpolation"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
 </section>
 </section>
@@ -943,7 +952,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-interpolation-operational"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-backward-operational"><code class="docutils literal notranslate"><span class="pre">step_backward</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#step-forward-operational"><code class="docutils literal notranslate"><span class="pre">step_forward</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chow-lin-future"><code class="docutils literal notranslate"><span class="pre">chow_lin</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chow-lin-operational"><code class="docutils literal notranslate"><span class="pre">chow_lin</span></code>  –  operational</a></li>
 </ul>
 </li>
 </ul>

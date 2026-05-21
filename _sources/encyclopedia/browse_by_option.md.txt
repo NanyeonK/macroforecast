@@ -63,7 +63,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`census_region_northeast`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
 | [`census_region_south`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
 | [`census_region_west`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
-| [`chow_lin`](l2/axes/quarterly_to_monthly_rule.md) | L2 | `quarterly_to_monthly_rule` | future |
+| [`chow_lin`](l2/axes/quarterly_to_monthly_rule.md) | L2 | `quarterly_to_monthly_rule` | operational |
 | [`clark_west`](l6/axes/nested_test.md) | L6 | `nested_test` | operational |
 | [`clean_panel`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`cleaned_vs_features`](l3_5/axes/comparison_stages.md) | L3.5 | `comparison_stages` | operational |
@@ -252,7 +252,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`keep_available_rows`](l1/axes/missing_availability.md) | L1 | `missing_availability` | operational |
 | [`keep_official_raw_scale`](l1/axes/official_transform_policy.md) | L1 | `official_transform_policy` | operational |
 | [`keep_unbalanced`](l2/axes/frame_edge_policy.md) | L2 | `frame_edge_policy` | operational |
-| [`keep_with_indicator`](l2/axes/outlier_action.md) | L2 | `outlier_action` | future |
+| [`keep_with_indicator`](l2/axes/outlier_action.md) | L2 | `outlier_action` | operational |
 | [`kendall`](l1_5/axes/correlation_method.md) | L1.5 | `correlation_method` | operational |
 | [`kernel`](l3/axes/op.md) | L3 | `op` | operational |
 | [`kernel_features`](l3/axes/op.md) | L3 | `op` | operational |
@@ -295,7 +295,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`long`](l7/axes/output_table_format.md) | L7 | `output_table_format` | operational |
 | [`longest_gap`](l1_5/axes/missing_view.md) | L1.5 | `missing_view` | operational |
 | [`lstm`](l4/axes/family.md) | L4 | `family` | operational |
-| [`lstm_hidden_state`](l7/axes/op.md) | L7 | `op` | future |
+| [`lstm_hidden_state`](l7/axes/op.md) | L7 | `op` | operational |
 | [`ma_increasing_order`](l3/axes/op.md) | L3 | `op` | operational |
 | [`ma_window`](l3/axes/op.md) | L3 | `op` | operational |
 | [`macroeconomic_random_forest`](l4/axes/family.md) | L4 | `family` | operational |
@@ -482,7 +482,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`raw_vs_imputed`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`raw_vs_outlier_handled`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`raw_vs_tcoded`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
-| [`real_time_alfred`](l1/axes/vintage_policy.md) | L1 | `vintage_policy` | future |
+| [`real_time_alfred`](l1/axes/vintage_policy.md) | L1 | `vintage_policy` | operational |
 | [`reality_check_white`](l6/axes/multiple_model_test.md) | L6 | `multiple_model_test` | operational |
 | [`realized_garch`](l4/axes/family.md) | L4 | `family` | operational |
 | [`realized_garch_with_rv_exog`](l4/axes/family.md) | L4 | `family` | operational |
