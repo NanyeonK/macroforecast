@@ -32,7 +32,7 @@ Version: **v0.9.2b1**. Package root: `macroforecast/`.
 | L2.5 | Diagnostic hook (default-off): preprocessed panel summaries | `core/layers/l2_5.py` |
 | L3 | Feature engineering DAG: 41 ops (lags, factors, filters, selection, targets) | `core/layers/l3.py`, `core/ops/l3_ops.py` |
 | L3.5 | Diagnostic hook (default-off): feature distribution summaries | `core/layers/l3_5.py` |
-| L4 | Forecasting model + tuning: 35+ families, 5 combine ops | `core/layers/l4.py`, `core/ops/l4_ops.py` |
+| L4 | Forecasting model + tuning: 46 operational families, 5 combine ops | `core/layers/l4.py`, `core/ops/l4_ops.py` |
 | L4.5 | Diagnostic hook (default-off): residual diagnostics, fitted-vs-actual | `core/layers/l4_5.py` |
 | L5 | Evaluation: metrics, benchmarks, decomposition, aggregation, ranking | `core/layers/l5.py`, `core/ops/l5_ops.py` |
 | L6 | Statistical tests: DM/HLN, CW, MCS/SPA/RC/StepM, PT/HM, residual battery, density tests | `core/layers/l6.py`, `core/ops/l6_ops.py` |
@@ -105,6 +105,30 @@ For the full per-callable reference (signatures, result attributes,
 examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 
 ---
+
+## Cycle 48 — MIDAS Family Honesty Pass (2026-05-21)
+
+Cycle 48 promotes four L4 families from `future` to `operational`, bringing
+the L4 operational count from 42 to 46. Each family implements the published
+mixed-data sampling (MIDAS) estimator using native SciPy/NumPy/statsmodels
+primitives. No new external dependencies were added.
+
+| Family | Paper | Estimation | Key params |
+|--------|-------|-----------|------------|
+| `midas_almon` | Ghysels, Santa-Clara & Valkanov (2004) "The MIDAS Touch", §2 eq. (3) | Multi-start NLS (Nelder-Mead) on Almon polynomial lag weights; `Q+1` hyperparameters | `freq_ratio`, `n_lags_high`, `polynomial_order`, `sum_to_one`, `n_starts`, `random_state` |
+| `midas_beta` | Ghysels, Sinko & Valkanov (2007) "MIDAS Regressions", §2 Beta kernel | Multi-start NLS; 2 Beta shape parameters `a`, `b`; initial point `[1,1]` then Gamma-perturbed restarts | `freq_ratio`, `n_lags_high`, `sum_to_one`, `n_starts`, `random_state` |
+| `midas_step` | Foroni, Marcellino & Schumacher (2015) "Unrestricted Mixed Data Sampling", §2.2 | OLS on step-aggregated design matrix; `S` piecewise-constant lag groups | `freq_ratio`, `n_lags_high`, `n_steps` |
+| `dfm_unrestricted_midas` | Foroni, Marcellino & Schumacher (2015) §3 eq. (7) and eq. (20); Marcellino & Schumacher (2010) U-MIDAS | OLS with optional AR(1) y-lag; BIC/AIC or fixed-K lag selection | `freq_ratio`, `n_lags_high`, `include_y_lag`, `random_state` |
+
+All four classes (`_MidasAlmonModel`, `_MidasBetaModel`, `_MidasStepModel`,
+`_UnrestrictedMidasModel`) are inlined in `core/runtime.py` following the
+existing pattern. They reuse the pre-existing `_midas_lag_stack` helper for
+high-frequency lag construction and share the per-origin seed contract
+established by issue #279 (`random_state = base_seed + origin_position`).
+
+The L3 MIDAS feature-engineering ops (`midas`, `u_midas`) are separate and
+unchanged: they produce LF-aggregated feature columns. The L4 MIDAS families
+receive those (or raw HF data when `freq_ratio > 1`) and produce forecasts.
 
 ## Cycle 47 — L3 feature-selection honesty pass (2026-05-21)
 
