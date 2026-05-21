@@ -15328,7 +15328,7 @@ def _adaptive_ma_rf(
     n_estimators: int = 500,
     min_samples_leaf: int = 40,
     sided: str = "two",
-    random_state: int = 0,
+    random_state: int | None = 0,
 ) -> pd.DataFrame:
     """AlbaMA -- Adaptive Moving Average via Random Forest with K=1
     (time index).
