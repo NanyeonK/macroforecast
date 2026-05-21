@@ -71,6 +71,9 @@ full per-version honesty-pass history embedded in repo documentation.
   `not deep and not slow` so ci-core skips t73.
 - `.github/workflows/ci-deep.yml`: marker filter updated from `deep` to
   `deep or slow` so the nightly ci-deep job exercises t73 with the new timeout.
+- `docs/install.md`: updated four pip install URL tags from `@v0.9.0` to
+  `@v0.9.2b1` (lines 27, 73, 83, 92). The `Check docs do not advertise stale
+  tag` CI step was unmasked by the t73 fix; this resolves that failure.
 
 ### Cycle 44 -- CI stabilization (mypy green + sphinx stale-check removal)
 
