@@ -450,7 +450,7 @@ L2_VIRTUAL_OPS_ORDERED: list[tuple[str, str]] = [
     ("zero_fill_leading", "operational"),
     ("quarterly_average", "operational"),
     ("step_backward", "operational"),
-    ("chow_lin_disaggregation", "future"),
+    ("chow_lin_disaggregation", "operational"),
 ]
 
 # L5 virtual ops: each is a standalone callable serving as a recipe axis value
