@@ -1,80 +1,260 @@
-# Standalone functions — L5 metrics
+# Standalone functions: L5 metrics (15 ops)
 
-L5 evaluation metrics are planned as standalone callables:
+L5 metric callables take arrays of true values and predictions and return a scalar float. They have no result dataclass - they return `float` directly.
+
+## Point metrics (7 ops)
+
+#### `mae(y_true: np.ndarray, y_pred: np.ndarray) -> float`
+
+Mean absolute error.
+
+Returns `float`.
 
 ```python
-mf.functions.<metric>(y_true, y_pred, **kwargs) -> float
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.mae(y_true, y_pred)
+print(value)
 ```
 
-> **Cycle 22 note** — `mf.functions.theil_u1` and `mf.functions.theil_u2`
-> are the only L5 standalone callables currently shipped (POC). Other metrics
-> below are planned for subsequent cycles. Note that `theil_u1` / `theil_u2`
-> are also accessible via `mf.functions` in addition to their metrics.py
-> location.
+[Encyclopedia](../encyclopedia/l5/point_metrics/mae.md)
 
-## Point metrics (6 options)
+#### `mape(y_true: np.ndarray, y_pred: np.ndarray, *, eps: float = 1e-10) -> float`
 
-| Option | One-liner | Encyclopedia |
-|---|---|---|
-| `mse` | Mean squared error | [point_metrics axis](../encyclopedia/l5/axes/point_metrics.md#mse) |
-| `rmse` | Root mean squared error | [point_metrics axis](../encyclopedia/l5/axes/point_metrics.md#rmse) |
-| `mae` | Mean absolute error | [point_metrics axis](../encyclopedia/l5/axes/point_metrics.md#mae) |
-| `medae` | Median absolute error | [point_metrics axis](../encyclopedia/l5/axes/point_metrics.md#medae) |
-| `mape` | Mean absolute percentage error | [point_metrics axis](../encyclopedia/l5/axes/point_metrics.md#mape) |
-| `theil_u1` | Theil U1 inequality coefficient — bounded in [0, 1] | [theil_u1 op page](../encyclopedia/l5/point_metrics/theil_u1.md) |
+Mean absolute percentage error.
 
-## Relative metrics (4 options)
+Returns `float`.
 
-| Option | One-liner | Encyclopedia |
-|---|---|---|
-| `mse_reduction` | MSE reduction vs benchmark | [relative_metrics axis](../encyclopedia/l5/axes/relative_metrics.md#mse-reduction) |
-| `r2_oos` | Out-of-sample R² (Clark-West style) | [relative_metrics axis](../encyclopedia/l5/axes/relative_metrics.md#r2-oos) |
-| `relative_mae` | MAE ratio vs benchmark | [relative_metrics axis](../encyclopedia/l5/axes/relative_metrics.md#relative-mae) |
-| `relative_mse` | MSE ratio vs benchmark | [relative_metrics axis](../encyclopedia/l5/axes/relative_metrics.md#relative-mse) |
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.mape(y_true, y_pred)
+print(value)
+```
 
-## Density metrics (2 options)
+[Encyclopedia](../encyclopedia/l5/point_metrics/mape.md)
 
-| Option | One-liner | Encyclopedia |
-|---|---|---|
-| `crps` | Continuous ranked probability score | [density_metrics axis](../encyclopedia/l5/axes/density_metrics.md#crps) |
-| `log_score` | Log-score for density forecasts | [density_metrics axis](../encyclopedia/l5/axes/density_metrics.md#log-score) |
+#### `medae(y_true: np.ndarray, y_pred: np.ndarray) -> float`
 
-## Direction metrics (2 options)
+Median absolute error.
 
-| Option | One-liner | Encyclopedia |
-|---|---|---|
-| `success_ratio` | Hit rate for directional forecasts | [direction_metrics axis](../encyclopedia/l5/axes/direction_metrics.md#success-ratio) |
-| `pesaran_timmermann_metric` | Pesaran-Timmermann (1992) direction metric | [direction_metrics axis](../encyclopedia/l5/axes/direction_metrics.md#pesaran-timmermann-metric) |
+Returns `float`.
 
-## Theil family (2 options — POC shipped)
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.medae(y_true, y_pred)
+print(value)
+```
 
-| Option | One-liner | Encyclopedia |
-|---|---|---|
-| `theil_u1` | Theil U1 — absolute inequality, bounded [0, 1] (**shipped**) | [theil_u1 op page](../encyclopedia/l5/point_metrics/theil_u1.md) |
-| `theil_u2` | Theil U2 — ratio vs random-walk benchmark (**shipped**) | [point_metrics axis](../encyclopedia/l5/axes/point_metrics.md#theil-u2) |
+[Encyclopedia](../encyclopedia/l5/point_metrics/medae.md)
 
-## Quick example (theil_u1 — currently shipped)
+#### `mse(y_true: np.ndarray, y_pred: np.ndarray) -> float`
+
+Mean squared error.
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.mse(y_true, y_pred)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/point_metrics/mse.md)
+
+#### `rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float`
+
+Root mean squared error.
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.rmse(y_true, y_pred)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/point_metrics/rmse.md)
+
+#### `theil_u1(y_true: np.ndarray, y_pred: np.ndarray) -> float`
+
+Theil U1 inequality coefficient in [0, 1].
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.theil_u1(y_true, y_pred)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/point_metrics/theil_u1.md)
+
+#### `theil_u2(y_true: np.ndarray, y_pred: np.ndarray, y_prev: np.ndarray) -> float`
+
+Theil U2 ratio vs naive forecast (requires `y_prev`).
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_prev = np.array([0.9, 1.9, 2.8, 3.7, 5.0])
+value = mf.functions.theil_u2(y_true, y_pred, y_prev)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/point_metrics/theil_u2.md)
+
+## Density metrics (2 ops)
+
+#### `coverage_rate(y_true: np.ndarray, y_lower: np.ndarray, y_upper: np.ndarray) -> float`
+
+Empirical coverage: fraction of y_true inside [y_lower, y_upper].
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_lower = y_pred - 0.5
+y_upper = y_pred + 0.5
+value = mf.functions.coverage_rate(y_true, y_lower, y_upper)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/density_metrics/coverage_rate.md)
+
+#### `interval_score(y_true: np.ndarray, y_lower: np.ndarray, y_upper: np.ndarray, *, alpha: float = 0.05) -> float`
+
+Winkler interval score (lower = better).
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_lower = y_pred - 0.5
+y_upper = y_pred + 0.5
+value = mf.functions.interval_score(y_true, y_lower, y_upper)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/density_metrics/interval_score.md)
+
+## Directional metrics (2 ops)
+
+#### `pesaran_timmermann_metric(y_true: np.ndarray, y_pred: np.ndarray, *, threshold: float = 0.0) -> float`
+
+Pesaran-Timmermann (1992) directional test statistic.
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+value = mf.functions.pesaran_timmermann_metric(y_true, y_pred)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/direction_metrics/pesaran_timmermann_metric.md)
+
+#### `success_ratio(y_true: np.ndarray, y_pred: np.ndarray, y_prev: np.ndarray) -> float`
+
+Directional accuracy: fraction of correct sign predictions (requires `y_prev`).
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_prev = np.array([0.9, 1.9, 2.8, 3.7, 5.0])
+value = mf.functions.success_ratio(y_true, y_pred, y_prev)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/direction_metrics/success_ratio.md)
+
+## Relative metrics (4 ops)
+
+#### `mse_reduction(y_true: np.ndarray, y_model: np.ndarray, y_benchmark: np.ndarray) -> float`
+
+Percentage MSE reduction vs benchmark.
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_bench = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+value = mf.functions.mse_reduction(y_true, y_pred, y_bench)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/relative_metrics/mse_reduction.md)
+
+#### `r2_oos(y_true: np.ndarray, y_model: np.ndarray, y_benchmark: np.ndarray) -> float`
+
+OOS R-squared (Campbell-Thompson 2008).
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_bench = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+value = mf.functions.r2_oos(y_true, y_pred, y_bench)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/relative_metrics/r2_oos.md)
+
+#### `relative_mae(y_true: np.ndarray, y_model: np.ndarray, y_benchmark: np.ndarray) -> float`
+
+MAE ratio: MAE(model) / MAE(benchmark).
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_bench = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+value = mf.functions.relative_mae(y_true, y_pred, y_bench)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/relative_metrics/relative_mae.md)
+
+#### `relative_mse(y_true: np.ndarray, y_model: np.ndarray, y_benchmark: np.ndarray) -> float`
+
+MSE ratio: MSE(model) / MSE(benchmark).
+
+Returns `float`.
+
+```python
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
+y_bench = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+value = mf.functions.relative_mse(y_true, y_pred, y_bench)
+print(value)
+```
+
+[Encyclopedia](../encyclopedia/l5/relative_metrics/relative_mse.md)
+
+## Quick example
 
 ```python
 import macroforecast as mf
 import numpy as np
 
-rng = np.random.RandomState(0)
-y_true = rng.randn(80)
-y_pred = y_true + 0.3 * rng.randn(80)
+y_true = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+y_pred = np.array([1.1, 2.2, 2.9, 3.8, 5.1])
 
-u1 = mf.functions.theil_u1(y_true, y_pred)
-print(f"Theil U1 = {u1:.4f}")   # smaller is better; 0 = perfect
-
-# Theil U2 requires a naive benchmark (e.g. random walk)
-naive = np.concatenate([[y_true[0]], y_true[:-1]])
-u2 = mf.functions.theil_u2(y_true, naive, y_pred)
-print(f"Theil U2 = {u2:.4f}")   # <1 = beats naive; 1 = same as naive
+print('MSE :', mf.functions.mse(y_true, y_pred))
+print('RMSE:', mf.functions.rmse(y_true, y_pred))
+print('MAE :', mf.functions.mae(y_true, y_pred))
 ```
-
-## Related
-
-- [L4 fit](l4_fit.md) — generate the `y_pred` from a fit result.
-- [L6 tests](l6_tests.md) — statistical significance of metric differences.
-- [Encyclopedia L5 index](../encyclopedia/l5/index.md) — full axis × option
-  reference including aggregation, decomposition, and ranking.

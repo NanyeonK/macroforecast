@@ -1,81 +1,171 @@
-# Standalone functions — L7 feature importance
+# Standalone functions: L7 importance (8 ops)
 
-L7 provides model interpretation and feature importance. In the standalone
-paradigm these are planned as:
+L7 importance callables take a fitted L4 result object plus feature matrix `X` (and target `y` for permutation-based methods) and return a frozen result dataclass. Return attributes differ by callable - see each type-specific description below.
+
+Result type summary:
+
+- `NativeImportanceResult` exposes `.importances_`, `.feature_names_`, `.method`, `.summary()`.
+- `PermutationImportanceResult` exposes `.importances_mean_`, `.importances_std_`, `.feature_names_`, `.n_repeats`, `.summary()`.
+- `CondPermutationImportanceResult` exposes `.importances_mean_`, `.importances_std_`, `.feature_names_`, `.method`, `.n_repeats`, `.summary()`.
+- `ALEImportanceResult` exposes `.importances_`, `.ale_values_`, `.feature_names_`, `.summary()`.
+- `PDPImportanceResult` exposes `.importances_`, `.pdp_values_`, `.grid_values_`, `.feature_names_`, `.summary()`.
+- `SHAPImportanceResult` exposes `.shap_values_`, `.expected_value_`, `.explainer_type`, `.feature_names_`, `.summary()`.
+
+Only `PermutationImportanceResult` and `CondPermutationImportanceResult` expose `.importances_mean_` / `.importances_std_`. The other importance types use `.importances_`, `.ale_values_`, `.pdp_values_`, or `.shap_values_` instead.
+
+## Model-native importance (2 ops)
+
+#### `model_native_linear_coef_importance(result: Any, X: np.ndarray | pd.DataFrame) -> NativeImportanceResult`
+
+Extract the fitted coefficient vector as signed importance scores (X required).
+
+Returns `NativeImportanceResult`: `.feature_names_`, `.importances_`, `.method`, `.summary()`.
 
 ```python
-mf.functions.<op>(fit_result, X, y, **kwargs) -> ImportanceResult
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.ols_fit(X, y)
+imp = mf.functions.model_native_linear_coef_importance(fit_result, X)
+print(imp.importances_)
 ```
 
-An `ImportanceResult` carries `.importances_mean`, `.importances_std`,
-`.feature_names_in_` (if available), and a `.plot()` method.
+[Encyclopedia](../encyclopedia/l7/op/model_native_linear_coef.md)
 
-> **Cycle 22 note** — L7 standalone callables are planned for a future cycle.
-> This page documents 8 grouped operational ops. The encyclopedia link at the
-> bottom covers the full ~30-op L7 surface including SHAP family, IRF/FEVD,
-> and attribution ops.
+#### `model_native_tree_importance(result: Any, X: np.ndarray | pd.DataFrame) -> NativeImportanceResult`
 
-## Native importance (2 ops)
+Tree impurity-based (gini/gain) feature importance (X required).
 
-| Op | One-liner | Encyclopedia |
-|---|---|---|
-| `model_native_linear_coef` | Signed coefficients from linear models | [op axis](../encyclopedia/l7/axes/op.md#model-native-linear-coef) |
-| `model_native_tree_importance` | Gini / split-count importance from tree models | [op axis](../encyclopedia/l7/axes/op.md#model-native-tree-importance) |
+Returns `NativeImportanceResult`: `.feature_names_`, `.importances_`, `.method`, `.summary()`.
 
-## Permutation importance (2 ops)
-
-| Op | One-liner | Encyclopedia |
-|---|---|---|
-| `permutation_importance` | Model-agnostic permutation feature importance (Breiman 2001) | [op axis](../encyclopedia/l7/axes/op.md#permutation-importance) |
-| `permutation_importance_strobl` | Strobl (2008) conditional permutation importance (bias-corrected) | [op axis](../encyclopedia/l7/axes/op.md#permutation-importance-strobl) |
-
-## Dependence (2 ops)
-
-| Op | One-liner | Encyclopedia |
-|---|---|---|
-| `partial_dependence` | Friedman (2001) marginal effect curves | [op axis](../encyclopedia/l7/axes/op.md#partial-dependence) |
-| `accumulated_local_effect` | ALE plots (Apley & Zhu 2020), de-aliased | [op axis](../encyclopedia/l7/axes/op.md#accumulated-local-effect) |
-
-## SHAP (2 ops)
-
-| Op | One-liner | Encyclopedia |
-|---|---|---|
-| `shap_linear` | SHAP values via linear explainer (no extra deps) | [op axis](../encyclopedia/l7/axes/op.md#shap-linear) |
-| `shap_tree` | SHAP values via tree explainer (requires `macroforecast[shap]`) | [op axis](../encyclopedia/l7/axes/op.md#shap-tree) |
-
-## Quick example (recipe DSL)
-
-```yaml
-7_interpretation:
-  enabled: true
-  fixed_axes:
-    op: permutation_importance
-    top_k_features_to_show: 10
-    figure_type: bar_global
-    figure_format: png
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.random_forest_fit(X, y, n_estimators=20)
+imp = mf.functions.model_native_tree_importance(fit_result, X)
+print(imp.importances_)
 ```
 
-## Quick example (standalone — planned)
+[Encyclopedia](../encyclopedia/l7/op/model_native_tree_importance.md)
+
+## Permutation-based importance (2 ops)
+
+#### `permutation_importance(result: Any, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_repeats: int = 10, random_state: int | None = None) -> PermutationImportanceResult`
+
+Breiman-Fisher permutation feature importance (model-agnostic).
+
+Returns `PermutationImportanceResult`: `.feature_names_`, `.importances_mean_`, `.importances_std_`, `.n_repeats`, `.summary()`.
+
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.ols_fit(X, y)
+imp = mf.functions.permutation_importance(fit_result, X, y, n_repeats=10)
+print(imp.importances_mean_)
+```
+
+[Encyclopedia](../encyclopedia/l7/op/permutation_importance.md)
+
+#### `cond_permutation_importance(result: Any, X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_repeats: int = 10, random_state: int | None = None) -> CondPermutationImportanceResult`
+
+Strobl (2008) conditional permutation importance (bias-corrected for correlated features).
+
+Returns `CondPermutationImportanceResult`: `.feature_names_`, `.importances_mean_`, `.importances_std_`, `.method`, `.n_repeats`, `.summary()`.
+
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.ols_fit(X, y)
+imp = mf.functions.cond_permutation_importance(fit_result, X, y, n_repeats=10)
+print(imp.importances_mean_)
+```
+
+[Encyclopedia](../encyclopedia/l7/op/permutation_importance_strobl.md)
+
+## Post-hoc importance (4 ops)
+
+#### `ale_importance(result: Any, X: np.ndarray | pd.DataFrame, *, n_bins: int = 20) -> ALEImportanceResult`
+
+Accumulated local effects (Apley-Zhu 2020) L1 importance.
+
+Returns `ALEImportanceResult`: `.ale_values_`, `.feature_names_`, `.importances_`, `.summary()`.
+
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.ols_fit(X, y)
+imp = mf.functions.ale_importance(fit_result, X, n_bins=20)
+print(imp.importances_)
+```
+
+[Encyclopedia](../encyclopedia/l7/op/accumulated_local_effect.md)
+
+#### `partial_dependence_importance(result: Any, X: np.ndarray | pd.DataFrame, *, grid_resolution: int = 20) -> PDPImportanceResult`
+
+Friedman (2001) partial dependence L1 importance.
+
+Returns `PDPImportanceResult`: `.feature_names_`, `.grid_values_`, `.importances_`, `.pdp_values_`, `.summary()`.
+
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.ols_fit(X, y)
+imp = mf.functions.partial_dependence_importance(fit_result, X, grid_resolution=20)
+print(imp.importances_)
+```
+
+[Encyclopedia](../encyclopedia/l7/op/partial_dependence.md)
+
+#### `shap_linear_importance(result: Any, X: np.ndarray | pd.DataFrame) -> SHAPImportanceResult`
+
+SHAP LinearExplainer importance (no extra deps for linear models).
+
+Returns `SHAPImportanceResult`: `.expected_value_`, `.explainer_type`, `.feature_names_`, `.shap_values_`, `.summary()`.
+
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.ols_fit(X, y)
+imp = mf.functions.shap_linear_importance(fit_result, X)
+print(imp.shap_values_.shape)
+```
+
+[Encyclopedia](../encyclopedia/l7/op/shap_linear.md)
+
+#### `shap_tree_importance(result: Any, X: np.ndarray | pd.DataFrame) -> SHAPImportanceResult`
+
+SHAP TreeExplainer importance (requires `pip install macroforecast[shap]`).
+
+Returns `SHAPImportanceResult`: `.expected_value_`, `.explainer_type`, `.feature_names_`, `.shap_values_`, `.summary()`.
+
+```python
+rng = np.random.default_rng(7)
+X = rng.standard_normal((80, 5))
+y = rng.standard_normal(80)
+fit_result = mf.functions.random_forest_fit(X, y, n_estimators=20)
+imp = mf.functions.shap_tree_importance(fit_result, X)
+# Requires: pip install macroforecast[shap]
+```
+
+[Encyclopedia](../encyclopedia/l7/op/shap_tree.md)
+
+## Quick example
 
 ```python
 import macroforecast as mf
 import numpy as np
 
-rng = np.random.RandomState(42)
-X = rng.randn(120, 6)
-y = X[:, 0] * 2 + X[:, 3] * -1 + 0.3 * rng.randn(120)
+rng = np.random.default_rng(7)
+X = rng.standard_normal((120, 8))
+y = X[:, 1] * 3 + X[:, 4] - X[:, 6] * 0.5 + rng.standard_normal(120)
 
-fit = mf.functions.ridge_fit(X, y, alpha=0.5)
-
-# Planned standalone call (future cycle):
-# imp = mf.functions.permutation_importance(fit, X, y, n_repeats=30, random_state=42)
-# print(imp.importances_mean)
+result = mf.functions.ridge_fit(X, y, alpha=1.0)
+imp = mf.functions.permutation_importance(result, X, y)
+print(imp.summary(top_n=5))
 ```
-
-## Related
-
-- [L4 fit](l4_fit.md) — the fit result is the primary input to L7 ops.
-- [L5 metrics](l5_metrics.md) — evaluation context for importance analysis.
-- [Encyclopedia L7 op axis](../encyclopedia/l7/axes/op.md) — full per-op
-  reference including SHAP family (kernel / deep / interaction), BVAR PIP,
-  IRF / FEVD / generalized IRF, forecast decomposition, and lineage attribution.

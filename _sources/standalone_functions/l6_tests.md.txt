@@ -1,71 +1,140 @@
-# Standalone functions — L6 statistical tests
+# Standalone functions: L6 forecast evaluation tests (7 ops)
 
-L6 provides formal statistical tests for comparing forecasts. In the standalone
-paradigm these are planned as:
+L6 test callables take arrays of forecast losses or errors and return a frozen result dataclass. Every L6 result type exposes `.stat` (float), `.pvalue` (float), `.decision` (str: `'reject'` or `'fail to reject'`), and `.summary()` (formatted string).
+
+## Equal predictive ability tests (4 ops)
+
+#### `dm_test(loss_a: np.ndarray, loss_b: np.ndarray, *, horizon: int = 1, correction: "Literal[hln, none]" = hln, kernel: "Literal[newey_west, andrews, parzen]" = newey_west) -> DMTestResult`
+
+Diebold-Mariano (1995) equal predictive ability test with optional HLN small-sample correction.
+
+Returns `DMTestResult`: `.alternative`, `.correction_method`, `.decision`, `.hln_correction`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
-mf.functions.<test>(errors_a, errors_b, **kwargs) -> TestResult
+rng = np.random.default_rng(42)
+loss_a = (rng.standard_normal(100) * 0.5)**2
+loss_b = (rng.standard_normal(100) * 0.8)**2
+result = mf.functions.dm_test(loss_a, loss_b, horizon=1)
+print(result.stat, result.pvalue, result.decision)
 ```
 
-A `TestResult` carries `.statistic`, `.p_value`, `.kernel`, `.lag`, and
-`.reject_null` (at the configured alpha).
+[Encyclopedia](../encyclopedia/l6/equal_predictive_test/dm_diebold_mariano.md)
 
-> **Cycle 22 note** — L6 standalone callables are planned for a future cycle.
-> This page documents the 7 primary L6 test ops. The encyclopedia links point
-> to full per-axis reference pages.
+#### `dmp_test(loss_differentials: list[np.ndarray] | np.ndarray, *, kernel: "Literal[newey_west, andrews, parzen]" = newey_west) -> DMPTestResult`
 
-## Equal-predictive-ability tests (4 ops)
+Panel Diebold-Mariano test (stacked loss differentials).
 
-Tests for the null hypothesis that two forecasts have equal expected loss.
+Returns `DMPTestResult`: `.alternative`, `.correction_method`, `.decision`, `.horizon`, `.n_obs_stacked`, `.pvalue`, `.stat`, `.summary()`.
 
-| Op | One-liner | Encyclopedia |
-|---|---|---|
-| `dm_diebold_mariano` | DM (1995) with Newey-West HAC + HLN small-sample correction | [equal_predictive_test axis](../encyclopedia/l6/axes/equal_predictive_test.md#dm-diebold-mariano) |
-| `gw_giacomini_white` | GW (2006) conditional predictive ability test | [equal_predictive_test axis](../encyclopedia/l6/axes/equal_predictive_test.md#gw-giacomini-white) |
-| `dmp_multi_horizon` | DMP joint multi-horizon HAC-adjusted test | [equal_predictive_test axis](../encyclopedia/l6/axes/equal_predictive_test.md#dmp-multi-horizon) |
-| `harvey_newbold_encompassing` | HLN (1998) forecast encompassing test | [equal_predictive_test axis](../encyclopedia/l6/axes/equal_predictive_test.md#harvey-newbold-encompassing) |
-
-**When to use equal-predictive tests**: Non-nested forecast comparisons where
-you want a single p-value for MSE or MAE loss equality. Use DM by default;
-switch to GW when you suspect regime-dependent performance differentials.
-
-## Nested-model tests (3 ops)
-
-Tests for the null hypothesis that a restricted (nested) model is adequate.
-The Clark-West adjustment is required for nested-model comparisons because
-the unrestricted model's additional noise inflates MSE in finite samples.
-
-| Op | One-liner | Encyclopedia |
-|---|---|---|
-| `clark_west` | Clark-West (2007) MSE-adjusted t-test for nested models | [cw_adjustment axis](../encyclopedia/l6/axes/cw_adjustment.md) |
-| `enc_new` | Harvey-Leybourne-Newbold (1998) ENC-NEW encompassing | [enc_test_one_sided axis](../encyclopedia/l6/axes/enc_test_one_sided.md) |
-| `enc_t` | ENC-T variant (regression-based encompassing) | [enc_test_one_sided axis](../encyclopedia/l6/axes/enc_test_one_sided.md) |
-
-**When to use nested-model tests**: Comparing a benchmark AR/RW against an
-augmented model. The Clark-West test corrects for the downward MSE bias from
-the extra noise in the augmented model's forecast.
-
-## Quick example (recipe DSL)
-
-```yaml
-6_statistical_tests:
-  enabled: true
-  sub_layers:
-    L6_A_equal_predictive:
-      enabled: true
-      fixed_axes:
-        equal_predictive_test: dm_diebold_mariano
-        loss_function: mse
-        hln_correction: true
-    L6_B_nested:
-      enabled: true
-      fixed_axes:
-        cw_adjustment: clark_west
+```python
+rng = np.random.default_rng(42)
+loss_diffs = [rng.standard_normal(100), rng.standard_normal(100)]
+result = mf.functions.dmp_test(loss_diffs)
+print(result.stat, result.pvalue, result.decision)
 ```
 
-## Related
+[Encyclopedia](../encyclopedia/l6/equal_predictive_test/dmp_multi_horizon.md)
 
-- [L5 metrics](l5_metrics.md) — compute the loss values that feed L6 tests.
-- [Encyclopedia L6 index](../encyclopedia/l6/index.md) — full test surface
-  including MCS / SPA / StepM bootstrap tests, residual battery, and density
-  tests.
+#### `gw_test(loss_a: np.ndarray, loss_b: np.ndarray, *, horizon: int = 1, correction: "Literal[hln, none]" = hln, kernel: "Literal[newey_west, andrews, parzen]" = newey_west) -> GWTestResult`
+
+Giacomini-White (2006) conditional predictive ability test.
+
+Returns `GWTestResult`: `.alternative`, `.correction_method`, `.decision`, `.hln_correction`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+
+```python
+rng = np.random.default_rng(42)
+loss_a = (rng.standard_normal(100) * 0.5)**2
+loss_b = (rng.standard_normal(100) * 0.8)**2
+result = mf.functions.gw_test(loss_a, loss_b, horizon=1)
+print(result.stat, result.pvalue, result.decision)
+```
+
+[Encyclopedia](../encyclopedia/l6/equal_predictive_test/gw_giacomini_white.md)
+
+#### `hn_test(e_a: np.ndarray, e_b: np.ndarray, *, horizon: int = 1, kernel: "Literal[newey_west, andrews, parzen]" = newey_west, small_sample: bool = True) -> HNTestResult`
+
+Harvey-Newbold (1998) forecast encompassing test.
+
+Returns `HNTestResult`: `.alternative`, `.correction_method`, `.decision`, `.encompassing`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+
+```python
+rng = np.random.default_rng(42)
+e_a = rng.standard_normal(100) * 0.5
+e_b = rng.standard_normal(100) * 0.8
+result = mf.functions.hn_test(e_a, e_b, horizon=1)
+print(result.stat, result.pvalue, result.decision)
+```
+
+[Encyclopedia](../encyclopedia/l6/equal_predictive_test/harvey_newbold_encompassing.md)
+
+## Nested model and encompassing tests (3 ops)
+
+#### `cw_test(loss_small: np.ndarray, loss_large: np.ndarray, f_small: np.ndarray, f_large: np.ndarray, *, horizon: int = 1, kernel: "Literal[newey_west, andrews, parzen]" = newey_west) -> CWTestResult`
+
+Clark-West (2006/2007) nested-model predictive ability test (4 positional args).
+
+Returns `CWTestResult`: `.alternative`, `.correction_method`, `.cw_adjustment`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+
+```python
+rng = np.random.default_rng(42)
+loss_small = (rng.standard_normal(100))**2
+loss_large = (rng.standard_normal(100))**2
+f_small = rng.standard_normal(100)
+f_large = rng.standard_normal(100)
+result = mf.functions.cw_test(loss_small, loss_large, f_small, f_large)
+print(result.stat, result.pvalue, result.decision)
+```
+
+[Encyclopedia](../encyclopedia/l6/nested_test/clark_west.md)
+
+#### `enc_new_test(loss_small: np.ndarray, loss_large: np.ndarray, *, horizon: int = 1, kernel: "Literal[newey_west, andrews, parzen]" = newey_west) -> EncNewTestResult`
+
+ENC-NEW test (Clark and McCracken 2001) for nested-model encompassing.
+
+Returns `EncNewTestResult`: `.alternative`, `.correction_method`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+
+```python
+rng = np.random.default_rng(42)
+loss_small = (rng.standard_normal(100))**2
+loss_large = (rng.standard_normal(100))**2
+result = mf.functions.enc_new_test(loss_small, loss_large, horizon=1)
+print(result.stat, result.pvalue, result.decision)
+```
+
+[Encyclopedia](../encyclopedia/l6/nested_test/enc_new.md)
+
+#### `enc_t_test(loss_small: np.ndarray, loss_large: np.ndarray, *, horizon: int = 1, kernel: "Literal[newey_west, andrews, parzen]" = newey_west) -> EncTTestResult`
+
+ENC-t test (Clark and McCracken 2001) for nested-model encompassing.
+
+Returns `EncTTestResult`: `.alternative`, `.correction_method`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+
+```python
+rng = np.random.default_rng(42)
+loss_small = (rng.standard_normal(100))**2
+loss_large = (rng.standard_normal(100))**2
+result = mf.functions.enc_t_test(loss_small, loss_large, horizon=1)
+print(result.stat, result.pvalue, result.decision)
+```
+
+[Encyclopedia](../encyclopedia/l6/nested_test/enc_t.md)
+
+## Return type reference
+
+All test result dataclasses expose `.stat` (float), `.pvalue` (float), `.decision` (str), and `.summary()`.
+
+## Quick example
+
+```python
+import macroforecast as mf
+import numpy as np
+
+rng = np.random.default_rng(42)
+e1 = rng.standard_normal(100) * 0.5
+e2 = rng.standard_normal(100) * 0.8
+loss_a, loss_b = e1**2, e2**2
+
+result = mf.functions.dm_test(loss_a, loss_b)
+print(result.stat, result.pvalue, result.decision)
+print(result.summary())
+```
