@@ -307,11 +307,12 @@ def test_l3_op_count_future():
     # Cycle 47: 5 L3 feature-selection ops promoted from future to operational
     # (boruta_selection, recursive_feature_elimination, lasso_path_selection,
     # stability_selection, genetic_algorithm_selection). Remaining future ops:
-    # chow_lin_disaggregation (L2), lstm_hidden_state (L7), generalized_irf (L7).
+    # chow_lin_disaggregation (L2), lstm_hidden_state (L7).
+    # Cycle 49: generalized_irf (L7) promoted from future to operational.
     from macroforecast.core.ops import list_ops
 
     future_ops = [op for op in list_ops().values() if op.status == "future"]
-    assert len(future_ops) >= 3
+    assert len(future_ops) >= 2
 
 
 def test_l3_pca_temporal_rule_required():
