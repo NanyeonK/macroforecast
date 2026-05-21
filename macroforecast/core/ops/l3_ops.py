@@ -655,47 +655,185 @@ def feature_selection(inputs, params):
     _stub(inputs, params)
 
 
-def _future_selection_op(name: str):
-    """Implementations for the design's `future` selection ops.
+@register_op(
+    name="boruta_selection",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    status="operational",
+    params_schema={
+        "n_estimators_rf": {"type": int, "default": 100, "sweepable": True},
+        "max_iter": {"type": int, "default": 100, "sweepable": True},
+        "alpha": {"type": float, "default": 0.05, "sweepable": True},
+        "include_tentative": {"type": bool, "default": False, "sweepable": False},
+        "random_state": {"type": int, "default": 0, "sweepable": False},
+        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for boruta_selection temporal_rule",
+        ),
+    ),
+)
+def boruta_selection(inputs, params):
+    from ..runtime import _execute_l3_op
+    target_name = params.get("__target_name__", "y") if params else "y"
+    return _execute_l3_op(
+        "boruta_selection",
+        list(inputs) if isinstance(inputs, list) else [inputs],
+        dict(params or {}),
+        target_name,
+    )
 
-    Each method falls back to a sklearn-friendly proxy:
 
-    - ``boruta_selection`` -> permutation-importance based shadow comparison
-    - ``recursive_feature_elimination`` -> sklearn ``RFE`` over a Ridge base
-    - ``lasso_path_selection`` -> LassoCV inclusion frequency
-    - ``stability_selection`` -> bootstrap-resampled lasso inclusion
-    - ``genetic_algorithm_selection`` -> simulated-annealing fallback (kept
-      simple so it runs without DEAP)
-    """
+@register_op(
+    name="recursive_feature_elimination",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    status="operational",
+    params_schema={
+        "n_features_to_select": {"type": object, "default": 0.5, "sweepable": True},
+        "step": {"type": object, "default": 1, "sweepable": True},
+        "estimator": {
+            "type": str,
+            "default": "ridge",
+            "options": ("ridge", "lasso", "svr_linear"),
+            "sweepable": True,
+        },
+        "use_cv": {"type": bool, "default": False, "sweepable": True},
+        "cv_folds": {"type": int, "default": 5, "sweepable": True},
+        "random_state": {"type": int, "default": 0, "sweepable": False},
+        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for recursive_feature_elimination temporal_rule",
+        ),
+    ),
+)
+def recursive_feature_elimination(inputs, params):
+    from ..runtime import _execute_l3_op
+    target_name = params.get("__target_name__", "y") if params else "y"
+    return _execute_l3_op(
+        "recursive_feature_elimination",
+        list(inputs) if isinstance(inputs, list) else [inputs],
+        dict(params or {}),
+        target_name,
+    )
 
-    def run(inputs, params):
-        from ..runtime import _execute_l3_op
 
-        return _execute_l3_op(
-            "feature_selection",
-            list(inputs) if isinstance(inputs, list) else [inputs],
-            dict(params or {}),
-            params.get("__target_name__", "y") if params else "y",
-        )
+@register_op(
+    name="lasso_path_selection",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    status="operational",
+    params_schema={
+        "n_features_to_select": {"type": object, "default": 0.5, "sweepable": True},
+        "normalize_features": {"type": bool, "default": True, "sweepable": False},
+        "random_state": {"type": int, "default": 0, "sweepable": False},
+        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for lasso_path_selection temporal_rule",
+        ),
+    ),
+)
+def lasso_path_selection(inputs, params):
+    from ..runtime import _execute_l3_op
+    target_name = params.get("__target_name__", "y") if params else "y"
+    return _execute_l3_op(
+        "lasso_path_selection",
+        list(inputs) if isinstance(inputs, list) else [inputs],
+        dict(params or {}),
+        target_name,
+    )
 
-    run.__name__ = name
-    return run
+
+@register_op(
+    name="stability_selection",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    status="operational",
+    params_schema={
+        "n_subsamples": {"type": int, "default": 100, "sweepable": True},
+        "subsample_fraction": {"type": float, "default": 0.5, "sweepable": True},
+        "pi_thr": {"type": float, "default": 0.6, "sweepable": True},
+        "base_estimator": {
+            "type": str,
+            "default": "lasso",
+            "options": ("lasso", "elastic_net"),
+            "sweepable": True,
+        },
+        "alpha": {"type": float, "default": 0.01, "sweepable": True},
+        "random_state": {"type": int, "default": 0, "sweepable": False},
+        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for stability_selection temporal_rule",
+        ),
+    ),
+)
+def stability_selection(inputs, params):
+    from ..runtime import _execute_l3_op
+    target_name = params.get("__target_name__", "y") if params else "y"
+    return _execute_l3_op(
+        "stability_selection",
+        list(inputs) if isinstance(inputs, list) else [inputs],
+        dict(params or {}),
+        target_name,
+    )
 
 
-for _future_name in (
-    "boruta_selection",
-    "recursive_feature_elimination",
-    "lasso_path_selection",
-    "stability_selection",
-    "genetic_algorithm_selection",
-):
-    register_op(
-        name=_future_name,
-        layer_scope=("l3",),
-        input_types={"default": (Panel, LaggedPanel, Factor)},
-        output_type=Panel,
-        status="future",
-    )(_future_selection_op(_future_name))
+@register_op(
+    name="genetic_algorithm_selection",
+    layer_scope=("l3",),
+    input_types={"default": (Panel, LaggedPanel, Factor)},
+    output_type=Panel,
+    status="operational",
+    params_schema={
+        "population_size": {"type": int, "default": 30, "sweepable": True},
+        "n_generations": {"type": int, "default": 50, "sweepable": True},
+        "crossover_prob": {"type": float, "default": 0.8, "sweepable": True},
+        "fitness_estimator": {
+            "type": str,
+            "default": "ridge",
+            "options": ("ridge", "lasso", "ols"),
+            "sweepable": True,
+        },
+        "cv_folds": {"type": int, "default": 3, "sweepable": True},
+        "random_state": {"type": int, "default": 0, "sweepable": False},
+        "temporal_rule": {"type": str, "default": "expanding_window_per_origin", "sweepable": True},
+    },
+    hard_rules=(
+        Rule(
+            "hard",
+            _not_full_sample(),
+            "full_sample_once is rejected for genetic_algorithm_selection temporal_rule",
+        ),
+    ),
+)
+def genetic_algorithm_selection(inputs, params):
+    from ..runtime import _execute_l3_op
+    target_name = params.get("__target_name__", "y") if params else "y"
+    return _execute_l3_op(
+        "genetic_algorithm_selection",
+        list(inputs) if isinstance(inputs, list) else [inputs],
+        dict(params or {}),
+        target_name,
+    )
 
 
 # ---------------------------------------------------------------------------
