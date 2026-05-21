@@ -191,7 +191,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`full_matrix`](l3_5/axes/correlation_view.md) | L3.5 | `correlation_view` | operational |
 | [`full_sample`](l1_5/axes/summary_split.md) | L1.5 | `summary_split` | operational |
 | [`garch11`](l4/axes/family.md) | L4 | `family` | operational |
-| [`generalized_irf`](l7/axes/op.md) | L7 | `op` | future |
+| [`generalized_irf`](l7/axes/op.md) | L7 | `op` | operational |
 | [`genetic_algorithm`](l4/axes/search_algorithm.md) | L4 | `search_algorithm` | operational |
 | [`genetic_algorithm_selection`](l3/axes/op.md) | L3 | `op` | operational |
 | [`giacomini_rossi_2010`](l6/axes/cpa_test.md) | L6 | `cpa_test` | operational |
@@ -484,7 +484,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`raw_vs_tcoded`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`real_time_alfred`](l1/axes/vintage_policy.md) | L1 | `vintage_policy` | future |
 | [`reality_check_white`](l6/axes/multiple_model_test.md) | L6 | `multiple_model_test` | operational |
-| [`realized_garch`](l4/axes/family.md) | L4 | `family` | future |
+| [`realized_garch`](l4/axes/family.md) | L4 | `family` | operational |
 | [`realized_garch_with_rv_exog`](l4/axes/family.md) | L4 | `family` | operational |
 | [`recipe_hash`](l8/axes/naming_convention.md) | L8 | `naming_convention` | operational |
 | [`recipe_hash`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |

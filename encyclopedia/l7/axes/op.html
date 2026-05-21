@@ -841,8 +841,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Operational: 34 option(s)</p></li>
-<li><p>Future: 2 option(s)</p></li>
+<li><p>Operational: 35 option(s)</p></li>
+<li><p>Future: 1 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -999,21 +999,10 @@
 <p><strong>Related options</strong>: <a class="reference internal" href="#shap-interaction"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code></span></a>, <a class="reference internal" href="#partial-dependence"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
 </section>
-<section id="generalized-irf-future">
-<h3><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>  –  future<a class="headerlink" href="#generalized-irf-future" title="Link to this heading">#</a></h3>
-<p>Pesaran-Shin (1998) generalized impulse-response function (future, v0.9.x).</p>
-<p>Order-invariant IRF where each shock is constructed as the multivariate-normal projection of all residuals onto the j-th canonical direction. Distinct from Cholesky orthogonalised IRFs (which use a recursive lower-triangular rotation). <strong>Future</strong> – the runtime currently raises NotImplementedError. For the Cholesky variant operational since v0.2, use <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code>.</p>
-<p><strong>When to use</strong></p>
-<p>VAR analysis where the variable ordering has no theoretical motivation – order-invariance is the desired property.</p>
-<p><strong>When NOT to use</strong></p>
-<p>When a recursive identification IS theoretically motivated – use <code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code> instead.</p>
-<p><strong>References</strong></p>
-<ul class="simple">
-<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
-<li><p>Pesaran &amp; Shin (1998) ‘Generalized impulse response analysis in linear multivariate models’, Economics Letters 58(1): 17-29.</p></li>
-</ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#fevd"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">fevd</span></code></span></a>, <a class="reference internal" href="#historical-decomposition"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code></span></a>, <a class="reference internal" href="#orthogonalised-irf"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code></span></a></p>
-<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+<section id="generalized-irf-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>  –  operational<a class="headerlink" href="#generalized-irf-operational" title="Link to this heading">#</a></h3>
+<p>Pesaran-Shin (1998) order-invariant generalized impulse-response function.</p>
+<p>See <a class="reference internal" href="../op/generalized_irf.html"><span class="std std-doc">generalized_irf function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.generalized_irf</span></code>.</p>
 </section>
 <section id="gradient-shap-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">gradient_shap</span></code>  –  operational<a class="headerlink" href="#gradient-shap-operational" title="Link to this heading">#</a></h3>
@@ -1168,7 +1157,7 @@
 <p><strong>When to use</strong></p>
 <p>VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).</p>
 <p><strong>When NOT to use</strong></p>
-<p>When the variable ordering is arbitrary – file a v0.9.x request for <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> (Pesaran-Shin 1998 order-invariant variant, currently future-gated).</p>
+<p>When the variable ordering is arbitrary – use <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> (Pesaran-Shin 1998 order-invariant variant, operational since C49).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
@@ -1396,7 +1385,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fevd-operational"><code class="docutils literal notranslate"><span class="pre">fevd</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-decomposition-operational"><code class="docutils literal notranslate"><span class="pre">forecast_decomposition</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#friedman-h-interaction-operational"><code class="docutils literal notranslate"><span class="pre">friedman_h_interaction</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generalized-irf-future"><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generalized-irf-operational"><code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-shap-operational"><code class="docutils literal notranslate"><span class="pre">gradient_shap</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-aggregate-operational"><code class="docutils literal notranslate"><span class="pre">group_aggregate</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#historical-decomposition-operational"><code class="docutils literal notranslate"><span class="pre">historical_decomposition</span></code>  –  operational</a></li>

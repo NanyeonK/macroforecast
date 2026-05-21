@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 34 option(s)
-- Future: 2 option(s)
+- Operational: 35 option(s)
+- Future: 1 option(s)
 
 ## Options
 
@@ -240,28 +240,11 @@ Wide panels -- the M² PDP grid grows expensive.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
-### `generalized_irf`  --  future
+### `generalized_irf`  --  operational
 
-Pesaran-Shin (1998) generalized impulse-response function (future, v0.9.x).
+Pesaran-Shin (1998) order-invariant generalized impulse-response function.
 
-Order-invariant IRF where each shock is constructed as the multivariate-normal projection of all residuals onto the j-th canonical direction. Distinct from Cholesky orthogonalised IRFs (which use a recursive lower-triangular rotation). **Future** -- the runtime currently raises NotImplementedError. For the Cholesky variant operational since v0.2, use ``orthogonalised_irf``.
-
-**When to use**
-
-VAR analysis where the variable ordering has no theoretical motivation -- order-invariance is the desired property.
-
-**When NOT to use**
-
-When a recursive identification IS theoretically motivated -- use ``orthogonalised_irf`` instead.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate models', Economics Letters 58(1): 17-29.
-
-**Related options**: [`fevd`](#fevd), [`historical_decomposition`](#historical-decomposition), [`orthogonalised_irf`](#orthogonalised-irf)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [generalized_irf function page](../op/generalized_irf.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.generalized_irf``.
 
 ### `gradient_shap`  --  operational
 
@@ -479,7 +462,7 @@ VAR analysis with a theoretically motivated recursive identification (e.g. monet
 
 **When NOT to use**
 
-When the variable ordering is arbitrary -- file a v0.9.x request for ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, currently future-gated).
+When the variable ordering is arbitrary -- use ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, operational since C49).
 
 **References**
 
