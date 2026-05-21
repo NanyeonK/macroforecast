@@ -528,10 +528,12 @@ FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
     # "OLS as an Attention Mechanism", Eq. 3 closed form). See the
     # DEFAULT_FIGURE_MAPPING entry above.
     "lstm_hidden_state",
-    "boruta_selection",
-    "recursive_feature_elimination",
-    "lasso_path_selection",
-    "stability_selection",
+    # boruta_selection, recursive_feature_elimination, lasso_path_selection,
+    # stability_selection were removed from FUTURE_OPS in Cycle 47 because
+    # they were promoted to status="operational" in L3 (l3_ops.py). They are
+    # L3 feature-selection ops and must NOT gain L7 scope. The tail loop
+    # below would have extended their layer_scope to include "l7"; removing
+    # them prevents that unintended scope extension.
     # v0.9 Phase 2 paper-coverage atomic primitives:
     # (dual_decomposition was moved to OPERATIONAL_OPS in v0.8.9 Phase 1
     #  -- linear-family closed-form via the representer theorem.
