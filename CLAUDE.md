@@ -57,7 +57,7 @@ replication = macroforecast.replicate("out/manifest.json")
 | L0 | Study setup (failure_policy, seed, compute_mode) | `core/layers/l0.py` |
 | L1 | Data definition (FRED-MD/QD/SD, target, geography, regime) | `core/layers/l1.py` |
 | L2 | Preprocessing (transform / outlier / imputation / frame edge) | `core/layers/l2.py` |
-| L3 | Feature engineering DAG (37 ops + cascade β) | `core/layers/l3.py`, `core/ops/l3_ops.py` |
+| L3 | Feature engineering DAG (37 recipe DAG ops + cascade β; 36 standalone callables in mf.functions) | `core/layers/l3.py`, `core/ops/l3_ops.py` |
 | L4 | Forecasting model + tuning (30+ families, 5 combine ops) | `core/layers/l4.py`, `core/ops/l4_ops.py` |
 | L5 | Evaluation (metrics × benchmark × aggregation × decomposition × ranking) | `core/layers/l5.py`, `core/ops/l5_ops.py` |
 | L6 | Statistical tests (DM/HLN, CW, MCS bootstrap, PT/HM, residual battery) | `core/layers/l6.py`, `core/ops/l6_ops.py` |

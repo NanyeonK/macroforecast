@@ -267,7 +267,9 @@ def apply_alfred_vintage_to_panel(
             return result
         else:
             # Rolling mode: each observation row uses its own vintage cutoff.
-            # Load the full snapshot (no vintage_date cutoff) for efficiency.
+            # Vectorized merge replaces the O(N_obs x snapshot_rows) loop.
+
+            # Load the full snapshot once.
             if not Path(snapshot_path).exists():
                 return panel_frame
             full_snapshot = _read_snapshot_file(Path(snapshot_path))
@@ -275,33 +277,52 @@ def apply_alfred_vintage_to_panel(
                 full_snapshot = full_snapshot[
                     full_snapshot["series_id"].isin(series_ids)
                 ]
+
             result = panel_frame.copy()
-            # Iterate over each observation date and apply the appropriate
-            # vintage cutoff row by row.
-            for obs_date in panel_frame.index:
-                vintage_cutoff = obs_date.strftime("%Y-%m")
-                row_df = full_snapshot[full_snapshot["vintage_date"] <= vintage_cutoff]
-                if row_df.empty:
-                    continue
-                # Pick the most recent vintage per (series_id, observation_date).
-                row_df = (
-                    row_df.sort_values("vintage_date")
-                    .groupby(["series_id", "observation_date"])
-                    .last()
-                    .reset_index()
-                )
-                # Find the value for this specific observation_date.
-                obs_str = obs_date.strftime("%Y-%m-%d")
-                row_match = row_df[
-                    pd.to_datetime(row_df["observation_date"]).dt.strftime("%Y-%m-%d")
-                    == obs_str
-                ]
-                if row_match.empty:
-                    continue
-                for _, record in row_match.iterrows():
-                    col = record["series_id"]
-                    if col in result.columns:
-                        result.at[obs_date, col] = record["value"]
+            if full_snapshot.empty:
+                return result
+
+            # Coerce snapshot observation_date to datetime for merging.
+            snap = full_snapshot.copy()
+            snap["observation_date_dt"] = pd.to_datetime(snap["observation_date"])
+
+            # Build a cutoff lookup: panel obs_date -> "YYYY-MM" vintage cutoff.
+            panel_dates = panel_frame.index.to_frame(index=False, name="observation_date_dt")
+            panel_dates["vintage_cutoff"] = (
+                panel_dates["observation_date_dt"].dt.strftime("%Y-%m")
+            )
+
+            # Merge snapshot with panel dates on observation_date.
+            # Inner join: only rows where obs_date is in both panel and snapshot.
+            merged = snap.merge(panel_dates, on="observation_date_dt", how="inner")
+
+            # Keep only rows where the snapshot vintage_date is at or before
+            # the cutoff for that observation date.
+            merged = merged[merged["vintage_date"] <= merged["vintage_cutoff"]]
+
+            if merged.empty:
+                return result
+
+            # For each (series_id, observation_date), pick the most recent vintage.
+            best = (
+                merged.sort_values("vintage_date")
+                .groupby(["series_id", "observation_date_dt"])
+                .last()
+                .reset_index()
+            )
+
+            # Pivot to wide format: rows = obs_date, cols = series_id.
+            wide_update = best.pivot(
+                index="observation_date_dt", columns="series_id", values="value"
+            )
+            wide_update.index.name = None
+            wide_update.columns.name = None
+
+            # Overwrite common columns in result.
+            common_cols = [c for c in panel_frame.columns if c in wide_update.columns]
+            if common_cols:
+                result.loc[wide_update.index, common_cols] = wide_update[common_cols]
+
             return result
 
     elif alfred_mode == "api":

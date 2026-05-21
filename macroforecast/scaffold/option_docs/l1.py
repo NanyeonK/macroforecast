@@ -598,8 +598,8 @@ _L1A_INFOSET_FINAL = _entry(
     ),
     when_not_to_use=(
         "Real-time evaluation papers where data revisions materially "
-        "affect conclusions -- use ``real_time_alfred`` when it becomes "
-        "available (currently a future feature, Cycle 14 K-4)."
+        "affect conclusions -- use ``real_time_alfred`` (operational as "
+        "of v0.9.3, Cycle 50)."
     ),
     references=(_REF_STARK_CROUSHORE_2002, _REF_FAUST_WRIGHT_2009, _REF_MCCRACKEN_NG_2016),
     related_options=("pseudo_oos_on_revised_data", "vintage_policy"),
@@ -617,19 +617,18 @@ _L1A_INFOSET_PSEUDO = _entry(
         "semantic -- selecting ``pseudo_oos_on_revised_data`` records the "
         "explicit recipe-author acknowledgement that revised data is being "
         "used for out-of-sample evaluation.\n\n"
-        "This axis value is exposed so that future versions can route "
-        "real-time vintage requests through the same axis without breaking "
-        "existing recipes. Studies that compare pseudo-OOS-on-revised "
-        "against real-time ALFRED vintages (once Cycle 14 K-4 is "
-        "implemented) will use this option to label the revised-data "
-        "branch explicitly.\n\n"
+        "This axis value is exposed so that recipes choosing pseudo-OOS-on-"
+        "revised data are explicit about that choice. Studies that compare "
+        "pseudo-OOS-on-revised against real-time ALFRED vintages use this "
+        "option to label the revised-data branch explicitly, while "
+        "``real_time_alfred`` handles the vintage-correct branch.\n\n"
         "Pairs with ``vintage_policy: current_vintage``."
     ),
     when_to_use=(
         "Studies explicitly contrasting pseudo-OOS-on-revised-data vs "
-        "real-time vintage performance (once ``real_time_alfred`` is "
-        "implemented); recipe scripts that want to make the revised-data "
-        "protocol visible in the YAML rather than relying on the default."
+        "real-time vintage performance; recipe scripts that want to make "
+        "the revised-data protocol visible in the YAML rather than relying "
+        "on the default."
     ),
     references=(_REF_STARK_CROUSHORE_2002, _REF_FAUST_WRIGHT_2009),
     related_options=("final_revised_data", "vintage_policy"),

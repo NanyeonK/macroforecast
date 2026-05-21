@@ -309,11 +309,14 @@ def test_l3_op_count_future():
     # stability_selection, genetic_algorithm_selection). Remaining future ops:
     # Cycle 49: generalized_irf (L7) promoted to operational.
     # Cycle 50: lstm_hidden_state (L7) promoted to operational.
-    # Post-C49+C50: only chow_lin_disaggregation (L2) remains future.
+    # Post-C51: chow_lin_disaggregation promoted to operational. No future ops remain.
     from macroforecast.core.ops import list_ops
 
     future_ops = [op for op in list_ops().values() if op.status == "future"]
-    assert len(future_ops) >= 1
+    assert len(future_ops) == 0, (
+        f"Expected 0 future ops post-C51; found {len(future_ops)}: "
+        f"{[op.name for op in future_ops]}"
+    )
 
 
 def test_l3_pca_temporal_rule_required():

@@ -104,6 +104,25 @@ live `macroforecast.functions.__all__` at HEAD afc28282):
 For the full per-callable reference (signatures, result attributes,
 examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 
+> **Note on L3 counts**: The table above reports *standalone callables* (the
+> `mf.functions` API surface, verified via `gen_standalone_docs.py`). The
+> recipe DAG registry (`l3_ops.py`) contains a different count — it includes
+> ops with `layer_scope=("l2",)` filed in that module and internal pipeline
+> ops (`l3_feature_bundle`, `l3_metadata_build`). The CLAUDE.md entry "37 ops
+> + cascade β" refers to the post-C47 operational recipe DAG op count;
+> "36 callables" refers to the standalone API. Both numbers are correct for
+> their respective surfaces.
+
+---
+
+## Cycle 51 — issue cleanup + C50 reviewer flags (2026-05-22)
+
+C51 follow-up to C50. Promotes `chow_lin_disaggregation` (L3 registry op, L2 scope)
+from `future` to `operational` by wiring it to the existing `_chow_lin_disaggregate`
+runtime helper. No new algorithmic work — uses the C50 Chow-Lin implementation.
+Also vectorizes the ALFRED rolling-mode vintage resolution (Flag-C) and adds
+formal `ParameterDoc` entries (Flag-D).
+
 ---
 
 ## Cycle 50 — real_time_alfred + L2 axes + lstm_hidden_state (2026-05-22)
@@ -111,6 +130,8 @@ examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 Cycle 50 is the **final v0.9.3 algorithmic honesty pass**. It promotes four
 schema items from `future` to `operational`. After C49 + C50 merge:
 `FUTURE_MODEL_FAMILIES = ()`, `FUTURE_OPS = ()`. The v0.9.3 pass is complete.
+C51 follow-up promoted `chow_lin_disaggregation` (L3 registry op) to complete
+the cleanup.
 
 | Item | Layer | Reference | Promoted in |
 |------|-------|-----------|-------------|
@@ -265,7 +286,7 @@ accepted under the `operational` label.
 | Metric | Pre-C47 | Post-C47 |
 |--------|---------|---------|
 | L3 operational ops | >= 32 | >= 37 |
-| L3 future ops | >= 6 | >= 3 (remaining: `chow_lin_disaggregation` L2-family, `lstm_hidden_state` L7-only, `generalized_irf` L7-only; `generalized_irf` promoted in C49) |
+| L3 future ops | >= 6 | 0 (all promoted: `chow_lin_disaggregation` promoted C51; `lstm_hidden_state` and `generalized_irf` promoted C49/C50) |
 | L7 future ops count | >= 6 | >= 1 (`lstm_hidden_state` only after C49 promoted `generalized_irf`) |
 
 ### Implementation notes
