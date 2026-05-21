@@ -436,6 +436,18 @@ _L2A_QM_FORWARD = _e(
 )
 
 # C50: chow_lin is now operational. OptionDoc added below.
+_chow_lin_indicator_arg = ParameterDoc(
+    name="chow_lin_indicator",
+    type="str | None",
+    default=None,
+    description=(
+        "Name of the monthly indicator column in the panel to use for "
+        "Chow-Lin (1971) regression-based disaggregation. If None or absent, "
+        "the monthly column with the highest absolute correlation to the "
+        "quarterly target observations is selected automatically via "
+        "``_default_chow_lin_indicator``."
+    ),
+)
 _L2A_QM_CHOW_LIN = _e(
     "l2_a", "quarterly_to_monthly_rule", "chow_lin",
     "Chow-Lin (1971) regression-based temporal disaggregation.",
@@ -464,6 +476,7 @@ _L2A_QM_CHOW_LIN = _e(
         ),
     ),
     related_options=("step_backward", "linear_interpolation"),
+    data_args=(_chow_lin_indicator_arg,),
 )
 
 
