@@ -33,7 +33,7 @@ jobs:
 
       - name: Run deep tests
         run: |
-          pytest tests/ -m deep -x -q
+          pytest tests/ -m 'deep or slow' -x -q
 
       - name: Run cross-cutting sweep-safety (deep included)
         run: |

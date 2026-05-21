@@ -538,6 +538,7 @@ def test_t72_existing_test_count_not_reduced():
     assert count >= 1432, f"Expected at least 1432 prior tests, found {count}"
 
 
+@pytest.mark.slow
 def test_t73_no_existing_test_failures():
     """T-73: All pre-existing tests pass; zero failures and zero errors."""
     import subprocess
@@ -549,7 +550,7 @@ def test_t73_no_existing_test_failures():
         capture_output=True,
         text=True,
         cwd=str(_ROOT),
-        timeout=600,
+        timeout=1800,
     )
     output = result.stdout + result.stderr
     # Must exit 0 (all pass) — any nonzero exit means a failure

@@ -31,7 +31,7 @@ jobs:
 
       - name: Run tests (core, no deep)
         run: |
-          pytest tests/ -x -q -m 'not deep'
+          pytest tests/ -x -q -m 'not deep and not slow'
 
       - name: Check seed hardcoding absent (Phase 0)
         run: |
