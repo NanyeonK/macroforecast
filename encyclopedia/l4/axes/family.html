@@ -841,8 +841,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Operational: 42 option(s)</p></li>
-<li><p>Future: 5 option(s)</p></li>
+<li><p>Operational: 46 option(s)</p></li>
+<li><p>Future: 1 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -1120,33 +1120,25 @@
 <p>Holt-Winters additive / multiplicative seasonal exponential smoothing.</p>
 <p>See <a class="reference internal" href="../family/holt_winters.html"><span class="std std-doc">holt_winters function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.holt_winters_fit</span></code>.</p>
 </section>
-<section id="midas-almon-future">
-<h3><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  future<a class="headerlink" href="#midas-almon-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="midas-almon-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  operational<a class="headerlink" href="#midas-almon-operational" title="Link to this heading">#</a></h3>
+<p>MIDAS with Almon polynomial lag weights (Ghysels-Santa-Clara-Valkanov 2004).</p>
+<p>See <a class="reference internal" href="../family/midas_almon.html"><span class="std std-doc">midas_almon function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.midas_almon</span></code>.</p>
 </section>
-<section id="midas-beta-future">
-<h3><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  future<a class="headerlink" href="#midas-beta-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="midas-beta-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  operational<a class="headerlink" href="#midas-beta-operational" title="Link to this heading">#</a></h3>
+<p>MIDAS with Beta distribution kernel lag weights (Ghysels-Sinko-Valkanov 2007).</p>
+<p>See <a class="reference internal" href="../family/midas_beta.html"><span class="std std-doc">midas_beta function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.midas_beta</span></code>.</p>
 </section>
-<section id="midas-step-future">
-<h3><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  future<a class="headerlink" href="#midas-step-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">midas_step</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="midas-step-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  operational<a class="headerlink" href="#midas-step-operational" title="Link to this heading">#</a></h3>
+<p>MIDAS with piecewise-constant step-function weights, OLS (Foroni-Marcellino-Schumacher 2015).</p>
+<p>See <a class="reference internal" href="../family/midas_step.html"><span class="std std-doc">midas_step function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.midas_step</span></code>.</p>
 </section>
-<section id="dfm-unrestricted-midas-future">
-<h3><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  future<a class="headerlink" href="#dfm-unrestricted-midas-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l4.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="dfm-unrestricted-midas-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  operational<a class="headerlink" href="#dfm-unrestricted-midas-operational" title="Link to this heading">#</a></h3>
+<p>Unrestricted MIDAS (U-MIDAS) – OLS on all HF lags (Foroni-Marcellino-Schumacher 2015).</p>
+<p>See <a class="reference internal" href="../family/dfm_unrestricted_midas.html"><span class="std std-doc">dfm_unrestricted_midas function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.dfm_unrestricted_midas</span></code>.</p>
 </section>
 <section id="realized-garch-future">
 <h3><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>  –  future<a class="headerlink" href="#realized-garch-future" title="Link to this heading">#</a></h3>
@@ -1251,10 +1243,10 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ets-operational"><code class="docutils literal notranslate"><span class="pre">ets</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#theta-method-operational"><code class="docutils literal notranslate"><span class="pre">theta_method</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#holt-winters-operational"><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-almon-future"><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  future</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-beta-future"><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  future</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-step-future"><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  future</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfm-unrestricted-midas-future"><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-almon-operational"><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-beta-operational"><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-step-operational"><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfm-unrestricted-midas-operational"><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#realized-garch-future"><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>  –  future</a></li>
 </ul>
 </li>
