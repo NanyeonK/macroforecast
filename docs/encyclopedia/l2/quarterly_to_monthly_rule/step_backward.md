@@ -1,4 +1,4 @@
-# `step_backward` -- Align quarterly series to a monthly grid using a chosen interpolation rule.
+# `step_backward` -- Step-function: each month inherits the most-recent published quarterly value.
 
 [Back to `quarterly_to_monthly_rule` axis](../axes/quarterly_to_monthly_rule.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -10,8 +10,6 @@
 ```python
 mf.functions.freq_align_quarterly_to_monthly_clean(
     panel: pd.DataFrame,
-    quarterly_columns: list[str],
-    rule: str = 'step_backward',
 ) -> pd.DataFrame
 ```
 
@@ -19,9 +17,7 @@ mf.functions.freq_align_quarterly_to_monthly_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | — |
-| `quarterly_columns` | `list[str]` | — | — | — |
-| `rule` | `str` | `'step_backward'` | — | — |
+| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
 
 ## Returns
 
@@ -29,7 +25,11 @@ mf.functions.freq_align_quarterly_to_monthly_clean(
 
 ## Behavior
 
-(See standalone callable docstring.)
+When a quarterly series needs to align with a monthly target, macroforecast holds the quarterly observation constant for all three months of the quarter (with a 1-quarter publication lag where appropriate). Conservative: no smoothing, no extrapolation.
+
+**When to use**
+
+Default for FRED-SD mixed-frequency studies.
 
 ## In recipe context
 
@@ -43,10 +43,10 @@ params:
 
 ## References
 
-* macroforecast design, L2: see design docs for step_backward.
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 ## Related ops
 
-See also: `chow_lin_disaggregation` (on the same axis).
+See also: `step_forward`, `linear_interpolation`, `chow_lin` (on the same axis).
 
-_Last reviewed 2026-05-22 by macroforecast author._
+_Last reviewed 2026-05-04 by macroforecast author._

@@ -1,4 +1,4 @@
-# `em_multivariate` -- Impute missing values using the PCA-EM algorithm (uncapped rank).
+# `em_multivariate` -- Multivariate-Gaussian EM imputation.
 
 [Back to `imputation_policy` axis](../axes/imputation_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -10,8 +10,6 @@
 ```python
 mf.functions.em_multivariate_impute_clean(
     panel: pd.DataFrame,
-    max_iter: int = 20,
-    tol: float = 0.0001,
 ) -> pd.DataFrame
 ```
 
@@ -19,9 +17,7 @@ mf.functions.em_multivariate_impute_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | — |
-| `max_iter` | `int` | `20` | — | — |
-| `tol` | `float` | `0.0001` | — | — |
+| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
 
 ## Returns
 
@@ -29,7 +25,11 @@ mf.functions.em_multivariate_impute_clean(
 
 ## Behavior
 
-(See standalone callable docstring.)
+Models the full panel as multivariate Gaussian and imputes missing cells via Schur-complement conditioning. More flexible than ``em_factor`` (no rank cap) but more expensive on large panels (O(p²) per iteration).
+
+**When to use**
+
+Smaller panels (≤ 50 series) where the full covariance is tractable.
 
 ## In recipe context
 
@@ -43,10 +43,10 @@ params:
 
 ## References
 
-* macroforecast design, L2: see design docs for em_multivariate.
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 ## Related ops
 
-See also: `em_factor`, `forward_fill`, `linear_interpolation`, `mean` (on the same axis).
+See also: `em_factor`, `mean` (on the same axis).
 
-_Last reviewed 2026-05-22 by macroforecast author._
+_Last reviewed 2026-05-04 by macroforecast author._

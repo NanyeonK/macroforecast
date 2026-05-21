@@ -1,4 +1,4 @@
-# `drop_unbalanced_series` -- Drop columns that contain any NaN (retain only fully-observed series).
+# `drop_unbalanced_series` -- Drop predictor columns that aren't observed across the full sample.
 
 [Back to `frame_edge_policy` axis](../axes/frame_edge_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -17,7 +17,7 @@ mf.functions.drop_unbalanced_series_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | — |
+| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
 
 ## Returns
 
@@ -25,7 +25,11 @@ mf.functions.drop_unbalanced_series_clean(
 
 ## Behavior
 
-(See standalone callable docstring.)
+Trades predictor count for sample length. Useful when the recipe wants to keep early observations and is willing to lose late-arrival series.
+
+**When to use**
+
+Long-history studies (1959-) where late-introduction series should be excluded.
 
 ## In recipe context
 
@@ -39,10 +43,10 @@ params:
 
 ## References
 
-* macroforecast design, L2: see design docs for drop_unbalanced_series.
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 ## Related ops
 
-See also: `truncate_to_balanced`, `zero_fill_leading` (on the same axis).
+See also: `truncate_to_balanced`, `keep_unbalanced` (on the same axis).
 
-_Last reviewed 2026-05-22 by macroforecast author._
+_Last reviewed 2026-05-04 by macroforecast author._

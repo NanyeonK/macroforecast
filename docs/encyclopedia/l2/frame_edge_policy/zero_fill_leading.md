@@ -1,4 +1,4 @@
-# `zero_fill_leading` -- Fill ALL NaN cells with zero (name refers to the leading-edge use case).
+# `zero_fill_leading` -- Zero-fill leading missing predictor cells; preserve the rest.
 
 [Back to `frame_edge_policy` axis](../axes/frame_edge_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -17,7 +17,7 @@ mf.functions.zero_fill_leading_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | — |
+| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
 
 ## Returns
 
@@ -25,7 +25,11 @@ mf.functions.zero_fill_leading_clean(
 
 ## Behavior
 
-(See standalone callable docstring.)
+Useful when leading NaN values block early-sample fits but interior NaN should remain visible to imputation.
+
+**When to use**
+
+Studies that want the early sample but accept zero-fill on leading edges.
 
 ## In recipe context
 
@@ -39,10 +43,10 @@ params:
 
 ## References
 
-* macroforecast design, L2: see design docs for zero_fill_leading.
+* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
 
 ## Related ops
 
-See also: `drop_unbalanced_series`, `truncate_to_balanced` (on the same axis).
+See also: `truncate_to_balanced`, `keep_unbalanced` (on the same axis).
 
-_Last reviewed 2026-05-22 by macroforecast author._
+_Last reviewed 2026-05-04 by macroforecast author._
