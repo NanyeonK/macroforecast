@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 46 option(s)
-- Future: 1 option(s)
+- Operational: 47 option(s)
+- Future: 0 option(s)
 
 ## Options
 
@@ -378,8 +378,8 @@ Unrestricted MIDAS (U-MIDAS) -- OLS on all HF lags (Foroni-Marcellino-Schumacher
 
 See [dfm_unrestricted_midas function page](../family/dfm_unrestricted_midas.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.dfm_unrestricted_midas``.
 
-### `realized_garch`  --  future
+### `realized_garch`  --  operational
 
-_(no schema description for `realized_garch`)_
+Hansen-Huang-Shek (2012) Realized GARCH -- joint return + measurement MLE.
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.
+See [realized_garch function page](../family/realized_garch.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.realized_garch``.
