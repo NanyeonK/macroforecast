@@ -103,7 +103,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`descriptive`](l8/axes/naming_convention.md) | L8 | `naming_convention` | operational |
 | [`dfm`](l3/axes/op.md) | L3 | `op` | operational |
 | [`dfm_mixed_mariano_murasawa`](l4/axes/family.md) | L4 | `family` | operational |
-| [`dfm_unrestricted_midas`](l4/axes/family.md) | L4 | `family` | future |
+| [`dfm_unrestricted_midas`](l4/axes/family.md) | L4 | `family` | operational |
 | [`diagnostics_all`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`diagnostics_l1_5`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`diagnostics_l2_5`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
@@ -321,9 +321,9 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`member_contribution`](l4_5/axes/ensemble_view.md) | L4.5 | `ensemble_view` | operational |
 | [`metrics`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`midas`](l3/axes/op.md) | L3 | `op` | operational |
-| [`midas_almon`](l4/axes/family.md) | L4 | `family` | future |
-| [`midas_beta`](l4/axes/family.md) | L4 | `family` | future |
-| [`midas_step`](l4/axes/family.md) | L4 | `family` | future |
+| [`midas_almon`](l4/axes/family.md) | L4 | `family` | operational |
+| [`midas_beta`](l4/axes/family.md) | L4 | `family` | operational |
+| [`midas_step`](l4/axes/family.md) | L4 | `family` | operational |
 | [`min`](l1_5/axes/summary_metrics.md) | L1.5 | `summary_metrics` | operational |
 | [`mixed_frequency_model_adapter`](l2/axes/mixed_frequency_representation.md) | L2 | `mixed_frequency_representation` | operational |
 | [`mlp`](l4/axes/family.md) | L4 | `family` | operational |

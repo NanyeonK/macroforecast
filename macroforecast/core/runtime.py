@@ -3419,10 +3419,1095 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             trend=params.get("trend", "add"),
             damped_trend=bool(params.get("damped_trend", False)),
         )
+    # ---------------------------------------------------------------------------
+    # C48: MIDAS family — Ghysels et al. (2004, 2007), Foroni et al. (2015)
+    # ---------------------------------------------------------------------------
+    if family == "midas_almon":
+        return _MidasAlmonModel(
+            freq_ratio=int(params.get("freq_ratio", 1)),
+            n_lags_high=int(params.get("n_lags_high", 12)),
+            polynomial_order=int(params.get("polynomial_order", 2)),
+            sum_to_one=bool(params.get("sum_to_one", True)),
+            max_iter=int(params.get("max_iter", 200)),
+            n_starts=int(params.get("n_starts", 5)),
+            random_state=seed,
+        )
+    if family == "midas_beta":
+        return _MidasBetaModel(
+            freq_ratio=int(params.get("freq_ratio", 1)),
+            n_lags_high=int(params.get("n_lags_high", 12)),
+            sum_to_one=bool(params.get("sum_to_one", True)),
+            max_iter=int(params.get("max_iter", 200)),
+            n_starts=int(params.get("n_starts", 5)),
+            random_state=seed,
+        )
+    if family == "midas_step":
+        _default_n_steps = max(1, int(params.get("freq_ratio", 1)))
+        return _MidasStepModel(
+            freq_ratio=int(params.get("freq_ratio", 1)),
+            n_lags_high=int(params.get("n_lags_high", 12)),
+            n_steps=int(params.get("n_steps", _default_n_steps)),
+        )
+    if family == "dfm_unrestricted_midas":
+        return _UnrestrictedMidasModel(
+            freq_ratio=int(params.get("freq_ratio", 1)),
+            n_lags_high=params.get("n_lags_high", "bic"),
+            include_y_lag=bool(params.get("include_y_lag", False)),
+            random_state=seed,
+        )
     custom = _resolve_custom_model(family)
     if custom is not None:
         return _CustomModelAdapter(custom, params=params)
     raise NotImplementedError(f"L4 runtime does not support family={family!r}")
+
+
+# ---------------------------------------------------------------------------
+# C48: MIDAS L4 model classes
+# Ghysels-Santa-Clara-Valkanov (2004); Ghysels-Sinko-Valkanov (2007);
+# Foroni-Marcellino-Schumacher (2015 JRSS-A 178(1) 57-82).
+# ---------------------------------------------------------------------------
+
+
+class _MidasAlmonModel:
+    """Ghysels-Santa-Clara-Valkanov (2004) MIDAS with Almon polynomial weights.
+
+    Fits the MIDAS regression:
+        y_t = mu + beta * sum_k b(k; theta) * x_{t,k} + eps_t
+    where b(k; theta) = sum_{q=0}^{Q} theta_q * k^q (Almon polynomial).
+    Estimation via NLS with Nelder-Mead multi-start.
+
+    Mixed-frequency input contract:
+        - freq_ratio=1 (default): X is already a LF-aligned DataFrame. The
+          model applies Almon weighting directly on X columns (each column
+          is treated as a predictor or a pre-stacked lag feature).
+        - freq_ratio>1: X is a HF DataFrame; the model calls
+          _midas_lag_stack internally to produce the LF lag design matrix.
+
+    Parameters
+    ----------
+    freq_ratio : int
+        HF periods per LF period (m). 1 = data already LF-aligned.
+    n_lags_high : int
+        Number of HF lags K to include.
+    polynomial_order : int
+        Almon polynomial degree Q. Total weight params = Q+1.
+    sum_to_one : bool
+        Normalize Almon weights to sum to one after clamping.
+    max_iter : int
+        Max iterations per Nelder-Mead call.
+    n_starts : int
+        Number of NLS multi-starts for robustness.
+    random_state : int
+        Seed for np.random.default_rng (used for perturbed NLS starts).
+
+    Paper reference: Ghysels, Santa-Clara, Valkanov (2004) "The MIDAS Touch."
+    §2, eq. (3).
+    """
+
+    def __init__(
+        self,
+        freq_ratio: int = 1,
+        n_lags_high: int = 12,
+        polynomial_order: int = 2,
+        sum_to_one: bool = True,
+        max_iter: int = 200,
+        n_starts: int = 5,
+        random_state: int = 0,
+    ) -> None:
+        if freq_ratio < 1:
+            raise ValueError(f"freq_ratio must be >= 1; got {freq_ratio!r}")
+        if n_lags_high < 1:
+            raise ValueError(f"n_lags_high must be >= 1; got {n_lags_high!r}")
+        if polynomial_order < 0:
+            raise ValueError(f"polynomial_order must be >= 0; got {polynomial_order!r}")
+        self.freq_ratio = int(freq_ratio)
+        self.n_lags_high = int(n_lags_high)
+        self.polynomial_order = int(polynomial_order)
+        self.sum_to_one = bool(sum_to_one)
+        self.max_iter = int(max_iter)
+        self.n_starts = int(n_starts)
+        self.random_state = int(random_state)
+
+        # State populated by fit()
+        self._w_hat: np.ndarray | None = None
+        # _w_hat_effective holds the K_eff-length weights used internally by
+        # predict(). When K_eff == n_lags_high, it equals _w_hat. When
+        # K_eff < n_lags_high, _w_hat is zero-padded to n_lags_high (PI-7)
+        # and _w_hat_effective retains only the K_eff entries for matmul.
+        self._w_hat_effective: np.ndarray | None = None
+        self._theta_hat: np.ndarray | None = None
+        self._intercept: float = 0.0
+        self._slope: float = 0.0
+        self._train_X_lf: pd.DataFrame | None = None
+        self._hf_cols: list[str] = []
+        self._converged: bool = False
+        self._fit_info: dict[str, Any] = {}
+
+    def _lag_stack(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Apply _midas_lag_stack when freq_ratio > 1, else return X as-is."""
+        if self.freq_ratio > 1:
+            return _midas_lag_stack(
+                X,
+                freq_ratio=self.freq_ratio,
+                n_lags_high=self.n_lags_high,
+                target_freq="low",
+            )
+        return X
+
+    def _w_almon(self, theta: np.ndarray, K: int | None = None) -> np.ndarray:
+        """Almon polynomial weight function.
+
+        b(k; theta) = sum_{q=0}^{Q} theta_q * k^q  for k=0..K-1.
+        Clamped to non-negative; normalized to sum to one when sum_to_one=True.
+
+        Parameters
+        ----------
+        theta : np.ndarray
+            Polynomial coefficients of length Q+1.
+        K : int or None
+            Effective number of lags to use. Defaults to self.n_lags_high.
+            Pass K_eff (resolved in fit) when freq_ratio=1 and X.shape[1]
+            may differ from self.n_lags_high.
+        """
+        if K is None:
+            K = self.n_lags_high
+        Q = self.polynomial_order
+        kk = np.arange(K, dtype=float)
+        w_raw = np.zeros(K, dtype=float)
+        for q in range(Q + 1):
+            w_raw = w_raw + float(theta[q]) * (kk ** q)
+        # Non-negativity constraint (economic prior: lag weights are non-negative)
+        w_raw = np.maximum(w_raw, 0.0)
+        if float(np.sum(w_raw)) == 0.0:
+            # All weights clamped to zero: fall back to uniform
+            return np.full(K, 1.0 / K, dtype=float)
+        if self.sum_to_one:
+            denom = float(np.sum(w_raw))
+            if denom > 1e-12:
+                w_raw = w_raw / denom
+        return w_raw
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_MidasAlmonModel":
+        """Fit MIDAS-Almon regression via NLS multi-start (Nelder-Mead).
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix. At LF frequency when freq_ratio=1; HF when
+            freq_ratio>1 (internal lag-stacking is applied).
+        y : pd.Series
+            LF target series.
+
+        Returns
+        -------
+        self
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if not isinstance(y, pd.Series):
+            raise TypeError(f"y must be a pd.Series; got {type(y)!r}")
+        if len(X) == 0 or len(y) == 0:
+            # Empty inputs: set uniform fallback weights
+            K = self.n_lags_high
+            self._w_hat = np.full(K, 1.0 / K, dtype=float)
+            self._theta_hat = np.zeros(self.polynomial_order + 1, dtype=float)
+            self._intercept = 0.0
+            self._slope = 0.0
+            return self
+
+        self._hf_cols = list(X.columns)
+
+        # Step 1: Lag-stack if needed
+        X_lf = self._lag_stack(X)
+
+        # Step 2: Align y and find common non-NaN index
+        y_arr_s = y.reindex(X_lf.index).dropna()
+        X_clean = X_lf.dropna(how="any")
+        common_idx = X_clean.index.intersection(y_arr_s.index)
+
+        # Resolve effective K: when freq_ratio=1, X is already LF-aligned and
+        # may have fewer columns than n_lags_high. Use the minimum to keep
+        # the weight vector dimension consistent with X_arr columns.
+        K_eff = min(self.n_lags_high, X_lf.shape[1])
+        # Truncate X_lf to the first K_eff columns so that _train_X_lf and
+        # _w_hat are always dimension-aligned regardless of n_lags_high.
+        X_lf_eff = X_lf.iloc[:, :K_eff]
+        Q = self.polynomial_order
+        # Need at least Q+3 rows to identify Q+1 weight params + mu + beta
+        if len(common_idx) < Q + 3:
+            _w_eff = np.full(K_eff, 1.0 / K_eff, dtype=float)
+            self._w_hat_effective = _w_eff
+            # PI-7: _w_hat must have length n_lags_high; pad with zeros if needed
+            if K_eff < self.n_lags_high:
+                _w_padded = np.zeros(self.n_lags_high, dtype=float)
+                _w_padded[:K_eff] = _w_eff
+                self._w_hat = _w_padded
+            else:
+                self._w_hat = _w_eff.copy()
+            self._theta_hat = np.zeros(Q + 1, dtype=float)
+            self._intercept = float(y_arr_s.mean()) if len(y_arr_s) > 0 else 0.0
+            self._slope = 0.0
+            self._train_X_lf = X_lf_eff
+            return self
+
+        X_arr = X_lf_eff.loc[common_idx].to_numpy(dtype=float)  # shape (T, K_eff)
+        y_arr = y_arr_s.loc[common_idx].to_numpy(dtype=float)  # shape (T,)
+
+        # Step 3 & 4: NLS loss — jointly optimise (theta, mu, beta).
+        # Use K_eff so that weights vector length matches X_arr.shape[1].
+        def loss(params: np.ndarray) -> float:
+            theta = params[:Q + 1]
+            mu = float(params[Q + 1])
+            beta = float(params[Q + 2])
+            weights = self._w_almon(theta, K=K_eff)
+            # agg shape (T,): weighted sum of lag columns
+            agg = X_arr @ weights
+            resid = y_arr - mu - beta * agg
+            return float(np.dot(resid, resid))
+
+        # Step 5: Multi-start NLS
+        from scipy.optimize import minimize  # type: ignore
+
+        rng = np.random.default_rng(self.random_state)
+        best_loss = np.inf
+        best_params: np.ndarray = np.zeros(Q + 3, dtype=float)
+        best_success = False
+
+        # Start 0: canonical flat Almon weights (theta[0]=1, rest zero)
+        theta0_canonical = np.zeros(Q + 1, dtype=float)
+        theta0_canonical[0] = 1.0
+        best_params = np.concatenate(
+            [theta0_canonical, [float(y_arr.mean()), 1.0]]
+        )
+
+        for s in range(self.n_starts):
+            if s == 0:
+                theta_init = theta0_canonical.copy()
+            else:
+                theta_init = rng.normal(0.0, 0.1, Q + 1)
+            x0 = np.concatenate([theta_init, [float(y_arr.mean()), 1.0]])
+            try:
+                result = minimize(
+                    loss,
+                    x0=x0,
+                    method="Nelder-Mead",
+                    options={
+                        "maxiter": self.max_iter,
+                        "xatol": 1e-6,
+                        "fatol": 1e-8,
+                    },
+                )
+                if result.fun < best_loss:
+                    best_loss = result.fun
+                    best_params = result.x
+                    best_success = result.success
+            except Exception:
+                continue  # skip failed starts
+
+        theta_hat = best_params[:Q + 1]
+        self._theta_hat = theta_hat
+        self._intercept = float(best_params[Q + 1])
+        self._slope = float(best_params[Q + 2])
+        # Compute K_eff-length weights for prediction alignment
+        _w_eff = self._w_almon(theta_hat, K=K_eff)
+        self._w_hat_effective = _w_eff
+        # PI-7: _w_hat must have length n_lags_high; pad with zeros when K_eff
+        # is smaller (zeros contribute nothing mathematically — predict uses
+        # _w_hat_effective against K_eff-column _train_X_lf, not _w_hat).
+        if K_eff < self.n_lags_high:
+            _w_padded = np.zeros(self.n_lags_high, dtype=float)
+            _w_padded[:K_eff] = _w_eff
+            self._w_hat = _w_padded
+        else:
+            self._w_hat = _w_eff
+        self._converged = best_success
+        # Store only the K_eff effective columns so predict reindex stays aligned
+        self._train_X_lf = X_lf_eff
+        self._fit_info = {
+            "best_loss": best_loss,
+            "converged": best_success,
+            "n_starts": self.n_starts,
+        }
+        # Invariant: _w_hat_effective aligns with _train_X_lf column count
+        assert self._w_hat_effective.shape[0] == self._train_X_lf.shape[1], (
+            f"_w_hat_effective dim {self._w_hat_effective.shape[0]} != "
+            f"_train_X_lf cols {self._train_X_lf.shape[1]}"
+        )
+        # PI-7 invariant: _w_hat must have length n_lags_high
+        assert self._w_hat.shape[0] == self.n_lags_high, (
+            f"PI-7 violated: _w_hat len {self._w_hat.shape[0]} != "
+            f"n_lags_high {self.n_lags_high}"
+        )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Predict using fitted Almon MIDAS weights.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix with same structure as used in fit().
+
+        Returns
+        -------
+        np.ndarray
+            Predicted values, shape (len(X),).
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if len(X) == 0:
+            return np.zeros(0, dtype=float)
+        if self._w_hat is None or self._train_X_lf is None:
+            return np.zeros(len(X), dtype=float)
+
+        # Step 1: Apply same lag-stacking
+        X_lf = self._lag_stack(X)
+
+        # Step 2: Reindex to training columns (fill_value=0 for edge rows)
+        X_arr = (
+            X_lf
+            .reindex(columns=self._train_X_lf.columns, fill_value=0.0)
+            .to_numpy(dtype=float)
+        )
+
+        # Step 3: Compute prediction using K_eff-length effective weights.
+        # _w_hat_effective has the same length as _train_X_lf columns (K_eff),
+        # so the matmul is always dimension-consistent regardless of whether
+        # _w_hat was padded to n_lags_high for PI-7.
+        w_eff = self._w_hat_effective if self._w_hat_effective is not None else self._w_hat
+        agg = X_arr @ w_eff
+        preds = self._intercept + self._slope * agg
+        return preds.astype(float)
+
+
+class _MidasBetaModel:
+    """Ghysels-Sinko-Valkanov (2007) MIDAS with Beta distribution kernel weights.
+
+    Fits the MIDAS regression:
+        y_t = mu + beta * sum_k b(k; a, b) * x_{t,k} + eps_t
+    where b(k; a, b) proportional to x_k^{a-1} * (1-x_k)^{b-1},
+    x_k = (k+1)/(K+1), always sums to one.
+    Estimation via NLS with Nelder-Mead multi-start.
+
+    Mixed-frequency input contract: same as _MidasAlmonModel (freq_ratio=1
+    means X is already LF-aligned; freq_ratio>1 triggers internal lag-stacking).
+
+    Parameters
+    ----------
+    freq_ratio : int
+        HF periods per LF period (m). 1 = data already LF-aligned.
+    n_lags_high : int
+        Number of HF lags K.
+    sum_to_one : bool
+        Included for API symmetry; Beta weights always sum to one.
+    max_iter : int
+        Max iterations per Nelder-Mead call.
+    n_starts : int
+        Number of NLS multi-starts.
+    random_state : int
+        Seed for np.random.default_rng (used for perturbed NLS starts).
+
+    Paper reference: Ghysels, Sinko, Valkanov (2007) "MIDAS Regressions:
+    Further Results and New Directions." §2, Beta distribution kernel.
+    """
+
+    def __init__(
+        self,
+        freq_ratio: int = 1,
+        n_lags_high: int = 12,
+        sum_to_one: bool = True,
+        max_iter: int = 200,
+        n_starts: int = 5,
+        random_state: int = 0,
+    ) -> None:
+        if freq_ratio < 1:
+            raise ValueError(f"freq_ratio must be >= 1; got {freq_ratio!r}")
+        if n_lags_high < 1:
+            raise ValueError(f"n_lags_high must be >= 1; got {n_lags_high!r}")
+        self.freq_ratio = int(freq_ratio)
+        self.n_lags_high = int(n_lags_high)
+        self.sum_to_one = bool(sum_to_one)
+        self.max_iter = int(max_iter)
+        self.n_starts = int(n_starts)
+        self.random_state = int(random_state)
+
+        self._w_hat: np.ndarray | None = None
+        # _w_hat_effective holds the K_eff-length weights used internally by
+        # predict(). When K_eff == n_lags_high, it equals _w_hat. When
+        # K_eff < n_lags_high, _w_hat is zero-padded to n_lags_high (PI-7)
+        # and _w_hat_effective retains only the K_eff entries for matmul.
+        self._w_hat_effective: np.ndarray | None = None
+        self._theta_hat: np.ndarray | None = None  # shape (2,): [a, b]
+        self._intercept: float = 0.0
+        self._slope: float = 0.0
+        self._train_X_lf: pd.DataFrame | None = None
+        self._hf_cols: list[str] = []
+        self._converged: bool = False
+        self._fit_info: dict[str, Any] = {}
+
+    def _lag_stack(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Apply _midas_lag_stack when freq_ratio > 1, else return X as-is."""
+        if self.freq_ratio > 1:
+            return _midas_lag_stack(
+                X,
+                freq_ratio=self.freq_ratio,
+                n_lags_high=self.n_lags_high,
+                target_freq="low",
+            )
+        return X
+
+    def _w_beta(self, theta: np.ndarray, K: int | None = None) -> np.ndarray:
+        """Beta distribution kernel weight function.
+
+        b(k; a, b) proportional to x_k^{a-1} * (1-x_k)^{b-1}
+        where x_k = (k+1)/(K+1) in (0, 1). Always sums to one.
+        Shape params a, b clamped to >= 1e-3 to prevent blowup.
+
+        Parameters
+        ----------
+        theta : np.ndarray
+            Beta shape parameters [a, b].
+        K : int or None
+            Effective number of lags to use. Defaults to self.n_lags_high.
+            Pass K_eff (resolved in fit) when freq_ratio=1 and X.shape[1]
+            may differ from self.n_lags_high.
+        """
+        if K is None:
+            K = self.n_lags_high
+        a = max(float(theta[0]), 1e-3)
+        b = max(float(theta[1]), 1e-3)
+        kk = (np.arange(K, dtype=float) + 1.0) / (K + 1.0)  # x_k in (0, 1)
+        w_raw = (kk ** (a - 1.0)) * ((1.0 - kk) ** (b - 1.0))
+        w_raw = np.maximum(w_raw, 0.0)
+        s = float(np.sum(w_raw))
+        if s <= 0.0 or not np.isfinite(s):
+            return np.full(K, 1.0 / K, dtype=float)
+        return w_raw / s  # always sum-to-one by construction
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_MidasBetaModel":
+        """Fit MIDAS-Beta regression via NLS multi-start (Nelder-Mead).
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix. LF when freq_ratio=1; HF when freq_ratio>1.
+        y : pd.Series
+            LF target series.
+
+        Returns
+        -------
+        self
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if not isinstance(y, pd.Series):
+            raise TypeError(f"y must be a pd.Series; got {type(y)!r}")
+        if len(X) == 0 or len(y) == 0:
+            K = self.n_lags_high
+            self._w_hat = np.full(K, 1.0 / K, dtype=float)
+            self._theta_hat = np.array([1.0, 1.0], dtype=float)
+            self._intercept = 0.0
+            self._slope = 0.0
+            return self
+
+        self._hf_cols = list(X.columns)
+
+        # Step 1: Lag-stack if needed
+        X_lf = self._lag_stack(X)
+
+        # Step 2: Align y and find common non-NaN index
+        y_arr_s = y.reindex(X_lf.index).dropna()
+        X_clean = X_lf.dropna(how="any")
+        common_idx = X_clean.index.intersection(y_arr_s.index)
+
+        # Resolve effective K: when freq_ratio=1, X is already LF-aligned and
+        # may have fewer columns than n_lags_high. Use the minimum to keep
+        # the weight vector dimension consistent with X_arr columns.
+        K_eff = min(self.n_lags_high, X_lf.shape[1])
+        # Truncate X_lf to the first K_eff columns so that _train_X_lf and
+        # _w_hat are always dimension-aligned regardless of n_lags_high.
+        X_lf_eff = X_lf.iloc[:, :K_eff]
+        # Need at least 4 rows (a, b, mu, beta) + 1 residual degree of freedom
+        if len(common_idx) < 5:
+            _w_eff = np.full(K_eff, 1.0 / K_eff, dtype=float)
+            self._w_hat_effective = _w_eff
+            # PI-7: _w_hat must have length n_lags_high; pad with zeros if needed
+            if K_eff < self.n_lags_high:
+                _w_padded = np.zeros(self.n_lags_high, dtype=float)
+                _w_padded[:K_eff] = _w_eff
+                self._w_hat = _w_padded
+            else:
+                self._w_hat = _w_eff.copy()
+            self._theta_hat = np.array([1.0, 1.0], dtype=float)
+            self._intercept = float(y_arr_s.mean()) if len(y_arr_s) > 0 else 0.0
+            self._slope = 0.0
+            self._train_X_lf = X_lf_eff
+            return self
+
+        X_arr = X_lf_eff.loc[common_idx].to_numpy(dtype=float)  # shape (T, K_eff)
+        y_arr = y_arr_s.loc[common_idx].to_numpy(dtype=float)  # shape (T,)
+
+        # Step 3 & 4: NLS loss — params = [a, b, mu, beta].
+        # Use K_eff so that weights vector length matches X_arr.shape[1].
+        def loss(params: np.ndarray) -> float:
+            theta = params[:2]
+            mu = float(params[2])
+            beta = float(params[3])
+            weights = self._w_beta(theta, K=K_eff)
+            agg = X_arr @ weights
+            resid = y_arr - mu - beta * agg
+            return float(np.dot(resid, resid))
+
+        # Step 5: Multi-start NLS
+        from scipy.optimize import minimize  # type: ignore
+
+        rng = np.random.default_rng(self.random_state)
+        best_loss = np.inf
+        best_params: np.ndarray = np.array([1.0, 1.0, float(y_arr.mean()), 1.0])
+        best_success = False
+
+        for s in range(self.n_starts):
+            if s == 0:
+                # Start 0: uniform Beta (a=b=1 gives equal weights)
+                theta_init = np.array([1.0, 1.0], dtype=float)
+            else:
+                # Perturbed starts: Gamma(2,1) keeps a,b > 0 naturally
+                a0, b0 = rng.gamma(2.0, 1.0, 2)
+                theta_init = np.array(
+                    [max(1e-3, float(a0)), max(1e-3, float(b0))], dtype=float
+                )
+            x0 = np.concatenate([theta_init, [float(y_arr.mean()), 1.0]])
+            try:
+                result = minimize(
+                    loss,
+                    x0=x0,
+                    method="Nelder-Mead",
+                    options={
+                        "maxiter": self.max_iter,
+                        "xatol": 1e-6,
+                        "fatol": 1e-8,
+                    },
+                )
+                if result.fun < best_loss:
+                    best_loss = result.fun
+                    best_params = result.x
+                    best_success = result.success
+            except Exception:
+                continue
+
+        # Clamp shape params after optimization
+        a_hat = max(float(best_params[0]), 1e-3)
+        b_hat = max(float(best_params[1]), 1e-3)
+        theta_hat = np.array([a_hat, b_hat], dtype=float)
+
+        self._theta_hat = theta_hat
+        self._intercept = float(best_params[2])
+        self._slope = float(best_params[3])
+        # Compute K_eff-length weights for prediction alignment
+        _w_eff = self._w_beta(theta_hat, K=K_eff)
+        self._w_hat_effective = _w_eff
+        # PI-7: _w_hat must have length n_lags_high; pad with zeros when K_eff
+        # is smaller (zeros contribute nothing mathematically — predict uses
+        # _w_hat_effective against K_eff-column _train_X_lf, not _w_hat).
+        if K_eff < self.n_lags_high:
+            _w_padded = np.zeros(self.n_lags_high, dtype=float)
+            _w_padded[:K_eff] = _w_eff
+            self._w_hat = _w_padded
+        else:
+            self._w_hat = _w_eff
+        self._converged = best_success
+        # Store only the K_eff effective columns so predict reindex stays aligned
+        self._train_X_lf = X_lf_eff
+        self._fit_info = {
+            "best_loss": best_loss,
+            "converged": best_success,
+            "n_starts": self.n_starts,
+            "a_hat": a_hat,
+            "b_hat": b_hat,
+        }
+        # Invariant: _w_hat_effective aligns with _train_X_lf column count
+        assert self._w_hat_effective.shape[0] == self._train_X_lf.shape[1], (
+            f"_w_hat_effective dim {self._w_hat_effective.shape[0]} != "
+            f"_train_X_lf cols {self._train_X_lf.shape[1]}"
+        )
+        # PI-7 invariant: _w_hat must have length n_lags_high
+        assert self._w_hat.shape[0] == self.n_lags_high, (
+            f"PI-7 violated: _w_hat len {self._w_hat.shape[0]} != "
+            f"n_lags_high {self.n_lags_high}"
+        )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Predict using fitted Beta MIDAS weights.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix with same structure as used in fit().
+
+        Returns
+        -------
+        np.ndarray
+            Predicted values, shape (len(X),).
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if len(X) == 0:
+            return np.zeros(0, dtype=float)
+        if self._w_hat is None or self._train_X_lf is None:
+            return np.zeros(len(X), dtype=float)
+
+        X_lf = self._lag_stack(X)
+        X_arr = (
+            X_lf
+            .reindex(columns=self._train_X_lf.columns, fill_value=0.0)
+            .to_numpy(dtype=float)
+        )
+        # Use K_eff-length effective weights for matmul — _w_hat may be padded
+        # to n_lags_high for PI-7 compliance but predict uses _w_hat_effective.
+        w_eff = self._w_hat_effective if self._w_hat_effective is not None else self._w_hat
+        agg = X_arr @ w_eff
+        preds = self._intercept + self._slope * agg
+        return preds.astype(float)
+
+
+class _MidasStepModel:
+    """Foroni-Marcellino-Schumacher (2015) piecewise-constant step-function MIDAS.
+
+    Assigns equal weights within each of S contiguous groups of HF lags,
+    reducing K free coefficients to S group means. With fixed group boundaries
+    the model is linear in S step-weights, so OLS via lstsq.
+
+    Design matrix: for each predictor and each group s, compute the mean of
+    lag columns in group s (one aggregate per group per predictor).
+
+    Group partition: contiguous non-overlapping, lags 0..K-1 split into S
+    groups. Group s (0-indexed) covers lags [s*K//S, (s+1)*K//S).
+
+    Mixed-frequency input contract: same as _MidasAlmonModel.
+
+    Parameters
+    ----------
+    freq_ratio : int
+        HF periods per LF period (m). 1 = X is already LF-aligned.
+    n_lags_high : int
+        Number of HF lags K.
+    n_steps : int
+        Number of step groups S. Default = freq_ratio (one per HF sub-period).
+
+    Paper reference: Foroni, Marcellino, Schumacher (2015) "Unrestricted Mixed
+    Data Sampling (MIDAS)." JRSS-A 178(1), 57-82. §2.2 step-function
+    restriction variant.
+    """
+
+    def __init__(
+        self,
+        freq_ratio: int = 1,
+        n_lags_high: int = 12,
+        n_steps: int = 1,
+    ) -> None:
+        if freq_ratio < 1:
+            raise ValueError(f"freq_ratio must be >= 1; got {freq_ratio!r}")
+        if n_lags_high < 1:
+            raise ValueError(f"n_lags_high must be >= 1; got {n_lags_high!r}")
+        if n_steps < 1:
+            raise ValueError(f"n_steps must be >= 1; got {n_steps!r}")
+        self.freq_ratio = int(freq_ratio)
+        self.n_lags_high = int(n_lags_high)
+        self.n_steps = int(n_steps)
+
+        self._step_coef: np.ndarray | None = None
+        self._intercept: float = 0.0
+        self._group_boundaries: list[tuple[int, int]] = []
+        self._train_X_lf: pd.DataFrame | None = None  # step-aggregated design
+        self._hf_cols: list[str] = []
+
+    def _lag_stack(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Apply _midas_lag_stack when freq_ratio > 1, else return X as-is."""
+        if self.freq_ratio > 1:
+            return _midas_lag_stack(
+                X,
+                freq_ratio=self.freq_ratio,
+                n_lags_high=self.n_lags_high,
+                target_freq="low",
+            )
+        return X
+
+    def _build_step_matrix(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Build step-aggregate design matrix from lag-stacked X.
+
+        For each original predictor column and each step group, compute the
+        row-wise mean of lag columns in that group. Returns a DataFrame with
+        n_predictor_cols * n_steps columns.
+
+        The group boundaries are based on the original columns of X before
+        lag-stacking when freq_ratio=1, or on lag columns when freq_ratio>1.
+        """
+        K = self.n_lags_high
+        S = self.n_steps
+        # Compute group boundaries once: group s covers lags [s*K//S, (s+1)*K//S)
+        boundaries = [
+            (s * K // S, min((s + 1) * K // S, K)) for s in range(S)
+        ]
+        self._group_boundaries = boundaries
+
+        # Detect predictor columns: when freq_ratio>1, X has lag columns like
+        # "col_lag0", "col_lag1", ... When freq_ratio=1, X columns are treated
+        # as consecutive features; we apply step grouping over them directly.
+        cols = list(X.columns)
+
+        if self.freq_ratio > 1:
+            # Extract unique original column prefixes from "col_lag{k}" names
+            import re as _re
+            pred_cols: list[str] = []
+            seen: set[str] = set()
+            for c in cols:
+                m = _re.match(r"^(.+)_lag\d+$", c)
+                if m:
+                    base = m.group(1)
+                    if base not in seen:
+                        pred_cols.append(base)
+                        seen.add(base)
+            if not pred_cols:
+                pred_cols = [cols[0]] if cols else []
+
+            step_dict: dict[str, np.ndarray] = {}
+            for pred in pred_cols:
+                lag_cols = [f"{pred}_lag{k}" for k in range(K)]
+                lag_cols_avail = [c for c in lag_cols if c in X.columns]
+                for s, (lo, hi) in enumerate(boundaries):
+                    group_lag_cols = [
+                        f"{pred}_lag{k}" for k in range(lo, hi)
+                        if f"{pred}_lag{k}" in X.columns
+                    ]
+                    if group_lag_cols:
+                        step_dict[f"{pred}_step{s}"] = (
+                            X[group_lag_cols].mean(axis=1).to_numpy()
+                        )
+                    else:
+                        step_dict[f"{pred}_step{s}"] = np.zeros(len(X), dtype=float)
+        else:
+            # freq_ratio=1: treat all columns as a single sequence of features,
+            # group them into S buckets by position index
+            n_cols = len(cols)
+            step_dict_flat: dict[str, np.ndarray] = {}
+            for s, (lo, hi) in enumerate(boundaries):
+                # Map lag indices [lo, hi) to column indices modulo n_cols
+                group_cols = [cols[k % n_cols] for k in range(lo, hi) if k < n_cols]
+                if not group_cols:
+                    # Repeat the last available column for out-of-range lags
+                    group_cols = [cols[-1]] if cols else []
+                if group_cols:
+                    step_dict_flat[f"step{s}"] = (
+                        X[group_cols].mean(axis=1).to_numpy()
+                    )
+                else:
+                    step_dict_flat[f"step{s}"] = np.zeros(len(X), dtype=float)
+            step_dict = step_dict_flat
+
+        return pd.DataFrame(step_dict, index=X.index)
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_MidasStepModel":
+        """Fit MIDAS step-function regression via OLS (np.linalg.lstsq).
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix. LF when freq_ratio=1; HF when freq_ratio>1.
+        y : pd.Series
+            LF target series.
+
+        Returns
+        -------
+        self
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if not isinstance(y, pd.Series):
+            raise TypeError(f"y must be a pd.Series; got {type(y)!r}")
+
+        S = self.n_steps
+        if len(X) == 0 or len(y) == 0:
+            self._step_coef = np.zeros(S, dtype=float)
+            self._intercept = 0.0
+            return self
+
+        self._hf_cols = list(X.columns)
+
+        # Step 1: Lag-stack if needed
+        X_lf = self._lag_stack(X)
+
+        # Step 2: Build step-aggregate design matrix
+        X_step = self._build_step_matrix(X_lf)
+
+        # Step 3: Align y and drop NaN rows
+        y_aligned = y.reindex(X_step.index)
+        combined = pd.concat(
+            [y_aligned.rename("__y__"), X_step], axis=1
+        ).dropna()
+
+        if len(combined) < S + 2:
+            # Insufficient degrees of freedom: fallback
+            self._step_coef = np.zeros(S, dtype=float)
+            self._intercept = (
+                float(y_aligned.dropna().mean())
+                if len(y_aligned.dropna()) > 0
+                else 0.0
+            )
+            self._train_X_lf = X_step
+            return self
+
+        y_arr = combined["__y__"].to_numpy(dtype=float)
+        X_arr = combined.drop(columns="__y__").to_numpy(dtype=float)
+        T = len(y_arr)
+
+        # Step 4: OLS via lstsq on [ones | X_arr]
+        X_aug = np.hstack([np.ones((T, 1)), X_arr])
+        beta_hat, *_ = np.linalg.lstsq(X_aug, y_arr, rcond=None)
+        self._intercept = float(beta_hat[0])
+        self._step_coef = beta_hat[1:].astype(float)
+        self._train_X_lf = X_step  # store step-aggregated design for predict
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Predict using fitted step-function OLS.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix with same structure as used in fit().
+
+        Returns
+        -------
+        np.ndarray
+            Predicted values, shape (len(X),).
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if len(X) == 0:
+            return np.zeros(0, dtype=float)
+        if self._step_coef is None or self._train_X_lf is None:
+            return np.zeros(len(X), dtype=float)
+
+        # Step 1: Reproduce lag-stacking and step-aggregation
+        X_lf = self._lag_stack(X)
+        X_step = self._build_step_matrix(X_lf)
+
+        # Step 2: Reindex to training columns
+        X_arr = (
+            X_step
+            .reindex(columns=self._train_X_lf.columns, fill_value=0.0)
+            .to_numpy(dtype=float)
+        )
+        n_rows = len(X_arr)
+        X_aug = np.hstack([np.ones((n_rows, 1)), X_arr])
+        coef_full = np.concatenate([[self._intercept], self._step_coef])
+        preds = X_aug @ coef_full
+        return preds.astype(float)
+
+
+class _UnrestrictedMidasModel:
+    """Foroni-Marcellino-Schumacher (2015) Unrestricted MIDAS (U-MIDAS).
+
+    Fits the U-MIDAS regression (paper §3, eq. 7):
+        y_t = mu + sum_{k=0}^{K-1} psi_k * x_{t,k} + eps_t
+    Each HF lag gets its own free coefficient psi_k. Estimated via OLS
+    (np.linalg.lstsq) on the full lag-stacked design matrix.
+
+    K can be fixed (int) or selected by BIC/AIC (string). When n_lags_high
+    is "bic" or "aic", _bic_select_k is called to choose K before fitting.
+
+    The "dfm_" prefix in the family name is a historical naming artifact.
+    This implements plain U-MIDAS without a PCA factor pre-step, distinct
+    from dfm_mixed_mariano_murasawa (Kalman filter DFM).
+
+    Mixed-frequency input contract:
+        - freq_ratio=1: X treated as already LF-aligned (no internal
+          lag-stacking); model fits OLS directly on X columns.
+        - freq_ratio>1: X is HF; _midas_lag_stack is called internally.
+
+    Parameters
+    ----------
+    freq_ratio : int
+        HF periods per LF period (m). 1 = X is already LF-aligned.
+    n_lags_high : int or str
+        HF lags K, or "bic"/"aic" for information-criterion selection.
+    include_y_lag : bool
+        If True, prepend a lagged y term (AR(1) term; paper eq. 20).
+    random_state : int
+        Accepted for API symmetry; OLS is deterministic and ignores this.
+
+    Paper reference: Foroni, Marcellino, Schumacher (2015) "Unrestricted
+    Mixed Data Sampling (MIDAS)." JRSS-A 178(1), 57-82. §3, eq. (7), (20).
+    """
+
+    def __init__(
+        self,
+        freq_ratio: int = 1,
+        n_lags_high: int | str = "bic",
+        include_y_lag: bool = False,
+        random_state: int = 0,
+    ) -> None:
+        if freq_ratio < 1:
+            raise ValueError(f"freq_ratio must be >= 1; got {freq_ratio!r}")
+        if isinstance(n_lags_high, int) and n_lags_high < 1:
+            raise ValueError(f"n_lags_high must be >= 1 when int; got {n_lags_high!r}")
+        if isinstance(n_lags_high, str) and n_lags_high not in ("bic", "aic"):
+            # Try to cast to int
+            try:
+                n_lags_high = int(n_lags_high)
+            except ValueError:
+                raise ValueError(
+                    f"n_lags_high must be int, 'bic', or 'aic'; got {n_lags_high!r}"
+                )
+        self.freq_ratio = int(freq_ratio)
+        self.n_lags_high: int | str = n_lags_high
+        self.include_y_lag = bool(include_y_lag)
+        self.random_state = int(random_state)
+
+        self._coef: np.ndarray | None = None
+        self._K_fit: int = 1
+        self._train_X_lf: pd.DataFrame | None = None
+        self._last_y: pd.Series | None = None
+        # Intercept exposed as named attribute for API contract (test-spec PI-8)
+        self._intercept: float = 0.0
+
+    def _build_lag_matrix(
+        self, X: pd.DataFrame, K: int
+    ) -> pd.DataFrame:
+        """Lag-stack X if freq_ratio>1, else return X as-is (K ignored)."""
+        if self.freq_ratio > 1:
+            return _midas_lag_stack(
+                X,
+                freq_ratio=self.freq_ratio,
+                n_lags_high=K,
+                target_freq="low",
+            )
+        return X
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_UnrestrictedMidasModel":
+        """Fit U-MIDAS OLS regression.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix. LF when freq_ratio=1; HF when freq_ratio>1.
+        y : pd.Series
+            LF target series.
+
+        Returns
+        -------
+        self
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if not isinstance(y, pd.Series):
+            raise TypeError(f"y must be a pd.Series; got {type(y)!r}")
+        if len(X) == 0 or len(y) == 0:
+            self._coef = np.array([0.0], dtype=float)
+            self._K_fit = 1
+            return self
+
+        # Step 1: Resolve K
+        if isinstance(self.n_lags_high, str):
+            # BIC/AIC selection — requires HF X; if freq_ratio=1, X is already LF
+            # so pass X as-is to _bic_select_k (it will lag-stack internally)
+            if self.freq_ratio > 1:
+                K = _bic_select_k(
+                    X,
+                    y,
+                    freq_ratio=self.freq_ratio,
+                    include_y_lag=self.include_y_lag,
+                    ic=self.n_lags_high,
+                )
+            else:
+                # freq_ratio=1: X is already LF; K = number of columns
+                K = X.shape[1]
+        else:
+            K = max(1, int(self.n_lags_high))
+        self._K_fit = K
+
+        # Step 2: Build lag-stacked design
+        X_lf = self._build_lag_matrix(X, K)
+
+        # Step 3: Optionally prepend y_lag1 (AR(1) term per paper eq. 20)
+        if self.include_y_lag:
+            y_lf_aligned = y.reindex(X_lf.index)
+            y_lag1 = y_lf_aligned.shift(1)
+            y_lag1.name = "y_lag1"
+            X_lf = pd.concat([y_lag1.to_frame(), X_lf], axis=1)
+
+        # Step 4: Align y and drop NaN rows
+        combined = pd.concat(
+            [y.rename("__y__"), X_lf], axis=1
+        ).dropna()
+        T_eff = len(combined)
+        K_params = X_lf.shape[1] + 1  # +1 for intercept
+
+        if T_eff < K_params + 2:
+            # Insufficient degrees of freedom: fallback to mean intercept
+            self._coef = np.zeros(K_params, dtype=float)
+            self._coef[0] = float(y.dropna().mean()) if len(y.dropna()) > 0 else 0.0
+            # Expose intercept as a named float attribute (test-spec.md PI-8)
+            self._intercept: float = float(self._coef[0])
+            self._train_X_lf = X_lf.loc[combined.index] if len(combined) > 0 else X_lf
+            self._last_y = y.loc[combined.index] if len(combined) > 0 else y
+            return self
+
+        y_arr = combined["__y__"].to_numpy(dtype=float)
+        X_arr = combined.drop(columns="__y__").to_numpy(dtype=float)
+
+        # Step 5: OLS via lstsq (handles rank-deficiency via SVD)
+        X_aug = np.hstack([np.ones((T_eff, 1)), X_arr])
+        coef_hat, *_ = np.linalg.lstsq(X_aug, y_arr, rcond=None)
+        self._coef = coef_hat.astype(float)
+        # Expose intercept as a named float attribute (test-spec.md PI-8)
+        self._intercept = float(self._coef[0])
+        self._train_X_lf = X_lf.loc[combined.index]
+        self._last_y = y.loc[combined.index]
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Predict using fitted U-MIDAS OLS coefficients.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix with same structure as used in fit().
+
+        Returns
+        -------
+        np.ndarray
+            Predicted values, shape (len(X),).
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"X must be a pd.DataFrame; got {type(X)!r}")
+        if len(X) == 0:
+            return np.zeros(0, dtype=float)
+        if self._coef is None or self._train_X_lf is None:
+            return np.zeros(len(X), dtype=float)
+
+        # Step 1: Reproduce lag-stacking
+        X_lf = self._build_lag_matrix(X, self._K_fit)
+
+        # Step 2: Optionally prepend y_lag1 using last training y
+        if self.include_y_lag and self._last_y is not None:
+            y_lag1_val = float(self._last_y.iloc[-1])
+            y_lag1_col = pd.Series(
+                y_lag1_val, index=X_lf.index, name="y_lag1"
+            )
+            X_lf = pd.concat([y_lag1_col.to_frame(), X_lf], axis=1)
+
+        # Step 3: OLS predict
+        X_arr = (
+            X_lf
+            .reindex(columns=self._train_X_lf.columns, fill_value=0.0)
+            .to_numpy(dtype=float)
+        )
+        n_rows = len(X_arr)
+        X_aug = np.hstack([np.ones((n_rows, 1)), X_arr])
+        preds = X_aug @ self._coef
+        return preds.astype(float)
 
 
 def _resolve_custom_model(family: str):

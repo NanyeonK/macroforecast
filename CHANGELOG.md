@@ -5,6 +5,51 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added — Cycle 48 (2026-05-21) — MIDAS Family Honesty Pass
+
+Promoted 4 L4 families from `future` to `operational` (MIDAS mixed-frequency
+regression). L4 operational count: 42 → 46.
+
+- `midas_almon`: Almon polynomial lag weights estimated by multi-start
+  Nelder-Mead NLS. Implements Ghysels, Santa-Clara & Valkanov (2004) "The
+  MIDAS Touch", §2 eq. (3). Weight function `b(k; θ) = Σ_q θ_q k^q` with
+  non-negativity clamp and optional sum-to-one normalization. Params:
+  `freq_ratio`, `n_lags_high`, `polynomial_order`, `sum_to_one`, `n_starts`,
+  `random_state`.
+
+- `midas_beta`: Beta distribution kernel lag weights by multi-start NLS.
+  Implements Ghysels, Sinko & Valkanov (2007) "MIDAS Regressions", §2.
+  Weight function `b(k) ∝ x_k^{a-1} (1-x_k)^{b-1}` where `x_k = (k+1)/(K+1)`;
+  initial point `[1, 1]` (uniform Beta); restarts drawn from Gamma(2,1).
+  Params: `freq_ratio`, `n_lags_high`, `sum_to_one`, `n_starts`, `random_state`.
+
+- `midas_step`: Piecewise-constant step-function lag weights by OLS. Implements
+  the restricted MIDAS variant in Foroni, Marcellino & Schumacher (2015)
+  "Unrestricted Mixed Data Sampling", §2.2. Groups the `K` HF lags into `S`
+  equal-size blocks; assigns one coefficient per block via `lstsq`.
+  Params: `freq_ratio`, `n_lags_high`, `n_steps`.
+
+- `dfm_unrestricted_midas`: Unrestricted MIDAS (U-MIDAS) by OLS with optional
+  AR(1) y-lag term. Implements Foroni, Marcellino & Schumacher (2015) §3 eq.
+  (7) and eq. (20); lag order selection via BIC/AIC follows Marcellino &
+  Schumacher (2010). `n_lags_high` accepts an integer (fixed K), `"bic"`, or
+  `"aic"`. Params: `freq_ratio`, `n_lags_high`, `include_y_lag`, `random_state`.
+
+All four classes share the per-origin seed contract (`random_state = base_seed
++ origin_position`) from #279. The L3 MIDAS feature-engineering ops (`midas`,
+`u_midas`) are unchanged.
+
+### Changed — Cycle 48 (2026-05-21)
+
+- `macroforecast/core/ops/l4_ops.py`: `OPERATIONAL_MODEL_FAMILIES` gains 4
+  entries; `FUTURE_MODEL_FAMILIES` reduced from 5 entries to 1 (`realized_garch`
+  only). `MODEL_FAMILY_STATUS` dict updates automatically.
+- `macroforecast/core/runtime.py`: Added 4 dispatch branches in `_build_l4_model`
+  and 4 private model classes (`_MidasAlmonModel`, `_MidasBetaModel`,
+  `_MidasStepModel`, `_UnrestrictedMidasModel`). Two-attribute design
+  (`_w_hat_effective` + zero-padded `_w_hat`) satisfies both the PI-7 invariant
+  and the `n_lags_high != X.shape[1]` edge case.
+
 ### Added -- Cycle 47 (2026-05-21) -- L3 Feature Selection Honesty Pass
 
 Five L3 feature-selection ops promoted from `status="future"` to

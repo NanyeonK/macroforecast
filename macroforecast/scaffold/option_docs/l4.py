@@ -1888,6 +1888,467 @@ _PI_BAI_NG = OptionDoc(
 )
 
 
+# ---------------------------------------------------------------------------
+# C48 — MIDAS family honesty pass (2026-05-21).
+# Four families promoted from future to operational.
+# References:
+#   Ghysels, Santa-Clara & Valkanov (2004) "The MIDAS Touch"
+#   Ghysels, Sinko & Valkanov (2007) "MIDAS Regressions"
+#   Foroni, Marcellino & Schumacher (2015) "Unrestricted Mixed Data Sampling"
+# ---------------------------------------------------------------------------
+
+_F_MIDAS_ALMON = _f(
+    "midas_almon",
+    "MIDAS with Almon polynomial lag weights (Ghysels-Santa-Clara-Valkanov 2004).",
+    (
+        "Estimates mixed-frequency regressions via non-linear least squares "
+        "(Nelder-Mead) on Almon polynomial lag weights. The weight function "
+        "``b(k; θ) = Σ_{q=0}^{Q} θ_q · k^q`` (Ghysels, Santa-Clara & "
+        "Valkanov 2004, §2 eq. 3) maps lag index ``k`` to a scalar weight; "
+        "weights are clamped to non-negative values and optionally normalized "
+        "to sum to one. The full parameter vector is ``(θ_0, ..., θ_Q, μ, β)`` "
+        "where ``μ`` is the intercept and ``β`` is the overall slope multiplier.\n\n"
+        "``params.freq_ratio`` (default 1) governs the mixed-frequency "
+        "contract. When ``freq_ratio > 1`` the model internally calls "
+        "``_midas_lag_stack`` to build the high-frequency lag design matrix "
+        "from a raw HF DataFrame. When ``freq_ratio = 1`` (default) X is "
+        "treated as already low-frequency aligned -- this is the primary "
+        "usage path following an upstream L3 ``midas`` or ``u_midas`` op.\n\n"
+        "Multi-start NLS uses ``params.n_starts`` restarts (default 5): "
+        "start 0 is canonical (θ_0 = 1, rest zero → flat weights); remaining "
+        "starts perturb θ from ``N(0, 0.1)``. Seed propagated from L0 via "
+        "the per-origin RNG contract (#279).\n\n"
+        "Two weight attributes are maintained: ``_w_hat`` (length "
+        "``n_lags_high``, zero-padded when ``K_eff < n_lags_high``) for "
+        "external inspection; ``_w_hat_effective`` (length ``K_eff``) for "
+        "internal predict matmul. This resolves the ``n_lags_high != "
+        "X.shape[1]`` edge case at ``freq_ratio = 1``."
+    ),
+    (
+        "Mixed-frequency macro forecasting where monthly or weekly predictors "
+        "inform a quarterly target. Parsimonious alternative to U-MIDAS when "
+        "K is large relative to T."
+    ),
+    when_not_to_use=(
+        "Very short samples (T < K + Q + 3) -- the model falls back to "
+        "uniform weights and mean intercept. When frequency alignment has "
+        "already been handled by an upstream L3 op and ``freq_ratio = 1`` is "
+        "sufficient, prefer ``midas_step`` (OLS, cheaper) or "
+        "``dfm_unrestricted_midas`` (U-MIDAS, more flexible)."
+    ),
+    references=(
+        _REF_DESIGN_L4,
+        Reference(
+            citation=(
+                "Ghysels, Santa-Clara & Valkanov (2004) 'The MIDAS Touch: "
+                "Mixed Data Sampling Regression Models', CIRANO Working Paper."
+            )
+        ),
+    ),
+    related_options=("midas_beta", "midas_step", "dfm_unrestricted_midas"),
+    op_page=True,
+    op_func_name="midas_almon",
+    parameters=(
+        ParameterDoc(
+            name="freq_ratio",
+            type="int",
+            default=1,
+            constraint=">=1",
+            description=(
+                "High-frequency periods per low-frequency period (m). "
+                "1 = X is already LF-aligned (primary path). "
+                ">1 = model internally lag-stacks X via ``_midas_lag_stack``."
+            ),
+        ),
+        ParameterDoc(
+            name="n_lags_high",
+            type="int",
+            default=12,
+            constraint=">=1",
+            description="Number of high-frequency lags K to include in the weight vector.",
+        ),
+        ParameterDoc(
+            name="polynomial_order",
+            type="int",
+            default=2,
+            constraint=">=0",
+            description="Almon polynomial degree Q. Number of θ hyperparameters is Q+1.",
+        ),
+        ParameterDoc(
+            name="sum_to_one",
+            type="bool",
+            default=True,
+            description="Normalize lag weights to sum to 1 after non-negativity clamp.",
+        ),
+        ParameterDoc(
+            name="max_iter",
+            type="int",
+            default=200,
+            description="Maximum Nelder-Mead iterations per start.",
+        ),
+        ParameterDoc(
+            name="n_starts",
+            type="int",
+            default=5,
+            constraint=">=1",
+            description="Number of NLS restarts. Start 0 is canonical; remaining starts perturb θ.",
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            description="RNG seed for perturbed NLS starts. Propagated from L0 via per-origin RNG contract (#279).",
+        ),
+    ),
+    data_args=(
+        ParameterDoc(
+            name="X",
+            type="pd.DataFrame",
+            default=REQUIRED,
+            description=(
+                "Feature matrix as a DataFrame. When ``freq_ratio = 1``: "
+                "LF-aligned lag columns (one column per lag feature). "
+                "When ``freq_ratio > 1``: raw HF DataFrame that is internally "
+                "lag-stacked. Shape (n_samples, n_features)."
+            ),
+        ),
+        ParameterDoc(
+            name="y",
+            type="pd.Series",
+            default=REQUIRED,
+            description="Low-frequency target series aligned to the LF index.",
+        ),
+    ),
+    return_type="_MidasAlmonModel",
+    returns_attrs=(
+        ("._w_hat", "np.ndarray", "Estimated Almon lag weights, shape (n_lags_high,). Zero-padded when K_eff < n_lags_high."),
+        ("._theta_hat", "np.ndarray", "Estimated Almon polynomial coefficients, shape (Q+1,)."),
+        ("._intercept", "float", "Fitted intercept mu."),
+        ("._slope", "float", "Fitted overall slope beta."),
+        ("._converged", "bool", "NLS convergence flag (True if any start converged)."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_rows,)."),
+    ),
+)
+
+_F_MIDAS_BETA = _f(
+    "midas_beta",
+    "MIDAS with Beta distribution kernel lag weights (Ghysels-Sinko-Valkanov 2007).",
+    (
+        "Estimates mixed-frequency regressions via non-linear least squares "
+        "(Nelder-Mead) on Beta distribution kernel weights. The weight "
+        "function ``b(k) ∝ x_k^{a-1} · (1-x_k)^{b-1}`` (Ghysels, Sinko & "
+        "Valkanov 2007, §2) maps normalized lag positions "
+        "``x_k = (k+1)/(K+1) ∈ (0,1)`` to scalar weights. Only 2 shape "
+        "parameters ``(a, b)`` control the entire lag profile, making this "
+        "the most parsimonious MIDAS variant.\n\n"
+        "Frequency contract and multi-start NLS are identical to "
+        "``midas_almon``. Start 0: ``[1, 1]`` (uniform Beta = equal "
+        "weights). Perturbed starts: ``a, b ~ Gamma(2, 1)`` to keep both "
+        "parameters positive naturally. Post-optimization clamp: "
+        "``a, b >= 1e-3``.\n\n"
+        "The two-attribute design (``_w_hat`` zero-padded to ``n_lags_high``; "
+        "``_w_hat_effective`` of length ``K_eff``) is identical to "
+        "``midas_almon``."
+    ),
+    (
+        "Parsimonious mixed-frequency forecasting -- only 2 shape parameters "
+        "regardless of K. Suitable when T is small relative to K, making the "
+        "Almon polynomial over-parameterized."
+    ),
+    when_not_to_use=(
+        "When the lag weight profile is known to be non-Beta-shaped (e.g., "
+        "step-function or flat). Use ``midas_step`` or ``midas_almon`` instead."
+    ),
+    references=(
+        _REF_DESIGN_L4,
+        Reference(
+            citation=(
+                "Ghysels, Sinko & Valkanov (2007) 'MIDAS Regressions: "
+                "Further Results and New Directions', Econometric Reviews 26(1)."
+            )
+        ),
+    ),
+    related_options=("midas_almon", "midas_step", "dfm_unrestricted_midas"),
+    op_page=True,
+    op_func_name="midas_beta",
+    parameters=(
+        ParameterDoc(
+            name="freq_ratio",
+            type="int",
+            default=1,
+            constraint=">=1",
+            description="High-frequency periods per low-frequency period. 1 = X already LF-aligned.",
+        ),
+        ParameterDoc(
+            name="n_lags_high",
+            type="int",
+            default=12,
+            constraint=">=1",
+            description="Number of high-frequency lags K.",
+        ),
+        ParameterDoc(
+            name="sum_to_one",
+            type="bool",
+            default=True,
+            description="Normalize weights to sum to 1 (always True by construction of Beta kernel; parameter retained for API symmetry with midas_almon).",
+        ),
+        ParameterDoc(
+            name="max_iter",
+            type="int",
+            default=200,
+            description="Maximum Nelder-Mead iterations per start.",
+        ),
+        ParameterDoc(
+            name="n_starts",
+            type="int",
+            default=5,
+            constraint=">=1",
+            description="Number of NLS restarts. Start 0 uses [1,1]; remaining starts draw a, b from Gamma(2,1).",
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            description="RNG seed for perturbed NLS starts. Propagated from L0 via per-origin RNG contract (#279).",
+        ),
+    ),
+    data_args=(
+        ParameterDoc(
+            name="X",
+            type="pd.DataFrame",
+            default=REQUIRED,
+            description=(
+                "Feature matrix as a DataFrame. When ``freq_ratio = 1``: "
+                "LF-aligned lag columns. When ``freq_ratio > 1``: raw HF "
+                "DataFrame internally lag-stacked. Shape (n_samples, n_features)."
+            ),
+        ),
+        ParameterDoc(
+            name="y",
+            type="pd.Series",
+            default=REQUIRED,
+            description="Low-frequency target series aligned to the LF index.",
+        ),
+    ),
+    return_type="_MidasBetaModel",
+    returns_attrs=(
+        ("._w_hat", "np.ndarray", "Estimated Beta kernel lag weights, shape (n_lags_high,). Zero-padded when K_eff < n_lags_high."),
+        ("._theta_hat", "np.ndarray", "Estimated Beta shape parameters [a, b], shape (2,)."),
+        ("._intercept", "float", "Fitted intercept mu."),
+        ("._slope", "float", "Fitted overall slope beta."),
+        ("._converged", "bool", "NLS convergence flag."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_rows,)."),
+    ),
+)
+
+_F_MIDAS_STEP = _f(
+    "midas_step",
+    "MIDAS with piecewise-constant step-function weights, OLS (Foroni-Marcellino-Schumacher 2015).",
+    (
+        "Restricted MIDAS with a step-function lag weight profile. The K "
+        "HF lags are partitioned into S equal-size groups; within each "
+        "group all lags share one coefficient estimated by OLS on the "
+        "group-mean aggregate (Foroni, Marcellino & Schumacher 2015, "
+        "§2.2). Group boundaries: group s covers lags in "
+        "``[s*K//S, (s+1)*K//S)``.\n\n"
+        "No stochastic initialization (OLS is deterministic). Closed-form "
+        "via ``numpy.linalg.lstsq(rcond=None)``.\n\n"
+        "``params.n_steps`` defaults to ``freq_ratio`` (one group per HF "
+        "sub-period). ``params.freq_ratio = 1`` treats X columns as a flat "
+        "lag sequence grouped by position index."
+    ),
+    (
+        "Fast, interpretable mixed-frequency baseline. Useful when K is "
+        "large and only the coarse lag structure matters. No NLS overhead."
+    ),
+    when_not_to_use=(
+        "When the lag weight profile is smooth (use ``midas_almon`` or "
+        "``midas_beta``) or when the fully-flexible U-MIDAS parameterization "
+        "is affordable (use ``dfm_unrestricted_midas``)."
+    ),
+    references=(
+        _REF_DESIGN_L4,
+        Reference(
+            citation=(
+                "Foroni, Marcellino & Schumacher (2015) 'Unrestricted Mixed "
+                "Data Sampling (MIDAS): MIDAS Regressions with Unrestricted "
+                "Lag Polynomials', Journal of the Royal Statistical Society: "
+                "Series A 178(1)."
+            )
+        ),
+    ),
+    related_options=("midas_almon", "midas_beta", "dfm_unrestricted_midas"),
+    op_page=True,
+    op_func_name="midas_step",
+    parameters=(
+        ParameterDoc(
+            name="freq_ratio",
+            type="int",
+            default=1,
+            constraint=">=1",
+            description="High-frequency periods per low-frequency period. 1 = X already LF-aligned.",
+        ),
+        ParameterDoc(
+            name="n_lags_high",
+            type="int",
+            default=12,
+            constraint=">=1",
+            description="Number of high-frequency lags K to include.",
+        ),
+        ParameterDoc(
+            name="n_steps",
+            type="int",
+            default="freq_ratio",
+            constraint=">=1",
+            description=(
+                "Number of piecewise-constant groups S. Defaults to "
+                "``freq_ratio`` (one group per HF sub-period). Determines "
+                "the coarseness of the lag weight profile."
+            ),
+        ),
+    ),
+    data_args=(
+        ParameterDoc(
+            name="X",
+            type="pd.DataFrame",
+            default=REQUIRED,
+            description=(
+                "Feature matrix as a DataFrame. When ``freq_ratio = 1``: "
+                "LF-aligned lag columns grouped by position. When "
+                "``freq_ratio > 1``: raw HF DataFrame internally lag-stacked."
+            ),
+        ),
+        ParameterDoc(
+            name="y",
+            type="pd.Series",
+            default=REQUIRED,
+            description="Low-frequency target series aligned to the LF index.",
+        ),
+    ),
+    return_type="_MidasStepModel",
+    returns_attrs=(
+        ("._step_coef", "np.ndarray", "OLS step-group coefficients, shape (n_steps,)."),
+        ("._intercept", "float", "OLS intercept."),
+        ("._group_boundaries", "list[tuple[int,int]]", "Lag index boundaries per group, e.g. [(0,4),(4,8),(8,12)]."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_rows,)."),
+    ),
+)
+
+_F_DFM_UNRESTRICTED_MIDAS = _f(
+    "dfm_unrestricted_midas",
+    "Unrestricted MIDAS (U-MIDAS) -- OLS on all HF lags (Foroni-Marcellino-Schumacher 2015).",
+    (
+        "Unrestricted mixed-data sampling regression: every HF lag enters "
+        "linearly with its own OLS coefficient ``ψ_k`` (Foroni, Marcellino "
+        "& Schumacher 2015, §3 eq. 7). The lag polynomial is fully flexible "
+        "with no shape restriction, making U-MIDAS equivalent to OLS on the "
+        "lag-stacked design matrix.\n\n"
+        "``params.n_lags_high`` accepts an integer (fixed K), ``'bic'``, or "
+        "``'aic'`` for information-criterion lag selection (Marcellino & "
+        "Schumacher 2010; the pre-existing ``_bic_select_k`` helper is "
+        "reused). When ``freq_ratio = 1``, BIC/AIC selection defaults to "
+        "``K = X.shape[1]`` (all available columns).\n\n"
+        "``params.include_y_lag = True`` augments the design matrix with the "
+        "lagged dependent variable ``y_{t-1}`` (eq. 20), yielding a "
+        "mixed-frequency ADL specification. In predict, the last observed "
+        "``y`` value is used as the y-lag.\n\n"
+        "OLS via ``numpy.linalg.lstsq(rcond=None)``. No stochastic step; "
+        "``random_state`` is accepted for API symmetry but unused."
+    ),
+    (
+        "Flexible mixed-frequency benchmark when T is large relative to K. "
+        "BIC/AIC lag selection avoids manual K tuning. Pairs well with "
+        "upstream L3 ``u_midas`` for feature preprocessing."
+    ),
+    when_not_to_use=(
+        "When T is small relative to K (use ``midas_almon`` or "
+        "``midas_beta`` for parsimonious alternatives). The 'dfm_' prefix "
+        "is a historical naming artifact -- this is not a dynamic factor model."
+    ),
+    references=(
+        _REF_DESIGN_L4,
+        Reference(
+            citation=(
+                "Foroni, Marcellino & Schumacher (2015) 'Unrestricted Mixed "
+                "Data Sampling (MIDAS): MIDAS Regressions with Unrestricted "
+                "Lag Polynomials', Journal of the Royal Statistical Society: "
+                "Series A 178(1)."
+            )
+        ),
+        Reference(
+            citation=(
+                "Marcellino & Schumacher (2010) 'Factor MIDAS for Nowcasting "
+                "and Forecasting with Ragged-Edge Data', Journal of Applied "
+                "Econometrics 25(7)."
+            )
+        ),
+    ),
+    related_options=("midas_almon", "midas_beta", "midas_step", "dfm_mixed_mariano_murasawa"),
+    op_page=True,
+    op_func_name="dfm_unrestricted_midas",
+    parameters=(
+        ParameterDoc(
+            name="freq_ratio",
+            type="int",
+            default=1,
+            constraint=">=1",
+            description="High-frequency periods per low-frequency period. 1 = X already LF-aligned.",
+        ),
+        ParameterDoc(
+            name="n_lags_high",
+            type='int | str enum {"bic", "aic"}',
+            default='"bic"',
+            description=(
+                "Lag order K. Integer fixes K; ``'bic'`` or ``'aic'`` selects K "
+                "via information criterion (``_bic_select_k``). When "
+                "``freq_ratio = 1`` and IC selected, defaults to ``X.shape[1]``."
+            ),
+        ),
+        ParameterDoc(
+            name="include_y_lag",
+            type="bool",
+            default=False,
+            description=(
+                "Include lagged dependent variable y_{t-1} as an additional "
+                "predictor (eq. 20 in Foroni et al. 2015). Yields a "
+                "mixed-frequency ADL specification."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            description="Accepted for API symmetry with NLS families; unused (OLS is deterministic).",
+        ),
+    ),
+    data_args=(
+        ParameterDoc(
+            name="X",
+            type="pd.DataFrame",
+            default=REQUIRED,
+            description=(
+                "Feature matrix as a DataFrame. When ``freq_ratio = 1``: "
+                "LF-aligned lag columns. When ``freq_ratio > 1``: raw HF "
+                "DataFrame internally lag-stacked to K lags."
+            ),
+        ),
+        ParameterDoc(
+            name="y",
+            type="pd.Series",
+            default=REQUIRED,
+            description="Low-frequency target series aligned to the LF index.",
+        ),
+    ),
+    return_type="_UnrestrictedMidasModel",
+    returns_attrs=(
+        ("._coef", "np.ndarray", "OLS coefficient vector, shape (K_eff + 1,) with intercept at index 0."),
+        ("._intercept", "float", "OLS intercept (= _coef[0])."),
+        ("._K_fit", "int", "Resolved number of HF lags K used in fitting."),
+        (".predict(X)", "np.ndarray", "Predictions for new data X, shape (n_rows,)."),
+    ),
+)
+
+
 register(
     _F_OLS,
     _F_RIDGE,
@@ -1951,4 +2412,9 @@ register(
     # v0.9 Phase C M12 pi_correction (Bai-Ng 2006)
     _PI_NONE,
     _PI_BAI_NG,
+    # C48 MIDAS family honesty pass (2026-05-21)
+    _F_MIDAS_ALMON,
+    _F_MIDAS_BETA,
+    _F_MIDAS_STEP,
+    _F_DFM_UNRESTRICTED_MIDAS,
 )

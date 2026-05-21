@@ -97,6 +97,22 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "ets",
     "theta_method",
     "holt_winters",
+    # Promoted in v0.9.3 C48 (MIDAS family honesty pass):
+    # - midas_almon: Ghysels-Santa-Clara-Valkanov (2004) Almon polynomial
+    #   lag weights, NLS estimation of slope + Q+1 polynomial coefficients.
+    # - midas_beta: Ghysels-Sinko-Valkanov (2007) Beta distribution kernel
+    #   weights (2 shape params a, b), NLS estimation.
+    # - midas_step: Foroni-Marcellino-Schumacher (2015) piecewise-constant
+    #   step-function weights (S groups), closed-form OLS.
+    # - dfm_unrestricted_midas: Foroni-Marcellino-Schumacher (2015)
+    #   Unrestricted MIDAS (U-MIDAS) -- every HF lag gets a free OLS
+    #   coefficient; optional BIC/AIC lag-order selection. The "dfm_" prefix
+    #   is a historical naming artifact; this is plain U-MIDAS with no PCA
+    #   factor step (distinct from dfm_mixed_mariano_murasawa).
+    "midas_almon",
+    "midas_beta",
+    "midas_step",
+    "dfm_unrestricted_midas",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -122,11 +138,6 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
-    # always future (Phase 1 design): MIDAS family awaits its own runtime.
-    "midas_almon",
-    "midas_beta",
-    "midas_step",
-    "dfm_unrestricted_midas",
     # Phase C-3 audit-fix (M9): the canonical name ``realized_garch`` is
     # reserved for the Hansen-Huang-Shek (2012) joint return +
     # measurement-equation MLE. Until that runtime exists (awaiting

@@ -106,10 +106,11 @@ def test_l4_dfm_mixed_mariano_murasawa_operational_after_kalman_landing():
     assert not report.has_hard_errors
 
 
-def test_l4_midas_almon_future_rejected():
+def test_l4_midas_almon_operational_after_c48():
+    # C48 honesty pass promotes midas_almon to operational. The validator
+    # must no longer hard-reject it (it was previously a "future" family).
     report = validate_layer(parse_layer_yaml(make_l4_yaml(family="midas_almon", n_lag=12, polynomial_degree=3)))
-    assert report.has_hard_errors
-    assert any("future" in issue.message.lower() for issue in report.hard_errors)
+    assert not report.has_hard_errors
 
 
 def test_l4_all_midas_future_families_rejected():
@@ -243,17 +244,26 @@ def test_l4_operational_model_families_registered():
     assert all(get_family_status(family) == "operational" for family in OPERATIONAL_MODEL_FAMILIES)
 
 
-def test_l4_future_model_families_includes_midas_and_v0_1_demotions():
-    # PR-B honesty pass demoted 5 families; v0.2 has since re-promoted
-    # bvar_minnesota / bvar_normal_inverse_wishart with proper closed-form
-    # Minnesota / NIW posterior mean estimators (#185 / #186). The other
-    # PR-B demotions remain future until their tracking issue lands.
-    expected_future = {
-        "midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas",
-    }
-    assert expected_future <= set(FUTURE_MODEL_FAMILIES)
+def test_l4_future_model_families_c48_midas_promoted():
+    # C48 honesty pass (v0.9.3) promoted the 4 MIDAS families from FUTURE to
+    # OPERATIONAL.  FUTURE now contains only realized_garch (C49 target).
+    # Guard: midas families must NOT be in FUTURE any more.
+    for promoted in (
+        "midas_almon",
+        "midas_beta",
+        "midas_step",
+        "dfm_unrestricted_midas",
+    ):
+        assert promoted not in FUTURE_MODEL_FAMILIES, (
+            f"{promoted!r} should be OPERATIONAL after C48 promotion"
+        )
+        assert promoted in OPERATIONAL_MODEL_FAMILIES, (
+            f"{promoted!r} should be in OPERATIONAL_MODEL_FAMILIES after C48"
+        )
+    # realized_garch still future (C49)
+    assert "realized_garch" in FUTURE_MODEL_FAMILIES
     assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
-    # Every honesty-pass demotion must be promoted by v0.2 follow-ups.
+    # Every prior honesty-pass demotion must be promoted.
     for promoted in (
         "bvar_minnesota",
         "bvar_normal_inverse_wishart",

@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 42 option(s)
-- Future: 5 option(s)
+- Operational: 46 option(s)
+- Future: 1 option(s)
 
 ## Options
 
@@ -354,29 +354,29 @@ Holt-Winters additive / multiplicative seasonal exponential smoothing.
 
 See [holt_winters function page](../family/holt_winters.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.holt_winters_fit``.
 
-### `midas_almon`  --  future
+### `midas_almon`  --  operational
 
-_(no schema description for `midas_almon`)_
+MIDAS with Almon polynomial lag weights (Ghysels-Santa-Clara-Valkanov 2004).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.
+See [midas_almon function page](../family/midas_almon.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.midas_almon``.
 
-### `midas_beta`  --  future
+### `midas_beta`  --  operational
 
-_(no schema description for `midas_beta`)_
+MIDAS with Beta distribution kernel lag weights (Ghysels-Sinko-Valkanov 2007).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.
+See [midas_beta function page](../family/midas_beta.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.midas_beta``.
 
-### `midas_step`  --  future
+### `midas_step`  --  operational
 
-_(no schema description for `midas_step`)_
+MIDAS with piecewise-constant step-function weights, OLS (Foroni-Marcellino-Schumacher 2015).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.
+See [midas_step function page](../family/midas_step.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.midas_step``.
 
-### `dfm_unrestricted_midas`  --  future
+### `dfm_unrestricted_midas`  --  operational
 
-_(no schema description for `dfm_unrestricted_midas`)_
+Unrestricted MIDAS (U-MIDAS) -- OLS on all HF lags (Foroni-Marcellino-Schumacher 2015).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l4.py`` are welcome.
+See [dfm_unrestricted_midas function page](../family/dfm_unrestricted_midas.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.dfm_unrestricted_midas``.
 
 ### `realized_garch`  --  future
 

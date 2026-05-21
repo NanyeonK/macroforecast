@@ -322,10 +322,9 @@ def test_execute_minimal_forecast_rejects_unknown_family():
 
 
 def test_execute_minimal_forecast_rejects_future_family():
-    # The Phase-1 design keeps the MIDAS family as future (no runtime).
-    # The v0.2 honesty-pass demotions have all been re-promoted, so
-    # ``midas_almon`` is the canonical hard-rejected example.
-    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: midas_almon")
+    # C48 promoted the 4 MIDAS families to operational.
+    # ``realized_garch`` is the canonical hard-rejected example (still future, deferred to C49).
+    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: realized_garch")
     with pytest.raises(ValueError, match=r"future or unknown"):
         execute_minimal_forecast(yaml_text)
 
