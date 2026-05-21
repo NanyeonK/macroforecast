@@ -176,13 +176,20 @@ def test_dim2_l2_winsorize_and_zscore_outlier_paths(tmp_path):
     for policy in ("winsorize", "zscore_threshold"):
         recipe = _custom_recipe()
         recipe = recipe.replace("outlier_policy: none", f"outlier_policy: {policy}")
+        recipe = recipe.replace(
+            "imputation_policy: none_propagate",
+            "imputation_policy: none_propagate\n    imputation_temporal_rule: block_recompute",
+        )
         result = execute_recipe(recipe)
         log = result.cells[0].runtime_result.artifacts["l2_clean_panel_v1"].cleaning_log
         assert any(step.get("outlier") == policy for step in log["steps"])
 
 
 def test_dim2_l2_em_factor_imputation_runs():
-    recipe = _custom_recipe().replace("imputation_policy: none_propagate", "imputation_policy: em_factor")
+    recipe = _custom_recipe().replace(
+        "imputation_policy: none_propagate",
+        "imputation_policy: em_factor\n    imputation_temporal_rule: block_recompute",
+    )
     result = execute_recipe(recipe)
     log = result.cells[0].runtime_result.artifacts["l2_clean_panel_v1"].cleaning_log
     assert any(step.get("imputation") == "em_factor" for step in log["steps"])
