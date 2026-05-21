@@ -856,7 +856,7 @@
 <p><strong>When to use</strong></p>
 <p>Benchmark and methods studies where vintage realism is not the primary focus; replication of published FRED-MD/QD benchmarks; any study comparing models on the same revised data.</p>
 <p><strong>When NOT to use</strong></p>
-<p>Real-time evaluation papers where data revisions materially affect conclusions – use <code class="docutils literal notranslate"><span class="pre">real_time_alfred</span></code> when it becomes available (currently a future feature, Cycle 14 K-4).</p>
+<p>Real-time evaluation papers where data revisions materially affect conclusions – use <code class="docutils literal notranslate"><span class="pre">real_time_alfred</span></code> (operational as of v0.9.3, Cycle 50).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>Stark &amp; Croushore (2002) ‘Forecasting with a real-time data set for macroeconomists’, Journal of Macroeconomics 24(4). (doi:10.1016/S0164-0704(02)00041-0)</p></li>
@@ -870,10 +870,10 @@
 <h3><code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code>  –  operational<a class="headerlink" href="#pseudo-oos-on-revised-data-operational" title="Link to this heading">#</a></h3>
 <p>Pseudo out-of-sample using revised series; explicit acknowledgement of using post-hoc data.</p>
 <p>Numerically identical to <code class="docutils literal notranslate"><span class="pre">final_revised_data</span></code> in all released versions (v0.9.x and earlier): both options produce the same forecasts from the same revised data. The distinction is purely semantic – selecting <code class="docutils literal notranslate"><span class="pre">pseudo_oos_on_revised_data</span></code> records the explicit recipe-author acknowledgement that revised data is being used for out-of-sample evaluation.</p>
-<p>This axis value is exposed so that future versions can route real-time vintage requests through the same axis without breaking existing recipes. Studies that compare pseudo-OOS-on-revised against real-time ALFRED vintages (once Cycle 14 K-4 is implemented) will use this option to label the revised-data branch explicitly.</p>
+<p>This axis value is exposed so that recipes choosing pseudo-OOS-on-revised data are explicit about that choice. Studies that compare pseudo-OOS-on-revised against real-time ALFRED vintages use this option to label the revised-data branch explicitly, while <code class="docutils literal notranslate"><span class="pre">real_time_alfred</span></code> handles the vintage-correct branch.</p>
 <p>Pairs with <code class="docutils literal notranslate"><span class="pre">vintage_policy:</span> <span class="pre">current_vintage</span></code>.</p>
 <p><strong>When to use</strong></p>
-<p>Studies explicitly contrasting pseudo-OOS-on-revised-data vs real-time vintage performance (once <code class="docutils literal notranslate"><span class="pre">real_time_alfred</span></code> is implemented); recipe scripts that want to make the revised-data protocol visible in the YAML rather than relying on the default.</p>
+<p>Studies explicitly contrasting pseudo-OOS-on-revised-data vs real-time vintage performance; recipe scripts that want to make the revised-data protocol visible in the YAML rather than relying on the default.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>Stark &amp; Croushore (2002) ‘Forecasting with a real-time data set for macroeconomists’, Journal of Macroeconomics 24(4). (doi:10.1016/S0164-0704(02)00041-0)</p></li>

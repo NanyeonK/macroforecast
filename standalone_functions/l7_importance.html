@@ -662,7 +662,7 @@
 </section>
 <section id="shap-linear-importance-result-any-x-np-ndarray-pd-dataframe-shapimportanceresult">
 <h3><code class="docutils literal notranslate"><span class="pre">shap_linear_importance(result:</span> <span class="pre">Any,</span> <span class="pre">X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame)</span> <span class="pre">-&gt;</span> <span class="pre">SHAPImportanceResult</span></code><a class="headerlink" href="#shap-linear-importance-result-any-x-np-ndarray-pd-dataframe-shapimportanceresult" title="Link to this heading">#</a></h3>
-<p>SHAP LinearExplainer importance (no extra deps for linear models).</p>
+<p>SHAP LinearExplainer importance. Requires: pip install macroforecast[shap]</p>
 <p>Returns <code class="docutils literal notranslate"><span class="pre">SHAPImportanceResult</span></code>: <code class="docutils literal notranslate"><span class="pre">.expected_value_</span></code>, <code class="docutils literal notranslate"><span class="pre">.explainer_type</span></code>, <code class="docutils literal notranslate"><span class="pre">.feature_names_</span></code>, <code class="docutils literal notranslate"><span class="pre">.shap_values_</span></code>, <code class="docutils literal notranslate"><span class="pre">.summary()</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">80</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
@@ -670,6 +670,7 @@
 <span class="n">fit_result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">ols_fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 <span class="n">imp</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">shap_linear_importance</span><span class="p">(</span><span class="n">fit_result</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">imp</span><span class="o">.</span><span class="n">shap_values_</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="c1"># Requires: pip install macroforecast[shap]</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="../encyclopedia/l7/op/shap_linear.html"><span class="std std-doc">Encyclopedia</span></a></p>
