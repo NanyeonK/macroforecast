@@ -932,6 +932,10 @@ def _register_l3_5() -> None:
 
     sub = "L3_5_E_selected_features_post_selection"
     SV_DOCS = {
+        "none": (
+            "Disable feature-selection diagnostics for this layer.",
+            "Suppressing diagnostics when feature selection is present but its diagnostics are not needed, avoiding unnecessary overhead.",
+        ),
         "selected_list": (
             "List of selected features per OOS origin.",
             "Cheapest readout; the raw record of feature-selection decisions.",

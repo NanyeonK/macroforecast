@@ -29,6 +29,7 @@ def test_execute_l1_l2_materializes_inline_custom_panel():
         transform_policy: no_transform
         outlier_policy: none
         imputation_policy: mean
+        imputation_temporal_rule: block_recompute
         frame_edge_policy: keep_unbalanced
     """
     result = execute_l1_l2(yaml_text)
@@ -173,6 +174,7 @@ def test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells():
         outlier_policy: winsorize
         outlier_action: replace_with_cap_value
         imputation_policy: none_propagate
+        imputation_temporal_rule: block_recompute
         frame_edge_policy: keep_unbalanced
       leaf_config:
         winsorize_quantiles: [0.25, 0.75]
@@ -209,6 +211,7 @@ def test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics():
         transform_policy: no_transform
         outlier_policy: none
         imputation_policy: mean
+        imputation_temporal_rule: block_recompute
         frame_edge_policy: keep_unbalanced
     2_5_pre_post_preprocessing:
       enabled: true

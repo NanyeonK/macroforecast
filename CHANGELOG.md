@@ -5,6 +5,63 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Cycle 45 -- Test stabilization (15 pytest failures resolved)
+
+**Production bug fix:**
+
+- `macroforecast/core/runtime.py` (`materialize_l2`): Deferred L2
+  `_apply_frame_edge` truncation to per-origin L3 closure when
+  `imputation_temporal_rule=expanding_window_per_origin` and
+  `frame_edge_policy` is a NaN-dropping policy (`truncate_to_balanced` or
+  `drop_unbalanced_series`). Previously, `_apply_frame_edge` ran
+  unconditionally before per-origin imputation, silently dropping rows that
+  contained NaN cells which would have been filled by the deferred imputation
+  step. This caused 46% row loss on the realistic test fixture (48 monthly
+  obs truncated to 22), leaving too few aligned observations for L4
+  (`min_train_size` not satisfied). The deferred frame_edge is now applied
+  inside `_per_origin_callable` in `materialize_l3_minimal`, after per-origin
+  imputation, so NaN-dropping operates on already-imputed data. Policies
+  `keep_unbalanced` and `zero_fill_leading` are unaffected (no NaN dependency,
+  run at L2 bulk level as before). Restores data retention parity with
+  single-origin pipelines (closes 5 test failures #8-#12).
+
+**Scaffold fix:**
+
+- `macroforecast/scaffold/option_docs/diagnostics.py` (`_register_l3_5`):
+  Added `"none"` entry to `SV_DOCS` for `selection_view`. The `none` option
+  was added in Cycle 14 (L1-4 fix) to disable selection diagnostics without
+  raising an error, but the OptionDoc completeness test requires every valid
+  operational option to have a Tier-1 entry. No schema or runtime behavior
+  changed (closes 1 test failure #14).
+
+**Test corrections (stale tests from F-P1 deferral):**
+
+- `tests/core/test_runtime_l1_l2.py`: Added
+  `imputation_temporal_rule: block_recompute` to three tests
+  (`test_execute_l1_l2_materializes_inline_custom_panel`,
+  `test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells`,
+  `test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics`) to restore
+  bulk-L2 outlier/imputation code paths exercised before the F-P1 per-origin
+  deferral change was introduced (closes 3 test failures #1-#3).
+- `tests/core/test_v01_dimensions.py`: Added
+  `imputation_temporal_rule: block_recompute` to two tests
+  (`test_dim2_l2_winsorize_and_zscore_outlier_paths`,
+  `test_dim2_l2_em_factor_imputation_runs`) for the same reason (closes 2
+  test failures #4-#5).
+- `tests/core/test_v03_features.py`: Replaced `"decision_at_5pct"` with
+  `"decision"` in the `issubset` key check for the DMP multi-horizon test.
+  The canonical key was renamed in Cycle 15 M-3; `.keys()` only exposes the
+  new canonical key while `__getitem__` still supports the deprecated alias
+  (closes 1 test failure #13).
+
+**Environment skip gate:**
+
+- `tests/core/test_paper_helpers_e2e.py`
+  (`test_paper_09_hemisphere_neural_network`): Added
+  `pytest.importorskip("torch", ...)` at function entry so the test is skipped
+  rather than errored in CI environments that install `[ci]` extras only
+  (which excludes the `[deep]` extra / torch) (closes 1 test failure #15).
+
 ### Cycle 44 -- CI stabilization (mypy green + sphinx stale-check removal)
 
 **mypy fixes (26 errors resolved, 4 deferred):**

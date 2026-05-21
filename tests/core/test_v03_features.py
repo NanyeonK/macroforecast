@@ -125,7 +125,7 @@ def test_dmp_multi_horizon_runs_per_pair_target():
     key = ("dmp_multi_horizon", "b", "a", "y")
     assert key in out
     payload = out[key]
-    assert {"statistic", "p_value", "decision_at_5pct", "n_obs_stacked", "hac_kernel"}.issubset(payload.keys())
+    assert {"statistic", "p_value", "decision", "n_obs_stacked", "hac_kernel"}.issubset(payload.keys())
     # 40 origins × 3 horizons = 120 stacked observations.
     assert payload["n_obs_stacked"] == 120
 

@@ -394,6 +394,17 @@ def materialize_l2(
     # _per_origin_callable closure so stats are computed on data up to each
     # origin only (no lookahead leakage).
     _l2_imputation_temporal = resolved.get("imputation_temporal_rule", "expanding_window_per_origin")
+    # F-C45 fix: NaN-dropping frame_edge policies must also be deferred when
+    # imputation is deferred, because dropping NaNs before per-origin imputation
+    # silently discards rows that would be filled later (forward_fill / mean).
+    # Non-NaN-dropping policies (keep_unbalanced, zero_fill_leading) are
+    # independent of imputation order and can still run at L2 bulk level.
+    _nan_dropping_frame_policies = {"truncate_to_balanced", "drop_unbalanced_series"}
+    _frame_edge_policy = resolved.get("frame_edge_policy", "keep_unbalanced")
+    _defer_frame_edge = (
+        _l2_imputation_temporal == "expanding_window_per_origin"
+        and _frame_edge_policy in _nan_dropping_frame_policies
+    )
     if _l2_imputation_temporal == "expanding_window_per_origin":
         # Deferred to per-origin closure in materialize_l3_minimal.
         n_outliers = 0
@@ -403,7 +414,11 @@ def materialize_l2(
     else:
         df, n_outliers = _apply_outlier_policy(df, resolved, leaf_config, cleaning_log)
         df, n_imputed = _apply_imputation(df, resolved, cleaning_log)
-    df, n_truncated = _apply_frame_edge(df, resolved, cleaning_log)
+    if _defer_frame_edge:
+        n_truncated = 0
+        cleaning_log["steps"].append({"frame_edge": "deferred_per_origin"})
+    else:
+        df, n_truncated = _apply_frame_edge(df, resolved, cleaning_log)
 
     # Issue #251 -- post-pipeline custom L2 preprocessor hook.
     # ``leaf_config.custom_postprocessor`` accepts a name registered via
@@ -1387,11 +1402,31 @@ def materialize_l3_minimal(
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
     dag = l3_layer.normalize_to_dag_form(raw)
     df = l2_artifact.panel.data.copy()
+    # F-C45 fix: preserve the original un-imputed L2 data for use in the
+    # per-origin closure (which applies imputation per-origin to avoid lookahead).
+    df_raw_l2 = df.copy()
     target_name = l1_artifact.target or (
         l1_artifact.targets[0] if l1_artifact.targets else None
     )
     if not target_name or target_name not in df.columns:
         raise ValueError("minimal L3 runtime requires target column in L2 clean panel")
+
+    # F-C45 fix: when imputation is deferred to per-origin, the raw L2 df
+    # contains NaN cells that imputation would have filled. Running the
+    # full-sample L3 DAG on un-imputed data produces a near-empty aligned_index
+    # (because the post-DAG dropna drops almost every row). Pre-impute df with
+    # the L2 imputation policy (full-sample, no per-origin stats) ONLY for the
+    # purpose of computing aligned_index and the full-sample X/y arrays. The
+    # actual per-origin data cleaning is still done correctly inside the
+    # _per_origin_callable closure (which uses df_raw_l2), preserving the
+    # no-lookahead guarantee.
+    _l3_l2_imputation_temporal_for_dag = (
+        (l2_resolved or {}).get("imputation_temporal_rule", "expanding_window_per_origin")
+        if l2_resolved is not None
+        else "expanding_window_per_origin"
+    )
+    if _l3_l2_imputation_temporal_for_dag == "expanding_window_per_origin" and l2_resolved is not None:
+        df, _ = _apply_imputation(df, l2_resolved, {"steps": []})
 
     node_values = _execute_l3_dag(dag, df, target_name)
     sink_node = dag.nodes.get(dag.sinks.get("l3_features_v1", ""))
@@ -1452,9 +1487,12 @@ def materialize_l3_minimal(
     if expanding_node_ids:
         affected_node_ids = _l3_per_origin_affected_nodes(dag, expanding_node_ids)
         x_sink_id = sink_node.inputs[0].node_id
-        # Dataset reference for the closure -- copy to insulate from
-        # downstream mutation; the closure shouldn't affect L2 artifacts.
-        df_for_origin = df.copy()
+        # Dataset reference for the closure -- use the original un-imputed
+        # L2 data (df_raw_l2) so per-origin cleaning starts from raw NaN-laden
+        # data and applies imputation only up to each origin (no lookahead).
+        # F-C45: df_raw_l2 is preserved before the full-sample pre-imputation
+        # step that computes aligned_index above.
+        df_for_origin = df_raw_l2.copy()
         target_name_for_closure = target_name
         # Map the post-dropna aligned index (the index L4 sees) into df row
         # positions so the L4 walk-forward can pass an origin *date* and
@@ -1494,6 +1532,14 @@ def materialize_l3_minimal(
                 df_origin_input = _apply_imputation_per_origin(
                     df_origin_input, _l3_l2_resolved_ref, origin_ts
                 )
+                # F-C45 fix: apply deferred frame_edge after per-origin imputation
+                # so NaN-dropping policies (truncate_to_balanced, drop_unbalanced_series)
+                # operate on imputed data, not raw data with future NaN cells.
+                _fe_policy = (_l3_l2_resolved_ref or {}).get("frame_edge_policy", "keep_unbalanced")
+                if _fe_policy in {"truncate_to_balanced", "drop_unbalanced_series"}:
+                    df_origin_input, _ = _apply_frame_edge(
+                        df_origin_input, _l3_l2_resolved_ref, {"steps": []}
+                    )
             X_origin_full = materialize_l3_per_origin(
                 dag,
                 df_origin_input,
