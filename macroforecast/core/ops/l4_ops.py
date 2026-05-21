@@ -113,6 +113,13 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "midas_beta",
     "midas_step",
     "dfm_unrestricted_midas",
+    # Promoted in v0.9.3 C49 (realized_garch honesty pass):
+    # - realized_garch: Hansen, Huang & Shek (2012) joint return +
+    #   measurement-equation MLE. Implemented via manual scipy.optimize.minimize
+    #   on the joint log-likelihood (Option B; arch.RealizedGARCH not
+    #   available in arch>=6.0). The RV-as-exogenous approximation remains
+    #   as realized_garch_with_rv_exog (unchanged).
+    "realized_garch",
 )
 
 # Families whose v0.1 runtime did *not* faithfully implement the design's
@@ -138,14 +145,9 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
-    # Phase C-3 audit-fix (M9): the canonical name ``realized_garch`` is
-    # reserved for the Hansen-Huang-Shek (2012) joint return +
-    # measurement-equation MLE. Until that runtime exists (awaiting
-    # ``arch.RealizedGARCH`` upstream wiring or manual joint MLE), the
-    # name is FUTURE. The current RV-as-exogenous approximation is
-    # exposed under the honest name ``realized_garch_with_rv_exog``
-    # (operational).
-    "realized_garch",
+    # C49 honesty pass promoted ``realized_garch`` to OPERATIONAL (above).
+    # FUTURE_MODEL_FAMILIES is now empty. C50 targets: lstm_hidden_state,
+    # real_time_alfred.
 )
 
 
