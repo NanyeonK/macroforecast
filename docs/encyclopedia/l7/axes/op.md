@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 35 option(s)
-- Future: 1 option(s)
+- Operational: 36 option(s)
+- Future: 0 option(s)
 
 ## Options
 
