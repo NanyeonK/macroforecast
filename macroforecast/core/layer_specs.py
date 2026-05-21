@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from .dag import GatePredicate, LayerCategory, LayerId
 from .ops.registry import Rule
+
+if TYPE_CHECKING:
+    from macroforecast.scaffold.option_docs.types import ParameterDoc
 
 
 @dataclass(frozen=True)

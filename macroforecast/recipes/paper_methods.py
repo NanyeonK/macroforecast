@@ -1976,7 +1976,7 @@ def sparse_macro_factors_risk_premia(
             fold_mses.append(mse)
         q_mse[q] = float(np.mean(fold_mses))
 
-    q_selected = min(q_mse, key=q_mse.get)
+    q_selected = min(q_mse, key=lambda q: q_mse[q])
 
     # ------------------------------------------------------------------
     # 3. Screening on full data with q_selected
