@@ -16,8 +16,8 @@
 
 ## Operational status summary
 
-- Operational: 47 option(s)
-- Future: 5 option(s)
+- Operational: 52 option(s)
+- Future: 0 option(s)
 
 ## Options
 
@@ -33,11 +33,11 @@ Albacore-family rank-space transformation (Goulet Coulombe et al. 2024).
 
 See [asymmetric_trim function page](../op/asymmetric_trim.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.asymmetric_trim_transform``.
 
-### `boruta_selection`  --  future
+### `boruta_selection`  --  operational
 
-_(no schema description for `boruta_selection`)_
+All-relevant feature selection via shadow-feature random forest (Kursa-Rudnicki 2010).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+See [boruta_selection function page](../op/boruta_selection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.boruta_selection``.
 
 ### `cumsum`  --  operational
 
@@ -69,11 +69,11 @@ Fourier basis features -- sin/cos at fixed harmonics.
 
 See [fourier function page](../op/fourier.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.fourier_transform``.
 
-### `genetic_algorithm_selection`  --  future
+### `genetic_algorithm_selection`  --  operational
 
-_(no schema description for `genetic_algorithm_selection`)_
+Evolutionary feature subset search via genetic algorithm (Goldberg 1989).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+See [genetic_algorithm_selection function page](../op/genetic_algorithm_selection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.genetic_algorithm_selection``.
 
 ### `hamilton_filter`  --  operational
 
@@ -169,11 +169,11 @@ Lagged target/predictor block.
 
 See [lag function page](../op/lag.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.lag_matrix``.
 
-### `lasso_path_selection`  --  future
+### `lasso_path_selection`  --  operational
 
-_(no schema description for `lasso_path_selection`)_
+Feature selection along the Lasso regularisation path (Efron et al. 2004).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+See [lasso_path_selection function page](../op/lasso_path_selection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.lasso_path_selection``.
 
 ### `level`  --  operational
 
@@ -336,11 +336,11 @@ Johnson-Lindenstrauss random Gaussian projection.
 
 See [random_projection function page](../op/random_projection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.random_projection_transform``.
 
-### `recursive_feature_elimination`  --  future
+### `recursive_feature_elimination`  --  operational
 
-_(no schema description for `recursive_feature_elimination`)_
+Backward stepwise feature pruning via estimator importance (Guyon et al. 2002).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+See [recursive_feature_elimination function page](../op/recursive_feature_elimination.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.recursive_feature_elimination``.
 
 ### `regime_indicator`  --  operational
 
@@ -408,11 +408,11 @@ Chen-Rohe (2023) Sparse Component Analysis -- non-diagonal D variant.
 
 See [sparse_pca_chen_rohe function page](../op/sparse_pca_chen_rohe.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.sparse_pca_chen_rohe_transform``.
 
-### `stability_selection`  --  future
+### `stability_selection`  --  operational
 
-_(no schema description for `stability_selection`)_
+Feature selection by subsampling stability -- selection probability threshold (Meinshausen-Bühlmann 2010).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3.py`` are welcome.
+See [stability_selection function page](../op/stability_selection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.stability_selection``.
 
 ### `supervised_pca`  --  operational
 

@@ -15,5 +15,5 @@
 | [`l4_5`](l4_5/index.md) | Generator diagnostics | `diagnostic` | 6 | 13 | 42 |
 | [`l5`](l5/index.md) | Evaluation | `consumption` | 5 | 18 | 30 |
 | [`l6`](l6/index.md) | Statistical tests | `consumption` | 7 | 33 | 16 |
-| [`l7`](l7/index.md) | Interpretation / importance | `consumption` | 2 | 9 | 55 |
+| [`l7`](l7/index.md) | Interpretation / importance | `consumption` | 2 | 9 | 51 |
 | [`l8`](l8/index.md) | Output / provenance | `consumption` | 4 | 8 | 62 |
