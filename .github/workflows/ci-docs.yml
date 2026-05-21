@@ -46,11 +46,11 @@ jobs:
           # divergence means a contributor edited the schema or OptionDoc
           # without re-running the renderer.
           python -m macroforecast.scaffold encyclopedia /tmp/encyc_check
-          if ! diff -r docs/encyclopedia/ /tmp/encyc_check/ >/dev/null; then
-              echo "docs/encyclopedia/ is out of sync with the registries."
-              echo "Run: python -m macroforecast.scaffold encyclopedia docs/encyclopedia/"
+          if ! diff -r docs/reference/encyclopedia/ /tmp/encyc_check/ >/dev/null; then
+              echo "docs/reference/encyclopedia/ is out of sync with the registries."
+              echo "Run: python -m macroforecast.scaffold encyclopedia docs/reference/encyclopedia/"
               echo "Then commit the resulting changes."
-              diff -r docs/encyclopedia/ /tmp/encyc_check/ | head -80 || true
+              diff -r docs/reference/encyclopedia/ /tmp/encyc_check/ | head -80 || true
               exit 1
           fi
           echo "encyclopedia is in sync"
