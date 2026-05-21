@@ -1,68 +1,12 @@
+---
+orphan: true
+---
 # User guide
 
-Run forecasts on **FRED-MD / FRED-QD / FRED-SD** or your own data. The only
-structural difference between consuming the package and customizing it is
-whether you register a Python callable.
+This page has moved.
 
-## Two paths
-
-::::{grid} 1 2 2 2
-:gutter: 3
-
-:::{grid-item-card} 1. Using the package
-:link: for_researchers/simple_api/index
-:link-type: doc
-
-After the [Getting started](getting_started.md) intro: the high-level
-Simple API, the full Recipe (YAML) grammar, and FRED dataset references.
-:::
-
-:::{grid-item-card} 2. Bring your own
-:link: for_researchers/user_data_workflow
-:link-type: doc
-
-Plug in your own dataset (CSV / Parquet), model, preprocessor, or target
-transformer.
-:::
-
-::::
-
-> **New in v0.9.2b0**: macroforecast also exposes individual operations as
-> standalone Python callables via `mf.functions.<name>(...)`. See
-> [Two entry points](two_entry_points.md) for a decision guide and
-> [Standalone functions](standalone_functions/index.md) for per-layer
-> references.
-
-```{toctree}
-:hidden:
-:maxdepth: 2
-:caption: 1. Using the package
-
-for_researchers/simple_api/index
-for_researchers/simple_api/quickstart
-for_researchers/simple_api/run_experiment
-for_researchers/simple_api/compare_models
-for_researchers/simple_api/read_results
-for_researchers/simple_api/fred_sd
-recipe_api/index
-recipe_api/gallery
-recipe_api/layer_contract
-recipe_api/data
-recipe_api/data_policies
-recipe_api/defaults
-recipe_api/runtime_support
-recipe_api/output
-recipe_api/fred_datasets
+```{raw} html
+<meta http-equiv="refresh" content="0; url=how_to/index.html">
 ```
 
-```{toctree}
-:hidden:
-:maxdepth: 2
-:caption: 2. Bring your own
-
-for_researchers/user_data_workflow
-for_recipe_authors/custom_function_quickstart
-for_recipe_authors/custom_hooks
-for_recipe_authors/target_transformer
-for_recipe_authors/partial_layer_execution
-```
+See [How-to guides](how_to/index.md) for custom models, data workflows, and more.
