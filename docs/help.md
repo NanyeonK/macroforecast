@@ -6,21 +6,21 @@ Hit an error? Want to contribute? Look up the docs conventions.
 :gutter: 3
 
 :::{grid-item-card} Troubleshooting
-:link: troubleshooting
+:link: how_to/troubleshooting
 :link-type: doc
 
 Errors, FAQs, common fixes.
 :::
 
 :::{grid-item-card} Contribute
-:link: for_contributors/index
+:link: how_to/contributing
 :link-type: doc
 
 Modify the package source, run the test suite, send a PR.
 :::
 
 :::{grid-item-card} Conventions
-:link: CONVENTIONS
+:link: how_to/conventions
 :link-type: doc
 
 Docs style and naming conventions.
@@ -32,7 +32,7 @@ Docs style and naming conventions.
 :hidden:
 :maxdepth: 2
 
-troubleshooting
-for_contributors/index
-CONVENTIONS
+how_to/troubleshooting
+how_to/contributing
+how_to/conventions
 ```

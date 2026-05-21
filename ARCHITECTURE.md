@@ -115,6 +115,15 @@ examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 
 ---
 
+## Cycle 52 — Diátaxis docs structure migration (2026-05-22)
+
+Documentation was reorganized into a Diátaxis 4-tier structure (tutorial /
+how-to / reference / explanation) in C52; see `docs/` for the current layout.
+All existing content is preserved via `git mv`. The encyclopedia moved from
+`docs/encyclopedia/` to `docs/reference/encyclopedia/`.
+
+---
+
 ## Cycle 51 — issue cleanup + C50 reviewer flags (2026-05-22)
 
 C51 follow-up to C50. Promotes `chow_lin_disaggregation` (L3 registry op, L2 scope)
