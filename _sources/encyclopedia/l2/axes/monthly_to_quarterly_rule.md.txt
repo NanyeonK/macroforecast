@@ -25,21 +25,7 @@
 
 Aggregate to quarterly via mean of the three monthly observations.
 
-Standard NIPA aggregation for stocks / averages.
-
-Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_average`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
-
-**When to use**
-
-Default. Stock variables (interest rates, prices, employment levels).
-
-**References**
-
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
-
-**Related options**: [`quarterly_endpoint`](#quarterly-endpoint), [`quarterly_sum`](#quarterly-sum)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [quarterly_average function page](../monthly_to_quarterly_rule/quarterly_average.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.freq_align_monthly_to_quarterly_clean``.
 
 ### `quarterly_endpoint`  --  operational
 

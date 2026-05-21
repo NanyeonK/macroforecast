@@ -35,18 +35,39 @@ Default for any pseudo-out-of-sample study using revised data.
 
 **When NOT to use**
 
-Real-time forecasting evaluations -- those need ALFRED vintages.
+Real-time forecasting evaluations -- those need ALFRED vintages (future feature; see real_time_alfred).
 
 **References**
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`information_set_type`](#information-set-type)
+**Related options**: [`real_time_alfred`](#real-time-alfred), [`information_set_type`](#information-set-type)
 
-_Last reviewed 2026-05-04 by macroforecast author._
+_Last reviewed 2026-05-16 by macroforecast author._
 
 ### `real_time_alfred`  --  future
 
-_(no schema description for `real_time_alfred`)_
+Real-time ALFRED vintage policy (not yet implemented).
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l1.py`` are welcome.
+ALFRED (Archival FRED) is the St. Louis Fed's real-time data archive. It stores historical vintages of every FRED series, allowing researchers to reconstruct the information set that was actually available at any past date -- before subsequent data revisions occurred.
+
+Future macroforecast support will pull the historical-as-of vintage for each forecast origin from the ALFRED API, enabling true real-time replication studies where the model never sees data that was not yet released at the forecast origin.
+
+**Current behavior**: selecting ``real_time_alfred`` raises a hard ``ValueError`` at recipe validation with the message ``'real_time_alfred is not yet implemented; future feature. Use current_vintage (default).'`` (Cycle 14 K-4). No partial execution occurs.
+
+**When to use**
+
+Future. For now, use ``current_vintage`` and document the data-revision context via ``data_revision_tag`` in manifest provenance (Cycle 14 K-3 auto-captures ``fred-md@YYYY-MM``).
+
+**When NOT to use**
+
+Any current recipe -- this option is hard-rejected at validation in all released versions up to and including v0.9.x.
+
+**References**
+
+* Federal Reserve Bank of St. Louis, 'ALFRED: Archival Federal Reserve Economic Data' -- real-time vintage archive of FRED series. <https://alfred.stlouisfed.org/>
+* Croushore & Stark (2001) 'A real-time data set for macroeconomists', Journal of Econometrics 105(1). (doi:10.1016/S0304-4076(01)00072-0)
+
+**Related options**: [`current_vintage`](#current-vintage)
+
+_Last reviewed 2026-05-16 by macroforecast author._

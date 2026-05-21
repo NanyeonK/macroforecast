@@ -25,30 +25,7 @@
 
 Apply McCracken-Ng's series-by-series stationarity transforms.
 
-Each FRED-MD/QD series ships with a transformation code (1-7) mapping to a stationarity transform. ``apply_official_tcode`` runs the canonical mapping per series:
-
-* 1 = level
-* 2 = first difference
-* 3 = second difference
-* 4 = log
-* 5 = first difference of log (≈ growth rate)
-* 6 = second difference of log
-* 7 = log diff of (1 + growth rate)
-
-Applied per-origin within walk-forward to avoid look-ahead.
-
-**When to use**
-
-Default for FRED-based studies. Canonical replication path.
-
-**References**
-
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
-* McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4). (doi:10.1080/07350015.2015.1086655)
-
-**Related options**: [`no_transform`](#no-transform), [`custom_tcode`](#custom-tcode), [`transform_scope`](#transform-scope)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [apply_official_tcode function page](../transform_policy/apply_official_tcode.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.apply_tcode_transform``.
 
 ### `no_transform`  --  operational
 

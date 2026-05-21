@@ -37,6 +37,12 @@ State-level case studies (e.g., CA / TX / NY-specific forecasts).
 
 **Related options**: [`all_states`](#all-states), [`selected_states`](#selected-states), [`predictor_geography_scope`](#predictor-geography-scope)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target_state` | `str` | — | required US state code or 'US' when target_geography_scope=single_state | Single target state code (e.g. 'CA', 'TX') or 'US' for national target. Must be a valid two-letter postal code present in FRED-SD. |
+
 _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `all_states`  --  operational
@@ -74,5 +80,11 @@ Region-specific studies (Northeast vs. Midwest), Census-division comparisons.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
 **Related options**: [`all_states`](#all-states), [`fred_sd_state_group`](#fred-sd-state-group)
+
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `target_states` | `list[str]` | — | non-empty list required; each element a valid US state code or DC | Explicit target state list when target_geography_scope=selected_states. |
 
 _Last reviewed 2026-05-04 by macroforecast author._

@@ -73,6 +73,12 @@ Custom regional studies (e.g. neighbouring states).
 
 **Related options**: [`match_target`](#match-target), [`all_states`](#all-states)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `predictor_states` | `list[str]` | — | non-empty list required | Explicit predictor state list. Independent of target_states; permits cross-state-pair studies. |
+
 _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `national_only`  --  operational

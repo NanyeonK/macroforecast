@@ -38,9 +38,9 @@ and
 
 L2 supports a user-supplied callable in two positions:
 
-- `leaf_config.custom_preprocessor` (since v0.8.6) — runs **before** the
+- `leaf_config.custom_preprocessor` — runs **before** the
   canonical `transform → outlier → impute → frame_edge` pipeline.
-- `leaf_config.custom_postprocessor` (since v0.2.5) — runs **after** the
+- `leaf_config.custom_postprocessor` — runs **after** the
   canonical pipeline; output replaces the L2 clean panel.
 
 The simple-API method is `Experiment.use_preprocessor("name",

@@ -10,11 +10,10 @@ source. Start here.
 |---|---|
 | Set up the package and run your first recipe | [Quickstart](quickstart.md) |
 | Build your first study with a working recipe template | [First study](first_study.md) |
-| See what the runtime executes today vs. what is schema-only | [Runtime support matrix](runtime_support.md) |
-| Understand the output directory and manifest layout | [Understanding output](understanding_output.md) |
-| Look up FRED-MD / FRED-QD / FRED-SD column dictionaries | [FRED datasets](fred_datasets/index.md) |
-| Check FRED-SD T-code policy (transform-code defaults for state series) | [FRED-SD transform policy](fred_datasets/fred_sd/transform_policy.md), [inferred T-codes](fred_datasets/fred_sd/inferred_tcodes.md), [v0.1 review](fred_datasets/fred_sd/inferred_tcode_review_v0_1.md) |
-| Browse the 38 bundled recipes (with extras + smoke-test status) | [Recipe gallery](recipe_gallery.md) |
+| See what the runtime executes today vs. what is schema-only | [Runtime support matrix](../recipe_api/runtime_support.md) |
+| Understand the output directory and manifest layout | [Understanding output](../recipe_api/output.md) |
+| Look up FRED-MD / FRED-QD / FRED-SD column dictionaries | [FRED datasets](../recipe_api/fred_datasets.md) |
+| Browse the recipe gallery (runnable examples) | [Recipe gallery](../recipe_api/gallery.md) |
 | Use the high-level Python facade (`mf.forecast` / `mf.Experiment`) | [Simple API](simple_api/index.md) |
 | Bring your own monthly or quarterly data (CSV / Parquet) | [Bring your own data](user_data_workflow.md) |
 
@@ -41,10 +40,6 @@ For the full curated reference see [`encyclopedia/public_api.md`](../encyclopedi
 
 quickstart
 first_study
-runtime_support
-understanding_output
-fred_datasets/index
-recipe_gallery
 user_data_workflow
 simple_api/index
 ```

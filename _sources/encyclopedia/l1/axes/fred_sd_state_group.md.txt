@@ -371,4 +371,11 @@ Bespoke regional groupings not captured by Census definitions.
 
 **Related options**: [`all_states`](#all-states), [`census_region_northeast`](#census-region-northeast), [`census_region_midwest`](#census-region-midwest)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `sd_state_group_members` | `list[str]` | — | exactly one of {sd_state_group_members, sd_state_groups} required | Flat list of US state codes constituting the custom group. |
+| `sd_state_groups` | `dict[str, list[str]]` | — | exactly one of {sd_state_group_members, sd_state_groups} required | Named subgroups: maps group-label to state-code list. For multi-named-subgroup studies. |
+
 _Last reviewed 2026-05-05 by macroforecast author._

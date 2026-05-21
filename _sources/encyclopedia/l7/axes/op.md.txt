@@ -25,20 +25,7 @@
 
 Apley & Zhu (2020) accumulated local effects -- PDP alternative robust to correlation.
 
-For feature ``j``, computes the cumulative local change ``Σ_{k≤K} E_{X_{-j} | x_j ∈ bin_k}[∂f/∂x_j]·Δx_j``. The binning + conditioning eliminates the 'extrapolation into low-density regions' bias of plain PDPs.
-
-**When to use**
-
-Correlated feature panels (FRED-MD / -QD) where PDPs are misleading.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Apley & Zhu (2020) 'Visualizing the Effects of Predictor Variables in Black Box Supervised Learning Models', JRSS Series B 82(4): 1059-1086.
-
-**Related options**: [`partial_dependence`](#partial-dependence)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [accumulated_local_effect function page](../op/accumulated_local_effect.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.ale_importance``.
 
 ### `attention_weights`  --  operational
 
@@ -461,52 +448,13 @@ _(no schema description for `lstm_hidden_state`)_
 
 Standardised regression coefficients from a fitted linear model.
 
-Returns ``β̂_j`` for each predictor as the importance score; with ``standardize=True`` (default) the predictors are pre-scaled so coefficients are directly comparable. Compatible with every linear-family L4 model (``ols / ridge / lasso / elastic_net / lasso_path / bayesian_ridge / huber / glmboost``).
-
-Cheapest meaningful importance score; the natural sanity-check to run before the more expensive permutation / SHAP families.
-
-**When to use**
-
-Linear-model baselines; quick interpretation when a tree / NN model is overkill.
-
-**When NOT to use**
-
-Non-linear models -- coefficients no longer summarise marginal effects.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Greene (2018) 'Econometric Analysis', 8th ed., Pearson, Chapter 4.
-
-**Related options**: [`model_native_tree_importance`](#model-native-tree-importance), [`lasso_inclusion_frequency`](#lasso-inclusion-frequency)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [model_native_linear_coef function page](../op/model_native_linear_coef.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.model_native_linear_coef_importance``.
 
 ### `model_native_tree_importance`  --  operational
 
 Mean-decrease-impurity importance from a fitted tree ensemble.
 
-Returns sklearn's ``feature_importances_`` for the fitted estimator -- the average reduction in node impurity attributable to each feature, weighted by node sample count. Available for every tree-family L4 model (``decision_tree`` / ``random_forest`` / ``extra_trees`` / ``gradient_boosting`` / ``xgboost`` / ``lightgbm`` / ``catboost``).
-
-Cheap and built-in; biases toward high-cardinality features. For unbiased tree importance, prefer ``permutation_importance`` or ``permutation_importance_strobl``.
-
-**When to use**
-
-Quick first-pass tree importance; pair with permutation importance for bias-correction.
-
-**When NOT to use**
-
-High-cardinality continuous features dominate -- known MDI bias (Strobl et al. 2007).
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.
-* Strobl, Boulesteix, Zeileis & Hothorn (2007) 'Bias in random forest variable importance measures', BMC Bioinformatics 8: 25.
-
-**Related options**: [`permutation_importance`](#permutation-importance), [`permutation_importance_strobl`](#permutation-importance-strobl)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [model_native_tree_importance function page](../op/model_native_tree_importance.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.model_native_tree_importance``.
 
 ### `mrf_gtvp`  --  operational
 
@@ -583,24 +531,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Friedman (2001) partial dependence plot.
 
-For feature ``j``, computes ``E_{X_{-j}}[f(x_j, X_{-j})]`` over a grid of ``x_j`` values. Visualises the marginal effect of ``x_j`` on the prediction averaged over the joint distribution of remaining features. sklearn ``partial_dependence`` backend.
-
-**When to use**
-
-Visualising marginal feature effects; first-pass non-linearity audit.
-
-**When NOT to use**
-
-Highly correlated features -- PDP averages over impossible regions of feature space. Use ``accumulated_local_effect`` instead.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Friedman (2001) 'Greedy Function Approximation: A Gradient Boosting Machine', Annals of Statistics 29(5): 1189-1232.
-
-**Related options**: [`accumulated_local_effect`](#accumulated-local-effect), [`friedman_h_interaction`](#friedman-h-interaction)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [partial_dependence function page](../op/partial_dependence.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.partial_dependence_importance``.
 
 ### `pbsv`  --  operational
 
@@ -631,50 +562,13 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Breiman-Fisher-Rudin (2019) model-agnostic permutation importance.
 
-For each predictor ``j``, computes the increase in OOS loss when ``x_j`` is randomly permuted. The score is ``L(y, f(X_perm_j)) - L(y, f(X))`` averaged over ``n_repeats`` (default 10). Model-agnostic: works for every L4 family.
-
-Bias-free alternative to ``model_native_tree_importance``; the gold-standard fallback for any model that does not expose a native importance attribute.
-
-**When to use**
-
-Default importance score for non-linear models; comparing across model families.
-
-**When NOT to use**
-
-Highly correlated predictors -- permutation breaks the dependence and inflates importance. Use ``permutation_importance_strobl`` instead.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Fisher, Rudin & Dominici (2019) 'All Models are Wrong, but Many are Useful: Learning a Variable's Importance by Studying an Entire Class of Prediction Models Simultaneously', JMLR 20(177): 1-81.
-* Breiman (2001) 'Random Forests', Machine Learning 45(1): 5-32.
-
-**Related options**: [`permutation_importance_strobl`](#permutation-importance-strobl), [`lofo`](#lofo), [`model_native_tree_importance`](#model-native-tree-importance)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [permutation_importance function page](../op/permutation_importance.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.permutation_importance``.
 
 ### `permutation_importance_strobl`  --  operational
 
 Strobl (2008) conditional permutation importance.
 
-Permutes ``x_j`` only within bins defined by the joint distribution of correlated predictors, eliminating the extrapolation bias of plain permutation importance for correlated features. v0.3 implementation uses tree-partition bins (Strobl et al. 2008 §4).
-
-**When to use**
-
-Highly correlated macro panels (FRED-MD / -QD with redundant aggregates).
-
-**When NOT to use**
-
-When predictor correlations are negligible -- the cheaper plain permutation importance suffices.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Strobl, Boulesteix, Kneib, Augustin & Zeileis (2008) 'Conditional variable importance for random forests', BMC Bioinformatics 9: 307.
-
-**Related options**: [`permutation_importance`](#permutation-importance)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [permutation_importance_strobl function page](../op/permutation_importance_strobl.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.cond_permutation_importance``.
 
 ### `recursive_feature_elimination`  --  future
 
@@ -800,46 +694,13 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Linear SHAP -- closed-form Shapley values for linear models.
 
-For a fitted linear model ``f(x) = β'x + b``, the SHAP value for feature ``j`` reduces to ``β_j (x_j - E[x_j])``. Uses the training-sample mean as the reference. Available for every linear L4 family.
-
-**When to use**
-
-Linear models when the SHAP per-row decomposition is needed (otherwise ``model_native_linear_coef`` suffices).
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
-
-**Related options**: [`model_native_linear_coef`](#model-native-linear-coef), [`shap_tree`](#shap-tree), [`shap_kernel`](#shap-kernel)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [shap_linear function page](../op/shap_linear.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.shap_linear_importance``.
 
 ### `shap_tree`  --  operational
 
 Tree SHAP -- exact polynomial-time Shapley values for tree ensembles.
 
-Lundberg-Erion-Lee (2020) algorithm computing exact Shapley values in ``O(T·L·D²)`` time (T trees, L leaves, D depth) instead of ``O(2^M)`` brute-force. Available for ``random_forest`` / ``extra_trees`` / ``gradient_boosting`` / ``xgboost`` / ``lightgbm`` / ``catboost``.
-
-Returns per-prediction SHAP values; the ``output_table_format`` L7.B axis controls whether the result is the global mean-``|SHAP|`` ranking or the per-row decomposition.
-
-**When to use**
-
-Default importance op for tree ensembles; exact and fast.
-
-**When NOT to use**
-
-Non-tree models -- use ``shap_kernel`` or ``shap_linear`` instead.
-
-**References**
-
-* macroforecast design Part 3, L7: 'every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.'
-* Lundberg & Lee (2017) 'A Unified Approach to Interpreting Model Predictions', NeurIPS 30: 4765-4774.
-* Lundberg, Erion & Lee (2020) 'From local explanations to global understanding with explainable AI for trees', Nature Machine Intelligence 2: 56-67.
-
-**Related options**: [`shap_kernel`](#shap-kernel), [`shap_linear`](#shap-linear), [`shap_interaction`](#shap-interaction), [`shap_deep`](#shap-deep)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [shap_tree function page](../op/shap_tree.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.shap_tree_importance``.
 
 ### `stability_selection`  --  future
 

@@ -1,22 +1,64 @@
 # macroforecast
 
-> What you can do: run reproducible macro-forecasting experiments with custom
-> preprocessing DAGs, 35+ models, statistical tests, importance interpretation,
-> and FRED-SD geographic visualization. One YAML recipe → bit-exact replicable
-> manifest, replayable bit-for-bit by `macroforecast.replicate(...)`.
+> What macroforecast does: run forecasting research on
+> **FRED-MD / FRED-QD / FRED-SD** with your own dataset, preprocessing,
+> and models — and benchmark them head-to-head against established methods.
+> One YAML recipe defines the full study; `macroforecast.replicate(...)`
+> regenerates every artifact identically from the recipe.
+>
+> macroforecast also exposes every operation as a **standalone callable**
+> (`mf.functions.<name>(...)`) for use in notebooks and scripts — no YAML
+> needed. See [two entry points](two_entry_points.md) for a decision guide.
 
 ## Pick your path
 
-| If you want to ... | Start here |
-|---|---|
-| Run a forecast on FRED data and read the results | [Researchers](for_researchers/index.md) |
-| Write a custom recipe with your model / preprocessor (incl. partial-layer debugging and custom hooks) | [Recipe authors](for_recipe_authors/index.md) |
-| Modify the package source / contribute | [Contributors](for_contributors/index.md) |
-| **Understand the design** — why layers / sub-layers / contracts are split this way (read top-to-bottom) | [Architecture](architecture/index.md) — design narrative, ~18 prose pages |
-| **Look up an option** — what does `apply_official_tcode` do, what models are L7 `shap_tree` compatible with, etc. (search / browse) | [Encyclopedia](encyclopedia/index.md) — auto-generated reference, 189 pages |
-| See replication studies (bundled examples + 3 research walkthroughs today, 4+ more in v0.9.1) | [Replications](replications/index.md) |
-| Visually explore the layer / DAG topology | [Navigator](navigator/index.md) |
-| Hit an error or something doesn't work | [Troubleshooting & FAQ](troubleshooting.md) |
+::::{grid} 1 2 2 3
+:gutter: 3
+:class-container: pick-your-path
+
+:::{grid-item-card} 🚀 Getting started
+:link: getting_started
+:link-type: doc
+
+Install, quickstart, your first complete study.
+:::
+
+:::{grid-item-card} 📝 User guide
+:link: user_guide
+:link-type: doc
+
+Recipe authoring, custom models, FRED & custom datasets.
+:::
+
+:::{grid-item-card} 📖 Reference
+:link: reference
+:link-type: doc
+
+Encyclopedia of every option + architecture design narrative.
+:::
+
+:::{grid-item-card} 🔁 Replications
+:link: replications
+:link-type: doc
+
+Paper replications, recipe gallery, layer navigator.
+:::
+
+:::{grid-item-card} 🆘 Help
+:link: help
+:link-type: doc
+
+Troubleshooting, contributing, conventions.
+:::
+
+:::{grid-item-card} 🧩 Standalone functions
+:link: standalone_functions/index
+:link-type: doc
+
+Use L2–L7 ops as Python callables without a YAML recipe.
+:::
+
+::::
 
 > **Architecture vs Encyclopedia**: same 12-layer system, two angles.
 > Architecture is **prose** — "why is L2 separated from L3", "how does
@@ -33,7 +75,7 @@
 4-part design lives under `plans/design/` in the repo.
 
 ```text
-L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
+L0 -> L1 -> L2 -> L3(pipeline) -> L4(pipeline) -> L5 -> L6 -> L7(pipeline) -> L8
         |      |      |       |
        L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
@@ -54,14 +96,24 @@ MIT
 :hidden:
 :maxdepth: 1
 
-install
-for_researchers/index
-for_recipe_authors/index
-for_contributors/index
-architecture/index
-navigator/index
-replications/index
-encyclopedia/index
-troubleshooting
-CONVENTIONS
+getting_started
+user_guide
+two_entry_points
+standalone_functions/index
+reference
+replications
+help
+```
+
+```{toctree}
+:hidden:
+:maxdepth: 1
+:caption: Standalone functions
+
+standalone_functions/l2_clean
+standalone_functions/l3_transforms
+standalone_functions/l4_fit
+standalone_functions/l5_metrics
+standalone_functions/l6_tests
+standalone_functions/l7_importance
 ```

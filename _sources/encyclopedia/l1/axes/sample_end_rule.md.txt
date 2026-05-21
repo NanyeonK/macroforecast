@@ -57,4 +57,10 @@ Pre-COVID benchmark studies; matching a paper's reported sample window.
 
 **Related options**: [`latest_available`](#latest-available)
 
+**Parameters**
+
+| name | type | default | constraint | description |
+|---|---|---|---|---|
+| `sample_end_date` | `str` | — | Required when sample_end_rule=fixed_date. ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized to last day of month), or YYYY (normalized to Dec 31). Must be >= sample_start_date when both are fixed. | Explicit panel end date. The L1 loader trims the panel so that no observation falls after this date. |
+
 _Last reviewed 2026-05-04 by macroforecast author._

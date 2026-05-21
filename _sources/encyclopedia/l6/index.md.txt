@@ -6,7 +6,7 @@
 - Category: `consumption`
 - Sub-layers: 7
 - Axes: 33
-- Options across axes: 12
+- Options across axes: 16
 
 ## Sub-layers
 

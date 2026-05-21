@@ -17,8 +17,8 @@ user should not have to choose a fake FRED-MD/FRED-QD route for custom-only data
 derived for FRED-MD, FRED-QD, and composite FRED panels. It is required for
 standalone FRED-SD and custom-only data.
 
-For the current FRED-MD, FRED-QD, and FRED-SD column dictionaries, use
-[5. FRED-Dataset](../../for_researchers/fred_datasets/index.md). This page only defines which
+For the current FRED-MD, FRED-QD, and FRED-SD dataset reference, see
+[FRED Datasets in Recipes](../../recipe_api/fred_datasets.md). This page only defines which
 source route Layer 1 loads.
 
 | Axis | Choices | Default / rule |

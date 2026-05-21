@@ -9,7 +9,7 @@ how horizon targets are built, how x is lagged, or which representation reaches
 a model. Those decisions start in Layer 2.
 
 FRED column dictionaries are not maintained in this Layer 1 page. Use
-[5. FRED-Dataset](../../for_researchers/fred_datasets/index.md) for the current FRED-MD,
+[5. FRED-Dataset](../../recipe_api/fred_datasets.md) for the current FRED-MD,
 FRED-QD, and FRED-SD column definitions before writing explicit y/x lists.
 
 ## Target (y) Definition
@@ -45,23 +45,23 @@ Layer 2 boundary:
 source columns that are eligible as candidate predictors x before Layer 2
 builds lags, factors, feature blocks, rotations, or custom representations.
 The current all-column dictionaries live in
-[5.1 FRED-MD](../../for_researchers/fred_datasets/fred_md.md) and
-[5.2 FRED-QD](../../for_researchers/fred_datasets/fred_qd.md).
+[5.1 FRED-MD](../../recipe_api/fred_datasets.md) and
+[5.2 FRED-QD](../../recipe_api/fred_datasets.md).
 
 For `custom_source_policy: custom_panel_only` or standalone `dataset: fred_sd`,
 this axis is hidden by default. Custom-only x columns are defined by the custom
 file itself. FRED-SD x columns are defined by state scope and series scope in
 [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md), with the current
 generated column dictionary in
-[5.3 FRED-SD](../../for_researchers/fred_datasets/fred_sd.md).
+[5.3 FRED-SD](../../recipe_api/fred_datasets.md).
 
 | Value | Required payload | Meaning for FRED-MD/QD |
 |---|---|---|
 | `all_variables` | none | Use all eligible non-date source columns except target y. For FRED-MD/QD this means the whole selected FRED panel after source loading and official transform policy. |
 | `core_variables` | none | Use the package core macro subset: `INDPRO`, `PAYEMS`, `CPIAUCSL`, `FEDFUNDS`, `GS10`, `M2SL`, `UNRATE`, when those columns exist in the selected panel. |
-| `category_variables` | `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category` | Use a named category from a user-supplied category map. The map should be built from the [FRED-MD](../../for_researchers/fred_datasets/fred_md.md) or [FRED-QD](../../for_researchers/fred_datasets/fred_qd.md) all-column table, or another documented study taxonomy. |
-| `target_specific_variables` | `leaf_config.target_specific_columns` | Use a different x list for each y. Write these lists after inspecting the selected dataset's all-column table in [5. FRED-Dataset](../../for_researchers/fred_datasets/index.md). |
-| `explicit_variable_list` | `leaf_config.variable_universe_columns` | Use one explicit x list for all target y series. Write the list after inspecting the selected dataset's all-column table in [5. FRED-Dataset](../../for_researchers/fred_datasets/index.md). |
+| `category_variables` | `leaf_config.variable_universe_category_columns` and `leaf_config.variable_universe_category` | Use a named category from a user-supplied category map. The map should be built from the [FRED-MD](../../recipe_api/fred_datasets.md) or [FRED-QD](../../recipe_api/fred_datasets.md) all-column table, or another documented study taxonomy. |
+| `target_specific_variables` | `leaf_config.target_specific_columns` | Use a different x list for each y. Write these lists after inspecting the selected dataset's all-column table in [5. FRED-Dataset](../../recipe_api/fred_datasets.md). |
+| `explicit_variable_list` | `leaf_config.variable_universe_columns` | Use one explicit x list for all target y series. Write the list after inspecting the selected dataset's all-column table in [5. FRED-Dataset](../../recipe_api/fred_datasets.md). |
 
 Current package behavior:
 
@@ -71,7 +71,7 @@ Current package behavior:
   runtime. It requires `leaf_config.variable_universe_category_columns`.
 - `target_specific_variables` and `explicit_variable_list` are user-authored
   lists. They should be written against the column names visible in the
-  selected FRED-MD/QD panel. Use [5. FRED-Dataset](../../for_researchers/fred_datasets/index.md)
+  selected FRED-MD/QD panel. Use [5. FRED-Dataset](../../recipe_api/fred_datasets.md)
   as the current column reference.
 
 Category map example:

@@ -9,7 +9,7 @@ It is a Layer 0 setup axis because it affects routing, sweep interpretation,
 Navigator flow, and manifest metadata before any data or model details are
 chosen.
 
-The compiler can derive `study_scope` when it is omitted. Navigator and
+The runtime can derive `study_scope` when it is omitted. Navigator and
 replication recipes may set it explicitly.
 
 ## Values
@@ -26,7 +26,7 @@ one target and one method is still a 1x1 sweep case for provenance consistency.
 
 ## Derivation
 
-When `study_scope` is omitted, the compiler derives it from:
+When `study_scope` is omitted, the runtime derives it from:
 
 | Input Shape | Derived Value |
 |---|---|
@@ -36,7 +36,7 @@ When `study_scope` is omitted, the compiler derives it from:
 | multi target, swept model or feature axes | `multiple_targets_compare_methods` |
 
 This derivation should be treated as a defaulting rule. If the recipe sets
-`study_scope` explicitly, the compiler checks it against target structure.
+`study_scope` explicitly, the runtime checks it against target structure.
 
 ## Compatibility Rules
 

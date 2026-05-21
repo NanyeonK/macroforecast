@@ -96,9 +96,8 @@ Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order
 
 ## Related reference
 
-- [Data source and frame](../../for_recipe_authors/data/source.md)
-- [Target and predictor definition](../../for_recipe_authors/data/target_structure.md)
-- [Data handling policies](../../for_recipe_authors/data_policies.md)
+- [Data layer (source, target, horizon, geography)](../../recipe_api/data.md)
+- [Data policies](../../recipe_api/data_policies.md)
 
 ```{toctree}
 :maxdepth: 1

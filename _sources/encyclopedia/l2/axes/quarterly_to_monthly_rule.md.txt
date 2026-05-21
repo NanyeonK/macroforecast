@@ -45,19 +45,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Step-function: each month inherits the most-recent published quarterly value.
 
-When a quarterly series needs to align with a monthly target, macroforecast holds the quarterly observation constant for all three months of the quarter (with a 1-quarter publication lag where appropriate). Conservative: no smoothing, no extrapolation.
-
-**When to use**
-
-Default for FRED-SD mixed-frequency studies.
-
-**References**
-
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
-
-**Related options**: [`step_forward`](#step-forward), [`linear_interpolation`](#linear-interpolation), [`chow_lin`](#chow-lin)
-
-_Last reviewed 2026-05-04 by macroforecast author._
+See [step_backward function page](../quarterly_to_monthly_rule/step_backward.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.freq_align_quarterly_to_monthly_clean``.
 
 ### `step_forward`  --  operational
 

@@ -25,21 +25,7 @@
 
 Empirical coverage rate -- share of OOS observations falling within the nominal-α interval.
 
-Density-forecast metric ``coverage_rate``. Should equal α (1 - α miscoverage) if the model is well-calibrated. Deviations indicate miscalibration: low coverage = intervals too narrow; high coverage = intervals too wide. Pair with ``interval_score`` to capture both calibration and sharpness.
-
-**When to use**
-
-Interval-calibration audits; reporting alongside interval_score.
-
-**References**
-
-* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
-* Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
-* Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
-
-**Related options**: [`log_score`](#log-score), [`crps`](#crps), [`interval_score`](#interval-score)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [coverage_rate function page](../density_metrics/coverage_rate.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.coverage_rate``.
 
 ### `crps`  --  operational
 
@@ -65,22 +51,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Winkler (1972) interval score -- jointly penalises miscoverage + interval width.
 
-Density-forecast metric ``interval_score``. For a nominal-α interval ``[L, U]``: ``IS_α = (U - L) + (2/α)(L - y) 1{y < L} + (2/α)(y - U) 1{y > U}``. Lower = better. Strictly-proper for the α-level prediction interval; the natural metric when L4 emits ``forecast_object = interval``.
-
-**When to use**
-
-Prediction-interval evaluation; balancing tightness against coverage.
-
-**References**
-
-* macroforecast design Part 3, L5: 'evaluation = (metric × benchmark × aggregation × decomposition × ranking).'
-* Gneiting & Raftery (2007) 'Strictly Proper Scoring Rules, Prediction, and Estimation', JASA 102(477): 359-378. (doi:10.1198/016214506000001437)
-* Gneiting & Katzfuss (2014) 'Probabilistic Forecasting', Annual Review of Statistics and Its Application 1: 125-151.
-* Winkler (1972) 'A Decision-Theoretic Approach to Interval Estimation', JASA 67(337): 187-191.
-
-**Related options**: [`log_score`](#log-score), [`crps`](#crps), [`coverage_rate`](#coverage-rate)
-
-_Last reviewed 2026-05-05 by macroforecast author._
+See [interval_score function page](../density_metrics/interval_score.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.interval_score``.
 
 ### `log_score`  --  operational
 
