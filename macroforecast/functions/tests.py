@@ -890,6 +890,7 @@ def cw_test(
     stat, p_two = _diebold_mariano_test(diff, horizon=horizon, hln=False, kernel=kernel)
 
     # One-sided correction (H_a: large model improves on small)
+    pvalue: float | None
     if p_two is not None and stat is not None and stat > 0:
         pvalue = p_two / 2.0
     else:
@@ -986,6 +987,7 @@ def enc_new_test(
     stat, p_two = _diebold_mariano_test(diff, horizon=horizon, hln=False, kernel=kernel)
 
     # One-sided correction
+    pvalue: float | None
     if p_two is not None and stat is not None and stat > 0:
         pvalue = p_two / 2.0
     else:
@@ -1084,6 +1086,7 @@ def enc_t_test(
     stat, p_two = _diebold_mariano_test(diff, horizon=horizon, hln=False, kernel=kernel)
 
     # One-sided correction
+    pvalue: float | None
     if p_two is not None and stat is not None and stat > 0:
         pvalue = p_two / 2.0
     else:

@@ -14,7 +14,7 @@ from ..types import (
 )
 
 
-def _positive_param(name: str, default: int = 1):
+def _positive_param(name: str, default: int | str = 1):
     def check(dag, nref):
         value = dag.node(nref.node_id).params.get(name, default)
         # Phase A3 fix: ``n_components="all"`` sentinel passes the
