@@ -3383,15 +3383,29 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             rescale=bool(params.get("rescale", False)),
             random_state=seed,
         )
+    if family == "realized_garch":
+        # C49: Hansen-Huang-Shek (2012) joint return + measurement MLE.
+        # Option B: manual scipy joint MLE (arch.RealizedGARCH not available
+        # in arch>=6.0). The RV-as-exog approximation lives under the
+        # honest name realized_garch_with_rv_exog (unchanged).
+        return _RealizedGARCHModel(
+            mean_model=str(params.get("mean_model", "constant")),
+            dist=str(params.get("dist", "normal")),
+            max_iter=int(params.get("max_iter", 2000)),
+            n_starts=int(params.get("n_starts", 3)),
+            random_state=seed,
+            realized_variance=params.get("realized_variance"),
+        )
     if family == "realized_garch_with_rv_exog":
         # Phase C-3 audit-fix (M9): honest rename. The runtime feeds
         # the realised-variance series as the exogenous ``x=`` regressor
         # in a vanilla GARCH(1,1) -- useful in practice but **NOT** the
         # Hansen-Huang-Shek (2012) joint return + measurement-equation
-        # MLE. The proper RealizedGARCH spec is reserved as the FUTURE
-        # name ``realized_garch``.
+        # MLE. The proper joint MLE is now operational as ``realized_garch``
+        # (C49). Internal variant renamed from "realized_garch" to "rv_exog"
+        # to prevent collision with the new true joint-MLE dispatch above.
         return _GARCHFamily(
-            variant="realized_garch",
+            variant="rv_exog",
             mean_model=str(params.get("mean_model", "constant")),
             dist=str(params.get("dist", "normal")),
             rescale=bool(params.get("rescale", False)),
@@ -8440,10 +8454,12 @@ class _GARCHFamily:
                 dist=self.dist,
                 rescale=self.rescale,
             )
-        elif self.variant == "realized_garch":
-            # Approximation: arch_model exogenous + GARCH(1,1). Full
-            # Hansen-Huang-Tong-Wang 2012 RealizedGARCH MLE awaits an
-            # ``arch.RealizedGARCH`` upstream wiring.
+        elif self.variant == "rv_exog":
+            # Approximation: arch_model exogenous + GARCH(1,1). This is the
+            # realized_garch_with_rv_exog variant (honest-name approximation).
+            # The true Hansen-Huang-Shek (2012) joint MLE is implemented as
+            # ``_RealizedGARCHModel`` (C49); internal variant renamed from
+            # "realized_garch" to "rv_exog" to prevent name collision.
             rv = None
             if (
                 self.realized_variance_col
@@ -8506,6 +8522,401 @@ class _GARCHFamily:
     @property
     def params_(self) -> dict[str, float]:
         return self._fitted.params.to_dict() if self._fitted is not None else {}
+
+
+# ---------------------------------------------------------------------------
+# C49: Hansen, Huang & Shek (2012) Realized GARCH — joint return +
+# realized-measurement MLE (Option B: manual scipy joint MLE).
+# Reference: Hansen, P.R., Huang, Z. & Shek, H.H. (2012)
+# "Realized GARCH: a joint model for returns and realized measures of
+# volatility." Journal of Applied Econometrics 27(6): 877–906.
+# ---------------------------------------------------------------------------
+
+
+class _RealizedGARCHModel:
+    """Hansen, Huang & Shek (2012) Realized GARCH — joint return + measurement MLE.
+
+    Implements the joint log-likelihood from Hansen et al. (2012) Journal of
+    Applied Econometrics 27(6): 877-906. All parameters are estimated jointly
+    via scipy.optimize.minimize (L-BFGS-B). No ``arch`` package dependency.
+
+    Model equations
+    ---------------
+    Return equation:
+        r_t = mu + sqrt(h_t) * z_t,   z_t ~ N(0, 1)
+
+    Log-variance equation:
+        log(h_t) = omega + beta * log(h_{t-1})
+                 + tau_1 * z_{t-1} + tau_2 * (z_{t-1}^2 - 1)
+                 + gamma * u_{t-1}
+
+    Measurement equation:
+        log(x_t) = xi + phi * log(h_t)
+                 + delta_1 * z_t + delta_2 * (z_t^2 - 1) + u_t,
+        u_t ~ N(0, sigma_u^2)
+
+    Joint log-likelihood minimized via scipy L-BFGS-B with multi-start
+    perturbations seeded from ``random_state + start_index``.
+
+    Parameters
+    ----------
+    mean_model : str
+        ``"constant"`` (only supported value; AR-mean deferred).
+    dist : str
+        ``"normal"`` (only supported value; fat-tail extension deferred).
+    max_iter : int
+        Maximum iterations for scipy L-BFGS-B. Default 2000.
+    n_starts : int
+        Multi-start restarts to escape local optima. Default 3.
+    random_state : int
+        Seed for RNG used in multi-start perturbation. Default 0.
+    realized_variance : str or None
+        Column name in X containing the realized variance series. If None
+        or if the column is missing / all-NaN, falls back to r^2 as a
+        realized-variance proxy (WARNING: proxy degrades estimation quality).
+    """
+
+    # Parameter names in the order they appear in the theta vector.
+    _PARAM_NAMES: tuple[str, ...] = (
+        "mu",
+        "omega",
+        "beta",
+        "tau_1",
+        "tau_2",
+        "gamma",
+        "xi",
+        "phi",
+        "delta_1",
+        "delta_2",
+        "log_sigma_u",
+    )
+
+    def __init__(
+        self,
+        *,
+        mean_model: str = "constant",
+        dist: str = "normal",
+        max_iter: int = 2000,
+        n_starts: int = 3,
+        random_state: int = 0,
+        realized_variance: str | None = None,
+    ) -> None:
+        if mean_model != "constant":
+            raise ValueError(
+                f"_RealizedGARCHModel: mean_model={mean_model!r} is not supported in C49. "
+                "Only 'constant' mean is implemented. AR-mean is deferred to a future cycle."
+            )
+        if dist != "normal":
+            raise ValueError(
+                f"_RealizedGARCHModel: dist={dist!r} is not supported in C49. "
+                "Only 'normal' distribution is implemented. Fat-tail extensions are deferred."
+            )
+        self.mean_model = mean_model
+        self.dist = dist
+        self.max_iter = max_iter
+        self.n_starts = n_starts
+        self.random_state = random_state
+        self.realized_variance_col = realized_variance
+        # Post-fit attributes (None until fit() is called)
+        self._params: dict[str, float] | None = None
+        self._h: np.ndarray | None = None
+        self._z: np.ndarray | None = None
+        self._u: np.ndarray | None = None
+        self._mu: float = 0.0
+        self._last_h: float = 1.0
+        self._last_z: float = 0.0
+        self._last_u: float = 0.0
+        self._r: np.ndarray | None = None
+        self._x: np.ndarray | None = None
+
+    # ------------------------------------------------------------------
+    # Internal: forward recursion and negative log-likelihood
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _forward_pass(
+        theta: np.ndarray,
+        r: np.ndarray,
+        x: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Compute h_t, z_t, u_t arrays via the log-variance recursion.
+
+        Parameters
+        ----------
+        theta : np.ndarray, shape (11,)
+            Parameter vector (mu, omega, beta, tau_1, tau_2, gamma,
+            xi, phi, delta_1, delta_2, log_sigma_u).
+        r : np.ndarray, shape (T,)
+            Return series (aligned with x).
+        x : np.ndarray, shape (T,)
+            Realized variance series (positive; already clipped).
+
+        Returns
+        -------
+        h : np.ndarray, shape (T,) — conditional variance
+        z : np.ndarray, shape (T,) — standardized returns
+        u : np.ndarray, shape (T,) — measurement residuals
+        """
+        mu, omega, beta, tau_1, tau_2, gamma, xi, phi, delta_1, delta_2, _ = theta
+        T = len(r)
+        h = np.empty(T, dtype=float)
+        z = np.empty(T, dtype=float)
+        u = np.empty(T, dtype=float)
+
+        # Initial conditions: h[0] from sample variance, u[0] = z[0] = 0.
+        h0 = max(float(np.var(r)), 1e-6)
+        log_h_prev = float(np.log(h0))
+        z_prev = 0.0
+        u_prev = 0.0
+
+        for t in range(T):
+            # Compute h_t from the log-variance equation using t-1 state.
+            log_h_t = (
+                omega
+                + beta * log_h_prev
+                + tau_1 * z_prev
+                + tau_2 * (z_prev ** 2 - 1.0)
+                + gamma * u_prev
+            )
+            # Clip log_h_t to avoid overflow in exp (e^709 ~ max float64).
+            log_h_t = float(np.clip(log_h_t, -30.0, 30.0))
+            h_t = float(np.exp(log_h_t))
+            # Clip for numerical stability (prevents sqrt(0) or log(0)).
+            h_t = max(h_t, 1e-8)
+            h[t] = h_t
+
+            # Standardized return at time t.
+            z_t = (r[t] - mu) / float(np.sqrt(h_t))
+            z[t] = z_t
+
+            # Measurement residual u_t (only when x_t > 0).
+            x_t = float(x[t])
+            if x_t > 0.0:
+                u_t = (
+                    float(np.log(x_t))
+                    - xi
+                    - phi * log_h_t
+                    - delta_1 * z_t
+                    - delta_2 * (z_t ** 2 - 1.0)
+                )
+            else:
+                u_t = 0.0
+            u[t] = u_t
+
+            # Update state for next iteration.
+            log_h_prev = float(np.log(h_t))
+            z_prev = z_t
+            u_prev = u_t
+
+        return h, z, u
+
+    @staticmethod
+    def _neg_log_lik(
+        theta: np.ndarray,
+        r: np.ndarray,
+        x: np.ndarray,
+    ) -> float:
+        """Negative joint log-likelihood (return + measurement equations).
+
+        ell_return(t) = -0.5 * log(h_t) - 0.5 * z_t^2
+        ell_meas(t)   = -0.5 * log(sigma_u^2) - 0.5 * u_t^2 / sigma_u^2
+
+        Returns the negative sum (for minimization).
+        """
+        log_sigma_u = float(np.clip(theta[10], -10.0, 10.0))
+        sigma_u = float(np.exp(log_sigma_u))
+        sigma_u2 = sigma_u ** 2
+
+        h, z, u = _RealizedGARCHModel._forward_pass(theta, r, x)
+
+        # Return contribution: -0.5 * sum(log(h_t) + z_t^2)
+        # Guard against h <= 0 (should not happen after clip, but defensive).
+        log_h = np.log(np.maximum(h, 1e-8))
+        ell_ret = -0.5 * float(np.sum(log_h + z ** 2))
+
+        # Measurement contribution: -0.5 * T * log(sigma_u^2) - 0.5 * sum(u^2) / sigma_u^2
+        T = len(r)
+        ell_meas = -0.5 * T * float(np.log(sigma_u2)) - 0.5 * float(np.sum(u ** 2)) / sigma_u2
+
+        return -(ell_ret + ell_meas)
+
+    # ------------------------------------------------------------------
+    # Public fit / predict interface
+    # ------------------------------------------------------------------
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_RealizedGARCHModel":
+        """Fit Hansen-Huang-Shek (2012) joint MLE.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix. If ``realized_variance`` column is specified,
+            uses that column as the realized variance series. Otherwise
+            falls back to r^2 as a proxy.
+        y : pd.Series
+            Return series (the target variable for the volatility model).
+        """
+        from scipy.optimize import minimize  # type: ignore
+
+        r_full = pd.Series(y).astype(float).dropna()
+        if len(r_full) < 30:
+            raise NotImplementedError(
+                f"_RealizedGARCHModel requires >= 30 observations; got {len(r_full)}."
+            )
+
+        # --- Resolved realized variance series ---
+        rv: pd.Series | None = None
+        if (
+            self.realized_variance_col is not None
+            and isinstance(X, pd.DataFrame)
+            and self.realized_variance_col in X.columns
+        ):
+            rv_candidate = (
+                pd.Series(X[self.realized_variance_col])
+                .astype(float)
+                .reindex(r_full.index)
+            )
+            if not rv_candidate.isna().all():
+                rv = rv_candidate
+        if rv is None:
+            # Fallback: squared returns as a realized-variance proxy.
+            # WARNING: this degrades estimation of phi, delta_1, delta_2 because
+            # r^2 is a noisy measurement that confounds return and variance dynamics.
+            rv = (r_full ** 2).rename("rv_proxy")
+
+        # Align r and rv on the same index, drop rows where either is NaN.
+        aligned = pd.DataFrame({"r": r_full, "x": rv}).dropna()
+        r_arr = np.asarray(aligned["r"], dtype=float)
+        # Clip realized variance to [1e-8, inf) before taking log.
+        x_arr = np.clip(np.asarray(aligned["x"], dtype=float), 1e-8, None)
+
+        T = len(r_arr)
+        if T < 30:
+            raise NotImplementedError(
+                f"_RealizedGARCHModel: fewer than 30 non-NaN aligned observations ({T})."
+            )
+
+        # --- Canonical initial parameter vector (§4.3 of spec.md) ---
+        import math as _math
+        theta0 = np.array([
+            float(np.mean(r_arr)),  # mu: return mean
+            -0.5,                   # omega: log-var intercept
+            0.9,                    # beta: log-var persistence
+            0.0,                    # tau_1: leverage (linear)
+            0.05,                   # tau_2: leverage (quadratic)
+            0.05,                   # gamma: RV feedback
+            0.0,                    # xi: measurement intercept
+            1.0,                    # phi: measurement loading
+            0.0,                    # delta_1: measurement leverage (linear)
+            0.05,                   # delta_2: measurement leverage (quadratic)
+            _math.log(0.1),         # log_sigma_u: log of measurement noise std
+        ], dtype=float)
+
+        # --- Multi-start optimization ---
+        best_theta: np.ndarray | None = None
+        best_obj = float("inf")
+
+        for start_idx in range(max(1, int(self.n_starts))):
+            if start_idx == 0:
+                # Canonical initialization.
+                x0 = theta0.copy()
+            else:
+                # Perturb the canonical theta by N(0, 0.05) noise.
+                rng = np.random.default_rng(self.random_state + start_idx)
+                x0 = theta0 + rng.normal(0.0, 0.05, size=len(theta0))
+                # Clip beta to [0, 0.999] after perturbation to avoid unit-root start.
+                x0[2] = float(np.clip(x0[2], 0.0, 0.999))
+
+            try:
+                result = minimize(
+                    fun=_RealizedGARCHModel._neg_log_lik,
+                    x0=x0,
+                    args=(r_arr, x_arr),
+                    method="L-BFGS-B",
+                    options={"maxiter": int(self.max_iter), "ftol": 1e-9, "gtol": 1e-6},
+                )
+                if np.isfinite(result.fun) and result.fun < best_obj:
+                    best_obj = float(result.fun)
+                    best_theta = np.asarray(result.x, dtype=float)
+            except Exception:
+                # If a start fails (e.g. numerical overflow), skip it.
+                continue
+
+        if best_theta is None:
+            # All starts failed; fall back to the canonical initial values as
+            # a last resort (no guarantee of convergence).
+            best_theta = theta0.copy()
+
+        # --- Store fitted state ---
+        fitted_h, fitted_z, fitted_u = self._forward_pass(best_theta, r_arr, x_arr)
+        self._params = {
+            name: float(best_theta[i]) for i, name in enumerate(self._PARAM_NAMES)
+        }
+        # Recover sigma_u from log_sigma_u for user-facing access.
+        self._params["sigma_u"] = float(np.exp(best_theta[10]))
+        self._h = fitted_h
+        self._z = fitted_z
+        self._u = fitted_u
+        self._mu = float(best_theta[0])
+        self._last_h = float(fitted_h[-1]) if len(fitted_h) > 0 else 1.0
+        self._last_z = float(fitted_z[-1]) if len(fitted_z) > 0 else 0.0
+        self._last_u = float(fitted_u[-1]) if len(fitted_u) > 0 else 0.0
+        self._r = r_arr
+        self._x = x_arr
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        """Return conditional mean mu broadcast over len(X) rows.
+
+        Consistent with ``_GARCHFamily.predict`` — the L4 point-forecast
+        machinery expects a scalar-per-row return from this method.
+        """
+        return np.full(len(X), self._mu, dtype=float)
+
+    def predict_variance(self, h_steps: int = 1) -> np.ndarray:
+        """Iterate the log-variance recursion forward ``h_steps`` steps.
+
+        For multi-step forecasting, future shocks z and measurement residuals u
+        are set to zero (their conditional expectations under the normal model).
+        The recursion degenerates to:
+            log(h_{T+s}) = omega + beta * log(h_{T+s-1}) - tau_2
+
+        Returns
+        -------
+        np.ndarray, shape (h_steps,)
+            One-step-to-h_steps-ahead conditional variance forecasts.
+        """
+        if self._params is None:
+            return np.zeros(int(h_steps), dtype=float)
+
+        omega = self._params["omega"]
+        beta = self._params["beta"]
+        tau_2 = self._params["tau_2"]
+
+        forecasts = np.empty(int(h_steps), dtype=float)
+        log_h = float(np.log(max(self._last_h, 1e-8)))
+        for s in range(int(h_steps)):
+            # With z=0 and u=0: tau_1*0 + tau_2*(0-1) + gamma*0 = -tau_2
+            log_h = omega + beta * log_h - tau_2
+            forecasts[s] = float(np.exp(log_h))
+
+        return forecasts
+
+    @property
+    def conditional_volatility_(self) -> np.ndarray | None:
+        """In-sample conditional standard deviations (sqrt of h_t)."""
+        if self._h is None:
+            return None
+        return np.sqrt(np.maximum(self._h, 0.0))
+
+    @property
+    def params_(self) -> dict[str, float]:
+        """Fitted parameter dictionary.
+
+        Keys: mu, omega, beta, tau_1, tau_2, gamma, xi, phi,
+              delta_1, delta_2, log_sigma_u, sigma_u.
+        """
+        return dict(self._params) if self._params is not None else {}
 
 
 # ---------------------------------------------------------------------------
@@ -9587,17 +9998,12 @@ def _execute_l7_step(
         frame = _gradient_attribution_frame(model, X, kind=op)
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "generalized_irf":
-        # v0.8.9 honesty pass V2.3: name is reserved for the Pesaran-Shin
-        # (1998) order-invariant variant, not yet implemented. The previous
-        # v0.2 #189 runtime shipped Cholesky orthogonalised IRFs under this
-        # name; the operational Cholesky variant is now ``orthogonalised_irf``.
-        raise NotImplementedError(
-            "generalized_irf (Pesaran-Shin 1998 order-invariant GIRF) is "
-            "future-gated (v0.9.x roadmap). For Cholesky orthogonalised "
-            "IRFs use the ``orthogonalised_irf`` op (operational since "
-            "v0.8.9; matches the IRF previously emitted under the "
-            "misnamed ``generalized_irf`` alias)."
-        )
+        # C49: Pesaran-Shin (1998) order-invariant GIRF.
+        # Uses irf_obj.irfs (reduced-form MA, NOT orth_irfs) and sigma_u.
+        # Formula: sigma_jj^{-1/2} * A_h * Sigma * e_j.
+        model = _first_model_input(inputs)
+        frame = _var_girf_frame(model, n_periods=int(params.get("n_periods", 12)))
+        return _attach_l7_attrs(frame, model, op, l3_features)
     if op in {"fevd", "historical_decomposition", "orthogonalised_irf"}:
         model = _first_model_input(inputs)
         frame = _var_impulse_frame(model, op_name=op)
@@ -10173,6 +10579,119 @@ def _forecast_decomposition_frame(
             "coefficient": [float(v) for v in contributions],
         }
     )
+
+
+def _var_girf_frame(
+    model: ModelArtifact, *, n_periods: int = 12
+) -> pd.DataFrame:
+    """Pesaran-Shin (1998) generalized impulse response function (C49).
+
+    For a fitted statsmodels VAR, computes the order-invariant GIRF:
+
+        GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma * e_j
+
+    where:
+    - A_h = irf_obj.irfs[h]  — reduced-form MA coefficient matrix at horizon h
+      (shape K x K, NOT Cholesky; uses ``irf.irfs`` NOT ``irf.orth_irfs``)
+    - Sigma = fitted_results.sigma_u  — residual covariance (K x K)
+    - e_j = unit vector with 1 at position j (0-indexed)
+    - sigma_jj = Sigma[j, j]  — marginal residual variance of variable j
+
+    The importance metric is the L1 norm of the target variable's response
+    to shock j across all horizons h = 0, ..., H:
+
+        importance[j] = sum_{h=0}^{H} |GIRF_h(j)[target_index]|
+
+    Consistent with ``_var_impulse_frame`` importance convention.
+
+    Falls back to ``_tree_importance_frame`` with ``status = "fallback_non_var"``
+    when the model is not a fitted VAR (e.g. ridge). No posterior path —
+    posterior GIRF for BVAR is deferred to a future cycle.
+
+    Reference: Pesaran, M.H. & Shin, Y. (1998) "Generalized impulse response
+    analysis in linear multivariate models." Economics Letters 58.
+    """
+    # --- Unwrap fitted VAR results ---
+    fitted_results = getattr(model.fitted_object, "_results", None)
+    if fitted_results is None:
+        # One level unwrap for FAVAR (its ._var._results is the VAR fit).
+        inner = getattr(model.fitted_object, "_var", None)
+        fitted_results = getattr(inner, "_results", None) if inner is not None else None
+    if fitted_results is None:
+        frame = _tree_importance_frame(model)
+        if "status" not in frame.columns:
+            frame["status"] = "fallback_non_var"
+        return frame
+
+    # --- Identify target variable index ---
+    target_index = 0
+    try:
+        target_index = (
+            list(fitted_results.names).index("__y__")
+            if "__y__" in fitted_results.names
+            else 0
+        )
+    except Exception:
+        target_index = 0
+
+    # --- Compute reduced-form MA coefficients and residual covariance ---
+    sigma = np.asarray(fitted_results.sigma_u, dtype=float)  # (K, K)
+    K = sigma.shape[0]
+    # Pass var_decomp=identity to skip the Cholesky decomposition inside
+    # statsmodels IRAnalysis.__init__. This gives irfs = A_h (the raw
+    # reduced-form MA coefficients), which is what the Pesaran-Shin formula
+    # requires (NOT orth_irfs which uses the Cholesky factorization).
+    try:
+        irf_obj = fitted_results.irf(int(n_periods), var_decomp=np.eye(K))
+    except Exception:
+        # Fallback: try without var_decomp (may work if sigma_u is PD).
+        try:
+            irf_obj = fitted_results.irf(int(n_periods))
+        except Exception:
+            frame = _tree_importance_frame(model)
+            if "status" not in frame.columns:
+                frame["status"] = "fallback_non_var"
+            return frame
+    # irfs: reduced-form MA coefficients, shape (H+1, K, K).
+    # irfs[h, i, j] = response of variable i at horizon h to unit impulse
+    # in variable j (no Cholesky, since we passed var_decomp=I).
+    irfs = np.asarray(irf_obj.irfs, dtype=float)   # shape (H+1, K, K)
+
+    rows: list[dict[str, Any]] = []
+    for j, name in enumerate(fitted_results.names):
+        if j >= K:
+            break
+        # Unit vector e_j (K x 1 conceptually, but we use a 1-D array).
+        e_j = np.zeros(K, dtype=float)
+        e_j[j] = 1.0
+
+        # Scale factor: sigma_jj^{-1/2}.
+        sigma_jj = float(sigma[j, j])
+        if sigma_jj <= 0.0:
+            # Guard: degenerate diagonal element — set scale = 1 to avoid
+            # division by zero or sqrt of negative (§10 numerical stability).
+            scale = 1.0
+        else:
+            scale = sigma_jj ** -0.5
+
+        # Accumulate L1 importance across horizons h = 0, ..., H.
+        response = 0.0
+        for h in range(irfs.shape[0]):
+            # GIRF_h(j) = scale * A_h @ Sigma @ e_j
+            # A_h @ Sigma @ e_j picks out column j of (A_h @ Sigma),
+            # then we read the target_index element.
+            girf_h = scale * irfs[h] @ sigma @ e_j   # shape (K,)
+            response += abs(float(girf_h[target_index]))
+
+        rows.append(
+            {
+                "feature": str(name),
+                "importance": response,
+                "coefficient": None,
+                "status": "operational",
+            }
+        )
+    return pd.DataFrame(rows)
 
 
 def _gradient_attribution_frame(
