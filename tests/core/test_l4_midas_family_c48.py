@@ -85,14 +85,15 @@ class TestRegistration:
                 f"get_family_status('{fam}') != 'operational'"
             )
 
-    def test_c48_realized_garch_remains_future(self):
-        """R-2: realized_garch must stay FUTURE (deferred to C49).
+    def test_c48_realized_garch_now_operational_in_c49(self):
+        """R-2: realized_garch was FUTURE at C48; promoted to OPERATIONAL in C49.
 
-        Verifies test-spec.md behavioral contract #2.
+        Updated in C49 to reflect Hansen-Huang-Shek (2012) joint-MLE promotion.
+        Original C48 assertion was: assert 'realized_garch' in FUTURE_MODEL_FAMILIES.
         """
-        assert "realized_garch" in FUTURE_MODEL_FAMILIES
-        assert "realized_garch" not in OPERATIONAL_MODEL_FAMILIES
-        assert get_family_status("realized_garch") == "future"
+        assert "realized_garch" in OPERATIONAL_MODEL_FAMILIES
+        assert "realized_garch" not in FUTURE_MODEL_FAMILIES
+        assert get_family_status("realized_garch") == "operational"
 
     def test_c48_operational_count_increased(self):
         """R-3: operational count must be >= 39 after C48 (+4 MIDAS families).
@@ -154,11 +155,11 @@ class TestValidation:
                 f"{[e.message for e in report.hard_errors]}"
             )
 
-    def test_c48_realized_garch_recipe_rejected(self):
-        """V-2: YAML recipe with realized_garch must be hard-rejected.
+    def test_c48_realized_garch_recipe_now_accepted_in_c49(self):
+        """V-2: realized_garch was rejected at C48; now accepted (operational) after C49.
 
-        Verifies test-spec.md behavioral contract #4:
-        error message must contain 'future' or 'realized_garch'.
+        Updated in C49 to reflect promotion to operational. A recipe using
+        realized_garch must now pass validation without hard errors.
         """
         from macroforecast.core.layers.l4 import validate_layer, parse_layer_yaml
 
@@ -189,10 +190,13 @@ class TestValidation:
 """
         layer = parse_layer_yaml(yaml_text, "l4")
         report = validate_layer(layer)
-        assert report.has_hard_errors, "realized_garch should be hard-rejected"
-        messages = [e.message for e in report.hard_errors]
-        assert any("future" in m.lower() or "realized_garch" in m for m in messages), (
-            f"Error messages do not mention 'future' or 'realized_garch': {messages}"
+        # realized_garch is now operational — must not produce a "future" hard error
+        future_errors = [
+            e for e in report.hard_errors
+            if "future" in e.message.lower() or "realized_garch" in e.message
+        ]
+        assert not future_errors, (
+            f"realized_garch should no longer be hard-rejected as future: {future_errors}"
         )
 
 
