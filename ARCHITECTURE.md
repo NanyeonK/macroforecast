@@ -104,6 +104,15 @@ live `macroforecast.functions.__all__` at HEAD afc28282):
 For the full per-callable reference (signatures, result attributes,
 examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 
+> **Note on L3 counts**: The table above reports *standalone callables* (the
+> `mf.functions` API surface, verified via `gen_standalone_docs.py`). The
+> recipe DAG registry (`l3_ops.py`) contains a different count — it includes
+> ops with `layer_scope=("l2",)` filed in that module and internal pipeline
+> ops (`l3_feature_bundle`, `l3_metadata_build`). The CLAUDE.md entry "37 ops
+> + cascade β" refers to the post-C47 operational recipe DAG op count;
+> "36 callables" refers to the standalone API. Both numbers are correct for
+> their respective surfaces.
+
 ---
 
 ## Cycle 50 — real_time_alfred + L2 axes + lstm_hidden_state (2026-05-22)
