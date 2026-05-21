@@ -1,4 +1,4 @@
-# `quarterly_average` -- Aggregate to quarterly via mean of the three monthly observations.
+# `quarterly_average` -- Aggregate monthly columns to quarterly frequency.
 
 [Back to `monthly_to_quarterly_rule` axis](../axes/monthly_to_quarterly_rule.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -10,6 +10,8 @@
 ```python
 mf.functions.freq_align_monthly_to_quarterly_clean(
     panel: pd.DataFrame,
+    monthly_columns: list[str],
+    rule: str = 'quarterly_average',
 ) -> pd.DataFrame
 ```
 
@@ -17,7 +19,9 @@ mf.functions.freq_align_monthly_to_quarterly_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
+| `panel` | `pd.DataFrame` | — | — | — |
+| `monthly_columns` | `list[str]` | — | — | — |
+| `rule` | `str` | `'quarterly_average'` | — | — |
 
 ## Returns
 
@@ -25,13 +29,7 @@ mf.functions.freq_align_monthly_to_quarterly_clean(
 
 ## Behavior
 
-Standard NIPA aggregation for stocks / averages.
-
-Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_average`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
-
-**When to use**
-
-Default. Stock variables (interest rates, prices, employment levels).
+(See standalone callable docstring.)
 
 ## In recipe context
 
@@ -45,10 +43,10 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design, L2: see design docs for quarterly_average.
 
 ## Related ops
 
-See also: `quarterly_endpoint`, `quarterly_sum` (on the same axis).
+See the layer index for related ops.
 
-_Last reviewed 2026-05-04 by macroforecast author._
+_Last reviewed 2026-05-22 by macroforecast author._

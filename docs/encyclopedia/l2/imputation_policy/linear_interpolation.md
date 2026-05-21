@@ -1,4 +1,4 @@
-# `linear_interpolation` -- Linear interpolation between adjacent observations.
+# `linear_interpolation` -- Impute missing cells by linear interpolation between adjacent observations.
 
 [Back to `imputation_policy` axis](../axes/imputation_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -17,7 +17,7 @@ mf.functions.linear_interpolate_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
+| `panel` | `pd.DataFrame` | — | — | — |
 
 ## Returns
 
@@ -25,11 +25,7 @@ mf.functions.linear_interpolate_clean(
 
 ## Behavior
 
-Smooths over isolated missing observations. Not appropriate for leading / trailing missings.
-
-**When to use**
-
-Interior missing observations in well-behaved series.
+(See standalone callable docstring.)
 
 ## In recipe context
 
@@ -43,11 +39,10 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
-* Chow & Lin (1971) 'Best Linear Unbiased Interpolation, Distribution, and Extrapolation of Time Series by Related Series', RES 53(4).
+* macroforecast design, L2: see design docs for linear_interpolation.
 
 ## Related ops
 
-See also: `forward_fill`, `em_factor` (on the same axis).
+See also: `em_factor`, `em_multivariate`, `forward_fill`, `mean` (on the same axis).
 
-_Last reviewed 2026-05-04 by macroforecast author._
+_Last reviewed 2026-05-22 by macroforecast author._

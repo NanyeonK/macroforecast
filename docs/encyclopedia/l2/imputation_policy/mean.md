@@ -1,4 +1,4 @@
-# `mean` -- Replace missing cells with the per-series rolling mean.
+# `mean` -- Replace missing cells with the per-column full-sample mean.
 
 [Back to `imputation_policy` axis](../axes/imputation_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -17,7 +17,7 @@ mf.functions.mean_impute_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
+| `panel` | `pd.DataFrame` | — | — | — |
 
 ## Returns
 
@@ -25,11 +25,7 @@ mf.functions.mean_impute_clean(
 
 ## Behavior
 
-Simple, fast, deterministic. No iteration. Useful when the missing pattern is sparse.
-
-**When to use**
-
-Sparse missingness; quick smoke tests.
+(See standalone callable docstring.)
 
 ## In recipe context
 
@@ -43,10 +39,10 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
+* macroforecast design, L2: see design docs for mean.
 
 ## Related ops
 
-See also: `em_factor`, `forward_fill` (on the same axis).
+See also: `em_factor`, `em_multivariate`, `forward_fill`, `linear_interpolation` (on the same axis).
 
-_Last reviewed 2026-05-04 by macroforecast author._
+_Last reviewed 2026-05-22 by macroforecast author._

@@ -1,4 +1,4 @@
-# `truncate_to_balanced` -- Trim leading / trailing rows until every series is observed.
+# `truncate_to_balanced` -- Remove rows containing any NaN to produce a balanced panel.
 
 [Back to `frame_edge_policy` axis](../axes/frame_edge_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
@@ -17,7 +17,7 @@ mf.functions.truncate_to_balanced_clean(
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `panel` | `pd.DataFrame` | — | — | Input panel. Each column is a variable; rows are time periods. Series is promoted to a single-column DataFrame internally. |
+| `panel` | `pd.DataFrame` | — | — | — |
 
 ## Returns
 
@@ -25,11 +25,7 @@ mf.functions.truncate_to_balanced_clean(
 
 ## Behavior
 
-Makes the panel rectangular by removing rows where any predictor (or the target, depending on scope) is missing. Standard for factor-model-style studies that need a balanced panel.
-
-**When to use**
-
-Default for high-dimensional studies; pairs with em_factor imputation for the interior.
+(See standalone callable docstring.)
 
 ## In recipe context
 
@@ -43,11 +39,10 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L2: 'preprocessing is the only layer with a strict A→B→C→D→E execution order; every cell follows the same pipeline.'
-* Stock & Watson (2002) 'Macroeconomic Forecasting Using Diffusion Indexes', JBES 20(2).
+* macroforecast design, L2: see design docs for truncate_to_balanced.
 
 ## Related ops
 
-See also: `drop_unbalanced_series`, `keep_unbalanced`, `zero_fill_leading` (on the same axis).
+See also: `drop_unbalanced_series`, `zero_fill_leading` (on the same axis).
 
-_Last reviewed 2026-05-04 by macroforecast author._
+_Last reviewed 2026-05-22 by macroforecast author._
