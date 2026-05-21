@@ -268,6 +268,7 @@ def test_paper_08_two_step_ridge(synth_panel):
 # Paper 9 — hemisphere_neural_network: Round 1 flagged that L4 dispatches to
 # LinearRegression rather than the HNN distrib methods.
 def test_paper_09_hemisphere_neural_network(synth_panel):
+    pytest.importorskip("torch", reason="hemisphere_neural_network requires macroforecast[deep] (torch)")
     recipe = hemisphere_neural_network(target="y", horizon=1, panel=synth_panel)
     # MLP per-origin walk-forward refit blows up the smoke budget; raise
     # min_train_size so only a couple of origins are scored. Doesn't
