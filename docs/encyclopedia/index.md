@@ -10,7 +10,7 @@ Encyclopedia-style browse for every macroforecast schema choice. Each layer, sub
 - Sub-layers: 62
 - Axes (operational + future): 172
 - Option values: 635
-- OptionDoc entries (full prose): 617
+- OptionDoc entries (full prose): 618
 
 ## Browse
 

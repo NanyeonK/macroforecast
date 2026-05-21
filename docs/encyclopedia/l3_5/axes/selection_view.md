@@ -37,15 +37,29 @@ Default rich audit. Activates the ``multi`` branch on L3.5.selection_view; combi
 
 * macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
-**Related options**: [`selected_list`](#selected-list), [`selection_count_per_origin`](#selection-count-per-origin), [`selection_stability`](#selection-stability)
+**Related options**: [`none`](#none), [`selected_list`](#selected-list), [`selection_count_per_origin`](#selection-count-per-origin), [`selection_stability`](#selection-stability)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `none`  --  operational
 
-_(no schema description for `none`)_
+Disable feature-selection diagnostics for this layer.
 
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l3_5.py`` are welcome.
+L3.5.E selection view ``none``.
+
+This option configures the ``selection_view`` axis on the ``L3_5_E_selected_features_post_selection`` sub-layer of L3.5; output is emitted under ``manifest.diagnostics/l3_5/L3_5_E_selected_features_post_selection/`` alongside the other selected views.
+
+**When to use**
+
+Suppressing diagnostics when feature selection is present but its diagnostics are not needed, avoiding unnecessary overhead.
+
+**References**
+
+* macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
+
+**Related options**: [`selected_list`](#selected-list), [`selection_count_per_origin`](#selection-count-per-origin), [`selection_stability`](#selection-stability), [`multi`](#multi)
+
+_Last reviewed 2026-05-05 by macroforecast author._
 
 ### `selected_list`  --  operational
 
@@ -63,7 +77,7 @@ Cheapest readout; the raw record of feature-selection decisions.
 
 * macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
-**Related options**: [`selection_count_per_origin`](#selection-count-per-origin), [`selection_stability`](#selection-stability), [`multi`](#multi)
+**Related options**: [`none`](#none), [`selection_count_per_origin`](#selection-count-per-origin), [`selection_stability`](#selection-stability), [`multi`](#multi)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -83,7 +97,7 @@ Detecting selection volatility; large variation across origins flags an unstable
 
 * macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
-**Related options**: [`selected_list`](#selected-list), [`selection_stability`](#selection-stability), [`multi`](#multi)
+**Related options**: [`none`](#none), [`selected_list`](#selected-list), [`selection_stability`](#selection-stability), [`multi`](#multi)
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
@@ -103,6 +117,6 @@ Quantifying selection robustness; high stability is a positive indicator for the
 
 * macroforecast design Part 4: 'diagnostic layers default-off; non-blocking; produce JSON + matplotlib views attached to manifest.diagnostics/.'
 
-**Related options**: [`selected_list`](#selected-list), [`selection_count_per_origin`](#selection-count-per-origin), [`multi`](#multi)
+**Related options**: [`none`](#none), [`selected_list`](#selected-list), [`selection_count_per_origin`](#selection-count-per-origin), [`multi`](#multi)
 
 _Last reviewed 2026-05-05 by macroforecast author._
