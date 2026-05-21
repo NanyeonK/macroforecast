@@ -2035,57 +2035,51 @@ def test_v23_orthogonalised_irf_returns_cholesky_response():
     np.testing.assert_allclose(np.asarray(irf.orth_irfs)[0], chol, atol=1e-10)
 
 
-def test_v23_generalized_irf_is_future_gated():
-    """``generalized_irf`` (Pesaran-Shin 1998) is reserved for a v0.9.x
-    runtime; the schema declares it future and the L7 dispatcher must
-    raise NotImplementedError pointing users to ``orthogonalised_irf``."""
+def test_v23_generalized_irf_operational_in_c49():
+    """C49 promoted ``generalized_irf`` (Pesaran-Shin 1998) to operational.
 
-    import pytest
+    Regression guard: schema registers the op as operational (not future);
+    the runtime computes order-invariant GIRFs that differ from the
+    Cholesky-orthogonalised IRFs produced by ``orthogonalised_irf``."""
+
+    import numpy as np
 
     from macroforecast.core.ops.l7_ops import FUTURE_OPS, OPERATIONAL_OPS
+    from macroforecast.core.runtime import _var_girf_frame, _var_impulse_frame
 
-    # Schema registration: ``generalized_irf`` future, ``orthogonalised_irf``
-    # operational.
-    assert "generalized_irf" in FUTURE_OPS
+    # Schema registration: ``generalized_irf`` operational, not future.
+    assert "generalized_irf" in OPERATIONAL_OPS
+    assert "generalized_irf" not in FUTURE_OPS
     assert "orthogonalised_irf" in OPERATIONAL_OPS
-    assert "generalized_irf" not in OPERATIONAL_OPS
 
-    # Runtime dispatcher gate: re-route via the public op resolver to
-    # exercise the explicit NotImplementedError path.
-    from macroforecast.core.runtime import _execute_l7_step
+    # Runtime dispatch: use the same VAR artifact helper as the orthogonalised
+    # IRF test so both tests exercise the same fitted model.
+    artifact, wrapper, _, _ = _var_artifact_for_v23()
+    frame = _var_girf_frame(artifact, n_periods=8)
 
-    # Build a minimal viable context using construction defaults. Any
-    # input shape is fine because the gate triggers before any payload
-    # inspection.
-    from macroforecast.core.types import (
-        L3FeaturesArtifact,
-        L3MetadataArtifact,
-        L5EvaluationArtifact,
+    # Output must be a non-empty DataFrame with the standard importance columns.
+    import pandas as pd
+
+    assert isinstance(frame, pd.DataFrame)
+    assert len(frame) > 0
+    assert "importance" in frame.columns
+    assert (frame["importance"] >= 0).all()
+    assert (frame["status"] == "operational").all()
+
+    # Order-invariance check: Pesaran-Shin GIRFs use reduced-form MA
+    # coefficients (irf.irfs), NOT the Cholesky factor. The per-shock
+    # importance values must differ from the Cholesky-orthogonalised IRF
+    # importance values for at least one shock (the two methods are
+    # mathematically distinct).
+    orth_frame = _var_impulse_frame(artifact, op_name="orthogonalised_irf", n_periods=8)
+    girf_importance = np.sort(frame["importance"].values)
+    orth_importance = np.sort(orth_frame["importance"].values)
+    # Not identical (different normalisation / method); allow small tolerance.
+    assert not np.allclose(girf_importance, orth_importance, atol=1e-6), (
+        "generalized_irf and orthogonalised_irf returned identical importance "
+        "values -- GIRF should use sigma_jj^{-1/2} * A_h * Sigma * e_j, "
+        "not the Cholesky path."
     )
-
-    # Inspect the dataclass fields to construct safely without coupling
-    # to the internal field set.
-    import dataclasses
-
-    def _empty(cls):
-        defaults = {
-            f.name: getattr(f, "default", None) for f in dataclasses.fields(cls)
-        }
-        # Replace MISSING sentinels with None / {}
-        for k, v in defaults.items():
-            if v is dataclasses.MISSING:
-                defaults[k] = {} if k.endswith("hashes") else None
-        return cls(**defaults)
-
-    with pytest.raises(NotImplementedError, match="orthogonalised_irf"):
-        _execute_l7_step(
-            "generalized_irf",
-            inputs=[],
-            params={},
-            l3_features=_empty(L3FeaturesArtifact),
-            l3_metadata=_empty(L3MetadataArtifact),
-            l5_eval=_empty(L5EvaluationArtifact),
-        )
 
 
 def test_v23_historical_decomposition_reconstructs_target_path():
