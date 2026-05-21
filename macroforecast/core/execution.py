@@ -738,7 +738,7 @@ class ManifestExecutionResult:
                     break
         if _l1_art is not None:
             # FRED data_through → auto-populate data_revision_tag when not already set
-            _raw_meta = {}
+            _raw_meta: dict[str, Any] = {}
             if hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
                 _raw_meta = (_l1_art.raw_panel.metadata.values or {}) if hasattr(_l1_art.raw_panel, "metadata") else {}
             _dt = _raw_meta.get("data_through")
