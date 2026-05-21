@@ -770,7 +770,7 @@ _ORTHOGONALISED_IRF = _o(
         "causal scheme imposed."
     ),
     "VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).",
-    when_not_to_use="When the variable ordering is arbitrary -- file a v0.9.x request for ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, currently future-gated).",
+    when_not_to_use="When the variable ordering is arbitrary -- use ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, operational since C49).",
     references=(
         _REF_DESIGN_L7,
         Reference(
@@ -780,29 +780,57 @@ _ORTHOGONALISED_IRF = _o(
     related=("fevd", "historical_decomposition"),
 )
 
-# ``generalized_irf`` (Pesaran-Shin 1998) is registered as a *future* op.
-# v0.2 #189 promoted an op named ``generalized_irf`` that actually shipped
-# Cholesky orthogonalised IRFs (statsmodels ``irf.orth_irfs``); the
-# v0.8.9 honesty pass renamed the operational variant to
-# ``orthogonalised_irf`` and reserved ``generalized_irf`` for the
-# Pesaran-Shin order-invariant procedure (v0.9.x roadmap). The two
-# methods differ -- Cholesky is order-dependent; Pesaran-Shin computes
-# each shock as the multivariate-normal projection of all residuals
-# onto the j-th canonical direction, yielding an order-invariant table.
+# ``generalized_irf`` (Pesaran-Shin 1998) was promoted from *future* to
+# *operational* in Cycle 49 (2026-05-21). The v0.2 #189 version shipped
+# Cholesky orthogonalised IRFs; the v0.8.9 honesty pass renamed that
+# to ``orthogonalised_irf`` and reserved ``generalized_irf`` for the
+# true Pesaran-Shin order-invariant procedure. C49 implements it via
+# ``_var_girf_frame`` using ``var_decomp=np.eye(K)`` to obtain raw
+# reduced-form MA coefficients.
 _GENERALIZED_IRF = _o(
     "generalized_irf",
-    "Pesaran-Shin (1998) generalized impulse-response function (future, v0.9.x).",
+    "Pesaran-Shin (1998) order-invariant generalized impulse-response function.",
     (
-        "Order-invariant IRF where each shock is constructed as the "
-        "multivariate-normal projection of all residuals onto the j-th "
-        "canonical direction. Distinct from Cholesky orthogonalised "
-        "IRFs (which use a recursive lower-triangular rotation). "
-        "**Future** -- the runtime currently raises NotImplementedError. "
-        "For the Cholesky variant operational since v0.2, use "
-        "``orthogonalised_irf``."
+        "Order-invariant IRF where each GIRF is computed as the projection "
+        "of all K residuals onto the j-th shock direction, scaled by the "
+        "j-th diagonal entry of the residual covariance:\n\n"
+        "``GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma * e_j``\n\n"
+        "where ``A_h = irf_obj.irfs[h]`` are the **raw reduced-form MA "
+        "coefficients** (NOT Cholesky-orthogonalised), obtained via "
+        "``fitted_results.irf(n_periods, var_decomp=np.eye(K))``. Passing "
+        "``var_decomp=I`` bypasses the Cholesky factorisation inside "
+        "statsmodels ``IRAnalysis``, returning ``A_h @ I = A_h`` directly. "
+        "``Sigma = fitted_results.sigma_u`` is the residual covariance "
+        "matrix. ``e_j`` is the j-th standard basis vector.\n\n"
+        "**Importance metric**: "
+        "``importance[j] = sum_{h=0}^{H} |GIRF_h(j)[target_index]|`` -- "
+        "the L1 norm of the target variable's response to shock j across "
+        "all horizons 0..H.\n\n"
+        "**Order invariance**: permuting the VAR column order produces "
+        "identical importance values for any given (shock, response) pair. "
+        "Verified empirically to atol=1e-8 (actual difference ~1e-19 in "
+        "the C49 test suite). This is the defining property that "
+        "distinguishes the Pesaran-Shin GIRF from the Cholesky "
+        "``orthogonalised_irf``.\n\n"
+        "**Non-VAR fallback**: when the fitted model is not a VAR "
+        "family (e.g., ridge), falls back to "
+        "``_tree_importance_frame`` with ``status='fallback_non_var'``.\n\n"
+        "**Numerical guard**: when ``sigma_jj <= 0`` (degenerate diagonal), "
+        "scale defaults to 1.0. When ``irf()`` fails (singular or non-PD "
+        "data), the fallback is triggered automatically.\n\n"
+        "Distinct from ``orthogonalised_irf`` (Cholesky lower-triangular "
+        "rotation; order-dependent; operational since v0.2). Use "
+        "``generalized_irf`` when the variable ordering in the VAR has no "
+        "theoretical motivation. Use ``orthogonalised_irf`` when a recursive "
+        "identification is theoretically motivated."
     ),
-    "VAR analysis where the variable ordering has no theoretical motivation -- order-invariance is the desired property.",
-    when_not_to_use="When a recursive identification IS theoretically motivated -- use ``orthogonalised_irf`` instead.",
+    "VAR analysis where the variable ordering has no theoretical motivation and order-invariance is required; replication of papers using Pesaran-Shin (1998) GIRFs; comparing shock propagation across different variable orderings.",
+    when_not_to_use=(
+        "When a recursive identification IS theoretically motivated -- use "
+        "``orthogonalised_irf`` instead (e.g., monetary policy ordered last in a "
+        "structural VAR). Non-VAR models (triggers fallback to tree importance; "
+        "no meaningful GIRF interpretation)."
+    ),
     references=(
         _REF_DESIGN_L7,
         Reference(
@@ -810,6 +838,8 @@ _GENERALIZED_IRF = _o(
         ),
     ),
     related=("fevd", "historical_decomposition", "orthogonalised_irf"),
+    op_page=True,
+    op_func_name="generalized_irf",
 )
 
 

@@ -5,6 +5,62 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added — Cycle 49 (2026-05-21) — Realized GARCH + Pesaran-Shin GIRF
+
+Promoted 2 items from `future` to `operational`. `FUTURE_MODEL_FAMILIES` is now
+empty `()`; `FUTURE_OPS` contains only `lstm_hidden_state`.
+
+- `realized_garch`: Hansen-Huang-Shek (2012) joint-MLE Realized GARCH. Three-equation
+  system (return + log-variance + measurement); 11-parameter vector estimated by
+  `scipy.optimize.minimize(method="L-BFGS-B")` with 3 multi-starts. No `arch` package
+  dependency. `params_` dict exposes all 11 HHS2012 parameters: `mu, omega, beta,
+  tau_1, tau_2, gamma, xi, phi, delta_1, delta_2, sigma_u`. Conditional-volatility
+  path in `conditional_volatility_`. References: Hansen, Huang & Shek (2012),
+  Journal of Applied Econometrics 27(6): 877-906.
+
+  **Distinct from** `realized_garch_with_rv_exog` (RV-as-exogenous-regressor into
+  a vanilla GARCH(1,1) via the `arch` package). That family remains operational and
+  unchanged. Use `realized_garch_with_rv_exog` when only the `arch` package is
+  available and an approximation suffices; use `realized_garch` for the true
+  HHS (2012) joint-MLE procedure.
+
+- `generalized_irf`: Pesaran-Shin (1998) order-invariant generalized impulse-response
+  function. Formula: `GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma * e_j` where `A_h`
+  are the raw reduced-form MA coefficients (obtained via `fitted_results.irf(n_periods,
+  var_decomp=np.eye(K))`; identity `var_decomp` bypasses the Cholesky factorisation).
+  Importance metric: L1 norm of target-variable response to shock `j` across all
+  horizons. Order-invariance verified at atol=1e-8 (actual difference ~1e-19).
+  References: Pesaran & Shin (1998), Economics Letters 58(1): 17-29.
+
+  **Distinct from** `orthogonalised_irf` (Cholesky lower-triangular rotation; order-
+  dependent; operational since v0.2). Use `generalized_irf` when the variable ordering
+  in the VAR has no theoretical motivation; use `orthogonalised_irf` when a recursive
+  identification is theoretically motivated.
+
+### Changed — Cycle 49 (2026-05-21)
+
+- `macroforecast/core/ops/l4_ops.py`: moved `realized_garch` from
+  `FUTURE_MODEL_FAMILIES` to `OPERATIONAL_MODEL_FAMILIES`. `FUTURE_MODEL_FAMILIES`
+  is now empty `()`.
+- `macroforecast/core/ops/l7_ops.py`: added `generalized_irf: "irf_with_confidence_band"`
+  to `DEFAULT_FIGURE_MAPPING`; removed `generalized_irf` from `FUTURE_OPS`. Only
+  `lstm_hidden_state` remains in `FUTURE_OPS`.
+- `macroforecast/core/runtime.py`: added `_RealizedGARCHModel` class (HHS 2012 joint
+  MLE) and `_var_girf_frame` function (Pesaran-Shin 1998 GIRF); added dispatch
+  branches for both; renamed `_GARCHFamily` internal variant from `"realized_garch"`
+  to `"rv_exog"` for the `realized_garch_with_rv_exog` branch (internal rename only;
+  no external API change).
+- `ARCHITECTURE.md`: L4 operational count 46 → 47; L7 FUTURE_OPS count 2 → 1;
+  added C49 section documenting both promotions.
+- `docs/architecture/layer4/index.md`: operational count updated 46 → 47.
+- `docs/architecture/layer7/index.md`: FUTURE_OPS reference updated.
+- `macroforecast/scaffold/option_docs/l4.py`: added `_F_REALIZED_GARCH` OptionDoc
+  entry for the `realized_garch` family.
+- `macroforecast/scaffold/option_docs/l7_a.py`: updated `_GENERALIZED_IRF` from
+  future-gated stub to full operational OptionDoc entry.
+- `docs/encyclopedia/l4/family/realized_garch.md`: new file (encyclopedia regen).
+- `docs/encyclopedia/l7/op/generalized_irf.md`: updated (encyclopedia regen).
+
 ### Added — Cycle 48 (2026-05-21) — MIDAS Family Honesty Pass
 
 Promoted 4 L4 families from `future` to `operational` (MIDAS mixed-frequency

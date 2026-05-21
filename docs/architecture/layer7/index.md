@@ -5,7 +5,7 @@
 - Current: Layer 7
 - Next: [Layer 8](../layer8/index.md)
 
-Layer 7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML.
+Layer 7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML. As of Cycle 49 (2026-05-21), `generalized_irf` (Pesaran-Shin 1998) is operational; `FUTURE_OPS` contains only `lstm_hidden_state`.
 
 ## Contract
 

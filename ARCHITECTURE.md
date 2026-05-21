@@ -32,11 +32,11 @@ Version: **v0.9.2b1**. Package root: `macroforecast/`.
 | L2.5 | Diagnostic hook (default-off): preprocessed panel summaries | `core/layers/l2_5.py` |
 | L3 | Feature engineering DAG: 41 ops (lags, factors, filters, selection, targets) | `core/layers/l3.py`, `core/ops/l3_ops.py` |
 | L3.5 | Diagnostic hook (default-off): feature distribution summaries | `core/layers/l3_5.py` |
-| L4 | Forecasting model + tuning: 46 operational families, 5 combine ops | `core/layers/l4.py`, `core/ops/l4_ops.py` |
+| L4 | Forecasting model + tuning: 47 operational families, 5 combine ops | `core/layers/l4.py`, `core/ops/l4_ops.py` |
 | L4.5 | Diagnostic hook (default-off): residual diagnostics, fitted-vs-actual | `core/layers/l4_5.py` |
 | L5 | Evaluation: metrics, benchmarks, decomposition, aggregation, ranking | `core/layers/l5.py`, `core/ops/l5_ops.py` |
 | L6 | Statistical tests: DM/HLN, CW, MCS/SPA/RC/StepM, PT/HM, residual battery, density tests | `core/layers/l6.py`, `core/ops/l6_ops.py` |
-| L7 | Interpretation: 29 importance ops, group aggregate, lineage, transformation attribution | `core/layers/l7.py`, `core/ops/l7_ops.py` |
+| L7 | Interpretation: 35 importance ops, group aggregate, lineage, transformation attribution | `core/layers/l7.py`, `core/ops/l7_ops.py` |
 | L8 | Output and provenance: json/csv/parquet/latex/markdown, manifest, saved objects | `core/layers/l8.py`, `core/ops/l8_ops.py` |
 
 Layers L6 and L7 are default-off and require explicit `enabled: true`. Layer L8
@@ -106,6 +106,64 @@ examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).
 
 ---
 
+## Cycle 49 — realized_garch + Pesaran-Shin GIRF (2026-05-21)
+
+Cycle 49 promotes two items from `future` to `operational`: the Hansen-Huang-Shek
+(2012) Realized GARCH joint MLE (L4 family `realized_garch`) and the Pesaran-Shin
+(1998) generalized impulse-response function (L7 op `generalized_irf`). After this
+cycle, `FUTURE_MODEL_FAMILIES` is empty `()` and `FUTURE_OPS` contains only
+`lstm_hidden_state`.
+
+| Item | Layer | Paper | Implementation | Changed in C49 |
+|------|-------|-------|----------------|----------------|
+| `realized_garch` | L4 | Hansen, Huang & Shek (2012, JAE 27(6)) | `_RealizedGARCHModel` in `runtime.py`; scipy L-BFGS-B joint MLE, 11-parameter vector, multi-start with `random_state` | Yes |
+| `generalized_irf` | L7 | Pesaran & Shin (1998, Economics Letters 58) | `_var_girf_frame` in `runtime.py`; `irf(var_decomp=eye(K))` to obtain raw reduced-form MA coefficients; `GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma * e_j` | Yes |
+
+### Count changes
+
+| Counter | Pre-C49 | Post-C49 |
+|---------|---------|---------|
+| L4 operational families | 46 | 47 |
+| L4 FUTURE_MODEL_FAMILIES | 1 (`realized_garch`) | 0 (empty) |
+| L7 FUTURE_OPS | 2 (`lstm_hidden_state`, `generalized_irf`) | 1 (`lstm_hidden_state`) |
+
+### Hansen-Huang-Shek (2012) `_RealizedGARCHModel`
+
+Three-equation joint system estimated by `scipy.optimize.minimize(method="L-BFGS-B")`:
+
+- **Return**: `r_t = mu + sqrt(h_t) * z_t`, `z_t ~ N(0,1)`
+- **Log-variance**: `log(h_t) = omega + beta*log(h_{t-1}) + tau_1*z_{t-1} + tau_2*(z_{t-1}^2-1) + gamma*u_{t-1}`
+- **Measurement**: `log(x_t) = xi + phi*log(h_t) + delta_1*z_t + delta_2*(z_t^2-1) + u_t`
+
+Parameter vector (length 11): `(mu, omega, beta, tau_1, tau_2, gamma, xi, phi, delta_1, delta_2, log_sigma_u)`.
+Multi-start `n_starts=3`; seeds derived from `random_state + start_index` following the #279 contract.
+No `arch` package dependency — depends only on NumPy and SciPy.
+
+Distinct from `realized_garch_with_rv_exog` (which feeds RV as an exogenous regressor into
+a vanilla GARCH(1,1) via the `arch` package — a useful practical approximation but not the
+Hansen-Huang-Shek joint MLE).
+
+### Pesaran-Shin (1998) `_var_girf_frame`
+
+Order-invariant IRF formula: `GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma * e_j`
+
+where `A_h = irf_obj.irfs[h]` (raw reduced-form MA coefficients, obtained via
+`fitted_results.irf(n_periods, var_decomp=np.eye(K))` — the identity `var_decomp`
+skips the Cholesky factorisation and returns raw MA matrices directly).
+
+Importance metric: `importance[j] = sum_{h=0}^{H} |GIRF_h(j)[target_index]|` (L1 norm
+of target-variable response across all horizons). Order-invariance verified to 1e-19 tolerance
+(test: `test_generalized_irf_order_invariance_k3`).
+
+Distinct from `orthogonalised_irf` (Cholesky-identified; order-dependent; operational since v0.2).
+
+### References
+
+- Hansen, Huang & Shek (2012) 'Realized GARCH: A Joint Model for Returns and Realized
+  Measures of Volatility', Journal of Applied Econometrics 27(6): 877-906.
+- Pesaran & Shin (1998) 'Generalized impulse response analysis in linear multivariate
+  models', Economics Letters 58(1): 17-29.
+
 ## Cycle 48 — MIDAS Family Honesty Pass (2026-05-21)
 
 Cycle 48 promotes four L4 families from `future` to `operational`, bringing
@@ -155,8 +213,8 @@ accepted under the `operational` label.
 | Metric | Pre-C47 | Post-C47 |
 |--------|---------|---------|
 | L3 operational ops | >= 32 | >= 37 |
-| L3 future ops | >= 6 | >= 3 (remaining: `chow_lin_disaggregation` L2-family, `lstm_hidden_state` L7-only, `generalized_irf` L7-only) |
-| L7 future ops count | >= 6 | >= 2 (`lstm_hidden_state`, `generalized_irf`) |
+| L3 future ops | >= 6 | >= 3 (remaining: `chow_lin_disaggregation` L2-family, `lstm_hidden_state` L7-only, `generalized_irf` L7-only; `generalized_irf` promoted in C49) |
+| L7 future ops count | >= 6 | >= 1 (`lstm_hidden_state` only after C49 promoted `generalized_irf`) |
 
 ### Implementation notes
 
