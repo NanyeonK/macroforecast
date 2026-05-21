@@ -21,6 +21,7 @@ Usage::
 
     # Generate a single layer into a temp directory:
     python tools/gen_encyclopedia_docs.py --layer L4 --out /tmp/enc_l4 --force
+    # (--out directory is auto-created including parent directories if absent)
 """
 from __future__ import annotations
 
@@ -449,7 +450,7 @@ L2_VIRTUAL_OPS_ORDERED: list[tuple[str, str]] = [
     ("zero_fill_leading", "operational"),
     ("quarterly_average", "operational"),
     ("step_backward", "operational"),
-    ("chow_lin_disaggregation", "future"),
+    ("chow_lin_disaggregation", "operational"),
 ]
 
 # L5 virtual ops: each is a standalone callable serving as a recipe axis value
@@ -1148,7 +1149,10 @@ def main() -> int:
         "--out",
         default="docs/encyclopedia/",
         metavar="DIR",
-        help="Output base directory. Default: docs/encyclopedia/.",
+        help=(
+            "Output base directory (auto-created including parent directories if absent). "
+            "Default: docs/encyclopedia/."
+        ),
     )
     parser.add_argument(
         "--dry-run",

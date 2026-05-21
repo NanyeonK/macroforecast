@@ -123,7 +123,7 @@ print(imp.importances_)
 
 #### `shap_linear_importance(result: Any, X: np.ndarray | pd.DataFrame) -> SHAPImportanceResult`
 
-SHAP LinearExplainer importance (no extra deps for linear models).
+SHAP LinearExplainer importance. Requires: pip install macroforecast[shap]
 
 Returns `SHAPImportanceResult`: `.expected_value_`, `.explainer_type`, `.feature_names_`, `.shap_values_`, `.summary()`.
 
@@ -134,6 +134,7 @@ y = rng.standard_normal(80)
 fit_result = mf.functions.ols_fit(X, y)
 imp = mf.functions.shap_linear_importance(fit_result, X)
 print(imp.shap_values_.shape)
+# Requires: pip install macroforecast[shap]
 ```
 
 [Encyclopedia](../encyclopedia/l7/op/shap_linear.md)

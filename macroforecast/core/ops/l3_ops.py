@@ -937,24 +937,74 @@ def asymmetric_trim(inputs, params):
     layer_scope=("l2",),
     input_types={"default": Panel},
     output_type=Panel,
-    status="future",
+    status="operational",
 )
 def chow_lin_disaggregation(inputs, params):
     """Chow-Lin (1971) regression-based temporal disaggregation.
 
-    Approximates disaggregation by linearly interpolating low-frequency series
-    values to the higher-frequency index of a related indicator. Suitable for
-    quarterly -> monthly when a monthly indicator is supplied via params.
+    Implements the best linear unbiased interpolation of Chow & Lin (1971):
+    OLS regression of the quarterly series on a quarterly-aggregated monthly
+    indicator, then distributes fitted values and residuals to monthly
+    frequency. The monthly residual for each quarter is spread evenly across
+    the quarter's months.
+
+    Operational from C51. Runtime function:
+    :func:`macroforecast.core.runtime._chow_lin_disaggregate`.
+
+    Parameters
+    ----------
+    inputs:
+        ``inputs[0]`` is the low-frequency (quarterly) Panel or pd.DataFrame.
+        ``inputs[1]``, if provided, is the monthly indicator Panel or Series.
+        If a second input is absent, ``params.get("chow_lin_indicator")`` must
+        name a column present in the first input that serves as the monthly
+        indicator.
+    params:
+        ``params.get("chow_lin_indicator")`` (str | None): name of the monthly
+        indicator column. Used when ``inputs[1]`` is not provided. If None
+        and no second input is provided, raises ValueError.
+
+    Returns
+    -------
+    Panel with the quarterly series disaggregated to monthly frequency.
     """
-
     import pandas as pd
+    from macroforecast.core.runtime import _chow_lin_disaggregate
 
-    low = inputs[0] if not isinstance(inputs, list) else inputs[0]
+    # Resolve the quarterly series (input[0])
+    low = inputs[0] if isinstance(inputs, (list, tuple)) else inputs
     if hasattr(low, "data"):
         low = low.data
-    if isinstance(low, pd.DataFrame):
-        return low.resample("MS").asfreq().interpolate("linear")
-    return low
+    if isinstance(low, pd.Series):
+        quarterly = low
+    elif isinstance(low, pd.DataFrame):
+        quarterly = low.iloc[:, 0]
+    else:
+        raise TypeError(f"chow_lin_disaggregation: unsupported input type {type(low)}")
+
+    # Resolve the monthly indicator (input[1] or params["chow_lin_indicator"])
+    if isinstance(inputs, (list, tuple)) and len(inputs) >= 2:
+        ind = inputs[1]
+        if hasattr(ind, "data"):
+            ind = ind.data
+        if isinstance(ind, pd.DataFrame):
+            ind = ind.iloc[:, 0]
+        indicator_monthly = ind
+    else:
+        col = params.get("chow_lin_indicator")
+        if not col:
+            raise ValueError(
+                "chow_lin_disaggregation: 'chow_lin_indicator' param required "
+                "when a second input (monthly indicator panel) is not provided."
+            )
+        if isinstance(low, pd.DataFrame) and col in low.columns:
+            indicator_monthly = low[col]
+        else:
+            raise ValueError(
+                f"chow_lin_disaggregation: indicator column {col!r} not found in input."
+            )
+
+    return _chow_lin_disaggregate(quarterly, indicator_monthly)
 
 
 @register_op(
