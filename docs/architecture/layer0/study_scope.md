@@ -75,7 +75,7 @@ Multi-target method comparison:
   fixed_axes:
     study_scope: multiple_targets_compare_methods
 
-1_data_task:
+1_data:
   fixed_axes:
     target_structure: multi_target
   leaf_config:

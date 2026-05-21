@@ -43,7 +43,7 @@ YAML:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       missing_availability: zero_fill_leading_predictor_gaps
 ```
@@ -52,7 +52,7 @@ Predictor-only imputation example:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       missing_availability: impute_predictors_only
     leaf_config:

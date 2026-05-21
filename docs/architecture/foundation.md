@@ -25,27 +25,9 @@ The foundation layer provides:
 - sweep expansion, validation, cache hashing, YAML normalization, recipe, and
   manifest scaffolding.
 
-## Registry Migration Plan
+## Source of Truth
 
-`macroforecast.core` is the source of truth for the new DAG execution system.
-`macroforecast/registry` will be regenerated from `macroforecast.core` entries once
-L0-L8 coverage lands.
-
-Until that point, `macroforecast/registry` stays frozen for backward compatibility:
-
-- DO NOT add new axes to `macroforecast/registry`.
-- DO NOT modify existing axes in `macroforecast/registry`.
-- DO NOT remove existing axes from `macroforecast/registry`.
-
-Phase 1 layer work adds new axes only to `macroforecast.core`. If current public
-recipes need backward-compatible behavior during the transition, implement an
-adapter at the boundary instead of changing legacy registry entries.
-
-## Capability Counts
-
-README capability counts refer to the legacy registry runtime, not
-`macroforecast.core`. Phase 0 Foundation work must not modify headline capability
-counts.
-
-The Foundation Core should not change runtime capability counts until it is
-wired to execution and a dedicated capability-audit test owns those numbers.
+`macroforecast.core` is the live source of truth for all layer specifications
+and op registries. The migration from a legacy registry subsystem is complete.
+Layer contracts, op enumerations, and sweep machinery all live under
+`macroforecast.core`.

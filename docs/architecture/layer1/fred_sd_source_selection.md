@@ -60,7 +60,7 @@ Selector YAML:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       dataset: fred_sd
       frequency: monthly

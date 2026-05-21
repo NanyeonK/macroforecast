@@ -54,7 +54,7 @@ Input:
 - Layer 1 source frame, target y, and candidate predictor x contract.
 
 Output:
-- `layer2_representation_v1`;
+- `l2_clean_panel_v1`;
 - feature matrices and representation metadata consumed by Layer 3;
 - auxiliary payloads for narrow advanced routes.
 

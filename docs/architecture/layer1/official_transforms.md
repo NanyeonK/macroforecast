@@ -37,7 +37,7 @@ YAML:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       official_transform_policy: apply_official_tcode
       official_transform_scope: target_and_predictors

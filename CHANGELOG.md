@@ -52,6 +52,54 @@ full per-version honesty-pass history embedded in repo documentation.
   assets exist" CI steps (Fix 3). The `navigator_app` assets were removed in
   commit `09c79e11`; `docs/conf.py` already reflects `html_extra_path = []`.
 
+### Cycle 42 Phase A — Foundational docs alignment (2026-05-20)
+
+#### Changed
+
+- `ARCHITECTURE.md` (root): complete rewrite replacing the stale Cycle-17
+  `scaffold/option_docs` Mermaid diagram with the current 12-layer L0–L8
+  DAG architecture. New content documents the top-level module layout, the
+  12-layer canonical design table (L0–L8 + L1.5/L2.5/L3.5/L4.5), the
+  2-paradigm model (recipe DSL vs standalone callables), the core runtime
+  module map, and the standalone function counts per layer. All module
+  paths and callable counts are introspection-verified.
+
+- `README.md` (root): five targeted fixes — version callout and GitHub
+  install URL updated from v0.9.0 to v0.9.2b1; `permutation_importance`
+  example made live (was commented out as "planned for post-Cycle-22
+  expansion"; operational since Cycle 38); `runtime_support` link
+  corrected from `docs/getting_started/` to `docs/recipe_api/`; citation
+  version updated from v0.6.0 to v0.9.2b1.
+
+- `docs/architecture/foundation.md`: removed stale "Registry Migration Plan"
+  and "Capability Counts" sections (described a transition to
+  `macroforecast.core` that completed before v0.9.x). Replaced with a brief
+  note that `macroforecast.core` is the live source of truth.
+
+- `docs/architecture/reproducibility.md`: expanded 17-line stub to current
+  reproducibility contract. Documents `ManifestExecutionResult.cells`,
+  `CellExecutionResult.sink_hashes`, `ReplicationResult.sink_hashes_match`,
+  seed propagation via `seeded_reproducible` + `random_seed`, and
+  `Experiment.to_yaml()`. All attribute names confirmed by dataclass
+  introspection.
+
+- `docs/architecture/layer1/index.md`: artifact name
+  `layer1_official_frame_v1` → `l1_data_definition_v1` (canonical key per
+  `core/runtime.py`).
+
+- `docs/architecture/layer2/index.md`: artifact name
+  `layer2_representation_v1` → `l2_clean_panel_v1` (canonical key per
+  `core/runtime.py`).
+
+- YAML key `1_data_task` → `1_data` in 7 architecture sub-docs:
+  `docs/architecture/layer0/study_scope.md`,
+  `docs/architecture/layer1/source_frame.md`,
+  `docs/architecture/layer1/availability_timing.md`,
+  `docs/architecture/layer1/target_universe.md`,
+  `docs/architecture/layer1/fred_sd_source_selection.md`,
+  `docs/architecture/layer1/official_transforms.md`,
+  `docs/architecture/layer1/frame_availability.md`.
+
 ## [0.9.2b1] -- 2026-05-20 -- "introspection-based docs catalog + holiday pandas 2.x fix"
 
 ### Changed

@@ -8,7 +8,7 @@
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 [![docs](https://readthedocs.org/projects/macroforecast/badge/?version=latest)](https://macroforecast.readthedocs.io/en/latest/)
 
-> **v0.9.0** — extensive test suite (counts vary by extras and Python version; see CI badges above).
+> **v0.9.2b1** — extensive test suite (counts vary by extras and Python version; see CI badges above).
 >
 > **Renamed from `macrocast` -> `macroforecast`** in v0.6.0 (PyPI
 > namespace ownership). See ``CHANGELOG.md`` for the migration diff.
@@ -26,7 +26,7 @@ pip install 'macroforecast[shap]'            # + shap package for richer L7 figu
 Or pin to a tagged release directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.0"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.2b1"
 ```
 
 For development:
@@ -59,9 +59,9 @@ print(result.coef_)
 u1 = mf.functions.theil_u1(y, result.predict(X))
 print(f"Theil U1 = {u1:.4f}")
 
-# L7: permutation importance (planned for post-Cycle-22 expansion)
-# imp = mf.functions.permutation_importance(result, X, y, n_repeats=30, random_state=42)
-# print(imp.importances_mean)
+# L7: permutation importance
+imp = mf.functions.permutation_importance(result, X, y, n_repeats=10, random_state=42)
+print(imp.importances_mean_)
 ```
 
 > Or use the recipe DSL for full reproducible studies — see
@@ -144,7 +144,7 @@ See `plans/design/part1-4` for the canonical design tables.
 ## Operational coverage
 
 > Before relying on advanced families/tests in a paper workflow, check
-> [`docs/getting_started/runtime_support.md`](docs/getting_started/runtime_support.md)
+> [`docs/recipe_api/runtime_support.md`](docs/recipe_api/runtime_support.md)
 > for the exact current path coverage. Some listed families are wired
 > through legacy/specialized paths or optional extras, not necessarily
 > through the minimal core runtime end-to-end.
@@ -203,7 +203,7 @@ v0.1.1 audit table is now `operational`).
 
 If you use macroforecast in published work, please cite:
 
-> macroforecast: Fair, reproducible macro forecasting benchmarking. v0.6.0, 2026.
+> macroforecast: Fair, reproducible macro forecasting benchmarking. v0.9.2b1, 2026.
 
 ## License
 

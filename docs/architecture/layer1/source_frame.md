@@ -99,7 +99,7 @@ Minimal YAML:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       dataset: fred_md
       custom_source_policy: official_only
@@ -115,7 +115,7 @@ Replace FRED-MD with a custom CSV:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       custom_source_policy: custom_panel_only
       frequency: monthly
@@ -130,7 +130,7 @@ Append custom state-level columns to FRED-MD:
 
 ```yaml
 path:
-  1_data_task:
+  1_data:
     fixed_axes:
       dataset: fred_md
       custom_source_policy: official_plus_custom

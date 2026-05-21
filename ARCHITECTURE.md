@@ -1,196 +1,105 @@
-<!-- ARCHITECTURE.md — macroforecast scaffold/option_docs subsystem -->
-<!-- Generated: 2026-05-16, Cycle 17 Builder O-1 -->
+# macroforecast — Architecture
 
-# macroforecast — Architecture Diagram
-
-## System Architecture
-
-### Module Structure
-
-```mermaid
-%%{init: {'theme': 'neutral'}}%%
-graph TD
-    subgraph API["API Layer"]
-        CLI["scaffold/cli.py\n(CLI entry point)"]
-        MAIN["scaffold/__main__.py\n(module runner)"]
-    end
-
-    subgraph Scaffold["Scaffold Layer"]
-        SINIT["scaffold/__init__.py\n(register() + load)"]
-        BUILDER["scaffold/builder.py\n(recipe builder)"]
-        WIZARD["scaffold/wizard.py\n(interactive wizard)"]
-        INTROSPECT["scaffold/introspect.py\n(schema introspection)"]
-        TEMPLATES["scaffold/templates.py\n(Jinja2 templates)"]
-        RENC["scaffold/render_encyclopedia.py\n(encyclopedia writer)"]
-        RERST["scaffold/render_rst.py\n(RST generator)"]
-    end
-
-    subgraph OptionDocs["Option Docs Registry"]
-        ODINIT["option_docs/__init__.py\n(OPTION_DOCS dict)"]
-        TYPES["option_docs/types.py\n(OptionDoc dataclasses)"]
-        L0["option_docs/l0.py\n(Workflow axes)"]
-        L1["option_docs/l1.py\n(Data definition — CHANGED)"]
-        L2["option_docs/l2.py\n(Cleaning/alignment)"]
-        L3["option_docs/l3.py\n(Feature engineering)"]
-        L4["option_docs/l4.py\n(Model)"]
-        L5["option_docs/l5.py\n(Evaluation)"]
-        L6["option_docs/l6.py\n(Output)"]
-        L7["option_docs/l7.py\n(Figures)"]
-        L7A["option_docs/l7_a.py\n(Figure sub-axes)"]
-        L8["option_docs/l8.py\n(Deployment)"]
-        DIAG["option_docs/diagnostics.py\n(completeness checks)"]
-    end
-
-    CLI --> SINIT
-    MAIN --> SINIT
-    SINIT --> BUILDER
-    SINIT --> WIZARD
-    SINIT --> RENC
-    SINIT --> INTROSPECT
-    BUILDER --> TEMPLATES
-    WIZARD --> ODINIT
-    RENC --> ODINIT
-    RERST --> ODINIT
-    ODINIT --> TYPES
-    ODINIT --> L0
-    ODINIT --> L1
-    ODINIT --> L2
-    ODINIT --> L3
-    ODINIT --> L4
-    ODINIT --> L5
-    ODINIT --> L6
-    ODINIT --> L7
-    ODINIT --> L7A
-    ODINIT --> L8
-    ODINIT --> DIAG
-
-    style L1 fill:#1e90ff,stroke:#1565c0,color:#fff
-```
-
-| Module | Purpose | Key Dependencies | Changed in This Run |
-|---|---|---|---|
-| `scaffold/__init__.py` | Exposes `register()` function; triggers auto-load of layer modules | `option_docs/__init__.py` | No |
-| `scaffold/cli.py` | CLI entry point for `macroforecast.scaffold` commands (`encyclopedia`, `wizard`, `inspect`) | `scaffold/__init__.py` | No |
-| `scaffold/render_encyclopedia.py` | Writes per-axis Markdown pages to `docs/encyclopedia/` | `option_docs/__init__.py`, `templates.py` | No |
-| `scaffold/render_rst.py` | Writes RST fragments for Sphinx autodoc | `option_docs/__init__.py` | No |
-| `scaffold/wizard.py` | Interactive recipe authoring wizard; surfaces `OptionDoc` on `?` | `option_docs/__init__.py` | No |
-| `option_docs/__init__.py` | Global `OPTION_DOCS` dict; quality-floor enforcement; auto-loads layer modules | `types.py`, all layer modules | No |
-| `option_docs/types.py` | `OptionDoc`, `Reference`, `CodeExample`, `ParameterDoc` dataclasses | — | No |
-| `option_docs/l1.py` | L1 (data definition) option documentation: 26 axes, ~90 entries across L1.A–L1.G | `types.py`, `register()` | **YES** |
-| `option_docs/l0.py` | L0 (workflow) option documentation | `types.py`, `register()` | No |
-| `option_docs/l2.py`–`l8.py` | L2–L8 option documentation (cleaning, features, model, eval, output, figures, deploy) | `types.py`, `register()` | No |
-| `option_docs/diagnostics.py` | Completeness checks; flags entries with `last_reviewed=""` | `option_docs/__init__.py` | No |
+Version: **v0.9.2b1**. Package root: `macroforecast/`.
 
 ---
 
-### Function Call Graph
+## Top-level module layout
 
-```mermaid
-%%{init: {'theme': 'neutral'}}%%
-graph TD
-    CLI_CMD["cli: encyclopedia command"]
-    LOAD["_load_layer_modules()"]
-    REG["register(*entries)"]
-    ENTRY["_entry() helper"]
-    T1["_t1() scaffold helper"]
-    OPTIONDOC["OptionDoc(...)"]
-    FLOOR["_ensure_quality_floor()"]
-    RENC_WRITE["render_encyclopedia.write_pages()"]
-    AX_PAGE["per-axis Markdown page"]
-
-    CLI_CMD --> LOAD
-    LOAD --> REG
-    REG --> FLOOR
-    FLOOR --> OPTIONDOC
-    ENTRY --> OPTIONDOC
-    T1 --> OPTIONDOC
-    CLI_CMD --> RENC_WRITE
-    RENC_WRITE --> AX_PAGE
-
-    style ENTRY fill:#1e90ff,stroke:#1565c0,color:#fff
-    style OPTIONDOC fill:#1e90ff,stroke:#1565c0,color:#fff
-```
-
-| Function | Purpose | Key Dependencies | Changed in This Run |
-|---|---|---|---|
-| `_entry()` in `l1.py` | Helper that constructs an `OptionDoc` with L1-specific defaults (`layer="l1"`, `last_reviewed=_REVIEWED`) | `OptionDoc` | Indirectly (callers promoted) |
-| `_t1()` in `l1.py` | Scaffold helper for long-tail axes; identical structure to `_entry()` but with 2026-05-05 review date | `OptionDoc` | No (fred_sd_freq ops migrated away from `_t1`) |
-| `register(*entries)` | Inserts `OptionDoc` objects into global `OPTION_DOCS` dict; applies `_ensure_quality_floor()` | `option_docs/__init__.py` | No |
-| `_ensure_quality_floor()` | Tops up `description`/`when_to_use` with axis-context tail when entry is too short | `OptionDoc` | No |
-| `render_encyclopedia.write_pages()` | Writes per-axis Markdown to output directory | `OPTION_DOCS`, `templates.py` | No |
+| Module | Role |
+|--------|------|
+| `macroforecast.api` | Public entry points: `mf.run`, `mf.replicate`, `mf.forecast` |
+| `macroforecast.api_high` | High-level `Experiment` class and `ForecastResult` |
+| `macroforecast.core` | DAG runtime, layer schemas, op registries, sweep, cache, manifest |
+| `macroforecast.scaffold` | Option-doc registry and encyclopedia generator |
+| `macroforecast.functions` | 118 standalone callables organized by layer (L2–L7) |
+| `macroforecast.raw` | FRED-MD/QD/SD adapters, vintage manager, raw manifest |
+| `macroforecast.preprocessing` | Preprocessing contract helpers |
+| `macroforecast.custom` | User-defined model, preprocessor, and target transformer registration |
+| `macroforecast.defaults` | Default profile dict template |
+| `macroforecast.tuning` | Hyperparameter search engines (optional, integrated via L4) |
 
 ---
 
-### Data Flow
+## 12-layer canonical design (L0–L8 + diagnostic half-layers)
 
-```mermaid
-%%{init: {'theme': 'neutral'}}%%
-graph TD
-    A["recipe YAML\n(user input)"]
-    B{"custom_source_policy?"}
-    C["official_only:\nload FRED adapter"]
-    D["custom_panel_only:\nload user CSV/Parquet"]
-    E["official_plus_custom:\nmerge FRED + user"]
-    F{"vintage_policy?"}
-    G["current_vintage:\nbundled snapshot"]
-    H["real_time_alfred:\nValueError (future)"]
-    I{"frequency?"}
-    J["'derived' sentinel:\n_derived_frequency()"]
-    K["monthly / quarterly:\npinned"]
-    L{"information_set_type?"}
-    M["final_revised_data:\nrevised data OOS"]
-    N["pseudo_oos_on_revised_data:\nidentical behavior + label"]
-    O{"fred_sd_frequency_policy?"}
-    P["report_only:\nlog mismatch, proceed"]
-    Q["allow_mixed_frequency:\nexplicit mix, L2.A aligns"]
-    R["reject_mixed_known:\nValueError on mismatch"]
-    S["require_single_known:\nstrictest gate"]
-    T["L1 normalized panel\n→ L2 cleaning"]
+| Layer | Purpose | Primary module paths |
+|-------|---------|----------------------|
+| L0 | Study setup: failure policy, seed, compute mode, study scope | `core/layers/l0.py` |
+| L1 | Data definition: FRED-MD/QD/SD source, target y, predictor x, regime, availability | `core/layers/l1.py` |
+| L1.5 | Diagnostic hook (default-off): stationarity tests, raw data summaries | `core/layers/l1_5.py` |
+| L2 | Preprocessing: transform, outlier, imputation, frame edge, mixed-frequency alignment | `core/layers/l2.py` |
+| L2.5 | Diagnostic hook (default-off): preprocessed panel summaries | `core/layers/l2_5.py` |
+| L3 | Feature engineering DAG: 36 ops (lags, factors, filters, selection, targets) | `core/layers/l3.py`, `core/ops/l3_ops.py` |
+| L3.5 | Diagnostic hook (default-off): feature distribution summaries | `core/layers/l3_5.py` |
+| L4 | Forecasting model + tuning: 35+ families, 5 combine ops | `core/layers/l4.py`, `core/ops/l4_ops.py` |
+| L4.5 | Diagnostic hook (default-off): residual diagnostics, fitted-vs-actual | `core/layers/l4_5.py` |
+| L5 | Evaluation: metrics, benchmarks, decomposition, aggregation, ranking | `core/layers/l5.py`, `core/ops/l5_ops.py` |
+| L6 | Statistical tests: DM/HLN, CW, MCS/SPA/RC/StepM, PT/HM, residual battery, density tests | `core/layers/l6.py`, `core/ops/l6_ops.py` |
+| L7 | Interpretation: 29 importance ops, group aggregate, lineage, transformation attribution | `core/layers/l7.py`, `core/ops/l7_ops.py` |
+| L8 | Output and provenance: json/csv/parquet/latex/markdown, manifest, saved objects | `core/layers/l8.py`, `core/ops/l8_ops.py` |
 
-    A --> B
-    B --> C
-    B --> D
-    B --> E
-    C --> F
-    D --> F
-    E --> F
-    F --> G
-    F --> H
-    G --> I
-    I --> J
-    I --> K
-    J --> L
-    K --> L
-    L --> M
-    L --> N
-    M --> O
-    N --> O
-    O --> P
-    O --> Q
-    O --> R
-    O --> S
-    P --> T
-    Q --> T
-    R --> T
-    S --> T
+Layers L6 and L7 are default-off and require explicit `enabled: true`. Layer L8
+is always on. The diagnostic half-layers L1.5, L2.5, L3.5, L4.5 are
+default-off and non-blocking.
 
-    style H fill:#1e90ff,stroke:#1565c0,color:#fff
-    style J fill:#1e90ff,stroke:#1565c0,color:#fff
-    style M fill:#1e90ff,stroke:#1565c0,color:#fff
-    style N fill:#1e90ff,stroke:#1565c0,color:#fff
-    style P fill:#1e90ff,stroke:#1565c0,color:#fff
-    style Q fill:#1e90ff,stroke:#1565c0,color:#fff
-    style R fill:#1e90ff,stroke:#1565c0,color:#fff
-    style S fill:#1e90ff,stroke:#1565c0,color:#fff
-```
+---
 
-| Node | Role | Changed in This Run |
-|---|---|---|
-| `real_time_alfred` | Future feature; raises `ValueError` at validation in all v0.9.x | **YES** — new OptionDoc entry |
-| `'derived'` sentinel | Auto-resolves to `monthly`/`quarterly` via `_derived_frequency()` at L1 normalization | **YES** — sentinel documented in both `monthly`/`quarterly` entries |
-| `final_revised_data` | Standard pseudo-OOS on currently-published revised data | **YES** — richer prose + Stark-Croushore/Faust-Wright refs |
-| `pseudo_oos_on_revised_data` | Semantic synonym for `final_revised_data` in v0.9.x | **YES** — numerical-equivalence note + refs |
-| `report_only` | Log frequency mismatch, proceed | **YES** — upgraded from `_t1()` scaffold |
-| `allow_mixed_frequency` | Explicit mixed-frequency permission | **YES** — upgraded from `_t1()` scaffold |
-| `reject_mixed_known_frequency` | Hard-reject on known-frequency mismatch only | **YES** — upgraded from `_t1()` scaffold |
-| `require_single_known_frequency` | Strictest: reject unknown + mismatched | **YES** — upgraded from `_t1()` scaffold |
+## 2-paradigm model
+
+macroforecast exposes two complementary access patterns.
+
+**Recipe DSL** (`mf.run`). A YAML recipe fully specifies a study as an
+end-to-end DAG from L0 through L8. Sweep markers expand the recipe into
+independent cells. Every run writes a manifest with per-cell sink hashes and
+supports bit-exact replication via `mf.replicate(manifest_path)`. This
+paradigm is appropriate for reproducible comparative studies.
+
+**Standalone callables** (`mf.functions.*`). Individual operations from L2
+through L7 are also available as direct Python callables requiring no YAML.
+They accept NumPy arrays or DataFrames and return frozen dataclasses with typed
+result attributes. This paradigm is appropriate for exploratory analysis,
+notebook workflows, and integration into custom pipelines.
+
+See [docs/two_entry_points.md](docs/two_entry_points.md) for a decision guide
+on when to choose each paradigm.
+
+---
+
+## Core runtime module map
+
+| Module | Role |
+|--------|------|
+| `core/execution.py` | Cell loop (`execute_recipe`), seed propagation, `replicate_recipe` |
+| `core/runtime.py` | Per-layer `materialize_l*` helpers; layer artifact construction |
+| `core/layers/l0.py`–`l8.py` | Layer schema definitions (axes, gates, defaults, status) |
+| `core/layers/l1_5.py`, `l2_5.py`, `l3_5.py`, `l4_5.py` | Diagnostic half-layer schemas |
+| `core/ops/l3_ops.py`–`l8_ops.py` | Op registries per layer |
+| `core/dag.py` | Universal DAG schema: 5 node types (source, axis, step, combine, sink) |
+| `core/sweep.py` | Sweep expansion: param-level, recipe-level (external axis), node-level (sweep_groups) |
+| `core/cache.py` | Content-addressed artifact cache; SHA-256 sink hash generation |
+| `core/manifest.py` | Manifest read/write; provenance record schema |
+
+Foundation contracts (typed artifacts, validator, YAML normalizer, recipe
+schema, selector types) live in `core/types.py`, `core/validator.py`,
+`core/yaml.py`, `core/recipe.py`, and `core/selectors.py`.
+
+---
+
+## Standalone functions summary
+
+`macroforecast.functions` contains **118** standalone callables organized by
+layer. Per-layer counts (verified via `tools/gen_standalone_docs.py` against
+live `macroforecast.functions.__all__` at HEAD afc28282):
+
+| Layer | Count | Module |
+|-------|-------|--------|
+| L2 | 14 | `functions/clean.py` |
+| L3 | 36 | `functions/transforms.py` |
+| L4 | 38 | `functions/fit.py` |
+| L5 | 15 | `functions/metrics.py` |
+| L6 | 7 | `functions/tests.py` |
+| L7 | 8 | `functions/importance.py` |
+
+For the full per-callable reference (signatures, result attributes,
+examples), see [docs/standalone_functions/](docs/standalone_functions/index.md).

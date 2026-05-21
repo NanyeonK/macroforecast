@@ -86,7 +86,7 @@ Input:
 - source request, custom-source request when relevant, target y request, and candidate predictor x request.
 
 Output:
-- `layer1_official_frame_v1`, the compatibility artifact name for the Layer 1 source-frame handoff;
+- `l1_data_definition_v1`, the Layer 1 source-frame handoff artifact;
 - source availability contract;
 - data reports for availability, release lag, missing policy, and FRED-SD source metadata when relevant.
 
