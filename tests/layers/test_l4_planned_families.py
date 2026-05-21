@@ -103,7 +103,9 @@ sinks:
     assert any("future or unknown" in issue.message.lower() for issue in report.hard_errors)
 
 
-def test_midas_future_families_still_rejected():
+def test_realized_garch_still_rejected():
+    # C48 promoted all 4 MIDAS families to operational.
+    # realized_garch remains the sole future L4 family (deferred to C49).
     yaml_text = """
 nodes:
   - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
@@ -112,9 +114,7 @@ nodes:
     type: step
     op: fit_model
     params:
-      family: midas_almon
-      n_lag: 12
-      polynomial_degree: 3
+      family: realized_garch
       forecast_strategy: direct
       training_start_rule: expanding
       refit_policy: every_origin

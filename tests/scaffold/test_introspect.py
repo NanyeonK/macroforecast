@@ -60,10 +60,11 @@ def test_operational_options_filters_by_status():
     # No tuple should reference a future-status option.
     for layer_id, _sublayer, axis_name, option_value in tuples:
         assert layer_id == "l4"
-        # ``midas_almon`` is a v1.0 future family per the L4 ops registry;
-        # it must not appear in the operational tuples.
+        # C48 promoted midas_almon/beta/step/dfm_unrestricted_midas to operational.
+        # realized_garch remains the sole future L4 family (deferred to C49)
+        # and must not appear in the operational tuples.
         if axis_name == "family":
-            assert option_value not in {"midas_almon", "midas_beta", "midas_step"}
+            assert option_value not in {"realized_garch"}
 
 
 def test_unknown_layer_raises():
