@@ -841,8 +841,8 @@
 <section id="operational-status-summary">
 <h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Operational: 47 option(s)</p></li>
-<li><p>Future: 5 option(s)</p></li>
+<li><p>Operational: 52 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
 </ul>
 </section>
 <section id="options">
@@ -857,12 +857,10 @@
 <p>Albacore-family rank-space transformation (Goulet Coulombe et al. 2024).</p>
 <p>See <a class="reference internal" href="../op/asymmetric_trim.html"><span class="std std-doc">asymmetric_trim function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.asymmetric_trim_transform</span></code>.</p>
 </section>
-<section id="boruta-selection-future">
-<h3><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>  –  future<a class="headerlink" href="#boruta-selection-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="boruta-selection-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>  –  operational<a class="headerlink" href="#boruta-selection-operational" title="Link to this heading">#</a></h3>
+<p>All-relevant feature selection via shadow-feature random forest (Kursa-Rudnicki 2010).</p>
+<p>See <a class="reference internal" href="../op/boruta_selection.html"><span class="std std-doc">boruta_selection function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.boruta_selection</span></code>.</p>
 </section>
 <section id="cumsum-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">cumsum</span></code>  –  operational<a class="headerlink" href="#cumsum-operational" title="Link to this heading">#</a></h3>
@@ -889,12 +887,10 @@
 <p>Fourier basis features – sin/cos at fixed harmonics.</p>
 <p>See <a class="reference internal" href="../op/fourier.html"><span class="std std-doc">fourier function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.fourier_transform</span></code>.</p>
 </section>
-<section id="genetic-algorithm-selection-future">
-<h3><code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>  –  future<a class="headerlink" href="#genetic-algorithm-selection-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="genetic-algorithm-selection-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>  –  operational<a class="headerlink" href="#genetic-algorithm-selection-operational" title="Link to this heading">#</a></h3>
+<p>Evolutionary feature subset search via genetic algorithm (Goldberg 1989).</p>
+<p>See <a class="reference internal" href="../op/genetic_algorithm_selection.html"><span class="std std-doc">genetic_algorithm_selection function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.genetic_algorithm_selection</span></code>.</p>
 </section>
 <section id="hamilton-filter-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code>  –  operational<a class="headerlink" href="#hamilton-filter-operational" title="Link to this heading">#</a></h3>
@@ -967,12 +963,10 @@
 <p>Lagged target/predictor block.</p>
 <p>See <a class="reference internal" href="../op/lag.html"><span class="std std-doc">lag function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.lag_matrix</span></code>.</p>
 </section>
-<section id="lasso-path-selection-future">
-<h3><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>  –  future<a class="headerlink" href="#lasso-path-selection-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="lasso-path-selection-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>  –  operational<a class="headerlink" href="#lasso-path-selection-operational" title="Link to this heading">#</a></h3>
+<p>Feature selection along the Lasso regularisation path (Efron et al. 2004).</p>
+<p>See <a class="reference internal" href="../op/lasso_path_selection.html"><span class="std std-doc">lasso_path_selection function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.lasso_path_selection</span></code>.</p>
 </section>
 <section id="level-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">level</span></code>  –  operational<a class="headerlink" href="#level-operational" title="Link to this heading">#</a></h3>
@@ -1097,12 +1091,10 @@
 <p>Johnson-Lindenstrauss random Gaussian projection.</p>
 <p>See <a class="reference internal" href="../op/random_projection.html"><span class="std std-doc">random_projection function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.random_projection_transform</span></code>.</p>
 </section>
-<section id="recursive-feature-elimination-future">
-<h3><code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>  –  future<a class="headerlink" href="#recursive-feature-elimination-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="recursive-feature-elimination-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>  –  operational<a class="headerlink" href="#recursive-feature-elimination-operational" title="Link to this heading">#</a></h3>
+<p>Backward stepwise feature pruning via estimator importance (Guyon et al. 2002).</p>
+<p>See <a class="reference internal" href="../op/recursive_feature_elimination.html"><span class="std std-doc">recursive_feature_elimination function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.recursive_feature_elimination</span></code>.</p>
 </section>
 <section id="regime-indicator-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code>  –  operational<a class="headerlink" href="#regime-indicator-operational" title="Link to this heading">#</a></h3>
@@ -1157,12 +1149,10 @@
 <p>Chen-Rohe (2023) Sparse Component Analysis – non-diagonal D variant.</p>
 <p>See <a class="reference internal" href="../op/sparse_pca_chen_rohe.html"><span class="std std-doc">sparse_pca_chen_rohe function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.sparse_pca_chen_rohe_transform</span></code>.</p>
 </section>
-<section id="stability-selection-future">
-<h3><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>  –  future<a class="headerlink" href="#stability-selection-future" title="Link to this heading">#</a></h3>
-<p><em>(no schema description for <code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>)</em></p>
-<blockquote>
-<div><p>TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full <code class="docutils literal notranslate"><span class="pre">OptionDoc</span></code> entry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/l3.py</span></code> are welcome.</p>
-</div></blockquote>
+<section id="stability-selection-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>  –  operational<a class="headerlink" href="#stability-selection-operational" title="Link to this heading">#</a></h3>
+<p>Feature selection by subsampling stability – selection probability threshold (Meinshausen-Bühlmann 2010).</p>
+<p>See <a class="reference internal" href="../op/stability_selection.html"><span class="std std-doc">stability_selection function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.stability_selection</span></code>.</p>
 </section>
 <section id="supervised-pca-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code>  –  operational<a class="headerlink" href="#supervised-pca-operational" title="Link to this heading">#</a></h3>
@@ -1292,13 +1282,13 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adaptive-ma-rf-operational"><code class="docutils literal notranslate"><span class="pre">adaptive_ma_rf</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#asymmetric-trim-operational"><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#boruta-selection-future"><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#boruta-selection-operational"><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cumsum-operational"><code class="docutils literal notranslate"><span class="pre">cumsum</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfm-operational"><code class="docutils literal notranslate"><span class="pre">dfm</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diff-operational"><code class="docutils literal notranslate"><span class="pre">diff</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-selection-operational"><code class="docutils literal notranslate"><span class="pre">feature_selection</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fourier-operational"><code class="docutils literal notranslate"><span class="pre">fourier</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#genetic-algorithm-selection-future"><code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#genetic-algorithm-selection-operational"><code class="docutils literal notranslate"><span class="pre">genetic_algorithm_selection</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hamilton-filter-operational"><code class="docutils literal notranslate"><span class="pre">hamilton_filter</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#holiday-operational"><code class="docutils literal notranslate"><span class="pre">holiday</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hp-filter-operational"><code class="docutils literal notranslate"><span class="pre">hp_filter</span></code>  –  operational</a></li>
@@ -1308,7 +1298,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l3-feature-bundle-operational"><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l3-metadata-build-operational"><code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lag-operational"><code class="docutils literal notranslate"><span class="pre">lag</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lasso-path-selection-future"><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lasso-path-selection-operational"><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#level-operational"><code class="docutils literal notranslate"><span class="pre">level</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#log-operational"><code class="docutils literal notranslate"><span class="pre">log</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#log-diff-operational"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code>  –  operational</a></li>
@@ -1324,7 +1314,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polynomial-operational"><code class="docutils literal notranslate"><span class="pre">polynomial</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polynomial-expansion-operational"><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-projection-operational"><code class="docutils literal notranslate"><span class="pre">random_projection</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recursive-feature-elimination-future"><code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recursive-feature-elimination-operational"><code class="docutils literal notranslate"><span class="pre">recursive_feature_elimination</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regime-indicator-operational"><code class="docutils literal notranslate"><span class="pre">regime_indicator</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#savitzky-golay-filter-operational"><code class="docutils literal notranslate"><span class="pre">savitzky_golay_filter</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scale-operational"><code class="docutils literal notranslate"><span class="pre">scale</span></code>  –  operational</a></li>
@@ -1334,7 +1324,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sliced-inverse-regression-operational"><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-pca-operational"><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-pca-chen-rohe-operational"><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code>  –  operational</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stability-selection-future"><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>  –  future</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stability-selection-operational"><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supervised-pca-operational"><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#target-construction-operational"><code class="docutils literal notranslate"><span class="pre">target_construction</span></code>  –  operational</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-trend-operational"><code class="docutils literal notranslate"><span class="pre">time_trend</span></code>  –  operational</a></li>

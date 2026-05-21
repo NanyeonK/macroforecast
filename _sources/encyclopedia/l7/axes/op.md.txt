@@ -17,7 +17,7 @@
 ## Operational status summary
 
 - Operational: 34 option(s)
-- Future: 6 option(s)
+- Future: 2 option(s)
 
 ## Options
 
@@ -70,12 +70,6 @@ Reporting confidence-banded importance rankings.
 **Related options**: [`rolling_recompute`](#rolling-recompute)
 
 _Last reviewed 2026-05-05 by macroforecast author._
-
-### `boruta_selection`  --  future
-
-_(no schema description for `boruta_selection`)_
-
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `bvar_pip`  --  operational
 
@@ -383,12 +377,6 @@ Feature-selection stability audit for Lasso / Lasso-Path / Elastic Net.
 
 _Last reviewed 2026-05-05 by macroforecast author._
 
-### `lasso_path_selection`  --  future
-
-_(no schema description for `lasso_path_selection`)_
-
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
-
 ### `lineage_attribution`  --  operational
 
 Trace importance back through L3 feature lineage to the L1 raw source.
@@ -570,12 +558,6 @@ Strobl (2008) conditional permutation importance.
 
 See [permutation_importance_strobl function page](../op/permutation_importance_strobl.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.cond_permutation_importance``.
 
-### `recursive_feature_elimination`  --  future
-
-_(no schema description for `recursive_feature_elimination`)_
-
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
-
 ### `rolling_recompute`  --  operational
 
 Re-compute any importance score on a rolling-window basis.
@@ -701,12 +683,6 @@ See [shap_linear function page](../op/shap_linear.md) for full documentation + p
 Tree SHAP -- exact polynomial-time Shapley values for tree ensembles.
 
 See [shap_tree function page](../op/shap_tree.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.shap_tree_importance``.
-
-### `stability_selection`  --  future
-
-_(no schema description for `stability_selection`)_
-
-> TBD: option doc not yet authored for this value. The encyclopedia falls back to the bare schema description above. PRs adding a full ``OptionDoc`` entry under ``macroforecast/scaffold/option_docs/l7.py`` are welcome.
 
 ### `transformation_attribution`  --  operational
 

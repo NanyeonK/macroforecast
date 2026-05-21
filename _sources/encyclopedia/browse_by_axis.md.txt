@@ -119,7 +119,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`official_transform_scope`](l1/axes/official_transform_scope.md) | L1 | `l1_c` | operational | no | 4 |
 | [`oos_period`](l5/axes/oos_period.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |
 | [`op`](l3/axes/op.md) | L3 | `L3_A_step_op` | operational | no | 52 |
-| [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 40 |
+| [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 36 |
 | [`outlier_action`](l2/axes/outlier_action.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_policy`](l2/axes/outlier_policy.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_scope`](l2/axes/outlier_scope.md) | L2 | `l2_c` | operational | yes | 4 |
