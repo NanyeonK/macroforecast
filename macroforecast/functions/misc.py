@@ -17,7 +17,7 @@ Cycle 37 -- L4 misc family standalone-ization (6 ops).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -44,8 +44,11 @@ def _to_series(y: np.ndarray | pd.Series) -> pd.Series:
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
-class SVRLinearFitResult:
-    """Result of :func:`svr_linear_fit`.
+class _SVRLinearFitResultV0:
+    """Pre-consolidation result type for :func:`svr_linear_fit`.
+
+    Superseded by :class:`SVRFitResult`. The public name
+    ``SVRLinearFitResult`` is now a TypeAlias for ``SVRFitResult``.
 
     Attributes
     ----------
@@ -100,8 +103,11 @@ class SVRLinearFitResult:
 
 
 @dataclass(frozen=True)
-class SVRRBFFitResult:
-    """Result of :func:`svr_rbf_fit`.
+class _SVRRBFFitResultV0:
+    """Pre-consolidation result type for :func:`svr_rbf_fit`.
+
+    Superseded by :class:`SVRFitResult`. The public name
+    ``SVRRBFFitResult`` is now a TypeAlias for ``SVRFitResult``.
 
     Attributes
     ----------
@@ -160,8 +166,11 @@ class SVRRBFFitResult:
 
 
 @dataclass(frozen=True)
-class SVRPolyFitResult:
-    """Result of :func:`svr_poly_fit`.
+class _SVRPolyFitResultV0:
+    """Pre-consolidation result type for :func:`svr_poly_fit`.
+
+    Superseded by :class:`SVRFitResult`. The public name
+    ``SVRPolyFitResult`` is now a TypeAlias for ``SVRFitResult``.
 
     Attributes
     ----------
@@ -281,9 +290,9 @@ class SVRFitResult:
 
 # Backward-compat aliases so existing code referencing the old specific types
 # still works at runtime.
-SVRLinearFitResult = SVRFitResult
-SVRRBFFitResult = SVRFitResult
-SVRPolyFitResult = SVRFitResult
+SVRLinearFitResult: TypeAlias = SVRFitResult
+SVRRBFFitResult: TypeAlias = SVRFitResult
+SVRPolyFitResult: TypeAlias = SVRFitResult
 
 @dataclass(frozen=True)
 class KNNFitResult:

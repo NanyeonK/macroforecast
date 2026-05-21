@@ -18,7 +18,7 @@ Cycle 37 -- L4 timeseries family standalone-ization (14 ops).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeAlias
 
 import numpy as np
 import pandas as pd
@@ -424,8 +424,11 @@ class FAVARFitResult:
 
 
 @dataclass(frozen=True)
-class GARCH11FitResult:
-    """Result of :func:`garch11_fit`.
+class _GARCH11FitResultV0:
+    """Pre-consolidation result type for :func:`garch11_fit`.
+
+    Superseded by :class:`GARCHFitResult`. The public name
+    ``GARCH11FitResult`` is now a TypeAlias for ``GARCHFitResult``.
 
     Attributes
     ----------
@@ -494,8 +497,11 @@ class GARCH11FitResult:
 
 
 @dataclass(frozen=True)
-class EGARCHFitResult:
-    """Result of :func:`egarch_fit`.
+class _EGARCHFitResultV0:
+    """Pre-consolidation result type for :func:`egarch_fit`.
+
+    Superseded by :class:`GARCHFitResult`. The public name
+    ``EGARCHFitResult`` is now a TypeAlias for ``GARCHFitResult``.
 
     Attributes
     ----------
@@ -563,8 +569,11 @@ class EGARCHFitResult:
 
 
 @dataclass(frozen=True)
-class RealizedGARCHFitResult:
-    """Result of :func:`realized_garch_fit`.
+class _RealizedGARCHFitResultV0:
+    """Pre-consolidation result type for :func:`realized_garch_fit`.
+
+    Superseded by :class:`GARCHFitResult`. The public name
+    ``RealizedGARCHFitResult`` is now a TypeAlias for ``GARCHFitResult``.
 
     Attributes
     ----------
@@ -693,9 +702,9 @@ class GARCHFitResult:
 
 # Backward-compat aliases: old result types map to the new consolidated type.
 # These aliases keep existing code that references GARCH11FitResult etc. working.
-GARCH11FitResult = GARCHFitResult
-EGARCHFitResult = GARCHFitResult
-RealizedGARCHFitResult = GARCHFitResult
+GARCH11FitResult: TypeAlias = GARCHFitResult
+EGARCHFitResult: TypeAlias = GARCHFitResult
+RealizedGARCHFitResult: TypeAlias = GARCHFitResult
 
 @dataclass(frozen=True)
 class ETSFitResult:
