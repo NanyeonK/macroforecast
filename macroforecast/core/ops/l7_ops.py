@@ -454,6 +454,9 @@ DEFAULT_FIGURE_MAPPING = {
     # 1998 GIRF). ``generalized_irf`` is now reserved for the order-invariant
     # Pesaran-Shin variant and remains future-gated until v0.9.x.
     "orthogonalised_irf": "irf_with_confidence_band",
+    # C49 promotion: Pesaran-Shin (1998) generalized IRF (order-invariant).
+    # Does not use Cholesky; result is invariant to variable ordering.
+    "generalized_irf": "irf_with_confidence_band",
     "forecast_decomposition": "historical_decomp_stacked_bar",
     "group_aggregate": "bar_grouped",
     "lineage_attribution": "bar_grouped_by_pipeline",
@@ -541,12 +544,9 @@ FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
     # (``oshapley_vi`` and ``pbsv`` were moved to OPERATIONAL in v0.9.1
     #  dev-stage v0.9.0D Path B -- final-window-fit anatomy adapter; Path
     #  A faithful per-origin refit lands in v0.9.0E.)
-    # v0.8.9 honesty pass V2.3: ``generalized_irf`` was misnamed in v0.2 #189
-    # (it shipped Cholesky orthogonalised IRFs, not Pesaran-Shin 1998 GIRF).
-    # Operational Cholesky variant is now ``orthogonalised_irf``;
-    # ``generalized_irf`` is reserved for the true order-invariant
-    # Pesaran-Shin procedure and remains future until a v0.9.x runtime.
-    "generalized_irf",
+    # generalized_irf promoted to operational in C49 (Pesaran-Shin 1998
+    # order-invariant GIRF). Removed from FUTURE_OPS here; now in
+    # DEFAULT_FIGURE_MAPPING (therefore in OPERATIONAL_OPS).
 )
 
 
