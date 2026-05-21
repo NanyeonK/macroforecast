@@ -178,10 +178,13 @@ def test_l3_full_sample_once_rejected_for_pca():
     assert validate_layer(parse_layer_yaml(make_l3_yaml_with_pca(4, "full_sample_once"))).has_hard_errors
 
 
-def test_l3_future_op_rejected_boruta():
+def test_l3_boruta_selection_accepted_as_operational():
+    # Cycle 47: boruta_selection promoted to status="operational".
+    # The validator must now accept it (no hard errors for the op status).
     report = validate_layer(parse_layer_yaml(make_l3_yaml_with_op("boruta_selection", n_estimators=100)))
-    assert report.has_hard_errors
-    assert any("future" in i.message.lower() for i in report.hard_errors)
+    # The op status is now operational; no "future" hard error should be raised.
+    future_errors = [i for i in report.hard_errors if "future" in i.message.lower()]
+    assert len(future_errors) == 0, f"Unexpected future-status hard errors: {future_errors}"
 
 
 def test_l3_scaled_pca_requires_target_signal():
