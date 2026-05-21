@@ -62,6 +62,16 @@ full per-version honesty-pass history embedded in repo documentation.
   rather than errored in CI environments that install `[ci]` extras only
   (which excludes the `[deep]` extra / torch) (closes 1 test failure #15).
 
+### Cycle 46 -- CI hotfix: gate t73 behind `slow` marker; raise subprocess timeout
+
+- `tests/core/test_stages.py` (`test_t73_no_existing_test_failures`): tagged
+  `@pytest.mark.slow`; subprocess `timeout` raised from 600 s to 1800 s to
+  accommodate the heavier suite restored by the Cycle 45 L2 frame_edge fix.
+- `.github/workflows/ci-core.yml`: marker filter updated from `not deep` to
+  `not deep and not slow` so ci-core skips t73.
+- `.github/workflows/ci-deep.yml`: marker filter updated from `deep` to
+  `deep or slow` so the nightly ci-deep job exercises t73 with the new timeout.
+
 ### Cycle 44 -- CI stabilization (mypy green + sphinx stale-check removal)
 
 **mypy fixes (26 errors resolved, 4 deferred):**
