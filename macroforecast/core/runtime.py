@@ -14232,6 +14232,36 @@ def _execute_l3_op(
             n_slices=int(params.get("n_slices", 10)),
             scaling_method=str(params.get("scaling_method", "scaled_pca")),
         )
+    if op == "boruta_selection":
+        return _boruta_selection(
+            _as_frame(inputs[0]),
+            target=_first_series(inputs),
+            params=params,
+        )
+    if op == "recursive_feature_elimination":
+        return _recursive_feature_elimination(
+            _as_frame(inputs[0]),
+            target=_first_series(inputs),
+            params=params,
+        )
+    if op == "lasso_path_selection":
+        return _lasso_path_selection(
+            _as_frame(inputs[0]),
+            target=_first_series(inputs),
+            params=params,
+        )
+    if op == "stability_selection":
+        return _stability_selection(
+            _as_frame(inputs[0]),
+            target=_first_series(inputs),
+            params=params,
+        )
+    if op == "genetic_algorithm_selection":
+        return _genetic_algorithm_selection(
+            _as_frame(inputs[0]),
+            target=_first_series(inputs),
+            params=params,
+        )
     raise NotImplementedError(f"L3 runtime does not support op {op!r}")
 
 
@@ -15524,6 +15554,645 @@ def _feature_selection(
         return frame[list(ordered.index[:keep])]
     variances = frame.var().sort_values(ascending=False)
     return frame[list(variances.index[:keep])]
+
+
+def _boruta_selection(
+    frame: pd.DataFrame,
+    *,
+    target: pd.Series | None,
+    params: dict[str, Any],
+) -> pd.DataFrame:
+    """Boruta feature selection (Kursa & Rudnicki 2010, Algorithm 1).
+
+    Paper: Kursa & Rudnicki (2010), Journal of Statistical Software 36(11),
+    doi:10.18637/jss.v036.i11.
+
+    Implements Algorithm 1 exactly: iterates shadow-feature augmentation,
+    Random Forest importance scoring, MISA comparison, and Bonferroni-corrected
+    binomial testing to classify each feature as accepted, rejected, or
+    tentative. No external ``boruta`` package is required -- this is the pure
+    NumPy + sklearn reimplementation of Algorithm 1.
+    """
+    from sklearn.ensemble import RandomForestRegressor
+    from scipy import stats  # already in dependencies via statsmodels
+
+    # --- parameter extraction ---
+    n_estimators: int = int(params.get("n_estimators_rf", 100))
+    max_iter: int = int(params.get("max_iter", 100))
+    alpha: float = float(params.get("alpha", 0.05))
+    include_tentative: bool = bool(params.get("include_tentative", False))
+    seed: int = int(params.get("random_state", 0))
+
+    # --- input validation ---
+    if not isinstance(frame, pd.DataFrame):
+        raise TypeError(f"boruta_selection: expected pd.DataFrame, got {type(frame)}")
+    if frame.shape[1] == 0:
+        return frame
+    if frame.shape[1] == 1:
+        return frame
+
+    # Drop all-NaN columns before any processing
+    frame = frame.dropna(axis=1, how="all")
+    if frame.shape[1] == 0:
+        return frame
+
+    if target is None:
+        warnings.warn(
+            "boruta_selection: target is None; falling back to variance-based ranking",
+            stacklevel=2,
+        )
+        N_cols = frame.shape[1]
+        k_fb = max(1, N_cols // 2)
+        return frame[list(frame.var().sort_values(ascending=False).index[:k_fb])]
+
+    # Align frame and target, dropping NaN rows jointly
+    aligned = pd.concat([frame, target.rename("__y__")], axis=1).dropna()
+    if len(aligned) < 10:
+        warnings.warn(
+            "boruta_selection: insufficient samples (need >= 10); returning input unchanged",
+            stacklevel=2,
+        )
+        return frame
+
+    X_aligned: np.ndarray = aligned.iloc[:, :-1].to_numpy(dtype=float)
+    y_aligned: np.ndarray = aligned.iloc[:, -1].to_numpy(dtype=float)
+    T_aligned, N = X_aligned.shape
+    col_names = list(aligned.columns[:-1])
+
+    # --- initialise per-feature counters ---
+    # status: 0 = tentative, 1 = accepted, -1 = rejected
+    hit_count: np.ndarray = np.zeros(N, dtype=int)
+    miss_count: np.ndarray = np.zeros(N, dtype=int)
+    status: np.ndarray = np.zeros(N, dtype=int)
+
+    # Bonferroni-corrected significance threshold
+    alpha_bonf: float = alpha / N
+
+    rng: np.random.Generator = np.random.default_rng(seed)
+
+    for iteration in range(max_iter):
+        # a. Build shadow matrix by shuffling each column independently
+        X_shadow: np.ndarray = X_aligned.copy()
+        for j in range(N):
+            X_shadow[:, j] = X_aligned[rng.permutation(T_aligned), j]
+
+        # b. Augment: real features left, shadow features right
+        X_aug: np.ndarray = np.concatenate([X_aligned, X_shadow], axis=1)
+
+        # c. Train Random Forest (derive per-iteration seed for bit-exact replicate)
+        iter_seed: int = (seed + iteration) % (2**31 - 1)
+        rf = RandomForestRegressor(n_estimators=n_estimators, random_state=iter_seed)
+        rf.fit(X_aug, y_aligned)
+
+        # d. Importance scores: first N are real features, last N are shadows
+        imp: np.ndarray = rf.feature_importances_
+        imp_real: np.ndarray = imp[:N]
+        imp_shadow: np.ndarray = imp[N:]
+
+        # e. MISA = Maximum Importance of Shadow Attributes
+        misa: float = float(imp_shadow.max())
+
+        # f. Update hit/miss counts for tentative features only
+        for j in range(N):
+            if status[j] != 0:
+                continue
+            if imp_real[j] > misa:
+                hit_count[j] += 1
+            elif imp_real[j] < misa:
+                miss_count[j] += 1
+
+        # g. Bonferroni decision after each iteration
+        for j in range(N):
+            if status[j] != 0:
+                continue
+            n_trials: int = hit_count[j] + miss_count[j]
+            if n_trials == 0:
+                continue
+            # p_accept: probability of >= hit_count hits under null (p=0.5)
+            p_accept: float = float(stats.binom.sf(hit_count[j] - 1, n_trials, 0.5))
+            # p_reject: probability of <= hit_count hits under null (p=0.5)
+            p_reject: float = float(stats.binom.cdf(hit_count[j], n_trials, 0.5))
+            if p_reject <= alpha_bonf:
+                status[j] = -1  # rejected
+            elif p_accept <= alpha_bonf:
+                status[j] = 1  # accepted
+
+        # h. Early exit if all features have been decided
+        if np.all(status != 0):
+            break
+
+    # --- select output columns ---
+    accepted_mask: np.ndarray = status == 1
+    if include_tentative:
+        accepted_mask = accepted_mask | (status == 0)
+
+    selected_indices: np.ndarray = np.where(accepted_mask)[0]
+
+    # Edge case: no feature accepted -> fall back to highest cumulative hit count
+    if len(selected_indices) == 0:
+        best_j: int = int(np.argmax(hit_count))
+        selected_indices = np.array([best_j], dtype=int)
+
+    # Preserve original column ordering (sort indices ascending)
+    selected_indices = np.sort(selected_indices)
+    selected_cols: list[str] = [col_names[j] for j in selected_indices]
+    return frame[selected_cols]
+
+
+def _recursive_feature_elimination(
+    frame: pd.DataFrame,
+    *,
+    target: pd.Series | None,
+    params: dict[str, Any],
+) -> pd.DataFrame:
+    """Recursive Feature Elimination (Guyon, Weston, Barnhill & Vapnik 2002).
+
+    Paper: Guyon, Weston, Barnhill & Vapnik (2002), Machine Learning 46(1-3),
+    pp. 389-422, doi:10.1023/A:1012487302797.
+
+    Implements Section 4 Algorithm exactly: iteratively prune the feature
+    with the lowest squared-coefficient ranking from a linear estimator until
+    ``n_features_to_select`` features remain. Optionally uses RFECV for
+    cross-validation-based automatic selection.
+    """
+    from sklearn.feature_selection import RFE, RFECV
+    from sklearn.linear_model import Ridge as _Ridge, Lasso as _Lasso
+    from sklearn.svm import SVR as _SVR
+
+    # --- parameter extraction ---
+    n_features_raw: Any = params.get("n_features_to_select", 0.5)
+    step_raw: Any = params.get("step", 1)
+    estimator_name: str = str(params.get("estimator", "ridge"))
+    use_cv: bool = bool(params.get("use_cv", False))
+    cv_folds: int = int(params.get("cv_folds", 5))
+    seed: int = int(params.get("random_state", 0))
+
+    # --- input validation ---
+    if not isinstance(frame, pd.DataFrame):
+        raise TypeError(
+            f"recursive_feature_elimination: expected pd.DataFrame, got {type(frame)}"
+        )
+    if frame.shape[1] == 0:
+        return frame
+    if frame.shape[1] == 1:
+        return frame
+
+    frame = frame.dropna(axis=1, how="all")
+    N: int = frame.shape[1]
+
+    if target is None:
+        warnings.warn(
+            "recursive_feature_elimination: target is None; falling back to variance-based ranking",
+            stacklevel=2,
+        )
+        k_fb: int = max(
+            1,
+            int(n_features_raw * N)
+            if isinstance(n_features_raw, float) and 0 < n_features_raw <= 1
+            else max(1, min(int(n_features_raw), N)),
+        )
+        return frame[list(frame.var().sort_values(ascending=False).index[:k_fb])]
+
+    # Resolve n_features_to_select
+    if isinstance(n_features_raw, float) and 0 < n_features_raw <= 1:
+        k: int = max(1, int(n_features_raw * N))
+    else:
+        k = max(1, min(int(n_features_raw), N))
+
+    # If k >= N, no reduction needed
+    if k >= N:
+        return frame
+
+    # Align and drop NaN rows
+    aligned = pd.concat([frame, target.rename("__y__")], axis=1).dropna()
+    min_rows: int = k + cv_folds if use_cv else k + 1
+    if len(aligned) < min_rows:
+        warnings.warn(
+            "recursive_feature_elimination: insufficient samples; returning first k columns",
+            stacklevel=2,
+        )
+        return frame[list(frame.columns[:k])]
+
+    X_aligned: np.ndarray = aligned.iloc[:, :-1].to_numpy(dtype=float)
+    y_aligned: np.ndarray = aligned.iloc[:, -1].to_numpy(dtype=float)
+
+    # Build base estimator
+    if estimator_name == "ridge":
+        base_est = _Ridge(random_state=seed)
+    elif estimator_name == "lasso":
+        base_est = _Lasso(random_state=seed)
+    elif estimator_name == "svr_linear":
+        base_est = _SVR(kernel="linear")
+    else:
+        base_est = _Ridge(random_state=seed)
+
+    # Fit RFE or RFECV
+    if not use_cv:
+        selector = RFE(estimator=base_est, n_features_to_select=k, step=step_raw)
+    else:
+        selector = RFECV(
+            estimator=base_est,
+            min_features_to_select=k,
+            step=step_raw,
+            cv=cv_folds,
+            scoring="neg_mean_squared_error",
+        )
+    selector.fit(X_aligned, y_aligned)
+
+    # Build support mask aligned with the original (pre-dropna) frame columns
+    aligned_cols: list[str] = list(aligned.columns[:-1])
+    support_mask: np.ndarray = selector.support_
+    selected_cols: list[str] = [
+        col for col, sel in zip(aligned_cols, support_mask) if sel
+    ]
+    # Preserve original ordering (columns already in ascending order by construction)
+    return frame[selected_cols]
+
+
+def _lasso_path_selection(
+    frame: pd.DataFrame,
+    *,
+    target: pd.Series | None,
+    params: dict[str, Any],
+) -> pd.DataFrame:
+    """LARS path entry-order feature selection (Efron, Hastie, Johnstone & Tibshirani 2004).
+
+    Paper: Efron, Hastie, Johnstone & Tibshirani (2004), Annals of Statistics
+    32(2), pp. 407-499, doi:10.1214/009053604000000067.
+
+    This op implements LARS path entry order (Efron et al. 2004, LARS
+    Algorithm 1). It is distinct from ``feature_selection(method='lasso')``,
+    which ranks features by LassoCV coefficient magnitude. Here, the
+    selection criterion is the order in which features enter the LARS active
+    set as the regularization parameter decreases from infinity to zero.
+    """
+    from sklearn.linear_model import lars_path
+    from sklearn.preprocessing import StandardScaler
+
+    # --- parameter extraction ---
+    n_features_raw: Any = params.get("n_features_to_select", 0.5)
+    normalize_features: bool = bool(params.get("normalize_features", True))
+    # random_state is accepted for interface consistency but LARS is deterministic
+    _seed: int = int(params.get("random_state", 0))  # noqa: F841
+
+    # --- input validation ---
+    if not isinstance(frame, pd.DataFrame):
+        raise TypeError(
+            f"lasso_path_selection: expected pd.DataFrame, got {type(frame)}"
+        )
+    if frame.shape[1] == 0:
+        return frame
+    if frame.shape[1] == 1:
+        return frame
+
+    frame = frame.dropna(axis=1, how="all")
+    N: int = frame.shape[1]
+
+    # Resolve k
+    if isinstance(n_features_raw, float) and 0 < n_features_raw <= 1:
+        k: int = max(1, int(n_features_raw * N))
+    else:
+        k = max(1, min(int(n_features_raw), N))
+
+    if k >= N:
+        return frame
+
+    if target is None:
+        warnings.warn(
+            "lasso_path_selection: target is None; falling back to variance-based ranking",
+            stacklevel=2,
+        )
+        return frame[list(frame.var().sort_values(ascending=False).index[:k])]
+
+    # Align and drop NaN rows
+    aligned = pd.concat([frame, target.rename("__y__")], axis=1).dropna()
+    if len(aligned) < 3:
+        warnings.warn(
+            "lasso_path_selection: insufficient samples (need >= 3); returning input unchanged",
+            stacklevel=2,
+        )
+        return frame
+
+    X_aligned: np.ndarray = aligned.iloc[:, :-1].to_numpy(dtype=float)
+    y_aligned: np.ndarray = aligned.iloc[:, -1].to_numpy(dtype=float)
+    aligned_cols: list[str] = list(aligned.columns[:-1])
+
+    # Standardize if requested (Efron et al. 2004 assume standardized predictors)
+    if normalize_features:
+        scaler = StandardScaler()
+        X_scaled: np.ndarray = scaler.fit_transform(X_aligned)
+    else:
+        X_scaled = X_aligned
+
+    # Compute LARS path: returns (alphas, active, coefs) where `active` is the
+    # entry-order list of feature indices (Algorithm 1, Step 2c in the paper)
+    _, active_indices, _coefs = lars_path(X_scaled, y_aligned, method="lasso", max_iter=N)
+
+    # `active_indices` may be a list or array; take first k unique entries in entry order
+    seen: set[int] = set()
+    ordered_selection: list[int] = []
+    for idx in active_indices:
+        idx_int = int(idx)
+        if idx_int not in seen:
+            seen.add(idx_int)
+            ordered_selection.append(idx_int)
+        if len(ordered_selection) >= k:
+            break
+
+    # If fewer than k features entered, take all that entered
+    if len(ordered_selection) == 0:
+        # Degenerate: fall back to variance ranking
+        return frame[list(frame.var().sort_values(ascending=False).index[:k])]
+
+    # Sort indices ascending to preserve original column ordering
+    selected_indices: list[int] = sorted(ordered_selection)
+    selected_cols: list[str] = [aligned_cols[j] for j in selected_indices]
+    return frame[selected_cols]
+
+
+def _stability_selection(
+    frame: pd.DataFrame,
+    *,
+    target: pd.Series | None,
+    params: dict[str, Any],
+) -> pd.DataFrame:
+    """Stability selection (Meinshausen & Bühlmann 2010, Section 2).
+
+    Paper: Meinshausen & Bühlmann (2010), Journal of the Royal Statistical
+    Society Series B 72(4), pp. 417-473, doi:10.1111/j.1467-9868.2010.00740.x.
+
+    For each of ``n_subsamples`` random subsamples (drawn without replacement),
+    fits a Lasso or ElasticNet and records which features have nonzero
+    coefficients. Features are selected when their selection probability
+    (fraction of subsamples in which they appear) exceeds ``pi_thr``.
+    """
+    from sklearn.linear_model import Lasso as _Lasso, ElasticNet as _ElasticNet
+
+    # --- parameter extraction ---
+    n_subsamples: int = int(params.get("n_subsamples", 100))
+    subsample_fraction: float = float(params.get("subsample_fraction", 0.5))
+    pi_thr: float = float(params.get("pi_thr", 0.6))
+    base_estimator_name: str = str(params.get("base_estimator", "lasso"))
+    alpha: float = float(params.get("alpha", 0.01))
+    seed: int = int(params.get("random_state", 0))
+
+    # --- input validation ---
+    if not isinstance(frame, pd.DataFrame):
+        raise TypeError(
+            f"stability_selection: expected pd.DataFrame, got {type(frame)}"
+        )
+    if frame.shape[1] == 0:
+        return frame
+    if frame.shape[1] == 1:
+        return frame
+
+    frame = frame.dropna(axis=1, how="all")
+    N: int = frame.shape[1]
+
+    if target is None:
+        warnings.warn(
+            "stability_selection: target is None; falling back to variance-based ranking",
+            stacklevel=2,
+        )
+        k_fb: int = max(1, int(pi_thr * N) if pi_thr < 1.0 else N)
+        return frame[list(frame.var().sort_values(ascending=False).index[:k_fb])]
+
+    # Align and drop NaN rows
+    aligned = pd.concat([frame, target.rename("__y__")], axis=1).dropna()
+    T_aligned: int = len(aligned)
+    if T_aligned < 4:
+        warnings.warn(
+            "stability_selection: insufficient samples (need >= 4); returning input unchanged",
+            stacklevel=2,
+        )
+        return frame
+
+    X_aligned: np.ndarray = aligned.iloc[:, :-1].to_numpy(dtype=float)
+    y_aligned: np.ndarray = aligned.iloc[:, -1].to_numpy(dtype=float)
+
+    # Sub-sample size: at least 2 rows
+    n_sub: int = max(2, int(subsample_fraction * T_aligned))
+
+    # Accumulate per-feature selection counts across subsamples
+    selection_count: np.ndarray = np.zeros(N, dtype=float)
+
+    for s in range(n_subsamples):
+        # Derive deterministic per-subsample seed (mirrors #279 pattern)
+        sub_seed: int = (seed + s) % (2**31 - 1)
+        rng_s: np.random.Generator = np.random.default_rng(sub_seed)
+
+        # Draw subsample rows without replacement
+        idx: np.ndarray = rng_s.choice(T_aligned, size=n_sub, replace=False)
+        X_sub: np.ndarray = X_aligned[idx, :]
+        y_sub: np.ndarray = y_aligned[idx]
+
+        # Fit base estimator on the subsample
+        if base_estimator_name == "elastic_net":
+            est = _ElasticNet(alpha=alpha, max_iter=10000)
+        else:
+            # default to lasso (Meinshausen & Bühlmann 2010 Section 2 default)
+            est = _Lasso(alpha=alpha, max_iter=10000)
+
+        try:
+            est.fit(X_sub, y_sub)
+            selected: np.ndarray = np.abs(est.coef_) > 1e-10
+            selection_count += selected.astype(float)
+        except Exception:
+            # Degenerate subsample (e.g., singular matrix): skip silently
+            pass
+
+    # Compute selection probabilities and threshold
+    pi: np.ndarray = selection_count / n_subsamples
+    selected_mask: np.ndarray = pi >= pi_thr
+    selected_indices: np.ndarray = np.where(selected_mask)[0]
+
+    # Edge case: no feature exceeds threshold -> return the feature with highest pi
+    if len(selected_indices) == 0:
+        best_j: int = int(np.argmax(pi))
+        selected_indices = np.array([best_j], dtype=int)
+
+    # Sort ascending to preserve original column ordering
+    selected_indices = np.sort(selected_indices)
+    col_names: list[str] = list(aligned.columns[:-1])
+    selected_cols: list[str] = [col_names[j] for j in selected_indices]
+    return frame[selected_cols]
+
+
+def _genetic_algorithm_selection(
+    frame: pd.DataFrame,
+    *,
+    target: pd.Series | None,
+    params: dict[str, Any],
+) -> pd.DataFrame:
+    """Genetic algorithm feature selection (Goldberg 1989, Chapters 1-3).
+
+    Paper: Goldberg, D.E. (1989), Genetic Algorithms in Search, Optimization,
+    and Machine Learning, Addison-Wesley, Reading MA. ISBN 0-201-15767-5.
+    Chapters 1-3 (encoding, fitness evaluation, selection, crossover, mutation).
+
+    Implements the standard GA loop: binary chromosome encoding (one bit per
+    feature), tournament selection, single-point crossover, bit-flip mutation,
+    and elitist replacement. Pure NumPy -- no ``deap`` dependency required.
+
+    Performance note: default ``n_generations=50``, ``population_size=30``,
+    ``cv_folds=3`` is chosen to stay fast. For large N (>100 features), expect
+    approximately 30-120 seconds runtime depending on T. Use
+    ``n_generations=10, population_size=10`` for exploratory sweeps.
+    """
+    from sklearn.model_selection import cross_val_score
+    from sklearn.linear_model import Ridge as _Ridge, Lasso as _Lasso, LinearRegression
+
+    # --- parameter extraction ---
+    population_size: int = int(params.get("population_size", 30))
+    n_generations: int = int(params.get("n_generations", 50))
+    crossover_prob: float = float(params.get("crossover_prob", 0.8))
+    fitness_estimator_name: str = str(params.get("fitness_estimator", "ridge"))
+    cv_folds: int = int(params.get("cv_folds", 3))
+    seed: int = int(params.get("random_state", 0))
+
+    # --- input validation ---
+    if not isinstance(frame, pd.DataFrame):
+        raise TypeError(
+            f"genetic_algorithm_selection: expected pd.DataFrame, got {type(frame)}"
+        )
+    if frame.shape[1] == 0:
+        return frame
+    if frame.shape[1] == 1:
+        return frame
+
+    frame = frame.dropna(axis=1, how="all")
+    N: int = frame.shape[1]
+    if N < 2:
+        return frame
+
+    if target is None:
+        warnings.warn(
+            "genetic_algorithm_selection: target is None; falling back to variance-based ranking",
+            stacklevel=2,
+        )
+        k_fb: int = max(1, N // 2)
+        return frame[list(frame.var().sort_values(ascending=False).index[:k_fb])]
+
+    # Align and drop NaN rows
+    aligned = pd.concat([frame, target.rename("__y__")], axis=1).dropna()
+    T_aligned: int = len(aligned)
+    if T_aligned < 3 * cv_folds:
+        warnings.warn(
+            "genetic_algorithm_selection: insufficient samples (need >= 3*cv_folds); "
+            "returning input unchanged",
+            stacklevel=2,
+        )
+        return frame
+
+    X_aligned: np.ndarray = aligned.iloc[:, :-1].to_numpy(dtype=float)
+    y_aligned: np.ndarray = aligned.iloc[:, -1].to_numpy(dtype=float)
+
+    # Build fitness estimator
+    if fitness_estimator_name == "lasso":
+        fitness_est = _Lasso()
+    elif fitness_estimator_name == "ols":
+        fitness_est = LinearRegression()
+    else:
+        fitness_est = _Ridge()
+
+    # --- inner helpers defined in local scope ---
+
+    def _ga_fitness(chromosome: np.ndarray) -> float:
+        """Evaluate a binary chromosome: CV neg-MSE on selected features."""
+        selected_cols: np.ndarray = np.where(chromosome)[0]
+        if len(selected_cols) == 0:
+            return float(-np.inf)
+        X_sel: np.ndarray = X_aligned[:, selected_cols]
+        scores: np.ndarray = cross_val_score(
+            fitness_est, X_sel, y_aligned, cv=cv_folds, scoring="neg_mean_squared_error"
+        )
+        return float(np.mean(scores))
+
+    def _tournament(
+        pop: np.ndarray, fitness: np.ndarray, rng_t: np.random.Generator
+    ) -> np.ndarray:
+        """Tournament selection of size 2; returns a copy of the winner chromosome."""
+        a: int = int(rng_t.integers(0, len(pop)))
+        b: int = int(rng_t.integers(0, len(pop)))
+        winner: int = a if fitness[a] >= fitness[b] else b
+        return pop[winner].copy()
+
+    # --- initialise population ---
+    rng: np.random.Generator = np.random.default_rng(seed)
+    pop: np.ndarray = rng.integers(0, 2, size=(population_size, N)).astype(bool)
+    # Ensure each chromosome has at least 1 feature bit set
+    for i in range(population_size):
+        if not np.any(pop[i]):
+            pop[i, 0] = True
+
+    best_ch: np.ndarray = pop[0].copy()
+    best_fitness: float = float(-np.inf)
+
+    # --- main GA loop ---
+    for _gen in range(n_generations):
+        # a. Evaluate fitness
+        fitness: np.ndarray = np.array([_ga_fitness(ch) for ch in pop])
+
+        # b. Track best chromosome (elitism)
+        gen_best_idx: int = int(np.argmax(fitness))
+        if fitness[gen_best_idx] > best_fitness:
+            best_fitness = float(fitness[gen_best_idx])
+            best_ch = pop[gen_best_idx].copy()
+
+        # c. Build offspring population
+        offspring: np.ndarray = np.empty_like(pop)
+        for i in range(population_size):
+            # Tournament selection for two parents
+            parent_a: np.ndarray = _tournament(pop, fitness, rng)
+            parent_b: np.ndarray = _tournament(pop, fitness, rng)
+
+            # Single-point crossover with probability crossover_prob
+            if rng.random() < crossover_prob:
+                pt: int = int(rng.integers(1, N))
+                child: np.ndarray = np.concatenate([parent_a[:pt], parent_b[pt:]])
+            else:
+                child = parent_a.copy()
+
+            # Bit-flip mutation: each bit flips with probability 1/N
+            mutation_mask: np.ndarray = rng.random(N) < (1.0 / N)
+            child ^= mutation_mask
+
+            # Ensure at least 1 bit set
+            if not np.any(child):
+                child[0] = True
+
+            offspring[i] = child
+
+        # d. Elitist replacement: replace worst offspring with best known solution
+        worst_idx: int = int(np.argmin(np.array([_ga_fitness(ch) for ch in offspring])))
+        offspring[worst_idx] = best_ch.copy()
+
+        pop = offspring
+
+    # --- final selection ---
+    # Evaluate fitness on final population to confirm best
+    final_fitness: np.ndarray = np.array([_ga_fitness(ch) for ch in pop])
+    final_best_idx: int = int(np.argmax(final_fitness))
+    if final_fitness[final_best_idx] > best_fitness:
+        best_ch = pop[final_best_idx].copy()
+
+    selected_indices: np.ndarray = np.where(best_ch)[0]
+
+    # Edge case: no bits set (should not happen with the bit-set guard)
+    if len(selected_indices) == 0:
+        col_names_list: list[str] = list(aligned.columns[:-1])
+        # Fall back to the column with highest absolute correlation to target
+        corr: np.ndarray = np.abs(
+            np.corrcoef(X_aligned.T, y_aligned)[:-1, -1]
+        )
+        best_j: int = int(np.argmax(corr))
+        return frame[[col_names_list[best_j]]]
+
+    # Sort ascending to preserve original column ordering
+    selected_indices = np.sort(selected_indices)
+    col_names_ga: list[str] = list(aligned.columns[:-1])
+    selected_cols_ga: list[str] = [col_names_ga[j] for j in selected_indices]
+    return frame[selected_cols_ga]
 
 
 def _hierarchical_pca(

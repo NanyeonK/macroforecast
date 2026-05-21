@@ -1244,7 +1244,7 @@ _OP_TARGET_CONSTRUCTION = _o(
 
 
 # ---------------------------------------------------------------------------
-# Selection family (1 op)
+# Selection family (6 ops)
 # ---------------------------------------------------------------------------
 
 _OP_FEATURE_SELECTION = _o(
@@ -1287,6 +1287,488 @@ _OP_FEATURE_SELECTION = _o(
                 "(no target needed). 'correlation' keeps columns most correlated "
                 "with target. 'lasso' fits LassoCV and keeps largest-coefficient "
                 "columns. 'correlation' and 'lasso' require target."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
+)
+
+
+_OP_BORUTA_SELECTION = _o(
+    "boruta_selection",
+    "All-relevant feature selection via shadow-feature random forest (Kursa-Rudnicki 2010).",
+    (
+        "Boruta identifies all features that carry statistically relevant "
+        "predictive information by comparing each feature's importance to the "
+        "maximum importance achieved by random (shadow) copies. Algorithm:\n\n"
+        "1. Append shuffled shadow copies of every column to the panel.\n"
+        "2. Fit a random forest (``n_estimators_rf`` trees) and record mean "
+        "impurity-reduction importance for each real and shadow feature.\n"
+        "3. Use a two-sided binomial test (threshold ``alpha``) to classify each "
+        "real feature as confirmed, rejected, or tentative.\n"
+        "4. Remove rejected features and their shadows; repeat up to "
+        "``max_iter`` rounds or until no tentative features remain.\n"
+        "5. Return the sub-panel of confirmed (and optionally tentative, "
+        "``include_tentative=True``) features.\n\n"
+        "Because the null is the importance of random noise, Boruta is an "
+        "all-relevant selector: it keeps every feature that beats chance, "
+        "not just the minimal predictive set. ``temporal_rule`` controls "
+        "whether the forest is fit once per origin (``expanding_window_per_origin``). "
+        "``full_sample_once`` is rejected by a hard rule."
+    ),
+    "Macro panels where many predictors may matter but standard Lasso-type selectors over-shrink; best before tree or neural forecasters where high-dim panels are acceptable.",
+    when_not_to_use="Very wide panels (K >> 500) -- shadow copies double memory; prefer lasso_path_selection or stability_selection for computational cost.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Kursa, M.B. & Rudnicki, W.R. (2010) 'Feature Selection with the Boruta Package', Journal of Statistical Software 36(11): 1-13.",
+            url="https://doi.org/10.18637/jss.v036.i11",
+        ),
+    ),
+    related_options=("feature_selection", "stability_selection", "recursive_feature_elimination"),
+    op_page=True,
+    op_func_name="boruta_selection",
+    data_args=_L3_SUPERVISED_DATA_ARGS + (
+        ParameterDoc(
+            name="n_estimators_rf",
+            type="int",
+            default=100,
+            constraint=">= 1",
+            description=(
+                "Number of trees in each random forest fit. Larger values stabilise "
+                "importance rankings at the cost of compute."
+            ),
+        ),
+        ParameterDoc(
+            name="max_iter",
+            type="int",
+            default=100,
+            constraint=">= 1",
+            description=(
+                "Maximum number of Boruta iterations. Each iteration removes at "
+                "least one rejected feature; convergence typically occurs well "
+                "before the limit."
+            ),
+        ),
+        ParameterDoc(
+            name="alpha",
+            type="float",
+            default=0.05,
+            constraint="in (0, 1)",
+            description=(
+                "Two-sided binomial test significance level for classifying features "
+                "as confirmed or rejected. Lower values are more conservative."
+            ),
+        ),
+        ParameterDoc(
+            name="include_tentative",
+            type="bool",
+            default=False,
+            constraint="",
+            description=(
+                "If True, tentative features (not yet confirmed or rejected within "
+                "max_iter rounds) are retained in the output panel."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            constraint="",
+            description="Random seed for the random forest and shadow-feature shuffles.",
+        ),
+        ParameterDoc(
+            name="temporal_rule",
+            type="str",
+            default='"expanding_window_per_origin"',
+            constraint='"expanding_window_per_origin" | "rolling_window_per_origin"',
+            description=(
+                "Controls when the random forest is refitted relative to each "
+                "forecast origin. ``full_sample_once`` is hard-rejected."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
+)
+
+_OP_RECURSIVE_FEATURE_ELIMINATION = _o(
+    "recursive_feature_elimination",
+    "Backward stepwise feature pruning via estimator importance (Guyon et al. 2002).",
+    (
+        "Recursively eliminates the weakest features according to coefficients "
+        "or feature importances of a base estimator until the target count is "
+        "reached. Algorithm:\n\n"
+        "1. Fit the base estimator (``ridge``, ``lasso``, or ``svr_linear``) on "
+        "the full feature set aligned to the target.\n"
+        "2. Rank features by absolute coefficient magnitude (linear models) or "
+        "impurity reduction (trees).\n"
+        "3. Remove the bottom ``step`` features (an int) or fraction (a float).\n"
+        "4. Repeat until exactly ``n_features_to_select`` remain.\n"
+        "5. If ``use_cv=True``, wrap in cross-validated RFECV with ``cv_folds`` "
+        "time-series folds to auto-select the optimal count.\n\n"
+        "``temporal_rule`` governs refitting per forecast origin; "
+        "``full_sample_once`` is rejected by a hard rule."
+    ),
+    "Trimming macro panels to a compact predictor set before linear or penalised forecasters; especially useful when coefficient-based ranking aligns with the forecasting objective.",
+    when_not_to_use="When the estimator's coefficient ranking is a poor proxy for marginal predictive value (e.g. highly correlated groups); prefer stability_selection or boruta_selection.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Guyon, I., Weston, J., Barnhill, S. & Vapnik, V. (2002) 'Gene Selection for Cancer Classification using Support Vector Machines', Machine Learning 46(1-3): 389-422.",
+            url="https://doi.org/10.1023/A:1012487302797",
+        ),
+    ),
+    related_options=("feature_selection", "boruta_selection", "lasso_path_selection"),
+    op_page=True,
+    op_func_name="recursive_feature_elimination",
+    data_args=_L3_SUPERVISED_DATA_ARGS + (
+        ParameterDoc(
+            name="n_features_to_select",
+            type="int | float",
+            default=0.5,
+            constraint="int >= 1 or float in (0, 1]",
+            description=(
+                "Number of features to retain. A float in (0, 1] is treated as a "
+                "fraction of total columns; an integer is used directly."
+            ),
+        ),
+        ParameterDoc(
+            name="step",
+            type="int | float",
+            default=1,
+            constraint="int >= 1 or float in (0, 1)",
+            description=(
+                "Features removed per iteration. An integer removes that many; "
+                "a float removes that fraction of the remaining features."
+            ),
+        ),
+        ParameterDoc(
+            name="estimator",
+            type="str",
+            default='"ridge"',
+            constraint='"ridge" | "lasso" | "svr_linear"',
+            description=(
+                "Base estimator whose coefficient magnitudes rank feature importance. "
+                "``svr_linear`` uses the SVM weight vector."
+            ),
+        ),
+        ParameterDoc(
+            name="use_cv",
+            type="bool",
+            default=False,
+            constraint="",
+            description=(
+                "If True, wrap RFE in cross-validated RFECV; ``n_features_to_select`` "
+                "is ignored and the optimal count is determined by CV."
+            ),
+        ),
+        ParameterDoc(
+            name="cv_folds",
+            type="int",
+            default=5,
+            constraint=">= 2",
+            description="Number of time-series cross-validation folds when use_cv=True.",
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            constraint="",
+            description="Random seed for estimators that require it (e.g. SVR with RBF).",
+        ),
+        ParameterDoc(
+            name="temporal_rule",
+            type="str",
+            default='"expanding_window_per_origin"',
+            constraint='"expanding_window_per_origin" | "rolling_window_per_origin"',
+            description=(
+                "Controls when the base estimator is refitted per forecast origin. "
+                "``full_sample_once`` is hard-rejected."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
+)
+
+_OP_LASSO_PATH_SELECTION = _o(
+    "lasso_path_selection",
+    "Feature selection along the Lasso regularisation path (Efron et al. 2004).",
+    (
+        "Traces the full Lasso regularisation path from lambda_max down to a "
+        "lambda that retains approximately ``n_features_to_select`` columns, "
+        "then returns the sub-panel of surviving predictors. Algorithm:\n\n"
+        "1. Optionally standardise each column to unit variance "
+        "(``normalize_features=True``, default).\n"
+        "2. Compute the full Lasso path via LARS or coordinate descent.\n"
+        "3. Identify the regularisation value where the number of non-zero "
+        "coefficients first reaches ``n_features_to_select``.\n"
+        "4. Return the columns with non-zero coefficients at that lambda.\n\n"
+        "Unlike ``feature_selection`` with ``method='lasso'``, this op "
+        "traverses the entire path so the selection threshold adapts to the "
+        "data geometry rather than a fixed penalty. ``temporal_rule`` controls "
+        "refitting per forecast origin; ``full_sample_once`` is rejected."
+    ),
+    "Compact, theory-grounded feature selection for linear macro forecasting models where a path-based threshold is preferable to a manually tuned penalty.",
+    when_not_to_use="When the number of desired features is unknown and cross-validation is required -- use recursive_feature_elimination with use_cv=True instead.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Efron, B., Hastie, T., Johnstone, I. & Tibshirani, R. (2004) 'Least Angle Regression', Annals of Statistics 32(2): 407-499.",
+            url="https://doi.org/10.1214/009053604000000067",
+        ),
+    ),
+    related_options=("feature_selection", "recursive_feature_elimination", "stability_selection"),
+    op_page=True,
+    op_func_name="lasso_path_selection",
+    data_args=_L3_SUPERVISED_DATA_ARGS + (
+        ParameterDoc(
+            name="n_features_to_select",
+            type="int | float",
+            default=0.5,
+            constraint="int >= 1 or float in (0, 1]",
+            description=(
+                "Target number of features. A float in (0, 1] is treated as a "
+                "fraction of total columns; an integer is used directly. The path "
+                "is traced until this count is first reached."
+            ),
+        ),
+        ParameterDoc(
+            name="normalize_features",
+            type="bool",
+            default=True,
+            constraint="",
+            description=(
+                "If True, standardise each column to zero mean and unit variance "
+                "before computing the Lasso path so coefficients are comparable."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            constraint="",
+            description="Random seed for any stochastic components of the path solver.",
+        ),
+        ParameterDoc(
+            name="temporal_rule",
+            type="str",
+            default='"expanding_window_per_origin"',
+            constraint='"expanding_window_per_origin" | "rolling_window_per_origin"',
+            description=(
+                "Controls when the Lasso path is recomputed per forecast origin. "
+                "``full_sample_once`` is hard-rejected."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
+)
+
+_OP_STABILITY_SELECTION = _o(
+    "stability_selection",
+    "Feature selection by subsampling stability -- selection probability threshold (Meinshausen-Bühlmann 2010).",
+    (
+        "Estimates the probability that each feature would be selected by a "
+        "sparse estimator on a random subsample, then retains features whose "
+        "selection probability exceeds ``pi_thr``. Algorithm:\n\n"
+        "1. Draw ``n_subsamples`` subsamples of size ``subsample_fraction * T`` "
+        "from the aligned (panel, target) observations.\n"
+        "2. On each subsample, fit the base estimator (``lasso`` or "
+        "``elastic_net``) with regularisation ``alpha`` and record which "
+        "features receive non-zero coefficients.\n"
+        "3. Compute the empirical selection frequency for each feature across "
+        "all subsamples.\n"
+        "4. Return the sub-panel of features with frequency >= ``pi_thr``.\n\n"
+        "Stability selection provides FWER control under mild assumptions on the "
+        "regularisation path (Meinshausen-Bühlmann Theorem 1). "
+        "``temporal_rule`` governs refitting per origin; "
+        "``full_sample_once`` is rejected."
+    ),
+    "Macro panels where robustness of selection across data perturbations is more important than computational speed; pairs well with L4 ridge or elastic_net forecasters.",
+    when_not_to_use="Short time series (T < 100) where subsampling leaves too few observations per draw; prefer lasso_path_selection for small T.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Meinshausen, N. & Bühlmann, P. (2010) 'Stability selection', Journal of the Royal Statistical Society Series B 72(4): 417-473.",
+            url="https://doi.org/10.1111/j.1467-9868.2010.00740.x",
+        ),
+    ),
+    related_options=("feature_selection", "boruta_selection", "lasso_path_selection"),
+    op_page=True,
+    op_func_name="stability_selection",
+    data_args=_L3_SUPERVISED_DATA_ARGS + (
+        ParameterDoc(
+            name="n_subsamples",
+            type="int",
+            default=100,
+            constraint=">= 10",
+            description=(
+                "Number of subsampling rounds. More rounds give stable frequency "
+                "estimates at higher compute cost."
+            ),
+        ),
+        ParameterDoc(
+            name="subsample_fraction",
+            type="float",
+            default=0.5,
+            constraint="in (0, 1)",
+            description=(
+                "Fraction of observations in each subsample. Meinshausen-Bühlmann "
+                "recommend 0.5 for the theoretical FWER bound to apply."
+            ),
+        ),
+        ParameterDoc(
+            name="pi_thr",
+            type="float",
+            default=0.6,
+            constraint="in (0.5, 1]",
+            description=(
+                "Selection-probability threshold. Features with empirical frequency "
+                "above this value are retained. Values near 0.9 are very conservative."
+            ),
+        ),
+        ParameterDoc(
+            name="base_estimator",
+            type="str",
+            default='"lasso"',
+            constraint='"lasso" | "elastic_net"',
+            description=(
+                "Sparse base estimator applied to each subsample. ``elastic_net`` "
+                "can improve stability when predictors are highly correlated."
+            ),
+        ),
+        ParameterDoc(
+            name="alpha",
+            type="float",
+            default=0.01,
+            constraint="> 0",
+            description=(
+                "Regularisation strength passed to the base estimator on each "
+                "subsample. Controls sparsity per subsample draw."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            constraint="",
+            description="Random seed for reproducible subsampling.",
+        ),
+        ParameterDoc(
+            name="temporal_rule",
+            type="str",
+            default='"expanding_window_per_origin"',
+            constraint='"expanding_window_per_origin" | "rolling_window_per_origin"',
+            description=(
+                "Controls when subsampling is rerun per forecast origin. "
+                "``full_sample_once`` is hard-rejected."
+            ),
+        ),
+    ),
+    return_type="pd.DataFrame",
+    returns_attrs=(),
+)
+
+_OP_GENETIC_ALGORITHM_SELECTION = _o(
+    "genetic_algorithm_selection",
+    "Evolutionary feature subset search via genetic algorithm (Goldberg 1989).",
+    (
+        "Evolves a population of binary feature-inclusion masks to maximise "
+        "cross-validated forecast accuracy. Algorithm:\n\n"
+        "1. Initialise ``population_size`` random binary masks (each bit "
+        "indicates inclusion of one feature).\n"
+        "2. Evaluate each mask by fitting ``fitness_estimator`` on the "
+        "sub-panel and computing ``cv_folds``-fold time-series CV MSE.\n"
+        "3. Select parents by tournament selection proportional to CV fitness.\n"
+        "4. Apply uniform crossover (rate ``crossover_prob``) and bit-flip "
+        "mutation to produce the next generation.\n"
+        "5. Repeat for ``n_generations`` generations; return the feature "
+        "subset of the fittest mask in the final population.\n\n"
+        "Genetic search is useful when the inclusion/exclusion objective is "
+        "non-convex and greedy backward/forward procedures get stuck. "
+        "``temporal_rule`` governs when the GA is re-run per origin; "
+        "``full_sample_once`` is rejected."
+    ),
+    "Feature selection when the predictive objective is highly non-linear or when combinations of individually weak predictors form strong subsets inaccessible to greedy methods.",
+    when_not_to_use="Large panels (K > 200) or long time series where CV evaluation of many masks is computationally prohibitive -- prefer lasso_path_selection or boruta_selection.",
+    references=(
+        _REF_DESIGN_L3,
+        Reference(
+            citation="Goldberg, D.E. (1989) Genetic Algorithms in Search, Optimization and Machine Learning. Addison-Wesley, Reading, MA.",
+        ),
+    ),
+    related_options=("feature_selection", "boruta_selection", "recursive_feature_elimination"),
+    op_page=True,
+    op_func_name="genetic_algorithm_selection",
+    data_args=_L3_SUPERVISED_DATA_ARGS + (
+        ParameterDoc(
+            name="population_size",
+            type="int",
+            default=30,
+            constraint=">= 4",
+            description=(
+                "Number of candidate feature masks in each generation. Larger "
+                "populations explore more of the subset space per generation."
+            ),
+        ),
+        ParameterDoc(
+            name="n_generations",
+            type="int",
+            default=50,
+            constraint=">= 1",
+            description=(
+                "Number of evolutionary generations. More generations allow finer "
+                "convergence at higher compute cost."
+            ),
+        ),
+        ParameterDoc(
+            name="crossover_prob",
+            type="float",
+            default=0.8,
+            constraint="in (0, 1]",
+            description=(
+                "Probability of applying uniform crossover to a parent pair. "
+                "The complement probability reproduces a parent unchanged."
+            ),
+        ),
+        ParameterDoc(
+            name="fitness_estimator",
+            type="str",
+            default='"ridge"',
+            constraint='"ridge" | "lasso" | "ols"',
+            description=(
+                "Estimator used to evaluate each feature subset's CV accuracy. "
+                "``ridge`` is recommended for high-dim panels; ``ols`` for small subsets."
+            ),
+        ),
+        ParameterDoc(
+            name="cv_folds",
+            type="int",
+            default=3,
+            constraint=">= 2",
+            description=(
+                "Number of time-series cross-validation folds per fitness evaluation. "
+                "Higher values are more reliable but slow."
+            ),
+        ),
+        ParameterDoc(
+            name="random_state",
+            type="int",
+            default=0,
+            constraint="",
+            description="Random seed for population initialisation and genetic operators.",
+        ),
+        ParameterDoc(
+            name="temporal_rule",
+            type="str",
+            default='"expanding_window_per_origin"',
+            constraint='"expanding_window_per_origin" | "rolling_window_per_origin"',
+            description=(
+                "Controls when the genetic search is re-run per forecast origin. "
+                "``full_sample_once`` is hard-rejected."
             ),
         ),
     ),
@@ -1762,7 +2244,13 @@ register(
     _OP_TIME_TREND,
     _OP_HOLIDAY,
     _OP_TARGET_CONSTRUCTION,
+    # Selection family (6 ops)
     _OP_FEATURE_SELECTION,
+    _OP_BORUTA_SELECTION,
+    _OP_RECURSIVE_FEATURE_ELIMINATION,
+    _OP_LASSO_PATH_SELECTION,
+    _OP_STABILITY_SELECTION,
+    _OP_GENETIC_ALGORITHM_SELECTION,
     _OP_L3_FEATURE_BUNDLE,
     _OP_L3_METADATA_BUILD,
     # v0.9 Phase 2 paper-coverage atomic primitives

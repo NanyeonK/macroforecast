@@ -48,7 +48,9 @@ Representative operational ops:
 - feature expansion: `polynomial`, `interaction`, `kernel`, `nystroem`;
 - auxiliary: `regime_indicator`, `season_dummy`, `time_trend`, `holiday`;
 - combine: `concat`, `interact`, `hierarchical_pca`, `weighted_concat`, `simple_average`;
-- selection: `feature_selection`.
+- selection: `feature_selection`, `boruta_selection`, `recursive_feature_elimination`, `lasso_path_selection`, `stability_selection`, `genetic_algorithm_selection`.
+
+**Cycle 47 (2026-05-21)**: five selection ops promoted from `future` to `operational` (total L3 ops: 41). See `CHANGELOG.md` and `ARCHITECTURE.md` for paper references and implementation details.
 
 Compatibility aliases remain available where older recipes used them: `varimax_rotation`, `polynomial_expansion`, `kernel_features`, and `nystroem_features`.
 

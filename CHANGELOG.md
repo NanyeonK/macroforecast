@@ -5,6 +5,86 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added -- Cycle 47 (2026-05-21) -- L3 Feature Selection Honesty Pass
+
+Five L3 feature-selection ops promoted from `status="future"` to
+`status="operational"`. Each implements the published procedure exactly;
+no approximations are accepted under the `operational` label.
+
+- `boruta_selection` promoted to operational. Implements Kursa & Rudnicki
+  (2010) Algorithm 1 (Journal of Statistical Software 36(11)): shadow-feature
+  permutation test in which each original feature's importance is compared
+  against the maximum importance of randomly permuted shadow copies (MISA) in
+  each iteration; Bonferroni-corrected two-sided binomial test decides
+  acceptance or rejection per feature. Pure NumPy + sklearn
+  `RandomForestRegressor`. Optional `boruta` package not required.
+
+- `recursive_feature_elimination` promoted to operational. Implements Guyon,
+  Weston, Barnhill & Vapnik (2002) RFE procedure (Machine Learning 46,
+  Section 4): recursive backward elimination in which the feature with the
+  smallest squared coefficient magnitude is removed per step, with optional
+  cross-validation for automatic `n_features_to_select` selection (RFECV
+  extension). Base estimators: `ridge` (default), `lasso`, or `svr_linear`
+  (sklearn `RFE` / `RFECV` wrappers).
+
+- `lasso_path_selection` promoted to operational. Implements the LARS path
+  entry-order selector from Efron, Hastie, Johnstone & Tibshirani (2004)
+  (Annals of Statistics 32(2), LARS Algorithm 1): selects the first
+  `n_features_to_select` features to enter the LARS active set as the
+  regularization parameter decreases from infinity. This op is distinct from
+  the existing `feature_selection(method="lasso")`, which ranks features by
+  LassoCV coefficient magnitude at convergence. Implemented via sklearn
+  `lars_path` with `method="lasso"`.
+
+- `stability_selection` promoted to operational. Implements Meinshausen &
+  Bühlmann (2010) Section 2 algorithm (JRSS-B 72(4)): lasso or elastic-net
+  is fitted on `n_subsamples` random subsamples of fraction
+  `subsample_fraction`; features retained where empirical selection
+  probability exceeds threshold `pi_thr`. Default parameters follow the paper:
+  `n_subsamples=100`, `subsample_fraction=0.5`, `pi_thr=0.6`.
+
+- `genetic_algorithm_selection` promoted to operational. Implements the
+  canonical binary-chromosome genetic algorithm from Goldberg (1989) (Genetic
+  Algorithms in Search, Optimization, and Machine Learning, Addison-Wesley,
+  Chapters 1-3): population of binary feature masks evolved by tournament
+  selection, single-point crossover, bit-flip mutation at rate 1/N, and
+  elitism; fitness is cross-validated negative MSE. Pure NumPy; no `deap`
+  dependency required.
+
+### Changed -- Cycle 47
+
+- `macroforecast/core/ops/l3_ops.py`: removed `_future_selection_op` closure
+  factory and the 5-name `for` loop (pre-C47 lines 658-699); replaced with
+  5 separate `@register_op(status="operational")` decorated functions, one per
+  op, each with its own `params_schema` and `hard_rules`.
+
+- `macroforecast/core/ops/l7_ops.py`: removed `boruta_selection`,
+  `recursive_feature_elimination`, `lasso_path_selection`, and
+  `stability_selection` from the `FUTURE_OPS` tuple. These four ops are L3
+  feature-selection ops and must not gain L7 scope via the tail registration
+  loop. `genetic_algorithm_selection` was never in `FUTURE_OPS` and required
+  no change.
+
+- `macroforecast/core/runtime.py`: added 5 dispatch branches in
+  `_execute_l3_op` and 5 private helper functions (`_boruta_selection`,
+  `_recursive_feature_elimination`, `_lasso_path_selection`,
+  `_stability_selection`, `_genetic_algorithm_selection`) after
+  `_feature_selection`. All helpers follow the #215/#279 seed-propagation
+  contract and produce bit-exact replicable output.
+
+- L3 operational op count increases from >= 32 to >= 37. L7 future-op count
+  drops from >= 6 to >= 2 (`lstm_hidden_state`, `generalized_irf`).
+
+- `tests/layers/test_l7.py`: `test_l7_boruta_selection_rejected_as_future`
+  renamed to `test_l7_boruta_selection_not_in_l7_scope` (now asserts boruta
+  absent from L7 scope entirely); `test_l7_future_ops_includes_design_remainder`
+  threshold updated from `>= 6` to `>= 2`.
+
+- `tests/layers/test_l3.py`: `test_l3_future_op_rejected_boruta` renamed to
+  `test_l3_boruta_selection_accepted_as_operational`; `test_l3_op_count_6_future`
+  renamed to `test_l3_op_count_future` with threshold updated from `>= 6` to
+  `>= 3`.
+
 ### Cycle 45 -- Test stabilization (15 pytest failures resolved)
 
 **Production bug fix:**

@@ -241,10 +241,15 @@ def test_l7_lstm_hidden_state_rejected_as_future():
     ).has_hard_errors
 
 
-def test_l7_boruta_selection_rejected_as_future():
-    assert validate_layer(
-        parse_layer_yaml(make_l7_yaml(op="boruta_selection"), "l7")
-    ).has_hard_errors
+def test_l7_boruta_selection_not_in_l7_scope():
+    # Cycle 47: boruta_selection was promoted to status="operational" in L3.
+    # It is an L3 feature-selection op and must NOT have L7 scope.
+    # The test confirms boruta_selection is absent from L7-scoped ops.
+    from macroforecast.core.ops.registry import list_ops
+    l7_op_names = {
+        name for name, op in list_ops().items() if "l7" in op.layer_scope
+    }
+    assert "boruta_selection" not in l7_op_names
 
 
 def test_l7_mrf_gtvp_operational_after_coefficient_path_landing():
@@ -339,16 +344,16 @@ def test_l7_operational_ops_registered_after_honesty_pass():
 
 
 def test_l7_future_ops_includes_design_remainder():
-    # Every honesty-pass demotion is re-promoted in v0.2; only the 6
-    # design-future ops (attention_weights / lstm_hidden_state /
-    # boruta_selection / RFE / lasso_path_selection / stability_selection)
-    # remain.
+    # Cycle 47: boruta_selection / recursive_feature_elimination /
+    # lasso_path_selection / stability_selection were removed from L7 scope
+    # (they are now L3-only operational ops). Only 2 design-future ops
+    # remain with L7 scope: lstm_hidden_state and generalized_irf.
     future_ops = [
         op
         for op in list_ops().values()
         if "l7" in op.layer_scope and op.status == "future"
     ]
-    assert len(future_ops) >= 6
+    assert len(future_ops) >= 2
 
 
 def test_l7_18_figure_types():

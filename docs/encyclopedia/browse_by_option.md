@@ -38,8 +38,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`block_recompute`](l1/axes/regime_estimation_temporal_rule.md) | L1 | `regime_estimation_temporal_rule` | operational |
 | [`block_recompute`](l2/axes/imputation_temporal_rule.md) | L2 | `imputation_temporal_rule` | operational |
 | [`bootstrap_jackknife`](l7/axes/op.md) | L7 | `op` | operational |
-| [`boruta_selection`](l3/axes/op.md) | L3 | `op` | future |
-| [`boruta_selection`](l7/axes/op.md) | L7 | `op` | future |
+| [`boruta_selection`](l3/axes/op.md) | L3 | `op` | operational |
 | [`both`](l2/axes/sd_series_frequency_filter.md) | L2 | `sd_series_frequency_filter` | operational |
 | [`both_overlay`](l4_5/axes/forecast_scale_view.md) | L4.5 | `forecast_scale_view` | operational |
 | [`boxplot`](l7/axes/figure_type.md) | L7 | `figure_type` | operational |
@@ -194,7 +193,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`garch11`](l4/axes/family.md) | L4 | `family` | operational |
 | [`generalized_irf`](l7/axes/op.md) | L7 | `op` | future |
 | [`genetic_algorithm`](l4/axes/search_algorithm.md) | L4 | `search_algorithm` | operational |
-| [`genetic_algorithm_selection`](l3/axes/op.md) | L3 | `op` | future |
+| [`genetic_algorithm_selection`](l3/axes/op.md) | L3 | `op` | operational |
 | [`giacomini_rossi_2010`](l6/axes/cpa_test.md) | L6 | `cpa_test` | operational |
 | [`git_branch_name`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
 | [`git_commit_sha`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
@@ -272,8 +271,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`lasso`](l4/axes/family.md) | L4 | `family` | operational |
 | [`lasso_inclusion_frequency`](l7/axes/op.md) | L7 | `op` | operational |
 | [`lasso_path`](l4/axes/family.md) | L4 | `family` | operational |
-| [`lasso_path_selection`](l3/axes/op.md) | L3 | `op` | future |
-| [`lasso_path_selection`](l7/axes/op.md) | L7 | `op` | future |
+| [`lasso_path_selection`](l3/axes/op.md) | L3 | `op` | operational |
 | [`last_origin_only`](l4_5/axes/fit_per_origin.md) | L4.5 | `fit_per_origin` | operational |
 | [`latest_available`](l1/axes/sample_end_rule.md) | L1 | `sample_end_rule` | operational |
 | [`latex_table`](l1_5/axes/diagnostic_format.md) | L1.5 | `diagnostic_format` | operational |
@@ -491,8 +489,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`recipe_hash`](l8/axes/naming_convention.md) | L8 | `naming_convention` | operational |
 | [`recipe_hash`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
 | [`recipe_yaml_full`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
-| [`recursive_feature_elimination`](l3/axes/op.md) | L3 | `op` | future |
-| [`recursive_feature_elimination`](l7/axes/op.md) | L7 | `op` | future |
+| [`recursive_feature_elimination`](l3/axes/op.md) | L3 | `op` | operational |
 | [`regime_indicator`](l3/axes/op.md) | L3 | `op` | operational |
 | [`regime_metrics`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`reject_mixed_known_frequency`](l1/axes/fred_sd_frequency_policy.md) | L1 | `fred_sd_frequency_policy` | operational |
@@ -562,8 +559,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`spearman`](l1_5/axes/correlation_method.md) | L1.5 | `correlation_method` | operational |
 | [`spearman`](l2_5/axes/correlation_method.md) | L2.5 | `correlation_method` | operational |
 | [`spearman`](l3_5/axes/correlation_method.md) | L3.5 | `correlation_method` | operational |
-| [`stability_selection`](l3/axes/op.md) | L3 | `op` | future |
-| [`stability_selection`](l7/axes/op.md) | L7 | `op` | future |
+| [`stability_selection`](l3/axes/op.md) | L3 | `op` | operational |
 | [`stacked_area`](l4_5/axes/weights_over_time_method.md) | L4.5 | `weights_over_time_method` | operational |
 | [`standard_md`](l1/axes/horizon_set.md) | L1 | `horizon_set` | operational |
 | [`standard_qd`](l1/axes/horizon_set.md) | L1 | `horizon_set` | operational |
