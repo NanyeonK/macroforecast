@@ -3,7 +3,29 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
-## [Unreleased]
+## [Unreleased] — Cycle 51
+
+### Added
+- `tests/tools/test_gen_encyclopedia.py`: `test_gen_no_third_party_imports` (closes #318)
+- `tests/tools/test_audit_docs.py`: `test_audit_no_third_party_imports` (closes #318)
+- `macroforecast/scaffold/option_docs/l2.py`: formal `ParameterDoc` for `chow_lin_indicator` (Flag-D)
+
+### Changed
+- `macroforecast/core/ops/l3_ops.py`: `chow_lin_disaggregation` promoted from `future` to `operational`, body wired to `_chow_lin_disaggregate` (Flag-A)
+- `macroforecast/raw/alfred_adapter.py`: rolling-mode ALFRED vintage resolution vectorized; O(N×snapshot) → O(snapshot+N) (Flag-C)
+- `tools/gen_encyclopedia_docs.py`: `--out` help text documents auto-create behavior (closes #319)
+
+### Fixed
+- `docs/standalone_functions/l7_importance.md`: `shap_linear_importance` correctly requires `pip install macroforecast[shap]` (closes #310)
+- `docs/encyclopedia/l1/axes/information_set_type.md`: removed stale "future feature Cycle 14 K-4" references to `real_time_alfred` (Flag-B)
+
+### Closed (no code change)
+- #311: `test_r4_02_paper_table2_k60_midas_wins` timeout was resolved in C46 via `@pytest.mark.slow`; issue closed with comment
+- #316: L3 op count clarified in ARCHITECTURE.md and CLAUDE.md
+
+---
+
+## Cycle 50 (2026-05-22) — Final v0.9.3 algorithmic cycle
 
 ### Added — Cycle 50 (2026-05-22) — Final v0.9.3 algorithmic cycle
 
