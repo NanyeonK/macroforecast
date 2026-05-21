@@ -639,18 +639,20 @@ def _validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str
         issues.append(_issue("l1.frequency", "frequency must be quarterly for FRED-QD datasets"))
     if (dataset == "fred_sd" or custom_policy == "custom_panel_only") and frequency is None:
         issues.append(_issue("l1.frequency", "frequency must be explicitly set for fred_sd standalone or custom-only data"))
-    # Cycle 14 K-4 fix: hard-reject real_time_alfred in both fixed_axes and leaf_config
-    _vintage_from_leaf = leaf_config.get("vintage_policy")
-    if _vintage_from_leaf == "real_time_alfred":
-        issues.append(_issue(
-            "l1.vintage_policy",
-            "real_time_alfred is not yet implemented; future feature. Use current_vintage (default).",
-        ))
+    # C50: real_time_alfred is operational. Soft validation checks that the
+    # required leaf_config keys are present for the selected mode.
     if resolved.get("vintage_policy") == "real_time_alfred":
-        issues.append(_issue(
-            "l1.vintage_policy",
-            "real_time_alfred is not yet implemented; future feature. Use current_vintage (default).",
-        ))
+        alfred_mode = leaf_config.get("alfred_mode", "local")
+        if alfred_mode == "local" and not leaf_config.get("alfred_snapshot_dir"):
+            issues.append(_issue(
+                "l1.vintage_policy",
+                "real_time_alfred with alfred_mode=local requires leaf_config.alfred_snapshot_dir",
+            ))
+        elif alfred_mode == "api" and not leaf_config.get("alfred_api_key") and not __import__("os").environ.get("FRED_API_KEY"):
+            issues.append(_issue(
+                "l1.vintage_policy",
+                "real_time_alfred with alfred_mode=api requires leaf_config.alfred_api_key or FRED_API_KEY env var",
+            ))
     return issues
 
 
@@ -1023,7 +1025,7 @@ L1_LAYER_SPEC = LayerImplementationSpec(
                 "vintage_policy",
                 (
                     Option("current_vintage", "Current Vintage", "", status="operational"),
-                    Option("real_time_alfred", "Real-Time ALFRED", "", status="future"),
+                    Option("real_time_alfred", "Real-Time ALFRED", "", status="operational"),
                 ),
                 "current_vintage",
                 sweepable=False,

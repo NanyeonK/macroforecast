@@ -138,7 +138,10 @@ def test_l1_official_plus_custom_requires_merge_keys():
     assert any("custom_merge_rule" in issue.message for issue in report.hard_errors)
 
 
-def test_l1_realtime_alfred_future_fails():
+def test_l1_realtime_alfred_now_operational():
+    # C50: real_time_alfred is now operational. Without alfred_snapshot_dir
+    # the validator emits a soft error about the missing required key (not
+    # the "future" message that existed before C50).
     yaml_text = """
     1_data:
       fixed_axes:
@@ -148,8 +151,29 @@ def test_l1_realtime_alfred_future_fails():
         vintage_date_or_tag: "2020-01-01"
     """
     report = validate_layer(parse_layer_yaml(yaml_text))
-    assert report.has_hard_errors
-    assert any("future" in issue.message for issue in report.hard_errors)
+    # Must NOT contain the old "future" rejection message.
+    assert not any("future" in issue.message for issue in report.hard_errors)
+    # Must report the missing alfred_snapshot_dir requirement.
+    all_messages = [i.message for i in report.hard_errors] + [i.message for i in getattr(report, "warnings", [])]
+    assert any("alfred_snapshot_dir" in m for m in all_messages), (
+        "Expected 'alfred_snapshot_dir' validation message for local mode without dir"
+    )
+
+
+def test_l1_realtime_alfred_passes_with_snapshot_dir():
+    # C50: real_time_alfred is operational when alfred_snapshot_dir is provided.
+    yaml_text = """
+    1_data:
+      fixed_axes:
+        vintage_policy: real_time_alfred
+      leaf_config:
+        target: CPIAUCSL
+        alfred_snapshot_dir: /tmp/alfred_snapshots
+    """
+    report = validate_layer(parse_layer_yaml(yaml_text))
+    # No "future" rejection and no "alfred_snapshot_dir" error.
+    assert not any("future" in issue.message for issue in report.hard_errors)
+    assert not any("alfred_snapshot_dir" in issue.message for issue in report.hard_errors)
 
 
 def test_l1_target_structure_rules():
