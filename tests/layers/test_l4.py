@@ -246,8 +246,7 @@ def test_l4_operational_model_families_registered():
 
 def test_l4_future_model_families_c48_midas_promoted():
     # C48 honesty pass (v0.9.3) promoted the 4 MIDAS families from FUTURE to
-    # OPERATIONAL.  FUTURE now contains only realized_garch (C49 target).
-    # Guard: midas families must NOT be in FUTURE any more.
+    # OPERATIONAL. Guard: midas families must NOT be in FUTURE any more.
     for promoted in (
         "midas_almon",
         "midas_beta",
@@ -260,9 +259,6 @@ def test_l4_future_model_families_c48_midas_promoted():
         assert promoted in OPERATIONAL_MODEL_FAMILIES, (
             f"{promoted!r} should be in OPERATIONAL_MODEL_FAMILIES after C48"
         )
-    # realized_garch still future (C49)
-    assert "realized_garch" in FUTURE_MODEL_FAMILIES
-    assert all(get_family_status(family) == "future" for family in FUTURE_MODEL_FAMILIES)
     # Every prior honesty-pass demotion must be promoted.
     for promoted in (
         "bvar_minnesota",
@@ -272,6 +268,28 @@ def test_l4_future_model_families_c48_midas_promoted():
         "dfm_mixed_mariano_murasawa",
     ):
         assert promoted not in FUTURE_MODEL_FAMILIES
+
+
+def test_l4_c49_realized_garch_promoted():
+    # C49 honesty pass (v0.9.3) promoted realized_garch to OPERATIONAL.
+    # Hansen-Huang-Shek (2012) joint return + measurement-equation MLE via
+    # manual scipy.optimize.minimize (Option B; arch.RealizedGARCH not
+    # available in arch>=6.0).
+    assert "realized_garch" in OPERATIONAL_MODEL_FAMILIES, (
+        "realized_garch should be OPERATIONAL after C49 promotion"
+    )
+    assert "realized_garch" not in FUTURE_MODEL_FAMILIES, (
+        "realized_garch must NOT be in FUTURE after C49 promotion"
+    )
+    assert FUTURE_MODEL_FAMILIES == (), (
+        f"FUTURE_MODEL_FAMILIES should be empty after C49; got {FUTURE_MODEL_FAMILIES}"
+    )
+    assert get_family_status("realized_garch") == "operational"
+    # Ensure realized_garch_with_rv_exog (RV-as-exog approximation) is
+    # still operational alongside (must not have been removed).
+    assert "realized_garch_with_rv_exog" in OPERATIONAL_MODEL_FAMILIES, (
+        "realized_garch_with_rv_exog must remain operational after C49"
+    )
 
 
 def test_l4_5_forecast_combine_ops_registered():

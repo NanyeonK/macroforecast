@@ -346,14 +346,21 @@ def test_l7_operational_ops_registered_after_honesty_pass():
 def test_l7_future_ops_includes_design_remainder():
     # Cycle 47: boruta_selection / recursive_feature_elimination /
     # lasso_path_selection / stability_selection were removed from L7 scope
-    # (they are now L3-only operational ops). Only 2 design-future ops
-    # remain with L7 scope: lstm_hidden_state and generalized_irf.
+    # (they are now L3-only operational ops).
+    # Cycle 49: generalized_irf was promoted to operational (Pesaran-Shin 1998
+    # GIRF). Only 1 design-future op remains with L7 scope: lstm_hidden_state.
     future_ops = [
         op
         for op in list_ops().values()
         if "l7" in op.layer_scope and op.status == "future"
     ]
-    assert len(future_ops) >= 2
+    assert len(future_ops) >= 1
+    # Verify generalized_irf is no longer future-gated.
+    assert not any(
+        op.name == "generalized_irf"
+        for op in list_ops().values()
+        if op.status == "future"
+    ), "generalized_irf must NOT be future after C49 promotion"
 
 
 def test_l7_18_figure_types():
