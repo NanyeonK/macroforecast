@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -35,17 +36,24 @@ _SKIP_MARKER = "# doctest: +SKIP"
 _TIMEOUT_SECONDS = 60
 
 
-def _extract_blocks(path: Path) -> list[str]:
-    """Return all non-skipped Python code blocks from a markdown file.
+def _extract_blocks_from_text(text: str) -> list[str]:
+    """Extract Python fenced code blocks from markdown text, filtering SKIP markers.
 
-    Reads the markdown at ``path``, finds every fenced ```python ... ```
-    block, then filters out any block that contains the ``_SKIP_MARKER``
-    string anywhere in its text.
+    Finds every fenced ```python ... ``` block in ``text``, then filters out
+    any block that contains the ``_SKIP_MARKER`` string anywhere in its body.
     """
-    content = path.read_text(encoding="utf-8")
-    blocks = _BLOCK_PATTERN.findall(content)
+    blocks = _BLOCK_PATTERN.findall(text)
     # Exclude any block the tutorial author explicitly opted out of running.
     return [b for b in blocks if _SKIP_MARKER not in b]
+
+
+def _extract_blocks(path: Path) -> list[str]:
+    """Read file at ``path`` and extract Python fenced code blocks.
+
+    Delegates to :func:`_extract_blocks_from_text` after reading the file
+    contents; preserves backward compatibility for all existing callers.
+    """
+    return _extract_blocks_from_text(path.read_text(encoding="utf-8"))
 
 
 def _build_script(blocks: list[str], source_name: str) -> str:
@@ -103,12 +111,24 @@ def test_tutorial_smoke(tutorial_file: Path, tmp_path: Path) -> None:
         tmp.write(script)
         tmp_path_script = tmp.name
 
+    # Build subprocess environment: inherit the current environment and ensure
+    # PYTHONPATH includes REPO_ROOT so the local macroforecast package is
+    # importable even when the editable install points to a stale source path.
+    env = os.environ.copy()
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = (
+        str(REPO_ROOT) + os.pathsep + existing_pythonpath
+        if existing_pythonpath
+        else str(REPO_ROOT)
+    )
+
     try:
         result = subprocess.run(
-            ["python", tmp_path_script],
+            [sys.executable, tmp_path_script],
             capture_output=True,
             text=True,
             timeout=_TIMEOUT_SECONDS,
+            env=env,
         )
     finally:
         # Always clean up the temp script regardless of outcome.
