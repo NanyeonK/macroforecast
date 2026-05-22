@@ -55,9 +55,9 @@ Frequency contract and multi-start NLS are identical to ``midas_almon``. Start 0
 
 The two-attribute design (``_w_hat`` zero-padded to ``n_lags_high``; ``_w_hat_effective`` of length ``K_eff``) is identical to ``midas_almon``.
 
-**Optimization method**: NLS (Beta kernel weights, multi-start)
-
 **When to use**
+
+**Optimization method**: NLS (Nelder-Mead with multi-start over Beta kernel weights)
 
 Parsimonious mixed-frequency forecasting -- only 2 shape parameters regardless of K. Suitable when T is small relative to K, making the Almon polynomial over-parameterized.
 

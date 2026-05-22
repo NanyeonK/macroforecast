@@ -47,9 +47,9 @@ No stochastic initialization (OLS is deterministic). Closed-form via ``numpy.lin
 
 ``params.n_steps`` defaults to ``freq_ratio`` (one group per HF sub-period). ``params.freq_ratio = 1`` treats X columns as a flat lag sequence grouped by position index.
 
-**Optimization method**: OLS (closed-form, no NLS)
-
 **When to use**
+
+**Optimization method**: OLS (closed-form ``numpy.linalg.lstsq``, no NLS)
 
 Fast, interpretable mixed-frequency baseline. Useful when K is large and only the coarse lag structure matters. No NLS overhead.
 
