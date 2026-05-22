@@ -5,6 +5,43 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### C60 — Docs Depth and Polish
+
+#### Added
+
+- **`docs/tutorial/04_custom_preprocessor.md`**: New narrative tutorial for
+  the `register_preprocessor` / `custom_preprocessor` API. Covers the L2
+  preprocessor contract (`fn(X_train, y_train, X_test, context) -> (X_train, X_test)`),
+  context fields (`feature_names`, `alignment`, `leakage_contract`, `mode`),
+  step-by-step registration, contract verification on synthetic data,
+  recipe integration using `leaf_config.custom_preprocessor:`, a complete logged-variant
+  recipe example, and debugging guidance. Uses synthetic inline panel only
+  (no FRED credentials required).
+- **`docs/tutorial/index.md`**: `04_custom_preprocessor` entry added to toctree.
+
+#### Changed
+
+- **`docs/explanation/12_layer_design.md`** section heading at line 32:
+  "9 Main Layers Plus 4 Diagnostic Halves" expanded to
+  "9 Main Layers Plus 4 Diagnostic Halves (13 Slots Total)". Two-sentence
+  opener added to reconcile the "12 Layers" brand name with the 13-slot
+  canonical flow (9 + 4 = 13 named slots).
+- **`docs/explanation/bit_exact_replicate.md`**: Forward-reference sentence
+  appended to the paragraph ending at "Bit-exactness allows neither."
+  Points readers directly to the "What Can Break the Guarantee" section.
+- **MIDAS encyclopedia pages** (`midas_almon.md`, `midas_beta.md`,
+  `midas_step.md`, `dfm_unrestricted_midas.md`): Added
+  `**Optimization method**:` label before the "When to use" block in each
+  page, distinguishing NLS (multi-start Nelder-Mead) from OLS (closed-form)
+  families at a glance.
+
+#### Deferred
+
+- `register_metric` API does not exist; custom_metric tutorial deferred to
+  a future cycle pending API design.
+
+---
+
 ### C59 — Statistical Credibility Hardening: Boruta Null Calibration + HHS Tolerance Tightening
 
 #### Breaking Changes (Statistical Correctness)

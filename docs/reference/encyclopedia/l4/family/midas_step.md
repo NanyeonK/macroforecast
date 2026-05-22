@@ -49,6 +49,8 @@ No stochastic initialization (OLS is deterministic). Closed-form via ``numpy.lin
 
 **When to use**
 
+**Optimization method**: OLS (closed-form ``numpy.linalg.lstsq``, no NLS)
+
 Fast, interpretable mixed-frequency baseline. Useful when K is large and only the coarse lag structure matters. No NLS overhead.
 
 **When NOT to use**

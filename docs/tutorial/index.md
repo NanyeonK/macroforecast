@@ -11,6 +11,7 @@ Each tutorial runs real code against a synthetic dataset. By the end of tutorial
 01_first_forecast
 02_full_study
 03_custom_model
+04_custom_preprocessor
 two_entry_points
 replications/index
 ```

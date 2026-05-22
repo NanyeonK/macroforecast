@@ -2078,6 +2078,7 @@ _F_MIDAS_ALMON = _f(
         "X.shape[1]`` edge case at ``freq_ratio = 1``."
     ),
     (
+        "**Optimization method**: NLS (Nelder-Mead with multi-start over Almon polynomial weights)\n\n"
         "Mixed-frequency macro forecasting where monthly or weekly predictors "
         "inform a quarterly target. Parsimonious alternative to U-MIDAS when "
         "K is large relative to T."
@@ -2204,6 +2205,7 @@ _F_MIDAS_BETA = _f(
         "``midas_almon``."
     ),
     (
+        "**Optimization method**: NLS (Nelder-Mead with multi-start over Beta kernel weights)\n\n"
         "Parsimonious mixed-frequency forecasting -- only 2 shape parameters "
         "regardless of K. Suitable when T is small relative to K, making the "
         "Almon polynomial over-parameterized."
@@ -2311,6 +2313,7 @@ _F_MIDAS_STEP = _f(
         "lag sequence grouped by position index."
     ),
     (
+        "**Optimization method**: OLS (closed-form ``numpy.linalg.lstsq``, no NLS)\n\n"
         "Fast, interpretable mixed-frequency baseline. Useful when K is "
         "large and only the coarse lag structure matters. No NLS overhead."
     ),
@@ -2409,6 +2412,7 @@ _F_DFM_UNRESTRICTED_MIDAS = _f(
         "``random_state`` is accepted for API symmetry but unused."
     ),
     (
+        "**Optimization method**: OLS (unrestricted U-MIDAS, closed-form)\n\n"
         "Flexible mixed-frequency benchmark when T is large relative to K. "
         "BIC/AIC lag selection avoids manual K tuning. Pairs well with "
         "upstream L3 ``u_midas`` for feature preprocessing."
