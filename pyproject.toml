@@ -9,6 +9,18 @@ description = "Fair, reproducible macro forecasting benchmarking package"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
+authors = [{name = "NanyeonK", email = "104714490+NanyeonK@users.noreply.github.com"}]
+keywords = ["forecasting", "macroeconomics", "fred-md", "fred-qd", "midas", "garch", "bit-exact-replication"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+]
 dependencies = [
     "pandas>=2.2",
     "numpy>=2.0",
