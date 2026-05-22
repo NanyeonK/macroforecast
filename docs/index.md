@@ -1,119 +1,54 @@
 # macroforecast
 
-> What macroforecast does: run forecasting research on
-> **FRED-MD / FRED-QD / FRED-SD** with your own dataset, preprocessing,
-> and models — and benchmark them head-to-head against established methods.
-> One YAML recipe defines the full study; `macroforecast.replicate(...)`
-> regenerates every artifact identically from the recipe.
->
-> macroforecast also exposes every operation as a **standalone callable**
-> (`mf.functions.<name>(...)`) for use in notebooks and scripts — no YAML
-> needed. See [two entry points](two_entry_points.md) for a decision guide.
+Run macro-forecasting studies on **FRED-MD / FRED-QD / FRED-SD** (or your
+own data) with reproducible YAML recipes — or call every layer operation
+directly as a Python callable.
 
-## Pick your path
-
-::::{grid} 1 2 2 3
+::::{grid} 1 2 2 2
 :gutter: 3
-:class-container: pick-your-path
+:class-container: mf-landing
 
-:::{grid-item-card} 🚀 Getting started
-:link: getting_started
+:::{grid-item-card} Tutorial
+:link: tutorial/index
 :link-type: doc
 
-Install, quickstart, your first complete study.
+New to macroforecast? Start here. Follow guided walkthroughs from
+install through your first complete study.
 :::
 
-:::{grid-item-card} 📝 User guide
-:link: user_guide
+:::{grid-item-card} How-to guides
+:link: how_to/index
 :link-type: doc
 
-Recipe authoring, custom models, FRED & custom datasets.
+Task-specific recipes for custom models, data ingestion, hooks,
+and contributing to the package.
 :::
 
-:::{grid-item-card} 📖 Reference
-:link: reference
+:::{grid-item-card} Reference
+:link: reference/index
 :link-type: doc
 
-Encyclopedia of every option + architecture design narrative.
+Complete schema documentation — recipe options, standalone functions,
+architecture design, and the encyclopedia.
 :::
 
-:::{grid-item-card} 🔁 Replications
-:link: replications
+:::{grid-item-card} Explanation
+:link: explanation/index
 :link-type: doc
 
-Paper replications, recipe gallery, layer navigator.
-:::
-
-:::{grid-item-card} 🆘 Help
-:link: help
-:link-type: doc
-
-Troubleshooting, contributing, conventions.
-:::
-
-:::{grid-item-card} 🧩 Standalone functions
-:link: standalone_functions/index
-:link-type: doc
-
-Use L2–L7 ops as Python callables without a YAML recipe.
+Background reading — design rationale, cross-layer contracts, and
+conceptual guides. *(Expanding in C54.)*
 :::
 
 ::::
 
-> **Architecture vs Encyclopedia**: same 12-layer system, two angles.
-> Architecture is **prose** — "why is L2 separated from L3", "how does
-> L7 read L4 sinks", "what are the cross-layer references". Encyclopedia
-> is **lookup** — one page per axis with every option's definition,
-> when to use, when NOT, references, related options. Architecture is
-> hand-written; encyclopedia is auto-generated from
-> `LayerImplementationSpec` + `OPTION_DOCS` and locked by the ci-docs
-> drift gate.
-
-## Architecture overview
-
-12-layer canonical design — see [architecture](architecture/index.md). The full
-4-part design lives under `plans/design/` in the repo.
-
-```text
-L0 -> L1 -> L2 -> L3(pipeline) -> L4(pipeline) -> L5 -> L6 -> L7(pipeline) -> L8
-        |      |      |       |
-       L1.5   L2.5   L3.5    L4.5 diagnostics
-```
-
-## Install
-
-```bash
-pip install macroforecast
-```
-
-See [install](install.md) for extras and source install.
-
-## License
-
-MIT
-
 ```{toctree}
 :hidden:
-:maxdepth: 1
+:maxdepth: 2
 
-getting_started
-user_guide
-two_entry_points
-standalone_functions/index
-reference
-replications
+tutorial/index
+how_to/index
+reference/index
+explanation/index
 help
-```
-
-```{toctree}
-:hidden:
-:maxdepth: 1
-:caption: Standalone functions
-
-standalone_functions/l2_clean
-standalone_functions/l3_transforms
-standalone_functions/l4_fit
-standalone_functions/l5_metrics
-standalone_functions/l6_tests
-standalone_functions/l7_importance
 ```

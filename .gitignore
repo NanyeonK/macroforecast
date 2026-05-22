@@ -63,7 +63,8 @@ runs/
 
 # Sphinx build output
 docs/_build/
-docs/reference/
+# docs/reference/ was gitignored when Sphinx auto-generated it; removed in C52
+# because docs/reference/ is now a source-committed Diataxis tier directory.
 .venv-docs/
 
 # CatBoost training artifacts
