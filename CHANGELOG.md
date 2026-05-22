@@ -14,7 +14,7 @@ full per-version honesty-pass history embedded in repo documentation.
   preprocessor contract (`fn(X_train, y_train, X_test, context) -> (X_train, X_test)`),
   context fields (`feature_names`, `alignment`, `leakage_contract`, `mode`),
   step-by-step registration, contract verification on synthetic data,
-  recipe integration using `preprocessor_name:`, a complete logged-variant
+  recipe integration using `leaf_config.custom_preprocessor:`, a complete logged-variant
   recipe example, and debugging guidance. Uses synthetic inline panel only
   (no FRED credentials required).
 - **`docs/tutorial/index.md`**: `04_custom_preprocessor` entry added to toctree.

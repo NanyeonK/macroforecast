@@ -182,8 +182,8 @@ filtering.
 Now put the preprocessor into a minimal benchmarking recipe. The recipe
 uses a synthetic inline panel so you do not need FRED credentials.
 
-The preprocessor is activated by setting `preprocessor_name` in the L2
-`fixed_axes`. The runtime dispatches the registered callable by name at
+The preprocessor is activated by setting `custom_preprocessor` in the L2
+`leaf_config`. The runtime dispatches the registered callable by name at
 each forecast origin, after all built-in L2 operations finish.
 
 ```python
@@ -237,7 +237,8 @@ recipe = """
     outlier_policy: none
     imputation_policy: none_propagate
     frame_edge_policy: keep_unbalanced
-    preprocessor_name: variance_filter
+  leaf_config:
+    custom_preprocessor: variance_filter
 
 3_feature_engineering:
   nodes:
@@ -300,9 +301,10 @@ print(f"Cells: {len(result.cells)}")   # 1
 print("sink_hashes_match test run completed")
 ```
 
-The `preprocessor_name: variance_filter` line in L2 is the only change
-relative to a standard recipe. The constant series `const_series` will be
-dropped at each forecast origin before features reach L3.
+The `custom_preprocessor: variance_filter` entry under L2 `leaf_config` is
+the only change relative to a standard recipe. The constant series
+`const_series` will be dropped at each forecast origin before features reach
+L3.
 
 ---
 
