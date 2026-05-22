@@ -5,6 +5,66 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### C59 — Statistical Credibility Hardening: Boruta Null Calibration + HHS Tolerance Tightening
+
+#### Breaking Changes (Statistical Correctness)
+
+- **`_boruta_selection` empty-result on null DGP** (Round 2 Cycle 4 of 6): The
+  argmax fallback that returned the feature with the highest hit count when
+  Bonferroni testing rejected all features has been removed. The correct behaviour
+  per Kursa & Rudnicki (2010, JSS 36(11)) Algorithm 1 is to return an empty
+  DataFrame when no feature is formally accepted. The old fallback produced a 100%
+  false-positive rate on shuffled-label null DGPs; the corrected implementation
+  achieves a false-positive rate of 3.3% across 30 seeds (within the 5% Bonferroni
+  guarantee). Callers that relied on the fallback to guarantee at least one selected
+  feature must now handle the empty-DataFrame return case.
+
+#### Improved
+
+- **Boruta `n_shadow_copies` default 1 → 6**: The number of independent shadow
+  permutations used per Boruta iteration is raised from 1 to 6. Multi-shadow MISA
+  (Maximum Importance of Shadow Attributes) over `6N` shadow importances provides
+  better calibration in small-T/N settings. The parameter is backward-compatible;
+  callers that specify `n_shadow_copies` explicitly retain their value. All C47
+  regression tests pass with the new default (40 tests, no regression).
+
+#### Added
+
+- **`tests/core/test_l3_boruta_null_c59.py`**: Null calibration baseline (30
+  seeds, shuffled-label null DGP; FP rate must be <= 0.05) and signal-calibrated
+  test (recall >= 0.75, precision >= 0.50 on a 4-relevant-feature DGP).
+- **`tests/core/test_r_crossref_c59.py`**: Real rpy2 bridge tests for
+  `boruta_selection` vs `Boruta::Boruta()`, `midas_almon` vs `midasr`, and
+  `realized_garch` vs `rugarch`. The entire module is gated via
+  `pytest.importorskip("rpy2")` so it skips cleanly when rpy2 is not installed.
+  Tolerances: Boruta Jaccard >= 0.70; MIDAS y_hat rtol <= 0.10; HHS per-param.
+- **`docs/how_to/validate_against_r.md`**: How-to guide for installing
+  `macroforecast[validation]` (rpy2>=3.5), installing R packages (Boruta, midasr,
+  rugarch), running the cross-reference suite, and interpreting expected tolerance
+  differences between Python and R implementations.
+- **`[validation]` pyproject extra**: `validation = ["rpy2>=3.5"]` added to
+  `[project.optional-dependencies]`; included in `all` aggregate. The `ci`
+  aggregate deliberately excludes it because CI does not include an R runtime.
+
+#### Changed
+
+- **`tests/core/test_l4_realized_garch_c56.py` MRE-1 tolerances tightened**:
+  HHS parameter recovery tolerances narrowed from C56 baselines (mu atol 0.05 →
+  0.02; omega atol 0.50 → 0.15; beta range width 0.30 → 0.15; phi range width
+  0.40 → 0.20; gamma atol 0.07 added). Sample size bumped from T=500 to T=2000
+  for asymptotic standard error compliance: gamma is weakly identified at T=500
+  and can recover with the wrong sign (abs error 0.101 > atol 0.07); at T=2000
+  all 11 parameters pass the tightened tolerances across 5 seeds. The T=500 test
+  class is retained as a smoke test; the T=2000 class is the acceptance standard.
+
+#### Source
+
+Codex + MiniMax external cross-review P1 findings: Boruta empty-result bug (100%
+FP rate on null), HHS tolerance tightening, R cross-reference gated test suite.
+Round 2 Cycle 4 of 6 in the statistical credibility hardening series.
+
+---
+
 ### C58 — Release Pipeline Manual Gate + Encyclopedia Drift Detection
 
 - **changed**: `.github/workflows/release.yml` trigger changed from `push.tags` to `workflow_dispatch` (manual only). PyPI publish no longer auto-fires on tag push; the operator must open the GitHub Actions UI, enter the version string, and click "Run workflow". This closes the release-governance P0 finding from the Codex external cross-review (run `2026-05-22-external-cross-review`): accidental tag pushes can no longer trigger an irreversible PyPI publish.
