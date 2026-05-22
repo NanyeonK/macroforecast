@@ -1,7 +1,9 @@
 name: release
 
 # PyPI publish via API token (PYPI_API_TOKEN secret in repo settings).
-# Triggers on tag push `v*.*.*`.
+# Triggered manually via GitHub Actions "Run workflow" UI.
+# User must type the version string (e.g. 0.9.3) before triggering;
+# tag push alone no longer publishes to PyPI.
 #
 # NOTE: the project maintainer owns the ``macroforecast`` PyPI namespace,
 # so a successful tag push publishes the new version to
@@ -15,9 +17,12 @@ name: release
 # ``macroforecast`` PyPI project.
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 0.9.3 or 0.9.3b1)'
+        required: true
+        type: string
 
 permissions:
   contents: read
