@@ -72,6 +72,7 @@ macroforecast = "macroforecast.scaffold.cli:main"
 include = ["macroforecast*"]
 
 [tool.setuptools.package-data]
+macroforecast = ["py.typed"]
 "macroforecast._vendor.macro_random_forest" = ["LICENSE", "PATCHES.md"]
 
 [tool.pytest.ini_options]
