@@ -340,7 +340,21 @@ added or modified. All changes are within `docs/tutorial/` and `docs/how_to/`.
 
 ---
 
-## Version: v0.9.2b1 (C53 — docs content update)
+## Version: v0.9.2b2 (C55 — beta release cut)
+
+## Cycle 55 — What Changed
+
+This cycle is a release engineering cycle. No source code algorithms were
+added or modified. All changes are administrative.
+
+| Category | Change |
+| --- | --- |
+| Version bump | `pyproject.toml` + `macroforecast/__init__.py`: `0.9.2b1` → `0.9.2b2` |
+| CHANGELOG synthesis | 8 unreleased cycle entries (C47-C54) consolidated into `[0.9.2b2]` section |
+| Install docs | `docs/tutorial/00_install.md`: 4 occurrences of `@v0.9.2b1` → `@v0.9.2b2` |
+| Build artifacts | `python3 -m build` produces `dist/macroforecast-0.9.2b2-py3-none-any.whl` + `.tar.gz` |
+| Git tag | `v0.9.2b2` annotated tag applied to merge commit after PR merge |
+| PyPI publish | HELD pending explicit user authorization |
 
 ## Module layout
 
