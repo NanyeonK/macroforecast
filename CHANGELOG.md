@@ -3,6 +3,31 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [Unreleased] — Cycle 53
+
+### C53 — Tutorial + how-to content overhaul
+
+- `docs/tutorial/01_first_forecast.md`: replaced stub with 5-min hands-on narrative (AR(2) forecast, manifest, replicate guarantee). Synthetic inline panel, no network.
+- `docs/tutorial/02_full_study.md`: replaced stub with full benchmarking narrative (multi-model, sweep, DM test, L7 importance). Synthetic panel.
+- `docs/tutorial/03_custom_model.md`: new narrative tutorial for `register_model` / `@mf.custom_model` extension point.
+- `docs/tutorial/two_entry_points.md`: renamed from `03_two_entry_points.md`; broken links fixed.
+- `docs/tutorial/00_install.md`: fixed broken quickstart link.
+- `docs/tutorial/index.md`: updated toctree for new filenames.
+- `docs/how_to/add_custom_dataset.md`: new task recipe (replaces encyclopedia add_dataset.md).
+- `docs/how_to/tune_hyperparameters.md`: new task recipe for grid/random/BIC hyperparameter tuning.
+- `docs/how_to/sweep_over_models.md`: new task recipe for multi-model sweeps.
+- `docs/how_to/add_custom_model.md`: refactored from custom_function_quickstart to terse how-to.
+- `docs/how_to/use_custom_hooks.md`: refactored from custom_hooks.md to terse five-hook summary.
+- `docs/how_to/partial_layer_execution.md`: renamed from partial_execution.md; broken links fixed.
+- `docs/how_to/replicate_a_study.md`: new task recipe for manifest-based replication.
+- `docs/how_to/index.md`: updated toctree for all new/renamed files.
+- Redirect stubs added for all renamed/replaced files.
+- All code blocks verified to run in a fresh `pip install -e .` environment.
+- Sphinx build with `-W` passes.
+- Note for C54: add CI smoke test for tutorial code blocks.
+
+---
+
 ## [Unreleased] — Cycle 52
 
 ### C52 — Diátaxis docs structure migration

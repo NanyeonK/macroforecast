@@ -106,4 +106,4 @@ pip install "macroforecast[deep] @ git+https://github.com/NanyeonK/macroforecast
 | `openpyxl` | FRED-SD Excel workbook loading |
 | `PyYAML` | Recipe YAML parsing |
 
-**See also:** [Researchers: Quickstart](for_researchers/quickstart.md)
+**See also:** See {doc}`01_first_forecast` to run your first recipe immediately after installation.

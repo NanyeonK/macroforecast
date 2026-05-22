@@ -1,30 +1,65 @@
-# Recipe API quickstart
+# Your first forecast
 
-Run a core layer-contract forecast in under 5 minutes.
+By the end of this tutorial you will have run your first AR(p) forecast, inspected
+the output manifest, and confirmed the bit-exact replicate guarantee. It takes about
+five minutes.
 
-This quickstart uses `mf.run(...)`, the v0.9.0 public entry point. It executes the core L1-L8 runtime: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.
+---
 
-For the exact support boundary, read [Runtime Support Matrix](runtime_support.md).
+## Before you start
 
-## Run A Minimal Core Recipe
+Verify that macroforecast is installed:
+
+```python
+import macroforecast as mf
+print(mf.__version__)   # 0.9.2b1 or later
+```
+
+If the import fails, see {doc}`00_install`.
+
+---
+
+## Your first recipe
+
+A recipe is a YAML document that describes your full forecasting study. You pass it
+to `mf.run()` and get back a result object containing all your forecasts, metrics,
+and artifacts.
+
+The recipe below uses a 20-row synthetic panel with a linear trend so the output
+is visually interpretable. Every layer from L0 (study setup) through L8 (output)
+is represented in full.
 
 ```python
 import macroforecast as mf
 
 recipe = """
+0_meta:
+  fixed_axes:
+    failure_policy: fail_fast
+    reproducibility_mode: seeded_reproducible
+  leaf_config:
+    random_seed: 0
+
 1_data:
   fixed_axes:
     custom_source_policy: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
-    target: y
+    target: gdp_growth
     target_horizons: [1]
     custom_panel_inline:
-      date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01, 2020-05-01, 2020-06-01]
-      y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-      x1: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-      x2: [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
+      date:
+        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,
+         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,
+         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,
+         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]
+      gdp_growth:
+        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,
+         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]
+      ip_index:
+        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,
+         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]
 
 2_preprocessing:
   fixed_axes:
@@ -35,124 +70,142 @@ recipe = """
 
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
-    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
-    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
+    - id: src_X
+      type: source
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
+    - id: src_y
+      type: source
+      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
+    - id: lag_x
+      type: step
+      op: lag
+      params: {n_lag: 1}
+      inputs: [src_X]
+    - id: y_h
+      type: step
+      op: target_construction
+      params: {mode: point_forecast, method: direct, horizon: 1}
+      inputs: [src_y]
   sinks:
     l3_features_v1: {X_final: lag_x, y_final: y_h}
     l3_metadata_v1: auto
 
 4_forecasting_model:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
-    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
-    - id: fit_ridge
+    - id: src_X
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
+    - id: src_y
+      type: source
+      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
+    - id: fit_ar
       type: step
       op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
-      inputs: [src_X, src_y]
-    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
+      params:
+        family: ar_p
+        n_lag: 2
+        forecast_strategy: direct
+        training_start_rule: expanding
+        refit_policy: every_origin
+        search_algorithm: none
+        min_train_size: 6
+      inputs: [src_y]
+    - id: predict_ar
+      type: step
+      op: predict
+      inputs: [fit_ar]
   sinks:
-    l4_forecasts_v1: predict_ridge
-    l4_model_artifacts_v1: fit_ridge
+    l4_forecasts_v1: predict_ar
+    l4_model_artifacts_v1: fit_ar
     l4_training_metadata_v1: auto
 
 5_evaluation:
   fixed_axes:
     primary_metric: mse
     point_metrics: [mse, rmse, mae]
-
-8_output:
-  fixed_axes:
-    saved_objects: [forecasts, metrics, ranking]
-  leaf_config:
-    output_directory: ./macroforecast_output/quickstart/
 """
-
-import macroforecast as mf
-result = mf.run(recipe)
-print(result.sink("l5_evaluation_v1").metrics_table)
-print(result.sink("l8_artifacts_v1").output_directory)
 ```
 
-`mf.run` accepts both YAML string and path.
+Notice that `3_feature_engineering` takes a one-period lag of the predictors. This
+ensures the model never sees future data — a hard leakage rule enforced by the runtime.
 
-## What Gets Materialized
+---
 
-The result object is an in-memory sink map:
+## Run it and inspect the results
 
 ```python
-forecasts = result.sink("l4_forecasts_v1")
-metrics = result.sink("l5_evaluation_v1").metrics_table
-ranking = result.sink("l5_evaluation_v1").ranking_table
-output = result.sink("l8_artifacts_v1")
+result = mf.run(recipe, output_directory="./tutorial_output/first_forecast/")
 ```
 
-With `8_output` enabled, the runtime writes:
+The call returns a `ManifestExecutionResult` object. Access metrics and artifacts
+through `result.cells[0].runtime_result.artifacts`:
 
-```text
-macroforecast_output/quickstart/
-  manifest.json
-  recipe.json
-  summary/
-    metrics_all_cells.csv
-    ranking.csv
-  cell_001/
-    forecasts.csv
+```python
+# The artifacts dict maps sink names to artifact objects
+cell = result.cells[0]
+arts = cell.runtime_result.artifacts
+
+# Metrics table
+metrics = arts["l5_evaluation_v1"].metrics_table
+print(metrics[["model_id", "mse", "rmse", "mae"]])
 ```
 
-## Enabling Diagnostics, Tests, And Importance
+You will see one row for the AR(2) model with columns `model_id`, `mse`, `rmse`,
+and `mae`. Because this panel has a clear linear trend and the lag features capture
+it, the MSE is very small.
 
-Add these blocks when needed:
+You can also use the aggregate `result.metrics` property, which adds a `cell_id`
+column and concatenates all cells:
 
-```yaml
-1_5_data_summary:
-  enabled: true
-2_5_pre_post_preprocessing:
-  enabled: true
-3_5_feature_diagnostics:
-  enabled: true
-4_5_generator_diagnostics:
-  enabled: true
-6_statistical_tests:
-  enabled: true
-  sub_layers:
-    L6_G_residual:
-      enabled: true
-7_interpretation:
-  enabled: true
-  nodes:
-    - id: src_model
-      type: source
-      selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: fit_ridge}}
-    - id: src_X
-      type: source
-      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
-    - id: linear_imp
-      type: step
-      op: model_native_linear_coef
-      params: {model_family: ridge}
-      inputs: [src_model, src_X]
-  sinks:
-    l7_importance_v1:
-      global: linear_imp
+```python
+print(result.metrics[["cell_id", "model_id", "mse"]])
 ```
 
-## Next Steps
+Inspect individual forecasts:
 
-- [Runtime Support Matrix](runtime_support.md) -- current support boundary
-- [Your First Study](first_study.md) -- extend the quickstart to diagnostics, L6, L7, and L8 export
-- [Understanding Output](understanding_output.md) -- output directory and artifact guide
+```python
+forecasts_artifact = arts["l4_forecasts_v1"]
+# The forecasts dict maps (model_id, target, horizon, origin) -> float
+for key, val in list(forecasts_artifact.forecasts.items())[:3]:
+    print(key, "->", round(val, 4))
+```
+
+Each key encodes the model ID, target series name, forecast horizon, and the origin
+date — the last date the model saw before making its prediction.
 
 ---
 
-**Note on FRED data and real-time vintages**: macroforecast v0.9.x uses final-revised FRED data
-(current vintage) when `custom_source_policy: official_only` is set. Real-time vintage tracking
-(ALFRED) is planned for v1.x; `vintage_policy: real_time_alfred` raises `NotImplementedError`
-in v0.9.x. For details and workarounds, see
-[Your First Study — Real-Time Data Caveat](first_study.md#real-time-data-caveat).
+## The manifest and bit-exact replication
+
+The most important file in the output directory is `manifest.json`. It is the
+recipe's receipt — a machine-readable record of exactly what was run, which data
+was used, and a hash fingerprint of every artifact.
+
+```python
+import pathlib
+
+manifest_path = pathlib.Path("./tutorial_output/first_forecast/manifest.json")
+replication = mf.replicate(str(manifest_path))
+print("Recipe match:", replication.recipe_match)
+print("Artifacts match:", replication.sink_hashes_match)
+```
+
+If both print `True`, you have confirmed that re-running the recipe produces
+bit-identical artifacts. Share `manifest.json` with a colleague and they can run
+the same check.
+
+```{note}
+The replicate guarantee requires the same macroforecast version and the same
+dependency lockfile. Use `pip freeze > requirements.txt` to record your
+environment at run time.
+```
 
 ---
 
-**Note on output directory naming**: The runtime default is `./macrocast_output/<recipe_id>/<timestamp>/` (defined in `macroforecast.core.types` and `macroforecast.core.layers.l8`). To override, set `output_directory` in the `8_output.leaf_config` block, as the examples above do (`./macroforecast_output/quickstart/`). The historical `macrocast_output/` default is preserved for backward compatibility with v0.1-era manifests.
+## What to do next
+
+- Continue to {doc}`02_full_study` to extend this recipe with multiple models, a
+  model sweep, the DM test, and importance figures.
+- See {doc}`../how_to/add_custom_dataset` to use your own panel data instead of
+  the inline fixture.
+- See {doc}`../how_to/replicate_a_study` for the replication workflow in production.
