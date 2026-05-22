@@ -5,147 +5,47 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
-### C60 — Docs Depth and Polish
-
-#### Added
-
-- **`docs/tutorial/04_custom_preprocessor.md`**: New narrative tutorial for
-  the `register_preprocessor` / `custom_preprocessor` API. Covers the L2
-  preprocessor contract (`fn(X_train, y_train, X_test, context) -> (X_train, X_test)`),
-  context fields (`feature_names`, `alignment`, `leakage_contract`, `mode`),
-  step-by-step registration, contract verification on synthetic data,
-  recipe integration using `leaf_config.custom_preprocessor:`, a complete logged-variant
-  recipe example, and debugging guidance. Uses synthetic inline panel only
-  (no FRED credentials required).
-- **`docs/tutorial/index.md`**: `04_custom_preprocessor` entry added to toctree.
-
-#### Changed
-
-- **`docs/explanation/12_layer_design.md`** section heading at line 32:
-  "9 Main Layers Plus 4 Diagnostic Halves" expanded to
-  "9 Main Layers Plus 4 Diagnostic Halves (13 Slots Total)". Two-sentence
-  opener added to reconcile the "12 Layers" brand name with the 13-slot
-  canonical flow (9 + 4 = 13 named slots).
-- **`docs/explanation/bit_exact_replicate.md`**: Forward-reference sentence
-  appended to the paragraph ending at "Bit-exactness allows neither."
-  Points readers directly to the "What Can Break the Guarantee" section.
-- **MIDAS encyclopedia pages** (`midas_almon.md`, `midas_beta.md`,
-  `midas_step.md`, `dfm_unrestricted_midas.md`): Added
-  `**Optimization method**:` label before the "When to use" block in each
-  page, distinguishing NLS (multi-start Nelder-Mead) from OLS (closed-form)
-  families at a glance.
-
-#### Deferred
-
-- `register_metric` API does not exist; custom_metric tutorial deferred to
-  a future cycle pending API design.
-
 ---
 
-### C59 — Statistical Credibility Hardening: Boruta Null Calibration + HHS Tolerance Tightening
+## [0.9.3b1] -- 2026-05-22 -- "Round 2 cross-review remediation"
 
-#### Breaking Changes (Statistical Correctness)
-
-- **`_boruta_selection` empty-result on null DGP** (Round 2 Cycle 4 of 6): The
-  argmax fallback that returned the feature with the highest hit count when
-  Bonferroni testing rejected all features has been removed. The correct behaviour
-  per Kursa & Rudnicki (2010, JSS 36(11)) Algorithm 1 is to return an empty
-  DataFrame when no feature is formally accepted. The old fallback produced a 100%
-  false-positive rate on shuffled-label null DGPs; the corrected implementation
-  achieves a false-positive rate of 3.3% across 30 seeds (within the 5% Bonferroni
-  guarantee). Callers that relied on the fallback to guarantee at least one selected
-  feature must now handle the empty-DataFrame return case.
-
-#### Improved
-
-- **Boruta `n_shadow_copies` default 1 → 6**: The number of independent shadow
-  permutations used per Boruta iteration is raised from 1 to 6. Multi-shadow MISA
-  (Maximum Importance of Shadow Attributes) over `6N` shadow importances provides
-  better calibration in small-T/N settings. The parameter is backward-compatible;
-  callers that specify `n_shadow_copies` explicitly retain their value. All C47
-  regression tests pass with the new default (40 tests, no regression).
-
-#### Added
-
-- **`tests/core/test_l3_boruta_null_c59.py`**: Null calibration baseline (30
-  seeds, shuffled-label null DGP; FP rate must be <= 0.05) and signal-calibrated
-  test (recall >= 0.75, precision >= 0.50 on a 4-relevant-feature DGP).
-- **`tests/core/test_r_crossref_c59.py`**: Real rpy2 bridge tests for
-  `boruta_selection` vs `Boruta::Boruta()`, `midas_almon` vs `midasr`, and
-  `realized_garch` vs `rugarch`. The entire module is gated via
-  `pytest.importorskip("rpy2")` so it skips cleanly when rpy2 is not installed.
-  Tolerances: Boruta Jaccard >= 0.70; MIDAS y_hat rtol <= 0.10; HHS per-param.
-- **`docs/how_to/validate_against_r.md`**: How-to guide for installing
-  `macroforecast[validation]` (rpy2>=3.5), installing R packages (Boruta, midasr,
-  rugarch), running the cross-reference suite, and interpreting expected tolerance
-  differences between Python and R implementations.
-- **`[validation]` pyproject extra**: `validation = ["rpy2>=3.5"]` added to
-  `[project.optional-dependencies]`; included in `all` aggregate. The `ci`
-  aggregate deliberately excludes it because CI does not include an R runtime.
-
-#### Changed
-
-- **`tests/core/test_l4_realized_garch_c56.py` MRE-1 tolerances tightened**:
-  HHS parameter recovery tolerances narrowed from C56 baselines (mu atol 0.05 →
-  0.02; omega atol 0.50 → 0.15; beta range width 0.30 → 0.15; phi range width
-  0.40 → 0.20; gamma atol 0.07 added). Sample size bumped from T=500 to T=2000
-  for asymptotic standard error compliance: gamma is weakly identified at T=500
-  and can recover with the wrong sign (abs error 0.101 > atol 0.07); at T=2000
-  all 11 parameters pass the tightened tolerances across 5 seeds. The T=500 test
-  class is retained as a smoke test; the T=2000 class is the acceptance standard.
-
-#### Source
-
-Codex + MiniMax external cross-review P1 findings: Boruta empty-result bug (100%
-FP rate on null), HHS tolerance tightening, R cross-reference gated test suite.
-Round 2 Cycle 4 of 6 in the statistical credibility hardening series.
-
----
-
-### C58 — Release Pipeline Manual Gate + Encyclopedia Drift Detection
-
-- **changed**: `.github/workflows/release.yml` trigger changed from `push.tags` to `workflow_dispatch` (manual only). PyPI publish no longer auto-fires on tag push; the operator must open the GitHub Actions UI, enter the version string, and click "Run workflow". This closes the release-governance P0 finding from the Codex external cross-review (run `2026-05-22-external-cross-review`): accidental tag pushes can no longer trigger an irreversible PyPI publish.
-- **added**: `tests/scaffold/test_encyclopedia_op_coverage.py` — drift CI gate that fails when an operational op (L3/L4/L7) is registered as operational with `op_page=True` in its OptionDoc but has no corresponding encyclopedia page on disk. Covers 42 L3 ops, 43 L4 families, 10 L7 ops (95 parametrized items total on HEAD post-C57). Failure message names the missing page and the opt-out mechanism (`op_page=False`).
-- **added**: `tests/scaffold/test_drift_gate_meta.py` — negative test (Scenario B6 from test-spec) verifying the gate fires correctly: injects a fake op whose page does not exist, asserts `pytest.fail` is raised, and verifies the failure message contains the op name, the string "encyclopedia page", and a path reference.
-- **source**: Codex external cross-review P0 (release governance) + both reviewers (docs drift); addressed in Round 2 Cycle 3 of 6.
-
-### C57 — Runtime↔Tutorial 03 Contract Sync + 2 Missing Encyclopedia Pages
-
-- **fix**: `_CustomModelAdapter.predict()` context dict now includes `target` (str, target series name) and `horizon` (int, forecast horizon) as documented by Tutorial 03 and `custom_model_contract_metadata()`. Existing keys (`contract_version`, `model_name`, `feature_names`, `params`) are unchanged. Users who access `context["target"]` or `context["horizon"]` in custom model functions no longer get `KeyError`.
-- **docs**: Added encyclopedia page for `lstm_hidden_state` L7 op (`docs/reference/encyclopedia/l7/op/lstm_hidden_state.md`). Page was missing despite runtime support in `runtime.py` and `DEFAULT_FIGURE_MAPPING` entry in `l7_ops.py`. Fixed by adding `op_page=True` to `_LSTM_HIDDEN_STATE` OptionDoc.
-- **docs**: Added encyclopedia page for `chow_lin_disaggregation` L3 op (`docs/reference/encyclopedia/l3/op/chow_lin_disaggregation.md`). Page was missing despite operational registration in `l3_ops.py`. Added `_OP_CHOW_LIN_DISAGGREGATION` OptionDoc and updated `layer_scope` to `("l2", "l3")`.
-- **test**: New `tests/core/test_l4_custom_model_c57.py` with 4 tests covering context key presence and Tutorial 03 code patterns.
+Codex + MiniMax external cross-review identified P0/P1/P2 statistical and governance gaps in v0.9.2b2. This release closes them.
 
 ### Breaking Changes
 
-- **C56 — `_RealizedGARCHModel.fit()` convergence failure now raises `RuntimeError`
-  (previously returned initial-parameter estimates silently).** Callers relying on
-  the old silent-fallback behaviour must wrap `fit()` in a try/except block or
-  ensure sufficient data quality for multi-start convergence.
+- (HHS realized_garch) `_RealizedGARCHModel.fit()` no longer silently returns init params on convergence failure. Raises `RuntimeError` instead. Users relying on silent fallback must catch the exception. (C56)
+- (Boruta) `_boruta_selection` no longer returns argmax(hit_count) when no feature is formally accepted. Returns empty DataFrame on null DGP. Fixes 100% false-positive rate. (C59)
+
+### Fixed
+
+- (Boruta P0/P1) **Critical**: false-positive rate on null data corrected from **100% to 3.3%**. Two-bug fix: argmax fallback removed + multi-shadow MISA calibration (`n_shadow_copies=6`). (C59)
+- (HHS P0) Multi-start L-BFGS-B `bounds` enforcement, consistent `log_sigma_u` clip in objective and storage, convergence metadata exposed. (C56)
+- (Custom model contract) `_CustomModelAdapter._invoke` context now includes `target` and `horizon` keys per Tutorial 03 docs (was: KeyError). (C57)
+- (Encyclopedia drift) 2 missing pages added: `lstm_hidden_state` (L7), `chow_lin_disaggregation` (L3). (C57)
+- (Tutorial 04) YAML key correction `preprocessor_name` (invalid) to `leaf_config.custom_preprocessor` (correct). (C60)
 
 ### Added
 
-- **C56 — `_RealizedGARCHModel` convergence diagnostic attributes** (set by
-  `fit()`): `_converged` (bool), `_n_starts_succeeded` (int),
-  `_best_neg_log_lik` (float), `_initial_neg_log_lik` (float). These expose
-  optimization diagnostics for downstream inspection and testing without
-  requiring access to the scipy result object.
+- (CI governance P0) `release.yml` trigger changed from `push.tags` (auto-publish on tag) to `workflow_dispatch` (manual). PyPI publish requires explicit user action via GitHub UI. (C58)
+- (CI drift gate) `tests/scaffold/test_encyclopedia_op_coverage.py` — 95-item gate fails when operational op lacks reference page. (C58)
+- (HHS recovery depth P1) 5-seed multi-seed recovery test with tightened tolerances (mu atol 0.05 to 0.02, omega 0.50 to 0.15, etc); T bumped 500 to 2000 for asymptotic SE compliance. (C56+C59)
+- (R cross-reference P1) Real rpy2 bridge for Boruta/midasr/rugarch validation, gated via `pytest.importorskip`. New `[validation]` optional extra. (C59)
+- (Tutorial 04 custom_preprocessor) Full narrative tutorial covering `register_preprocessor` API with synthetic data, debugging section. (C60)
+- (How-to validate_against_r) Documentation for R cross-reference setup. (C59)
+- (MIDAS encyclopedia clarity) Optimization method labels (NLS vs OLS) on Almon/Beta/Step/U-MIDAS pages. (C60)
+- (Documentation polish) `12_layer_design.md` terminology unified (12 brand + 9+4=13 slot count reconciled). `bit_exact_replicate.md` forward-reference to caveats. (C60)
 
-### Improved
+### Deferred
 
-- **C56 — Explicit L-BFGS-B bounds for all 11 `_RealizedGARCHModel` parameters**:
-  `phi` upper bound set to 1.0 (economic constraint: measurement-equation scaling
-  coefficient must not exceed unity; prevents weak-identification drift in small
-  samples). `log_sigma_u` clipped consistently to `[-30, 5]` in both the objective
-  function and post-fit parameter storage, eliminating a clip/storage mismatch.
-- **C56 — Multi-start schedule upgraded**: default `n_starts` raised from 3 to 8;
-  perturbation scales for starts 1–7 follow an escalating ladder
-  `[0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]` to provide broader coverage of the
-  parameter landscape and escape weak-identification local basins. Start 0 is
-  unperturbed (exact initialisation).
-- **C56 — Source**: Codex external cross-review P0 finding; remediated in this
-  cycle. Recovery test (`test_realized_garch_*`) now verifies all 11 parameters
-  across 5 seeds (previously single-seed mu/beta/phi/omega only).
+- (`register_metric` tutorial) API does not exist in `macroforecast.custom`; tutorial deferred to a future cycle pending API design. (C60)
+- (Monte Carlo finite-sample suite) Bias/RMSE/coverage assessment for HHS/MIDAS/GIRF; deferred beyond Round 2.
+
+### Packaging
+
+- v0.9.3b1 fresh semantic version (0.9.3 > 0.9.2 final on PyPI). Pre-release suffix `b1` requires `pip install macroforecast --pre` to install via PyPI default.
+- `pyproject.toml` metadata polish: Trove classifiers (Beta, Python 3.10/3.11/3.12, MIT, Topic, Audience), `authors`, `keywords`. (C61)
+- `LICENSE` file added (MIT body). (C61)
+- `macroforecast/py.typed` marker added (PEP 561 type-hint exposure). (C61)
 
 ---
 
