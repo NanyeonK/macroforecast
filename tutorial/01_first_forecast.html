@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Recipe API quickstart &#8212; macroforecast</title>
+    <title>Your first forecast &#8212; macroforecast</title>
   
   
   
@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Your First Study: Ridge With Diagnostics, Tests, Importance, And Export" href="02_full_study.html" />
+    <link rel="next" title="A complete benchmarking study" href="02_full_study.html" />
     <link rel="prev" title="Installation" href="00_install.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -139,7 +139,7 @@
     
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="index.html">
-    Tutorial
+    Tutorials
   </a>
 </li>
 
@@ -279,7 +279,7 @@
     
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="index.html">
-    Tutorial
+    Tutorials
   </a>
 </li>
 
@@ -380,9 +380,10 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="00_install.html">Installation</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Recipe API quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</a></li>
-<li class="toctree-l1"><a class="reference internal" href="03_two_entry_points.html">Two entry points — recipe DSL vs standalone callables</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Your first forecast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">A complete benchmarking study</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Bring your own model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — recipe DSL vs standalone callables</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="replications/index.html">Replications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="replications/example_walkthrough.html">Example Walkthrough — minimal ridge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="replications/goulet_coulombe_2021.html">Goulet-Coulombe (2021) — bundled paper baseline</a></li>
@@ -429,9 +430,9 @@
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial</a></li>
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorials</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Recipe API quickstart</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Your first forecast</span></li>
   </ul>
 </nav>
 </div>
@@ -448,29 +449,60 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="recipe-api-quickstart">
-<h1>Recipe API quickstart<a class="headerlink" href="#recipe-api-quickstart" title="Link to this heading">#</a></h1>
-<p>Run a core layer-contract forecast in under 5 minutes.</p>
-<p>This quickstart uses <code class="docutils literal notranslate"><span class="pre">mf.run(...)</span></code>, the v0.9.0 public entry point. It executes the core L1-L8 runtime: custom panels, deterministic L3 features, linear sklearn L4 models, point metrics, lightweight L6/L7 artifacts, diagnostics, and L8 file export.</p>
-<p>For the exact support boundary, read <a class="reference internal" href="#runtime_support.md"><span class="xref myst">Runtime Support Matrix</span></a>.</p>
-<section id="run-a-minimal-core-recipe">
-<h2>Run A Minimal Core Recipe<a class="headerlink" href="#run-a-minimal-core-recipe" title="Link to this heading">#</a></h2>
+  <section id="your-first-forecast">
+<h1>Your first forecast<a class="headerlink" href="#your-first-forecast" title="Link to this heading">#</a></h1>
+<p>By the end of this tutorial you will have run your first AR(p) forecast, inspected
+the output manifest, and confirmed the bit-exact replicate guarantee. It takes about
+five minutes.</p>
+<hr class="docutils" />
+<section id="before-you-start">
+<h2>Before you start<a class="headerlink" href="#before-you-start" title="Link to this heading">#</a></h2>
+<p>Verify that macroforecast is installed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>   <span class="c1"># 0.9.2b1 or later</span>
+</pre></div>
+</div>
+<p>If the import fails, see <a class="reference internal" href="00_install.html"><span class="doc">Installation</span></a>.</p>
+</section>
+<hr class="docutils" />
+<section id="your-first-recipe">
+<h2>Your first recipe<a class="headerlink" href="#your-first-recipe" title="Link to this heading">#</a></h2>
+<p>A recipe is a YAML document that describes your full forecasting study. You pass it
+to <code class="docutils literal notranslate"><span class="pre">mf.run()</span></code> and get back a result object containing all your forecasts, metrics,
+and artifacts.</p>
+<p>The recipe below uses a 20-row synthetic panel with a linear trend so the output
+is visually interpretable. Every layer from L0 (study setup) through L8 (output)
+is represented in full.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
 <span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">0_meta:</span>
+<span class="s2">  fixed_axes:</span>
+<span class="s2">    failure_policy: fail_fast</span>
+<span class="s2">    reproducibility_mode: seeded_reproducible</span>
+<span class="s2">  leaf_config:</span>
+<span class="s2">    random_seed: 0</span>
+
 <span class="s2">1_data:</span>
 <span class="s2">  fixed_axes:</span>
 <span class="s2">    custom_source_policy: custom_panel_only</span>
 <span class="s2">    frequency: monthly</span>
 <span class="s2">    horizon_set: custom_list</span>
 <span class="s2">  leaf_config:</span>
-<span class="s2">    target: y</span>
+<span class="s2">    target: gdp_growth</span>
 <span class="s2">    target_horizons: [1]</span>
 <span class="s2">    custom_panel_inline:</span>
-<span class="s2">      date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01, 2020-05-01, 2020-06-01]</span>
-<span class="s2">      y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]</span>
-<span class="s2">      x1: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]</span>
-<span class="s2">      x2: [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]</span>
+<span class="s2">      date:</span>
+<span class="s2">        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,</span>
+<span class="s2">         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,</span>
+<span class="s2">         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,</span>
+<span class="s2">         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]</span>
+<span class="s2">      gdp_growth:</span>
+<span class="s2">        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,</span>
+<span class="s2">         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]</span>
+<span class="s2">      ip_index:</span>
+<span class="s2">        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,</span>
+<span class="s2">         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]</span>
 
 <span class="s2">2_preprocessing:</span>
 <span class="s2">  fixed_axes:</span>
@@ -481,121 +513,134 @@
 
 <span class="s2">3_feature_engineering:</span>
 <span class="s2">  nodes:</span>
-<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}</span>
-<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}</span>
-<span class="s2">    - {id: lag_x, type: step, op: lag, params: </span><span class="si">{n_lag: 1}</span><span class="s2">, inputs: [src_X]}</span>
-<span class="s2">    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}</span>
+<span class="s2">    - id: src_X</span>
+<span class="s2">      type: source</span>
+<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}</span>
+<span class="s2">    - id: src_y</span>
+<span class="s2">      type: source</span>
+<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}</span>
+<span class="s2">    - id: lag_x</span>
+<span class="s2">      type: step</span>
+<span class="s2">      op: lag</span>
+<span class="s2">      params: </span><span class="si">{n_lag: 1}</span>
+<span class="s2">      inputs: [src_X]</span>
+<span class="s2">    - id: y_h</span>
+<span class="s2">      type: step</span>
+<span class="s2">      op: target_construction</span>
+<span class="s2">      params: {mode: point_forecast, method: direct, horizon: 1}</span>
+<span class="s2">      inputs: [src_y]</span>
 <span class="s2">  sinks:</span>
 <span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
 <span class="s2">    l3_metadata_v1: auto</span>
 
 <span class="s2">4_forecasting_model:</span>
 <span class="s2">  nodes:</span>
-<span class="s2">    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}</span>
-<span class="s2">    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}</span>
-<span class="s2">    - id: fit_ridge</span>
+<span class="s2">    - id: src_X</span>
+<span class="s2">      type: source</span>
+<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}</span>
+<span class="s2">    - id: src_y</span>
+<span class="s2">      type: source</span>
+<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
+<span class="s2">    - id: fit_ar</span>
 <span class="s2">      type: step</span>
 <span class="s2">      op: fit_model</span>
-<span class="s2">      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}</span>
-<span class="s2">      inputs: [src_X, src_y]</span>
-<span class="s2">    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}</span>
+<span class="s2">      params:</span>
+<span class="s2">        family: ar_p</span>
+<span class="s2">        n_lag: 2</span>
+<span class="s2">        forecast_strategy: direct</span>
+<span class="s2">        training_start_rule: expanding</span>
+<span class="s2">        refit_policy: every_origin</span>
+<span class="s2">        search_algorithm: none</span>
+<span class="s2">        min_train_size: 6</span>
+<span class="s2">      inputs: [src_y]</span>
+<span class="s2">    - id: predict_ar</span>
+<span class="s2">      type: step</span>
+<span class="s2">      op: predict</span>
+<span class="s2">      inputs: [fit_ar]</span>
 <span class="s2">  sinks:</span>
-<span class="s2">    l4_forecasts_v1: predict_ridge</span>
-<span class="s2">    l4_model_artifacts_v1: fit_ridge</span>
+<span class="s2">    l4_forecasts_v1: predict_ar</span>
+<span class="s2">    l4_model_artifacts_v1: fit_ar</span>
 <span class="s2">    l4_training_metadata_v1: auto</span>
 
 <span class="s2">5_evaluation:</span>
 <span class="s2">  fixed_axes:</span>
 <span class="s2">    primary_metric: mse</span>
 <span class="s2">    point_metrics: [mse, rmse, mae]</span>
-
-<span class="s2">8_output:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    saved_objects: [forecasts, metrics, ranking]</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    output_directory: ./macroforecast_output/quickstart/</span>
 <span class="s2">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>Notice that <code class="docutils literal notranslate"><span class="pre">3_feature_engineering</span></code> takes a one-period lag of the predictors. This
+ensures the model never sees future data — a hard leakage rule enforced by the runtime.</p>
+</section>
+<hr class="docutils" />
+<section id="run-it-and-inspect-the-results">
+<h2>Run it and inspect the results<a class="headerlink" href="#run-it-and-inspect-the-results" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;./tutorial_output/first_forecast/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The call returns a <code class="docutils literal notranslate"><span class="pre">ManifestExecutionResult</span></code> object. Access metrics and artifacts
+through <code class="docutils literal notranslate"><span class="pre">result.cells[0].runtime_result.artifacts</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The artifacts dict maps sink names to artifact objects</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">arts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">output_directory</span><span class="p">)</span>
+<span class="c1"># Metrics table</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">arts</span><span class="p">[</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">metrics_table</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">[[</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span> <span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">]])</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">mf.run</span></code> accepts both YAML string and path.</p>
+<p>You will see one row for the AR(2) model with columns <code class="docutils literal notranslate"><span class="pre">model_id</span></code>, <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">rmse</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">mae</span></code>. Because this panel has a clear linear trend and the lag features capture
+it, the MSE is very small.</p>
+<p>You can also use the aggregate <code class="docutils literal notranslate"><span class="pre">result.metrics</span></code> property, which adds a <code class="docutils literal notranslate"><span class="pre">cell_id</span></code>
+column and concatenates all cells:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">[[</span><span class="s2">&quot;cell_id&quot;</span><span class="p">,</span> <span class="s2">&quot;model_id&quot;</span><span class="p">,</span> <span class="s2">&quot;mse&quot;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Inspect individual forecasts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forecasts_artifact</span> <span class="o">=</span> <span class="n">arts</span><span class="p">[</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">]</span>
+<span class="c1"># The forecasts dict maps (model_id, target, horizon, origin) -&gt; float</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">forecasts_artifact</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">items</span><span class="p">())[:</span><span class="mi">3</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Each key encodes the model ID, target series name, forecast horizon, and the origin
+date — the last date the model saw before making its prediction.</p>
 </section>
-<section id="what-gets-materialized">
-<h2>What Gets Materialized<a class="headerlink" href="#what-gets-materialized" title="Link to this heading">#</a></h2>
-<p>The result object is an in-memory sink map:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forecasts</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l4_forecasts_v1&quot;</span><span class="p">)</span>
-<span class="n">metrics</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">metrics_table</span>
-<span class="n">ranking</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ranking_table</span>
-<span class="n">output</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="s2">&quot;l8_artifacts_v1&quot;</span><span class="p">)</span>
+<hr class="docutils" />
+<section id="the-manifest-and-bit-exact-replication">
+<h2>The manifest and bit-exact replication<a class="headerlink" href="#the-manifest-and-bit-exact-replication" title="Link to this heading">#</a></h2>
+<p>The most important file in the output directory is <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code>. It is the
+recipe’s receipt — a machine-readable record of exactly what was run, which data
+was used, and a hash fingerprint of every artifact.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+
+<span class="n">manifest_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./tutorial_output/first_forecast/manifest.json&quot;</span><span class="p">)</span>
+<span class="n">replication</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Recipe match:&quot;</span><span class="p">,</span> <span class="n">replication</span><span class="o">.</span><span class="n">recipe_match</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Artifacts match:&quot;</span><span class="p">,</span> <span class="n">replication</span><span class="o">.</span><span class="n">sink_hashes_match</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>With <code class="docutils literal notranslate"><span class="pre">8_output</span></code> enabled, the runtime writes:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>macroforecast_output/quickstart/
-  manifest.json
-  recipe.json
-  summary/
-    metrics_all_cells.csv
-    ranking.csv
-  cell_001/
-    forecasts.csv
-</pre></div>
-</div>
-</section>
-<section id="enabling-diagnostics-tests-and-importance">
-<h2>Enabling Diagnostics, Tests, And Importance<a class="headerlink" href="#enabling-diagnostics-tests-and-importance" title="Link to this heading">#</a></h2>
-<p>Add these blocks when needed:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_5_data_summary</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">2_5_pre_post_preprocessing</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">3_5_feature_diagnostics</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">4_5_generator_diagnostics</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">6_statistical_tests</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">  </span><span class="nt">sub_layers</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">L6_G_residual</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">7_interpretation</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_model</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l4</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l4_model_artifacts_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">model_id</span><span class="p">:</span><span class="w"> </span><span class="nv">fit_ridge</span><span class="p p-Indicator">}}</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linear_imp</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">model_native_linear_coef</span>
-<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">model_family</span><span class="p">:</span><span class="w"> </span><span class="nv">ridge</span><span class="p p-Indicator">}</span>
-<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_model</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]</span>
-<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">l7_importance_v1</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">global</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">linear_imp</span>
-</pre></div>
+<p>If both print <code class="docutils literal notranslate"><span class="pre">True</span></code>, you have confirmed that re-running the recipe produces
+bit-identical artifacts. Share <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> with a colleague and they can run
+the same check.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The replicate guarantee requires the same macroforecast version and the same
+dependency lockfile. Use <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">freeze</span> <span class="pre">&gt;</span> <span class="pre">requirements.txt</span></code> to record your
+environment at run time.</p>
 </div>
 </section>
-<section id="next-steps">
-<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<hr class="docutils" />
+<section id="what-to-do-next">
+<h2>What to do next<a class="headerlink" href="#what-to-do-next" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#runtime_support.md"><span class="xref myst">Runtime Support Matrix</span></a> – current support boundary</p></li>
-<li><p><a class="reference internal" href="#first_study.md"><span class="xref myst">Your First Study</span></a> – extend the quickstart to diagnostics, L6, L7, and L8 export</p></li>
-<li><p><a class="reference internal" href="#understanding_output.md"><span class="xref myst">Understanding Output</span></a> – output directory and artifact guide</p></li>
+<li><p>Continue to <a class="reference internal" href="02_full_study.html"><span class="doc">A complete benchmarking study</span></a> to extend this recipe with multiple models, a
+model sweep, the DM test, and importance figures.</p></li>
+<li><p>See <a class="reference internal" href="../how_to/add_custom_dataset.html"><span class="doc">How to add a custom dataset</span></a> to use your own panel data instead of
+the inline fixture.</p></li>
+<li><p>See <a class="reference internal" href="../how_to/replicate_a_study.html"><span class="doc">How to replicate a study</span></a> for the replication workflow in production.</p></li>
 </ul>
-<hr class="docutils" />
-<p><strong>Note on FRED data and real-time vintages</strong>: macroforecast v0.9.x uses final-revised FRED data
-(current vintage) when <code class="docutils literal notranslate"><span class="pre">custom_source_policy:</span> <span class="pre">official_only</span></code> is set. Real-time vintage tracking
-(ALFRED) is planned for v1.x; <code class="docutils literal notranslate"><span class="pre">vintage_policy:</span> <span class="pre">real_time_alfred</span></code> raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>
-in v0.9.x. For details and workarounds, see
-<a class="reference internal" href="#first_study.md#real-time-data-caveat"><span class="xref myst">Your First Study — Real-Time Data Caveat</span></a>.</p>
-<hr class="docutils" />
-<p><strong>Note on output directory naming</strong>: The runtime default is <code class="docutils literal notranslate"><span class="pre">./macrocast_output/&lt;recipe_id&gt;/&lt;timestamp&gt;/</span></code> (defined in <code class="docutils literal notranslate"><span class="pre">macroforecast.core.types</span></code> and <code class="docutils literal notranslate"><span class="pre">macroforecast.core.layers.l8</span></code>). To override, set <code class="docutils literal notranslate"><span class="pre">output_directory</span></code> in the <code class="docutils literal notranslate"><span class="pre">8_output.leaf_config</span></code> block, as the examples above do (<code class="docutils literal notranslate"><span class="pre">./macroforecast_output/quickstart/</span></code>). The historical <code class="docutils literal notranslate"><span class="pre">macrocast_output/</span></code> default is preserved for backward compatibility with v0.1-era manifests.</p>
 </section>
 </section>
 
@@ -623,7 +668,7 @@ in v0.9.x. For details and workarounds, see
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Your First Study: Ridge With Diagnostics, Tests, Importance, And Export</p>
+        <p class="prev-next-title">A complete benchmarking study</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -646,10 +691,11 @@ in v0.9.x. For details and workarounds, see
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-a-minimal-core-recipe">Run A Minimal Core Recipe</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-gets-materialized">What Gets Materialized</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enabling-diagnostics-tests-and-importance">Enabling Diagnostics, Tests, And Importance</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-you-start">Before you start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#your-first-recipe">Your first recipe</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-it-and-inspect-the-results">Run it and inspect the results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-manifest-and-bit-exact-replication">The manifest and bit-exact replication</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-do-next">What to do next</a></li>
 </ul>
   </nav></div>
 

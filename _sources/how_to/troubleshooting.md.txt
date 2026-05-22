@@ -120,7 +120,7 @@ exp.run()
 
 For batch / CI runs, ensure the recipe runner imports your method
 module before calling `mf.run("recipe.yaml")`. See
-[`docs/for_recipe_authors/custom_hooks.md`](for_recipe_authors/custom_hooks.md)
+{doc}`use_custom_hooks`
 for the full registration contract.
 
 ---
@@ -143,7 +143,7 @@ warning and the axis is ignored.
 ## A bundled example recipe fails with `ImportError: xgboost`
 
 Some recipes need extras. Check the
-[Recipe gallery](recipe_api/gallery.md) "Extras required"
+the recipe gallery "Extras required"
 column. To install everything:
 
 ```bash
@@ -200,7 +200,7 @@ print(l3[0].y_final.head())                       # L3 target
 ```
 
 Full guide:
-[`docs/for_recipe_authors/partial_layer_execution.md`](for_recipe_authors/partial_layer_execution.md).
+{doc}`partial_layer_execution`.
 
 ---
 

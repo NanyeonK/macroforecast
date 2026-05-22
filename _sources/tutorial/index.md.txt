@@ -1,11 +1,8 @@
-# Tutorial
+# Tutorials
 
-New to macroforecast? These walkthroughs guide you from installation
-through a complete forecasting study with diagnostics, tests, and
-importance interpretation. Follow them in order on your first pass.
+New to macroforecast? Work through these in order.
 
-Each tutorial is a complete narrative — you run real code and see real
-output. By the end you will have a working study on FRED-MD data.
+Each tutorial runs real code against a synthetic dataset. By the end of tutorial 2 you will have a complete benchmarking study. Tutorial 3 shows you how to plug in your own model.
 
 ```{toctree}
 :maxdepth: 1
@@ -13,6 +10,7 @@ output. By the end you will have a working study on FRED-MD data.
 00_install
 01_first_forecast
 02_full_study
-03_two_entry_points
+03_custom_model
+two_entry_points
 replications/index
 ```

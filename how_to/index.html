@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Custom Function Quickstart" href="custom_model.html" />
+    <link rel="next" title="How to add a custom dataset" href="add_custom_dataset.html" />
     <link rel="prev" title="Goulet-Coulombe (2021) — bundled paper baseline" href="../tutorial/replications/goulet_coulombe_2021.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -139,7 +139,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../tutorial/index.html">
-    Tutorial
+    Tutorials
   </a>
 </li>
 
@@ -279,7 +279,7 @@
     
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../tutorial/index.html">
-    Tutorial
+    Tutorials
   </a>
 </li>
 
@@ -379,27 +379,28 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Custom Function Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Custom Extensions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Partial Layer Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_custom_dataset.html">How to add a custom dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tune_hyperparameters.html">How to tune hyperparameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sweep_over_models.html">How to sweep over models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">How to add a custom model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_custom_hooks.html">How to use custom hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="partial_layer_execution.html">Partial Layer Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="replicate_a_study.html">How to replicate a study</a></li>
 <li class="toctree-l1"><a class="reference internal" href="target_transformer.html">Target Transformer Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">FRED-MD</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Bring Your Own Data</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="simple_api/index.html">Simple API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="simple_api/quickstart.html">Simple API quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple_api/run_experiment.html">Run an experiment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple_api/compare_models.html">Compare models and parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple_api/read_results.html">Read results</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simple_api/fred_sd.html">Use FRED-SD</a></li>
-</ul>
-</details></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="conventions.html">Docs Conventions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproducibility_policy.html">Reproducibility Policy</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="contributing.html">For contributors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="reproducibility_policy.html">Reproducibility Policy</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="reproducibility_policy.html">Reproducibility Policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conventions.html">Docs Conventions</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
 </ul>
 </div>
 </nav></div>
@@ -459,23 +460,26 @@
                   
   <section id="how-to-guides">
 <h1>How-to guides<a class="headerlink" href="#how-to-guides" title="Link to this heading">#</a></h1>
-<p>Goal-oriented recipes for specific tasks. These guides assume you have
-completed the <a class="reference internal" href="../tutorial/index.html"><span class="std std-doc">Tutorial</span></a> and are looking to
-accomplish a particular objective.</p>
+<p>Task-focused recipes. Each guide answers one question: “how do I do X?” If you
+need concepts or background, see <a class="reference internal" href="../explanation/index.html"><span class="std std-doc">Explanation</span></a>. If you
+are new, start with the <a class="reference internal" href="../tutorial/index.html"><span class="std std-doc">Tutorial</span></a>.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Custom Function Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Custom Extensions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Partial Layer Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_custom_dataset.html">How to add a custom dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tune_hyperparameters.html">How to tune hyperparameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sweep_over_models.html">How to sweep over models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">How to add a custom model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_custom_hooks.html">How to use custom hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="partial_layer_execution.html">Partial Layer Execution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="replicate_a_study.html">How to replicate a study</a></li>
 <li class="toctree-l1"><a class="reference internal" href="target_transformer.html">Target Transformer Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">FRED-MD</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Bring Your Own Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="simple_api/index.html">Simple API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting &amp; FAQ</a></li>
-<li class="toctree-l1"><a class="reference internal" href="conventions.html">Docs Conventions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">For contributors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility_policy.html">Reproducibility Policy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">For contributors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conventions.html">Docs Conventions</a></li>
 </ul>
+</div>
+<div class="toctree-wrapper compound">
 </div>
 </section>
 
@@ -499,11 +503,11 @@ accomplish a particular objective.</p>
       </div>
     </a>
     <a class="right-next"
-       href="custom_model.html"
+       href="add_custom_dataset.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Custom Function Quickstart</p>
+        <p class="prev-next-title">How to add a custom dataset</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

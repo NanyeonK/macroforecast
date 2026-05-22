@@ -1,5 +1,8 @@
 # Two entry points — recipe DSL vs standalone callables
 
+This page compares the two entry points at a conceptual level. For a hands-on
+narrative, start with {doc}`01_first_forecast`.
+
 macroforecast exposes two ways to use its operations:
 
 | | Recipe DSL | Standalone callables |
@@ -36,7 +39,7 @@ replication = mf.replicate("out/manifest.json")
 assert replication.sink_hashes_match           # bit-exact
 ```
 
-See [User guide](user_guide.md) and [Recipe API](recipe_api/index.md).
+See the recipe DSL tutorials above, starting with {doc}`01_first_forecast`.
 
 ---
 
@@ -66,7 +69,7 @@ u1 = mf.functions.theil_u1(y, result.predict(X))
 print(f"Theil U1 = {u1:.4f}")
 ```
 
-See [Standalone functions](standalone_functions/index.md).
+See {doc}`../how_to/simple_api/index` for the standalone callables reference.
 
 ---
 
@@ -101,12 +104,3 @@ Need full L6 test battery or L7 interpretation pipeline?
     YES  →  Recipe DSL  →  6_statistical_tests: {enabled: true, ...}
     NO   →  Standalone  →  individual test / importance callables
 ```
-
----
-
-## Related
-
-- [Getting started](getting_started.md)
-- [User guide](user_guide.md)
-- [Standalone functions overview](standalone_functions/index.md)
-- [Recipe API](recipe_api/index.md)
