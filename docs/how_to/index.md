@@ -14,6 +14,7 @@ add_custom_model
 use_custom_hooks
 partial_layer_execution
 replicate_a_study
+validate_against_r
 target_transformer
 troubleshooting
 reproducibility_policy

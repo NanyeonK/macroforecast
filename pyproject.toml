@@ -59,7 +59,9 @@ markdown = ["tabulate>=0.9"]
 # C50: ALFRED vintage adapter -- requests is only needed for API mode;
 # local snapshot mode uses pandas read_parquet (already in [parquet] extra).
 alfred = ["requests>=2.28"]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,wizard,markdown,alfred]"]
+# rpy2 bridge for R cross-implementation validation (Boruta / midasr / rugarch)
+validation = ["rpy2>=3.5"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,wizard,markdown,alfred,validation]"]
 ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy,markdown]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
