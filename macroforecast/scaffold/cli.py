@@ -206,13 +206,13 @@ def main(argv: list[str] | None = None) -> int:
         "encyclopedia",
         help=(
             "Emit the source-committed encyclopedia tree under <output>. "
-            "Used to refresh ``docs/encyclopedia/`` after editing the "
+            "Used to refresh ``docs/reference/encyclopedia/`` after editing the "
             "OptionDoc registry; CI diffs the output to enforce sync."
         ),
     )
     encyc_p.add_argument(
         "output",
-        help="Output directory (e.g. ``docs/encyclopedia``).",
+        help="Output directory (e.g. ``docs/reference/encyclopedia``).",
     )
     encyc_p.set_defaults(func=_cmd_encyclopedia)
 

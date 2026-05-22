@@ -613,7 +613,7 @@ class TestEncyclopediaPages:
     def _read_page(self, *path_parts):
         import os
         repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        path = os.path.join(repo_root, "docs", "encyclopedia", "l5", *path_parts)
+        path = os.path.join(repo_root, "docs", "reference", "encyclopedia", "l5", *path_parts)
         with open(path) as fh:
             return fh.read()
 

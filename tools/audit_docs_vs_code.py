@@ -17,7 +17,7 @@ Usage::
     python tools/audit_docs_vs_code.py --root docs/ --fail-on-drift
 
     # Scan standalone_functions only (expected near-zero drift):
-    python tools/audit_docs_vs_code.py --root docs/standalone_functions/ --out audit.json
+    python tools/audit_docs_vs_code.py --root docs/reference/api/standalone_functions/ --out audit.json
 
     # Exclude archive and changelog:
     python tools/audit_docs_vs_code.py --root docs/ \\

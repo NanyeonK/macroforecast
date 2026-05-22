@@ -1,8 +1,8 @@
 """Introspection-based encyclopedia page generator for macroforecast.
 
 Produces one .md file per registered op (or per virtual op for L5/L6) into
-``docs/encyclopedia/<layer>/<subdir>/<op_name>.md``, mirroring the existing
-per-op page structure exactly.
+``docs/reference/encyclopedia/<layer>/<subdir>/<op_name>.md``, mirroring the
+existing per-op page structure exactly.
 
 Reuses patterns from ``tools/gen_standalone_docs.py`` (Cycle 41): same
 sys.path bootstrap, same ``inspect.signature`` extraction, same forward-ref
@@ -13,11 +13,11 @@ Usage::
     # Dry-run all layers (print paths + first 5 lines, no writes):
     python tools/gen_encyclopedia_docs.py --layer all --dry-run
 
-    # Generate L3 into docs/encyclopedia/ with a fixed date for idempotency:
-    python tools/gen_encyclopedia_docs.py --layer L3 --review-date 2026-05-21
+    # Generate L3 into docs/reference/encyclopedia/ with a fixed date for idempotency:
+    python tools/gen_encyclopedia_docs.py --layer L3 --out docs/reference/encyclopedia/ --review-date 2026-05-21
 
     # Diff L7 output against existing pages without writing:
-    python tools/gen_encyclopedia_docs.py --layer L7 --diff-against docs/encyclopedia/
+    python tools/gen_encyclopedia_docs.py --layer L7 --diff-against docs/reference/encyclopedia/
 
     # Generate a single layer into a temp directory:
     python tools/gen_encyclopedia_docs.py --layer L4 --out /tmp/enc_l4 --force
@@ -391,7 +391,7 @@ EXCLUSION_LIST: set[str] = {
     # L7 ops that are in the registry but do NOT have encyclopedia pages yet.
     # These ops are operational/future but not yet documented in the per-op
     # encyclopedia surface. Generate pages only for the 8 ops that already
-    # have pages in docs/encyclopedia/l7/op/.
+    # have pages in docs/reference/encyclopedia/l7/op/.
     "attention_weights",
     "bootstrap_jackknife",
     "bvar_pip",
@@ -1147,11 +1147,11 @@ def main() -> int:
     )
     parser.add_argument(
         "--out",
-        default="docs/encyclopedia/",
+        default="docs/reference/encyclopedia/",
         metavar="DIR",
         help=(
             "Output base directory (auto-created including parent directories if absent). "
-            "Default: docs/encyclopedia/."
+            "Default: docs/reference/encyclopedia/."
         ),
     )
     parser.add_argument(

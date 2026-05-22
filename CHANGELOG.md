@@ -3,6 +3,23 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [Unreleased] — Cycle 52
+
+### C52 — Diátaxis docs structure migration
+
+- Reorganized `docs/` from 11 parallel entry points into the Diátaxis 4-tier
+  structure: `tutorial/`, `how_to/`, `reference/`, `explanation/`.
+- All existing content preserved via `git mv`; no content deleted.
+- Encyclopedia moved from `docs/encyclopedia/` to `docs/reference/encyclopedia/`
+  (hidden from main sidebar, accessible via reference/index).
+- Architecture moved from `docs/architecture/` to `docs/reference/architecture/`.
+- New single-entry landing `docs/index.md` with 4 navigation cards.
+- Redirect stubs at retired URLs for backward compatibility.
+- CI drift check updated to `docs/reference/encyclopedia/`.
+- Content rewrites: C53 (tutorial + how-to) and C54 (explanation + reference cleanup).
+
+---
+
 ## [Unreleased] — Cycle 51
 
 ### Added
