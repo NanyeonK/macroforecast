@@ -2206,6 +2206,51 @@ _OP_SLICED_INVERSE_REGRESSION = _o(
 )
 
 
+# C57: chow_lin_disaggregation encyclopedia page (L2-scoped op, lives in l3_ops.py).
+_OP_CHOW_LIN_DISAGGREGATION = _o(
+    "chow_lin_disaggregation",
+    "Chow-Lin (1971) regression-based temporal disaggregation from quarterly to monthly frequency.",
+    (
+        "Implements the best linear unbiased interpolation procedure of "
+        "Chow & Lin (1971). A monthly indicator series "
+        "(``params.chow_lin_indicator``) is regressed on the quarterly "
+        "target observations using OLS; fitted values and residuals are "
+        "distributed to monthly frequency. The quarterly sum-constraint is "
+        "preserved: the sum of the three monthly disaggregated values equals "
+        "the original quarterly value.\n\n"
+        "Algorithm steps:\n\n"
+        "1. Resample the monthly indicator to quarterly frequency by summing.\n"
+        "2. Fit OLS: quarterly_target ~ quarterly_indicator (with intercept).\n"
+        "3. Compute fitted quarterly values and residuals.\n"
+        "4. Spread residuals evenly across the three months of each quarter.\n"
+        "5. Reconstruct monthly series as ``fitted_monthly + residual_monthly``.\n\n"
+        "The monthly indicator column must be present in the input panel. "
+        "If ``params.chow_lin_indicator`` is ``None``, the runtime selects "
+        "the monthly column with highest absolute correlation to the "
+        "quarterly observations automatically via "
+        "``_default_chow_lin_indicator``."
+    ),
+    "Quarterly-to-monthly temporal disaggregation when a correlated monthly indicator is available "
+    "(e.g., industrial production as indicator for quarterly GDP).",
+    when_not_to_use=(
+        "When no informative monthly indicator exists -- use step_backward "
+        "(conservative) or linear_interpolation (smooth) instead. "
+        "Also not appropriate when the series is already at monthly frequency."
+    ),
+    references=(
+        Reference(
+            citation="Chow & Lin (1971) 'Best Linear Unbiased Interpolation, Distribution, "
+                     "and Extrapolation of Time Series by Related Series', "
+                     "Review of Economics and Statistics 53(4): 372-375.",
+            doi="10.2307/1928739",
+        ),
+    ),
+    related_options=("step_backward", "linear_interpolation"),
+    op_page=True,
+    op_func_name="chow_lin_disaggregation",
+)
+
+
 register(
     _OP_LEVEL,
     _OP_DIFF,
@@ -2263,4 +2308,6 @@ register(
     _OP_SLICED_INVERSE_REGRESSION,
     # v0.9.0 phase-f16: per-variable PCA MAF (Coulombe et al. 2021 IJF Eq. 7)
     _OP_MAF_PER_VARIABLE_PCA,
+    # C57: L2-scoped Chow-Lin disaggregation op page
+    _OP_CHOW_LIN_DISAGGREGATION,
 )
