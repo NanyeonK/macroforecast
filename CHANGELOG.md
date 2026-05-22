@@ -3,521 +3,195 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
-## [Unreleased] — Cycle 54
+## [Unreleased]
 
-### C54 — Explanation tier + reference cleanup + tutorial CI smoke test
-
-- `docs/explanation/12_layer_design.md`: new conceptual page — why 12 layers, per-layer purpose, inter-layer contracts, Mermaid diagram.
-- `docs/explanation/bit_exact_replicate.md`: new conceptual page — seed propagation, sink hashes, bit-exact guarantee, and what can break it.
-- `docs/explanation/honesty_pass.md`: new conceptual page — operational/future vocabulary rationale, v0.1/v0.25/v0.3/v0.9.3 honesty-pass history, no-proxy policy.
-- `docs/explanation/recipe_to_run.md`: new conceptual page — YAML to DAG to cell loop to manifest pipeline.
-- `docs/explanation/index.md`: updated with toctree for all four pages.
-- `docs/reference/index.md`: updated card layout; encyclopedia moved to visible toctree; API links point to new umbrella index.
-- `docs/reference/api/index.md`: new umbrella index for API sub-tier (standalone_functions + navigator).
-- `docs/reference/encyclopedia/index.md`: added auto-gen clarity sentence.
-- `docs/index.md`: removed "Expanding in C54" placeholder; all four tiers now have substantive content.
-- `tests/docs/test_tutorial_smoke.py`: new CI smoke test — extracts Python blocks from tutorials 01, 02, 03 and executes them in subprocess. Closes C53 reviewer note 1.
-- Sphinx `-W` build passes.
-- Docs overhaul complete (C52 structure + C53 tutorial/how-to + C54 explanation/reference).
+No unreleased changes.
 
 ---
 
-## [Unreleased] — Cycle 53
+## [0.9.2b2] -- 2026-05-22 -- "v0.9.3 algorithmic completion + Diátaxis docs overhaul"
 
-### C53 — Tutorial + how-to content overhaul
-
-- `docs/tutorial/01_first_forecast.md`: replaced stub with 5-min hands-on narrative (AR(2) forecast, manifest, replicate guarantee). Synthetic inline panel, no network.
-- `docs/tutorial/02_full_study.md`: replaced stub with full benchmarking narrative (multi-model, sweep, DM test, L7 importance). Synthetic panel.
-- `docs/tutorial/03_custom_model.md`: new narrative tutorial for `register_model` / `@mf.custom_model` extension point.
-- `docs/tutorial/two_entry_points.md`: renamed from `03_two_entry_points.md`; broken links fixed.
-- `docs/tutorial/00_install.md`: fixed broken quickstart link.
-- `docs/tutorial/index.md`: updated toctree for new filenames.
-- `docs/how_to/add_custom_dataset.md`: new task recipe (replaces encyclopedia add_dataset.md).
-- `docs/how_to/tune_hyperparameters.md`: new task recipe for grid/random/BIC hyperparameter tuning.
-- `docs/how_to/sweep_over_models.md`: new task recipe for multi-model sweeps.
-- `docs/how_to/add_custom_model.md`: refactored from custom_function_quickstart to terse how-to.
-- `docs/how_to/use_custom_hooks.md`: refactored from custom_hooks.md to terse five-hook summary.
-- `docs/how_to/partial_layer_execution.md`: renamed from partial_execution.md; broken links fixed.
-- `docs/how_to/replicate_a_study.md`: new task recipe for manifest-based replication.
-- `docs/how_to/index.md`: updated toctree for all new/renamed files.
-- Redirect stubs added for all renamed/replaced files.
-- All code blocks verified to run in a fresh `pip install -e .` environment.
-- Sphinx build with `-W` passes.
-- Note for C54: add CI smoke test for tutorial code blocks.
-
----
-
-## [Unreleased] — Cycle 52
-
-### C52 — Diátaxis docs structure migration
-
-- Reorganized `docs/` from 11 parallel entry points into the Diátaxis 4-tier
-  structure: `tutorial/`, `how_to/`, `reference/`, `explanation/`.
-- All existing content preserved via `git mv`; no content deleted.
-- Encyclopedia moved from `docs/encyclopedia/` to `docs/reference/encyclopedia/`
-  (hidden from main sidebar, accessible via reference/index).
-- Architecture moved from `docs/architecture/` to `docs/reference/architecture/`.
-- New single-entry landing `docs/index.md` with 4 navigation cards.
-- Redirect stubs at retired URLs for backward compatibility.
-- CI drift check updated to `docs/reference/encyclopedia/`.
-- Content rewrites: C53 (tutorial + how-to) and C54 (explanation + reference cleanup).
-
----
-
-## [Unreleased] — Cycle 51
+v0.9.3 algorithmic honesty pass is complete: all four cycles (C47-C50) promoted
+paper-faithful implementations, leaving `FUTURE_MODEL_FAMILIES = ()` and
+`FUTURE_OPS = ()`. Fourteen items promoted across four layers (L3 feature
+selection, L4 MIDAS families, L4 Realized GARCH, L7 GIRF, L1/L2 real-time
+vintage and temporal disaggregation). C51 closed four tracked issues. C52-C54
+reorganized and populated the Diátaxis 4-tier documentation structure: 3
+narrative tutorials, 6 task how-tos, 4 explanation pages, and a reference index
+serving 319 auto-generated encyclopedia pages.
 
 ### Added
-- `tests/tools/test_gen_encyclopedia.py`: `test_gen_no_third_party_imports` (closes #318)
-- `tests/tools/test_audit_docs.py`: `test_audit_no_third_party_imports` (closes #318)
-- `macroforecast/scaffold/option_docs/l2.py`: formal `ParameterDoc` for `chow_lin_indicator` (Flag-D)
+
+- **C47 — L3 Feature Selection (5 ops promoted to operational)**
+  - `boruta_selection`: Kursa & Rudnicki (2010, JSS 36(11)) shadow-feature
+    permutation test; Bonferroni-corrected two-sided binomial test; pure NumPy +
+    sklearn `RandomForestRegressor`; no `boruta` package dependency.
+  - `recursive_feature_elimination`: Guyon et al. (2002, Machine Learning 46)
+    recursive backward elimination with optional RFECV; base estimators: ridge,
+    lasso, svr_linear.
+  - `lasso_path_selection`: Efron et al. (2004, AoS 32(2)) LARS path entry-order
+    selector; selects first `n_features_to_select` features to enter the LARS
+    active set; distinct from `feature_selection(method="lasso")` which ranks by
+    LassoCV coefficient magnitude at convergence.
+  - `stability_selection`: Meinshausen & Bühlmann (2010, JRSS-B 72(4)); lasso or
+    elastic-net on `n_subsamples` random subsamples; features retained where
+    selection probability exceeds `pi_thr`; defaults n_subsamples=100,
+    subsample_fraction=0.5, pi_thr=0.6.
+  - `genetic_algorithm_selection`: Goldberg (1989) binary-chromosome GA;
+    tournament selection, single-point crossover, bit-flip mutation rate 1/N,
+    elitism; fitness = CV negative MSE; pure NumPy, no `deap` dependency.
+  - L3 operational op count: ≥32 → ≥37.
+
+- **C48 — MIDAS Families (4 L4 families promoted to operational; count 42 → 46)**
+  - `midas_almon`: Almon polynomial lag weights estimated by multi-start
+    Nelder-Mead NLS; implements Ghysels, Santa-Clara & Valkanov (2004) §2 eq. (3).
+  - `midas_beta`: Beta distribution kernel lag weights by multi-start NLS;
+    implements Ghysels, Sinko & Valkanov (2007) §2.
+  - `midas_step`: Piecewise-constant step-function lag weights by OLS; implements
+    Foroni, Marcellino & Schumacher (2015) §2.2.
+  - `dfm_unrestricted_midas`: U-MIDAS by OLS with optional AR(1) y-lag; implements
+    FMS (2015) §3 eqs. (7), (20); lag order by BIC/AIC.
+  - All four share per-origin seed contract (`random_state = base_seed +
+    origin_position`) from #279.
+
+- **C49 — Realized GARCH + Pesaran-Shin GIRF (2 items promoted)**
+  - `realized_garch`: Hansen, Huang & Shek (2012, JAE 27(6): 877-906) joint-MLE
+    Realized GARCH; three-equation system (return + log-variance + measurement);
+    11-parameter vector via `scipy.optimize.minimize(method="L-BFGS-B")` with 3
+    multi-starts; no `arch` dependency. Distinct from
+    `realized_garch_with_rv_exog` (RV-as-exogenous-regressor via `arch` package).
+  - `generalized_irf`: Pesaran & Shin (1998, Economics Letters 58(1): 17-29)
+    order-invariant GIRF; formula `GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma *
+    e_j`; importance metric is L1 norm of target-variable response; order-
+    invariance verified atol=1e-8. Distinct from `orthogonalised_irf` (Cholesky,
+    order-dependent).
+  - After C49: `FUTURE_MODEL_FAMILIES = ()`.
+
+- **C50 — Final v0.9.3 Algorithmic Items (4 items promoted; after C50: `FUTURE_OPS = ()`)**
+  - `real_time_alfred` (`vintage_policy`, L1.A): real-time ALFRED vintage policy
+    operational; two modes: `alfred_mode=local` (pre-downloaded snapshots from
+    `alfred_snapshot_dir`) or `alfred_mode=api` (ALFRED REST API via
+    `alfred_api_key` / `FRED_API_KEY`). Reference: Croushore & Stark (2001, JoE
+    105(1)); Federal Reserve Bank of St. Louis ALFRED API.
+  - `chow_lin` (`quarterly_to_monthly_rule`, L2.A): regression-based temporal
+    disaggregation; GLS with AR(1) errors using monthly indicator
+    `leaf_config.chow_lin_indicator`; quarterly sum-constraint preserved by
+    construction. Reference: Chow & Lin (1971, RES 53(4), doi:10.2307/1928739).
+  - `keep_with_indicator` (`outlier_action`, L2.C): keeps original outlier value
+    and appends binary `{col}__outlier_flag` column (1=flagged, 0=clean).
+  - `lstm_hidden_state` (L7.A op): LSTM hidden-state activation heatmap; per-
+    timestep `h_t` activations via PyTorch forward hook; requires
+    `macroforecast[deep]`; raises `NotImplementedError` for transformer. Reference:
+    Karpathy, Johnson & Fei-Fei (2015, arXiv:1506.02078).
+
+- **C51 — Issue Cleanup**
+  - `tests/tools/test_gen_encyclopedia.py`: `test_gen_no_third_party_imports`
+    (closes #318).
+  - `tests/tools/test_audit_docs.py`: `test_audit_no_third_party_imports`
+    (closes #318).
+  - `macroforecast/scaffold/option_docs/l2.py`: formal `ParameterDoc` for
+    `chow_lin_indicator` (Flag-D).
+  - `macroforecast/core/ops/l3_ops.py`: `chow_lin_disaggregation` promoted from
+    `future` to `operational`.
+
+- **C52-C54 — Diátaxis Documentation Overhaul**
+  - `docs/tutorial/01_first_forecast.md`, `02_full_study.md`,
+    `03_custom_model.md`: three new narrative tutorials replacing empty stubs
+    (C53); `two_entry_points.md` renamed and polished (C53).
+  - `docs/how_to/add_custom_dataset.md`, `tune_hyperparameters.md`,
+    `sweep_over_models.md`, `replicate_a_study.md`: four new how-to task
+    recipes (C53); two refactors, one rename (C53).
+  - `docs/explanation/12_layer_design.md`, `bit_exact_replicate.md`,
+    `honesty_pass.md`, `recipe_to_run.md`: four new conceptual explanation pages
+    (C54).
+  - `docs/reference/api/index.md`: new umbrella index for API sub-tier (C54).
+  - `tests/docs/test_tutorial_smoke.py`: CI smoke test extracting Python blocks
+    from tutorials 01-03 and executing them in subprocess (C54; closes C53
+    reviewer note 1).
 
 ### Changed
-- `macroforecast/core/ops/l3_ops.py`: `chow_lin_disaggregation` promoted from `future` to `operational`, body wired to `_chow_lin_disaggregate` (Flag-A)
-- `macroforecast/raw/alfred_adapter.py`: rolling-mode ALFRED vintage resolution vectorized; O(N×snapshot) → O(snapshot+N) (Flag-C)
-- `tools/gen_encyclopedia_docs.py`: `--out` help text documents auto-create behavior (closes #319)
+
+- **C47 — L3 Op Registry Refactor**
+  - `macroforecast/core/ops/l3_ops.py`: removed `_future_selection_op` closure
+    factory and 5-name `for` loop; replaced with 5 separate
+    `@register_op(status="operational")` decorated functions with individual
+    `params_schema` and `hard_rules`.
+  - `macroforecast/core/ops/l7_ops.py`: removed `boruta_selection`,
+    `recursive_feature_elimination`, `lasso_path_selection`, `stability_selection`
+    from `FUTURE_OPS` (L3 ops must not gain L7 scope via tail registration loop).
+  - `macroforecast/core/runtime.py`: 5 dispatch branches + 5 private helpers in
+    `_execute_l3_op`; all follow #215/#279 seed-propagation contract.
+  - `tests/layers/test_l7.py`, `tests/layers/test_l3.py`: tests renamed and
+    thresholds updated to reflect new op counts.
+
+- **C48 — L4 MIDAS Dispatch**
+  - `macroforecast/core/ops/l4_ops.py`: `OPERATIONAL_MODEL_FAMILIES` gains 4
+    entries; `FUTURE_MODEL_FAMILIES` reduced 5 → 1 (`realized_garch` only).
+  - `macroforecast/core/runtime.py`: 4 dispatch branches + 4 private model
+    classes (`_MidasAlmonModel`, `_MidasBetaModel`, `_MidasStepModel`,
+    `_UnrestrictedMidasModel`); two-attribute design `_w_hat_effective` +
+    zero-padded `_w_hat`.
+
+- **C49 — Internal GARCH Family Rename**
+  - `macroforecast/core/runtime.py`: `_GARCHFamily` internal variant renamed from
+    `"realized_garch"` to `"rv_exog"` for the `realized_garch_with_rv_exog`
+    branch (internal only; no external API change).
+  - `ARCHITECTURE.md`: L4 operational count 46 → 47; L7 `FUTURE_OPS` count 2 → 1.
+
+- **C50 — Layer Validator + ALFRED Optimizer Updates**
+  - `macroforecast/core/layers/l1.py`: `VintagePolicy` Literal updated; validator
+    accepts `real_time_alfred`; soft validation checks `alfred_snapshot_dir` (local)
+    or `alfred_api_key` / `FRED_API_KEY` (api).
+  - `macroforecast/core/layers/l2.py`: `chow_lin` + `keep_with_indicator` added to
+    valid sets and `AxisSpec`; hard-reject guards removed.
+  - `macroforecast/core/ops/l7_ops.py`: `lstm_hidden_state` in `OPERATIONAL_OPS`;
+    `FUTURE_OPS = ()`.
+  - `macroforecast/raw/alfred_adapter.py`: rolling-mode ALFRED vintage resolution
+    vectorized O(N×snapshot) → O(snapshot+N).
+  - Option docs for `l1.py`, `l2.py`, `l7_a.py`: new OptionDoc and ParameterDoc
+    entries.
+
+- **C51 — var_decomp Internal Rename + Tool Help Text**
+  - `macroforecast/raw/alfred_adapter.py`: rolling-mode vectorization (also C50;
+    confirmed operational in C51).
+  - `tools/gen_encyclopedia_docs.py`: `--out` help text updated to document
+    auto-create behavior (closes #319).
+
+- **C52 — Diátaxis Docs Structure**
+  - Existing content moved via `git mv` from 11 parallel directories to 4-tier
+    structure; encyclopedia moved to `docs/reference/encyclopedia/`; architecture
+    moved to `docs/reference/architecture/`; redirect stubs at retired URLs;
+    CI drift check updated.
+
+- **C53 — Tutorial and How-to Refactors**
+  - `docs/tutorial/two_entry_points.md`: renamed from `03_two_entry_points.md`;
+    broken links fixed.
+  - `docs/tutorial/00_install.md`: broken quickstart link fixed.
+  - `docs/how_to/add_custom_model.md`: refactored from `custom_function_quickstart`.
+  - `docs/how_to/use_custom_hooks.md`: refactored from `custom_hooks.md`.
+  - `docs/how_to/partial_layer_execution.md`: renamed from `partial_execution.md`
+    + broken link fixes.
+  - Tutorial index, how-to index: toctrees updated.
+
+- **C54 — Reference Index + Landing Page**
+  - `docs/reference/index.md`: card layout updated; encyclopedia in visible
+    toctree; API links point to new umbrella index.
+  - `docs/reference/encyclopedia/index.md`: auto-gen clarity sentence added.
+  - `docs/index.md`: removed "Expanding in C54" placeholder.
+  - `docs/explanation/index.md`: replaced stub with 4-page toctree.
 
 ### Fixed
-- `docs/standalone_functions/l7_importance.md`: `shap_linear_importance` correctly requires `pip install macroforecast[shap]` (closes #310)
-- `docs/encyclopedia/l1/axes/information_set_type.md`: removed stale "future feature Cycle 14 K-4" references to `real_time_alfred` (Flag-B)
 
-### Closed (no code change)
-- #311: `test_r4_02_paper_table2_k60_midas_wins` timeout was resolved in C46 via `@pytest.mark.slow`; issue closed with comment
-- #316: L3 op count clarified in ARCHITECTURE.md and CLAUDE.md
+- `docs/standalone_functions/l7_importance.md`: `shap_linear_importance` correctly
+  requires `pip install macroforecast[shap]` (closes #310; C51).
+- `docs/encyclopedia/l1/axes/information_set_type.md`: removed stale
+  "future feature Cycle 14 K-4" references to `real_time_alfred` (C51, Flag-B).
+- Issue #311: `test_r4_02_paper_table2_k60_midas_wins` timeout was resolved in C46
+  via `@pytest.mark.slow`; issue closed with comment (C51, no code change).
+- Issue #316: L3 op count clarified in ARCHITECTURE.md and CLAUDE.md (C51, no
+  code change).
 
 ---
-
-## Cycle 50 (2026-05-22) — Final v0.9.3 algorithmic cycle
-
-### Added — Cycle 50 (2026-05-22) — Final v0.9.3 algorithmic cycle
-
-Promoted 4 schema items from `future` to `operational`, completing the v0.9.3
-algorithmic honesty pass. After C49 + C50 merge: `FUTURE_MODEL_FAMILIES = ()`,
-`FUTURE_OPS = ()`.
-
-- `real_time_alfred` (`vintage_policy` axis, L1.A): real-time ALFRED vintage
-  policy is now operational. Two modes: `alfred_mode=local` loads pre-downloaded
-  per-origin snapshots from `leaf_config.alfred_snapshot_dir`; `alfred_mode=api`
-  queries the ALFRED REST API using `leaf_config.alfred_api_key` or the
-  `FRED_API_KEY` environment variable. Reference: Croushore & Stark (2001)
-  Journal of Econometrics 105(1); Federal Reserve Bank of St. Louis ALFRED API
-  (https://alfred.stlouisfed.org/).
-
-- `chow_lin` (`quarterly_to_monthly_rule` axis, L2.A): regression-based temporal
-  disaggregation by Chow & Lin (1971). GLS with AR(1) errors using a monthly
-  indicator series specified in `leaf_config.chow_lin_indicator`. The quarterly
-  sum-constraint is preserved by construction. Reference: Chow & Lin (1971)
-  Review of Economics and Statistics 53(4), doi:10.2307/1928739.
-
-- `keep_with_indicator` (`outlier_action` axis, L2.C): keeps the original outlier
-  value unchanged and appends a binary `{col}__outlier_flag` column (1=flagged,
-  0=clean) for downstream use as a covariate.
-
-- `lstm_hidden_state` (L7.A importance op): LSTM hidden-state activation heatmap.
-  Extracts per-timestep `h_t` activations via a PyTorch forward hook; renders
-  as a heatmap (rows = hidden units, columns = observations, color = mean |h_t|).
-  Requires `macroforecast[deep]`. Raises `NotImplementedError` for transformer
-  (use `attention_weights` instead). Reference: Karpathy, Johnson & Fei-Fei
-  (2015) "Visualizing and Understanding Recurrent Networks", arXiv:1506.02078.
-
-### Changed — Cycle 50 (2026-05-22)
-
-- `macroforecast/core/layers/l1.py`: `VintagePolicy` Literal updated; validator
-  accepts `real_time_alfred` without hard-reject; soft validation checks
-  `alfred_snapshot_dir` (local mode) or `alfred_api_key` / `FRED_API_KEY` (api mode).
-- `macroforecast/core/layers/l2.py`: `chow_lin` added to `quarterly_to_monthly_rule`
-  valid set and `AxisSpec`; `keep_with_indicator` added to `outlier_action` valid
-  set and `AxisSpec`. Hard-reject guards for both removed.
-- `macroforecast/core/ops/l7_ops.py`: `lstm_hidden_state` added to
-  `DEFAULT_FIGURE_MAPPING` (heatmap) and is now in `OPERATIONAL_OPS` (not
-  `FUTURE_OPS`). After C49 + C50 merge `FUTURE_OPS = ()`.
-- `macroforecast/scaffold/option_docs/l1.py`: `_L1A_VINTAGE_REAL_TIME_ALFRED`
-  summary + description updated to reflect operational status; `ParameterDoc`
-  entries added for `alfred_mode`, `alfred_snapshot_dir`, `alfred_api_key`.
-- `macroforecast/scaffold/option_docs/l2.py`: `_L2A_QM_CHOW_LIN` and
-  `_L2C_ACTION_KEEP_WITH_INDICATOR` OptionDoc entries added and registered.
-- `macroforecast/scaffold/option_docs/l7_a.py`: `_LSTM_HIDDEN_STATE` OptionDoc
-  entry added and registered. `_REF_KARPATHY_2015` reference added.
-- `docs/architecture/layer{1,2,7}/index.md`: minimal Cycle 50 update notes.
-- `docs/encyclopedia/`: regenerated; new pages for `real_time_alfred` (L1),
-  `chow_lin` (L2 axis option), `keep_with_indicator` (L2 axis option),
-  `lstm_hidden_state` (L7); browse aggregates updated.
-
-### Added — Cycle 49 (2026-05-21) — Realized GARCH + Pesaran-Shin GIRF
-
-Promoted 2 items from `future` to `operational`. `FUTURE_MODEL_FAMILIES` is now
-empty `()`; `FUTURE_OPS` contained only `lstm_hidden_state` (promoted in C50).
-
-- `realized_garch`: Hansen-Huang-Shek (2012) joint-MLE Realized GARCH. Three-equation
-  system (return + log-variance + measurement); 11-parameter vector estimated by
-  `scipy.optimize.minimize(method="L-BFGS-B")` with 3 multi-starts. No `arch` package
-  dependency. `params_` dict exposes all 11 HHS2012 parameters: `mu, omega, beta,
-  tau_1, tau_2, gamma, xi, phi, delta_1, delta_2, sigma_u`. Conditional-volatility
-  path in `conditional_volatility_`. References: Hansen, Huang & Shek (2012),
-  Journal of Applied Econometrics 27(6): 877-906.
-
-  **Distinct from** `realized_garch_with_rv_exog` (RV-as-exogenous-regressor into
-  a vanilla GARCH(1,1) via the `arch` package). That family remains operational and
-  unchanged. Use `realized_garch_with_rv_exog` when only the `arch` package is
-  available and an approximation suffices; use `realized_garch` for the true
-  HHS (2012) joint-MLE procedure.
-
-- `generalized_irf`: Pesaran-Shin (1998) order-invariant generalized impulse-response
-  function. Formula: `GIRF_h(j) = sigma_jj^{-1/2} * A_h * Sigma * e_j` where `A_h`
-  are the raw reduced-form MA coefficients (obtained via `fitted_results.irf(n_periods,
-  var_decomp=np.eye(K))`; identity `var_decomp` bypasses the Cholesky factorisation).
-  Importance metric: L1 norm of target-variable response to shock `j` across all
-  horizons. Order-invariance verified at atol=1e-8 (actual difference ~1e-19).
-  References: Pesaran & Shin (1998), Economics Letters 58(1): 17-29.
-
-  **Distinct from** `orthogonalised_irf` (Cholesky lower-triangular rotation; order-
-  dependent; operational since v0.2). Use `generalized_irf` when the variable ordering
-  in the VAR has no theoretical motivation; use `orthogonalised_irf` when a recursive
-  identification is theoretically motivated.
-
-### Changed — Cycle 49 (2026-05-21)
-
-- `macroforecast/core/ops/l4_ops.py`: moved `realized_garch` from
-  `FUTURE_MODEL_FAMILIES` to `OPERATIONAL_MODEL_FAMILIES`. `FUTURE_MODEL_FAMILIES`
-  is now empty `()`.
-- `macroforecast/core/ops/l7_ops.py`: added `generalized_irf: "irf_with_confidence_band"`
-  to `DEFAULT_FIGURE_MAPPING`; removed `generalized_irf` from `FUTURE_OPS`. Only
-  `lstm_hidden_state` remained in `FUTURE_OPS` (promoted in C50).
-- `macroforecast/core/runtime.py`: added `_RealizedGARCHModel` class (HHS 2012 joint
-  MLE) and `_var_girf_frame` function (Pesaran-Shin 1998 GIRF); added dispatch
-  branches for both; renamed `_GARCHFamily` internal variant from `"realized_garch"`
-  to `"rv_exog"` for the `realized_garch_with_rv_exog` branch (internal rename only;
-  no external API change).
-- `ARCHITECTURE.md`: L4 operational count 46 → 47; L7 FUTURE_OPS count 2 → 1;
-  added C49 section documenting both promotions.
-- `docs/architecture/layer4/index.md`: operational count updated 46 → 47.
-- `docs/architecture/layer7/index.md`: FUTURE_OPS reference updated.
-- `macroforecast/scaffold/option_docs/l4.py`: added `_F_REALIZED_GARCH` OptionDoc
-  entry for the `realized_garch` family.
-- `macroforecast/scaffold/option_docs/l7_a.py`: updated `_GENERALIZED_IRF` from
-  future-gated stub to full operational OptionDoc entry.
-- `docs/encyclopedia/l4/family/realized_garch.md`: new file (encyclopedia regen).
-- `docs/encyclopedia/l7/op/generalized_irf.md`: updated (encyclopedia regen).
-
-### Added — Cycle 48 (2026-05-21) — MIDAS Family Honesty Pass
-
-Promoted 4 L4 families from `future` to `operational` (MIDAS mixed-frequency
-regression). L4 operational count: 42 → 46.
-
-- `midas_almon`: Almon polynomial lag weights estimated by multi-start
-  Nelder-Mead NLS. Implements Ghysels, Santa-Clara & Valkanov (2004) "The
-  MIDAS Touch", §2 eq. (3). Weight function `b(k; θ) = Σ_q θ_q k^q` with
-  non-negativity clamp and optional sum-to-one normalization. Params:
-  `freq_ratio`, `n_lags_high`, `polynomial_order`, `sum_to_one`, `n_starts`,
-  `random_state`.
-
-- `midas_beta`: Beta distribution kernel lag weights by multi-start NLS.
-  Implements Ghysels, Sinko & Valkanov (2007) "MIDAS Regressions", §2.
-  Weight function `b(k) ∝ x_k^{a-1} (1-x_k)^{b-1}` where `x_k = (k+1)/(K+1)`;
-  initial point `[1, 1]` (uniform Beta); restarts drawn from Gamma(2,1).
-  Params: `freq_ratio`, `n_lags_high`, `sum_to_one`, `n_starts`, `random_state`.
-
-- `midas_step`: Piecewise-constant step-function lag weights by OLS. Implements
-  the restricted MIDAS variant in Foroni, Marcellino & Schumacher (2015)
-  "Unrestricted Mixed Data Sampling", §2.2. Groups the `K` HF lags into `S`
-  equal-size blocks; assigns one coefficient per block via `lstsq`.
-  Params: `freq_ratio`, `n_lags_high`, `n_steps`.
-
-- `dfm_unrestricted_midas`: Unrestricted MIDAS (U-MIDAS) by OLS with optional
-  AR(1) y-lag term. Implements Foroni, Marcellino & Schumacher (2015) §3 eq.
-  (7) and eq. (20); lag order selection via BIC/AIC follows Marcellino &
-  Schumacher (2010). `n_lags_high` accepts an integer (fixed K), `"bic"`, or
-  `"aic"`. Params: `freq_ratio`, `n_lags_high`, `include_y_lag`, `random_state`.
-
-All four classes share the per-origin seed contract (`random_state = base_seed
-+ origin_position`) from #279. The L3 MIDAS feature-engineering ops (`midas`,
-`u_midas`) are unchanged.
-
-### Changed — Cycle 48 (2026-05-21)
-
-- `macroforecast/core/ops/l4_ops.py`: `OPERATIONAL_MODEL_FAMILIES` gains 4
-  entries; `FUTURE_MODEL_FAMILIES` reduced from 5 entries to 1 (`realized_garch`
-  only). `MODEL_FAMILY_STATUS` dict updates automatically.
-- `macroforecast/core/runtime.py`: Added 4 dispatch branches in `_build_l4_model`
-  and 4 private model classes (`_MidasAlmonModel`, `_MidasBetaModel`,
-  `_MidasStepModel`, `_UnrestrictedMidasModel`). Two-attribute design
-  (`_w_hat_effective` + zero-padded `_w_hat`) satisfies both the PI-7 invariant
-  and the `n_lags_high != X.shape[1]` edge case.
-
-### Added -- Cycle 47 (2026-05-21) -- L3 Feature Selection Honesty Pass
-
-Five L3 feature-selection ops promoted from `status="future"` to
-`status="operational"`. Each implements the published procedure exactly;
-no approximations are accepted under the `operational` label.
-
-- `boruta_selection` promoted to operational. Implements Kursa & Rudnicki
-  (2010) Algorithm 1 (Journal of Statistical Software 36(11)): shadow-feature
-  permutation test in which each original feature's importance is compared
-  against the maximum importance of randomly permuted shadow copies (MISA) in
-  each iteration; Bonferroni-corrected two-sided binomial test decides
-  acceptance or rejection per feature. Pure NumPy + sklearn
-  `RandomForestRegressor`. Optional `boruta` package not required.
-
-- `recursive_feature_elimination` promoted to operational. Implements Guyon,
-  Weston, Barnhill & Vapnik (2002) RFE procedure (Machine Learning 46,
-  Section 4): recursive backward elimination in which the feature with the
-  smallest squared coefficient magnitude is removed per step, with optional
-  cross-validation for automatic `n_features_to_select` selection (RFECV
-  extension). Base estimators: `ridge` (default), `lasso`, or `svr_linear`
-  (sklearn `RFE` / `RFECV` wrappers).
-
-- `lasso_path_selection` promoted to operational. Implements the LARS path
-  entry-order selector from Efron, Hastie, Johnstone & Tibshirani (2004)
-  (Annals of Statistics 32(2), LARS Algorithm 1): selects the first
-  `n_features_to_select` features to enter the LARS active set as the
-  regularization parameter decreases from infinity. This op is distinct from
-  the existing `feature_selection(method="lasso")`, which ranks features by
-  LassoCV coefficient magnitude at convergence. Implemented via sklearn
-  `lars_path` with `method="lasso"`.
-
-- `stability_selection` promoted to operational. Implements Meinshausen &
-  Bühlmann (2010) Section 2 algorithm (JRSS-B 72(4)): lasso or elastic-net
-  is fitted on `n_subsamples` random subsamples of fraction
-  `subsample_fraction`; features retained where empirical selection
-  probability exceeds threshold `pi_thr`. Default parameters follow the paper:
-  `n_subsamples=100`, `subsample_fraction=0.5`, `pi_thr=0.6`.
-
-- `genetic_algorithm_selection` promoted to operational. Implements the
-  canonical binary-chromosome genetic algorithm from Goldberg (1989) (Genetic
-  Algorithms in Search, Optimization, and Machine Learning, Addison-Wesley,
-  Chapters 1-3): population of binary feature masks evolved by tournament
-  selection, single-point crossover, bit-flip mutation at rate 1/N, and
-  elitism; fitness is cross-validated negative MSE. Pure NumPy; no `deap`
-  dependency required.
-
-### Changed -- Cycle 47
-
-- `macroforecast/core/ops/l3_ops.py`: removed `_future_selection_op` closure
-  factory and the 5-name `for` loop (pre-C47 lines 658-699); replaced with
-  5 separate `@register_op(status="operational")` decorated functions, one per
-  op, each with its own `params_schema` and `hard_rules`.
-
-- `macroforecast/core/ops/l7_ops.py`: removed `boruta_selection`,
-  `recursive_feature_elimination`, `lasso_path_selection`, and
-  `stability_selection` from the `FUTURE_OPS` tuple. These four ops are L3
-  feature-selection ops and must not gain L7 scope via the tail registration
-  loop. `genetic_algorithm_selection` was never in `FUTURE_OPS` and required
-  no change.
-
-- `macroforecast/core/runtime.py`: added 5 dispatch branches in
-  `_execute_l3_op` and 5 private helper functions (`_boruta_selection`,
-  `_recursive_feature_elimination`, `_lasso_path_selection`,
-  `_stability_selection`, `_genetic_algorithm_selection`) after
-  `_feature_selection`. All helpers follow the #215/#279 seed-propagation
-  contract and produce bit-exact replicable output.
-
-- L3 operational op count increases from >= 32 to >= 37. L7 future-op count
-  drops from >= 6 to >= 2 (`lstm_hidden_state`, `generalized_irf`).
-
-- `tests/layers/test_l7.py`: `test_l7_boruta_selection_rejected_as_future`
-  renamed to `test_l7_boruta_selection_not_in_l7_scope` (now asserts boruta
-  absent from L7 scope entirely); `test_l7_future_ops_includes_design_remainder`
-  threshold updated from `>= 6` to `>= 2`.
-
-- `tests/layers/test_l3.py`: `test_l3_future_op_rejected_boruta` renamed to
-  `test_l3_boruta_selection_accepted_as_operational`; `test_l3_op_count_6_future`
-  renamed to `test_l3_op_count_future` with threshold updated from `>= 6` to
-  `>= 3`.
-
-### Cycle 45 -- Test stabilization (15 pytest failures resolved)
-
-**Production bug fix:**
-
-- `macroforecast/core/runtime.py` (`materialize_l2`): Deferred L2
-  `_apply_frame_edge` truncation to per-origin L3 closure when
-  `imputation_temporal_rule=expanding_window_per_origin` and
-  `frame_edge_policy` is a NaN-dropping policy (`truncate_to_balanced` or
-  `drop_unbalanced_series`). Previously, `_apply_frame_edge` ran
-  unconditionally before per-origin imputation, silently dropping rows that
-  contained NaN cells which would have been filled by the deferred imputation
-  step. This caused 46% row loss on the realistic test fixture (48 monthly
-  obs truncated to 22), leaving too few aligned observations for L4
-  (`min_train_size` not satisfied). The deferred frame_edge is now applied
-  inside `_per_origin_callable` in `materialize_l3_minimal`, after per-origin
-  imputation, so NaN-dropping operates on already-imputed data. Policies
-  `keep_unbalanced` and `zero_fill_leading` are unaffected (no NaN dependency,
-  run at L2 bulk level as before). Restores data retention parity with
-  single-origin pipelines (closes 5 test failures #8-#12).
-
-**Scaffold fix:**
-
-- `macroforecast/scaffold/option_docs/diagnostics.py` (`_register_l3_5`):
-  Added `"none"` entry to `SV_DOCS` for `selection_view`. The `none` option
-  was added in Cycle 14 (L1-4 fix) to disable selection diagnostics without
-  raising an error, but the OptionDoc completeness test requires every valid
-  operational option to have a Tier-1 entry. No schema or runtime behavior
-  changed (closes 1 test failure #14).
-
-**Test corrections (stale tests from F-P1 deferral):**
-
-- `tests/core/test_runtime_l1_l2.py`: Added
-  `imputation_temporal_rule: block_recompute` to three tests
-  (`test_execute_l1_l2_materializes_inline_custom_panel`,
-  `test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells`,
-  `test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics`) to restore
-  bulk-L2 outlier/imputation code paths exercised before the F-P1 per-origin
-  deferral change was introduced (closes 3 test failures #1-#3).
-- `tests/core/test_v01_dimensions.py`: Added
-  `imputation_temporal_rule: block_recompute` to two tests
-  (`test_dim2_l2_winsorize_and_zscore_outlier_paths`,
-  `test_dim2_l2_em_factor_imputation_runs`) for the same reason (closes 2
-  test failures #4-#5).
-- `tests/core/test_v03_features.py`: Replaced `"decision_at_5pct"` with
-  `"decision"` in the `issubset` key check for the DMP multi-horizon test.
-  The canonical key was renamed in Cycle 15 M-3; `.keys()` only exposes the
-  new canonical key while `__getitem__` still supports the deprecated alias
-  (closes 1 test failure #13).
-
-**Environment skip gate:**
-
-- `tests/core/test_paper_helpers_e2e.py`
-  (`test_paper_09_hemisphere_neural_network`): Added
-  `pytest.importorskip("torch", ...)` at function entry so the test is skipped
-  rather than errored in CI environments that install `[ci]` extras only
-  (which excludes the `[deep]` extra / torch) (closes 1 test failure #15).
-
-### Cycle 46 -- CI hotfix: gate t73 behind `slow` marker; raise subprocess timeout
-
-- `tests/core/test_stages.py` (`test_t73_no_existing_test_failures`): tagged
-  `@pytest.mark.slow`; subprocess `timeout` raised from 600 s to 1800 s to
-  accommodate the heavier suite restored by the Cycle 45 L2 frame_edge fix.
-- `.github/workflows/ci-core.yml`: marker filter updated from `not deep` to
-  `not deep and not slow` so ci-core skips t73.
-- `.github/workflows/ci-deep.yml`: marker filter updated from `deep` to
-  `deep or slow` so the nightly ci-deep job exercises t73 with the new timeout.
-- `docs/install.md`: updated four pip install URL tags from `@v0.9.0` to
-  `@v0.9.2b1` (lines 27, 73, 83, 92). The `Check docs do not advertise stale
-  tag` CI step was unmasked by the t73 fix; this resolves that failure.
-
-### Cycle 44 -- CI stabilization (mypy green + sphinx stale-check removal)
-
-**mypy fixes (26 errors resolved, 4 deferred):**
-
-- `macroforecast/functions/misc.py`: Renamed pre-consolidation dataclasses
-  (`SVRLinearFitResult`, `SVRRBFFitResult`, `SVRPolyFitResult`) to private
-  `_SVRLinearFitResultV0` / `_SVRRBFFitResultV0` / `_SVRPolyFitResultV0`; re-
-  declared the public names as `TypeAlias = SVRFitResult` (Fix 1). Resolves 9
-  mypy errors (`[misc]` x 3, `[assignment]` x 3, `[return-value]` x 3).
-- `macroforecast/core/execution.py`: Added `dict[str, Any]` annotation to
-  `_raw_meta` local variable (Fix 2). Resolves 1 `[var-annotated]` error.
-- `macroforecast/functions/timeseries.py`: Same TypeAlias pattern as Fix 1 for
-  GARCH family (`GARCH11FitResult`, `EGARCHFitResult`, `RealizedGARCHFitResult`
-  -> `GARCHFitResult`). Resolves 9 errors (Fix 4).
-- `macroforecast/functions/transforms.py`: Added `np.ndarray` annotation on
-  `trend` local variable in `time_trend_transform` (Fix 5). Resolves 1 error.
-- `macroforecast/functions/tests.py`: Added `pvalue: float | None` bare
-  annotation before the `if/else` narrowing block in `cw_test`,
-  `enc_new_test`, and `enc_t_test` (Fix 6). Resolves 3 `[assignment]` errors.
-- `macroforecast/core/ops/l3_ops.py`: Widened `_positive_param` `default`
-  parameter from `int` to `int | str` (Fix 7). Resolves 1 `[arg-type]` error.
-- `macroforecast/core/layer_specs.py`: Added `TYPE_CHECKING` guard import of
-  `ParameterDoc` from `macroforecast.scaffold.option_docs.types` (Fix 8).
-  Resolves 1 `[name-defined]` error.
-- `macroforecast/recipes/paper_methods.py`: Replaced `key=q_mse.get` with
-  `key=lambda q: q_mse[q]` in `min()` call (Fix 9). Resolves 1 `[arg-type]`
-  error.
-
-**spec_v3 additions (4 remaining issues closed, full CI green):**
-- `tests/wizard/conftest.py`: Created new conftest with `pytest.importorskip("solara")`
-  so the wizard test suite is skipped (not errored) when the `[wizard]` extra is absent
-  from the CI environment (Fix 10). Resolves pytest collection error.
-- `macroforecast/core/runtime.py`: Widened `_adaptive_ma_rf` parameter from
-  `random_state: int` to `random_state: int | None` (Fix 11). Resolves 1
-  `[arg-type]` error at `transforms.py:1138`.
-- `macroforecast/scaffold/option_docs/l1.py`: Added `tuple[OptionDoc, ...]`
-  annotation on `_L1D_PRED_GEO`, `_L1D_STATE_SEL`, and `_L1D_VAR_SEL` initial
-  declarations (Fix 12). Resolves 3 `[assignment]` errors caused by tuple
-  rebinding losing the fixed-length inferred type.
-
-**Total mypy errors resolved: 30 → 0. pytest collection: error → skipped.**
-
-**Sphinx fix:**
-- `.github/workflows/ci-docs.yml`: Removed two stale "Check navigator app
-  assets exist" CI steps (Fix 3). The `navigator_app` assets were removed in
-  commit `09c79e11`; `docs/conf.py` already reflects `html_extra_path = []`.
-
-### Cycle 43 Phase B-tooling — Automation scaffolding for encyclopedia alignment (2026-05-21)
-
-#### Added
-
-- `tools/gen_encyclopedia_docs.py`: introspection-based generator for
-  `docs/encyclopedia/` per-op pages. Enumerates all registered ops via
-  `list_ops()` (L3, L7, half-layers), virtual ops for L2 (axis-value names),
-  L4 model families, L5 metric ops, and L6 test ops. Writes one `.md` file per
-  op with function signature, parameters table, return type, behavior, recipe
-  context, references, and related-ops sections — all derived from
-  `inspect.signature` and the op registry. Idempotent (byte-identical re-run
-  with `--review-date`). Supports `--dry-run`, `--diff-against`, `--force`.
-
-- `tools/audit_docs_vs_code.py`: bidirectional drift detector for `.md` files.
-  Extracts six token classes (standalone_callable, result_type, version_string,
-  yaml_recipe_key, dotted_import_path, result_attribute) and resolves each
-  against the live codebase. Emits a JSON report with per-token
-  (file, line, token, verdict, evidence). Achieves 0% false-positive rate on
-  `docs/standalone_functions/` (cycle-41 aligned surface, 302 tokens, 302
-  PASS). Supports `--fail-on-drift` for CI gating. No third-party deps beyond
-  `macroforecast`.
-
-- `tests/tools/__init__.py`, `tests/tools/test_gen_encyclopedia.py`,
-  `tests/tools/test_audit_docs.py`: 10 smoke tests (5 per tool) covering
-  `--help`, dry-run, idempotency, op count baseline (L3 = 36), clean/drift
-  fixture verdicts, JSON report schema, and integration false-positive rate.
-
-- `pyproject.toml`: registered `integration` pytest mark for the live
-  false-positive-rate test.
-
-### Cycle 42 Phase A — Foundational docs alignment (2026-05-20)
-
-#### Changed
-
-- `ARCHITECTURE.md` (root): complete rewrite replacing the stale Cycle-17
-  `scaffold/option_docs` Mermaid diagram with the current 12-layer L0–L8
-  DAG architecture. New content documents the top-level module layout, the
-  12-layer canonical design table (L0–L8 + L1.5/L2.5/L3.5/L4.5), the
-  2-paradigm model (recipe DSL vs standalone callables), the core runtime
-  module map, and the standalone function counts per layer. All module
-  paths and callable counts are introspection-verified.
-
-- `README.md` (root): five targeted fixes — version callout and GitHub
-  install URL updated from v0.9.0 to v0.9.2b1; `permutation_importance`
-  example made live (was commented out as "planned for post-Cycle-22
-  expansion"; operational since Cycle 38); `runtime_support` link
-  corrected from `docs/getting_started/` to `docs/recipe_api/`; citation
-  version updated from v0.6.0 to v0.9.2b1.
-
-- `docs/architecture/foundation.md`: removed stale "Registry Migration Plan"
-  and "Capability Counts" sections (described a transition to
-  `macroforecast.core` that completed before v0.9.x). Replaced with a brief
-  note that `macroforecast.core` is the live source of truth.
-
-- `docs/architecture/reproducibility.md`: expanded 17-line stub to current
-  reproducibility contract. Documents `ManifestExecutionResult.cells`,
-  `CellExecutionResult.sink_hashes`, `ReplicationResult.sink_hashes_match`,
-  seed propagation via `seeded_reproducible` + `random_seed`, and
-  `Experiment.to_yaml()`. All attribute names confirmed by dataclass
-  introspection.
-
-- `docs/architecture/layer1/index.md`: artifact name
-  `layer1_official_frame_v1` → `l1_data_definition_v1` (canonical key per
-  `core/runtime.py`).
-
-- `docs/architecture/layer2/index.md`: artifact name
-  `layer2_representation_v1` → `l2_clean_panel_v1` (canonical key per
-  `core/runtime.py`).
-
-- YAML key `1_data_task` → `1_data` in 7 architecture sub-docs:
-  `docs/architecture/layer0/study_scope.md`,
-  `docs/architecture/layer1/source_frame.md`,
-  `docs/architecture/layer1/availability_timing.md`,
-  `docs/architecture/layer1/target_universe.md`,
-  `docs/architecture/layer1/fred_sd_source_selection.md`,
-  `docs/architecture/layer1/official_transforms.md`,
-  `docs/architecture/layer1/frame_availability.md`.
-
 
 ## [0.9.2b1] -- 2026-05-20 -- "introspection-based docs catalog + holiday pandas 2.x fix"
 

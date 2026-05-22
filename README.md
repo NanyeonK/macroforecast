@@ -26,7 +26,7 @@ pip install 'macroforecast[shap]'            # + shap package for richer L7 figu
 Or pin to a tagged release directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.2b1"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.2b2"
 ```
 
 For development:
