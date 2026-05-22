@@ -3,6 +3,25 @@
 Notable changes since the v0.0.0 schema reset. See ``CLAUDE.md`` for the
 full per-version honesty-pass history embedded in repo documentation.
 
+## [Unreleased] — Cycle 54
+
+### C54 — Explanation tier + reference cleanup + tutorial CI smoke test
+
+- `docs/explanation/12_layer_design.md`: new conceptual page — why 12 layers, per-layer purpose, inter-layer contracts, Mermaid diagram.
+- `docs/explanation/bit_exact_replicate.md`: new conceptual page — seed propagation, sink hashes, bit-exact guarantee, and what can break it.
+- `docs/explanation/honesty_pass.md`: new conceptual page — operational/future vocabulary rationale, v0.1/v0.25/v0.3/v0.9.3 honesty-pass history, no-proxy policy.
+- `docs/explanation/recipe_to_run.md`: new conceptual page — YAML to DAG to cell loop to manifest pipeline.
+- `docs/explanation/index.md`: updated with toctree for all four pages.
+- `docs/reference/index.md`: updated card layout; encyclopedia moved to visible toctree; API links point to new umbrella index.
+- `docs/reference/api/index.md`: new umbrella index for API sub-tier (standalone_functions + navigator).
+- `docs/reference/encyclopedia/index.md`: added auto-gen clarity sentence.
+- `docs/index.md`: removed "Expanding in C54" placeholder; all four tiers now have substantive content.
+- `tests/docs/test_tutorial_smoke.py`: new CI smoke test — extracts Python blocks from tutorials 01, 02, 03 and executes them in subprocess. Closes C53 reviewer note 1.
+- Sphinx `-W` build passes.
+- Docs overhaul complete (C52 structure + C53 tutorial/how-to + C54 explanation/reference).
+
+---
+
 ## [Unreleased] — Cycle 53
 
 ### C53 — Tutorial + how-to content overhaul
