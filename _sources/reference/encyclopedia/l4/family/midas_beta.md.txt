@@ -57,6 +57,8 @@ The two-attribute design (``_w_hat`` zero-padded to ``n_lags_high``; ``_w_hat_ef
 
 **When to use**
 
+**Optimization method**: NLS (Nelder-Mead with multi-start over Beta kernel weights)
+
 Parsimonious mixed-frequency forecasting -- only 2 shape parameters regardless of K. Suitable when T is small relative to K, making the Almon polynomial over-parameterized.
 
 **When NOT to use**

@@ -462,7 +462,10 @@ places after rounding) or <em>method-equivalent</em> (same algorithm applied by 
 different implementation). Results-equivalence allows for floating-point
 accumulation differences and silent changes in default parameters.
 Method-equivalence allows for entirely different code paths that happen to
-produce similar numbers. Bit-exactness allows neither.</p>
+produce similar numbers. Bit-exactness allows neither. For the specific
+conditions that can break this guarantee — version drift, BLAS differences,
+and unmanaged randomness in custom callables — see the
+<a class="reference internal" href="#what-can-break-the-guarantee">What Can Break the Guarantee</a> section below.</p>
 <p>The choice of SHA-256 per artifact — rather than a single aggregate checksum
 of the output directory — is deliberate. A single changed byte in a forecast
 CSV propagates to a hash mismatch on that file alone, making the source of

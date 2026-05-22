@@ -61,6 +61,8 @@ Two weight attributes are maintained: ``_w_hat`` (length ``n_lags_high``, zero-p
 
 **When to use**
 
+**Optimization method**: NLS (Nelder-Mead with multi-start over Almon polynomial weights)
+
 Mixed-frequency macro forecasting where monthly or weekly predictors inform a quarterly target. Parsimonious alternative to U-MIDAS when K is large relative to T.
 
 **When NOT to use**

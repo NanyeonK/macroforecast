@@ -53,6 +53,8 @@ OLS via ``numpy.linalg.lstsq(rcond=None)``. No stochastic step; ``random_state``
 
 **When to use**
 
+**Optimization method**: OLS (unrestricted U-MIDAS, closed-form)
+
 Flexible mixed-frequency benchmark when T is large relative to K. BIC/AIC lag selection avoids manual K tuning. Pairs well with upstream L3 ``u_midas`` for feature preprocessing.
 
 **When NOT to use**

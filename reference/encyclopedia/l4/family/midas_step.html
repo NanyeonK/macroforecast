@@ -521,6 +521,7 @@ Standalone callable: <code class="docutils literal notranslate"><span class="pre
 <p>No stochastic initialization (OLS is deterministic). Closed-form via <code class="docutils literal notranslate"><span class="pre">numpy.linalg.lstsq(rcond=None)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">params.n_steps</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">freq_ratio</span></code> (one group per HF sub-period). <code class="docutils literal notranslate"><span class="pre">params.freq_ratio</span> <span class="pre">=</span> <span class="pre">1</span></code> treats X columns as a flat lag sequence grouped by position index.</p>
 <p><strong>When to use</strong></p>
+<p><strong>Optimization method</strong>: OLS (closed-form <code class="docutils literal notranslate"><span class="pre">numpy.linalg.lstsq</span></code>, no NLS)</p>
 <p>Fast, interpretable mixed-frequency baseline. Useful when K is large and only the coarse lag structure matters. No NLS overhead.</p>
 <p><strong>When NOT to use</strong></p>
 <p>When the lag weight profile is smooth (use <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code> or <code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>) or when the fully-flexible U-MIDAS parameterization is affordable (use <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>).</p>
