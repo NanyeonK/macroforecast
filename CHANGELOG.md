@@ -5,6 +5,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### C58 — Release Pipeline Manual Gate + Encyclopedia Drift Detection
+
+- **changed**: `.github/workflows/release.yml` trigger changed from `push.tags` to `workflow_dispatch` (manual only). PyPI publish no longer auto-fires on tag push; the operator must open the GitHub Actions UI, enter the version string, and click "Run workflow". This closes the release-governance P0 finding from the Codex external cross-review (run `2026-05-22-external-cross-review`): accidental tag pushes can no longer trigger an irreversible PyPI publish.
+- **added**: `tests/scaffold/test_encyclopedia_op_coverage.py` — drift CI gate that fails when an operational op (L3/L4/L7) is registered as operational with `op_page=True` in its OptionDoc but has no corresponding encyclopedia page on disk. Covers 42 L3 ops, 43 L4 families, 10 L7 ops (95 parametrized items total on HEAD post-C57). Failure message names the missing page and the opt-out mechanism (`op_page=False`).
+- **added**: `tests/scaffold/test_drift_gate_meta.py` — negative test (Scenario B6 from test-spec) verifying the gate fires correctly: injects a fake op whose page does not exist, asserts `pytest.fail` is raised, and verifies the failure message contains the op name, the string "encyclopedia page", and a path reference.
+- **source**: Codex external cross-review P0 (release governance) + both reviewers (docs drift); addressed in Round 2 Cycle 3 of 6.
+
 ### C57 — Runtime↔Tutorial 03 Contract Sync + 2 Missing Encyclopedia Pages
 
 - **fix**: `_CustomModelAdapter.predict()` context dict now includes `target` (str, target series name) and `horizon` (int, forecast horizon) as documented by Tutorial 03 and `custom_model_contract_metadata()`. Existing keys (`contract_version`, `model_name`, `feature_names`, `params`) are unchanged. Users who access `context["target"]` or `context["horizon"]` in custom model functions no longer get `KeyError`.
