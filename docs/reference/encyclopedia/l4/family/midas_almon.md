@@ -59,6 +59,8 @@ Multi-start NLS uses ``params.n_starts`` restarts (default 5): start 0 is canoni
 
 Two weight attributes are maintained: ``_w_hat`` (length ``n_lags_high``, zero-padded when ``K_eff < n_lags_high``) for external inspection; ``_w_hat_effective`` (length ``K_eff``) for internal predict matmul. This resolves the ``n_lags_high != X.shape[1]`` edge case at ``freq_ratio = 1``.
 
+**Optimization method**: NLS (Almon polynomial weights, multi-start)
+
 **When to use**
 
 Mixed-frequency macro forecasting where monthly or weekly predictors inform a quarterly target. Parsimonious alternative to U-MIDAS when K is large relative to T.
