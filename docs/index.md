@@ -37,7 +37,7 @@ architecture design, and the encyclopedia.
 :link-type: doc
 
 Background reading — design rationale, cross-layer contracts, and
-conceptual guides. *(Expanding in C54.)*
+conceptual guides.
 :::
 
 ::::

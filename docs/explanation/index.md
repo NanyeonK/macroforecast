@@ -1,7 +1,15 @@
 # Explanation
 
-Conceptual background and design rationale for macroforecast.
+These pages explain the design rationale and architectural decisions behind
+macroforecast. They answer the question "why is it built this way?" rather
+than "how do I use it?". Read them to build a mental model before working
+with complex recipes or extending the package.
 
-This section is under development (expanding in Cycle 54). In the
-interim, the [Architecture](../reference/architecture/index.md)
-pages provide the design narrative.
+```{toctree}
+:maxdepth: 1
+
+12_layer_design
+bit_exact_replicate
+honesty_pass
+recipe_to_run
+```
