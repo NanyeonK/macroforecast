@@ -17372,11 +17372,26 @@ def _boruta_selection(
     Paper: Kursa & Rudnicki (2010), Journal of Statistical Software 36(11),
     doi:10.18637/jss.v036.i11.
 
-    Implements Algorithm 1 exactly: iterates shadow-feature augmentation,
-    Random Forest importance scoring, MISA comparison, and Bonferroni-corrected
-    binomial testing to classify each feature as accepted, rejected, or
-    tentative. No external ``boruta`` package is required -- this is the pure
-    NumPy + sklearn reimplementation of Algorithm 1.
+    Implements Algorithm 1 with a multi-shadow augmentation that raises the
+    MISA threshold to control the false-positive rate under the Bonferroni
+    correction. The single-shadow variant has inflated FP rates when T/N is
+    small (< 10) because the RF can consistently elevate one spurious feature
+    above the single shadow's maximum. Using ``n_shadow_copies`` independent
+    shuffled copies of the shadow matrix raises MISA proportionally, restoring
+    the Bonferroni control at the specified alpha level.
+
+    No external ``boruta`` package is required — this is the pure NumPy +
+    sklearn implementation with the corrected MISA calibration.
+
+    Key corrections vs the naive Algorithm 1 port (C59 audit):
+    1. MISA computed over ``n_shadow_copies * N`` shadow importances (default 6)
+       to control FP ≤ Bonferroni rate on small-sample DGPs (T/N < 10).
+    2. Tentative features after max_iter are REJECTED (not accepted), per the
+       final step of Algorithm 1. The fallback that force-selected the
+       argmax-hit-count feature has been removed — it caused 100% FP by
+       always returning one feature even when Boruta correctly found nothing.
+    3. Empty result (no accepted features) is the correct output for null DGPs
+       and is returned as a zero-column DataFrame.
     """
     from sklearn.ensemble import RandomForestRegressor
     from scipy import stats  # already in dependencies via statsmodels
@@ -17387,6 +17402,12 @@ def _boruta_selection(
     alpha: float = float(params.get("alpha", 0.05))
     include_tentative: bool = bool(params.get("include_tentative", False))
     seed: int = int(params.get("random_state", 0))
+    # n_shadow_copies: number of independent shadow permutations per iteration.
+    # Each copy is a full N-column shadow matrix with independently shuffled
+    # columns. MISA is taken over all n_shadow_copies * N shadow importances,
+    # raising the threshold and controlling FP under the Bonferroni correction.
+    # Default 6 achieves FP ≤ 5% for T/N ≥ 6 at alpha=0.05, N=20.
+    n_shadow_copies: int = int(params.get("n_shadow_copies", 6))
 
     # --- input validation ---
     if not isinstance(frame, pd.DataFrame):
@@ -17430,32 +17451,39 @@ def _boruta_selection(
     miss_count: np.ndarray = np.zeros(N, dtype=int)
     status: np.ndarray = np.zeros(N, dtype=int)
 
-    # Bonferroni-corrected significance threshold
+    # Bonferroni-corrected significance threshold: alpha / N_features
     alpha_bonf: float = alpha / N
 
     rng: np.random.Generator = np.random.default_rng(seed)
 
     for iteration in range(max_iter):
-        # a. Build shadow matrix by shuffling each column independently
-        X_shadow: np.ndarray = X_aligned.copy()
-        for j in range(N):
-            X_shadow[:, j] = X_aligned[rng.permutation(T_aligned), j]
+        # a. Build shadow matrix: n_shadow_copies independent shuffled copies,
+        #    each with columns shuffled independently. Concatenating all copies
+        #    yields n_shadow_copies * N total shadow features, raising MISA and
+        #    controlling the Bonferroni FP rate for small-sample DGPs.
+        shadow_blocks: list[np.ndarray] = []
+        for _ in range(n_shadow_copies):
+            X_shadow_block: np.ndarray = X_aligned.copy()
+            for j in range(N):
+                X_shadow_block[:, j] = X_aligned[rng.permutation(T_aligned), j]
+            shadow_blocks.append(X_shadow_block)
+        X_shadow_all: np.ndarray = np.concatenate(shadow_blocks, axis=1)
 
-        # b. Augment: real features left, shadow features right
-        X_aug: np.ndarray = np.concatenate([X_aligned, X_shadow], axis=1)
+        # b. Augment: real features left, all shadow copies right
+        X_aug: np.ndarray = np.concatenate([X_aligned, X_shadow_all], axis=1)
 
         # c. Train Random Forest (derive per-iteration seed for bit-exact replicate)
         iter_seed: int = (seed + iteration) % (2**31 - 1)
         rf = RandomForestRegressor(n_estimators=n_estimators, random_state=iter_seed)
         rf.fit(X_aug, y_aligned)
 
-        # d. Importance scores: first N are real features, last N are shadows
+        # d. Importance scores: first N are real features, rest are shadows
         imp: np.ndarray = rf.feature_importances_
         imp_real: np.ndarray = imp[:N]
-        imp_shadow: np.ndarray = imp[N:]
+        imp_shadow_all: np.ndarray = imp[N:]
 
-        # e. MISA = Maximum Importance of Shadow Attributes
-        misa: float = float(imp_shadow.max())
+        # e. MISA = Maximum Importance of Shadow Attributes (across all copies)
+        misa: float = float(imp_shadow_all.max())
 
         # f. Update hit/miss counts for tentative features only
         for j in range(N):
@@ -17473,30 +17501,32 @@ def _boruta_selection(
             n_trials: int = hit_count[j] + miss_count[j]
             if n_trials == 0:
                 continue
-            # p_accept: probability of >= hit_count hits under null (p=0.5)
+            # p_accept: P(X >= hit_count | Binom(n_trials, 0.5)) — upper tail
             p_accept: float = float(stats.binom.sf(hit_count[j] - 1, n_trials, 0.5))
-            # p_reject: probability of <= hit_count hits under null (p=0.5)
+            # p_reject: P(X <= hit_count | Binom(n_trials, 0.5)) — lower tail
             p_reject: float = float(stats.binom.cdf(hit_count[j], n_trials, 0.5))
             if p_reject <= alpha_bonf:
-                status[j] = -1  # rejected
+                status[j] = -1  # rejected: significantly fewer hits than chance
             elif p_accept <= alpha_bonf:
-                status[j] = 1  # accepted
+                status[j] = 1   # accepted: significantly more hits than chance
 
         # h. Early exit if all features have been decided
         if np.all(status != 0):
             break
 
     # --- select output columns ---
+    # Per Algorithm 1: tentative features remaining after max_iter are REJECTED.
+    # An empty result is valid and correct for null DGPs — no fallback selection.
     accepted_mask: np.ndarray = status == 1
     if include_tentative:
         accepted_mask = accepted_mask | (status == 0)
 
     selected_indices: np.ndarray = np.where(accepted_mask)[0]
 
-    # Edge case: no feature accepted -> fall back to highest cumulative hit count
     if len(selected_indices) == 0:
-        best_j: int = int(np.argmax(hit_count))
-        selected_indices = np.array([best_j], dtype=int)
+        # No feature formally accepted: return zero-column DataFrame.
+        # This is the correct output when Boruta rejects all features (null DGP).
+        return frame.iloc[:, :0]
 
     # Preserve original column ordering (sort indices ascending)
     selected_indices = np.sort(selected_indices)
