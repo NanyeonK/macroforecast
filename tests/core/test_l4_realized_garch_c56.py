@@ -136,22 +136,24 @@ def _build_rg(random_state: int = 42):  # type: ignore[return]
 
 
 # ---------------------------------------------------------------------------
-# MRE-1 — Tightened Parameter Recovery at T=500 (primary)
+# MRE-1 — Tightened Parameter Recovery at T=2000 (primary, per C59 audit)
 # ---------------------------------------------------------------------------
 
 class TestMRE1TightenedTolerancesT500:
-    """MRE-1: Tightened parameter recovery test at T=500, seed=42.
+    """MRE-1: Tightened parameter recovery test at T=2000, seed=42.
 
     All tolerances are taken directly from test-spec.md §B (C59). They are
     recorded in the _MRE1_TOL dict above, and the audit.md records each
     tolerance used vs the test-spec.md specification.
 
-    Planner fallback: if T=500 fails, run T=2000. Both are in this class
-    as separate test methods; only one is expected to be activated.
+    T=2000 is required for asymptotic SE-based tolerances at MRE-1 P1 level
+    (per C59 audit). T=500 produces gamma error 0.101 > atol=0.07; T=2000
+    is the planner fallback confirmed by tester retry-1 (C59 cycle 59).
+    The class name is retained for backward compatibility with test collection.
     """
 
     SEED: int = 42
-    T_DEFAULT: int = 500
+    T_DEFAULT: int = 2000
 
     def _check_recovery(self, fitted_params: dict, T: int, seed: int) -> None:
         """Check each parameter against the tightened tolerances.
@@ -271,7 +273,11 @@ class TestMRE1TightenedTolerancesT500:
             )
 
     def test_mre1_tightened_t500_seed42(self) -> None:
-        """MRE-1 (primary): tightened tolerances at T=500, seed=42.
+        """MRE-1 (primary): tightened tolerances at T=2000, seed=42.
+
+        T=2000 required for asymptotic SE-based tolerances at MRE-1 P1 level
+        (per C59 audit). The tester confirmed T=500 fails (gamma error 0.101
+        > atol=0.07) while T=2000 passes. Spec adjustment, not a runtime bug.
 
         Tolerances used (from test-spec.md §B, unchanged):
           mu:     atol=0.02
