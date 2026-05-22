@@ -64,6 +64,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`census_region_south`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
 | [`census_region_west`](l1/axes/fred_sd_state_group.md) | L1 | `fred_sd_state_group` | operational |
 | [`chow_lin`](l2/axes/quarterly_to_monthly_rule.md) | L2 | `quarterly_to_monthly_rule` | operational |
+| [`chow_lin_disaggregation`](l3/axes/op.md) | L3 | `op` | operational |
 | [`clark_west`](l6/axes/nested_test.md) | L6 | `nested_test` | operational |
 | [`clean_panel`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`cleaned_vs_features`](l3_5/axes/comparison_stages.md) | L3.5 | `comparison_stages` | operational |

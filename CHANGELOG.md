@@ -5,6 +5,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### C57 — Runtime↔Tutorial 03 Contract Sync + 2 Missing Encyclopedia Pages
+
+- **fix**: `_CustomModelAdapter.predict()` context dict now includes `target` (str, target series name) and `horizon` (int, forecast horizon) as documented by Tutorial 03 and `custom_model_contract_metadata()`. Existing keys (`contract_version`, `model_name`, `feature_names`, `params`) are unchanged. Users who access `context["target"]` or `context["horizon"]` in custom model functions no longer get `KeyError`.
+- **docs**: Added encyclopedia page for `lstm_hidden_state` L7 op (`docs/reference/encyclopedia/l7/op/lstm_hidden_state.md`). Page was missing despite runtime support in `runtime.py` and `DEFAULT_FIGURE_MAPPING` entry in `l7_ops.py`. Fixed by adding `op_page=True` to `_LSTM_HIDDEN_STATE` OptionDoc.
+- **docs**: Added encyclopedia page for `chow_lin_disaggregation` L3 op (`docs/reference/encyclopedia/l3/op/chow_lin_disaggregation.md`). Page was missing despite operational registration in `l3_ops.py`. Added `_OP_CHOW_LIN_DISAGGREGATION` OptionDoc and updated `layer_scope` to `("l2", "l3")`.
+- **test**: New `tests/core/test_l4_custom_model_c57.py` with 4 tests covering context key presence and Tutorial 03 code patterns.
+
 ### Breaking Changes
 
 - **C56 — `_RealizedGARCHModel.fit()` convergence failure now raises `RuntimeError`

@@ -934,7 +934,7 @@ def asymmetric_trim(inputs, params):
 
 @register_op(
     name="chow_lin_disaggregation",
-    layer_scope=("l2",),
+    layer_scope=("l2", "l3"),
     input_types={"default": Panel},
     output_type=Panel,
     status="operational",

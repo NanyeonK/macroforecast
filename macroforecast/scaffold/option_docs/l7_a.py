@@ -1148,6 +1148,7 @@ _LSTM_HIDDEN_STATE = _o(
         _REF_KARPATHY_2015,
     ),
     related=("attention_weights", "shap_deep", "gradient_shap", "integrated_gradients"),
+    op_page=True,
 )
 
 
