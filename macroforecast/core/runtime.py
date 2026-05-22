@@ -3392,9 +3392,9 @@ def _build_l4_model(family: str, params: dict[str, Any]):
             mean_model=str(params.get("mean_model", "constant")),
             dist=str(params.get("dist", "normal")),
             max_iter=int(params.get("max_iter", 2000)),
-            n_starts=int(params.get("n_starts", 3)),
+            n_starts=int(params.get("n_starts", 8)),
             random_state=seed,
-            realized_variance=params.get("realized_variance"),
+            realized_variance=params.get("realized_measure_col") or params.get("realized_variance"),
         )
     if family == "realized_garch_with_rv_exog":
         # Phase C-3 audit-fix (M9): honest rename. The runtime feeds
@@ -8556,7 +8556,8 @@ class _RealizedGARCHModel:
         u_t ~ N(0, sigma_u^2)
 
     Joint log-likelihood minimized via scipy L-BFGS-B with multi-start
-    perturbations seeded from ``random_state + start_index``.
+    perturbations seeded from ``random_state + start_index``. phi is bounded to
+    (0, 1] to prevent weak-identification drift in small samples.
 
     Parameters
     ----------
@@ -8567,7 +8568,9 @@ class _RealizedGARCHModel:
     max_iter : int
         Maximum iterations for scipy L-BFGS-B. Default 2000.
     n_starts : int
-        Multi-start restarts to escape local optima. Default 3.
+        Multi-start restarts to escape local optima. Default 8. Starts 1..n-1
+        use escalating perturbation scales (0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4)
+        to provide broad coverage and escape weak-identification local basins.
     random_state : int
         Seed for RNG used in multi-start perturbation. Default 0.
     realized_variance : str or None
@@ -8591,15 +8594,40 @@ class _RealizedGARCHModel:
         "log_sigma_u",
     )
 
+    # L-BFGS-B parameter bounds corresponding to _PARAM_NAMES (11 entries).
+    # References: Hansen, Huang & Shek (2012) §3 parameter constraints.
+    #   - beta in (0, 1): log-variance stationarity requires 0 < beta < 1.
+    #   - phi in (0, 1]: measurement loading must be strictly positive. The upper
+    #     bound of 1.0 enforces the economic constraint that log(x_t) tracks
+    #     log(h_t) with a coefficient no greater than unity; unconstrained phi can
+    #     drift above 1.0 in small samples due to weak joint identification of
+    #     (xi, phi) in the measurement equation, leading to biased estimates.
+    #   - log_sigma_u in [-30, 5]: sigma_u in [9.4e-14, 148], prevents
+    #     numerical overflow/underflow in the likelihood computation.
+    _BOUNDS: list[tuple[float | None, float | None]] = [
+        (None,   None),          # mu         — unrestricted
+        (None,   None),          # omega      — unrestricted
+        (1e-6,   1.0 - 1e-6),   # beta       — strict stationarity (0, 1)
+        (None,   None),          # tau_1      — unrestricted
+        (None,   None),          # tau_2      — unrestricted
+        (None,   None),          # gamma      — unrestricted
+        (None,   None),          # xi         — unrestricted
+        (1e-6,   1.0),           # phi        — measurement loading in (0, 1]
+        (None,   None),          # delta_1    — unrestricted
+        (None,   None),          # delta_2    — unrestricted
+        (-30.0,  5.0),           # log_sigma_u — clip range [-30, 5]
+    ]
+
     def __init__(
         self,
         *,
         mean_model: str = "constant",
         dist: str = "normal",
         max_iter: int = 2000,
-        n_starts: int = 3,
+        n_starts: int = 8,
         random_state: int = 0,
         realized_variance: str | None = None,
+        realized_measure_col: str | None = None,
     ) -> None:
         if mean_model != "constant":
             raise ValueError(
@@ -8616,7 +8644,9 @@ class _RealizedGARCHModel:
         self.max_iter = max_iter
         self.n_starts = n_starts
         self.random_state = random_state
-        self.realized_variance_col = realized_variance
+        # realized_measure_col is an alias for realized_variance; if both are
+        # provided, realized_measure_col takes precedence (more specific name).
+        self.realized_variance_col = realized_measure_col if realized_measure_col is not None else realized_variance
         # Post-fit attributes (None until fit() is called)
         self._params: dict[str, float] | None = None
         self._h: np.ndarray | None = None
@@ -8628,6 +8658,11 @@ class _RealizedGARCHModel:
         self._last_u: float = 0.0
         self._r: np.ndarray | None = None
         self._x: np.ndarray | None = None
+        # Convergence diagnostics (set by fit(); sentinels indicate pre-fit state)
+        self._converged: bool = False
+        self._n_starts_succeeded: int = 0
+        self._best_neg_log_lik: float = float("inf")
+        self._initial_neg_log_lik: float = float("inf")
 
     # ------------------------------------------------------------------
     # Internal: forward recursion and negative log-likelihood
@@ -8723,7 +8758,7 @@ class _RealizedGARCHModel:
 
         Returns the negative sum (for minimization).
         """
-        log_sigma_u = float(np.clip(theta[10], -10.0, 10.0))
+        log_sigma_u = float(np.clip(theta[10], -30.0, 5.0))
         sigma_u = float(np.exp(log_sigma_u))
         sigma_u2 = sigma_u ** 2
 
@@ -8812,18 +8847,25 @@ class _RealizedGARCHModel:
             _math.log(0.1),         # log_sigma_u: log of measurement noise std
         ], dtype=float)
 
+        # Compute NLL at canonical starting point (for likelihood improvement check).
+        initial_nll = float(_RealizedGARCHModel._neg_log_lik(theta0, r_arr, x_arr))
+
         # --- Multi-start optimization ---
         best_theta: np.ndarray | None = None
-        best_obj = float("inf")
+        best_obj: float = float("inf")
+        n_starts_succeeded: int = 0
+        last_exc: Exception | None = None
 
         for start_idx in range(max(1, int(self.n_starts))):
             if start_idx == 0:
-                # Canonical initialization.
+                # Canonical initialization — unperturbed.
                 x0 = theta0.copy()
             else:
-                # Perturb the canonical theta by N(0, 0.05) noise.
+                # Escalating perturbation scale to escape weak-identification basins.
+                # scale for start_idx 1..7: 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4
+                scale = 0.1 + 0.1 * ((start_idx - 1) // 2)
                 rng = np.random.default_rng(self.random_state + start_idx)
-                x0 = theta0 + rng.normal(0.0, 0.05, size=len(theta0))
+                x0 = theta0 + rng.standard_normal(len(theta0)) * scale
                 # Clip beta to [0, 0.999] after perturbation to avoid unit-root start.
                 x0[2] = float(np.clip(x0[2], 0.0, 0.999))
 
@@ -8833,27 +8875,41 @@ class _RealizedGARCHModel:
                     x0=x0,
                     args=(r_arr, x_arr),
                     method="L-BFGS-B",
+                    bounds=_RealizedGARCHModel._BOUNDS,
                     options={"maxiter": int(self.max_iter), "ftol": 1e-9, "gtol": 1e-6},
                 )
                 if np.isfinite(result.fun) and result.fun < best_obj:
                     best_obj = float(result.fun)
                     best_theta = np.asarray(result.x, dtype=float)
-            except Exception:
-                # If a start fails (e.g. numerical overflow), skip it.
+                # Track succeeded starts regardless of whether this was the best.
+                if result.success:
+                    n_starts_succeeded += 1
+            except Exception as exc:
+                # If a start fails (e.g. numerical overflow), record and skip.
+                last_exc = exc
                 continue
 
         if best_theta is None:
-            # All starts failed; fall back to the canonical initial values as
-            # a last resort (no guarantee of convergence).
-            best_theta = theta0.copy()
+            n_starts = max(1, int(self.n_starts))
+            last_err_msg = (
+                str(last_exc) if last_exc is not None
+                else "all starts produced non-finite objective"
+            )
+            raise RuntimeError(
+                f"HHS realized_garch failed to converge after {n_starts} multi-starts; "
+                f"last error: {last_err_msg}"
+            )
 
         # --- Store fitted state ---
         fitted_h, fitted_z, fitted_u = self._forward_pass(best_theta, r_arr, x_arr)
         self._params = {
             name: float(best_theta[i]) for i, name in enumerate(self._PARAM_NAMES)
         }
-        # Recover sigma_u from log_sigma_u for user-facing access.
-        self._params["sigma_u"] = float(np.exp(best_theta[10]))
+        # Clip log_sigma_u consistently with the bounds and objective clip,
+        # then overwrite the raw stored value and recover sigma_u.
+        clipped_log_sigma_u = float(np.clip(best_theta[10], -30.0, 5.0))
+        self._params["log_sigma_u"] = clipped_log_sigma_u
+        self._params["sigma_u"] = float(np.exp(clipped_log_sigma_u))
         self._h = fitted_h
         self._z = fitted_z
         self._u = fitted_u
@@ -8863,6 +8919,11 @@ class _RealizedGARCHModel:
         self._last_u = float(fitted_u[-1]) if len(fitted_u) > 0 else 0.0
         self._r = r_arr
         self._x = x_arr
+        # Convergence diagnostics.
+        self._converged = n_starts_succeeded >= 1
+        self._n_starts_succeeded = n_starts_succeeded
+        self._best_neg_log_lik = best_obj
+        self._initial_neg_log_lik = initial_nll
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:

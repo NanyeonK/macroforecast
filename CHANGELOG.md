@@ -5,7 +5,36 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
-No unreleased changes.
+### Breaking Changes
+
+- **C56 — `_RealizedGARCHModel.fit()` convergence failure now raises `RuntimeError`
+  (previously returned initial-parameter estimates silently).** Callers relying on
+  the old silent-fallback behaviour must wrap `fit()` in a try/except block or
+  ensure sufficient data quality for multi-start convergence.
+
+### Added
+
+- **C56 — `_RealizedGARCHModel` convergence diagnostic attributes** (set by
+  `fit()`): `_converged` (bool), `_n_starts_succeeded` (int),
+  `_best_neg_log_lik` (float), `_initial_neg_log_lik` (float). These expose
+  optimization diagnostics for downstream inspection and testing without
+  requiring access to the scipy result object.
+
+### Improved
+
+- **C56 — Explicit L-BFGS-B bounds for all 11 `_RealizedGARCHModel` parameters**:
+  `phi` upper bound set to 1.0 (economic constraint: measurement-equation scaling
+  coefficient must not exceed unity; prevents weak-identification drift in small
+  samples). `log_sigma_u` clipped consistently to `[-30, 5]` in both the objective
+  function and post-fit parameter storage, eliminating a clip/storage mismatch.
+- **C56 — Multi-start schedule upgraded**: default `n_starts` raised from 3 to 8;
+  perturbation scales for starts 1–7 follow an escalating ladder
+  `[0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]` to provide broader coverage of the
+  parameter landscape and escape weak-identification local basins. Start 0 is
+  unperturbed (exact initialisation).
+- **C56 — Source**: Codex external cross-review P0 finding; remediated in this
+  cycle. Recovery test (`test_realized_garch_*`) now verifies all 11 parameters
+  across 5 seeds (previously single-seed mu/beta/phi/omega only).
 
 ---
 
