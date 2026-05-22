@@ -108,7 +108,7 @@ def test_gen_l3_op_count(tmp_path: Path) -> None:
     """--layer L3 should generate exactly 36 .md files under l3/op/.
 
     This matches the cycle 41/42 baseline count of 36 pages in
-    docs/encyclopedia/l3/op/.
+    docs/reference/encyclopedia/l3/op/.
     """
     out_dir = tmp_path / "enc"
     out_dir.mkdir()
