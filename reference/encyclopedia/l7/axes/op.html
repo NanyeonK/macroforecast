@@ -1011,26 +1011,7 @@
 <section id="lstm-hidden-state-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">lstm_hidden_state</span></code>  –  operational<a class="headerlink" href="#lstm-hidden-state-operational" title="Link to this heading">#</a></h3>
 <p>LSTM hidden-state activation heatmap (Karpathy et al. 2015).</p>
-<p>Extracts the per-timestep hidden-state activations <code class="docutils literal notranslate"><span class="pre">h_t</span></code> from a fitted LSTM model and renders them as a heatmap: rows index hidden units, columns index observations, color encodes mean <code class="docutils literal notranslate"><span class="pre">|h_t|</span></code>. The visualization follows the approach of Karpathy, Johnson &amp; Fei-Fei (2015) for understanding which hidden units fire on which parts of the input sequence.</p>
-<p>Implementation details:</p>
-<ul class="simple">
-<li><p>Requires <code class="docutils literal notranslate"><span class="pre">macroforecast[deep]</span></code> (PyTorch); a <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> is raised for non-torch models (<code class="docutils literal notranslate"><span class="pre">transformer</span></code>, <code class="docutils literal notranslate"><span class="pre">gru</span></code> without <code class="docutils literal notranslate"><span class="pre">torch</span></code>, etc.).</p></li>
-<li><p>State capture uses a forward hook registered on the LSTM layer via <code class="docutils literal notranslate"><span class="pre">torch.nn.Module.register_forward_hook</span></code>.</p></li>
-<li><p>Output: a DataFrame of shape <code class="docutils literal notranslate"><span class="pre">(n_hidden_units,</span> <span class="pre">T)</span></code> where <code class="docutils literal notranslate"><span class="pre">T</span></code> is the sequence length. Column names are observation dates when the input panel carries a DatetimeIndex; otherwise integer positions.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">l7_importance_v1</span></code> sink carries the heatmap frame under the key <code class="docutils literal notranslate"><span class="pre">hidden_state_activations</span></code>.</p></li>
-</ul>
-<p>Only compatible with the <code class="docutils literal notranslate"><span class="pre">lstm</span></code> model family in L4. The <code class="docutils literal notranslate"><span class="pre">transformer</span></code> family raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> because it has no recurrent hidden state; use <code class="docutils literal notranslate"><span class="pre">attention_weights</span></code> for transformer attribution.</p>
-<p><strong>When to use</strong></p>
-<p>Diagnosing LSTM sequence dynamics; identifying which hidden units respond to macro regime shifts.</p>
-<p><strong>When NOT to use</strong></p>
-<p>Non-LSTM models – use attention_weights for transformers, shap_deep / gradient_shap / integrated_gradients for general deep-learning attribution.</p>
-<p><strong>References</strong></p>
-<ul class="simple">
-<li><p>macroforecast design Part 3, L7: ‘every importance op produces (table, figure) pairs; the L7.B sub-layer governs export shape.’</p></li>
-<li><p>Karpathy, Johnson &amp; Fei-Fei (2015) ‘Visualizing and Understanding Recurrent Networks’, arXiv:1506.02078. <a class="reference external" href="https://arxiv.org/abs/1506.02078">https://arxiv.org/abs/1506.02078</a></p></li>
-</ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#attention-weights"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">attention_weights</span></code></span></a>, <a class="reference internal" href="#shap-deep"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">shap_deep</span></code></span></a>, <a class="reference internal" href="#gradient-shap"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_shap</span></code></span></a>, <a class="reference internal" href="#integrated-gradients"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">integrated_gradients</span></code></span></a></p>
-<p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
+<p>See <a class="reference internal" href="../op/lstm_hidden_state.html"><span class="std std-doc">lstm_hidden_state function page</span></a> for full documentation + parameters + standalone usage.</p>
 </section>
 <section id="model-native-linear-coef-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">model_native_linear_coef</span></code>  –  operational<a class="headerlink" href="#model-native-linear-coef-operational" title="Link to this heading">#</a></h3>
