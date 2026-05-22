@@ -414,18 +414,19 @@
 <li class="toctree-l2"><a class="reference internal" href="architecture/terminology.html">Terminology</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="api/standalone_functions/index.html">Standalone functions - namespace overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/navigator/index.html">Navigator Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/tree_navigator.html">Tree Navigator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/path_resolver.html">Path Resolver</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/compatibility_engine.html">Compatibility Engine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/replication_library.html">Replication Library</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/yaml_execution.html">YAML And Execution</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/standalone_functions/index.html">Standalone functions - namespace overview</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/navigator/index.html">Navigator Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="recipe_schema/index.html">Recipe API</a></li>
-</ul>
-<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="encyclopedia/index.html">Encyclopedia</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l0/index.html">Layer L0  –  Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="encyclopedia/l0/axes/failure_policy.html"><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
@@ -711,28 +712,23 @@ These pages are for look-up, not for learning.</p>
 contracts, and cross-layer references.</p>
 <p><a class="reference internal" href="architecture/index.html"><span class="std std-doc">Architecture</span></a></p>
 </section>
+<section id="api">
+<h2>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h2>
+<p>Complete API documentation for macroforecast’s public Python surface:
+standalone layer-operation callables and the layer-topology Navigator.</p>
+<p><a class="reference internal" href="api/index.html"><span class="std std-doc">API reference</span></a></p>
+</section>
+<section id="recipe-schema">
+<h2>Recipe Schema<a class="headerlink" href="#recipe-schema" title="Link to this heading">#</a></h2>
+<p>Full recipe grammar: data sources, defaults, layer contracts, runtime
+support matrix, and the recipe gallery.</p>
+<p><a class="reference internal" href="recipe_schema/index.html"><span class="std std-doc">Recipe schema</span></a></p>
+</section>
 <section id="encyclopedia">
 <h2>Encyclopedia<a class="headerlink" href="#encyclopedia" title="Link to this heading">#</a></h2>
 <p>Auto-generated look-up for every recipe axis and option value. One page
 per option: definition, when to use, when not to use, references.</p>
 <p><a class="reference internal" href="encyclopedia/index.html"><span class="std std-doc">Encyclopedia</span></a></p>
-</section>
-<section id="api-standalone-functions">
-<h2>API: standalone functions<a class="headerlink" href="#api-standalone-functions" title="Link to this heading">#</a></h2>
-<p>Call any layer operation directly as <code class="docutils literal notranslate"><span class="pre">mf.functions.&lt;name&gt;(...)</span></code> without
-a YAML recipe.</p>
-<p><a class="reference internal" href="api/standalone_functions/index.html"><span class="std std-doc">Standalone functions</span></a></p>
-</section>
-<section id="api-navigator">
-<h2>API: navigator<a class="headerlink" href="#api-navigator" title="Link to this heading">#</a></h2>
-<p>Layer and pipeline topology navigator.</p>
-<p><a class="reference internal" href="api/navigator/index.html"><span class="std std-doc">Navigator</span></a></p>
-</section>
-<section id="recipe-schema">
-<h2>Recipe schema<a class="headerlink" href="#recipe-schema" title="Link to this heading">#</a></h2>
-<p>Full recipe grammar: data sources, defaults, layer contracts, runtime
-support matrix, and the recipe gallery.</p>
-<p><a class="reference internal" href="recipe_schema/index.html"><span class="std std-doc">Recipe schema</span></a></p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="architecture/index.html">Architecture</a><ul>
@@ -742,25 +738,19 @@ support matrix, and the recipe gallery.</p>
 <li class="toctree-l2"><a class="reference internal" href="architecture/index.html#per-layer-pages">Per-layer pages</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/standalone_functions/index.html">Standalone functions - namespace overview</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/standalone_functions/index.html#namespace">Namespace</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/standalone_functions/index.html#layer-summary">Layer summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/standalone_functions/index.html#end-to-end-example">End-to-end example</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/navigator/index.html">Navigator Docs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/index.html#canonical-layer-roles">Canonical Layer Roles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/index.html#layer-flow">Layer Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/index.html#authoring-recipes-with-macroforecast-wizard">Authoring recipes with <code class="docutils literal notranslate"><span class="pre">macroforecast</span> <span class="pre">wizard</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/index.html#visualization-with-kedro-viz-future">Visualization with Kedro-viz (future)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/index.html#recommended-flow">Recommended Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/navigator/index.html#pages">Pages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/index.html#standalone-functions">Standalone Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/index.html#navigator">Navigator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="recipe_schema/index.html">Recipe API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="encyclopedia/index.html">Encyclopedia</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="encyclopedia/index.html#counts">Counts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="encyclopedia/index.html#browse">Browse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="encyclopedia/index.html#layer-pages">Layer pages</a></li>
 </ul>
-</div>
-<div class="toctree-wrapper compound">
+</li>
+</ul>
 </div>
 </section>
 </section>
@@ -813,12 +803,9 @@ support matrix, and the recipe gallery.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-schema">Recipe Schema</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#encyclopedia">Encyclopedia</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-standalone-functions">API: standalone functions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-navigator">API: navigator</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-schema">Recipe schema</a><ul class="pst-show_toc_level nav section-nav flex-column">
-</ul>
-</li>
 </ul>
   </nav></div>
 

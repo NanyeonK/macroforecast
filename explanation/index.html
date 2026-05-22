@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Help" href="../help.html" />
+    <link rel="next" title="Why 12 Layers?" href="12_layer_design.html" />
     <link rel="prev" title="Public Python API" href="../reference/encyclopedia/public_api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -378,7 +378,13 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="12_layer_design.html">Why 12 Layers?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bit_exact_replicate.html">Bit-Exact Replication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="honesty_pass.html">The Honesty Pass</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipe_to_run.html">From Recipe to Run</a></li>
+</ul>
+</div>
 </nav></div>
     </div>
   
@@ -436,10 +442,18 @@
                   
   <section id="explanation">
 <h1>Explanation<a class="headerlink" href="#explanation" title="Link to this heading">#</a></h1>
-<p>Conceptual background and design rationale for macroforecast.</p>
-<p>This section is under development (expanding in Cycle 54). In the
-interim, the <a class="reference internal" href="../reference/architecture/index.html"><span class="std std-doc">Architecture</span></a>
-pages provide the design narrative.</p>
+<p>These pages explain the design rationale and architectural decisions behind
+macroforecast. They answer the question “why is it built this way?” rather
+than “how do I use it?”. Read them to build a mental model before working
+with complex recipes or extending the package.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="12_layer_design.html">Why 12 Layers?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bit_exact_replicate.html">Bit-Exact Replication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="honesty_pass.html">The Honesty Pass</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipe_to_run.html">From Recipe to Run</a></li>
+</ul>
+</div>
 </section>
 
 
@@ -462,11 +476,11 @@ pages provide the design narrative.</p>
       </div>
     </a>
     <a class="right-next"
-       href="../help.html"
+       href="12_layer_design.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Help</p>
+        <p class="prev-next-title">Why 12 Layers?</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
