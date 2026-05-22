@@ -8,7 +8,7 @@ Test functions:
     test_gen_dry_run_layer_all            -- --layer all --dry-run exits zero
     test_gen_dry_run_layer_l3             -- --layer L3 --dry-run produces l3/op/ paths
     test_gen_idempotent                   -- two runs with same --review-date are identical
-    test_gen_l3_op_count                  -- L3 generates exactly 36 .md files
+    test_gen_l3_op_count                  -- L3 generates exactly 37 .md files
 """
 from __future__ import annotations
 
@@ -105,10 +105,10 @@ def test_gen_idempotent(tmp_path: Path) -> None:
 
 
 def test_gen_l3_op_count(tmp_path: Path) -> None:
-    """--layer L3 should generate exactly 36 .md files under l3/op/.
+    """--layer L3 should generate exactly 37 .md files under l3/op/.
 
-    This matches the cycle 41/42 baseline count of 36 pages in
-    docs/reference/encyclopedia/l3/op/.
+    Baseline was 36 (cycles 41/42). C57 added chow_lin_disaggregation.md,
+    raising the count to 37.
     """
     out_dir = tmp_path / "enc"
     out_dir.mkdir()
@@ -130,8 +130,8 @@ def test_gen_l3_op_count(tmp_path: Path) -> None:
     )
     md_files = sorted(l3_op_dir.glob("*.md"))
     count = len(md_files)
-    assert count == 36, (
-        f"Expected 36 .md files in l3/op/, got {count}.\n"
+    assert count == 37, (
+        f"Expected 37 .md files in l3/op/, got {count}.\n"
         f"Files: {[f.name for f in md_files]}"
     )
 

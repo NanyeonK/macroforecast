@@ -16,7 +16,7 @@
 
 ## Operational status summary
 
-- Operational: 52 option(s)
+- Operational: 53 option(s)
 - Future: 0 option(s)
 
 ## Options
@@ -38,6 +38,12 @@ See [asymmetric_trim function page](../op/asymmetric_trim.md) for full documenta
 All-relevant feature selection via shadow-feature random forest (Kursa-Rudnicki 2010).
 
 See [boruta_selection function page](../op/boruta_selection.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.boruta_selection``.
+
+### `chow_lin_disaggregation`  --  operational
+
+Chow-Lin (1971) regression-based temporal disaggregation from quarterly to monthly frequency.
+
+See [chow_lin_disaggregation function page](../op/chow_lin_disaggregation.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.chow_lin_disaggregation``.
 
 ### `cumsum`  --  operational
 
