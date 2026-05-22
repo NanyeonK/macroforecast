@@ -10,7 +10,7 @@ appear on disk.
 
 ## The Five Stages
 
-```{mermaid}
+```mermaid
 flowchart TD
     YAML[YAML recipe text] --> PARSE[1. Parse and validate]
     PARSE --> DAG[2. Compile DAG per layer]

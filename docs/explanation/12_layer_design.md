@@ -195,7 +195,7 @@ in it.
 
 ## The Canonical Flow
 
-```{mermaid}
+```mermaid
 flowchart LR
     L0([L0: setup]) --> L1
     L1([L1: data]) --> L2
