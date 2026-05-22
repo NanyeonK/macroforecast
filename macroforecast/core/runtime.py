@@ -2088,7 +2088,7 @@ def materialize_l4_minimal(
                         raw=raw,
                     )
                 else:
-                    last_model = _build_l4_model(family, params)
+                    last_model = _build_l4_model(family, params, target=target, horizon=horizon)
                     last_model.fit(train_X, train_y)
                 last_fit_position = position
             elif refit_policy == "single_fit" and last_model is None:
@@ -2105,7 +2105,7 @@ def materialize_l4_minimal(
                         raw=raw,
                     )
                 else:
-                    last_model = _build_l4_model(family, params)
+                    last_model = _build_l4_model(family, params, target=target, horizon=horizon)
                     last_model.fit(train_X, train_y)
                 last_fit_position = position
             forecast_value = _l4_predict_one(
@@ -2131,7 +2131,7 @@ def materialize_l4_minimal(
                 raw=raw,
             )
         else:
-            model = _build_l4_model(family, params)
+            model = _build_l4_model(family, params, target=target, horizon=horizon)
             model.fit(X, y)
         artifacts[model_id] = ModelArtifact(
             model_id=model_id,
@@ -2771,7 +2771,7 @@ def _run_l4_fit_node(
                 raw=raw,
             )
         else:
-            model = _build_l4_model(family, per_origin_params)
+            model = _build_l4_model(family, per_origin_params, target=target, horizon=horizon)
             model.fit(train_X, train_y)
         forecast_value = _l4_predict_one(
             model,
@@ -2843,7 +2843,7 @@ def _run_l4_fit_node(
                         raw=raw,
                     )
                 else:
-                    last_model = _build_l4_model(family, params)
+                    last_model = _build_l4_model(family, params, target=target, horizon=horizon)
                     last_model.fit(train_X, train_y)
                 last_fit_position = position
             elif refit_policy == "single_fit" and last_model is None:
@@ -2860,7 +2860,7 @@ def _run_l4_fit_node(
                         raw=raw,
                     )
                 else:
-                    last_model = _build_l4_model(family, params)
+                    last_model = _build_l4_model(family, params, target=target, horizon=horizon)
                     last_model.fit(train_X, train_y)
                 last_fit_position = position
             forecast_value = _l4_predict_one(
@@ -2884,7 +2884,7 @@ def _run_l4_fit_node(
             raw=raw,
         )
     else:
-        full_model = _build_l4_model(family, params)
+        full_model = _build_l4_model(family, params, target=target, horizon=horizon)
         full_model.fit(X, y)
     artifact = ModelArtifact(
         model_id=model_id,
@@ -2916,7 +2916,13 @@ def _l4_framework(family: str) -> str:
     return "sklearn"
 
 
-def _build_l4_model(family: str, params: dict[str, Any]):
+def _build_l4_model(
+    family: str,
+    params: dict[str, Any],
+    *,
+    target: str = "",
+    horizon: int = 1,
+):
     """Build an estimator instance for one of the operational L4 families.
 
     Linear/tree/SVM/knn/boosting families are wired here; heavyweight models
@@ -3471,7 +3477,7 @@ def _build_l4_model(family: str, params: dict[str, Any]):
         )
     custom = _resolve_custom_model(family)
     if custom is not None:
-        return _CustomModelAdapter(custom, params=params)
+        return _CustomModelAdapter(custom, params=params, target=target, horizon=horizon)
     raise NotImplementedError(f"L4 runtime does not support family={family!r}")
 
 
@@ -4548,9 +4554,19 @@ class _CustomModelAdapter:
     1-row ``X_test`` contract; this matches the ``_l4_predict_one`` flow
     and keeps every recipe path working unchanged."""
 
-    def __init__(self, spec, params: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        spec,
+        params: dict[str, Any],
+        *,
+        target: str = "",
+        horizon: int = 1,
+    ) -> None:
         self.spec = spec
         self.params = dict(params or {})
+        # C57: store target series name and forecast horizon for context contract.
+        self._target: str = target
+        self._horizon: int = int(horizon)
         self._train_X: pd.DataFrame | None = None
         self._train_y: pd.Series | None = None
 
@@ -4573,6 +4589,9 @@ class _CustomModelAdapter:
             "model_name": self.spec.name,
             "feature_names": tuple(self._train_X.columns),
             "params": dict(self.params),
+            # C57: target series name and forecast horizon (Tutorial 03 contract).
+            "target": self._target,
+            "horizon": self._horizon,
         }
         preds: list[float] = []
         for _, row in test.iterrows():
