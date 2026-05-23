@@ -43,9 +43,37 @@ full per-version honesty-pass history embedded in repo documentation.
 - No source modification to existing private classes (backward compat preserved).
 - No recipe/runtime semantics change (recipe dispatch unaffected).
 
-### Known issue (pre-existing — to address in C64+)
+### Added — Cycle 63 retry (post-review remediation)
 
-- `tests/core/test_l4_realized_garch_c56.py` two MRE-1 tests (`TestMRE1TightenedTolerancesT500::test_mre1_tightened_t500_seed42` and `TestMRE1TightenedTolerancesT2000::test_mre1_tightened_t2000_seed42`) exceed the 120-second per-test timeout on the current machine. The T=2000 MLE fit requires more than 250 seconds. This is pre-existing from C56/C59; C63 does not touch `macroforecast/core/runtime.py`. Recommended follow-up: add `@pytest.mark.slow` to both tests and exclude from standard `-m "not slow"` runs.
+**`fit_transform` method** on all 5 `macroforecast.feature_selection` classes (sklearn convention):
+- `Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`, `GeneticSelection`
+- Signature: `fit_transform(X, y, **kwargs) -> pd.DataFrame`
+- Delegates to `self.fit(X, y, **kwargs).transform(X)`
+
+**`NotFittedError`** raised when `transform()` is called before `fit()`:
+- All 5 feature_selection classes now check `hasattr(self, "selected_features_")` and raise `sklearn.exceptions.NotFittedError` with class name in message
+- Resolves silent-empty-DataFrame footgun
+
+### Changed — Cycle 63 retry
+
+- **BREAKING (minor)**: feature_selection classes no longer pre-initialize `selected_features_: list[str] = []` in `__init__`. Pre-fit access of `Boruta().selected_features_` now raises `AttributeError` instead of returning `[]`. This is the sklearn-standard fitted-attribute convention and is required for `NotFittedError` to function correctly. Users who depended on empty-list pre-fit behavior must call `.fit()` first.
+
+### Fixed — Cycle 63 retry
+
+- **C56 pre-existing timeouts**: `tests/core/test_l4_realized_garch_c56.py::TestMRE1TightenedTolerancesT500::test_mre1_tightened_t500_seed42` and `test_mre1_tightened_t2000_seed42` are now decorated with `@pytest.mark.slow`. Scope-limited validation (`pytest -m "not slow"`) now skips them cleanly. Full CI without marker filter (or `pytest -m slow --timeout=180`) still runs and passes them.
+
+### Naming canonicalization — Cycle 63
+
+Builder's descriptive names are now canonical (supersedes original spec.md acronyms):
+- `PrincipalComponentRegression` (not `PCR`)
+- `FactorAugmentedVAR` (not `FAVAR`)
+- `BVAR` + `BVARMinnesota` (both alias `_BayesianVAR`; not `BayesianVAR`)
+- `DFMMixedFrequency` (not `DFM`)
+- `TwoStageRandomWalkRidge` (not `TwoStageRWRidge`)
+- `UnrestrictedMidas` (not `MidasUnrestricted`)
+- `random_walk_ridge_fit`, `unrestricted_midas_fit` (not shortened variants)
+
+C62 `naming-spec.md` Section E records these as ground truth for C64+.
 
 ### Source
 
