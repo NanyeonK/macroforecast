@@ -52,3 +52,35 @@ KEEP decisions per planner:
 - contributing.md:29 dag.py file listing (accurate module name)
 - tree_navigator.md:53 navigator_selected_dag_items (frozen API)
 - architecture/layer7/index.md:31 importance DAG body (INTERNAL-VOCAB per impact.md 2.17)
+
+---
+
+# mailbox.md -- builder (C67 Tutorial Standalone-First Rewrite)
+
+## Interface Changes: None
+
+C67 is documentation-only (workflow 3). No Python symbols were added, removed, or renamed.
+No API changes, no new exports.
+
+## Blockers: None
+
+## Notes for Tester
+
+`tests/docs/test_tutorial_smoke.py` will likely need updates after C67. The new tutorial
+code blocks use:
+- `LinearAR(p=2)` and `LinearAR(p=4)` -- NOT `n_lags`
+- `FactorAugmentedAR(p=2, n_factors=3)` -- NOT `n_lags`
+- `model.fit(X_train, y_train)` with an empty DataFrame for X when LinearAR is used alone
+- `model.predict(X_test)` -- NOT `model.predict(n_periods=...)`
+
+If the smoke test runs code blocks sequentially within a shared namespace, variable `y`
+(generated in the data section) must be in scope when the model fitting block runs.
+Tutorial 02 also requires `X` in scope for PCR and FAAR blocks.
+
+## Status
+
+4 commits made:
+- ac4e5ac3: index.md + two_entry_points.md reorder/refresh
+- e30cfb66: 01_first_forecast.md standalone-first rewrite
+- 65959124: 02_full_study.md 3-model comparison
+- 34b95655: 03_custom_model.md BaseEstimator subclass pattern

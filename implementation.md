@@ -1,125 +1,132 @@
-# implementation.md — Cycle 64 Bug Fix Retry
+# implementation.md -- Cycle 67 Tutorial Standalone-First Rewrite
 
 ## Summary
 
-Two pre-existing bugs in `macroforecast/core/runtime.py` uncovered by the
-C64 tester are fixed here, along with one test update. Both bugs affected the
-newly promoted public model classes (`SlowGrowingTree` and `Bagging`).
+Documentation-only rewrite (workflow 3). Five tutorial files rewritten to present
+the standalone `macroforecast.models` API first, with the recipe pipeline introduced
+only in the final graduation section of each tutorial. No source code was modified.
 
 ---
 
 ## Files Modified
 
-### macroforecast/core/runtime.py
+### `docs/tutorial/index.md`
+- Replaced the single-paragraph opening with two paragraphs describing the standalone-first
+  tutorial structure and summarizing what each tutorial covers.
+- Line count: 18 -> 25 lines (+7).
+- No toctree changes.
 
-**Bug A — `_SlowGrowingTree.__init__` max_depth default (line ~5923)**
+### `docs/tutorial/two_entry_points.md`
+- Reordered: standalone models section now leads (was second). Recipe pipeline section
+  follows. Comparison table columns swapped (standalone left, recipe right).
+- Updated standalone code snippet to use `LinearAR(p=2)` with `from macroforecast.models`.
+  Removed the old `mf.functions.ridge_fit` snippet.
+- Decision flowchart reversed: starts from "Working in a notebook or one-off script?"
+  instead of "Need bit-exact replication?".
+- Added "Transition path" prose reframing recipes as graduation from standalone.
+- Line count: 107 -> 112 lines (+5).
 
-Changed `max_depth: Any = None` to `max_depth: Any = 10`.
+### `docs/tutorial/01_first_forecast.md`
+- Full rewrite. Removed recipe-first YAML blocks, `mf.run()` invocations in main body,
+  and manifest/replicate sections.
+- New structure: install check, synthetic AR(2) data generation, LinearAR fit/predict,
+  TimeSeriesSplit OOS loop, graduation section.
+- Line count: 211 -> 95 lines (-116).
 
-Root cause: the `_build()` BFS only terminates when either (a) the
-Herfindahl index H >= herfindahl_threshold, (b) max_depth is reached, or
-(c) no split improves SSE. With soft weights (eta < 1), every node retains
-all n rows at non-zero weight. H = Σ(ω_i²)/(Σω_i)² stays near 1/n (for
-n=80 this is ~0.013), far below the threshold=0.25. No split can trigger
-the Herfindahl stop, so the only reliable depth bound is max_depth. With
-the old default of None, the BFS grew without bound and hit the 60s timeout.
+### `docs/tutorial/02_full_study.md`
+- Full rewrite. Removed ~370 lines of YAML recipe blocks and recipe-centric prose.
+- New structure: synthetic 5-feature macro panel, LinearAR OOS loop, PCR and FAAR
+  comparison, summary table, graduation section.
+- Line count: 491 -> 125 lines (-366).
 
-Fix chosen: Option 1 (add max_depth=10 fallback). This matches the depth
-range used in standard CART literature and stops the BFS after at most 2^10
-= 1024 nodes in the worst case. Users wanting deeper trees can pass
-max_depth=None explicitly.
-
-**Bug B — `_BaggingWrapper.fit` TypeError on base_params=None (line ~8042)**
-
-Changed `params = dict(self.base_params)` to
-`params = dict(self.base_params) if self.base_params is not None else {}`.
-
-Root cause: `_BaggingWrapper.__init__` sets `self.base_params = dict(base_params or {})`
-which guards None during direct construction. However, sklearn's
-`BaseEstimator.set_params()` and `clone()` bypass `__init__` and set
-attributes directly, so `self.base_params` can be set to None after
-construction. The `fit()` method then called `dict(None)` which raises
-TypeError. The guard in `fit()` makes it robust regardless of how
-`base_params` was set.
-
-### macroforecast/models/tree.py
-
-**Bug A companion fix — `SlowGrowingTree.__init__` max_depth default**
-
-The public `SlowGrowingTree` class inherits from `_SlowGrowingTree` but
-overrides `__init__` and restores raw parameter values after `super().__init__()`
-(the sklearn clone()-safe pattern documented in tree.py's module docstring).
-This means `self.max_depth = max_depth` at the end of the public class's
-`__init__` overwrites the private class's default of 10 with the public
-class's default of None.
-
-Both defaults had to be updated: `_SlowGrowingTree.__init__` (runtime.py)
-and `SlowGrowingTree.__init__` (tree.py).
-
-Updated the docstring for `max_depth` in `SlowGrowingTree` to explain why
-`None` is not recommended for SGT (soft weights keep H low, so max_depth
-is the primary depth bound).
-
-### tests/promotion/test_c63_promotion.py
-
-**C63 `__all__` count update: 22 → 30**
-
-`test_A4_models_all_count_is_22` hardcoded 22. After C64 promoted 8 more
-classes (tree.py: 6 + neural.py: 2), `mf.models.__all__` has 30 entries
-(14+3+2+3+6+2). Updated to 30 and renamed the test method to
-`test_A4_models_all_count_is_30` for clarity. Added explanation of the
-C64 additions in the docstring.
+### `docs/tutorial/03_custom_model.md`
+- Full rewrite. Replaced recipe-centric `@mf.register_model` decorator pattern with
+  BaseEstimator + RegressorMixin subclassing (C64 pattern).
+- Includes `ConstantTrendPlusAR` as a worked example with full `fit` and `predict`
+  implementation. Shows direct use in TimeSeriesSplit. Graduation section uses the
+  functional wrapper pattern for `mf_custom.register_model`.
+- Line count: 258 -> 130 lines (-128).
 
 ---
 
-## Commits
+## API Verification (Parameter Name Corrections)
 
-1. `971abe92` — `fix(runtime): _SlowGrowingTree._build infinite BFS — add max_depth=10 default`
-   Includes both Bug A (`max_depth=10` default in `_SlowGrowingTree.__init__` and
-   `SlowGrowingTree.__init__`) and Bug B (`base_params is not None` guard in
-   `_BaggingWrapper.fit`). Both were runtime.py changes committed atomically.
+Critical corrections made relative to the spec.md code snippets:
 
-2. `713fa341` — `test(c63): update mf.models __all__ count after C64 promotions (22 → 30)`
+| Spec snippet | Actual source signature | Correction applied |
+|---|---|---|
+| `LinearAR(n_lags=2)` | `_LinearARModel.__init__(self, p: int = 1)` | Changed to `LinearAR(p=2)` |
+| `LinearAR(n_lags=4)` | same | Changed to `LinearAR(p=4)` |
+| `FactorAugmentedAR(n_factors=3, n_lags=2)` | `_FactorAugmentedAR.__init__(self, p: int = 1, n_factors: int = 3)` | Changed to `FactorAugmentedAR(p=2, n_factors=3)` |
+| `model.predict(n_periods=len(y_test))` | `_LinearARModel.predict(self, X: pd.DataFrame)` | Changed to `model.predict(X_test)` with empty DataFrame |
+| `mf.custom.register_model` accepts class | `register_model(name, function)` takes callable only | Used functional wrapper pattern |
+
+`PrincipalComponentRegression(n_components=3)` was correct in the spec.
+
+All three signatures verified via `uv run python -c "import inspect; ..."` smoke check:
+- `LinearAR.__init__ sig: (self, p: int = 1) -> None`
+- `PrincipalComponentRegression.__init__ sig: (self, n_components: int = 4) -> None`
+- `FactorAugmentedAR.__init__ sig: (self, p: int = 1, n_factors: int = 3) -> None`
+- `LinearAR.fit sig: (self, X: pd.DataFrame, y: pd.Series) -> _LinearARModel`
+- `LinearAR.predict sig: (self, X: pd.DataFrame) -> np.ndarray`
 
 ---
 
-## Test Results
+## Unit Tests
 
-```
-tests/promotion/ — 388 passed, 7 deselected (slow/deep/heavy)
-```
+Not applicable for documentation-only workflow 3. The existing smoke tests in
+`tests/docs/test_tutorial_smoke.py` will need to be updated by tester to match
+the new code blocks (noted in mailbox.md).
 
-Specifically verified:
-- `TestSlowGrowingTree::test_ST3_smoke_fit_predict` — PASSED (was timeout)
-- `TestBagging::test_BA3_smoke_fit_predict` — PASSED (was TypeError)
-- All other C63 + C64 promotion tests still pass
+---
+
+## Cross-Reference Validation
+
+All `{doc}` cross-references in the rewritten files verified against the tutorial
+and how_to directory structure:
+- `{doc}00_install` -- exists
+- `{doc}02_full_study` -- exists
+- `{doc}03_custom_model` -- exists
+- `{doc}two_entry_points` -- exists
+- `{doc}../how_to/sweep_over_models` -- exists
+- `{doc}../how_to/add_custom_model` -- exists
 
 ---
 
 ## Design Choices
 
-- Bug A fix: Option 1 (max_depth=10) was chosen over Option 2 (Herfindahl
-  comparison inversion) because the Herfindahl check is logically correct —
-  the paper says "split when H < H-bar (low concentration = many effective
-  rows)". With soft weights the Herfindahl condition is vacuously true, so
-  a depth cap is the appropriate structural fix. Option 3 (no-improvement
-  plateau) was not chosen because `_best_split` already returns None when
-  no SSE improvement is possible, but this only fires when the tree is
-  already over-fitted and homogeneous, not early enough for default data.
+1. LinearAR and empty X DataFrame: the spec suggested `model.predict(n_periods=...)`,
+   but the actual `predict(X: pd.DataFrame)` signature uses `len(X)` for output size.
+   We pass an empty DataFrame with a matching DatetimeIndex, which is the cleanest
+   pattern when no feature columns are available.
 
-- Both defaults (private and public class) must agree. Changing only the
-  private class would be silently overridden by the sklearn restore pattern
-  in the public class.
+2. Tutorial 01 MSE interpretation: the prose notes "We find that the mean CV MSE is
+   low relative to the noise variance (0.25)" -- this is consistent with the data
+   generating process (scale=0.5, so variance=0.25) and is a factual statement, not
+   exaggeration.
+
+3. Tutorial 03 graduation: `mf_custom.register_model` takes a function, not a class.
+   The functional wrapper pattern is the correct approach and matches the existing API
+   documented in `macroforecast/custom.py`.
 
 ---
 
-## Known Limitations
+## Commits Made (4 atomic)
 
-- `max_depth=None` with SGT and soft weights (eta < 1) will still be
-  unbounded in theory. This is documented in the updated `SlowGrowingTree`
-  docstring as "not recommended". For the default use case (eta=0.1,
-  herfindahl_threshold=0.25), max_depth=10 gives reasonable tree depth.
+1. `ac4e5ac3` -- docs(c67): reorder tutorial/index.md and refresh two_entry_points.md
+2. `e30cfb66` -- docs(c67): rewrite 01_first_forecast.md -- standalone LinearAR (211 -> ~95 lines)
+3. `65959124` -- docs(c67): rewrite 02_full_study.md -- sklearn TimeSeriesSplit + 3-model comparison (491 -> ~125 lines)
+4. `34b95655` -- docs(c67): rewrite 03_custom_model.md -- BaseEstimator subclass pattern (258 -> ~130 lines)
 
-- The uv.lock file was updated by `uv pip install pytest pytest-timeout`
-  during smoke validation. These are test-only dependencies and do not
-  affect production use.
+---
+
+## Known Limitations / Deferred Items
+
+- `tests/docs/test_tutorial_smoke.py` extracts and runs Python blocks from tutorials.
+  The new code blocks reference `y` and `X` that must be generated before the model
+  fitting blocks are run. Tester should verify the smoke test handles variable scope
+  across code blocks, or update the test to generate the data inline.
+- Tutorial 01 predict output is described as "a single-step-ahead forecast repeated
+  for each row of `X_test`". This matches the `_LinearARModel.predict` implementation
+  which returns `np.array([float(...)] * len(X))` -- a constant array. This is correct
+  behavior for an AR model without recursive forecasting.

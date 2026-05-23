@@ -1,28 +1,50 @@
-# Two entry points — recipe DSL vs standalone callables
+# Two entry points — standalone models vs recipe pipeline
 
 This page compares the two entry points at a conceptual level. For a hands-on
 narrative, start with {doc}`01_first_forecast`.
 
-macroforecast exposes two ways to use its operations:
+macroforecast exposes two ways to run forecasting models:
 
-| | Recipe DSL | Standalone callables |
+| | Standalone models | Recipe pipeline |
 |---|---|---|
-| Interface | YAML file | `mf.functions.<name>(...)` |
-| Scope | Full 12-layer recipe pipeline | Single operation |
-| Bit-exact replay | `mf.replicate(manifest.json)` | Re-run the script |
-| Output | Artifact directory + manifest | Python return value |
-| Best for | Reproducible papers, sweep studies | Notebooks, scripting, partial pipelines |
+| Interface | `from macroforecast.models import X` | YAML file |
+| Scope | Single model, direct Python call | Full 12-layer pipeline |
+| Bit-exact replay | Re-run the script | `mf.recipes.run(manifest.json)` |
+| Output | Python return value | Artifact directory + manifest |
+| Best for | Notebooks, scripting, quick comparisons | Reproducible papers, sweep studies |
 
 ---
 
 ## Pick your path
 
-### Use the recipe DSL when
+### Use standalone models when
+
+- You are working in a **Jupyter notebook or one-off script** and want Python
+  return values rather than file artifacts.
+- You already have **your own data and pipeline** and want to fit a model or
+  compute a metric without writing YAML.
+- You want to **mix and match** macroforecast model classes with scikit-learn or
+  pandas code directly.
+
+```python
+from macroforecast.models import LinearAR
+import pandas as pd
+
+model = LinearAR(p=2)
+model.fit(X_train, y_train)   # no YAML, no output directory
+preds = model.predict(X_test)
+print(preds)
+```
+
+See {doc}`01_first_forecast` for a complete worked example.
+
+---
+
+### Use the recipe pipeline when
 
 - You want a **self-contained, reproducible study** that a colleague can
-  replicate from a single file: `mf.replicate("out/manifest.json")` verifies
-  every artifact bit-exactly.
-- You need **sweep experiments** — trying multiple model families,
+  replicate from a single file.
+- You need **sweep experiments**, trying multiple model families,
   regularisation strengths, or evaluation windows with a single recipe.
 - You are using **FRED-MD / FRED-QD / FRED-SD** datasets and want
   the built-in vintage management, tcode transforms, and McCracken-Ng
@@ -31,76 +53,47 @@ macroforecast exposes two ways to use its operations:
   residual battery / density tests) run automatically after evaluation.
 
 ```python
-import macroforecast as mf
+import macroforecast.recipes as mf_recipes
 
-result = mf.run("recipe.yaml", output_directory="out/")
-print(result.cells[0].sink_hashes)            # per-cell sink hashes
-replication = mf.replicate("out/manifest.json")
-assert replication.sink_hashes_match           # bit-exact
+result = mf_recipes.run("recipe.yaml", output_directory="out/")
+# mf_recipes.run is also callable as mf.run -- both are valid aliases
+print(result.cells[0].sink_hashes)
+replication = mf_recipes.replicate("out/manifest.json")
+assert replication.sink_hashes_match   # bit-exact
 ```
-
-See the recipe DSL tutorials above, starting with {doc}`01_first_forecast`.
-
----
-
-### Use standalone callables when
-
-- You already have **your own data and pipeline** and just want one
-  operation — fit a ridge, compute a Theil U1, run a DM test.
-- You are working in a **Jupyter notebook** or script and want Python
-  return values rather than file artifacts.
-- You want to **mix-and-match** macroforecast ops with scikit-learn or
-  pandas code without writing YAML.
-
-```python
-import macroforecast as mf
-import numpy as np
-
-# L4: fit ridge
-rng = np.random.RandomState(42)
-X = rng.randn(100, 5)
-y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
-
-result = mf.functions.ridge_fit(X, y, alpha=1.0)
-print(result.coef_)
-
-# L5: Theil U1
-u1 = mf.functions.theil_u1(y, result.predict(X))
-print(f"Theil U1 = {u1:.4f}")
-```
-
-See {doc}`../how_to/simple_api/index` for the standalone callables reference.
 
 ---
 
 ## Transition path
 
-If you start with standalone callables and later need reproducibility or
-sweeps, you can graduate to the recipe DSL. The operations are the same
-underneath — `mf.functions.ridge_fit(X, y, alpha=1.0)` uses the same
-adapter as `family: ridge` + `alpha: 1.0` in a recipe.
+If you start with standalone models and later need reproducibility or
+systematic sweeps, graduate to the recipe pipeline. The model families are
+the same underneath. `LinearAR(p=2)` in standalone mode uses the same
+implementation as `family: ar_p` in a recipe. Adding a YAML recipe around
+your study gains provenance, sweep expansion, and the full L6 test battery
+without changing the underlying models.
 
 ---
 
 ## Decision guide
 
 ```text
-Need bit-exact replication or sweep study?
-    YES  →  Recipe DSL  →  mf.run("recipe.yaml")
+Working in a notebook or one-off script?
+    YES  ->  Standalone  ->  from macroforecast.models import X
     NO
      |
-     ↓
+     v
+Need bit-exact replication across runs?
+    YES  ->  Recipe pipeline  ->  mf.recipes.run("recipe.yaml")
+    NO
+     |
+     v
 Need FRED-MD/QD/SD dataset integration?
-    YES  →  Recipe DSL  →  1_data: {fixed_axes: {dataset: fred_md}}
+    YES  ->  Recipe pipeline  ->  1_data: {fixed_axes: {dataset: fred_md}}
     NO
      |
-     ↓
-Working in a notebook or scripting context?
-    YES  →  Standalone  →  mf.functions.<name>(...)
-    NO
-     |
-     ↓
-Need full L6 test battery or L7 interpretation pipeline?
-    YES  →  Recipe DSL  →  6_statistical_tests: {enabled: true, ...}
-    NO   →  Standalone  →  individual test / importance callables
+     v
+Need full test battery (DM / CW / MCS)?
+    YES  ->  Recipe pipeline  ->  6_statistical_tests: {enabled: true, ...}
+    NO   ->  Standalone  ->  individual test callables in mf.functions
 ```
