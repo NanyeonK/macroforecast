@@ -5,6 +5,52 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added — Cycle 63 (R3-P1a) — Standalone-first paradigm shift
+
+**Round 3** of cross-review remediation: shift macroforecast from a contract-first framework to a library-first standalone API, so that users can import and use individual components without constructing a full YAML recipe.
+
+**`macroforecast.models` package** (NEW) — 22 L4 model classes with sklearn-style fit/predict:
+
+- `models.linear`: 14 classes — `MidasAlmon`, `MidasBeta`, `MidasStep`, `UnrestrictedMidas`, `LinearAR`, `FactorAugmentedAR`, `NonNegRidge`, `TwoStageRandomWalkRidge`, `ShrinkToTargetRidge`, `FusedDifferenceRidge`, `PrincipalComponentRegression`, `FactorAugmentedVAR`, `VAR`, `GLMBoost`
+- `models.bayesian`: 3 classes — `BVAR`, `BVARMinnesota`, `DFMMixedFrequency`
+- `models.volatility`: 2 classes — `GARCH`, `RealizedGARCH`
+- `models.timeseries`: 3 classes — `ETS`, `Theta`, `HoltWinters`
+- Flat re-export: `from macroforecast.models import RealizedGARCH` works (Option C hybrid module per C62 naming-spec).
+- Backward compat: private `_<Name>` classes unchanged; public classes inherit via thin subclass — `isinstance` check holds for both directions.
+
+**`macroforecast.feature_selection`** (NEW) — 5 sklearn-style class wrappers around L3 functions:
+
+- `Boruta` (Kursa & Rudnicki 2010), `RFE` (Guyon et al. 2002), `LassoPathSelector` (Efron et al. 2004), `StabilitySelection` (Meinshausen & Buhlmann 2010), `GeneticSelection` (Goldberg 1989)
+- Each provides: `fit(X, y) -> self`, `transform(X) -> X_selected`, `.selected_features_` attribute.
+
+**`macroforecast.transforms`** (NEW) — 1 transform-only function:
+
+- `chow_lin_disaggregate(low_freq, indicator_high_freq, ...)` — Chow-Lin (1971) regression-based quarterly-to-monthly disaggregation.
+
+**`macroforecast.interpretation`** (NEW) — 2 wrapper classes for fitted-model interpretation:
+
+- `GIRF` (Pesaran & Shin 1998 generalized impulse response) — `compute(fitted_var, n_periods, ...)`
+- `LSTMHiddenState` (Karpathy 2015 hidden-state activation importance) — `compute(fitted_lstm, X, ...)`
+
+**`macroforecast.functions`** (extended) — 8 new `*_fit` callables:
+
+- MIDAS family: `midas_almon_fit`, `midas_beta_fit`, `midas_step_fit`, `unrestricted_midas_fit`
+- Ridge-variant family: `random_walk_ridge_fit`, `shrink_to_target_ridge_fit`, `fused_difference_ridge_fit`, `nonneg_ridge_fit`
+
+### Changed — Cycle 63
+
+- `macroforecast/__init__.py` lazy imports updated: `models`, `feature_selection`, `transforms`, `interpretation` added to `_LAZY_MODULES`.
+- No source modification to existing private classes (backward compat preserved).
+- No recipe/runtime semantics change (recipe dispatch unaffected).
+
+### Known issue (pre-existing — to address in C64+)
+
+- `tests/core/test_l4_realized_garch_c56.py` two MRE-1 tests (`TestMRE1TightenedTolerancesT500::test_mre1_tightened_t500_seed42` and `TestMRE1TightenedTolerancesT2000::test_mre1_tightened_t2000_seed42`) exceed the 120-second per-test timeout on the current machine. The T=2000 MLE fit requires more than 250 seconds. This is pre-existing from C56/C59; C63 does not touch `macroforecast/core/runtime.py`. Recommended follow-up: add `@pytest.mark.slow` to both tests and exclude from standard `-m "not slow"` runs.
+
+### Source
+
+User direction: "각 단계들이 너무 강하게 contract 되어있나? package는 부분부분 사용자가 자유롭게 뽑아쓸수있어야하는데". C62 audit + naming spec → C63 first execution.
+
 ---
 
 ## [0.9.3b1] -- 2026-05-22 -- "Round 2 cross-review remediation"

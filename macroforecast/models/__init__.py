@@ -1,6 +1,6 @@
 """Public model class namespace for macroforecast.
 
-Exposes 21 promoted L4 model classes as stable public symbols. Each class is
+Exposes 22 promoted L4 model classes as stable public symbols. Each class is
 a thin subclass of the corresponding private runtime class (``_<Name>``).
 ``isinstance`` checks pass for both the public and private name.
 
@@ -13,7 +13,7 @@ Sub-modules
 
 Flat re-export
 --------------
-All 21 classes are importable directly from ``macroforecast.models``::
+All 22 classes are importable directly from ``macroforecast.models``::
 
     from macroforecast.models import (
         MidasAlmon, MidasBeta, MidasStep, UnrestrictedMidas,
@@ -27,7 +27,7 @@ All 21 classes are importable directly from ``macroforecast.models``::
         ETS, Theta, HoltWinters,
     )
 
-Cycle 63 -- 21 L4 classes promoted via thin subclassing.
+Cycle 63 -- 22 L4 classes promoted via thin subclassing.
 """
 from __future__ import annotations
 
