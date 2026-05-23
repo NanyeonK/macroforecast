@@ -25,7 +25,7 @@ Open `http://localhost:8765` in a browser.
 | P2a | Shell + L0 form + YAML preview + CLI entry | DONE (`c0addcf0`) |
 | P2b | L1/L2 form + bidirectional YAML edit + Starlette upper bound | planned |
 | P2c | L5/L6 form + Mosaic Cube overview polish + LR-04 fix | planned |
-| P3  | L3/L4/L7 DAG editor (React Flow embed) | planned |
+| P3  | L3/L4/L7 step graph editor (React Flow embed) | planned |
 
 See `ARCHITECTURE.md` "Phase Wizard P2a" section for full design + Mermaid.
 

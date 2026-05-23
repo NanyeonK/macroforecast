@@ -1,6 +1,6 @@
-"""DAG placeholder page for L3, L4, L7.
+"""Step graph placeholder page for L3, L4, L7.
 
-Phase 3 will replace this with a React Flow embedded DAG editor.
+Phase 3 will replace this with a React Flow embedded step graph editor.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _DOCS_URL = "https://macroforecast.readthedocs.io/"
 
 @solara.component
 def LayerDagPlaceholder(layer_id: str) -> None:
-    """Informational placeholder for DAG-configured layers (L3/L4/L7).
+    """Informational placeholder for step-graph layers (L3/L4/L7).
 
     Args:
         layer_id: The layer identifier (e.g. "l3").
@@ -35,7 +35,7 @@ def LayerDagPlaceholder(layer_id: str) -> None:
             )
         ):
             solara.Text(
-                f"DAG editor for {layer_id.upper()} is coming in Phase 3.",
+                f"Step graph editor for {layer_id.upper()} is coming in Phase 3.",
                 style="font-size:18px; font-weight:bold; color:#713f12; margin-bottom:12px;",
             )
             solara.Text(
@@ -43,7 +43,7 @@ def LayerDagPlaceholder(layer_id: str) -> None:
                 style="color:#92400e; margin-bottom:16px;",
             )
             solara.Text(
-                "The DAG editor will provide a visual node graph for configuring "
+                "The step graph editor will provide a visual node graph for configuring "
                 f"the {layer_id.upper()} layer's pipeline operations, with drag-and-drop "
                 "node placement and connection management.",
                 style="color:#78350f; font-size:13px; margin-bottom:20px;",
