@@ -159,6 +159,30 @@ Round 3 paradigm shift continuation per `r3-execution-plan.md`. C63 (R3-P1a) shi
 
 ---
 
+### Changed — Cycle 65 (R3-P2) — Recipe orchestration extraction
+
+**`macroforecast.recipes` is now the canonical home for recipe orchestration symbols.** Pure refactor with full backward compat — no semantic change to recipe behavior.
+
+- `mf.recipes.run`, `mf.recipes.run_file`, `mf.recipes.replicate` now expose the recipe execution API (previously importable only from `mf.api`)
+- `mf.recipes.forecast`, `mf.recipes.Experiment`, `mf.recipes.ForecastResult` now expose the high-level API (previously importable only from `mf.api_high`)
+- `mf.recipes.paper_methods` preserved
+- Backward compat: `mf.run`, `mf.replicate`, `mf.forecast`, `mf.Experiment`, `mf.ForecastResult` all continue to work via lazy import; these are silent aliases for `mf.recipes.<name>` and refer to identical objects (`mf.run is mf.recipes.run`)
+
+The intent: cleanly separate the standalone library API (`mf.models`, `mf.feature_selection`, `mf.transforms`, `mf.interpretation`, `mf.functions`) from recipe orchestration (`mf.recipes`). Users who only want standalone components no longer need to know recipes exist; users who want recipes find them under a single namespace.
+
+### Internals — Cycle 65
+
+- `mf/__init__.py` `_LAZY_EXPORTS` routes 8 user-facing symbols via `.recipes` instead of `.api` / `.api_high`
+- `mf/api.py` and `mf/api_high.py` remain as private implementation modules (no behavior change)
+- `mf/core/execution.py` (the recipe orchestrator) untouched
+- `mf/core/runtime.py` untouched
+
+### Source — Cycle 65
+
+User direction (from R3 paradigm shift): "package는 부분부분 사용자가 자유롭게 뽑아쓸수있어야하는데. standalone으로 근본적으로 바뀌되, yaml로 순차 실행가능한 클래스를 따로제작할까?". The library/orchestration boundary is now explicit in the namespace.
+
+---
+
 ## [0.9.3b1] -- 2026-05-22 -- "Round 2 cross-review remediation"
 
 Codex + MiniMax external cross-review identified P0/P1/P2 statistical and governance gaps in v0.9.2b2. This release closes them.
