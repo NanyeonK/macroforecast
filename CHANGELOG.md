@@ -81,6 +81,30 @@ User direction: "각 단계들이 너무 강하게 contract 되어있나? packag
 
 ---
 
+### Added — Cycle 63.1 (external review remediation)
+
+**Canonical Chow-Lin (1971) GLS disaggregation** in `macroforecast.transforms.chow_lin_disaggregate`:
+- New parameters: `aggregation={'sum','mean'}`, `rho=float|None`, `rho_method={'min_chi_squared','max_likelihood','fixed'}`
+- True BLUE estimator satisfies aggregation constraint `C @ y_hat_h == y_l` to machine precision (tested at atol=1e-8, achieved 8.88e-16)
+- AR(1) rho estimation via min_chi_squared (default) or max_likelihood
+- 144-scenario × R=100 Monte Carlo validation: conservation holds for both simulator's independent GLS and builder's implementation, with cross-implementation agreement at machine precision
+- Reference: Chow, G.C. and Lin, A.L. (1971) "Best linear unbiased interpolation, distribution, and extrapolation of time series by related series", Review of Economics and Statistics 53(4): 372-375
+
+### Changed — Cycle 63.1
+
+- **BREAKING (minor)**: `chow_lin_disaggregate` is now the canonical Chow-Lin (1971) GLS algorithm. The previous implementation (a thin OLS wrapper) did not satisfy the aggregation conservation constraint. Existing callers using only `(low_freq, indicator_high_freq)` continue to work (default `aggregation='mean'`, `rho_method='min_chi_squared'`); callers must verify they want canonical behavior.
+- `BVARMinnesota.__init__` now enforces `prior='minnesota'` (raises `ValueError` on any other value). Internal translation to `_BayesianVAR`'s expected `prior='bvar_minnesota'` happens transparently.
+
+### Fixed — Cycle 63.1
+
+- **CHANGELOG wording**: Cycle 63 line "isinstance check holds for both directions" was misleading — only `isinstance(public_instance, _PrivateClass)` holds (not the reverse). Corrected to specify directionality explicitly.
+
+### Source — Cycle 63.1
+
+Codex external cross-review of PR #340 (`1c49ab98`) surfaced three items: (1) chow_lin_disaggregate didn't enforce sum/mean aggregation conservation despite docstring promise of Chow-Lin disaggregation, (2) BVARMinnesota was a bare _BayesianVAR subclass without prior enforcement, (3) CHANGELOG isinstance claim was bidirectionally false. User chose canonical Chow-Lin (Option A) over rename-and-de-claim (Option B).
+
+---
+
 ## [0.9.3b1] -- 2026-05-22 -- "Round 2 cross-review remediation"
 
 Codex + MiniMax external cross-review identified P0/P1/P2 statistical and governance gaps in v0.9.2b2. This release closes them.
