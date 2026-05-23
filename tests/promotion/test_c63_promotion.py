@@ -189,15 +189,17 @@ class TestModelsImport:
 
     # --- A4: __all__ count ---
 
-    def test_A4_models_all_count_is_22(self) -> None:
-        """mf.models exposes exactly 22 public names (14+3+2+3).
+    def test_A4_models_all_count_is_30(self) -> None:
+        """mf.models exposes exactly 30 public names (14+3+2+3+6+2).
+        C63 promoted 22 classes; C64 added 8 more (6 tree + 2 neural).
         NOTE: dispatch memo says 21 but actual linear.py defines 14 classes
         (MidasAlmon/Beta/Step/Unrestricted + LinearAR + FactorAugmentedAR +
         NonNegRidge/TwoStageRandomWalkRidge/ShrinkToTargetRidge/FusedDifferenceRidge
-        + PCR + FactorAugmentedVAR + VAR + GLMBoost = 14). Total = 22.
+        + PCR + FactorAugmentedVAR + VAR + GLMBoost = 14). C63 total = 22.
+        C64 adds: tree.py (6) + neural.py (2) = 8 more. Grand total = 30.
         """
         import macroforecast.models as mmod
-        assert len(mmod.__all__) == 22
+        assert len(mmod.__all__) == 30
 
 
 # ===========================================================================
