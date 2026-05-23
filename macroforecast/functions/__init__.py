@@ -153,6 +153,12 @@ from .tree import (
     XGBoostFitResult, xgboost_fit,
     LightGBMFitResult, lightgbm_fit,
     CatBoostFitResult, catboost_fit,
+    # C64: tree/ensemble gap callables
+    SlowGrowingTreeFitResult, slow_growing_tree_fit,
+    QuantileRegressionForestFitResult, quantile_regression_forest_fit,
+    BaggingFitResult, bagging_fit,
+    BoogingFitResult, booging_fit,
+    MacroRandomForestFitResult, macro_random_forest_fit,
 )
 
 # Cycle 36: L4 deep family
@@ -161,6 +167,8 @@ from .deep import (
     LSTMFitResult, lstm_fit,
     GRUFitResult, gru_fit,
     TransformerFitResult, transformer_fit,
+    # C64: neural gap callable
+    HemisphereNNFitResult, hemisphere_nn_fit,
 )
 
 # Cycle 37: L4 timeseries family
@@ -352,6 +360,20 @@ __all__ = [
     "gru_fit",
     "TransformerFitResult",
     "transformer_fit",
+    # C64: tree/ensemble gap callables
+    "SlowGrowingTreeFitResult",
+    "slow_growing_tree_fit",
+    "QuantileRegressionForestFitResult",
+    "quantile_regression_forest_fit",
+    "BaggingFitResult",
+    "bagging_fit",
+    "BoogingFitResult",
+    "booging_fit",
+    "MacroRandomForestFitResult",
+    "macro_random_forest_fit",
+    # C64: neural gap callable
+    "HemisphereNNFitResult",
+    "hemisphere_nn_fit",
     # Cycle 37: L4 timeseries family
     "GARCHFitResult",
     "VARFitResult",

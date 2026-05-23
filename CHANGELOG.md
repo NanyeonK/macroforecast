@@ -5,6 +5,22 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added (C64 — R3-P1b Remaining Promotion + BaseEstimator Refactor)
+
+- `macroforecast.models.tree`: 6 public model classes — `SlowGrowingTree`,
+  `QuantileRegressionForest`, `Bagging`, `Booging`, `MacroRandomForest`, `KNN`
+- `macroforecast.models.neural`: 2 public model classes — `SequenceModel`, `HemisphereNN`
+- All 30 `mf.models` classes now inherit from `sklearn.base.BaseEstimator` +
+  `RegressorMixin`: `get_params`, `set_params`, `clone`, `__repr__`, `score` inherited.
+- All 30 `mf.models` classes store `feature_names_in_` and `n_features_in_` during `fit`.
+- `mf.feature_selection`: `Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`,
+  `GeneticSelection` now inherit from `sklearn.base.BaseEstimator` + `TransformerMixin`:
+  `get_params`, `set_params`, `clone`, `__repr__`, `check_estimator`-compatible.
+- `mf.feature_selection`: `feature_names_in_` and `n_features_in_` stored during `fit`.
+- `mf.functions`: 5 tree gap callables — `slow_growing_tree_fit`,
+  `quantile_regression_forest_fit`, `bagging_fit`, `booging_fit`, `macro_random_forest_fit`.
+- `mf.functions`: 1 neural gap callable — `hemisphere_nn_fit`.
+
 ### Added — Cycle 63 (R3-P1a) — Standalone-first paradigm shift
 
 **Round 3** of cross-review remediation: shift macroforecast from a contract-first framework to a library-first standalone API, so that users can import and use individual components without constructing a full YAML recipe.
@@ -102,6 +118,44 @@ User direction: "각 단계들이 너무 강하게 contract 되어있나? packag
 ### Source — Cycle 63.1
 
 Codex external cross-review of PR #340 (`1c49ab98`) surfaced three items: (1) chow_lin_disaggregate didn't enforce sum/mean aggregation conservation despite docstring promise of Chow-Lin disaggregation, (2) BVARMinnesota was a bare _BayesianVAR subclass without prior enforcement, (3) CHANGELOG isinstance claim was bidirectionally false. User chose canonical Chow-Lin (Option A) over rename-and-de-claim (Option B).
+
+---
+
+### Added — Cycle 64 (R3-P1b) — Tree + neural promotions, BaseEstimator refactor
+
+**`macroforecast.models.tree`** (NEW submodule) — 6 tree-family model classes:
+- `SlowGrowingTree` (Coulombe 2023 hemisphere-style)
+- `QuantileRegressionForest` (Meinshausen 2006)
+- `Bagging`, `Booging` (bootstrap-aggregated variants)
+- `MacroRandomForest`, `KNN`
+
+**`macroforecast.models.neural`** (NEW submodule) — 2 neural model classes:
+- `SequenceModel` (LSTM/GRU/Transformer wrapper)
+- `HemisphereNN` (Coulombe 2024 hemisphere neural net)
+
+All 8 inherit `(_<Private>, BaseEstimator, RegressorMixin)` for sklearn ecosystem compatibility (`get_params`, `set_params`, `clone`, `__repr__` auto-inherited).
+
+**`macroforecast.functions`** (extended) — 6 new `*_fit` callables for the new model classes.
+
+### Changed — Cycle 64
+
+**`macroforecast.feature_selection` BaseEstimator refactor**: all 5 selectors (`Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`, `GeneticSelection`) now inherit from `(BaseEstimator, TransformerMixin)`. Adds `feature_names_in_` and `n_features_in_` tracking per sklearn convention. `get_params`, `set_params`, `clone`, `__repr__` are now available for free via inheritance.
+
+- `macroforecast/__init__.py` lazy imports extended for `models.tree` + `models.neural` submodules
+- `mf.models.__all__` count: 22 → 30 (8 new public exports)
+
+### Fixed — Cycle 64 (runtime.py bug fixes)
+
+Two pre-existing bugs in `macroforecast/core/runtime.py` exposed by C64 promotion smoke tests:
+
+- **`_SlowGrowingTree._build` infinite BFS loop**: With `eta < 1` (soft weights), every node retains all n rows at non-zero weight, so the Herfindahl index never drops below the 0.25 threshold on realistic data. Added `max_depth=10` default as a guaranteed stopping condition. Both `_SlowGrowingTree.__init__` and public `SlowGrowingTree.__init__` defaults updated to keep `clone()` semantics consistent.
+- **`_BaggingWrapper.fit` TypeError on `base_params=None`**: `dict(self.base_params)` crashed when `base_params=None` (default). Added conditional guard. The bug triggered via sklearn `set_params()`/`clone()` which bypass `__init__` and can set the attribute to None directly.
+
+Both fixes also benefit recipe-path users of these private classes.
+
+### Source — Cycle 64
+
+Round 3 paradigm shift continuation per `r3-execution-plan.md`. C63 (R3-P1a) shipped 22 L4 promotions; C63.1 closed external review remediation; C64 (R3-P1b) closes the remaining tree + neural surface and resolves the Codex+MiniMax cross-review P1 finding about sklearn ecosystem compatibility.
 
 ---
 

@@ -1,120 +1,125 @@
-# implementation.md — Cycle 59 Fix Retry 1/3
+# implementation.md — Cycle 64 Bug Fix Retry
+
+## Summary
+
+Two pre-existing bugs in `macroforecast/core/runtime.py` uncovered by the
+C64 tester are fixed here, along with one test update. Both bugs affected the
+newly promoted public model classes (`SlowGrowingTree` and `Bagging`).
+
+---
 
 ## Files Modified
 
 ### macroforecast/core/runtime.py
-- Function: `_boruta_selection` (line 17364)
-- Two bugs fixed in the Boruta feature selection implementation.
 
-### tests/core/test_l4_realized_garch_c56.py
-- Class: `TestMRE1TightenedTolerancesT500`
-- `T_DEFAULT` bumped from 500 to 2000 with updated docstrings.
+**Bug A — `_SlowGrowingTree.__init__` max_depth default (line ~5923)**
 
----
+Changed `max_depth: Any = None` to `max_depth: Any = 10`.
 
-## A. Boruta Fix — Two Algorithmic Bugs
+Root cause: the `_build()` BFS only terminates when either (a) the
+Herfindahl index H >= herfindahl_threshold, (b) max_depth is reached, or
+(c) no split improves SSE. With soft weights (eta < 1), every node retains
+all n rows at non-zero weight. H = Σ(ω_i²)/(Σω_i)² stays near 1/n (for
+n=80 this is ~0.013), far below the threshold=0.25. No split can trigger
+the Herfindahl stop, so the only reliable depth bound is max_depth. With
+the old default of None, the BFS grew without bound and hit the 60s timeout.
 
-### Bug 1: Force-select fallback causing 100% FP
+Fix chosen: Option 1 (add max_depth=10 fallback). This matches the depth
+range used in standard CART literature and stops the BFS after at most 2^10
+= 1024 nodes in the worst case. Users wanting deeper trees can pass
+max_depth=None explicitly.
 
-The original code had a fallback at the end of the selection logic:
+**Bug B — `_BaggingWrapper.fit` TypeError on base_params=None (line ~8042)**
 
-```python
-if len(selected_indices) == 0:
-    best_j = int(np.argmax(hit_count))
-    selected_indices = np.array([best_j], dtype=int)
-```
+Changed `params = dict(self.base_params)` to
+`params = dict(self.base_params) if self.base_params is not None else {}`.
 
-This fired whenever no feature was formally accepted (status==1). On a null DGP
-where Boruta correctly determines no feature is relevant, the fallback force-selected
-the feature with the highest cumulative hit count — guaranteeing 1 FP per run.
-Result: 100% FP rate (every seed).
+Root cause: `_BaggingWrapper.__init__` sets `self.base_params = dict(base_params or {})`
+which guards None during direct construction. However, sklearn's
+`BaseEstimator.set_params()` and `clone()` bypass `__init__` and set
+attributes directly, so `self.base_params` can be set to None after
+construction. The `fit()` method then called `dict(None)` which raises
+TypeError. The guard in `fit()` makes it robust regardless of how
+`base_params` was set.
 
-Fix: Remove the fallback entirely. Return `frame.iloc[:, :0]` (zero-column DataFrame)
-when nothing is accepted. This is the correct Algorithm 1 behavior — an empty result is
-valid and expected for null DGPs.
+### macroforecast/models/tree.py
 
-### Bug 2: MISA threshold too low for small T/N — inflated genuine acceptances
+**Bug A companion fix — `SlowGrowingTree.__init__` max_depth default**
 
-After removing the fallback, FP rate dropped from 100% to 30%. The remaining FPs came
-from genuine algorithmic acceptances (status==1). Root cause: with a single shadow copy
-and T/N < 10 (here T=120, N=20, ratio=6), the Random Forest can consistently elevate
-one spurious null feature above the single shadow's maximum importance (MISA). Over 9
-consecutive iterations, that feature accumulates 9/9 hits, then passes the Bonferroni
-binomial test (P(X>=9 | Binom(9, 0.5)) = 0.00195 < alpha/N = 0.0025).
+The public `SlowGrowingTree` class inherits from `_SlowGrowingTree` but
+overrides `__init__` and restores raw parameter values after `super().__init__()`
+(the sklearn clone()-safe pattern documented in tree.py's module docstring).
+This means `self.max_depth = max_depth` at the end of the public class's
+`__init__` overwrites the private class's default of 10 with the public
+class's default of None.
 
-The issue is calibration: the binomial test assumes Bernoulli(p=0.5) trials, but with
-a single shadow copy and N=20, the true null probability of a feature beating MISA is
-1/(N+1) ≈ 0.048. The RF overfitting on small samples creates persistent importance
-rankings that violate the independence assumption of the binomial test.
+Both defaults had to be updated: `_SlowGrowingTree.__init__` (runtime.py)
+and `SlowGrowingTree.__init__` (tree.py).
 
-Fix: Use `n_shadow_copies=6` independent shadow permutations per iteration. MISA is
-taken over 6*N=120 shadow importances (instead of N=20), raising the threshold and
-making it much harder for spurious null features to consistently win. The raised MISA
-restores Bonferroni FP control empirically.
+Updated the docstring for `max_depth` in `SlowGrowingTree` to explain why
+`None` is not recommended for SGT (soft weights keep H low, so max_depth
+is the primary depth bound).
 
-New parameter: `params["n_shadow_copies"]` (default 6, configurable).
+### tests/promotion/test_c63_promotion.py
 
-### Empirical verification (30 seeds)
+**C63 `__all__` count update: 22 → 30**
 
-| Variant | FP rate | Pass? |
-|---------|---------|-------|
-| Original (with fallback) | 100% | FAIL |
-| Fallback removed only | 30% | FAIL |
-| Fallback removed + n_shadow_copies=6 | 3.3% | PASS (<=5%) |
-
-Signal test (seed=42, n=120, N=20, n_rel=4, max_iter=100, n_estimators=100):
-- Recall: 0.75 >= 0.75 PASS
-- Precision: 1.00 >= 0.50 PASS
-
-Dispatch smoke test (n=200, N=10, 30 seeds, FP <= 10%):
-- FP rate: 6.7% PASS
-
----
-
-## B. HHS Gamma — T=2000 Spec Adjustment
-
-The tester reported gamma error 0.101 > atol=0.07 at T=500. T=2000 passes all 11
-parameters within tightened tolerances (confirmed by tester retry-1).
-
-This is a spec adjustment, not a runtime bug. The realized GARCH MLE variance for
-gamma requires O(T^{1/2}) standard errors; with T=500, the asymptotic approximation
-is insufficiently accurate at atol=0.07.
-
-Change: `T_DEFAULT: int = 500` → `T_DEFAULT: int = 2000` in
-`TestMRE1TightenedTolerancesT500`. Docstrings updated to explain the rationale.
-Class name retained for backward compatibility with test collection infrastructure.
-
----
-
-## Unit Tests Written
-
-No new test files created — the existing tester tests were already defined in:
-- `tests/core/test_l3_boruta_null_c59.py` (null + signal)
-- `tests/core/test_l4_realized_garch_c56.py` (MRE-1)
-
-Smoke checks run:
-- Boruta null: 30 seeds, FP rate 3.3% PASS
-- Boruta signal: recall=0.75, precision=1.0 PASS
-- HHS MRE-1: T=2000 seed=42 PASS
-- mypy macroforecast/core/runtime.py: no issues
+`test_A4_models_all_count_is_22` hardcoded 22. After C64 promoted 8 more
+classes (tree.py: 6 + neural.py: 2), `mf.models.__all__` has 30 entries
+(14+3+2+3+6+2). Updated to 30 and renamed the test method to
+`test_A4_models_all_count_is_30` for clarity. Added explanation of the
+C64 additions in the docstring.
 
 ---
 
 ## Commits
 
-- `9cbbe36f`: fix(c59): boruta multi-shadow MISA calibration — remove fallback, add 6x shadow copies
-- `cceaa9be`: test(c59): bump MRE-1 T to 2000 for asymptotic SE tolerance compliance
+1. `971abe92` — `fix(runtime): _SlowGrowingTree._build infinite BFS — add max_depth=10 default`
+   Includes both Bug A (`max_depth=10` default in `_SlowGrowingTree.__init__` and
+   `SlowGrowingTree.__init__`) and Bug B (`base_params is not None` guard in
+   `_BaggingWrapper.fit`). Both were runtime.py changes committed atomically.
+
+2. `713fa341` — `test(c63): update mf.models __all__ count after C64 promotions (22 → 30)`
 
 ---
 
-## Known Limitations / Deferred Items
+## Test Results
 
-- The n_shadow_copies=6 default was calibrated empirically for T/N in [6, 10] and N=20.
-  For very large N (e.g. N=100), the default may need adjustment. Users can pass
-  `n_shadow_copies` in the params dict to override.
-- Signal recall is exactly 0.75 (3/4 relevant features) for seed=42. The weakest signal
-  feature (x3, coeff=0.3) is marginally not detected with max_iter=100. This is within
-  spec but indicates the algorithm is near its detection limit for this DGP.
-- The HHS T=500 variant (`TestMRE1TightenedTolerancesT500.T_DEFAULT`) is now 2000.
-  The T=2000 fallback class (`TestMRE1TightenedTolerancesT2000`) continues to run
-  redundantly; this is benign.
+```
+tests/promotion/ — 388 passed, 7 deselected (slow/deep/heavy)
+```
+
+Specifically verified:
+- `TestSlowGrowingTree::test_ST3_smoke_fit_predict` — PASSED (was timeout)
+- `TestBagging::test_BA3_smoke_fit_predict` — PASSED (was TypeError)
+- All other C63 + C64 promotion tests still pass
+
+---
+
+## Design Choices
+
+- Bug A fix: Option 1 (max_depth=10) was chosen over Option 2 (Herfindahl
+  comparison inversion) because the Herfindahl check is logically correct —
+  the paper says "split when H < H-bar (low concentration = many effective
+  rows)". With soft weights the Herfindahl condition is vacuously true, so
+  a depth cap is the appropriate structural fix. Option 3 (no-improvement
+  plateau) was not chosen because `_best_split` already returns None when
+  no SSE improvement is possible, but this only fires when the tree is
+  already over-fitted and homogeneous, not early enough for default data.
+
+- Both defaults (private and public class) must agree. Changing only the
+  private class would be silently overridden by the sklearn restore pattern
+  in the public class.
+
+---
+
+## Known Limitations
+
+- `max_depth=None` with SGT and soft weights (eta < 1) will still be
+  unbounded in theory. This is documented in the updated `SlowGrowingTree`
+  docstring as "not recommended". For the default use case (eta=0.1,
+  herfindahl_threshold=0.25), max_depth=10 gives reasonable tree depth.
+
+- The uv.lock file was updated by `uv pip install pytest pytest-timeout`
+  during smoke validation. These are test-only dependencies and do not
+  affect production use.

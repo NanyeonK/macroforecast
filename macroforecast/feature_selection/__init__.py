@@ -36,6 +36,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 # ---------------------------------------------------------------------------
@@ -64,7 +65,7 @@ def _to_series(y: np.ndarray | pd.Series) -> pd.Series:
 # Boruta
 # ---------------------------------------------------------------------------
 
-class Boruta:
+class Boruta(BaseEstimator, TransformerMixin):
     """Boruta feature selection (Kursa & Rudnicki 2010, Algorithm 1).
 
     Implements Algorithm 1 with multi-shadow augmentation to control the
@@ -140,6 +141,10 @@ class Boruta:
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
+        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
+        self.n_features_in_ = len(self.feature_names_in_)
+        # --- existing selection logic ---
         params: dict[str, Any] = {
             "n_estimators_rf": self.n_estimators_rf,
             "max_iter": self.max_iter,
@@ -214,7 +219,7 @@ class Boruta:
 # RFE
 # ---------------------------------------------------------------------------
 
-class RFE:
+class RFE(BaseEstimator, TransformerMixin):
     """Recursive Feature Elimination (Guyon, Weston, Barnhill & Vapnik 2002).
 
     Iteratively prunes the feature with the lowest squared-coefficient ranking
@@ -289,6 +294,10 @@ class RFE:
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
+        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
+        self.n_features_in_ = len(self.feature_names_in_)
+        # --- existing selection logic ---
         params: dict[str, Any] = {
             "n_features_to_select": self.n_features_to_select,
             "step": self.step,
@@ -362,7 +371,7 @@ class RFE:
 # LassoPathSelector
 # ---------------------------------------------------------------------------
 
-class LassoPathSelector:
+class LassoPathSelector(BaseEstimator, TransformerMixin):
     """LARS path entry-order feature selection (Efron et al. 2004).
 
     Selects features in the order they enter the LARS active set as
@@ -428,6 +437,10 @@ class LassoPathSelector:
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
+        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
+        self.n_features_in_ = len(self.feature_names_in_)
+        # --- existing selection logic ---
         params: dict[str, Any] = {
             "n_features_to_select": self.n_features_to_select,
             "normalize_features": self.normalize_features,
@@ -498,7 +511,7 @@ class LassoPathSelector:
 # StabilitySelection
 # ---------------------------------------------------------------------------
 
-class StabilitySelection:
+class StabilitySelection(BaseEstimator, TransformerMixin):
     """Stability selection (Meinshausen & Buhlmann 2010, Section 2).
 
     Repeatedly fits a Lasso or ElasticNet on random subsamples and selects
@@ -571,6 +584,10 @@ class StabilitySelection:
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
+        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
+        self.n_features_in_ = len(self.feature_names_in_)
+        # --- existing selection logic ---
         params: dict[str, Any] = {
             "n_subsamples": self.n_subsamples,
             "subsample_fraction": self.subsample_fraction,
@@ -644,7 +661,7 @@ class StabilitySelection:
 # GeneticSelection
 # ---------------------------------------------------------------------------
 
-class GeneticSelection:
+class GeneticSelection(BaseEstimator, TransformerMixin):
     """Genetic algorithm feature selection (Goldberg 1989, Chapters 1-3).
 
     Implements a binary-chromosome GA: tournament selection, single-point
@@ -719,6 +736,10 @@ class GeneticSelection:
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
+        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
+        self.n_features_in_ = len(self.feature_names_in_)
+        # --- existing selection logic ---
         params: dict[str, Any] = {
             "population_size": self.population_size,
             "n_generations": self.n_generations,

@@ -5923,7 +5923,7 @@ class _SlowGrowingTree:
         eta_depth_step: float = 0.01,
         eta_max_plateau: float = 0.5,
         mtry_frac: float = 1.0,
-        max_depth: Any = None,
+        max_depth: Any = 10,
         random_state: int = 0,
         min_leaf_size: int = 5,
     ) -> None:
@@ -8039,7 +8039,7 @@ class _BaggingWrapper:
             idx = self._draw_indices(rng, n, sample_size)
             sub_X = X.iloc[idx]
             sub_y = y.iloc[idx]
-            params = dict(self.base_params)
+            params = dict(self.base_params) if self.base_params is not None else {}
             params["random_state"] = (self.random_state + i) % (2**31 - 1)
             model = _build_l4_model(self.base_family, params)
             try:
