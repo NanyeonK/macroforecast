@@ -46,7 +46,7 @@ y = pd.Series(y_vals, index=dates, name="gdp_growth")
 
 `LinearAR` estimates an AR(p) model by OLS on the lag matrix. The constructor
 takes one required argument, `p`, which sets the lag order. The `fit` method
-accepts both `X` and `y` to satisfy the sklearn convention; `X` is not used
+accepts both `X` and `y` to satisfy the sklearn convention. `X` is not used
 internally by `LinearAR` but must be passed. Passing an empty DataFrame with
 a matching index is the cleanest option when no predictors are available.
 

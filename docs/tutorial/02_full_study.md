@@ -52,7 +52,7 @@ autoregressive and factor-based models should find signal.
 ## Out-of-sample loop with LinearAR
 
 We use `TimeSeriesSplit` with five folds and a fixed test size of 20 observations
-per fold. `LinearAR` is a target-only model; it accepts `X` for API uniformity
+per fold. `LinearAR` is a target-only model that accepts `X` for API uniformity
 but does not use it in estimation. We pass the predictor frame anyway so that
 the loop structure is uniform across all three models.
 
@@ -129,7 +129,7 @@ print(summary.to_string())
 We expect FAAR to outperform LinearAR when the factor structure in `X` explains
 target variation, because the PCA step recovers latent predictors that AR lags
 alone cannot. PCR provides a simpler factor extraction without an autoregressive
-component; its advantage over LinearAR depends on the signal-to-noise ratio in
+component. Its advantage over LinearAR depends on the signal-to-noise ratio in
 the predictor panel. On this synthetic dataset the factor loadings in `beta` are
 moderate, so the ranking may vary across random seeds.
 

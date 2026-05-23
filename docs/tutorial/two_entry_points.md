@@ -44,7 +44,7 @@ See {doc}`01_first_forecast` for a complete worked example.
 
 - You want a **self-contained, reproducible study** that a colleague can
   replicate from a single file.
-- You need **sweep experiments** — trying multiple model families,
+- You need **sweep experiments**, trying multiple model families,
   regularisation strengths, or evaluation windows with a single recipe.
 - You are using **FRED-MD / FRED-QD / FRED-SD** datasets and want
   the built-in vintage management, tcode transforms, and McCracken-Ng
@@ -68,7 +68,7 @@ assert replication.sink_hashes_match   # bit-exact
 
 If you start with standalone models and later need reproducibility or
 systematic sweeps, graduate to the recipe pipeline. The model families are
-the same underneath — `LinearAR(p=2)` in standalone mode uses the same
+the same underneath. `LinearAR(p=2)` in standalone mode uses the same
 implementation as `family: ar_p` in a recipe. Adding a YAML recipe around
 your study gains provenance, sweep expansion, and the full L6 test battery
 without changing the underlying models.

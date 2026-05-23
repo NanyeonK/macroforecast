@@ -34,7 +34,7 @@ and the recipe registration API.
 
 The class below fits a linear time trend plus an AR(1) residual correction by OLS.
 It accepts `X` in both `fit` and `predict` to satisfy the sklearn convention, but
-does not use feature columns; the `X` argument serves only to convey the row count
+does not use feature columns. The `X` argument serves only to convey the row count
 at predict time.
 
 ```python
