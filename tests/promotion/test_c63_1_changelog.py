@@ -2,7 +2,10 @@
 
 Tests C1-C3 from test-spec.md Section 5. Verifies that:
     C1 — CHANGELOG.md contains the corrected isinstance wording.
-    C2 — The old misleading phrase 'both directions' is absent.
+    C2 — The old misleading phrase 'both directions' is absent from the
+         active C63 [Unreleased] section (not file-global; the Fixed —
+         Cycle 63.1 section legitimately quotes the old phrase as a
+         historical description of the bug that was corrected).
     C3 — The reverse-direction clarification ('is False') is present.
 
 test-spec.md Section 5 specifies manual-reviewer inspection; these tests
@@ -24,6 +27,32 @@ _CHANGELOG = _WORKTREE_ROOT / "CHANGELOG.md"
 def _read_changelog_text() -> str:
     """Read full CHANGELOG.md text."""
     return _CHANGELOG.read_text(encoding="utf-8")
+
+
+def _read_c63_active_section() -> str:
+    """Extract only the Cycle 63 [Unreleased] active section from CHANGELOG.md.
+
+    The C63 active section begins at '### Added — Cycle 63' and ends at the
+    '---' separator that precedes '### Added — Cycle 63.1'.  The Fixed —
+    Cycle 63.1 block that follows intentionally quotes the old phrasing as a
+    historical record of the bug; the C2 test must not fire on that quote.
+    """
+    text = _read_changelog_text()
+    # Delimit the C63 active block: everything from its header up to (but not
+    # including) the first '---' horizontal rule that closes it.
+    start_marker = "### Added — Cycle 63"
+    end_marker = "---"
+    start_idx = text.find(start_marker)
+    if start_idx == -1:
+        raise AssertionError(
+            "C2/setup FAIL: '### Added — Cycle 63' section not found in CHANGELOG.md."
+        )
+    # Search for the closing '---' *after* the section start.
+    end_idx = text.find(end_marker, start_idx)
+    if end_idx == -1:
+        # If no '---' exists after the section, take the rest of the file.
+        return text[start_idx:]
+    return text[start_idx:end_idx]
 
 
 # ---------------------------------------------------------------------------
@@ -50,16 +79,24 @@ def test_C1_corrected_wording_present() -> None:
 
 
 # ---------------------------------------------------------------------------
-# C2 — Old misleading phrase is absent
+# C2 — Old misleading phrase is absent from the active C63 section
 # ---------------------------------------------------------------------------
 
 def test_C2_old_phrase_absent() -> None:
-    """C2: CHANGELOG.md does NOT contain the old phrase 'both directions'."""
-    text = _read_changelog_text()
+    """C2: The active C63 [Unreleased] section does NOT use 'both directions'.
+
+    Scope is narrowed to the C63 active section only (from '### Added —
+    Cycle 63' up to the closing '---' separator).  The subsequent
+    'Fixed — Cycle 63.1' block legitimately quotes the old phrase as a
+    historical description of the corrected bug; a file-global search would
+    produce a false positive against that historical record.
+    """
+    c63_section = _read_c63_active_section()
 
     old_phrase = "both directions"
-    assert old_phrase not in text, (
-        f"C2 FAIL: old misleading phrase 'both directions' still present in CHANGELOG.md."
+    assert old_phrase not in c63_section, (
+        "C2 FAIL: old misleading phrase 'both directions' is still present "
+        "as an active claim in the Cycle 63 [Unreleased] section of CHANGELOG.md."
     )
 
 
