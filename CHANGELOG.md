@@ -5,6 +5,22 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Added (C64 — R3-P1b Remaining Promotion + BaseEstimator Refactor)
+
+- `macroforecast.models.tree`: 6 public model classes — `SlowGrowingTree`,
+  `QuantileRegressionForest`, `Bagging`, `Booging`, `MacroRandomForest`, `KNN`
+- `macroforecast.models.neural`: 2 public model classes — `SequenceModel`, `HemisphereNN`
+- All 30 `mf.models` classes now inherit from `sklearn.base.BaseEstimator` +
+  `RegressorMixin`: `get_params`, `set_params`, `clone`, `__repr__`, `score` inherited.
+- All 30 `mf.models` classes store `feature_names_in_` and `n_features_in_` during `fit`.
+- `mf.feature_selection`: `Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`,
+  `GeneticSelection` now inherit from `sklearn.base.BaseEstimator` + `TransformerMixin`:
+  `get_params`, `set_params`, `clone`, `__repr__`, `check_estimator`-compatible.
+- `mf.feature_selection`: `feature_names_in_` and `n_features_in_` stored during `fit`.
+- `mf.functions`: 5 tree gap callables — `slow_growing_tree_fit`,
+  `quantile_regression_forest_fit`, `bagging_fit`, `booging_fit`, `macro_random_forest_fit`.
+- `mf.functions`: 1 neural gap callable — `hemisphere_nn_fit`.
+
 ### Added — Cycle 63 (R3-P1a) — Standalone-first paradigm shift
 
 **Round 3** of cross-review remediation: shift macroforecast from a contract-first framework to a library-first standalone API, so that users can import and use individual components without constructing a full YAML recipe.
