@@ -18,6 +18,9 @@ Horse race research benchmarking package for macro forecasting.
 
 **Importable submodule surface**
 
+- ``macroforecast.recipes`` -- canonical recipe-orchestration namespace (v0.9.5a);
+  ``mf.run`` / ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are
+  backward-compatible aliases pointing here.
 - ``macroforecast.custom`` -- user-defined model / preprocessor / feature registration
 - ``macroforecast.defaults`` -- default profile dict template
 - ``macroforecast.preprocessing`` -- preprocessing contract helpers
@@ -35,16 +38,17 @@ from typing import Any
 __version__ = "0.9.3b1"
 
 _LAZY_EXPORTS = {
-    # public top-level API
-    "run": ".api",
-    "run_file": ".api",
-    "replicate": ".api",
-    "ManifestExecutionResult": ".api",
-    "ReplicationResult": ".api",
-    # high-level façade (v0.8.0)
-    "forecast": ".api_high",
-    "Experiment": ".api_high",
-    "ForecastResult": ".api_high",
+    # public top-level API -- routed through macroforecast.recipes (v0.9.5a)
+    # mf.run / mf.replicate / etc. are silent aliases for mf.recipes.run / etc.
+    "run": ".recipes",
+    "run_file": ".recipes",
+    "replicate": ".recipes",
+    "ManifestExecutionResult": ".recipes",
+    "ReplicationResult": ".recipes",
+    # high-level façade -- also routed through macroforecast.recipes (v0.9.5a)
+    "forecast": ".recipes",
+    "Experiment": ".recipes",
+    "ForecastResult": ".recipes",
     # defaults
     "DEFAULT_PROFILE": ".defaults",
     "DEFAULT_PROFILE_NAME": ".defaults",
