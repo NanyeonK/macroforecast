@@ -74,8 +74,10 @@ class SlowGrowingTree(_SlowGrowingTree, BaseEstimator, RegressorMixin):
         Plateau cap for eta after depth steps (paper p.87).
     mtry_frac : float, default 1.0
         Fraction of features considered at each split (1.0 = all).
-    max_depth : int or None, default None
-        Hard maximum tree depth. None = unlimited.
+    max_depth : int or None, default 10
+        Hard maximum tree depth. None = unlimited (not recommended for SGT
+        with soft weights -- the Herfindahl index stays low with uniform
+        weights so max_depth is the primary depth-bounding mechanism).
     random_state : int, default 0
         Random seed for mtry sampling.
     min_leaf_size : int, default 5
@@ -98,7 +100,7 @@ class SlowGrowingTree(_SlowGrowingTree, BaseEstimator, RegressorMixin):
         eta_depth_step: float = 0.01,
         eta_max_plateau: float = 0.5,
         mtry_frac: float = 1.0,
-        max_depth: int | None = None,
+        max_depth: int | None = 10,
         random_state: int = 0,
         min_leaf_size: int = 5,
     ) -> None:
