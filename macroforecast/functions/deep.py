@@ -810,4 +810,115 @@ __all__ = [
     "gru_fit",
     "TransformerFitResult",
     "transformer_fit",
+    # C64: HemisphereNN gap callable
+    "HemisphereNNFitResult",
+    "hemisphere_nn_fit",
 ]
+
+
+# ---------------------------------------------------------------------------
+# C64: HemisphereNN gap callable
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class HemisphereNNFitResult:
+    """Result of :func:`hemisphere_nn_fit`.
+
+    Attributes
+    ----------
+    _model :
+        Internal fitted ``_HemisphereNN`` instance.
+        Not part of the public contract.
+    """
+
+    _model: Any
+
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Return point predictions (mean hemisphere output) for new data.
+
+        Parameters
+        ----------
+        X :
+            Feature matrix. Accepts numpy arrays or DataFrames.
+
+        Returns
+        -------
+        np.ndarray
+            1-D float array of predictions.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return np.asarray(self._model.predict(X), dtype=float).ravel()
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the HemisphereNN fit result.
+
+        Returns
+        -------
+        str
+            Minimal statsmodels-style table showing model type and key parameters.
+        """
+        sep = "=" * 78
+        params = self._model.get_params() if hasattr(self._model, "get_params") else {}
+        neurons = params.get("neurons", getattr(self._model, "neurons", "?"))
+        B = params.get("B", getattr(self._model, "B", "?"))
+        lines = [
+            sep,
+            f"{'HemisphereNN Results':^78}",
+            sep,
+            f"{'neurons:':35s} {str(neurons):>20s}",
+            f"{'B (bags):':35s} {str(B):>20s}",
+            sep,
+        ]
+        return "\n".join(lines)
+
+
+def hemisphere_nn_fit(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    **kwargs: Any,
+) -> HemisphereNNFitResult:
+    """Fit a Hemisphere Neural Networks density forecaster (Goulet Coulombe et al. 2025).
+
+    Standalone callable that constructs a ``_HemisphereNN`` directly,
+    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+
+    Raises NotImplementedError if macroforecast[deep] is not installed.
+
+    Parameters
+    ----------
+    X :
+        Feature matrix. Shape (n_samples, n_features). Accepts numpy
+        arrays or DataFrames.
+    y :
+        Target vector. Shape (n_samples,). Accepts numpy arrays or Series.
+    **kwargs :
+        Keyword arguments forwarded to ``_HemisphereNN`` constructor
+        (e.g., ``neurons=64``, ``B=100``, ``nu=None``).
+
+    Returns
+    -------
+    HemisphereNNFitResult
+        Fitted result exposing ``.predict(X)`` and ``.summary()`` methods.
+
+    Raises
+    ------
+    NotImplementedError
+        If macroforecast[deep] (PyTorch) is not installed.
+
+    References
+    ----------
+    Goulet Coulombe, Frenette, Klieber (2025),
+    "Hemisphere Neural Networks for Density Forecasting",
+    Journal of Applied Econometrics.
+    """
+    from ..core.runtime import _HemisphereNN
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    if isinstance(y, np.ndarray):
+        y = pd.Series(y.ravel(), name="y")
+
+    model = _HemisphereNN(**kwargs)
+    model.fit(X, y)
+    return HemisphereNNFitResult(_model=model)

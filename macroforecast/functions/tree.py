@@ -1115,4 +1115,520 @@ __all__ = [
     "lightgbm_fit",
     "CatBoostFitResult",
     "catboost_fit",
+    # C64: gap callables for tree-family private classes
+    "SlowGrowingTreeFitResult",
+    "slow_growing_tree_fit",
+    "QuantileRegressionForestFitResult",
+    "quantile_regression_forest_fit",
+    "BaggingFitResult",
+    "bagging_fit",
+    "BoogingFitResult",
+    "booging_fit",
+    "MacroRandomForestFitResult",
+    "macro_random_forest_fit",
 ]
+
+
+# ---------------------------------------------------------------------------
+# C64: Gap callables for tree-family private classes
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class SlowGrowingTreeFitResult:
+    """Result of :func:`slow_growing_tree_fit`.
+
+    Attributes
+    ----------
+    _model :
+        Internal fitted ``_SlowGrowingTree`` instance.
+        Not part of the public contract.
+    """
+
+    _model: Any
+
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Return point predictions for new data.
+
+        Parameters
+        ----------
+        X :
+            Feature matrix. Accepts numpy arrays or DataFrames.
+
+        Returns
+        -------
+        np.ndarray
+            1-D float array of predictions.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return np.asarray(self._model.predict(X), dtype=float).ravel()
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the SGT fit result.
+
+        Returns
+        -------
+        str
+            Minimal statsmodels-style table showing model type and parameters.
+        """
+        sep = "=" * 78
+        params = self._model.get_params() if hasattr(self._model, "get_params") else {}
+        eta = params.get("eta", getattr(self._model, "eta", "?"))
+        lines = [
+            sep,
+            f"{'SlowGrowingTree Results':^78}",
+            sep,
+            f"{'eta:':35s} {str(eta):>20s}",
+            sep,
+        ]
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class QuantileRegressionForestFitResult:
+    """Result of :func:`quantile_regression_forest_fit`.
+
+    Attributes
+    ----------
+    _model :
+        Internal fitted ``_QuantileRegressionForest`` instance.
+        Not part of the public contract.
+    """
+
+    _model: Any
+
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Return point predictions (forest mean) for new data.
+
+        Parameters
+        ----------
+        X :
+            Feature matrix. Accepts numpy arrays or DataFrames.
+
+        Returns
+        -------
+        np.ndarray
+            1-D float array of predictions.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return np.asarray(self._model.predict(X), dtype=float).ravel()
+
+    def predict_quantiles(
+        self, X: np.ndarray | pd.DataFrame
+    ) -> "dict[float, np.ndarray]":
+        """Return per-quantile predictions.
+
+        Parameters
+        ----------
+        X :
+            Feature matrix.
+
+        Returns
+        -------
+        dict[float, np.ndarray]
+            Mapping from quantile level to 1-D prediction array.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return self._model.predict_quantiles(X)
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the QRF fit result.
+
+        Returns
+        -------
+        str
+            Minimal statsmodels-style table showing model type and parameters.
+        """
+        sep = "=" * 78
+        params = self._model.get_params() if hasattr(self._model, "get_params") else {}
+        n_est = params.get("n_estimators", getattr(self._model, "n_estimators", "?"))
+        lines = [
+            sep,
+            f"{'QuantileRegressionForest Results':^78}",
+            sep,
+            f"{'n_estimators:':35s} {str(n_est):>20s}",
+            sep,
+        ]
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class BaggingFitResult:
+    """Result of :func:`bagging_fit`.
+
+    Attributes
+    ----------
+    _model :
+        Internal fitted ``_BaggingWrapper`` instance.
+        Not part of the public contract.
+    """
+
+    _model: Any
+
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Return bag-mean predictions for new data.
+
+        Parameters
+        ----------
+        X :
+            Feature matrix. Accepts numpy arrays or DataFrames.
+
+        Returns
+        -------
+        np.ndarray
+            1-D float array of predictions.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return np.asarray(self._model.predict(X), dtype=float).ravel()
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the Bagging fit result.
+
+        Returns
+        -------
+        str
+            Minimal statsmodels-style table showing model type and parameters.
+        """
+        sep = "=" * 78
+        params = self._model.get_params() if hasattr(self._model, "get_params") else {}
+        n_est = params.get("n_estimators", getattr(self._model, "n_estimators", "?"))
+        base = params.get("base_family", getattr(self._model, "base_family", "?"))
+        lines = [
+            sep,
+            f"{'Bagging Results':^78}",
+            sep,
+            f"{'base_family:':35s} {str(base):>20s}",
+            f"{'n_estimators:':35s} {str(n_est):>20s}",
+            sep,
+        ]
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class BoogingFitResult:
+    """Result of :func:`booging_fit`.
+
+    Attributes
+    ----------
+    _model :
+        Internal fitted ``_BoogingWrapper`` instance.
+        Not part of the public contract.
+    """
+
+    _model: Any
+
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Return bag-mean predictions for new data.
+
+        Parameters
+        ----------
+        X :
+            Feature matrix. Accepts numpy arrays or DataFrames.
+
+        Returns
+        -------
+        np.ndarray
+            1-D float array of predictions.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return np.asarray(self._model.predict(X), dtype=float).ravel()
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the Booging fit result.
+
+        Returns
+        -------
+        str
+            Minimal statsmodels-style table showing model type and parameters.
+        """
+        sep = "=" * 78
+        params = self._model.get_params() if hasattr(self._model, "get_params") else {}
+        B = params.get("B", getattr(self._model, "B", "?"))
+        lines = [
+            sep,
+            f"{'Booging Results':^78}",
+            sep,
+            f"{'B (outer bags):':35s} {str(B):>20s}",
+            sep,
+        ]
+        return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class MacroRandomForestFitResult:
+    """Result of :func:`macro_random_forest_fit`.
+
+    Attributes
+    ----------
+    _model :
+        Internal fitted ``_MRFExternalWrapper`` instance.
+        Not part of the public contract.
+    """
+
+    _model: Any
+
+    def predict(self, X: np.ndarray | pd.DataFrame) -> np.ndarray:
+        """Return MRF predictions for new data.
+
+        Note: This is computationally expensive -- each call re-runs the full
+        ensemble loop with the OOS rows appended to the training panel
+        (the MRF algorithm is a fit-and-forecast pipeline, not a stored model).
+
+        Parameters
+        ----------
+        X :
+            Feature matrix. Accepts numpy arrays or DataFrames.
+
+        Returns
+        -------
+        np.ndarray
+            1-D float array of predictions.
+        """
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+        return np.asarray(self._model.predict(X), dtype=float).ravel()
+
+    def summary(self) -> str:
+        """Return a human-readable summary of the MRF fit result.
+
+        Returns
+        -------
+        str
+            Minimal statsmodels-style table showing model type and parameters.
+        """
+        sep = "=" * 78
+        params = self._model.get_params() if hasattr(self._model, "get_params") else {}
+        B = params.get("B", getattr(self._model, "B", "?"))
+        lines = [
+            sep,
+            f"{'MacroRandomForest Results':^78}",
+            sep,
+            f"{'B (bags):':35s} {str(B):>20s}",
+            sep,
+        ]
+        return "\n".join(lines)
+
+
+def slow_growing_tree_fit(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    **kwargs: Any,
+) -> SlowGrowingTreeFitResult:
+    """Fit a Slow-Growing Tree (Goulet Coulombe 2024).
+
+    Standalone callable that constructs a ``_SlowGrowingTree`` directly,
+    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+
+    Parameters
+    ----------
+    X :
+        Feature matrix. Shape (n_samples, n_features). Accepts numpy
+        arrays or DataFrames.
+    y :
+        Target vector. Shape (n_samples,). Accepts numpy arrays or Series.
+    **kwargs :
+        Keyword arguments forwarded to ``_SlowGrowingTree`` constructor
+        (e.g., ``eta=0.2``, ``herfindahl_threshold=0.3``).
+
+    Returns
+    -------
+    SlowGrowingTreeFitResult
+        Fitted result exposing ``.predict(X)`` and ``.summary()`` methods.
+
+    References
+    ----------
+    Goulet Coulombe (2024), "The Slow-Growing Tree."
+    """
+    from ..core.runtime import _SlowGrowingTree
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    if isinstance(y, np.ndarray):
+        y = pd.Series(y.ravel(), name="y")
+
+    model = _SlowGrowingTree(**kwargs)
+    model.fit(X, y)
+    return SlowGrowingTreeFitResult(_model=model)
+
+
+def quantile_regression_forest_fit(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    **kwargs: Any,
+) -> QuantileRegressionForestFitResult:
+    """Fit a Quantile Regression Forest (Meinshausen 2006).
+
+    Standalone callable that constructs a ``_QuantileRegressionForest`` directly,
+    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+
+    Parameters
+    ----------
+    X :
+        Feature matrix. Shape (n_samples, n_features). Accepts numpy
+        arrays or DataFrames.
+    y :
+        Target vector. Shape (n_samples,). Accepts numpy arrays or Series.
+    **kwargs :
+        Keyword arguments forwarded to ``_QuantileRegressionForest`` constructor
+        (e.g., ``n_estimators=200``, ``quantile_levels=(0.1, 0.5, 0.9)``).
+
+    Returns
+    -------
+    QuantileRegressionForestFitResult
+        Fitted result exposing ``.predict(X)``, ``.predict_quantiles(X)``,
+        and ``.summary()`` methods.
+
+    References
+    ----------
+    Meinshausen (2006), "Quantile Regression Forests",
+    Journal of Machine Learning Research 7, pp. 983-999.
+    """
+    from ..core.runtime import _QuantileRegressionForest
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    if isinstance(y, np.ndarray):
+        y = pd.Series(y.ravel(), name="y")
+
+    model = _QuantileRegressionForest(**kwargs)
+    model.fit(X, y)
+    return QuantileRegressionForestFitResult(_model=model)
+
+
+def bagging_fit(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    **kwargs: Any,
+) -> BaggingFitResult:
+    """Fit a Bagging meta-estimator (Breiman 1996).
+
+    Standalone callable that constructs a ``_BaggingWrapper`` directly,
+    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+
+    Parameters
+    ----------
+    X :
+        Feature matrix. Shape (n_samples, n_features). Accepts numpy
+        arrays or DataFrames.
+    y :
+        Target vector. Shape (n_samples,). Accepts numpy arrays or Series.
+    **kwargs :
+        Keyword arguments forwarded to ``_BaggingWrapper`` constructor
+        (e.g., ``base_family="ridge"``, ``n_estimators=50``,
+        ``strategy="block"``).
+
+    Returns
+    -------
+    BaggingFitResult
+        Fitted result exposing ``.predict(X)`` and ``.summary()`` methods.
+
+    References
+    ----------
+    Breiman (1996), "Bagging Predictors",
+    Machine Learning 24(2), pp. 123-140.
+    """
+    from ..core.runtime import _BaggingWrapper
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    if isinstance(y, np.ndarray):
+        y = pd.Series(y.ravel(), name="y")
+
+    model = _BaggingWrapper(**kwargs)
+    model.fit(X, y)
+    return BaggingFitResult(_model=model)
+
+
+def booging_fit(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    **kwargs: Any,
+) -> BoogingFitResult:
+    """Fit a Booging estimator (Goulet Coulombe 2024).
+
+    Standalone callable that constructs a ``_BoogingWrapper`` directly,
+    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+
+    Parameters
+    ----------
+    X :
+        Feature matrix. Shape (n_samples, n_features). Accepts numpy
+        arrays or DataFrames.
+    y :
+        Target vector. Shape (n_samples,). Accepts numpy arrays or Series.
+    **kwargs :
+        Keyword arguments forwarded to ``_BoogingWrapper`` constructor
+        (e.g., ``B=100``, ``sample_frac=0.75``,
+        ``inner_n_estimators=1500``).
+
+    Returns
+    -------
+    BoogingFitResult
+        Fitted result exposing ``.predict(X)`` and ``.summary()`` methods.
+
+    References
+    ----------
+    Goulet Coulombe (2024), "To Bag is to Prune",
+    Journal of Applied Econometrics (forthcoming).
+    """
+    from ..core.runtime import _BoogingWrapper
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    if isinstance(y, np.ndarray):
+        y = pd.Series(y.ravel(), name="y")
+
+    model = _BoogingWrapper(**kwargs)
+    model.fit(X, y)
+    return BoogingFitResult(_model=model)
+
+
+def macro_random_forest_fit(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.Series,
+    **kwargs: Any,
+) -> MacroRandomForestFitResult:
+    """Fit a Macroeconomic Random Forest (Coulombe 2024 JAE).
+
+    Standalone callable that constructs a ``_MRFExternalWrapper`` directly,
+    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+
+    Note: Raises RuntimeError if the vendored macro_random_forest package is
+    not available in the macroforecast installation.
+
+    Parameters
+    ----------
+    X :
+        Feature matrix. Shape (n_samples, n_features). Accepts numpy
+        arrays or DataFrames.
+    y :
+        Target vector. Shape (n_samples,). Accepts numpy arrays or Series.
+    **kwargs :
+        Keyword arguments forwarded to ``_MRFExternalWrapper`` constructor
+        (e.g., ``B=50``, ``ridge_lambda=0.1``, ``random_state=0``).
+
+    Returns
+    -------
+    MacroRandomForestFitResult
+        Fitted result exposing ``.predict(X)`` and ``.summary()`` methods.
+        Note: predict() is computationally expensive.
+
+    References
+    ----------
+    Coulombe (2024), "The Macroeconomy as a Random Forest",
+    Journal of Applied Econometrics 39(4).
+    """
+    from ..core.runtime import _MRFExternalWrapper
+
+    if isinstance(X, np.ndarray):
+        X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
+    if isinstance(y, np.ndarray):
+        y = pd.Series(y.ravel(), name="y")
+
+    model = _MRFExternalWrapper(**kwargs)
+    model.fit(X, y)
+    return MacroRandomForestFitResult(_model=model)
