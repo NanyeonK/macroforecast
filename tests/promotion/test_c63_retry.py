@@ -8,7 +8,10 @@ D. @pytest.mark.slow collection filter for C56 tests (D-1 done separately via CL
 This file is authored independently from builder's tests and implementation.md.
 Tester does NOT read implementation.md.
 
-Synthetic data: seed=42, n=80, p=10 (matching test-spec-addendum.md Section 2).
+Synthetic data:
+  _make_xy       — seed=42, n=80,  p=10, pure noise (for C-section shape/type tests)
+  _make_xy_signal — seed=42, n=200, p=10, 2 true signals at x0 and x2
+                   (for B-2 and B-3 where column count must be >= 1)
 """
 from __future__ import annotations
 
@@ -18,7 +21,7 @@ import pytest
 
 
 # ---------------------------------------------------------------------------
-# Shared synthetic data factory (seed=42, n=80, p=10)
+# Shared synthetic data factories
 # ---------------------------------------------------------------------------
 
 def _make_xy(
@@ -26,13 +29,36 @@ def _make_xy(
     p: int = 10,
     seed: int = 42,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """Build (X, y) matching test-spec-addendum.md Scenario B-2."""
+    """Build (X, y) with pure noise — used for C-section tests that only
+    need shape / type checks and do not assert on column count."""
     rng = np.random.default_rng(seed)
     X = pd.DataFrame(
         rng.standard_normal((n, p)),
         columns=[f"x{i}" for i in range(p)],
     )
     y = pd.Series(rng.standard_normal(n), name="y")
+    return X, y
+
+
+def _make_xy_signal(
+    n: int = 200,
+    p: int = 10,
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Build (X, y) with 2 true signals at columns x0 (beta=1.5) and x2
+    (beta=1.2), noise std=0.3.  Used for B-2 and B-3 where the assertion
+    1 <= cols <= p requires at least one feature to be selected.
+
+    n=200 gives Boruta adequate power to detect both signals reliably.
+    """
+    rng = np.random.default_rng(seed)
+    X_arr = rng.standard_normal((n, p))
+    true_beta = np.zeros(p)
+    true_beta[0] = 1.5
+    true_beta[2] = 1.2
+    y_arr = X_arr @ true_beta + 0.3 * rng.standard_normal(n)
+    X = pd.DataFrame(X_arr, columns=[f"x{i}" for i in range(p)])
+    y = pd.Series(y_arr, name="y")
     return X, y
 
 
@@ -78,8 +104,14 @@ class TestFitTransform:
 
     @pytest.mark.parametrize("cls_name", CLASSES)
     def test_B2_fit_transform_returns_dataframe(self, cls_name: str) -> None:
-        """fit_transform must return a pd.DataFrame with n rows and 1..p cols."""
-        X, y = _make_xy(n=80, p=10, seed=42)
+        """fit_transform must return a pd.DataFrame with n rows and 1..p cols.
+
+        Uses _make_xy_signal (n=200, 2 true signals at x0/x2) so that all
+        selectors — including Boruta — have enough signal to select >= 1
+        feature.  The null-hypothesis case (0 features) is a correct FP-
+        control behaviour (C56/C59) but is not the contract tested here.
+        """
+        X, y = _make_xy_signal(n=200, p=10, seed=42)
         cls = self._import_cls(cls_name)
         result = cls().fit_transform(X, y)
 
@@ -88,8 +120,8 @@ class TestFitTransform:
             f"{cls_name}.fit_transform returned {type(result)}, expected pd.DataFrame"
         )
         # Row count: must equal n
-        assert result.shape[0] == 80, (
-            f"{cls_name}.fit_transform: expected 80 rows, got {result.shape[0]}"
+        assert result.shape[0] == 200, (
+            f"{cls_name}.fit_transform: expected 200 rows, got {result.shape[0]}"
         )
         # Column count: must be in [1, p]
         assert 1 <= result.shape[1] <= 10, (
@@ -103,10 +135,14 @@ class TestFitTransform:
     # --- B-3: fit_transform consistent with fit().transform() for Boruta ---
 
     def test_B3_boruta_fit_transform_consistent(self) -> None:
-        """Boruta: fit_transform(X, y) columns == fit(X, y).transform(X) columns."""
+        """Boruta: fit_transform(X, y) columns == fit(X, y).transform(X) columns.
+
+        Uses _make_xy_signal so Boruta selects >= 1 feature (deterministic
+        consistency check requires a non-empty result set).
+        """
         from macroforecast.feature_selection import Boruta
 
-        X, y = _make_xy(n=80, p=10, seed=42)
+        X, y = _make_xy_signal(n=200, p=10, seed=42)
 
         # Path A: fit_transform
         inst_a = Boruta(random_state=42)
