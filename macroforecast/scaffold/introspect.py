@@ -540,7 +540,7 @@ def _build_l6_fallback() -> tuple[AxisInfo, ...]:
 
 
 def _build_l7_fallback() -> tuple[AxisInfo, ...]:
-    """L7.A is a DAG body whose 30 operational importance ops live in the
+    """L7.A is a step graph body whose 30 operational importance ops live in the
     universal op registry rather than as schema AxisSpec options. Surface
     a single ``op`` axis on ``L7_A_importance_dag_body`` so docs + wizard
     iterate every importance op consistently with L3/L4/L6 layers.

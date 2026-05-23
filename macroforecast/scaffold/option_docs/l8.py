@@ -295,7 +295,7 @@ _SAVED_DOCS: dict[str, tuple[str, str, str]] = {
         "L7 importance outputs.",
         (
             "Tables and figures from every L7.A op in the recipe's "
-            "interpretation DAG. Default-on when L7 is enabled."
+            "interpretation pipeline. Default-on when L7 is enabled."
         ),
         "Default-on when L7 is active.",
     ),
@@ -304,10 +304,10 @@ _SAVED_DOCS: dict[str, tuple[str, str, str]] = {
         (
             "Per-pipeline Shapley contributions to forecast skill. "
             "Active when ``transformation_attribution`` is in the L7 "
-            "DAG (typically alongside multi-cell sweeps over alternative "
+            "pipeline (typically alongside multi-cell sweeps over alternative "
             "L3 transforms)."
         ),
-        "Active when transformation_attribution op is in the L7 DAG.",
+        "Active when transformation_attribution op is in the L7 pipeline.",
     ),
     "regime_metrics": (
         "Regime-conditional metrics.",
@@ -331,9 +331,9 @@ _SAVED_DOCS: dict[str, tuple[str, str, str]] = {
         (
             "Per-origin per-member weights produced by L4 combine ops "
             "(equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). "
-            "Active when ensemble combine ops are in the L4 DAG."
+            "Active when ensemble combine ops are in the L4 pipeline."
         ),
-        "Active when ensemble combine ops are in the L4 DAG.",
+        "Active when ensemble combine ops are in the L4 pipeline.",
     ),
     "diagnostics_l1_5": (
         "L1.5 diagnostic outputs (sample coverage / stationarity / outlier audit).",

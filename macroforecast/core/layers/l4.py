@@ -51,7 +51,7 @@ def normalize_to_dag_form(layer: dict[str, Any], layer_id: Literal["l4"] = "l4")
     if layer_id != "l4":
         raise ValueError("L4 normalizer only accepts layer_id='l4'")
     if "nodes" not in layer:
-        raise ValueError("L4 supports DAG form only")
+        raise ValueError("L4 uses a step graph (nodes/sinks); fixed_axes format is not supported")
 
     nodes: dict[str, Node] = {}
     for raw_node in layer.get("nodes", ()):

@@ -64,7 +64,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Efron, B., Hastie, T., Johnstone, I. & Tibshirani, R. (2004) 'Least Angle Regression', Annals of Statistics 32(2): 407-499. <https://doi.org/10.1214/009053604000000067>
 
 ## Related ops

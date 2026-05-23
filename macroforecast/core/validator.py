@@ -313,7 +313,7 @@ def _resolve_node_type(
     if node_id in disabled_nodes:
         raise ValueError(f"input node {node_id!r} is disabled")
     if node_id in resolving:
-        raise ValueError(f"DAG contains a cycle at {node_id!r}")
+        raise ValueError(f"Recipe graph contains a cycle at {node_id!r}")
     resolving.add(node_id)
     try:
         node = dag.node(node_id)
@@ -402,7 +402,7 @@ def _check_cycles(dag: DAG, issues: list[ValidationIssue]) -> None:
 
     def visit(node_id: str) -> None:
         if node_id in visiting:
-            issues.append(ValidationIssue("hard", f"{dag.layer_id}.{node_id}", "DAG contains a cycle"))
+            issues.append(ValidationIssue("hard", f"{dag.layer_id}.{node_id}", "Recipe graph contains a cycle"))
             return
         if node_id in visited:
             return

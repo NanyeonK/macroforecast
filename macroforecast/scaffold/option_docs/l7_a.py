@@ -1,6 +1,6 @@
 """L7.A importance ops -- per-option documentation.
 
-L7's importance / interpretation DAG body exposes 30 operational ops
+L7's importance / interpretation step graph body exposes 30 operational ops
 spanning model-native, perturbation-based, gradient-based, factor /
 shock-decomposition, and group / lineage attribution families. Each
 op consumes ``l4_forecasts_v1`` / ``l4_model_artifacts_v1`` (and

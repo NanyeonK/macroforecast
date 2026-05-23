@@ -43,11 +43,11 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Ensemble weights from L4 combine ops.
 
-Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 DAG.
+Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 pipeline.
 
 **When to use**
 
-Active when ensemble combine ops are in the L4 DAG.
+Active when ensemble combine ops are in the L4 pipeline.
 
 **References**
 
@@ -229,7 +229,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 L7 importance outputs.
 
-Tables and figures from every L7.A op in the recipe's interpretation DAG. Default-on when L7 is enabled.
+Tables and figures from every L7.A op in the recipe's interpretation pipeline. Default-on when L7 is enabled.
 
 **When to use**
 
@@ -373,11 +373,11 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 L7 transformation_attribution Shapley table.
 
-Per-pipeline Shapley contributions to forecast skill. Active when ``transformation_attribution`` is in the L7 DAG (typically alongside multi-cell sweeps over alternative L3 transforms).
+Per-pipeline Shapley contributions to forecast skill. Active when ``transformation_attribution`` is in the L7 pipeline (typically alongside multi-cell sweeps over alternative L3 transforms).
 
 **When to use**
 
-Active when transformation_attribution op is in the L7 DAG.
+Active when transformation_attribution op is in the L7 pipeline.
 
 **References**
 

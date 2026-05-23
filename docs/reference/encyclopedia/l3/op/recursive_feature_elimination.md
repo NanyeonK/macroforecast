@@ -71,7 +71,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Guyon, I., Weston, J., Barnhill, S. & Vapnik, V. (2002) 'Gene Selection for Cancer Classification using Support Vector Machines', Machine Learning 46(1-3): 389-422. <https://doi.org/10.1023/A:1012487302797>
 
 ## Related ops

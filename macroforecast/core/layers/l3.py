@@ -77,7 +77,7 @@ def normalize_to_dag_form(layer: dict[str, Any], layer_id: Literal["l3"] = "l3")
     if layer_id != "l3":
         raise ValueError("L3 normalizer only accepts layer_id='l3'")
     if "nodes" not in layer:
-        raise ValueError("L3 supports DAG form only; fixed_axes sugar is not supported")
+        raise ValueError("L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported")
 
     raw_nodes = list(layer.get("nodes", ()))
     pipeline_endpoints = _pipeline_endpoints(raw_nodes)
@@ -146,7 +146,7 @@ def validate_layer(layer: dict[str, Any] | str, recipe_context: dict[str, Any] |
     raw = parse_layer_yaml(layer) if isinstance(layer, str) else layer
     issues: list[Issue] = []
     if "nodes" not in raw:
-        return ValidationReport((_issue("l3", "L3 supports DAG form only; fixed_axes sugar is not supported"),))
+        return ValidationReport((_issue("l3", "L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported"),))
     try:
         dag = normalize_to_dag_form(raw)
     except Exception as exc:

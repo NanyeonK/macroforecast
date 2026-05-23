@@ -287,7 +287,7 @@ def cumsum_transform(panel: pd.DataFrame) -> pd.DataFrame:
 
     References
     ----------
-    macroforecast design Part 2, L3: feature engineering DAG step library.
+    macroforecast design Part 2, L3: feature engineering pipeline step library.
     """
     from macroforecast.core.runtime import _as_frame  # noqa: PLC0415
 

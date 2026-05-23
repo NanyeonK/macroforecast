@@ -25,7 +25,7 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.defaults`` -- default profile dict template
 - ``macroforecast.preprocessing`` -- preprocessing contract helpers
 - ``macroforecast.raw`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
-- ``macroforecast.core`` -- 12-layer DAG runtime (foundation, layers, ops, runtime, execution)
+- ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
 - ``macroforecast.scaffold`` -- recipe scaffold wizard + RecipeBuilder + OptionDoc
 - ``macroforecast.tuning`` -- hyperparameter search engines
 """

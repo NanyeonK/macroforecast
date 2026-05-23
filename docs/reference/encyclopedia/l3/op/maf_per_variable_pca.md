@@ -63,7 +63,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Coulombe, Leroux, Stevanovic & Surprenant (2021) 'Macroeconomic Data Transformations Matter', International Journal of Forecasting 37(4): 1338-1354. <https://doi.org/10.1016/j.ijforecast.2021.05.005>
 
 ## Related ops

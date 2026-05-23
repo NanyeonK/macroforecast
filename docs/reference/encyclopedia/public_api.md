@@ -17,7 +17,7 @@ Curated reference for the public surface of the macroforecast package. The encyc
 
 | Module | Purpose |
 |--------|---------|
-| `macroforecast.core` | 12-layer DAG runtime (foundation, layers, ops, runtime, execution, figures) |
+| `macroforecast.core` | 12-layer recipe runtime (foundation, layers, ops, runtime, execution, figures) |
 | `macroforecast.raw` | FRED-MD/QD/SD adapters, vintage manager, manifest |
 | `macroforecast.preprocessing` | Preprocessing contract helpers |
 | `macroforecast.tuning` | Hyperparameter search engines |

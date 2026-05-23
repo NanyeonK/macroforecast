@@ -20,7 +20,7 @@ except ImportError as exc:
 from macroforecast.core.stages import STAGE_BY_LAYER
 from macroforecast.wizard.components.layer_rail import STAGE_COLOR_MAP
 from macroforecast.wizard.components.option_input import OptionInput
-from macroforecast.wizard.pages.layer_dag import LayerDagPlaceholder
+from macroforecast.wizard.pages.layer_step_graph import LayerDagPlaceholder
 from macroforecast.wizard.schema import FormField, layer_form_schema
 from macroforecast.wizard.state import (
     RecipeState,
@@ -40,7 +40,7 @@ _DAG_LAYERS: frozenset[str] = frozenset({"l3", "l4", "l7"})
 def LayerForm(layer_id: str) -> None:
     """Main workspace page for a layer.
 
-    Renders either a form (for form layers) or the DAG placeholder.
+    Renders either a form (for form layers) or the step graph placeholder.
 
     All hooks must be called unconditionally (React hooks rules) before
     any conditional returns.

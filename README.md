@@ -130,7 +130,7 @@ To register a custom forecasting model, preprocessor, or target transformer:
 ## Architecture (12 layers)
 
 ```
-L0 study setup → L1 data → L2 preprocess → L3 features (DAG, 37 ops)
+L0 study setup → L1 data → L2 preprocess → L3 features (pipeline, 37 ops)
                 ↓                                ↓
                 L1.5 / L2.5 / L3.5 (diagnostics, default-off)
                                                  ↓

@@ -69,7 +69,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Kursa, M.B. & Rudnicki, W.R. (2010) 'Feature Selection with the Boruta Package', Journal of Statistical Software 36(11): 1-13. <https://doi.org/10.18637/jss.v036.i11>
 
 ## Related ops

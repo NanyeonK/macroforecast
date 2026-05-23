@@ -10,7 +10,7 @@ each returning a frozen dataclass that conforms structurally to
 :class:`~macroforecast.functions.FitResultBase`.
 
 All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
-directly, producing bit-exact numeric output identical to the recipe DAG
+directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
 Cycle 37 -- L4 timeseries family standalone-ization (14 ops).
@@ -934,7 +934,7 @@ def var_fit(
 ) -> VARFitResult:
     """Standalone Vector Autoregression VAR(p).
 
-    Calls ``_build_l4_model("var", params)`` directly; bypasses the recipe DAG.
+    Calls ``_build_l4_model("var", params)`` directly; bypasses the recipe pipeline.
     Uses statsmodels VAR on the joint panel of ``y`` and ``X`` columns.
 
     Parameters

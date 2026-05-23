@@ -32,7 +32,7 @@ Outputs:
 
 ## Important Rules
 
-- L3 is DAG-only. `fixed_axes` sugar is rejected.
+- L3 uses a step graph. `fixed_axes` sugar is rejected.
 - `target_construction` must appear exactly once and must be the `y_final` sink.
 - `X_final` must be panel-like; `y_final` must be series-like.
 - Cascade sources can reference previous L3 pipeline outputs, but cycles and ambiguous pipeline endpoints are hard errors.

@@ -93,12 +93,12 @@ L3 (`3_feature_engineering`) separates *what the model sees* from *how the
 model uses it*. It owns feature construction — lags, moving averages,
 dimensionality reduction, wavelet decomposition, and target construction
 (rolling means, cumulative averages) — expressed as a directed acyclic graph
-(DAG).
+(a directed pipeline graph).
 
-The DAG form is not incidental. Feature pipelines in real research are not
+This pipeline graph structure is not incidental. Feature pipelines in real research are not
 linear. A study might apply PCA to a subset of predictors, compute lags from
 both the original series and the PCA-reduced series, and then feed the union
-to a model. That structure is a graph, not a list. Using a DAG at L3 makes
+to a model. That structure is a graph, not a list. Using a step graph at L3 makes
 the structure explicit and verifiable rather than buried in procedural code.
 
 A critical non-negotiable rule: L3 owns target construction. This rule
@@ -158,14 +158,14 @@ choice.
 ### L7: Interpretation (Default Off)
 
 L7 (`7_interpretation`) separates *explaining the forecast* from *making the
-forecast*. Like L6, it is default off and uses a DAG.
+forecast*. Like L6, it is default off and uses a step graph.
 
 Importance is always post-hoc. A SHAP value, a partial dependence plot, or
 a forecast decomposition does not change the forecast; it characterizes it.
 If interpretation were merged with forecasting, it would be unclear whether
 an importance-weighted combination is a model operation or an interpretation
 operation. Keeping L7 distinct from L4 enforces this conceptual separation.
-The DAG form at L7 is used for the same reason as at L3 and L4: importance
+The step graph form at L7 is used for the same reason as at L3 and L4: importance
 workflows have branching structure (computing SHAP for some models, ALE for
 others, then aggregating across a group).
 
@@ -205,13 +205,13 @@ flowchart LR
     L1 --> L1_5([L1.5 diag])
     L2([L2: preproc]) --> L3
     L2 --> L2_5([L2.5 diag])
-    L3([L3: features DAG]) --> L4
+    L3([L3: features pipeline]) --> L4
     L3 --> L3_5([L3.5 diag])
-    L4([L4: model DAG]) --> L5
+    L4([L4: model pipeline]) --> L5
     L4 --> L4_5([L4.5 diag])
     L5([L5: eval]) --> L6
     L6([L6: tests]) --> L7
-    L7([L7: interp DAG]) --> L8([L8: output])
+    L7([L7: interp pipeline]) --> L8([L8: output])
     style L1_5 stroke-dasharray: 5 5
     style L2_5 stroke-dasharray: 5 5
     style L3_5 stroke-dasharray: 5 5
@@ -274,7 +274,7 @@ enabled, uses this filter to determine which models receive full importance
 analysis by default. Without this reference, interpretation would run for
 all models regardless of whether they are statistically competitive.
 
-**lineage (L3 to L7).** The feature construction DAG at L3 records a lineage
+**lineage (L3 to L7).** The feature construction pipeline at L3 records a lineage
 metadata artifact mapping each engineered feature back to the original series
 it was derived from. L7 reads this artifact to attribute importance to the
 original data sources rather than to the engineered feature names. Without
