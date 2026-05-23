@@ -1,258 +1,193 @@
-# Bring your own model
+# Build your own model
 
-In this tutorial you will register a custom model callable, add it as a contender
-in the benchmarking study from {doc}`02_full_study`, and compare its performance
-against the AR(2) baseline.
-
----
-
-## The custom model contract
-
-Before writing any code, understand the contract macroforecast expects. Your
-function must accept exactly four arguments:
-
-```python
-def my_model(
-    X_train,    # pd.DataFrame: n_train rows x n_features cols (training predictors)
-    y_train,    # pd.Series: n_train training target values
-    X_test,     # pd.DataFrame: exactly 1 row (one forecast origin)
-    context,    # dict: runtime metadata (model_name, target, horizon, feature_names, ...)
-) -> float:
-    ...         # return a single float — the one-step forecast
-```
-
-Four rules:
-
-1. Fit only on the data supplied in `X_train` and `y_train`. The runtime has
-   already applied the expanding-window split for you.
-2. Return a scalar (Python `float`) or a one-element sequence. The runtime coerces
-   both via `float(value)`.
-3. Never read future rows, the global panel, or any state outside the function.
-4. If your estimator fails on a degenerate window, raise `ValueError` — the
-   `failure_policy` in L0 decides what to do.
+Build a custom forecasting model by subclassing `sklearn.base.BaseEstimator` and
+`RegressorMixin`, use it directly in a `TimeSeriesSplit` loop, and optionally
+register it with the recipe pipeline. No YAML is required for the main body of
+this tutorial.
 
 ---
 
-## A naive baseline
+## The sklearn subclassing contract
 
-Start with the simplest possible custom model — a last-value naive baseline — to
-see the registration and recipe mechanics in one go.
+macroforecast model classes in `macroforecast.models` all follow the sklearn
+estimator convention. Any class that inherits from `sklearn.base.BaseEstimator`
+and `sklearn.base.RegressorMixin` can be used in the same way.
 
-```python
-import macroforecast as mf
+`BaseEstimator` provides `get_params()` and `set_params()` automatically, derived
+from the argument names in `__init__`. These methods are required for sklearn
+pipeline compatibility, including `clone()` and `GridSearchCV`. No extra
+implementation is needed beyond writing `__init__` in the standard way.
 
-@mf.register_model("naive_last_value")
-def naive_last_value(X_train, y_train, X_test, context):
-    """Return the last observed target value as the forecast."""
-    return float(y_train.iloc[-1])
+`RegressorMixin` provides a default `score(X, y)` method that computes the R^2
+coefficient of determination, which makes the class usable directly with sklearn
+scoring utilities.
 
-# Confirm registration
-print(mf.list_custom_models())   # ('naive_last_value',)
-```
-
-The `@mf.register_model` decorator registers the function under the name
-`'naive_last_value'` in the current Python process. You reference this name in
-your recipe with `family: naive_last_value`.
-
-```{warning}
-The registry lives in the Python process. If you call `mf.run()` in a different
-script without importing this registration code first, the recipe will fail with
-`ValueError: unknown model family 'naive_last_value'`. Always import your
-registration module before calling `mf.run()`.
-```
+The only contract that macroforecast requires to treat the class as a model is
+the pair `fit(X, y) -> self` and `predict(X) -> np.ndarray`. If your class
+satisfies those two methods and inherits from `BaseEstimator` and `RegressorMixin`,
+it is compatible with the standalone `TimeSeriesSplit` loop, sklearn pipelines,
+and the recipe registration API.
 
 ---
 
-## Add the custom model to the recipe
+## A concrete example -- ConstantTrendPlusAR
 
-The simplest way to compare multiple model families is to sweep over them using
-the `{sweep: [...]}` marker on the `family` parameter. Each value becomes an
-independent cell.
-
-```python
-recipe = """
-0_meta:
-  fixed_axes:
-    failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
-  leaf_config:
-    random_seed: 0
-
-1_data:
-  fixed_axes:
-    custom_source_policy: custom_panel_only
-    frequency: monthly
-    horizon_set: custom_list
-  leaf_config:
-    target: gdp_growth
-    target_horizons: [1]
-    custom_panel_inline:
-      date:
-        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,
-         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,
-         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,
-         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]
-      gdp_growth:
-        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,
-         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]
-      ip_index:
-        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,
-         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]
-
-2_preprocessing:
-  fixed_axes:
-    transform_policy: no_transform
-    outlier_policy: none
-    imputation_policy: none_propagate
-    frame_edge_policy: keep_unbalanced
-
-3_feature_engineering:
-  nodes:
-    - id: src_X
-      type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
-    - id: src_y
-      type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
-    - id: lag_x
-      type: step
-      op: lag
-      params: {n_lag: 1}
-      inputs: [src_X]
-    - id: y_h
-      type: step
-      op: target_construction
-      params: {mode: point_forecast, method: direct, horizon: 1}
-      inputs: [src_y]
-  sinks:
-    l3_features_v1: {X_final: lag_x, y_final: y_h}
-    l3_metadata_v1: auto
-
-4_forecasting_model:
-  nodes:
-    - id: src_X
-      type: source
-      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}
-    - id: src_y
-      type: source
-      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
-    - id: fit_model
-      type: step
-      op: fit_model
-      params:
-        family: {sweep: [ar_p, naive_last_value]}
-        n_lag: 2                    # used by ar_p; ignored by naive_last_value
-        forecast_strategy: direct
-        training_start_rule: expanding
-        refit_policy: every_origin
-        search_algorithm: none
-        min_train_size: 6
-      inputs: [src_y]              # both models only need the target series
-    - id: predict_model
-      type: step
-      op: predict
-      inputs: [fit_model]
-  sinks:
-    l4_forecasts_v1: predict_model
-    l4_model_artifacts_v1: fit_model
-    l4_training_metadata_v1: auto
-
-5_evaluation:
-  fixed_axes:
-    primary_metric: mse
-    point_metrics: [mse, rmse, mae]
-"""
-```
-
----
-
-## Run and compare
-
-Register the model, then run:
+The class below fits a linear time trend plus an AR(1) residual correction by OLS.
+It accepts `X` in both `fit` and `predict` to satisfy the sklearn convention, but
+does not use feature columns; the `X` argument serves only to convey the row count
+at predict time.
 
 ```python
-@mf.register_model("naive_last_value")
-def naive_last_value(X_train, y_train, X_test, context):
-    return float(y_train.iloc[-1])
+from __future__ import annotations
 
-result = mf.run(recipe)
-print(f"Cells: {len(result.cells)}")   # 2 cells (one per sweep value)
-
-for cell in result.cells:
-    metrics = cell.runtime_result.artifacts["l5_evaluation_v1"].metrics_table
-    print(cell.cell_id, "MSE:", round(metrics["mse"].values[0], 6))
-```
-
-The naive last-value baseline typically has higher MSE than AR(2) on a trending
-series. The point is to see the custom model integrated into the same evaluation
-pipeline.
-
-Inspect the model artifact to confirm `framework = "custom"`:
-
-```python
-cell_naive = result.cells[-1]   # last cell: naive_last_value
-art = cell_naive.runtime_result.artifacts["l4_model_artifacts_v1"]
-fitted = next(iter(art.artifacts.values()))
-print("framework:", fitted.framework)   # "custom"
-print("family:", fitted.family)         # "naive_last_value"
-```
-
----
-
-## A more realistic custom model
-
-The naive baseline is easy to verify. Here is a slightly more realistic example:
-a custom exponential-smoothing forecast that uses only the target series.
-
-```python
 import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator, RegressorMixin
 
-@mf.register_model("exp_smooth_alpha04")
-def exp_smooth(X_train, y_train, X_test, context):
-    """Simple exponential smoothing with fixed alpha=0.4."""
-    alpha = 0.4
-    y = y_train.values
-    smoothed = y[0]
-    for v in y[1:]:
-        smoothed = alpha * v + (1 - alpha) * smoothed
-    return float(smoothed)
+
+class ConstantTrendPlusAR(BaseEstimator, RegressorMixin):
+    """Linear time trend plus AR(1) residual forecaster.
+
+    Fits the model y_t = alpha + beta*t + phi*y_{t-1} + eps_t by OLS.
+    At predict time, extrapolates the trend and adds the AR(1) correction.
+
+    Parameters
+    ----------
+    fit_intercept : bool, default True
+        Whether to include a constant term in the design matrix.
+
+    Notes
+    -----
+    X is accepted in fit and predict to satisfy the sklearn estimator
+    convention, but is not used in estimation or forecasting.
+    """
+
+    def __init__(self, fit_intercept: bool = True) -> None:
+        self.fit_intercept = fit_intercept
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "ConstantTrendPlusAR":
+        n = len(y)
+        t = np.arange(n, dtype=float)
+        y_vals = y.values
+
+        # Design matrix: [1, t, y_{t-1}] or [t, y_{t-1}] without intercept
+        ar_lag = np.concatenate([[y_vals[0]], y_vals[:-1]])
+        if self.fit_intercept:
+            Z = np.column_stack([np.ones(n), t, ar_lag])
+        else:
+            Z = np.column_stack([t, ar_lag])
+
+        # OLS via least-squares solver
+        self.coef_, _, _, _ = np.linalg.lstsq(Z, y_vals, rcond=None)
+        self._n_train = n
+        self._last_y = float(y_vals[-1])
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        # X is used only to determine the number of forecast periods
+        n_test = len(X)
+        t_future = np.arange(self._n_train, self._n_train + n_test, dtype=float)
+        preds = []
+        last_y = self._last_y
+
+        for i, t_i in enumerate(t_future):
+            if self.fit_intercept:
+                z = np.array([1.0, t_i, last_y])
+            else:
+                z = np.array([t_i, last_y])
+            yhat = float(z @ self.coef_)
+            preds.append(yhat)
+            last_y = yhat   # AR(1) recursion: each period feeds the next
+
+        return np.array(preds)
 ```
-
-This function fits entirely from `y_train.values`. It ignores `X_train` and
-`context`. For a production custom model, you might use `context["feature_names"]`
-to select predictors by name, or `context["horizon"]` to adjust the forecast
-horizon.
-
-Swap it into the sweep: `family: {sweep: [ar_p, exp_smooth_alpha04]}` and re-run.
 
 ---
 
-## Debugging tips
+## Use the custom class directly
 
-If your custom model silently returns `NaN`, check three things:
-
-1. **Return value shape.** The runtime calls `float(return_value)`. If
-   `return_value` is a NumPy array with more than one element, `float()` raises.
-   Return `float(arr[0])` explicitly.
-2. **Registration order.** Import your registration module before `mf.run()`. Use
-   `mf.list_custom_models()` to confirm the name is registered.
-3. **Training window.** If `y_train` is shorter than your model requires, raise
-   `ValueError` rather than returning a degenerate value. The runtime's
-   `failure_policy` will handle it.
-
-Clean up the registry between sessions:
+The class works immediately in a `TimeSeriesSplit` loop, without any registration
+or YAML. The synthetic data from {doc}`02_full_study` is reused here.
 
 ```python
-mf.clear_custom_models()
-print(mf.list_custom_models())   # ()
+from sklearn.model_selection import TimeSeriesSplit
+import numpy as np
+import pandas as pd
+
+# y and X are the same series from Tutorial 02
+tscv = TimeSeriesSplit(n_splits=5)
+mse_list = []
+
+for train_idx, test_idx in tscv.split(y):
+    X_tr = X.iloc[train_idx]   # ConstantTrendPlusAR does not use columns,
+    X_te = X.iloc[test_idx]    # but len(X_te) sets the forecast horizon.
+    y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
+
+    m = ConstantTrendPlusAR(fit_intercept=True)
+    m.fit(X_tr, y_tr)
+    preds = m.predict(X_te)
+    mse_list.append(np.mean((preds - y_te.values) ** 2))
+
+print(f"ConstantTrendPlusAR mean CV MSE: {np.mean(mse_list):.4f}")
 ```
+
+Because `ConstantTrendPlusAR` inherits from `BaseEstimator`, sklearn utilities
+such as `clone()` and `check_estimator()` work out of the box. The `get_params()`
+method returns `{"fit_intercept": True}` automatically, derived from the `__init__`
+argument name.
 
 ---
 
-## What to do next
+## Inheriting macroforecast machinery (optional)
 
-- See {doc}`../how_to/add_custom_model` for the terse task-recipe version of this
-  tutorial.
-- See {doc}`../how_to/use_custom_hooks` for all five extension points: custom feature
-  blocks, combiners, preprocessors, target transformers, and models.
-- See {doc}`02_full_study` to revisit the full benchmarking study setup.
+If your custom model is a variant of an existing macroforecast model family, you
+can subclass both the private implementation class and the sklearn mixins. The 30
+public model classes in `mf.models` follow exactly this pattern. For example,
+`LinearAR` is defined as `class LinearAR(_LinearARModel): pass`. A custom variant
+that adds a constraint would look like:
+
+```python
+class MyLinearAR(_LinearARModel, BaseEstimator, RegressorMixin):
+    pass
+```
+
+This preserves the private class behavior while gaining `get_params`, `set_params`,
+and `score`. In practice, if you only need minor modifications, subclassing the
+private class is the most direct path. If you need full control, start from
+`BaseEstimator` and `RegressorMixin` directly, as in `ConstantTrendPlusAR` above.
+
+---
+
+## When to register for the recipe pipeline
+
+If you want the recipe runtime to dispatch your class by name in a YAML recipe,
+register it as a functional wrapper via `macroforecast.custom.register_model`. The
+registration API accepts a callable with the signature
+`fn(X_train, y_train, X_test, context) -> scalar`, where `X_test` is a single
+prediction-period row.
+
+```python
+import macroforecast.custom as mf_custom
+
+def constant_trend_plus_ar(X_train, y_train, X_test, context):
+    """Functional wrapper for ConstantTrendPlusAR for recipe dispatch.
+
+    The recipe runtime calls this once per forecast origin per horizon.
+    X_test is one row; the return value is a single forecast scalar.
+    """
+    model = ConstantTrendPlusAR(fit_intercept=True)
+    # Wrap inputs as DataFrames if the runtime passes numpy arrays
+    X_tr = pd.DataFrame(X_train) if not isinstance(X_train, pd.DataFrame) else X_train
+    y_tr = pd.Series(y_train) if not isinstance(y_train, pd.Series) else y_train
+    X_te = pd.DataFrame(X_test) if not isinstance(X_test, pd.DataFrame) else X_test
+    model.fit(X_tr, y_tr)
+    return float(model.predict(X_te)[0])
+
+mf_custom.register_model("constant_trend_plus_ar", constant_trend_plus_ar)
+```
+
+After registration, the name `"constant_trend_plus_ar"` is accepted as a
+`model_family` value in any recipe running in the same Python process. For
+full details on the registration contract and context fields, see
+{doc}`../how_to/add_custom_model`. For the conceptual comparison of standalone
+and recipe modes, see {doc}`two_entry_points`.
