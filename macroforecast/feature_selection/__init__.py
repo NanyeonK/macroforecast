@@ -116,8 +116,7 @@ class Boruta:
         self.include_tentative = include_tentative
         self.random_state = random_state
         self.n_shadow_copies = n_shadow_copies
-        # Set after fit
-        self.selected_features_: list[str] = []
+        # selected_features_ is set only after a successful fit() call.
 
     def fit(
         self,
@@ -171,14 +170,14 @@ class Boruta:
 
         Raises
         ------
-        RuntimeError
+        sklearn.exceptions.NotFittedError
             If :meth:`fit` has not been called yet.
         """
-        if not hasattr(self, "selected_features_") or not self.selected_features_:
-            if not self.selected_features_:
-                # Empty selection is valid (null DGP); return empty frame.
-                X_df = _to_frame(X)
-                return X_df[[c for c in self.selected_features_ if c in X_df.columns]]
+        if not hasattr(self, "selected_features_"):
+            from sklearn.exceptions import NotFittedError
+            raise NotFittedError(
+                f"{self.__class__.__name__} is not fitted yet. Call fit() first."
+            )
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
@@ -266,7 +265,7 @@ class RFE:
         self.use_cv = use_cv
         self.cv_folds = cv_folds
         self.random_state = random_state
-        self.selected_features_: list[str] = []
+        # selected_features_ is set only after a successful fit() call.
 
     def fit(
         self,
@@ -316,7 +315,17 @@ class RFE:
         Returns
         -------
         pd.DataFrame
+
+        Raises
+        ------
+        sklearn.exceptions.NotFittedError
+            If :meth:`fit` has not been called yet.
         """
+        if not hasattr(self, "selected_features_"):
+            from sklearn.exceptions import NotFittedError
+            raise NotFittedError(
+                f"{self.__class__.__name__} is not fitted yet. Call fit() first."
+            )
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
@@ -395,7 +404,7 @@ class LassoPathSelector:
         self.n_features_to_select = n_features_to_select
         self.normalize_features = normalize_features
         self.random_state = random_state
-        self.selected_features_: list[str] = []
+        # selected_features_ is set only after a successful fit() call.
 
     def fit(
         self,
@@ -442,7 +451,17 @@ class LassoPathSelector:
         Returns
         -------
         pd.DataFrame
+
+        Raises
+        ------
+        sklearn.exceptions.NotFittedError
+            If :meth:`fit` has not been called yet.
         """
+        if not hasattr(self, "selected_features_"):
+            from sklearn.exceptions import NotFittedError
+            raise NotFittedError(
+                f"{self.__class__.__name__} is not fitted yet. Call fit() first."
+            )
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
@@ -528,7 +547,7 @@ class StabilitySelection:
         self.base_estimator = base_estimator
         self.alpha = alpha
         self.random_state = random_state
-        self.selected_features_: list[str] = []
+        # selected_features_ is set only after a successful fit() call.
 
     def fit(
         self,
@@ -578,7 +597,17 @@ class StabilitySelection:
         Returns
         -------
         pd.DataFrame
+
+        Raises
+        ------
+        sklearn.exceptions.NotFittedError
+            If :meth:`fit` has not been called yet.
         """
+        if not hasattr(self, "selected_features_"):
+            from sklearn.exceptions import NotFittedError
+            raise NotFittedError(
+                f"{self.__class__.__name__} is not fitted yet. Call fit() first."
+            )
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
@@ -666,7 +695,7 @@ class GeneticSelection:
         self.fitness_estimator = fitness_estimator
         self.cv_folds = cv_folds
         self.random_state = random_state
-        self.selected_features_: list[str] = []
+        # selected_features_ is set only after a successful fit() call.
 
     def fit(
         self,
@@ -716,7 +745,17 @@ class GeneticSelection:
         Returns
         -------
         pd.DataFrame
+
+        Raises
+        ------
+        sklearn.exceptions.NotFittedError
+            If :meth:`fit` has not been called yet.
         """
+        if not hasattr(self, "selected_features_"):
+            from sklearn.exceptions import NotFittedError
+            raise NotFittedError(
+                f"{self.__class__.__name__} is not fitted yet. Call fit() first."
+            )
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
