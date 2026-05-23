@@ -16,7 +16,7 @@ full per-version honesty-pass history embedded in repo documentation.
 - `models.volatility`: 2 classes — `GARCH`, `RealizedGARCH`
 - `models.timeseries`: 3 classes — `ETS`, `Theta`, `HoltWinters`
 - Flat re-export: `from macroforecast.models import RealizedGARCH` works (Option C hybrid module per C62 naming-spec).
-- Backward compat: private `_<Name>` classes unchanged; public classes inherit via thin subclass — `isinstance` check holds for both directions.
+- Backward compat: private `_<Name>` classes unchanged; public classes inherit via thin subclass. `isinstance(public_instance, _PrivateClass)` continues to hold so pre-existing code using the private class for isinstance checks still works. The reverse (`isinstance(private_instance, PublicSubclass)`) is False, as expected with single inheritance.
 
 **`macroforecast.feature_selection`** (NEW) — 5 sklearn-style class wrappers around L3 functions:
 
