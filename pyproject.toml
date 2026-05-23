@@ -114,3 +114,8 @@ module = [
     "macroforecast.tuning.engine",
 ]
 ignore_errors = true
+
+[dependency-groups]
+dev = [
+    "pytest-timeout>=2.4.0",
+]
