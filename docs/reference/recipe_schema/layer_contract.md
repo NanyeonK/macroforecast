@@ -1,6 +1,6 @@
 # Recipe Layer Contract
 
-A recipe is a top-level YAML mapping. Main layers are L0-L8; diagnostic layers are L1.5-L4.5. L3, L4, and L7 use DAG `nodes` plus `sinks`. L1, L2, L5, L6, and L8 primarily use `fixed_axes` plus optional `leaf_config`.
+A recipe is a top-level YAML mapping. Main layers are L0-L8; diagnostic layers are L1.5-L4.5. L3, L4, and L7 use step graph `nodes` plus `sinks`. L1, L2, L5, L6, and L8 primarily use `fixed_axes` plus optional `leaf_config`.
 
 This complete recipe is runnable on a stock install:
 

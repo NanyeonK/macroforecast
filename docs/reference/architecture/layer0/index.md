@@ -134,7 +134,7 @@ axis values.
 
 `leaf_config` should not be used to smuggle in scientific choices. If a value
 changes what data or model is studied, it belongs in a downstream layer axis or
-DAG node.
+recipe node.
 
 ## Derived Manifest Fields
 

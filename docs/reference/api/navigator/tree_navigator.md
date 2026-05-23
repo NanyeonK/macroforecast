@@ -2,7 +2,7 @@
 
 The Navigator has two surfaces.
 
-## 1. Canonical Layer/DAG Map
+## 1. Canonical Layer Map
 
 This is the primary UI. It mirrors the registered runtime architecture:
 
@@ -21,7 +21,7 @@ Click a layer card to inspect:
 - layer globals;
 - axes or output controls.
 
-Graph/DAG layers do not have one flat axis list. Their decisions live in YAML `nodes`, `params`, `inputs`, and `sinks`. The UI now exposes clickable DAG items and writes a runnable YAML template from the selected layer axes plus selected DAG items.
+Graph layers do not have one flat axis list. Their decisions live in YAML `nodes`, `params`, `inputs`, and `sinks`. The UI now exposes clickable pipeline items and writes a runnable YAML template from the selected layer axes plus selected pipeline items.
 
 ## Canonical Sub-Layers
 
@@ -36,7 +36,7 @@ The layer map should expose every main and diagnostic sub-layer below. If a sub-
 | L4 | graph | L4.A Model selection; L4.B Forecast strategy; L4.C Training window; L4.D Tuning |
 | L5 | list | L5.A Metrics; L5.B Benchmark; L5.C Aggregation; L5.D Slicing and decomposition; L5.E Ranking |
 | L6 | list | L6 globals; L6_A_equal_predictive; L6_B_nested; L6_C_cpa; L6_D_multiple_model; L6_E_density_interval; L6_F_direction; L6_G_residual |
-| L7 | graph | L7.A Importance DAG; L7.B Output shape |
+| L7 | graph | L7.A Importance steps; L7.B Output shape |
 | L8 | list | L8_A_export_format; L8_B_saved_objects; L8_C_provenance; L8_D_artifact_granularity |
 | L1.5 | list | L1.5.A Sample coverage; L1.5.B Univariate summary; L1.5.C Stationarity; L1.5.D Missing and outlier; L1.5.E Correlation; L1.5.Z Export |
 | L2.5 | list | L2.5.A Comparison; L2.5.B Distribution shift; L2.5.C Correlation shift; L2.5.D Cleaning summary; L2.5.Z Export |
@@ -67,7 +67,7 @@ Use it after choosing a canonical layer when you need to know why a specific opt
 |---|---|
 | Main flow cards | Canonical L0-L8 execution order. |
 | Diagnostic side branches | Default-off hooks that consume construction sinks and produce diagnostics. |
-| `DAG` badge | Layer is configured as a graph of source/step/sink nodes. |
+| `Graph` badge | Layer is configured as a graph of source/step/sink nodes. |
 | `List` badge | Layer is configured by ordered sub-layers and axes. |
 | Sink handoffs | Registry-derived edges from `produces` to `expected_inputs`. |
 | Runtime support | Current runtime support class for selected options. |

@@ -46,8 +46,8 @@ L4.5 <- L4 + L3
 For L1.5-L4.5:
 
 - absent layer key: no diagnostic layer;
-- `enabled: false`: no DAG nodes, no sink, all axes inactive;
-- `enabled: true`: diagnostic DAG and sink are available;
+- `enabled: false`: no graph nodes, no sink, all axes inactive;
+- `enabled: true`: diagnostic graph and sink are available;
 - L8 can include active diagnostics through explicit saved objects or `diagnostics_all`.
 
 ## Naming

@@ -17,7 +17,7 @@ or auditing manifests.
 ## Canonical layer flow
 
 ```text
-L0 -> L1 -> L2 -> L3(DAG) -> L4(DAG) -> L5 -> L6 -> L7(DAG) -> L8
+L0 -> L1 -> L2 -> L3(graph) -> L4(graph) -> L5 -> L6 -> L7(graph) -> L8
         |      |      |       |
        L1.5   L2.5   L3.5    L4.5 diagnostics
 ```
@@ -36,7 +36,7 @@ L3.5 <- L1 + L2 + L3
 L4.5 <- L4 + L3
 ```
 
-Diagnostics are default off. With `enabled: false`, they create no DAG
+Diagnostics are default off. With `enabled: false`, they create no graph
 nodes and no sink. With `enabled: true`, they emit diagnostic artifacts
 that L8 can include through `diagnostics_l1_5`, `diagnostics_l2_5`,
 `diagnostics_l3_5`, `diagnostics_l4_5`, or `diagnostics_all`.
@@ -49,7 +49,7 @@ that L8 can include through `diagnostics_l1_5`, `diagnostics_l2_5`,
   encode.
 - [Layer boundary contract](layer_boundary_contract.md) — what each layer
   may consume from upstream and what it must emit downstream.
-- [Recipe layers](recipe_layers.md) — YAML key naming, DAG/list shape,
+- [Recipe layers](recipe_layers.md) — YAML key naming, graph/list shape,
   diagnostic-layer semantics.
 - [Artifacts and manifest](artifacts_and_manifest.md) — sink names,
   manifest fields, on-disk layout.

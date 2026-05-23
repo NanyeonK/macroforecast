@@ -1,6 +1,6 @@
 # Standalone functions: L3 transforms (36 ops)
 
-L3 transform callables apply a single feature engineering operation to a panel DataFrame and return a new DataFrame. They correspond to `op` values in the L3 recipe DAG.
+L3 transform callables apply a single feature engineering operation to a panel DataFrame and return a new DataFrame. They correspond to `op` values in the L3 recipe pipeline.
 
 
 ## Basic transforms (10 ops)
