@@ -443,7 +443,7 @@ def mlp_fit(
     """Standalone multi-layer perceptron (sklearn) regression.
 
     Calls the L4 mlp family adapter
-    (``_build_l4_model("mlp", params)``) directly; bypasses the recipe DAG.
+    (``_build_l4_model("mlp", params)``) directly; bypasses the recipe pipeline.
     Produces bit-exact numeric output identical to recipe-based MLP with the
     same parameter values.
 
@@ -545,7 +545,7 @@ def lstm_fit(
 
     Calls the L4 lstm family adapter
     (``_build_l4_model("lstm", params)``) architecture directly; bypasses the
-    recipe DAG.  Requires ``pip install macroforecast[deep]``.
+    recipe pipeline.  Requires ``pip install macroforecast[deep]``.
 
     Parameters
     ----------
@@ -635,7 +635,7 @@ def gru_fit(
 
     Calls the L4 gru family adapter
     (``_build_l4_model("gru", params)``) architecture directly; bypasses the
-    recipe DAG.  Requires ``pip install macroforecast[deep]``.
+    recipe pipeline.  Requires ``pip install macroforecast[deep]``.
 
     Parameters
     ----------
@@ -723,7 +723,7 @@ def transformer_fit(
 
     Calls the L4 transformer family adapter
     (``_build_l4_model("transformer", params)``) architecture directly;
-    bypasses the recipe DAG.  Single ``TransformerEncoderLayer`` with
+    bypasses the recipe pipeline.  Single ``TransformerEncoderLayer`` with
     ``nhead=1`` and ``dim_feedforward=hidden_size``.  Requires
     ``pip install macroforecast[deep]``.
 
@@ -881,7 +881,7 @@ def hemisphere_nn_fit(
     """Fit a Hemisphere Neural Networks density forecaster (Goulet Coulombe et al. 2025).
 
     Standalone callable that constructs a ``_HemisphereNN`` directly,
-    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+    bypassing the recipe pipeline. kwargs are forwarded to the constructor.
 
     Raises NotImplementedError if macroforecast[deep] is not installed.
 

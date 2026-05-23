@@ -6,7 +6,7 @@ Exposes seven fit callables -- ``ols_fit``, ``lasso_fit``,
 that conforms structurally to :class:`~macroforecast.functions.FitResultBase`.
 
 All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
-directly, producing bit-exact numeric output identical to the recipe DAG
+directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
 Ridge (``ridge_fit``) was implemented as the Cycle 22 POC in ``ridge.py``
@@ -594,7 +594,7 @@ def ols_fit(
     """Standalone ordinary least squares regression.
 
     Calls the L4 OLS family adapter (``_build_l4_model("ols", {})``)
-    directly; bypasses the recipe DAG.  Produces bit-exact numeric
+    directly; bypasses the recipe pipeline.  Produces bit-exact numeric
     output identical to recipe-based OLS.
 
     Parameters
@@ -659,7 +659,7 @@ def lasso_fit(
     """Standalone Lasso regression (L1-regularised OLS).
 
     Calls the L4 Lasso family adapter (``_build_l4_model("lasso", params)``)
-    directly; bypasses the recipe DAG.  Produces bit-exact numeric output
+    directly; bypasses the recipe pipeline.  Produces bit-exact numeric output
     identical to recipe-based Lasso with the same parameter values.
 
     Parameters
@@ -742,7 +742,7 @@ def elastic_net_fit(
 
     Calls the L4 elastic_net family adapter
     (``_build_l4_model("elastic_net", params)``) directly; bypasses
-    the recipe DAG.  Produces bit-exact numeric output identical to
+    the recipe pipeline.  Produces bit-exact numeric output identical to
     recipe-based elastic net with the same parameter values.
 
     Parameters
@@ -835,7 +835,7 @@ def lasso_path_fit(
 
     Calls the L4 lasso_path family adapter
     (``_build_l4_model("lasso_path", params)``) directly; bypasses the
-    recipe DAG.  Wraps ``sklearn.linear_model.LassoCV`` and selects
+    recipe pipeline.  Wraps ``sklearn.linear_model.LassoCV`` and selects
     alpha automatically from a regularisation path via k-fold CV.
 
     Parameters
@@ -922,7 +922,7 @@ def bayesian_ridge_fit(
 
     Calls the L4 bayesian_ridge family adapter
     (``_build_l4_model("bayesian_ridge", {})``) directly; bypasses the
-    recipe DAG.  Uses ``sklearn.linear_model.BayesianRidge`` with all
+    recipe pipeline.  Uses ``sklearn.linear_model.BayesianRidge`` with all
     defaults.  Estimates noise precision (``alpha_``) and weight
     precision (``lambda_``) via type-II ML (empirical Bayes).
 
@@ -999,7 +999,7 @@ def huber_fit(
 
     Calls the L4 Huber family adapter
     (``_build_l4_model("huber", params)``) directly; bypasses the recipe
-    DAG.  Uses ``sklearn.linear_model.HuberRegressor`` which replaces the
+    pipeline.  Uses ``sklearn.linear_model.HuberRegressor`` which replaces the
     squared loss with the Huber loss, down-weighting large residuals.
 
     Parameters
@@ -1086,7 +1086,7 @@ def glmboost_fit(
 
     Calls the L4 glmboost family adapter
     (``_build_l4_model("glmboost", params)``) directly; bypasses the
-    recipe DAG.  Implements Buhlmann-Hothorn (2007) componentwise boosting:
+    recipe pipeline.  Implements Buhlmann-Hothorn (2007) componentwise boosting:
     at each iteration, picks the predictor most correlated with the residual
     and updates only its coefficient.
 

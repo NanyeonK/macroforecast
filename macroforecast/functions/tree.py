@@ -6,7 +6,7 @@ Exposes six fit callables -- ``random_forest_fit``, ``extra_trees_fit``,
 structurally to :class:`~macroforecast.functions.FitResultBase`.
 
 All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
-directly, producing bit-exact numeric output identical to the recipe DAG
+directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
 Cycle 35 -- L4 tree/ensemble family standalone-ization.
@@ -511,7 +511,7 @@ def random_forest_fit(
 
     Calls the L4 random_forest family adapter
     (``_build_l4_model("random_forest", params)``) directly; bypasses the
-    recipe DAG.  Produces bit-exact numeric output identical to recipe-based
+    recipe pipeline.  Produces bit-exact numeric output identical to recipe-based
     random forest with the same parameter values.
 
     Parameters
@@ -612,7 +612,7 @@ def extra_trees_fit(
 
     Calls the L4 extra_trees family adapter
     (``_build_l4_model("extra_trees", params)``) directly; bypasses the
-    recipe DAG.  Unlike random forests, extra trees use random split
+    recipe pipeline.  Unlike random forests, extra trees use random split
     thresholds at each node, which reduces variance further at the cost
     of slight bias.
 
@@ -714,7 +714,7 @@ def gradient_boosting_fit(
 
     Calls the L4 gradient_boosting family adapter
     (``_build_l4_model("gradient_boosting", params)``) directly; bypasses
-    the recipe DAG.  Sequential boosting with shallow trees minimising the
+    the recipe pipeline.  Sequential boosting with shallow trees minimising the
     squared error.
 
     Parameters
@@ -807,7 +807,7 @@ def xgboost_fit(
 
     Calls the L4 xgboost family adapter
     (``_build_l4_model("xgboost", params)``) directly; bypasses the recipe
-    DAG.  Requires ``pip install macroforecast[xgboost]``.
+    recipe pipeline.  Requires ``pip install macroforecast[xgboost]``.
 
     Parameters
     ----------
@@ -907,7 +907,7 @@ def lightgbm_fit(
 
     Calls the L4 lightgbm family adapter
     (``_build_l4_model("lightgbm", params)``) directly; bypasses the recipe
-    DAG.  Requires ``pip install macroforecast[lightgbm]``.
+    recipe pipeline.  Requires ``pip install macroforecast[lightgbm]``.
 
     Parameters
     ----------
@@ -1015,7 +1015,7 @@ def catboost_fit(
 
     Calls the L4 catboost family adapter
     (``_build_l4_model("catboost", params)``) directly; bypasses the recipe
-    DAG.  Requires ``pip install macroforecast[catboost]``.
+    recipe pipeline.  Requires ``pip install macroforecast[catboost]``.
 
     Parameters
     ----------
@@ -1421,7 +1421,7 @@ def slow_growing_tree_fit(
     """Fit a Slow-Growing Tree (Goulet Coulombe 2024).
 
     Standalone callable that constructs a ``_SlowGrowingTree`` directly,
-    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+    bypassing the recipe pipeline. kwargs are forwarded to the constructor.
 
     Parameters
     ----------
@@ -1463,7 +1463,7 @@ def quantile_regression_forest_fit(
     """Fit a Quantile Regression Forest (Meinshausen 2006).
 
     Standalone callable that constructs a ``_QuantileRegressionForest`` directly,
-    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+    bypassing the recipe pipeline. kwargs are forwarded to the constructor.
 
     Parameters
     ----------
@@ -1507,7 +1507,7 @@ def bagging_fit(
     """Fit a Bagging meta-estimator (Breiman 1996).
 
     Standalone callable that constructs a ``_BaggingWrapper`` directly,
-    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+    bypassing the recipe pipeline. kwargs are forwarded to the constructor.
 
     Parameters
     ----------
@@ -1551,7 +1551,7 @@ def booging_fit(
     """Fit a Booging estimator (Goulet Coulombe 2024).
 
     Standalone callable that constructs a ``_BoogingWrapper`` directly,
-    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+    bypassing the recipe pipeline. kwargs are forwarded to the constructor.
 
     Parameters
     ----------
@@ -1595,7 +1595,7 @@ def macro_random_forest_fit(
     """Fit a Macroeconomic Random Forest (Coulombe 2024 JAE).
 
     Standalone callable that constructs a ``_MRFExternalWrapper`` directly,
-    bypassing the recipe DAG. kwargs are forwarded to the constructor.
+    bypassing the recipe pipeline. kwargs are forwarded to the constructor.
 
     Note: Raises RuntimeError if the vendored macro_random_forest package is
     not available in the macroforecast installation.

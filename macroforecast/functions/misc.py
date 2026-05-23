@@ -9,7 +9,7 @@ each returning a frozen dataclass that conforms structurally to
 :class:`~macroforecast.functions.FitResultBase`.
 
 All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
-directly, producing bit-exact numeric output identical to the recipe DAG
+directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
 Cycle 37 -- L4 misc family standalone-ization (6 ops).
@@ -490,7 +490,7 @@ def svr_linear_fit(
     """Standalone SVR with linear kernel.
 
     Calls ``_build_l4_model("svr_linear", params)`` directly; bypasses the
-    recipe DAG.  Epsilon-insensitive loss + L2 regularisation, sparse in
+    recipe pipeline.  Epsilon-insensitive loss + L2 regularisation, sparse in
     support vectors.
 
     Parameters
@@ -561,7 +561,7 @@ def svr_rbf_fit(
     """Standalone SVR with RBF kernel.
 
     Calls ``_build_l4_model("svr_rbf", params)`` directly; bypasses the
-    recipe DAG.  Non-linear regression via kernel trick.  Slow on large
+    recipe pipeline.  Non-linear regression via kernel trick.  Slow on large
     panels (O(n^3)).
 
     Parameters
@@ -630,7 +630,7 @@ def svr_poly_fit(
     """Standalone SVR with polynomial kernel.
 
     Calls ``_build_l4_model("svr_poly", params)`` directly; bypasses the
-    recipe DAG.
+    recipe pipeline.
 
     Parameters
     ----------
@@ -776,7 +776,7 @@ def kernel_ridge_fit(
     """Standalone Kernel Ridge Regression.
 
     Calls ``_build_l4_model("kernel_ridge", params)`` directly; bypasses the
-    recipe DAG.  Produces bit-exact output identical to recipe-based KRR
+    recipe pipeline.  Produces bit-exact output identical to recipe-based KRR
     with the same parameters.
 
     Parameters

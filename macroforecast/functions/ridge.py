@@ -109,7 +109,7 @@ def ridge_fit(
 ) -> RidgeFitResult:
     """Standalone ridge regression.
 
-    Calls the L4 ridge family adapter directly; bypasses the recipe DAG.
+    Calls the L4 ridge family adapter directly; bypasses the recipe pipeline.
     Produces bit-exact numeric output as recipe-based ridge with the same
     parameter values.
 
