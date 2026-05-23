@@ -12,7 +12,7 @@ re-exported from `macroforecast.custom` at the top-level `mf` namespace.
 | `custom_model` | The forecasting estimator | `@mf.register_model(name)` | `fn(X_train, y_train, X_test, context) -> float` |
 | `custom_preprocessor` | The feature matrix after L2 construction | `@mf.custom_preprocessor(name)` | `fn(X_train, y_train, X_test, context) -> (X_train, X_test)` |
 | `target_transformer` | The training target (fit + inverse) | `@mf.target_transformer(name)` | class with `fit`, `transform`, `inverse_transform_prediction` |
-| `custom_feature_block` | An L3 DAG step node | `@mf.custom_feature_block(name, block_kind=...)` | `fn(frame, params) -> pd.DataFrame` |
+| `custom_feature_block` | An L3 pipeline step | `@mf.custom_feature_block(name, block_kind=...)` | `fn(frame, params) -> pd.DataFrame` |
 | `custom_feature_combiner` | How L3 blocks are merged | `@mf.custom_feature_combiner(name)` | `fn(inputs, params) -> pd.DataFrame` |
 
 ---
