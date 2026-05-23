@@ -272,6 +272,7 @@ class TestMRE1TightenedTolerancesT500:
                 f"abs_error={abs(su_est - _TRUE_PARAMS['sigma_u']):.5f} > atol={su_tol}"
             )
 
+    @pytest.mark.slow
     def test_mre1_tightened_t500_seed42(self) -> None:
         """MRE-1 (primary): tightened tolerances at T=2000, seed=42.
 
@@ -316,6 +317,7 @@ class TestMRE1TightenedTolerancesT2000:
     SEED: int = 42
     T_FALLBACK: int = 2000
 
+    @pytest.mark.slow
     def test_mre1_tightened_t2000_seed42(self) -> None:
         """MRE-1 (T=2000 fallback): tightened tolerances at T=2000, seed=42.
 
