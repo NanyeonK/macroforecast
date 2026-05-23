@@ -8,6 +8,8 @@ BVAR NIW, DFM Mixed-Frequency).
 """
 from __future__ import annotations
 
+from typing import Any
+
 from macroforecast.core.runtime import (
     _BayesianVAR,
     _DFMMixedFrequency,
@@ -45,20 +47,46 @@ class BVAR(_BayesianVAR):
 
 
 class BVARMinnesota(_BayesianVAR):
-    """Bayesian VAR with the Litterman (1986) Minnesota prior.
+    """Bayesian VAR with Minnesota prior (Litterman 1986).
 
-    Public alias for :class:`~macroforecast.core.runtime._BayesianVAR`
-    (dispatches to the Minnesota prior path).
+    This is a convenience subclass that constrains ``prior='minnesota'``.
+    For arbitrary BVAR priors, use :class:`BVAR` directly.
 
-    Convenience alias for ``BVAR(prior="minnesota", ...)``. The Minnesota
-    prior treats each variable's own lags as most informative and imposes
-    increasing shrinkage on higher-order lags and cross-variable predictors.
+    The Minnesota prior treats each variable's own lags as most informative
+    and imposes increasing shrinkage on higher-order lags and cross-variable
+    predictors.
+
+    Parameters
+    ----------
+    prior : str
+        Must be ``'minnesota'`` (default). Any other value raises
+        ``ValueError``. Use :class:`BVAR` for arbitrary priors.
+    **kwargs
+        Forwarded to :class:`BVAR`. See :class:`BVAR` docstring for
+        available hyperparameters (``lambda1``, ``lambda2``, ``lambda3``,
+        ``n_lags``, ``n_draws``, etc.).
+
+    Raises
+    ------
+    ValueError
+        If ``prior`` is not ``'minnesota'``.
 
     References
     ----------
     Litterman (1986) "Forecasting with Bayesian Vector Autoregressions."
     Journal of Business and Economic Statistics 4(1).
     """
+
+    def __init__(self, *, prior: str = "minnesota", **kwargs: Any) -> None:
+        if prior != "minnesota":
+            raise ValueError(
+                f"BVARMinnesota requires prior='minnesota'; got prior={prior!r}. "
+                "Use BVAR for arbitrary priors."
+            )
+        # Translate user-facing 'minnesota' to internal 'bvar_minnesota' for _BayesianVAR.
+        # _BayesianVAR.__init__ dispatches on 'bvar_minnesota' (not 'minnesota') to activate
+        # the closed-form Litterman Minnesota posterior mean branch.
+        super().__init__(prior="bvar_minnesota", **kwargs)
 
 
 class DFMMixedFrequency(_DFMMixedFrequency):
