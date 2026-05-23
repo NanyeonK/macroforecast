@@ -183,6 +183,33 @@ class Boruta:
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
 
+    def fit_transform(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Fit the selector and return the selected feature columns.
+
+        Convenience method equivalent to calling fit(X, y, **kwargs) followed
+        by transform(X). Follows the sklearn transformer convention.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix.
+        y : pd.Series
+            Target series.
+        **kwargs
+            Forwarded to fit().
+
+        Returns
+        -------
+        pd.DataFrame
+            Subset of X containing only the selected columns.
+        """
+        return self.fit(X, y, **kwargs).transform(X)
+
 
 # ---------------------------------------------------------------------------
 # RFE
@@ -294,6 +321,33 @@ class RFE:
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
 
+    def fit_transform(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Fit the selector and return the selected feature columns.
+
+        Convenience method equivalent to calling fit(X, y, **kwargs) followed
+        by transform(X). Follows the sklearn transformer convention.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix.
+        y : pd.Series
+            Target series.
+        **kwargs
+            Forwarded to fit().
+
+        Returns
+        -------
+        pd.DataFrame
+            Subset of X containing only the selected columns.
+        """
+        return self.fit(X, y, **kwargs).transform(X)
+
 
 # ---------------------------------------------------------------------------
 # LassoPathSelector
@@ -392,6 +446,33 @@ class LassoPathSelector:
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
+
+    def fit_transform(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Fit the selector and return the selected feature columns.
+
+        Convenience method equivalent to calling fit(X, y, **kwargs) followed
+        by transform(X). Follows the sklearn transformer convention.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix.
+        y : pd.Series
+            Target series.
+        **kwargs
+            Forwarded to fit().
+
+        Returns
+        -------
+        pd.DataFrame
+            Subset of X containing only the selected columns.
+        """
+        return self.fit(X, y, **kwargs).transform(X)
 
 
 # ---------------------------------------------------------------------------
@@ -501,6 +582,33 @@ class StabilitySelection:
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
+
+    def fit_transform(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Fit the selector and return the selected feature columns.
+
+        Convenience method equivalent to calling fit(X, y, **kwargs) followed
+        by transform(X). Follows the sklearn transformer convention.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix.
+        y : pd.Series
+            Target series.
+        **kwargs
+            Forwarded to fit().
+
+        Returns
+        -------
+        pd.DataFrame
+            Subset of X containing only the selected columns.
+        """
+        return self.fit(X, y, **kwargs).transform(X)
 
 
 # ---------------------------------------------------------------------------
@@ -612,6 +720,33 @@ class GeneticSelection:
         X_df = _to_frame(X)
         cols = [c for c in self.selected_features_ if c in X_df.columns]
         return X_df[cols]
+
+    def fit_transform(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Fit the selector and return the selected feature columns.
+
+        Convenience method equivalent to calling fit(X, y, **kwargs) followed
+        by transform(X). Follows the sklearn transformer convention.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Feature matrix.
+        y : pd.Series
+            Target series.
+        **kwargs
+            Forwarded to fit().
+
+        Returns
+        -------
+        pd.DataFrame
+            Subset of X containing only the selected columns.
+        """
+        return self.fit(X, y, **kwargs).transform(X)
 
 
 __all__ = [
