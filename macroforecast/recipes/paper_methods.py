@@ -2748,7 +2748,7 @@ def _l3_b_rotation(
     footnote — "B₃() = B₂() only when no lags are included." At
     ``n_lag=0`` the universal lag op rejects (hard rule: ``n_lag >= 1``)
     so pre-A4 ``b_grid(n_lag=0)`` produced unrunnable recipes. Each
-    rotation now emits a no-lag DAG when ``n_lag == 0``:
+    rotation now emits a no-lag pipeline when ``n_lag == 0``:
 
     * B₁ → ``identity(src_X)`` (passthrough X).
     * B₂ → ``pca(src_X, n_components="all")`` (no post-lag).
