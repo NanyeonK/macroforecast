@@ -193,6 +193,23 @@ from .misc import (
     MARSFitResult, mars_fit,
 )
 
+# Cycle 63: L4 MIDAS family standalone callables (4 ops)
+from .midas import (
+    MidasFitResult,
+    midas_almon_fit,
+    midas_beta_fit,
+    midas_step_fit,
+    unrestricted_midas_fit,
+)
+
+# Cycle 63: L4 ridge-variant family standalone callables (4 ops)
+from .ridge_variants import (
+    nonneg_ridge_fit,
+    random_walk_ridge_fit,
+    shrink_to_target_ridge_fit,
+    fused_difference_ridge_fit,
+)
+
 # Cycle 38: L7 importance standalone callables
 from .importance import (
     NativeImportanceResult,
@@ -394,4 +411,15 @@ __all__ = [
     "ale_importance",
     "shap_tree_importance",
     "shap_linear_importance",
+    # Cycle 63: L4 MIDAS family
+    "MidasFitResult",
+    "midas_almon_fit",
+    "midas_beta_fit",
+    "midas_step_fit",
+    "unrestricted_midas_fit",
+    # Cycle 63: L4 ridge-variant family
+    "nonneg_ridge_fit",
+    "random_walk_ridge_fit",
+    "shrink_to_target_ridge_fit",
+    "fused_difference_ridge_fit",
 ]
