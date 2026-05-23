@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Bring your own model &#8212; macroforecast</title>
+    <title>Build your own model &#8212; macroforecast</title>
   
   
   
@@ -52,7 +52,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Bring your own preprocessor" href="04_custom_preprocessor.html" />
-    <link rel="prev" title="A complete benchmarking study" href="02_full_study.html" />
+    <link rel="prev" title="Full out-of-sample study" href="02_full_study.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.3b1" />
@@ -381,10 +381,10 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="00_install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="01_first_forecast.html">Your first forecast</a></li>
-<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">A complete benchmarking study</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Bring your own model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">Full out-of-sample study</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Build your own model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_custom_preprocessor.html">Bring your own preprocessor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — recipe DSL vs standalone callables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — standalone models vs recipe pipeline</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="replications/index.html">Replications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="replications/example_walkthrough.html">Example Walkthrough — minimal ridge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="replications/goulet_coulombe_2021.html">Goulet-Coulombe (2021) — bundled paper baseline</a></li>
@@ -433,7 +433,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorials</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Bring your own model</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Build your own model</span></li>
   </ul>
 </nav>
 </div>
@@ -450,246 +450,183 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="bring-your-own-model">
-<h1>Bring your own model<a class="headerlink" href="#bring-your-own-model" title="Link to this heading">#</a></h1>
-<p>In this tutorial you will register a custom model callable, add it as a contender
-in the benchmarking study from <a class="reference internal" href="02_full_study.html"><span class="doc">A complete benchmarking study</span></a>, and compare its performance
-against the AR(2) baseline.</p>
+  <section id="build-your-own-model">
+<h1>Build your own model<a class="headerlink" href="#build-your-own-model" title="Link to this heading">#</a></h1>
+<p>Build a custom forecasting model by subclassing <code class="docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RegressorMixin</span></code>, use it directly in a <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code> loop, and optionally
+register it with the recipe pipeline. No YAML is required for the main body of
+this tutorial.</p>
 <hr class="docutils" />
-<section id="the-custom-model-contract">
-<h2>The custom model contract<a class="headerlink" href="#the-custom-model-contract" title="Link to this heading">#</a></h2>
-<p>Before writing any code, understand the contract macroforecast expects. Your
-function must accept exactly four arguments:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">my_model</span><span class="p">(</span>
-    <span class="n">X_train</span><span class="p">,</span>    <span class="c1"># pd.DataFrame: n_train rows x n_features cols (training predictors)</span>
-    <span class="n">y_train</span><span class="p">,</span>    <span class="c1"># pd.Series: n_train training target values</span>
-    <span class="n">X_test</span><span class="p">,</span>     <span class="c1"># pd.DataFrame: exactly 1 row (one forecast origin)</span>
-    <span class="n">context</span><span class="p">,</span>    <span class="c1"># dict: runtime metadata (model_name, target, horizon, feature_names, ...)</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-    <span class="o">...</span>         <span class="c1"># return a single float — the one-step forecast</span>
-</pre></div>
-</div>
-<p>Four rules:</p>
-<ol class="arabic simple">
-<li><p>Fit only on the data supplied in <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">y_train</span></code>. The runtime has
-already applied the expanding-window split for you.</p></li>
-<li><p>Return a scalar (Python <code class="docutils literal notranslate"><span class="pre">float</span></code>) or a one-element sequence. The runtime coerces
-both via <code class="docutils literal notranslate"><span class="pre">float(value)</span></code>.</p></li>
-<li><p>Never read future rows, the global panel, or any state outside the function.</p></li>
-<li><p>If your estimator fails on a degenerate window, raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> — the
-<code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> in L0 decides what to do.</p></li>
-</ol>
+<section id="the-sklearn-subclassing-contract">
+<h2>The sklearn subclassing contract<a class="headerlink" href="#the-sklearn-subclassing-contract" title="Link to this heading">#</a></h2>
+<p>macroforecast model classes in <code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code> all follow the sklearn
+estimator convention. Any class that inherits from <code class="docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>
+and <code class="docutils literal notranslate"><span class="pre">sklearn.base.RegressorMixin</span></code> can be used in the same way.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> provides <code class="docutils literal notranslate"><span class="pre">get_params()</span></code> and <code class="docutils literal notranslate"><span class="pre">set_params()</span></code> automatically, derived
+from the argument names in <code class="docutils literal notranslate"><span class="pre">__init__</span></code>. These methods are required for sklearn
+pipeline compatibility, including <code class="docutils literal notranslate"><span class="pre">clone()</span></code> and <code class="docutils literal notranslate"><span class="pre">GridSearchCV</span></code>. No extra
+implementation is needed beyond writing <code class="docutils literal notranslate"><span class="pre">__init__</span></code> in the standard way.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RegressorMixin</span></code> provides a default <code class="docutils literal notranslate"><span class="pre">score(X,</span> <span class="pre">y)</span></code> method that computes the R^2
+coefficient of determination, which makes the class usable directly with sklearn
+scoring utilities.</p>
+<p>The only contract that macroforecast requires to treat the class as a model is
+the pair <code class="docutils literal notranslate"><span class="pre">fit(X,</span> <span class="pre">y)</span> <span class="pre">-&gt;</span> <span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">predict(X)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray</span></code>. If your class
+satisfies those two methods and inherits from <code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressorMixin</span></code>,
+it is compatible with the standalone <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code> loop, sklearn pipelines,
+and the recipe registration API.</p>
 </section>
 <hr class="docutils" />
-<section id="a-naive-baseline">
-<h2>A naive baseline<a class="headerlink" href="#a-naive-baseline" title="Link to this heading">#</a></h2>
-<p>Start with the simplest possible custom model — a last-value naive baseline — to
-see the registration and recipe mechanics in one go.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<section id="a-concrete-example-constanttrendplusar">
+<h2>A concrete example – ConstantTrendPlusAR<a class="headerlink" href="#a-concrete-example-constanttrendplusar" title="Link to this heading">#</a></h2>
+<p>The class below fits a linear time trend plus an AR(1) residual correction by OLS.
+It accepts <code class="docutils literal notranslate"><span class="pre">X</span></code> in both <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">predict</span></code> to satisfy the sklearn convention, but
+does not use feature columns. The <code class="docutils literal notranslate"><span class="pre">X</span></code> argument serves only to convey the row count
+at predict time.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="nd">@mf</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">&quot;naive_last_value&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">naive_last_value</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the last observed target value as the forecast.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span>
 
-<span class="c1"># Confirm registration</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">list_custom_models</span><span class="p">())</span>   <span class="c1"># (&#39;naive_last_value&#39;,)</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">&#64;mf.register_model</span></code> decorator registers the function under the name
-<code class="docutils literal notranslate"><span class="pre">'naive_last_value'</span></code> in the current Python process. You reference this name in
-your recipe with <code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">naive_last_value</span></code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The registry lives in the Python process. If you call <code class="docutils literal notranslate"><span class="pre">mf.run()</span></code> in a different
-script without importing this registration code first, the recipe will fail with
-<code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">unknown</span> <span class="pre">model</span> <span class="pre">family</span> <span class="pre">'naive_last_value'</span></code>. Always import your
-registration module before calling <code class="docutils literal notranslate"><span class="pre">mf.run()</span></code>.</p>
-</div>
-</section>
-<hr class="docutils" />
-<section id="add-the-custom-model-to-the-recipe">
-<h2>Add the custom model to the recipe<a class="headerlink" href="#add-the-custom-model-to-the-recipe" title="Link to this heading">#</a></h2>
-<p>The simplest way to compare multiple model families is to sweep over them using
-the <code class="docutils literal notranslate"><span class="pre">{sweep:</span> <span class="pre">[...]}</span></code> marker on the <code class="docutils literal notranslate"><span class="pre">family</span></code> parameter. Each value becomes an
-independent cell.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">0_meta:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    failure_policy: fail_fast</span>
-<span class="s2">    reproducibility_mode: seeded_reproducible</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    random_seed: 0</span>
 
-<span class="s2">1_data:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    custom_source_policy: custom_panel_only</span>
-<span class="s2">    frequency: monthly</span>
-<span class="s2">    horizon_set: custom_list</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    target: gdp_growth</span>
-<span class="s2">    target_horizons: [1]</span>
-<span class="s2">    custom_panel_inline:</span>
-<span class="s2">      date:</span>
-<span class="s2">        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,</span>
-<span class="s2">         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,</span>
-<span class="s2">         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,</span>
-<span class="s2">         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]</span>
-<span class="s2">      gdp_growth:</span>
-<span class="s2">        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,</span>
-<span class="s2">         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]</span>
-<span class="s2">      ip_index:</span>
-<span class="s2">        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,</span>
-<span class="s2">         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConstantTrendPlusAR</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear time trend plus AR(1) residual forecaster.</span>
 
-<span class="s2">2_preprocessing:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    transform_policy: no_transform</span>
-<span class="s2">    outlier_policy: none</span>
-<span class="s2">    imputation_policy: none_propagate</span>
-<span class="s2">    frame_edge_policy: keep_unbalanced</span>
+<span class="sd">    Fits the model y_t = alpha + beta*t + phi*y_{t-1} + eps_t by OLS.</span>
+<span class="sd">    At predict time, extrapolates the trend and adds the AR(1) correction.</span>
 
-<span class="s2">3_feature_engineering:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}</span>
-<span class="s2">    - id: lag_x</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: lag</span>
-<span class="s2">      params: </span><span class="si">{n_lag: 1}</span>
-<span class="s2">      inputs: [src_X]</span>
-<span class="s2">    - id: y_h</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: target_construction</span>
-<span class="s2">      params: {mode: point_forecast, method: direct, horizon: 1}</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
-<span class="s2">    l3_metadata_v1: auto</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fit_intercept : bool, default True</span>
+<span class="sd">        Whether to include a constant term in the design matrix.</span>
 
-<span class="s2">4_forecasting_model:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
-<span class="s2">    - id: fit_model</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
-<span class="s2">      params:</span>
-<span class="s2">        family: {sweep: [ar_p, naive_last_value]}</span>
-<span class="s2">        n_lag: 2                    # used by ar_p; ignored by naive_last_value</span>
-<span class="s2">        forecast_strategy: direct</span>
-<span class="s2">        training_start_rule: expanding</span>
-<span class="s2">        refit_policy: every_origin</span>
-<span class="s2">        search_algorithm: none</span>
-<span class="s2">        min_train_size: 6</span>
-<span class="s2">      inputs: [src_y]              # both models only need the target series</span>
-<span class="s2">    - id: predict_model</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_model]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l4_forecasts_v1: predict_model</span>
-<span class="s2">    l4_model_artifacts_v1: fit_model</span>
-<span class="s2">    l4_training_metadata_v1: auto</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    X is accepted in fit and predict to satisfy the sklearn estimator</span>
+<span class="sd">    convention, but is not used in estimation or forecasting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-<span class="s2">5_evaluation:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    primary_metric: mse</span>
-<span class="s2">    point_metrics: [mse, rmse, mae]</span>
-<span class="s2">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_intercept</span> <span class="o">=</span> <span class="n">fit_intercept</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ConstantTrendPlusAR&quot;</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">y_vals</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># Design matrix: [1, t, y_{t-1}] or [t, y_{t-1}] without intercept</span>
+        <span class="n">ar_lag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([[</span><span class="n">y_vals</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y_vals</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_intercept</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">t</span><span class="p">,</span> <span class="n">ar_lag</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">t</span><span class="p">,</span> <span class="n">ar_lag</span><span class="p">])</span>
+
+        <span class="c1"># OLS via least-squares solver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">y_vals</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_train</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># X is used only to determine the number of forecast periods</span>
+        <span class="n">n_test</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">t_future</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_train</span> <span class="o">+</span> <span class="n">n_test</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">last_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_y</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t_future</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_intercept</span><span class="p">:</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">t_i</span><span class="p">,</span> <span class="n">last_y</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">t_i</span><span class="p">,</span> <span class="n">last_y</span><span class="p">])</span>
+            <span class="n">yhat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">z</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span>
+            <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yhat</span><span class="p">)</span>
+            <span class="n">last_y</span> <span class="o">=</span> <span class="n">yhat</span>   <span class="c1"># AR(1) recursion: each period feeds the next</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <hr class="docutils" />
-<section id="run-and-compare">
-<h2>Run and compare<a class="headerlink" href="#run-and-compare" title="Link to this heading">#</a></h2>
-<p>Register the model, then run:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@mf</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">&quot;naive_last_value&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">naive_last_value</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<section id="use-the-custom-class-directly">
+<h2>Use the custom class directly<a class="headerlink" href="#use-the-custom-class-directly" title="Link to this heading">#</a></h2>
+<p>The class works immediately in a <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code> loop, without any registration
+or YAML. The synthetic data from <a class="reference internal" href="02_full_study.html"><span class="doc">Full out-of-sample study</span></a> is reused here.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeSeriesSplit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cells: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>   <span class="c1"># 2 cells (one per sweep value)</span>
+<span class="c1"># y and X are the same series from Tutorial 02</span>
+<span class="n">tscv</span> <span class="o">=</span> <span class="n">TimeSeriesSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">mse_list</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">:</span>
-    <span class="n">metrics</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">metrics_table</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">cell_id</span><span class="p">,</span> <span class="s2">&quot;MSE:&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;mse&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">test_idx</span> <span class="ow">in</span> <span class="n">tscv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="n">X_tr</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span>   <span class="c1"># ConstantTrendPlusAR does not use columns,</span>
+    <span class="n">X_te</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>    <span class="c1"># but len(X_te) sets the forecast horizon.</span>
+    <span class="n">y_tr</span><span class="p">,</span> <span class="n">y_te</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">ConstantTrendPlusAR</span><span class="p">(</span><span class="n">fit_intercept</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_tr</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">)</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_te</span><span class="p">)</span>
+    <span class="n">mse_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">preds</span> <span class="o">-</span> <span class="n">y_te</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ConstantTrendPlusAR mean CV MSE: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mse_list</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The naive last-value baseline typically has higher MSE than AR(2) on a trending
-series. The point is to see the custom model integrated into the same evaluation
-pipeline.</p>
-<p>Inspect the model artifact to confirm <code class="docutils literal notranslate"><span class="pre">framework</span> <span class="pre">=</span> <span class="pre">&quot;custom&quot;</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cell_naive</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>   <span class="c1"># last cell: naive_last_value</span>
-<span class="n">art</span> <span class="o">=</span> <span class="n">cell_naive</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l4_model_artifacts_v1&quot;</span><span class="p">]</span>
-<span class="n">fitted</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">art</span><span class="o">.</span><span class="n">artifacts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;framework:&quot;</span><span class="p">,</span> <span class="n">fitted</span><span class="o">.</span><span class="n">framework</span><span class="p">)</span>   <span class="c1"># &quot;custom&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;family:&quot;</span><span class="p">,</span> <span class="n">fitted</span><span class="o">.</span><span class="n">family</span><span class="p">)</span>         <span class="c1"># &quot;naive_last_value&quot;</span>
-</pre></div>
-</div>
+<p>Because <code class="docutils literal notranslate"><span class="pre">ConstantTrendPlusAR</span></code> inherits from <code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code>, sklearn utilities
+such as <code class="docutils literal notranslate"><span class="pre">clone()</span></code> and <code class="docutils literal notranslate"><span class="pre">check_estimator()</span></code> work out of the box. The <code class="docutils literal notranslate"><span class="pre">get_params()</span></code>
+method returns <code class="docutils literal notranslate"><span class="pre">{&quot;fit_intercept&quot;:</span> <span class="pre">True}</span></code> automatically, derived from the <code class="docutils literal notranslate"><span class="pre">__init__</span></code>
+argument name.</p>
 </section>
 <hr class="docutils" />
-<section id="a-more-realistic-custom-model">
-<h2>A more realistic custom model<a class="headerlink" href="#a-more-realistic-custom-model" title="Link to this heading">#</a></h2>
-<p>The naive baseline is easy to verify. Here is a slightly more realistic example:
-a custom exponential-smoothing forecast that uses only the target series.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<section id="inheriting-macroforecast-machinery-optional">
+<h2>Inheriting macroforecast machinery (optional)<a class="headerlink" href="#inheriting-macroforecast-machinery-optional" title="Link to this heading">#</a></h2>
+<p>If your custom model is a variant of an existing macroforecast model family, you
+can subclass both the private implementation class and the sklearn mixins. The 30
+public model classes in <code class="docutils literal notranslate"><span class="pre">mf.models</span></code> follow exactly this pattern. For example,
+<code class="docutils literal notranslate"><span class="pre">LinearAR</span></code> is defined as <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">LinearAR(_LinearARModel):</span> <span class="pre">pass</span></code>. A custom variant
+that adds a constraint would look like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyLinearAR</span><span class="p">(</span><span class="n">_LinearARModel</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>This preserves the private class behavior while gaining <code class="docutils literal notranslate"><span class="pre">get_params</span></code>, <code class="docutils literal notranslate"><span class="pre">set_params</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">score</span></code>. In practice, if you only need minor modifications, subclassing the
+private class is the most direct path. If you need full control, start from
+<code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressorMixin</span></code> directly, as in <code class="docutils literal notranslate"><span class="pre">ConstantTrendPlusAR</span></code> above.</p>
+</section>
+<hr class="docutils" />
+<section id="when-to-register-for-the-recipe-pipeline">
+<h2>When to register for the recipe pipeline<a class="headerlink" href="#when-to-register-for-the-recipe-pipeline" title="Link to this heading">#</a></h2>
+<p>If you want the recipe runtime to dispatch your class by name in a YAML recipe,
+register it as a functional wrapper via <code class="docutils literal notranslate"><span class="pre">macroforecast.custom.register_model</span></code>. The
+registration API accepts a callable with the signature
+<code class="docutils literal notranslate"><span class="pre">fn(X_train,</span> <span class="pre">y_train,</span> <span class="pre">X_test,</span> <span class="pre">context)</span> <span class="pre">-&gt;</span> <span class="pre">scalar</span></code>, where <code class="docutils literal notranslate"><span class="pre">X_test</span></code> is a single
+prediction-period row.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast.custom</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf_custom</span>
 
-<span class="nd">@mf</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">&quot;exp_smooth_alpha04&quot;</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">exp_smooth</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple exponential smoothing with fixed alpha=0.4.&quot;&quot;&quot;</span>
-    <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.4</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">values</span>
-    <span class="n">smoothed</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-        <span class="n">smoothed</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">v</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">smoothed</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">smoothed</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">constant_trend_plus_ar</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Functional wrapper for ConstantTrendPlusAR for recipe dispatch.</span>
+
+<span class="sd">    The recipe runtime calls this once per forecast origin per horizon.</span>
+<span class="sd">    X_test is one row; the return value is a single forecast scalar.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">ConstantTrendPlusAR</span><span class="p">(</span><span class="n">fit_intercept</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Wrap inputs as DataFrames if the runtime passes numpy arrays</span>
+    <span class="n">X_tr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="k">else</span> <span class="n">X_train</span>
+    <span class="n">y_tr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_train</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="k">else</span> <span class="n">y_train</span>
+    <span class="n">X_te</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="k">else</span> <span class="n">X_test</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_tr</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_te</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">mf_custom</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">&quot;constant_trend_plus_ar&quot;</span><span class="p">,</span> <span class="n">constant_trend_plus_ar</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This function fits entirely from <code class="docutils literal notranslate"><span class="pre">y_train.values</span></code>. It ignores <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and
-<code class="docutils literal notranslate"><span class="pre">context</span></code>. For a production custom model, you might use <code class="docutils literal notranslate"><span class="pre">context[&quot;feature_names&quot;]</span></code>
-to select predictors by name, or <code class="docutils literal notranslate"><span class="pre">context[&quot;horizon&quot;]</span></code> to adjust the forecast
-horizon.</p>
-<p>Swap it into the sweep: <code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">{sweep:</span> <span class="pre">[ar_p,</span> <span class="pre">exp_smooth_alpha04]}</span></code> and re-run.</p>
-</section>
-<hr class="docutils" />
-<section id="debugging-tips">
-<h2>Debugging tips<a class="headerlink" href="#debugging-tips" title="Link to this heading">#</a></h2>
-<p>If your custom model silently returns <code class="docutils literal notranslate"><span class="pre">NaN</span></code>, check three things:</p>
-<ol class="arabic simple">
-<li><p><strong>Return value shape.</strong> The runtime calls <code class="docutils literal notranslate"><span class="pre">float(return_value)</span></code>. If
-<code class="docutils literal notranslate"><span class="pre">return_value</span></code> is a NumPy array with more than one element, <code class="docutils literal notranslate"><span class="pre">float()</span></code> raises.
-Return <code class="docutils literal notranslate"><span class="pre">float(arr[0])</span></code> explicitly.</p></li>
-<li><p><strong>Registration order.</strong> Import your registration module before <code class="docutils literal notranslate"><span class="pre">mf.run()</span></code>. Use
-<code class="docutils literal notranslate"><span class="pre">mf.list_custom_models()</span></code> to confirm the name is registered.</p></li>
-<li><p><strong>Training window.</strong> If <code class="docutils literal notranslate"><span class="pre">y_train</span></code> is shorter than your model requires, raise
-<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> rather than returning a degenerate value. The runtime’s
-<code class="docutils literal notranslate"><span class="pre">failure_policy</span></code> will handle it.</p></li>
-</ol>
-<p>Clean up the registry between sessions:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">clear_custom_models</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">list_custom_models</span><span class="p">())</span>   <span class="c1"># ()</span>
-</pre></div>
-</div>
-</section>
-<hr class="docutils" />
-<section id="what-to-do-next">
-<h2>What to do next<a class="headerlink" href="#what-to-do-next" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>See <a class="reference internal" href="../how_to/add_custom_model.html"><span class="doc">How to add a custom model</span></a> for the terse task-recipe version of this
-tutorial.</p></li>
-<li><p>See <a class="reference internal" href="../how_to/use_custom_hooks.html"><span class="doc">How to use custom hooks</span></a> for all five extension points: custom feature
-blocks, combiners, preprocessors, target transformers, and models.</p></li>
-<li><p>See <a class="reference internal" href="02_full_study.html"><span class="doc">A complete benchmarking study</span></a> to revisit the full benchmarking study setup.</p></li>
-</ul>
+<p>After registration, the name <code class="docutils literal notranslate"><span class="pre">&quot;constant_trend_plus_ar&quot;</span></code> is accepted as a
+<code class="docutils literal notranslate"><span class="pre">model_family</span></code> value in any recipe running in the same Python process. For
+full details on the registration contract and context fields, see
+<a class="reference internal" href="../how_to/add_custom_model.html"><span class="doc">How to add a custom model</span></a>. For the conceptual comparison of standalone
+and recipe modes, see <a class="reference internal" href="two_entry_points.html"><span class="doc">Two entry points — standalone models vs recipe pipeline</span></a>.</p>
 </section>
 </section>
 
@@ -709,7 +646,7 @@ blocks, combiners, preprocessors, target transformers, and models.</p></li>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">A complete benchmarking study</p>
+        <p class="prev-next-title">Full out-of-sample study</p>
       </div>
     </a>
     <a class="right-next"
@@ -740,13 +677,11 @@ blocks, combiners, preprocessors, target transformers, and models.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-custom-model-contract">The custom model contract</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-naive-baseline">A naive baseline</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#add-the-custom-model-to-the-recipe">Add the custom model to the recipe</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-and-compare">Run and compare</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-more-realistic-custom-model">A more realistic custom model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debugging-tips">Debugging tips</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-do-next">What to do next</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-sklearn-subclassing-contract">The sklearn subclassing contract</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-concrete-example-constanttrendplusar">A concrete example – ConstantTrendPlusAR</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-the-custom-class-directly">Use the custom class directly</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inheriting-macroforecast-machinery-optional">Inheriting macroforecast machinery (optional)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-register-for-the-recipe-pipeline">When to register for the recipe pipeline</a></li>
 </ul>
   </nav></div>
 

@@ -381,10 +381,10 @@
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="00_install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="01_first_forecast.html">Your first forecast</a></li>
-<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">A complete benchmarking study</a></li>
-<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Bring your own model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">Full out-of-sample study</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Build your own model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_custom_preprocessor.html">Bring your own preprocessor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — recipe DSL vs standalone callables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — standalone models vs recipe pipeline</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="replications/index.html">Replications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="replications/example_walkthrough.html">Example Walkthrough — minimal ridge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="replications/goulet_coulombe_2021.html">Goulet-Coulombe (2021) — bundled paper baseline</a></li>
@@ -449,16 +449,23 @@
                   
   <section id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading">#</a></h1>
-<p>New to macroforecast? Work through these in order.</p>
-<p>Each tutorial runs real code against a synthetic dataset. By the end of tutorial 2 you will have a complete benchmarking study. Tutorial 3 shows you how to plug in your own model.</p>
+<p>New to macroforecast? The tutorials below start with the standalone model classes in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>. No YAML is required for tutorials 01 through 03. Each tutorial
+ends with a short section on graduating to the recipe pipeline when reproducibility or
+systematic sweeps are needed.</p>
+<p>Tutorial 01 fits a linear AR model on a synthetic series in under five minutes. Tutorial
+02 compares three model families using scikit-learn’s <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code>. Tutorial 03 shows
+how to subclass <code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> and <code class="docutils literal notranslate"><span class="pre">RegressorMixin</span></code> to define a custom forecasting model.
+For installation instructions, start with tutorial 00. For a conceptual comparison of the
+standalone and recipe entry points, see <a class="reference internal" href="two_entry_points.html"><span class="doc">Two entry points — standalone models vs recipe pipeline</span></a>.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="00_install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="01_first_forecast.html">Your first forecast</a></li>
-<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">A complete benchmarking study</a></li>
-<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Bring your own model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_full_study.html">Full out-of-sample study</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Build your own model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_custom_preprocessor.html">Bring your own preprocessor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — recipe DSL vs standalone callables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — standalone models vs recipe pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="replications/index.html">Replications</a></li>
 </ul>
 </div>

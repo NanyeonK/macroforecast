@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A complete benchmarking study &#8212; macroforecast</title>
+    <title>Full out-of-sample study &#8212; macroforecast</title>
   
   
   
@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Bring your own model" href="03_custom_model.html" />
+    <link rel="next" title="Build your own model" href="03_custom_model.html" />
     <link rel="prev" title="Your first forecast" href="01_first_forecast.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -381,10 +381,10 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="00_install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="01_first_forecast.html">Your first forecast</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">A complete benchmarking study</a></li>
-<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Bring your own model</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Full out-of-sample study</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_custom_model.html">Build your own model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="04_custom_preprocessor.html">Bring your own preprocessor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — recipe DSL vs standalone callables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="two_entry_points.html">Two entry points — standalone models vs recipe pipeline</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="replications/index.html">Replications</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="replications/example_walkthrough.html">Example Walkthrough — minimal ridge</a></li>
 <li class="toctree-l2"><a class="reference internal" href="replications/goulet_coulombe_2021.html">Goulet-Coulombe (2021) — bundled paper baseline</a></li>
@@ -433,7 +433,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorials</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">A complete benchmarking study</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Full out-of-sample study</span></li>
   </ul>
 </nav>
 </div>
@@ -450,481 +450,150 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="a-complete-benchmarking-study">
-<h1>A complete benchmarking study<a class="headerlink" href="#a-complete-benchmarking-study" title="Link to this heading">#</a></h1>
-<p>In this tutorial you will extend the AR(2) baseline from <a class="reference internal" href="01_first_forecast.html"><span class="doc">Your first forecast</span></a> into
-a complete benchmarking study: multiple model families, a parameter sweep, the
-Diebold-Mariano significance test, and an importance figure. By the end you will have
-a recipe that is ready for a paper.</p>
+  <section id="full-out-of-sample-study">
+<h1>Full out-of-sample study<a class="headerlink" href="#full-out-of-sample-study" title="Link to this heading">#</a></h1>
+<p>Run a full out-of-sample evaluation comparing three model classes from
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code> using scikit-learn’s <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code>, then graduate to
+the recipe pipeline for systematic benchmarking. No YAML is required for the
+main body of this tutorial.</p>
 <hr class="docutils" />
-<section id="adding-a-second-model-family">
-<h2>Adding a second model family<a class="headerlink" href="#adding-a-second-model-family" title="Link to this heading">#</a></h2>
-<p>Start with the same 20-row synthetic panel from tutorial 1. Extend the recipe by
-adding a ridge regression node alongside the AR(2) node and marking AR(2) as the
-benchmark via <code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code> flag tells L6 tests which model to use as the baseline
-when computing the Diebold-Mariano statistic. All other models are compared against it.</p>
-<p>The full <code class="docutils literal notranslate"><span class="pre">4_forecasting_model</span></code> block with both nodes:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">4_forecasting_model</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">X_final</span><span class="p p-Indicator">}}</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_y</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ar</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
-<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="nv">ar_p</span><span class="p p-Indicator">,</span><span class="nt"> n_lag</span><span class="p">:</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nt"> forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="nv">direct</span><span class="p p-Indicator">,</span>
-<span class="nt">               training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="nv">expanding</span><span class="p p-Indicator">,</span><span class="nt"> refit_policy</span><span class="p">:</span><span class="w"> </span><span class="nv">every_origin</span><span class="p p-Indicator">,</span>
-<span class="nt">               search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="nt"> min_train_size</span><span class="p">:</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">}</span>
-<span class="w">      </span><span class="nt">is_benchmark</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_ar</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict</span>
-<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_ar</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
-<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="nv">ridge</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="nt"> forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="nv">direct</span><span class="p p-Indicator">,</span>
-<span class="nt">               training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="nv">expanding</span><span class="p p-Indicator">,</span><span class="nt"> refit_policy</span><span class="p">:</span><span class="w"> </span><span class="nv">every_origin</span><span class="p p-Indicator">,</span>
-<span class="nt">               search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="nv">none</span><span class="p p-Indicator">,</span><span class="nt"> min_train_size</span><span class="p">:</span><span class="w"> </span><span class="nv">6</span><span class="p p-Indicator">}</span>
-<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_ridge</span>
-<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict</span>
-<span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_ridge</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">]</span>
-<span class="w">  </span><span class="nt">sinks</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">l4_forecasts_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">predict_ridge</span>
-<span class="w">    </span><span class="nt">l4_model_artifacts_v1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fit_ar</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">fit_ridge</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="nt">l4_training_metadata_v1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span>
-</pre></div>
-</div>
-<p>Notice that <code class="docutils literal notranslate"><span class="pre">fit_ar</span></code> takes only <code class="docutils literal notranslate"><span class="pre">[src_y]</span></code> as input — AR(p) models use only the
-target history, not the predictor matrix. Ridge uses both <code class="docutils literal notranslate"><span class="pre">[src_X,</span> <span class="pre">src_y]</span></code>.</p>
+<section id="before-you-start">
+<h2>Before you start<a class="headerlink" href="#before-you-start" title="Link to this heading">#</a></h2>
+<p>This tutorial assumes you have completed <a class="reference internal" href="01_first_forecast.html"><span class="doc">Your first forecast</span></a> and are
+comfortable with <code class="docutils literal notranslate"><span class="pre">LinearAR</span></code>. If not, start there.</p>
 </section>
 <hr class="docutils" />
-<section id="sweeping-over-lag-orders">
-<h2>Sweeping over lag orders<a class="headerlink" href="#sweeping-over-lag-orders" title="Link to this heading">#</a></h2>
-<p>To compare AR models with different lag orders, use a sweep marker on the <code class="docutils literal notranslate"><span class="pre">n_lag</span></code>
-parameter. The runtime runs each lag order as an independent cell.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<section id="the-synthetic-macro-panel">
+<h2>The synthetic macro panel<a class="headerlink" href="#the-synthetic-macro-panel" title="Link to this heading">#</a></h2>
+<p>We construct a 300-observation monthly panel with five predictor series and a
+factor-driven target. The seed is fixed for reproducibility.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">0_meta:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    failure_policy: fail_fast</span>
-<span class="s2">    reproducibility_mode: seeded_reproducible</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    random_seed: 0</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="n">dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2000-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">)</span>
 
-<span class="s2">1_data:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    custom_source_policy: custom_panel_only</span>
-<span class="s2">    frequency: monthly</span>
-<span class="s2">    horizon_set: custom_list</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    target: gdp_growth</span>
-<span class="s2">    target_horizons: [1]</span>
-<span class="s2">    custom_panel_inline:</span>
-<span class="s2">      date:</span>
-<span class="s2">        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,</span>
-<span class="s2">         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,</span>
-<span class="s2">         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,</span>
-<span class="s2">         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]</span>
-<span class="s2">      gdp_growth:</span>
-<span class="s2">        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,</span>
-<span class="s2">         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]</span>
-<span class="s2">      ip_index:</span>
-<span class="s2">        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,</span>
-<span class="s2">         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]</span>
+<span class="c1"># Five synthetic macro predictors</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ip_growth&quot;</span><span class="p">,</span> <span class="s2">&quot;unemp_diff&quot;</span><span class="p">,</span> <span class="s2">&quot;cpi_growth&quot;</span><span class="p">,</span> <span class="s2">&quot;ffr_diff&quot;</span><span class="p">,</span> <span class="s2">&quot;spread&quot;</span><span class="p">],</span>
+<span class="p">)</span>
 
-<span class="s2">2_preprocessing:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    transform_policy: no_transform</span>
-<span class="s2">    outlier_policy: none</span>
-<span class="s2">    imputation_policy: none_propagate</span>
-<span class="s2">    frame_edge_policy: keep_unbalanced</span>
+<span class="c1"># Target: factor-driven process with AR(1) residual</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">])</span>
+<span class="n">eps</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+<span class="n">y_vals</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">values</span> <span class="o">@</span> <span class="n">beta</span> <span class="o">+</span> <span class="n">eps</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">y_vals</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">y_vals</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
 
-<span class="s2">3_feature_engineering:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}</span>
-<span class="s2">    - id: lag_x</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: lag</span>
-<span class="s2">      params: </span><span class="si">{n_lag: 1}</span>
-<span class="s2">      inputs: [src_X]</span>
-<span class="s2">    - id: y_h</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: target_construction</span>
-<span class="s2">      params: {mode: point_forecast, method: direct, horizon: 1}</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
-<span class="s2">    l3_metadata_v1: auto</span>
-
-<span class="s2">4_forecasting_model:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
-<span class="s2">    - id: fit_ar</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
-<span class="s2">      params:</span>
-<span class="s2">        family: ar_p</span>
-<span class="s2">        n_lag: {sweep: [1, 2, 3]}</span>
-<span class="s2">        forecast_strategy: direct</span>
-<span class="s2">        training_start_rule: expanding</span>
-<span class="s2">        refit_policy: every_origin</span>
-<span class="s2">        search_algorithm: none</span>
-<span class="s2">        min_train_size: 6</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">    - id: predict_ar</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_ar]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l4_forecasts_v1: predict_ar</span>
-<span class="s2">    l4_model_artifacts_v1: fit_ar</span>
-<span class="s2">    l4_training_metadata_v1: auto</span>
-
-<span class="s2">5_evaluation:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    primary_metric: mse</span>
-<span class="s2">    point_metrics: [mse, rmse, mae]</span>
-<span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of cells: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">cells</span><span class="p">:</span>
-    <span class="n">metrics</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span><span class="p">[</span><span class="s2">&quot;l5_evaluation_v1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">metrics_table</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">cell_id</span><span class="p">,</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;mse&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_vals</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gdp_growth&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Each cell ran independently with its own seed. The sweep expands combinatorially
-when you have multiple sweep axes.</p>
+<p>The target combines a linear factor component with an AR(1) residual, so both
+autoregressive and factor-based models should find signal.</p>
 </section>
 <hr class="docutils" />
-<section id="the-diebold-mariano-test">
-<h2>The Diebold-Mariano test<a class="headerlink" href="#the-diebold-mariano-test" title="Link to this heading">#</a></h2>
-<p>Add a <code class="docutils literal notranslate"><span class="pre">6_statistical_tests</span></code> block to run the DM test. The test asks: does ridge
-significantly outperform AR(2)?</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recipe_with_dm</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">0_meta:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    failure_policy: fail_fast</span>
-<span class="s2">    reproducibility_mode: seeded_reproducible</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    random_seed: 0</span>
+<section id="out-of-sample-loop-with-linearar">
+<h2>Out-of-sample loop with LinearAR<a class="headerlink" href="#out-of-sample-loop-with-linearar" title="Link to this heading">#</a></h2>
+<p>We use <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code> with five folds and a fixed test size of 20 observations
+per fold. <code class="docutils literal notranslate"><span class="pre">LinearAR</span></code> is a target-only model that accepts <code class="docutils literal notranslate"><span class="pre">X</span></code> for API uniformity
+but does not use it in estimation. We pass the predictor frame anyway so that
+the loop structure is uniform across all three models.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearAR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeSeriesSplit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="s2">1_data:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    custom_source_policy: custom_panel_only</span>
-<span class="s2">    frequency: monthly</span>
-<span class="s2">    horizon_set: custom_list</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    target: gdp_growth</span>
-<span class="s2">    target_horizons: [1]</span>
-<span class="s2">    custom_panel_inline:</span>
-<span class="s2">      date:</span>
-<span class="s2">        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,</span>
-<span class="s2">         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,</span>
-<span class="s2">         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,</span>
-<span class="s2">         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]</span>
-<span class="s2">      gdp_growth:</span>
-<span class="s2">        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,</span>
-<span class="s2">         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]</span>
-<span class="s2">      ip_index:</span>
-<span class="s2">        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,</span>
-<span class="s2">         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]</span>
+<span class="n">tscv</span> <span class="o">=</span> <span class="n">TimeSeriesSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">mse_ar</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="s2">2_preprocessing:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    transform_policy: no_transform</span>
-<span class="s2">    outlier_policy: none</span>
-<span class="s2">    imputation_policy: none_propagate</span>
-<span class="s2">    frame_edge_policy: keep_unbalanced</span>
+<span class="k">for</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">test_idx</span> <span class="ow">in</span> <span class="n">tscv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="n">X_tr</span><span class="p">,</span> <span class="n">X_te</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
+    <span class="n">y_tr</span><span class="p">,</span> <span class="n">y_te</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
 
-<span class="s2">3_feature_engineering:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}</span>
-<span class="s2">    - id: lag_x</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: lag</span>
-<span class="s2">      params: </span><span class="si">{n_lag: 1}</span>
-<span class="s2">      inputs: [src_X]</span>
-<span class="s2">    - id: y_h</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: target_construction</span>
-<span class="s2">      params: {mode: point_forecast, method: direct, horizon: 1}</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
-<span class="s2">    l3_metadata_v1: auto</span>
+    <span class="c1"># p=4 means four AR lags; LinearAR ignores X internally</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">LinearAR</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_tr</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">)</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_te</span><span class="p">)</span>   <span class="c1"># len(X_te) determines output size</span>
+    <span class="n">mse_ar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">preds</span> <span class="o">-</span> <span class="n">y_te</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
 
-<span class="s2">4_forecasting_model:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
-<span class="s2">    - id: fit_ar</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
-<span class="s2">      params: {family: ar_p, n_lag: 2, forecast_strategy: direct,</span>
-<span class="s2">               training_start_rule: expanding, refit_policy: every_origin,</span>
-<span class="s2">               search_algorithm: none, min_train_size: 6}</span>
-<span class="s2">      is_benchmark: true</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">    - id: predict_ar</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_ar]</span>
-<span class="s2">    - id: fit_ridge</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
-<span class="s2">      params: {family: ridge, alpha: 1.0, forecast_strategy: direct,</span>
-<span class="s2">               training_start_rule: expanding, refit_policy: every_origin,</span>
-<span class="s2">               search_algorithm: none, min_train_size: 6}</span>
-<span class="s2">      inputs: [src_X, src_y]</span>
-<span class="s2">    - id: predict_ridge</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_ridge, src_X]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l4_forecasts_v1: predict_ridge</span>
-<span class="s2">    l4_model_artifacts_v1: [fit_ar, fit_ridge]</span>
-<span class="s2">    l4_training_metadata_v1: auto</span>
-
-<span class="s2">5_evaluation:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    primary_metric: mse</span>
-<span class="s2">    point_metrics: [mse, rmse, mae]</span>
-
-<span class="s2">6_statistical_tests:</span>
-<span class="s2">  enabled: true</span>
-<span class="s2">  sub_layers:</span>
-<span class="s2">    L6_A_equal_predictive:</span>
-<span class="s2">      enabled: true</span>
-<span class="s2">      fixed_axes:</span>
-<span class="s2">        equal_predictive_test: dm_diebold_mariano</span>
-<span class="s2">        loss_function: squared</span>
-<span class="s2">        model_pair_strategy: vs_benchmark_only</span>
-<span class="s2">        hln_correction: true</span>
-<span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">result_dm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe_with_dm</span><span class="p">)</span>
-<span class="n">cell</span> <span class="o">=</span> <span class="n">result_dm</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">arts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span>
-
-<span class="n">tests</span> <span class="o">=</span> <span class="n">arts</span><span class="p">[</span><span class="s2">&quot;l6_tests_v1&quot;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">tests</span><span class="o">.</span><span class="n">equal_predictive_results</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The HLN correction accounts for the fact that walk-forward errors at adjacent origins
-are correlated. Always use <code class="docutils literal notranslate"><span class="pre">hln_correction:</span> <span class="pre">true</span></code> for multi-step horizons.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The DM test requires enough out-of-sample origins to be meaningful. With a 20-row
-panel and <code class="docutils literal notranslate"><span class="pre">min_train_size:</span> <span class="pre">6</span></code>, you get about 12 origins. Interpret p-values
-cautiously on such short samples.</p>
-</div>
-</section>
-<hr class="docutils" />
-<section id="an-importance-figure">
-<h2>An importance figure<a class="headerlink" href="#an-importance-figure" title="Link to this heading">#</a></h2>
-<p>Add a <code class="docutils literal notranslate"><span class="pre">7_interpretation</span></code> block to extract ridge coefficients as an importance measure.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recipe_with_l7</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">0_meta:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    failure_policy: fail_fast</span>
-<span class="s2">    reproducibility_mode: seeded_reproducible</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    random_seed: 0</span>
-
-<span class="s2">1_data:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    custom_source_policy: custom_panel_only</span>
-<span class="s2">    frequency: monthly</span>
-<span class="s2">    horizon_set: custom_list</span>
-<span class="s2">  leaf_config:</span>
-<span class="s2">    target: gdp_growth</span>
-<span class="s2">    target_horizons: [1]</span>
-<span class="s2">    custom_panel_inline:</span>
-<span class="s2">      date:</span>
-<span class="s2">        [2015-01-01, 2015-02-01, 2015-03-01, 2015-04-01, 2015-05-01,</span>
-<span class="s2">         2015-06-01, 2015-07-01, 2015-08-01, 2015-09-01, 2015-10-01,</span>
-<span class="s2">         2015-11-01, 2015-12-01, 2016-01-01, 2016-02-01, 2016-03-01,</span>
-<span class="s2">         2016-04-01, 2016-05-01, 2016-06-01, 2016-07-01, 2016-08-01]</span>
-<span class="s2">      gdp_growth:</span>
-<span class="s2">        [0.3, 0.5, 0.4, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9,</span>
-<span class="s2">         0.8, 1.0, 0.9, 1.1, 1.0, 1.2, 1.1, 1.3, 1.2, 1.4]</span>
-<span class="s2">      ip_index:</span>
-<span class="s2">        [100.0, 100.5, 101.0, 101.5, 102.0, 102.5, 103.0, 103.5, 104.0, 104.5,</span>
-<span class="s2">         105.0, 105.5, 106.0, 106.5, 107.0, 107.5, 108.0, 108.5, 109.0, 109.5]</span>
-
-<span class="s2">2_preprocessing:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    transform_policy: no_transform</span>
-<span class="s2">    outlier_policy: none</span>
-<span class="s2">    imputation_policy: none_propagate</span>
-<span class="s2">    frame_edge_policy: keep_unbalanced</span>
-
-<span class="s2">3_feature_engineering:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}</span>
-<span class="s2">    - id: lag_x</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: lag</span>
-<span class="s2">      params: </span><span class="si">{n_lag: 1}</span>
-<span class="s2">      inputs: [src_X]</span>
-<span class="s2">    - id: y_h</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: target_construction</span>
-<span class="s2">      params: {mode: point_forecast, method: direct, horizon: 1}</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l3_features_v1: {X_final: lag_x, y_final: y_h}</span>
-<span class="s2">    l3_metadata_v1: auto</span>
-
-<span class="s2">4_forecasting_model:</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}</span>
-<span class="s2">    - id: src_y</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
-<span class="s2">    - id: fit_ar</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
-<span class="s2">      params: {family: ar_p, n_lag: 2, forecast_strategy: direct,</span>
-<span class="s2">               training_start_rule: expanding, refit_policy: every_origin,</span>
-<span class="s2">               search_algorithm: none, min_train_size: 6}</span>
-<span class="s2">      is_benchmark: true</span>
-<span class="s2">      inputs: [src_y]</span>
-<span class="s2">    - id: predict_ar</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_ar]</span>
-<span class="s2">    - id: fit_ridge</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
-<span class="s2">      params: {family: ridge, alpha: 1.0, forecast_strategy: direct,</span>
-<span class="s2">               training_start_rule: expanding, refit_policy: every_origin,</span>
-<span class="s2">               search_algorithm: none, min_train_size: 6}</span>
-<span class="s2">      inputs: [src_X, src_y]</span>
-<span class="s2">    - id: predict_ridge</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_ridge, src_X]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l4_forecasts_v1: predict_ridge</span>
-<span class="s2">    l4_model_artifacts_v1: [fit_ar, fit_ridge]</span>
-<span class="s2">    l4_training_metadata_v1: auto</span>
-
-<span class="s2">5_evaluation:</span>
-<span class="s2">  fixed_axes:</span>
-<span class="s2">    primary_metric: mse</span>
-<span class="s2">    point_metrics: [mse, rmse, mae]</span>
-
-<span class="s2">6_statistical_tests:</span>
-<span class="s2">  enabled: true</span>
-<span class="s2">  sub_layers:</span>
-<span class="s2">    L6_A_equal_predictive:</span>
-<span class="s2">      enabled: true</span>
-<span class="s2">      fixed_axes:</span>
-<span class="s2">        equal_predictive_test: dm_diebold_mariano</span>
-<span class="s2">        loss_function: squared</span>
-<span class="s2">        model_pair_strategy: vs_benchmark_only</span>
-<span class="s2">        hln_correction: true</span>
-
-<span class="s2">7_interpretation:</span>
-<span class="s2">  enabled: true</span>
-<span class="s2">  nodes:</span>
-<span class="s2">    - id: src_model</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector:</span>
-<span class="s2">        layer_ref: l4</span>
-<span class="s2">        sink_name: l4_model_artifacts_v1</span>
-<span class="s2">        subset: {model_id: fit_ridge}</span>
-<span class="s2">    - id: src_X</span>
-<span class="s2">      type: source</span>
-<span class="s2">      selector:</span>
-<span class="s2">        layer_ref: l3</span>
-<span class="s2">        sink_name: l3_features_v1</span>
-<span class="s2">        subset: {component: X_final}</span>
-<span class="s2">    - id: coef_importance</span>
-<span class="s2">      type: step</span>
-<span class="s2">      op: model_native_linear_coef</span>
-<span class="s2">      params: {model_family: ridge}</span>
-<span class="s2">      inputs: [src_model, src_X]</span>
-<span class="s2">  sinks:</span>
-<span class="s2">    l7_importance_v1:</span>
-<span class="s2">      global: coef_importance</span>
-<span class="s2">&quot;&quot;&quot;</span>
-
-<span class="n">result_l7</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">recipe_with_l7</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;./tutorial_output/full_study/&quot;</span><span class="p">)</span>
-<span class="n">cell</span> <span class="o">=</span> <span class="n">result_l7</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">arts</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">runtime_result</span><span class="o">.</span><span class="n">artifacts</span>
-
-<span class="n">importance</span> <span class="o">=</span> <span class="n">arts</span><span class="p">[</span><span class="s2">&quot;l7_importance_v1&quot;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">importance</span><span class="o">.</span><span class="n">global_importance</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The global importance table shows the average absolute coefficient across forecast
-origins. The L7 runtime writes a bar chart to the output directory automatically.</p>
-</section>
-<hr class="docutils" />
-<section id="the-complete-study-reading-the-output-directory">
-<h2>The complete study — reading the output directory<a class="headerlink" href="#the-complete-study-reading-the-output-directory" title="Link to this heading">#</a></h2>
-<p>After the run above, the output directory contains:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tutorial_output/full_study/
-  manifest.json           &lt;- full provenance + recipe + hash fingerprints
-  recipe.json             &lt;- human-readable recipe snapshot
-  cell_001/
-    forecasts.csv         &lt;- per-origin forecasts
-    raw_panel.csv
-    clean_panel.csv
-    feature_metadata.json
-  summary/
-    metrics_all_cells.csv &lt;- metrics table for all cells
-    ranking.csv
+<span class="n">results</span><span class="p">[</span><span class="s2">&quot;LinearAR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mse_ar</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LinearAR mean MSE: </span><span class="si">{</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;LinearAR&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <hr class="docutils" />
-<section id="what-to-do-next">
-<h2>What to do next<a class="headerlink" href="#what-to-do-next" title="Link to this heading">#</a></h2>
+<section id="adding-principalcomponentregression-and-factoraugmentedar">
+<h2>Adding PrincipalComponentRegression and FactorAugmentedAR<a class="headerlink" href="#adding-principalcomponentregression-and-factoraugmentedar" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">PrincipalComponentRegression</span></code> extracts the top-k principal components from <code class="docutils literal notranslate"><span class="pre">X</span></code>
+and regresses <code class="docutils literal notranslate"><span class="pre">y</span></code> on those components by OLS. <code class="docutils literal notranslate"><span class="pre">FactorAugmentedAR</span></code> augments an
+AR(p) model with PCA factors from <code class="docutils literal notranslate"><span class="pre">X</span></code>, following the Stock-Watson two-step
+procedure. Both models require <code class="docutils literal notranslate"><span class="pre">X</span></code> at fit and predict time.</p>
+<p>The constructor signatures, verified from source:</p>
 <ul class="simple">
-<li><p>Continue to <a class="reference internal" href="03_custom_model.html"><span class="doc">Bring your own model</span></a> to register your own model callable and plug
-it in as a third contender in this study.</p></li>
-<li><p>See <a class="reference internal" href="../how_to/sweep_over_models.html"><span class="doc">How to sweep over models</span></a> for a focused recipe on multi-model sweeps.</p></li>
-<li><p>See <a class="reference internal" href="../how_to/tune_hyperparameters.html"><span class="doc">How to tune hyperparameters</span></a> for BIC/AIC/grid-search-based tuning.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PrincipalComponentRegression(n_components=3)</span></code> – number of PC factors</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FactorAugmentedAR(p=2,</span> <span class="pre">n_factors=3)</span></code> – lag order <code class="docutils literal notranslate"><span class="pre">p</span></code> and number of factors</p></li>
 </ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrincipalComponentRegression</span><span class="p">,</span> <span class="n">FactorAugmentedAR</span>
+
+<span class="k">for</span> <span class="n">ModelClass</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="p">(</span><span class="n">PrincipalComponentRegression</span><span class="p">,</span> <span class="s2">&quot;PCR&quot;</span><span class="p">,</span>  <span class="p">{</span><span class="s2">&quot;n_components&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}),</span>
+    <span class="p">(</span><span class="n">FactorAugmentedAR</span><span class="p">,</span>            <span class="s2">&quot;FAAR&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;n_factors&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}),</span>
+<span class="p">]:</span>
+    <span class="n">mse_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">test_idx</span> <span class="ow">in</span> <span class="n">tscv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+        <span class="n">X_tr</span><span class="p">,</span> <span class="n">X_te</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
+        <span class="n">y_tr</span><span class="p">,</span> <span class="n">y_te</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">ModelClass</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_tr</span><span class="p">,</span> <span class="n">y_tr</span><span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_te</span><span class="p">)</span>
+        <span class="n">mse_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">preds</span> <span class="o">-</span> <span class="n">y_te</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mse_list</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> mean MSE: </span><span class="si">{</span><span class="n">results</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="comparing-the-three-models">
+<h2>Comparing the three models<a class="headerlink" href="#comparing-the-three-models" title="Link to this heading">#</a></h2>
+<p>Collecting the results into a <code class="docutils literal notranslate"><span class="pre">pd.Series</span></code> lets us sort and inspect them at a glance.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;mean_cv_mse&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>We expect FAAR to outperform LinearAR when the factor structure in <code class="docutils literal notranslate"><span class="pre">X</span></code> explains
+target variation, because the PCA step recovers latent predictors that AR lags
+alone cannot. PCR provides a simpler factor extraction without an autoregressive
+component. Its advantage over LinearAR depends on the signal-to-noise ratio in
+the predictor panel. On this synthetic dataset the factor loadings in <code class="docutils literal notranslate"><span class="pre">beta</span></code> are
+moderate, so the ranking may vary across random seeds.</p>
+</section>
+<hr class="docutils" />
+<section id="when-to-graduate-to-recipes">
+<h2>When to graduate to recipes<a class="headerlink" href="#when-to-graduate-to-recipes" title="Link to this heading">#</a></h2>
+<p>The standalone loop above is sufficient for exploratory work. When the study
+requires systematic sweeps over lag orders or factor counts, the Diebold-Mariano
+test battery, or bit-exact replication with a verifiable manifest, the recipe
+pipeline is the right tool.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast.recipes</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf_recipes</span>
+<span class="c1"># mf.run(...) is a valid alias for mf_recipes.run(...)</span>
+
+<span class="c1"># The recipe API runs the same model families as the standalone classes,</span>
+<span class="c1"># adding bit-exact provenance, parameter sweeps, and the DM test battery.</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf_recipes</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;path/to/my_study.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;./out/tut02/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For full recipe syntax, see the recipe DSL reference. The next tutorial,
+<a class="reference internal" href="03_custom_model.html"><span class="doc">Build your own model</span></a>, shows how to define your own model class and use it
+directly in the same <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code> loop. For systematic model sweeps in the
+recipe pipeline, see <a class="reference internal" href="../how_to/sweep_over_models.html"><span class="doc">How to sweep over models</span></a>. For the conceptual
+comparison of standalone and recipe modes, see <a class="reference internal" href="two_entry_points.html"><span class="doc">Two entry points — standalone models vs recipe pipeline</span></a>.</p>
 </section>
 </section>
 
@@ -952,7 +621,7 @@ it in as a third contender in this study.</p></li>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Bring your own model</p>
+        <p class="prev-next-title">Build your own model</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -975,12 +644,12 @@ it in as a third contender in this study.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-second-model-family">Adding a second model family</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sweeping-over-lag-orders">Sweeping over lag orders</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-diebold-mariano-test">The Diebold-Mariano test</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-importance-figure">An importance figure</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-complete-study-reading-the-output-directory">The complete study — reading the output directory</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-do-next">What to do next</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-you-start">Before you start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-synthetic-macro-panel">The synthetic macro panel</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#out-of-sample-loop-with-linearar">Out-of-sample loop with LinearAR</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-principalcomponentregression-and-factoraugmentedar">Adding PrincipalComponentRegression and FactorAugmentedAR</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-the-three-models">Comparing the three models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-graduate-to-recipes">When to graduate to recipes</a></li>
 </ul>
   </nav></div>
 
