@@ -49,7 +49,7 @@ _Last reviewed 2026-05-16 by macroforecast author._
 
 Explicitly permit mixed frequencies; downstream layers must handle alignment.
 
-Records an explicit recipe-author decision to accept a mixed-frequency FRED-SD panel. Unlike ``report_only``, selecting this option signals to downstream layers (L2.A frequency-alignment, L3 feature DAG) that the mixed-frequency structure is intentional and should be handled -- not silently passed through.
+Records an explicit recipe-author decision to accept a mixed-frequency FRED-SD panel. Unlike ``report_only``, selecting this option signals to downstream layers (L2.A frequency-alignment, L3 feature pipeline) that the mixed-frequency structure is intentional and should be handled -- not silently passed through.
 
 The actual frequency-alignment logic (e.g., temporal aggregation of monthly series to quarterly, or Kalman-filter mixed-frequency representation) is delegated to ``mixed_frequency_representation`` in L2.A. Use this option when the recipe is designed to combine monthly FRED-SD predictors (e.g., QCEW payrolls) with quarterly FRED-SD targets (e.g., GSP) and an explicit alignment strategy is configured in L2.
 

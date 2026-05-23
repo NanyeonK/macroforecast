@@ -1,9 +1,9 @@
-"""L3 feature-engineering DAG -- per-option documentation.
+"""L3 feature-engineering pipeline -- per-option documentation.
 
 L3 is the cascading feature-engineering layer: 37 operational ops
 across stationary / lag / aggregation / scale / reduction / spectral /
 detrend / expansion / auxiliary / target / selection / combine
-families. Each op is a node in the DAG; ops chain via ``inputs`` and
+families. Each op is a step in the pipeline; ops chain via ``inputs`` and
 the cascade-depth gate (``cascade_max_depth``) bounds recursion.
 
 Cycle 30: 10 basic transform ops updated with op_page=True, op_func_name,
@@ -25,7 +25,7 @@ _REVIEWED = "2026-05-05"
 _REVIEWER = "macroforecast author"
 
 _REF_DESIGN_L3 = Reference(
-    citation="macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'",
+    citation="macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'",
 )
 _REF_MCCRACKEN_NG = Reference(
     citation="McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', JBES 34(4): 574-589.",
@@ -134,7 +134,7 @@ _OP_LEVEL = _o(
     "Pass-through: keep the series at its original level.",
     (
         "No-op transform; the column flows through unchanged. Used as "
-        "an explicit anchor in the DAG so downstream ops can reference "
+        "an explicit anchor in the pipeline so downstream ops can reference "
         "the level form even when the L2 transform_policy converted to "
         "log-differences. Useful when you want both ``level`` and ``diff`` "
         "branches in the same recipe."
@@ -1235,7 +1235,7 @@ _OP_TARGET_CONSTRUCTION = _o(
         "``forecast_strategy`` (direct / iterated / cumulative_average) "
         "and the L1.F horizon set. Outputs the ``y`` artifact that L4 "
         "fit_model nodes consume.\n\n"
-        "Required as the leaf of every L3 DAG; the runtime auto-injects "
+        "Required as the leaf of every L3 pipeline; the runtime auto-injects "
         "it when the user does not."
     ),
     "Always required -- runtime auto-inserts when missing.",
@@ -1872,7 +1872,7 @@ _OP_ASYMMETRIC_TRIM = _o(
         "3-month MA for noisy components; users can chain ``ma_window`` "
         "explicitly when they want a different window).\n\n"
         "Operational from v0.8.9 (B-6). Layer scope ``(l2, l3)`` so "
-        "the L3 DAG can dispatch it at recipe time. Algorithm spec: "
+        "the L3 pipeline can dispatch it at recipe time. Algorithm spec: "
         "``docs/replications/maximally_forward_looking_algorithm_notes.md``."
     ),
     "Building Albacore_ranks-style core inflation indicators; supervised asymmetric trimming where the band is learned from data.",

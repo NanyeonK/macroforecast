@@ -70,7 +70,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Meinshausen, N. & Bühlmann, P. (2010) 'Stability selection', Journal of the Royal Statistical Society Series B 72(4): 417-473. <https://doi.org/10.1111/j.1467-9868.2010.00740.x>
 
 ## Related ops

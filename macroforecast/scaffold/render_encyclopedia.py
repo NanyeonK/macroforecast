@@ -762,7 +762,7 @@ def _render_public_api() -> str:
         "\n"
         "| Module | Purpose |\n"
         "|--------|---------|\n"
-        "| `macroforecast.core` | 12-layer DAG runtime (foundation, layers, ops, runtime, execution, figures) |\n"
+        "| `macroforecast.core` | 12-layer recipe runtime (foundation, layers, ops, runtime, execution, figures) |\n"
         "| `macroforecast.raw` | FRED-MD/QD/SD adapters, vintage manager, manifest |\n"
         "| `macroforecast.preprocessing` | Preprocessing contract helpers |\n"
         "| `macroforecast.tuning` | Hyperparameter search engines |\n"

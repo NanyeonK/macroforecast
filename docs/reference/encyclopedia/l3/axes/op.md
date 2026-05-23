@@ -119,7 +119,7 @@ Kernel-augmented linear / SVM pipelines.
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`kernel_features`](#kernel-features), [`nystroem`](#nystroem)
 
@@ -145,7 +145,7 @@ Never authored directly -- inserted by the cascade builder.
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`l3_metadata_build`](#l3-metadata-build)
 
@@ -163,7 +163,7 @@ Never authored directly -- inserted by the cascade builder when L7 lineage hooks
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`l3_feature_bundle`](#l3-feature-bundle)
 
@@ -185,7 +185,7 @@ See [lasso_path_selection function page](../op/lasso_path_selection.md) for full
 
 Pass-through: keep the series at its original level.
 
-No-op transform; the column flows through unchanged. Used as an explicit anchor in the DAG so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both ``level`` and ``diff`` branches in the same recipe.
+No-op transform; the column flows through unchanged. Used as an explicit anchor in the pipeline so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both ``level`` and ``diff`` branches in the same recipe.
 
 **When to use**
 
@@ -193,7 +193,7 @@ Authoring branches that need the level form alongside a transformed branch.
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`diff`](#diff), [`log`](#log), [`log_diff`](#log-diff), [`pct_change`](#pct-change)
 
@@ -254,7 +254,7 @@ High-noise predictors where NLS optimiser diverges (use ``u_midas`` + downstream
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Ghysels, Sinko & Valkanov (2007) 'MIDAS Regressions: Further Results and New Directions', Econometric Reviews 26(1): 53-90.
 * Ghysels, Santa-Clara & Valkanov (2004) 'The MIDAS Touch: Mixed Data Sampling Regression Models', UCLA / UNC working paper.
 
@@ -282,7 +282,7 @@ Multi-stage pipelines that separate kernel approximation from downstream linear 
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`nystroem`](#nystroem)
 
@@ -324,7 +324,7 @@ High dimension (degree > 3 with many predictors) -- explodes the design matrix; 
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`interaction`](#interaction), [`kernel_features`](#kernel-features), [`polynomial_expansion`](#polynomial-expansion)
 
@@ -360,7 +360,7 @@ Regime-conditional forecasts where the model needs explicit access to the state.
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`season_dummy`](#season-dummy), [`time_trend`](#time-trend)
 
@@ -432,7 +432,7 @@ Build the supervised target (``y``) from the panel.
 
 Constructs the regression target according to ``forecast_strategy`` (direct / iterated / cumulative_average) and the L1.F horizon set. Outputs the ``y`` artifact that L4 fit_model nodes consume.
 
-Required as the leaf of every L3 DAG; the runtime auto-injects it when the user does not.
+Required as the leaf of every L3 pipeline; the runtime auto-injects it when the user does not.
 
 **When to use**
 
@@ -440,7 +440,7 @@ Always required -- runtime auto-inserts when missing.
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`level`](#level), [`diff`](#diff), [`log_diff`](#log-diff)
 
@@ -482,7 +482,7 @@ When ``n_lags_high · n_HF_columns`` is large relative to T even after BIC selec
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Foroni, Marcellino & Schumacher (2011/2015) 'Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials'. Bundesbank Discussion Paper Series 1, No. 35/2011; published as JRSS-A 178(1): 57-82. DOI 10.1111/rssa.12043.
 * Borup, Rapach & Schütte (2023) 'Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data', International Journal of Forecasting 39(3): 1122-1144.
 
@@ -510,7 +510,7 @@ Multi-stage pipelines that explicitly separate factor extraction from rotation.
 
 **References**
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 
 **Related options**: [`varimax`](#varimax), [`pca`](#pca)
 

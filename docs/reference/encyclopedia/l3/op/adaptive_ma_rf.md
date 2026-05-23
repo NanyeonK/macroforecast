@@ -57,7 +57,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Goulet Coulombe & Klieber (2025) 'An Adaptive Moving Average for Macroeconomic Monitoring', arXiv:2501.13222.
 
 ## Related ops

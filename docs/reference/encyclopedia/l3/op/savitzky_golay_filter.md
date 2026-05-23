@@ -53,7 +53,7 @@ params:
 
 ## References
 
-* macroforecast design Part 2, L3: 'feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
+* macroforecast design Part 2, L3: 'feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.'
 * Savitzky & Golay (1964) 'Smoothing and Differentiation of Data by Simplified Least Squares Procedures', Analytical Chemistry 36(8).
 
 ## Related ops

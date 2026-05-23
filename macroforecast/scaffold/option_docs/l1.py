@@ -646,7 +646,7 @@ _L1B_TARGET_SINGLE = _entry(
     summary="Forecast one target series at a time.",
     description=(
         "The recipe declares one ``target`` in L1 leaf_config. All "
-        "downstream layers (feature DAG, model, evaluation) operate on "
+        "downstream layers (feature pipeline, model, evaluation) operate on "
         "that single series.\n\n"
         "This is the dominant pattern for benchmark studies because most "
         "forecasting literature reports per-target metrics; multi-series "
@@ -1480,7 +1480,7 @@ _L1A_FRED_SD_FREQ = (
             "Records an explicit recipe-author decision to accept a "
             "mixed-frequency FRED-SD panel. Unlike ``report_only``, "
             "selecting this option signals to downstream layers (L2.A "
-            "frequency-alignment, L3 feature DAG) that the mixed-frequency "
+            "frequency-alignment, L3 feature pipeline) that the mixed-frequency "
             "structure is intentional and should be handled -- not silently "
             "passed through.\n\n"
             "The actual frequency-alignment logic (e.g., temporal "

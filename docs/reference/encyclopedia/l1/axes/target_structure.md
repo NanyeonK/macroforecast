@@ -25,7 +25,7 @@
 
 Forecast one target series at a time.
 
-The recipe declares one ``target`` in L1 leaf_config. All downstream layers (feature DAG, model, evaluation) operate on that single series.
+The recipe declares one ``target`` in L1 leaf_config. All downstream layers (feature pipeline, model, evaluation) operate on that single series.
 
 This is the dominant pattern for benchmark studies because most forecasting literature reports per-target metrics; multi-series studies typically compose multiple single-target runs in a sweep.
 
