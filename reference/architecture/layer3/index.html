@@ -760,7 +760,7 @@
 <section id="important-rules">
 <h2>Important Rules<a class="headerlink" href="#important-rules" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>L3 is DAG-only. <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> sugar is rejected.</p></li>
+<li><p>L3 uses a step graph. <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> sugar is rejected.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">target_construction</span></code> must appear exactly once and must be the <code class="docutils literal notranslate"><span class="pre">y_final</span></code> sink.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">X_final</span></code> must be panel-like; <code class="docutils literal notranslate"><span class="pre">y_final</span></code> must be series-like.</p></li>
 <li><p>Cascade sources can reference previous L3 pipeline outputs, but cycles and ambiguous pipeline endpoints are hard errors.</p></li>

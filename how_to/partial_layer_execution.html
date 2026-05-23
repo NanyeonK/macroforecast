@@ -837,7 +837,7 @@ manages the cell loop).</p>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_final</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Panel</span> <span class="pre">|</span> <span class="pre">LaggedPanel</span> <span class="pre">|</span> <span class="pre">Factor</span></code></p></td>
-<td><p>The final predictor matrix. <code class="docutils literal notranslate"><span class="pre">X_final.data</span></code> is a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> with the post-DAG features.</p></td>
+<td><p>The final predictor matrix. <code class="docutils literal notranslate"><span class="pre">X_final.data</span></code> is a <code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code> with the pipeline features.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_final</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
@@ -879,7 +879,7 @@ manages the cell loop).</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cascade_graph</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">tuple[str,</span> <span class="pre">...]]</span></code></p></td>
-<td><p>Cascade-DAG adjacency.</p></td>
+<td><p>Cascade adjacency dict.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform_chain</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">tuple[StepRef,</span> <span class="pre">...]]</span></code></p></td>

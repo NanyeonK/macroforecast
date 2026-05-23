@@ -741,7 +741,7 @@
 <section id="single-target-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">single_target</span></code>  –  operational<a class="headerlink" href="#single-target-operational" title="Link to this heading">#</a></h3>
 <p>Forecast one target series at a time.</p>
-<p>The recipe declares one <code class="docutils literal notranslate"><span class="pre">target</span></code> in L1 leaf_config. All downstream layers (feature DAG, model, evaluation) operate on that single series.</p>
+<p>The recipe declares one <code class="docutils literal notranslate"><span class="pre">target</span></code> in L1 leaf_config. All downstream layers (feature pipeline, model, evaluation) operate on that single series.</p>
 <p>This is the dominant pattern for benchmark studies because most forecasting literature reports per-target metrics; multi-series studies typically compose multiple single-target runs in a sweep.</p>
 <p><strong>When to use</strong></p>
 <p>Default. Any standard forecasting benchmark.</p>

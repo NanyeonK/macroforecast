@@ -51,4 +51,4 @@ Current layer-contract recipes use numeric YAML keys that map directly to layer 
   fixed_axes: {}
 ```
 
-The skeleton above shows structure only. A runnable recipe must provide valid L3 and L4 DAG nodes and required sinks.
+The skeleton above shows structure only. A runnable recipe must provide valid L3 and L4 graph nodes and required sinks.

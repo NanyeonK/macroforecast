@@ -723,7 +723,7 @@ contracts; Encyclopedia pages are <strong>auto-generated lookup</strong> for the
 </div></blockquote>
 <section id="canonical-layer-flow">
 <h2>Canonical layer flow<a class="headerlink" href="#canonical-layer-flow" title="Link to this heading">#</a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(DAG) -&gt; L4(DAG) -&gt; L5 -&gt; L6 -&gt; L7(DAG) -&gt; L8
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(graph) -&gt; L4(graph) -&gt; L5 -&gt; L6 -&gt; L7(graph) -&gt; L8
         |      |      |       |
        L1.5   L2.5   L3.5    L4.5 diagnostics
 </pre></div>
@@ -743,7 +743,7 @@ L3.5 &lt;- L1 + L2 + L3
 L4.5 &lt;- L4 + L3
 </pre></div>
 </div>
-<p>Diagnostics are default off. With <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">false</span></code>, they create no DAG
+<p>Diagnostics are default off. With <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">false</span></code>, they create no graph
 nodes and no sink. With <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">true</span></code>, they emit diagnostic artifacts
 that L8 can include through <code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code>,
 <code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code>, or <code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code>.</p>
@@ -757,7 +757,7 @@ that the layered runtime extends.</p></li>
 encode.</p></li>
 <li><p><a class="reference internal" href="layer_boundary_contract.html"><span class="std std-doc">Layer boundary contract</span></a> — what each layer
 may consume from upstream and what it must emit downstream.</p></li>
-<li><p><a class="reference internal" href="recipe_layers.html"><span class="std std-doc">Recipe layers</span></a> — YAML key naming, DAG/list shape,
+<li><p><a class="reference internal" href="recipe_layers.html"><span class="std std-doc">Recipe layers</span></a> — YAML key naming, graph/list shape,
 diagnostic-layer semantics.</p></li>
 <li><p><a class="reference internal" href="artifacts_and_manifest.html"><span class="std std-doc">Artifacts and manifest</span></a> — sink names,
 manifest fields, on-disk layout.</p></li>

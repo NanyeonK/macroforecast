@@ -212,7 +212,7 @@ Inherits from ``Panel``; therefore exposes ``data``, ``shape``, ``column_names``
 
 | Field | Type | Notes |
 |---|---|---|
-| ``X_final`` | ``Panel \| LaggedPanel \| Factor`` | The final predictor matrix. ``X_final.data`` is a ``pd.DataFrame`` with the post-DAG features. |
+| ``X_final`` | ``Panel \| LaggedPanel \| Factor`` | The final predictor matrix. ``X_final.data`` is a ``pd.DataFrame`` with the pipeline features. |
 | ``y_final`` | ``Series`` | The final target series; ``y_final.name`` is the target column, ``y_final.metadata.values["data"]`` carries the raw ``pd.Series`` (and ``["raw_data"]`` when a target transformer is active). |
 | ``sample_index`` | ``pd.DatetimeIndex \| None`` | The aligned index of ``X_final`` ∩ ``y_final`` after dropna. |
 | ``horizon_set`` | ``tuple[int, ...]`` | Per-recipe target horizons. |
@@ -224,7 +224,7 @@ Inherits from ``Panel``; therefore exposes ``data``, ``shape``, ``column_names``
 |---|---|---|
 | ``column_lineage`` | ``dict[str, ColumnLineage]`` | column → ``(source_variable_ids, step_chain, pipeline_id, cascade_depth, output_type)``. |
 | ``pipeline_definitions`` | ``dict[str, PipelineDefinition]`` | One entry per L3 pipeline. |
-| ``cascade_graph`` | ``dict[str, tuple[str, ...]]`` | Cascade-DAG adjacency. |
+| ``cascade_graph`` | ``dict[str, tuple[str, ...]]`` | Cascade adjacency dict. |
 | ``transform_chain`` | ``dict[str, tuple[StepRef, ...]]`` | Per-column step chain. |
 | ``source_variables`` | ``dict[str, tuple[str, ...]]`` | Per-column source variable ids. |
 

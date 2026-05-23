@@ -711,7 +711,7 @@
   <section id="navigator-docs">
 <h1>Navigator Docs<a class="headerlink" href="#navigator-docs" title="Link to this heading">#</a></h1>
 <p>The Navigator is the visual front door for the canonical macroforecast layer system:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(DAG) -&gt; L4(DAG) -&gt; L5 -&gt; L6 -&gt; L7(DAG) -&gt; L8
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L0 -&gt; L1 -&gt; L2 -&gt; L3(graph) -&gt; L4(graph) -&gt; L5 -&gt; L6 -&gt; L7(graph) -&gt; L8
         |      |      |       |
        L1.5   L2.5   L3.5    L4.5 diagnostics
 </pre></div>
@@ -739,10 +739,10 @@ future Kedro adapter tagging.</p>
 <td><p>Cleaning and preprocessing into the clean panel.</p></td>
 </tr>
 <tr class="row-odd"><td><p>L3</p></td>
-<td><p>Feature engineering DAG, final features, feature metadata.</p></td>
+<td><p>Feature engineering steps, final features, feature metadata.</p></td>
 </tr>
 <tr class="row-even"><td><p>L4</p></td>
-<td><p>Forecast/model DAG, forecasts, model artifacts, training metadata.</p></td>
+<td><p>Forecast/model steps, forecasts, model artifacts, training metadata.</p></td>
 </tr>
 <tr class="row-odd"><td><p>L5</p></td>
 <td><p>Evaluation metrics, aggregation, slicing, ranking.</p></td>
@@ -751,7 +751,7 @@ future Kedro adapter tagging.</p>
 <td><p>Statistical tests over L4/L5 artifacts.</p></td>
 </tr>
 <tr class="row-odd"><td><p>L7</p></td>
-<td><p>Interpretation and importance DAG.</p></td>
+<td><p>Interpretation and importance steps.</p></td>
 </tr>
 <tr class="row-even"><td><p>L8</p></td>
 <td><p>Output, provenance, manifest, file artifacts.</p></td>
@@ -765,10 +765,10 @@ future Kedro adapter tagging.</p>
 </section>
 <section id="layer-flow">
 <h2>Layer Flow<a class="headerlink" href="#layer-flow" title="Link to this heading">#</a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[L0 meta] → [L1 data] → [L2 clean] → [L3 features DAG] → [L4 forecasts DAG]
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[L0 meta] → [L1 data] → [L2 clean] → [L3 features pipeline] → [L4 forecasts pipeline]
                                             ↓                      ↓
                                          L3.5 diag             L4.5 diag
-[L4] → [L5 evaluation] → [L6 tests] → [L7 interpretation DAG] → [L8 artifacts]
+[L4] → [L5 evaluation] → [L6 tests] → [L7 interpretation pipeline] → [L8 artifacts]
 </pre></div>
 </div>
 <p>Compatibility checks and YAML previews treat the layer map as the source of
@@ -789,7 +789,7 @@ macroforecast<span class="w"> </span>wizard<span class="w"> </span>--port<span c
 <li><p>right pane: live YAML preview</p></li>
 </ul>
 <p>See <a class="reference internal" href="#../../macroforecast/wizard/"><span class="xref myst">the wizard module README</span></a> for current
-phase status (P2a MVP) and upcoming features (P3 DAG editor for L3/L4/L7).</p>
+phase status (P2a MVP) and upcoming features (P3 step editor for L3/L4/L7).</p>
 </section>
 <section id="visualization-with-kedro-viz-future">
 <h2>Visualization with Kedro-viz (future)<a class="headerlink" href="#visualization-with-kedro-viz-future" title="Link to this heading">#</a></h2>
@@ -802,7 +802,7 @@ source.</p>
 <h2>Recommended Flow<a class="headerlink" href="#recommended-flow" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p>Start with the layer map and select the layer you are designing.</p></li>
-<li><p>For L3/L4/L7, think in DAG nodes: sources, steps, combines, and sinks.</p></li>
+<li><p>For L3/L4/L7, think in pipeline nodes: sources, steps, combines, and sinks.</p></li>
 <li><p>For list layers, inspect sub-layers and axes in the layer detail panel.</p></li>
 <li><p>Use the compatibility axis explorer only when you need option-level disabled reasons.</p></li>
 <li><p>Download or write YAML and run <code class="docutils literal notranslate"><span class="pre">macroforecast-navigate</span> <span class="pre">resolve</span></code> before execution.</p></li>

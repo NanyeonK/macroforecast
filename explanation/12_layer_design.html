@@ -527,11 +527,11 @@ all downstream layers, and is recorded in the manifest.</p>
 model uses it</em>. It owns feature construction — lags, moving averages,
 dimensionality reduction, wavelet decomposition, and target construction
 (rolling means, cumulative averages) — expressed as a directed acyclic graph
-(DAG).</p>
-<p>The DAG form is not incidental. Feature pipelines in real research are not
+(a directed pipeline graph).</p>
+<p>This pipeline graph structure is not incidental. Feature pipelines in real research are not
 linear. A study might apply PCA to a subset of predictors, compute lags from
 both the original series and the PCA-reduced series, and then feed the union
-to a model. That structure is a graph, not a list. Using a DAG at L3 makes
+to a model. That structure is a graph, not a list. Using a step graph at L3 makes
 the structure explicit and verifiable rather than buried in procedural code.</p>
 <p>A critical non-negotiable rule: L3 owns target construction. This rule
 prevents the ambiguity that would arise if feature engineering and forecast
@@ -586,13 +586,13 @@ choice.</p>
 <section id="l7-interpretation-default-off">
 <h3>L7: Interpretation (Default Off)<a class="headerlink" href="#l7-interpretation-default-off" title="Link to this heading">#</a></h3>
 <p>L7 (<code class="docutils literal notranslate"><span class="pre">7_interpretation</span></code>) separates <em>explaining the forecast</em> from <em>making the
-forecast</em>. Like L6, it is default off and uses a DAG.</p>
+forecast</em>. Like L6, it is default off and uses a step graph.</p>
 <p>Importance is always post-hoc. A SHAP value, a partial dependence plot, or
 a forecast decomposition does not change the forecast; it characterizes it.
 If interpretation were merged with forecasting, it would be unclear whether
 an importance-weighted combination is a model operation or an interpretation
 operation. Keeping L7 distinct from L4 enforces this conceptual separation.
-The DAG form at L7 is used for the same reason as at L3 and L4: importance
+The step graph form at L7 is used for the same reason as at L3 and L4: importance
 workflows have branching structure (computing SHAP for some models, ALE for
 others, then aggregating across a group).</p>
 </section>
@@ -629,13 +629,13 @@ in it.</p>
     L1 --&gt; L1_5([L1.5 diag])
     L2([L2: preproc]) --&gt; L3
     L2 --&gt; L2_5([L2.5 diag])
-    L3([L3: features DAG]) --&gt; L4
+    L3([L3: features pipeline]) --&gt; L4
     L3 --&gt; L3_5([L3.5 diag])
-    L4([L4: model DAG]) --&gt; L5
+    L4([L4: model pipeline]) --&gt; L5
     L4 --&gt; L4_5([L4.5 diag])
     L5([L5: eval]) --&gt; L6
     L6([L6: tests]) --&gt; L7
-    L7([L7: interp DAG]) --&gt; L8([L8: output])
+    L7([L7: interp pipeline]) --&gt; L8([L8: output])
     style L1_5 stroke-dasharray: 5 5
     style L2_5 stroke-dasharray: 5 5
     style L3_5 stroke-dasharray: 5 5
@@ -690,7 +690,7 @@ a subset of models that survive at a given significance level. L7, when
 enabled, uses this filter to determine which models receive full importance
 analysis by default. Without this reference, interpretation would run for
 all models regardless of whether they are statistically competitive.</p>
-<p><strong>lineage (L3 to L7).</strong> The feature construction DAG at L3 records a lineage
+<p><strong>lineage (L3 to L7).</strong> The feature construction pipeline at L3 records a lineage
 metadata artifact mapping each engineered feature back to the original series
 it was derived from. L7 reads this artifact to attribute importance to the
 original data sources rather than to the engineered feature names. Without

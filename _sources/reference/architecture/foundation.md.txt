@@ -1,6 +1,6 @@
 # Foundation Core
 
-`macroforecast.core` is the Phase 0 foundation for the next DAG-based execution
+`macroforecast.core` is the Phase 0 foundation for the next graph-based execution
 surface. It is intentionally introduced beside the current public runtime.
 
 ## Current Authority
@@ -8,7 +8,7 @@ surface. It is intentionally introduced beside the current public runtime.
 The public runtime stack is:
 
 - `macroforecast.api` — public entry points (`mf.run`, `mf.forecast`, `mf.Experiment`).
-- `macroforecast.core` — recipe schema, DAG, layer contracts, and execution runtime that backs every public entry.
+- `macroforecast.core` — recipe schema, pipeline graph, layer contracts, and execution runtime that backs every public entry.
 - `macroforecast.scaffold` — option-doc registry and encyclopedia generator that drives Navigator and `for_researchers/encyclopedia/`.
 
 There is no separate `macroforecast.compiler` or `macroforecast.execution` module in v0.9.0; recipe parsing, validation, and execution are unified under `macroforecast.core`.
@@ -17,11 +17,11 @@ There is no separate `macroforecast.compiler` or `macroforecast.execution` modul
 
 The foundation layer provides:
 
-- universal DAG schema with five node types: `source`, `axis`, `step`,
+- universal pipeline schema with five node types: `source`, `axis`, `step`,
   `combine`, `sink`;
 - typed artifacts for cross-layer sink contracts;
 - layer registration for `L0` through `L8` plus diagnostics;
-- operation registration for DAG step libraries;
+- operation registration for pipeline step libraries;
 - sweep expansion, validation, cache hashing, YAML normalization, recipe, and
   manifest scaffolding.
 

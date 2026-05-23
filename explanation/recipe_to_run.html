@@ -455,8 +455,8 @@ appear on disk.</p>
 <h2>The Five Stages<a class="headerlink" href="#the-five-stages" title="Link to this heading">#</a></h2>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>flowchart TD
     YAML[YAML recipe text] --&gt; PARSE[1. Parse and validate]
-    PARSE --&gt; DAG[2. Compile DAG per layer]
-    DAG --&gt; SWEEP[3. Expand sweep markers]
+    PARSE --&gt; COMPILE[2. Compile pipeline per layer]
+    COMPILE --&gt; SWEEP[3. Expand sweep markers]
     SWEEP --&gt; CELL[4. Cell loop: execute each cell]
     CELL --&gt; HASH[5. Hash sinks, write manifest]
 </pre></div>
@@ -477,7 +477,7 @@ recipe object. The validator then checks that:</p>
 <li><p>every axis value for each layer is known and has the correct type,</p></li>
 <li><p>no selected value has <code class="docutils literal notranslate"><span class="pre">future</span></code> status (if it does, a hard error is raised
 before any output is written),</p></li>
-<li><p>all required sinks are declared in DAG layers,</p></li>
+<li><p>all required sinks are declared in graph layers,</p></li>
 <li><p>cross-layer references are consistent: a model node with <code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code>
 must exist before L6 can reference it, and regime indicators used in L6.C
 conditional tests must have been defined at L1.</p></li>
@@ -488,8 +488,8 @@ a misspelled model family, or a reference to a future item should cost the
 user a fraction of a second, not the duration of a full study run.</p>
 </section>
 <hr class="docutils" />
-<section id="stage-2-compile-dag-per-layer">
-<h2>Stage 2: Compile DAG per Layer<a class="headerlink" href="#stage-2-compile-dag-per-layer" title="Link to this heading">#</a></h2>
+<section id="stage-2-compile-pipeline-per-layer">
+<h2>Stage 2: Compile Pipeline per Layer<a class="headerlink" href="#stage-2-compile-pipeline-per-layer" title="Link to this heading">#</a></h2>
 <p>Three layers (L3, L4, and L7) use directed acyclic graphs rather than flat
 lists of axis values. At this stage, the recipe’s <code class="docutils literal notranslate"><span class="pre">nodes</span></code> declarations are
 compiled into actual graph objects and topologically sorted.</p>
@@ -504,10 +504,10 @@ artifact (used for forecast combination and feature concatenation).</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">sink</span></code></strong>: names an output artifact that downstream layers may consume.</p></li>
 </ul>
 <p>The topological sort is a hard requirement: cycles are not permitted and are
-rejected with a clear error at compile time. A DAG that includes a cycle
+rejected with a clear error at compile time. A pipeline graph that includes a cycle
 would create a situation where a step depends on its own output, which is
 logically incoherent in a single-pass execution.</p>
-<p>List layers (L0, L1, L2, L5, L6, and L8) do not use a DAG; they use
+<p>List layers (L0, L1, L2, L5, L6, and L8) do not use a step graph; they use
 <code class="docutils literal notranslate"><span class="pre">fixed_axes</span></code> and optional <code class="docutils literal notranslate"><span class="pre">leaf_config</span></code> dictionaries. Their compilation is
 simpler: values are resolved against the layer’s <code class="docutils literal notranslate"><span class="pre">AxisSpec</span></code>, defaults are
 applied where the user has not specified a value, and the result is a
@@ -585,9 +585,9 @@ the run did not reach Stage 5, which is useful for diagnosing interrupted runs.<
 <p>Validation first ensures that a misconfigured recipe fails fast — in under
 a second — rather than after an hour of computation. A researcher who
 misspells a model family name discovers the mistake before any data is loaded.</p>
-<p>DAG compilation before expansion means the DAG structure is validated once
+<p>Pipeline compilation before expansion means the pipeline graph structure is validated once
 against the recipe’s axis set, not once per cell. This is a performance
-decision: with 100 cells in a sweep, re-compiling and re-validating the DAG
+decision: with 100 cells in a sweep, re-compiling and re-validating the pipeline graph
 for each cell would add significant overhead with no benefit.</p>
 <p>Sweep expansion before execution means cell positions are fixed before any
 random state is assigned. Seeds are therefore determined by the recipe’s
@@ -603,9 +603,9 @@ audit.</p>
 <h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../reference/architecture/recipe_layers.html"><span class="std std-doc">Recipe Layers</span></a> — YAML key
-reference, shape rules for list versus DAG layers, and the minimal recipe
+reference, shape rules for list versus graph layers, and the minimal recipe
 skeleton.</p></li>
-<li><p><a class="reference internal" href="../reference/architecture/foundation.html"><span class="std std-doc">Foundation Core</span></a> — the five DAG
+<li><p><a class="reference internal" href="../reference/architecture/foundation.html"><span class="std std-doc">Foundation Core</span></a> — the five graph
 node types and the core contract for <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>.</p></li>
 <li><p><a class="reference internal" href="../reference/architecture/reproducibility.html"><span class="std std-doc">Reproducibility</span></a> — how
 the manifest produced in Stage 5 is used by <code class="docutils literal notranslate"><span class="pre">mf.replicate</span></code> to verify
@@ -663,7 +663,7 @@ bit-exact reproduction.</p></li>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-five-stages">The Five Stages</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-1-parse-and-validate">Stage 1: Parse and Validate</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-2-compile-dag-per-layer">Stage 2: Compile DAG per Layer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-2-compile-pipeline-per-layer">Stage 2: Compile Pipeline per Layer</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-3-expand-sweep-markers">Stage 3: Expand Sweep Markers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-4-the-cell-loop">Stage 4: The Cell Loop</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-5-hash-sinks-and-write-manifest">Stage 5: Hash Sinks and Write Manifest</a></li>

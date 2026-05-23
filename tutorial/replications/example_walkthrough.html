@@ -532,8 +532,8 @@ realistic FRED-MD recipe would use:</p>
 <p>For FRED-SD / mixed-frequency studies see
 <a class="reference internal" href="#../encyclopedia/l2/axes/mixed_frequency_representation.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></span></a>.</p>
 </section>
-<section id="layer-3-feature-engineering-dag">
-<h2>Layer 3 — feature engineering DAG<a class="headerlink" href="#layer-3-feature-engineering-dag" title="Link to this heading">#</a></h2>
+<section id="layer-3-feature-engineering-steps">
+<h2>Layer 3 — feature engineering steps<a class="headerlink" href="#layer-3-feature-engineering-steps" title="Link to this heading">#</a></h2>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">3_feature_engineering</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">source</span><span class="p p-Indicator">,</span><span class="nt"> selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l2</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l2_clean_panel_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="nv">predictors</span><span class="p p-Indicator">}}}</span>
@@ -546,14 +546,14 @@ realistic FRED-MD recipe would use:</p>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>L3 is a DAG. <code class="docutils literal notranslate"><span class="pre">src_X</span></code> / <code class="docutils literal notranslate"><span class="pre">src_y</span></code> pull predictors / target from the L2
+<li><p>L3 uses a step graph. <code class="docutils literal notranslate"><span class="pre">src_X</span></code> / <code class="docutils literal notranslate"><span class="pre">src_y</span></code> pull predictors / target from the L2
 clean panel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">lag_x</span></code> step: a single 1-period lag of every predictor column.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">y_h</span></code> step: build the L3 target as a direct h=1 forecast (no lead /
 cumulative).</p></li>
-<li><p>Sinks: the DAG terminates at <code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code> (an <code class="docutils literal notranslate"><span class="pre">(X_final,</span> <span class="pre">y_final)</span></code> pair) plus <code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code> (lineage for L7 attribution).</p></li>
+<li><p>Outputs: the pipeline terminates at <code class="docutils literal notranslate"><span class="pre">l3_features_v1</span></code> (an <code class="docutils literal notranslate"><span class="pre">(X_final,</span> <span class="pre">y_final)</span></code> pair) plus <code class="docutils literal notranslate"><span class="pre">l3_metadata_v1</span></code> (lineage for L7 attribution).</p></li>
 </ul>
-<p>Real recipes compose richer DAGs: <code class="docutils literal notranslate"><span class="pre">pca</span></code> reduction,
+<p>Real recipes compose richer pipelines: <code class="docutils literal notranslate"><span class="pre">pca</span></code> reduction,
 <code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code> (MARX), <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_selection</span></code>, etc.
 See the <a class="reference internal" href="#../encyclopedia/l3/index.md"><span class="xref myst">encyclopedia L3 page</span></a> for the 37
 operational ops.</p>
@@ -731,7 +731,7 @@ maintainer replications (filled in as each study runs).</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-0-study-setup">Layer 0 — study setup</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-1-data">Layer 1 — data</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-2-preprocessing">Layer 2 — preprocessing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-3-feature-engineering-dag">Layer 3 — feature engineering DAG</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-3-feature-engineering-steps">Layer 3 — feature engineering steps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-4-forecasting-model">Layer 4 — forecasting model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-5-evaluation">Layer 5 — evaluation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-layer-8">Output (Layer 8)</a></li>

@@ -754,9 +754,9 @@
 <section id="combination-weights-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">combination_weights</span></code>  –  operational<a class="headerlink" href="#combination-weights-operational" title="Link to this heading">#</a></h3>
 <p>Ensemble weights from L4 combine ops.</p>
-<p>Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 DAG.</p>
+<p>Per-origin per-member weights produced by L4 combine ops (equal_weighted / dmsfe / inverse_msfe / mallows_cp / etc.). Active when ensemble combine ops are in the L4 pipeline.</p>
 <p><strong>When to use</strong></p>
-<p>Active when ensemble combine ops are in the L4 DAG.</p>
+<p>Active when ensemble combine ops are in the L4 pipeline.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>
@@ -887,7 +887,7 @@
 <section id="importance-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">importance</span></code>  –  operational<a class="headerlink" href="#importance-operational" title="Link to this heading">#</a></h3>
 <p>L7 importance outputs.</p>
-<p>Tables and figures from every L7.A op in the recipe’s interpretation DAG. Default-on when L7 is enabled.</p>
+<p>Tables and figures from every L7.A op in the recipe’s interpretation pipeline. Default-on when L7 is enabled.</p>
 <p><strong>When to use</strong></p>
 <p>Default-on when L7 is active. Selecting <code class="docutils literal notranslate"><span class="pre">importance</span></code> on <code class="docutils literal notranslate"><span class="pre">l8.saved_objects</span></code> activates this branch of the layer’s runtime.</p>
 <p><strong>References</strong></p>
@@ -991,9 +991,9 @@
 <section id="transformation-attribution-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code>  –  operational<a class="headerlink" href="#transformation-attribution-operational" title="Link to this heading">#</a></h3>
 <p>L7 transformation_attribution Shapley table.</p>
-<p>Per-pipeline Shapley contributions to forecast skill. Active when <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> is in the L7 DAG (typically alongside multi-cell sweeps over alternative L3 transforms).</p>
+<p>Per-pipeline Shapley contributions to forecast skill. Active when <code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code> is in the L7 pipeline (typically alongside multi-cell sweeps over alternative L3 transforms).</p>
 <p><strong>When to use</strong></p>
-<p>Active when transformation_attribution op is in the L7 DAG.</p>
+<p>Active when transformation_attribution op is in the L7 pipeline.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
 <li><p>macroforecast design Part 3, L8: ‘reproducibility = manifest + provenance + bit-exact replicate.’</p></li>

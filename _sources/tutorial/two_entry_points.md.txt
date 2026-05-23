@@ -8,7 +8,7 @@ macroforecast exposes two ways to use its operations:
 | | Recipe DSL | Standalone callables |
 |---|---|---|
 | Interface | YAML file | `mf.functions.<name>(...)` |
-| Scope | Full 12-layer DAG | Single operation |
+| Scope | Full 12-layer recipe pipeline | Single operation |
 | Bit-exact replay | `mf.replicate(manifest.json)` | Re-run the script |
 | Output | Artifact directory + manifest | Python return value |
 | Best for | Reproducible papers, sweep studies | Notebooks, scripting, partial pipelines |

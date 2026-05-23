@@ -78,7 +78,7 @@ realistic FRED-MD recipe would use:
 For FRED-SD / mixed-frequency studies see
 [`mixed_frequency_representation`](../encyclopedia/l2/axes/mixed_frequency_representation.md).
 
-## Layer 3 — feature engineering DAG
+## Layer 3 — feature engineering steps
 
 ```yaml
 3_feature_engineering:
@@ -92,15 +92,15 @@ For FRED-SD / mixed-frequency studies see
     l3_metadata_v1: auto
 ```
 
-- L3 is a DAG. `src_X` / `src_y` pull predictors / target from the L2
+- L3 uses a step graph. `src_X` / `src_y` pull predictors / target from the L2
   clean panel.
 - `lag_x` step: a single 1-period lag of every predictor column.
 - `y_h` step: build the L3 target as a direct h=1 forecast (no lead /
   cumulative).
-- Sinks: the DAG terminates at `l3_features_v1` (an `(X_final,
+- Outputs: the pipeline terminates at `l3_features_v1` (an `(X_final,
   y_final)` pair) plus `l3_metadata_v1` (lineage for L7 attribution).
 
-Real recipes compose richer DAGs: `pca` reduction,
+Real recipes compose richer pipelines: `pca` reduction,
 `ma_increasing_order` (MARX), `scaled_pca`, `feature_selection`, etc.
 See the [encyclopedia L3 page](../encyclopedia/l3/index.md) for the 37
 operational ops.

@@ -13,8 +13,8 @@ appear on disk.
 ```text
 flowchart TD
     YAML[YAML recipe text] --> PARSE[1. Parse and validate]
-    PARSE --> DAG[2. Compile DAG per layer]
-    DAG --> SWEEP[3. Expand sweep markers]
+    PARSE --> COMPILE[2. Compile pipeline per layer]
+    COMPILE --> SWEEP[3. Expand sweep markers]
     SWEEP --> CELL[4. Cell loop: execute each cell]
     CELL --> HASH[5. Hash sinks, write manifest]
 ```
@@ -36,7 +36,7 @@ recipe object. The validator then checks that:
 - every axis value for each layer is known and has the correct type,
 - no selected value has `future` status (if it does, a hard error is raised
   before any output is written),
-- all required sinks are declared in DAG layers,
+- all required sinks are declared in graph layers,
 - cross-layer references are consistent: a model node with `is_benchmark: true`
   must exist before L6 can reference it, and regime indicators used in L6.C
   conditional tests must have been defined at L1.
@@ -48,7 +48,7 @@ user a fraction of a second, not the duration of a full study run.
 
 ---
 
-## Stage 2: Compile DAG per Layer
+## Stage 2: Compile Pipeline per Layer
 
 Three layers (L3, L4, and L7) use directed acyclic graphs rather than flat
 lists of axis values. At this stage, the recipe's `nodes` declarations are
@@ -65,11 +65,11 @@ Five node types exist:
 - **`sink`**: names an output artifact that downstream layers may consume.
 
 The topological sort is a hard requirement: cycles are not permitted and are
-rejected with a clear error at compile time. A DAG that includes a cycle
+rejected with a clear error at compile time. A pipeline graph that includes a cycle
 would create a situation where a step depends on its own output, which is
 logically incoherent in a single-pass execution.
 
-List layers (L0, L1, L2, L5, L6, and L8) do not use a DAG; they use
+List layers (L0, L1, L2, L5, L6, and L8) do not use a step graph; they use
 `fixed_axes` and optional `leaf_config` dictionaries. Their compilation is
 simpler: values are resolved against the layer's `AxisSpec`, defaults are
 applied where the user has not specified a value, and the result is a
@@ -161,9 +161,9 @@ Validation first ensures that a misconfigured recipe fails fast — in under
 a second — rather than after an hour of computation. A researcher who
 misspells a model family name discovers the mistake before any data is loaded.
 
-DAG compilation before expansion means the DAG structure is validated once
+Pipeline compilation before expansion means the pipeline graph structure is validated once
 against the recipe's axis set, not once per cell. This is a performance
-decision: with 100 cells in a sweep, re-compiling and re-validating the DAG
+decision: with 100 cells in a sweep, re-compiling and re-validating the pipeline graph
 for each cell would add significant overhead with no benefit.
 
 Sweep expansion before execution means cell positions are fixed before any
@@ -181,9 +181,9 @@ audit.
 ## Further Reading
 
 - [Recipe Layers](../reference/architecture/recipe_layers.md) — YAML key
-  reference, shape rules for list versus DAG layers, and the minimal recipe
+  reference, shape rules for list versus graph layers, and the minimal recipe
   skeleton.
-- [Foundation Core](../reference/architecture/foundation.md) — the five DAG
+- [Foundation Core](../reference/architecture/foundation.md) — the five graph
   node types and the core contract for `macroforecast.core`.
 - [Reproducibility](../reference/architecture/reproducibility.md) — how
   the manifest produced in Stage 5 is used by `mf.replicate` to verify

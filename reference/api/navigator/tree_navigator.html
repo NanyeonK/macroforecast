@@ -714,8 +714,8 @@
   <section id="tree-navigator">
 <h1>Tree Navigator<a class="headerlink" href="#tree-navigator" title="Link to this heading">#</a></h1>
 <p>The Navigator has two surfaces.</p>
-<section id="canonical-layer-dag-map">
-<h2>1. Canonical Layer/DAG Map<a class="headerlink" href="#canonical-layer-dag-map" title="Link to this heading">#</a></h2>
+<section id="canonical-layer-map">
+<h2>1. Canonical Layer Map<a class="headerlink" href="#canonical-layer-map" title="Link to this heading">#</a></h2>
 <p>This is the primary UI. It mirrors the registered runtime architecture:</p>
 <ul class="simple">
 <li><p>L0-L8 main flow;</p></li>
@@ -733,7 +733,7 @@
 <li><p>layer globals;</p></li>
 <li><p>axes or output controls.</p></li>
 </ul>
-<p>Graph/DAG layers do not have one flat axis list. Their decisions live in YAML <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>. The UI now exposes clickable DAG items and writes a runnable YAML template from the selected layer axes plus selected DAG items.</p>
+<p>Graph layers do not have one flat axis list. Their decisions live in YAML <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">params</span></code>, <code class="docutils literal notranslate"><span class="pre">inputs</span></code>, and <code class="docutils literal notranslate"><span class="pre">sinks</span></code>. The UI now exposes clickable pipeline items and writes a runnable YAML template from the selected layer axes plus selected pipeline items.</p>
 </section>
 <section id="canonical-sub-layers">
 <h2>Canonical Sub-Layers<a class="headerlink" href="#canonical-sub-layers" title="Link to this heading">#</a></h2>
@@ -776,7 +776,7 @@
 </tr>
 <tr class="row-odd"><td><p>L7</p></td>
 <td><p>graph</p></td>
-<td><p>L7.A Importance DAG; L7.B Output shape</p></td>
+<td><p>L7.A Importance steps; L7.B Output shape</p></td>
 </tr>
 <tr class="row-even"><td><p>L8</p></td>
 <td><p>list</p></td>
@@ -834,7 +834,7 @@
 <tr class="row-odd"><td><p>Diagnostic side branches</p></td>
 <td><p>Default-off hooks that consume construction sinks and produce diagnostics.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DAG</span></code> badge</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Graph</span></code> badge</p></td>
 <td><p>Layer is configured as a graph of source/step/sink nodes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">List</span></code> badge</p></td>
@@ -903,7 +903,7 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#canonical-layer-dag-map">1. Canonical Layer/DAG Map</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#canonical-layer-map">1. Canonical Layer Map</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#canonical-sub-layers">Canonical Sub-Layers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#yaml-generation-contract">YAML Generation Contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compatibility-axis-explorer">2. Compatibility Axis Explorer</a></li>

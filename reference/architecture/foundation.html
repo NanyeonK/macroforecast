@@ -710,14 +710,14 @@
                   
   <section id="foundation-core">
 <h1>Foundation Core<a class="headerlink" href="#foundation-core" title="Link to this heading">#</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> is the Phase 0 foundation for the next DAG-based execution
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> is the Phase 0 foundation for the next graph-based execution
 surface. It is intentionally introduced beside the current public runtime.</p>
 <section id="current-authority">
 <h2>Current Authority<a class="headerlink" href="#current-authority" title="Link to this heading">#</a></h2>
 <p>The public runtime stack is:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.api</span></code> — public entry points (<code class="docutils literal notranslate"><span class="pre">mf.run</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.forecast</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.Experiment</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> — recipe schema, DAG, layer contracts, and execution runtime that backs every public entry.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code> — recipe schema, pipeline graph, layer contracts, and execution runtime that backs every public entry.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.scaffold</span></code> — option-doc registry and encyclopedia generator that drives Navigator and <code class="docutils literal notranslate"><span class="pre">for_researchers/encyclopedia/</span></code>.</p></li>
 </ul>
 <p>There is no separate <code class="docutils literal notranslate"><span class="pre">macroforecast.compiler</span></code> or <code class="docutils literal notranslate"><span class="pre">macroforecast.execution</span></code> module in v0.9.0; recipe parsing, validation, and execution are unified under <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>.</p>
@@ -726,11 +726,11 @@ surface. It is intentionally introduced beside the current public runtime.</p>
 <h2>New Core Contract<a class="headerlink" href="#new-core-contract" title="Link to this heading">#</a></h2>
 <p>The foundation layer provides:</p>
 <ul class="simple">
-<li><p>universal DAG schema with five node types: <code class="docutils literal notranslate"><span class="pre">source</span></code>, <code class="docutils literal notranslate"><span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>,
+<li><p>universal pipeline schema with five node types: <code class="docutils literal notranslate"><span class="pre">source</span></code>, <code class="docutils literal notranslate"><span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>,
 <code class="docutils literal notranslate"><span class="pre">combine</span></code>, <code class="docutils literal notranslate"><span class="pre">sink</span></code>;</p></li>
 <li><p>typed artifacts for cross-layer sink contracts;</p></li>
 <li><p>layer registration for <code class="docutils literal notranslate"><span class="pre">L0</span></code> through <code class="docutils literal notranslate"><span class="pre">L8</span></code> plus diagnostics;</p></li>
-<li><p>operation registration for DAG step libraries;</p></li>
+<li><p>operation registration for pipeline step libraries;</p></li>
 <li><p>sweep expansion, validation, cache hashing, YAML normalization, recipe, and
 manifest scaffolding.</p></li>
 </ul>

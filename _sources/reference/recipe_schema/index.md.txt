@@ -13,7 +13,7 @@ Diagnostic layers may also appear:
 Start here:
 
 - [Recipe Gallery](gallery.md): runnable examples.
-- [Recipe Layer Contract](layer_contract.md): layer keys, DAG node shape, and one complete recipe.
+- [Recipe Layer Contract](layer_contract.md): layer keys, graph node shape, and one complete recipe.
 - [Data Layer](data.md): source, target, horizon, and FRED-SD geography choices.
 - [Data Policies](data_policies.md): missingness, outliers, release lags, and same-period predictors.
 - [Recipe Defaults](defaults.md): package-level defaults from `macroforecast.defaults`.

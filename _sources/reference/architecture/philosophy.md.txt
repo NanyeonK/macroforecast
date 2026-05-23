@@ -17,11 +17,11 @@ Each layer owns a different class of decisions:
 - L0: study setup and execution grammar.
 - L1: data source, target, predictor universe.
 - L2: cleaning and preprocessing.
-- L3: feature engineering and target construction (DAG).
-- L4: forecasting model fit, tuning, and ensembling (DAG).
+- L3: feature engineering and target construction (step graph).
+- L4: forecasting model fit, tuning, and ensembling (step graph).
 - L5: evaluation, benchmarking, ranking.
 - L6: statistical tests.
-- L7: interpretation and importance (DAG).
+- L7: interpretation and importance (step graph).
 - L8: export and provenance.
 
 Layer boundaries matter because they prevent silent leakage, hidden preprocessing, and ambiguous model comparisons.

@@ -817,7 +817,7 @@
 <p>Kernel-augmented linear / SVM pipelines.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a>, <a class="reference internal" href="#nystroem"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -836,7 +836,7 @@
 <p>Never authored directly – inserted by the cascade builder.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#l3-metadata-build"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -849,7 +849,7 @@
 <p>Never authored directly – inserted by the cascade builder when L7 lineage hooks are active.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#l3-feature-bundle"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -867,12 +867,12 @@
 <section id="level-operational">
 <h3><code class="docutils literal notranslate"><span class="pre">level</span></code>  –  operational<a class="headerlink" href="#level-operational" title="Link to this heading">#</a></h3>
 <p>Pass-through: keep the series at its original level.</p>
-<p>No-op transform; the column flows through unchanged. Used as an explicit anchor in the DAG so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both <code class="docutils literal notranslate"><span class="pre">level</span></code> and <code class="docutils literal notranslate"><span class="pre">diff</span></code> branches in the same recipe.</p>
+<p>No-op transform; the column flows through unchanged. Used as an explicit anchor in the pipeline so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both <code class="docutils literal notranslate"><span class="pre">level</span></code> and <code class="docutils literal notranslate"><span class="pre">diff</span></code> branches in the same recipe.</p>
 <p><strong>When to use</strong></p>
 <p>Authoring branches that need the level form alongside a transformed branch.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference internal" href="#log"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log</span></code></span></a>, <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a>, <a class="reference internal" href="#pct-change"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -920,7 +920,7 @@
 <p>High-noise predictors where NLS optimiser diverges (use <code class="docutils literal notranslate"><span class="pre">u_midas</span></code> + downstream regularised regression instead).</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Ghysels, Sinko &amp; Valkanov (2007) ‘MIDAS Regressions: Further Results and New Directions’, Econometric Reviews 26(1): 53-90.</p></li>
 <li><p>Ghysels, Santa-Clara &amp; Valkanov (2004) ‘The MIDAS Touch: Mixed Data Sampling Regression Models’, UCLA / UNC working paper.</p></li>
 </ul>
@@ -941,7 +941,7 @@
 <p>Multi-stage pipelines that separate kernel approximation from downstream linear fits.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#nystroem"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -972,7 +972,7 @@
 <p>High dimension (degree &gt; 3 with many predictors) – explodes the design matrix; use kernel methods instead.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#interaction"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">interaction</span></code></span></a>, <a class="reference internal" href="#kernel-features"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a>, <a class="reference internal" href="#polynomial-expansion"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -1000,7 +1000,7 @@
 <p>Regime-conditional forecasts where the model needs explicit access to the state.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#season-dummy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></span></a>, <a class="reference internal" href="#time-trend"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">time_trend</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -1059,12 +1059,12 @@
 <h3><code class="docutils literal notranslate"><span class="pre">target_construction</span></code>  –  operational<a class="headerlink" href="#target-construction-operational" title="Link to this heading">#</a></h3>
 <p>Build the supervised target (<code class="docutils literal notranslate"><span class="pre">y</span></code>) from the panel.</p>
 <p>Constructs the regression target according to <code class="docutils literal notranslate"><span class="pre">forecast_strategy</span></code> (direct / iterated / cumulative_average) and the L1.F horizon set. Outputs the <code class="docutils literal notranslate"><span class="pre">y</span></code> artifact that L4 fit_model nodes consume.</p>
-<p>Required as the leaf of every L3 DAG; the runtime auto-injects it when the user does not.</p>
+<p>Required as the leaf of every L3 pipeline; the runtime auto-injects it when the user does not.</p>
 <p><strong>When to use</strong></p>
 <p>Always required – runtime auto-inserts when missing.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#level"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a>, <a class="reference internal" href="#diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a>, <a class="reference internal" href="#log-diff"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
@@ -1091,7 +1091,7 @@
 <p>When <code class="docutils literal notranslate"><span class="pre">n_lags_high</span> <span class="pre">·</span> <span class="pre">n_HF_columns</span></code> is large relative to T even after BIC selects a small K – BIC penalises over-parameterisation but cannot reduce the number of predictor columns. Use <code class="docutils literal notranslate"><span class="pre">midas</span></code> parametric weighting instead, or pair with downstream lasso / ridge (set <code class="docutils literal notranslate"><span class="pre">regularization='ridge'</span></code>) to handle wide design matrices.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 <li><p>Foroni, Marcellino &amp; Schumacher (2011/2015) ‘Unrestricted Mixed Data Sampling (MIDAS): MIDAS Regressions With Unrestricted Lag Polynomials’. Bundesbank Discussion Paper Series 1, No. 35/2011; published as JRSS-A 178(1): 57-82. DOI 10.1111/rssa.12043.</p></li>
 <li><p>Borup, Rapach &amp; Schütte (2023) ‘Mixed-frequency machine learning: Nowcasting and backcasting weekly initial claims with daily internet search-volume data’, International Journal of Forecasting 39(3): 1122-1144.</p></li>
 </ul>
@@ -1112,7 +1112,7 @@
 <p>Multi-stage pipelines that explicitly separate factor extraction from rotation.</p>
 <p><strong>References</strong></p>
 <ul class="simple">
-<li><p>macroforecast design Part 2, L3: ‘feature engineering is a DAG of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
+<li><p>macroforecast design Part 2, L3: ‘feature engineering is a pipeline of typed transforms; cascade-depth bounds the longest chain at cascade_max_depth.’</p></li>
 </ul>
 <p><strong>Related options</strong>: <a class="reference internal" href="#varimax"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">varimax</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/decomposition.html#pca" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-05 by macroforecast author.</em></p>
