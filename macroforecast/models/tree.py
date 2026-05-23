@@ -142,7 +142,7 @@ class SlowGrowingTree(_SlowGrowingTree, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
 
 
 class QuantileRegressionForest(_QuantileRegressionForest, BaseEstimator, RegressorMixin):
@@ -207,7 +207,7 @@ class QuantileRegressionForest(_QuantileRegressionForest, BaseEstimator, Regress
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
 
 
 class Bagging(_BaggingWrapper, BaseEstimator, RegressorMixin):
@@ -264,7 +264,7 @@ class Bagging(_BaggingWrapper, BaseEstimator, RegressorMixin):
         self.n_estimators = n_estimators
         self.max_samples = max_samples
         self.random_state = random_state
-        self.base_params = base_params
+        self.base_params: dict | None = base_params  # type: ignore[assignment]
         self.strategy = strategy
         self.block_length = block_length
 
@@ -283,7 +283,7 @@ class Bagging(_BaggingWrapper, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
 
 
 class Booging(_BoogingWrapper, BaseEstimator, RegressorMixin):
@@ -369,7 +369,7 @@ class Booging(_BoogingWrapper, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
 
 
 class MacroRandomForest(_MRFExternalWrapper, BaseEstimator, RegressorMixin):
@@ -483,7 +483,7 @@ class MacroRandomForest(_MRFExternalWrapper, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
 
 
 class KNN(_AutoClipKNN, BaseEstimator, RegressorMixin):
@@ -527,4 +527,4 @@ class KNN(_AutoClipKNN, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]

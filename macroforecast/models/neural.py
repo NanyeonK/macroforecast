@@ -117,7 +117,7 @@ class SequenceModel(_TorchSequenceModel, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
 
 
 class HemisphereNN(_HemisphereNN, BaseEstimator, RegressorMixin):
@@ -232,4 +232,4 @@ class HemisphereNN(_HemisphereNN, BaseEstimator, RegressorMixin):
         self
         """
         _store_sklearn_fit_attrs(self, X)
-        return super().fit(X, y)
+        return super().fit(X, y)  # type: ignore[return-value]
