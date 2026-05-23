@@ -399,10 +399,10 @@ def _build_axis(name: str) -> _AxisSpec:
     )
 
 
-# L7.A is the importance/attribution DAG body (axes belong to per-op node configs);
+# L7.A is the importance/attribution step graph body (axes belong to per-op node configs);
 # L7.B carries the 8 output/export axes.
 _L7_SUBLAYERS = (
-    _CanonicalSubLayerSpec(id="L7_A_importance_dag_body", name="Importance DAG body", axes=()),
+    _CanonicalSubLayerSpec(id="L7_A_importance_dag_body", name="Importance step graph body", axes=()),
     _CanonicalSubLayerSpec(id="L7_B_output_shape_export", name="Output shape & export", axes=L7_OUTPUT_AXES),
 )
 
