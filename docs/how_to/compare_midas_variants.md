@@ -51,7 +51,12 @@ for name, model in models.items():
     pred = model.predict(X.iloc[-20:])
     results[name] = pred
 
-table = pd.DataFrame(results, index=X.iloc[-20:].index)
+# MIDAS variants consume `freq_ratio * n_lags_high` rows of sliding-window
+# lookback per output, so `predict` returns fewer rows than the input frame.
+# All four estimators share `freq_ratio` and `n_lags_high`, so the output
+# lengths agree. Align the index to the predicted tail length.
+n_pred = len(next(iter(results.values())))
+table = pd.DataFrame(results, index=X.iloc[-n_pred:].index)
 ```
 
 ## Read the comparison
