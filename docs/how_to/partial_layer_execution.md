@@ -24,7 +24,7 @@ without invoking L4 / L5 / L6 / L7 / L8.
 | "Does my new L3 op produce the X_final I expect?" | ``materialize_l1`` + ``materialize_l2`` + ``materialize_l3_minimal``; iterate on L3 only. |
 | "Walk forward through L1 → L5 once, no L6/L7/L8" | ``execute_minimal_forecast`` -- the same helper that the integration tests use. |
 | "Bridge from a custom-panel YAML straight to the L2 sink" | ``execute_l1_l2`` -- L1 + L2 only, no L3+ overhead. |
-| "Replay one DAG node from cache" | ``execute_node`` -- foundation primitive used by ``execute_recipe``. |
+| "Replay one pipeline node from cache" | ``execute_node`` -- foundation primitive used by ``execute_recipe``. |
 
 ## Public API surface
 
@@ -52,7 +52,7 @@ from macroforecast.core import (
 | ``materialize_l5_minimal(recipe_root, l1_artifact, l3_features, l4_forecasts, l4_models)`` | as listed | ``L5EvaluationArtifact`` |
 | ``execute_l1_l2(recipe)`` | ``dict`` or YAML ``str`` | ``RuntimeResult`` with ``l1_data_definition_v1`` + ``l1_regime_metadata_v1`` + ``l2_clean_panel_v1`` (plus L1.5 / L2.5 diagnostics if enabled). |
 | ``execute_minimal_forecast(recipe)`` | ``dict`` or YAML ``str`` | ``RuntimeResult`` with L1 → L5 sinks + any enabled L1.5 / L2.5 / L3.5 / L4.5 / L6 / L7 / L8 sinks. |
-| ``execute_node(node, dag, runtime_context, cache_dir)`` | one DAG ``Node`` | the materialized node value (cached on disk). |
+| ``execute_node(node, dag, runtime_context, cache_dir)`` | one pipeline ``Node`` | the materialized node value (cached on disk). |
 
 ``RuntimeResult`` (from ``macroforecast.core``) is a frozen dataclass with
 ``artifacts: dict[str, Any]`` (sink_name → artifact),
@@ -103,7 +103,7 @@ Expected output (the inline panel is deterministic):
 L1 frequency : monthly
 L1 target    : y
 L1 raw_panel : (12, 2) rows x cols
-L1 axes keys : ['custom_source_policy', 'dataset', 'frequency', ...]
+L1 axes keys : ['panel_composition', 'dataset', 'frequency', ...]
 L2 panel     : (12, 2)
 L2 cleaning_log steps: [{'transform': 'no_transform'}, {'outlier': 'none'}, ...]
 L2 n_outliers: 0
@@ -162,7 +162,7 @@ The artifacts are frozen dataclasses defined in ``macroforecast/core/types.py``.
 
 | Field | Type | Notes |
 |---|---|---|
-| ``custom_source_policy`` | ``Literal["official_only", "custom_panel_only", "official_plus_custom"]`` | Resolved from L1 fixed_axes. |
+| ``panel_composition`` | ``Literal["official_only", "custom_panel_only", "official_plus_custom"]`` | Resolved from L1 fixed_axes. |
 | ``dataset`` | ``Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"] \| None`` | None for ``custom_panel_only``. |
 | ``frequency`` | ``Literal["monthly", "quarterly"]`` | Resolved frequency. |
 | ``vintage_policy`` | ``Literal["current_vintage", "real_time_alfred"] \| None`` | None for custom-panel runs. |
@@ -170,7 +170,7 @@ The artifacts are frozen dataclasses defined in ``macroforecast/core/types.py``.
 | ``target`` | ``str \| None`` | The single-target name (or first of ``targets``). |
 | ``targets`` | ``tuple[str, ...]`` | The full list when ``target_structure='multi_series_target'``. |
 | ``variable_universe`` | enum or ``None`` | -- |
-| ``target_geography_scope`` / ``predictor_geography_scope`` | enums or ``None`` | FRED-SD only. |
+| ``target_geography_policy`` / ``predictor_geography_policy`` | enums or ``None`` | FRED-SD only. |
 | ``sample_start_rule`` / ``sample_end_rule`` | enums | -- |
 | ``horizon_set`` / ``target_horizons`` | str / ``tuple[int, ...]`` | -- |
 | ``regime_definition`` | ``str`` | ``"none"`` unless a regime axis is set. |
@@ -275,9 +275,9 @@ from macroforecast.core import materialize_l1, materialize_l2
 
 recipe_str = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
 1_data:
-  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
   leaf_config:
     target: y
     target_horizons: [1]

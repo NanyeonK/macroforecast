@@ -6,7 +6,7 @@ policy, and tuning. Most users iterate primarily on L4 -- pick a
 family, tune it, repeat.
 
 This module ships Tier-1 docs for every operational L4 ``family``
-option (35 entries) plus the four other L4 axes (forecast_strategy,
+option (35 entries) plus the four other L4 axes (forecast_policy,
 training_start_rule, refit_policy, search_algorithm). Each family
 entry follows the same template: summary + algorithm description +
 when_to_use + when_not_to_use + key references.
@@ -44,7 +44,7 @@ def _f(
     return OptionDoc(
         layer="l4",
         sublayer="L4_A_model_selection",
-        axis="family",
+        axis="model",
         option=option,
         summary=summary,
         description=description,
@@ -346,7 +346,7 @@ _F_LASSO_PATH = _f(
     (
         "Wraps sklearn's ``LassoCV``. Picks α automatically from a "
         "regularisation path via k-fold CV (``params.cv``). Equivalent "
-        "to setting ``family: lasso, search_algorithm: cv_path``."
+        "to setting ``model: lasso, search_algorithm: cv_path``."
     ),
     "When the recipe wants automatic α selection without an explicit search_algorithm.",
     references=(_REF_DESIGN_L4,),
@@ -1797,7 +1797,7 @@ _F_TRANSFORMER = _f(
 )
 
 
-# Other axes (forecast_strategy / training_start_rule / refit_policy / search_algorithm)
+# Other axes (forecast_policy / training_start_rule / refit_policy / search_algorithm)
 def _other(
     sublayer: str,
     axis: str,
@@ -1822,7 +1822,7 @@ def _other(
 
 _S_DIRECT = _other(
     "L4_B_forecast_strategy",
-    "forecast_strategy",
+    "forecast_policy",
     "direct",
     "One model per horizon (h=1, h=6, h=12, ...).",
     "Fits a separate model for each horizon h, using y_{t+h} as the target. The standard horse-race protocol: simple to implement, no error compounding, more compute.",
@@ -1831,7 +1831,7 @@ _S_DIRECT = _other(
 
 _S_ITERATED = _other(
     "L4_B_forecast_strategy",
-    "forecast_strategy",
+    "forecast_policy",
     "iterated",
     "Fit h=1 model; apply recursively for h>1.",
     "Trains a single model on (y_t, X_t) → y_{t+1}, then iterates the prediction h times. Faster (one fit per cell) but errors compound.",
@@ -1840,7 +1840,7 @@ _S_ITERATED = _other(
 
 _S_PATH_AVG = _other(
     "L4_B_forecast_strategy",
-    "forecast_strategy",
+    "forecast_policy",
     "path_average",
     "Forecast the cumulative-average target over horizon h.",
     "Pairs with the L3 ``cumulative_average`` target-construction op. Useful for studies forecasting the *average* growth rate over horizon h rather than the level.",

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from string import Formatter
 from typing import Any, Literal
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 @dataclass(frozen=True)
@@ -41,7 +41,7 @@ class L8ResolvedAxes(dict):
 
 
 L8_AXIS_NAMES = L8Output.list_axes()
-DEFAULT_TEMPLATE = "{model_family}_{forecast_strategy}_h{horizon}"
+DEFAULT_TEMPLATE = "{model_family}_{forecast_policy}_h{horizon}"
 
 DEFAULT_AXES: dict[str, Any] = {
     "export_format": "json_csv",
@@ -214,14 +214,14 @@ def make_recipe_with_l6_l7_active() -> str:
 
 
 def make_recipe_without_ensemble() -> dict[str, Any]:
-    return {"4_forecasting_model": {"nodes": [{"id": "fit_ridge", "type": "step", "op": "fit_model", "params": {"family": "ridge"}}]}, "8_output": {"fixed_axes": {}}}
+    return {"4_forecasting_model": {"nodes": [{"id": "fit_ridge", "type": "step", "op": "fit", "params": {"model": "ridge"}}]}, "8_output": {"fixed_axes": {}}}
 
 
 def make_recipe_with_glmboost() -> str:
     return """
 4_forecasting_model:
   nodes:
-    - {id: fit_glmboost, type: step, op: fit_model, params: {family: glmboost}}
+    - {id: fit_glmboost, type: step, op: fit, params: {model: glmboost}}
 8_output:
   fixed_axes: {}
 """
@@ -282,7 +282,7 @@ def _validate_values(resolved: L8ResolvedAxes, leaf: dict[str, Any], context: di
     if resolved["naming_convention"] == "custom" and "custom_naming_function" not in leaf:
         issues.append(_issue("l8.naming_convention", "custom naming requires custom_naming_function"))
     if resolved["naming_convention"] == "descriptive":
-        allowed = {"model_family", "forecast_strategy", "horizon", "combine_method", "target"}
+        allowed = {"model_family", "forecast_policy", "horizon", "combine_method", "target"}
         placeholders = {field for _, field, _, _ in Formatter().parse(resolved["leaf_config"]["descriptive_naming_template"]) if field}
         if not placeholders <= allowed:
             issues.append(_issue("l8.descriptive_naming_template", "template references unknown recipe axes"))
@@ -316,7 +316,7 @@ def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
         "has_fred_sd": l1_fixed.get("dataset", "fred_md") in {"fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"},
         "regime_definition": l1_fixed.get("regime_definition", "none"),
         "has_ensemble": any(isinstance(node, dict) and node.get("type") == "combine" for node in l4_nodes),
-        "uses_r_model": any(isinstance(node, dict) and (node.get("params", {}) or {}).get("family") == "glmboost" for node in l4_nodes),
+        "uses_r_model": any(isinstance(node, dict) and (node.get("params", {}) or {}).get("model") == "glmboost" for node in l4_nodes),
         "l5_active": bool(l5.get("enabled", True)),
         "l5_decomposition_active": l5_fixed.get("decomposition_target", "none") != "none",
         "regime_metrics_active": l5_fixed.get("regime_use", "pooled") != "pooled",

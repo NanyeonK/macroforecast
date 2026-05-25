@@ -69,7 +69,7 @@ def _make_var_model_artifact(
 
     art = object.__new__(ModelArtifact)
     object.__setattr__(art, "model_id", "test_var")
-    object.__setattr__(art, "family", "var")
+    object.__setattr__(art, "model", "var")
     object.__setattr__(art, "fitted_object", _FakeVARWrapper(var_results))
     object.__setattr__(art, "framework", "statsmodels")
     object.__setattr__(art, "fit_metadata", {})
@@ -85,7 +85,7 @@ def _make_var_from_results(var_results: object, cols: list[str]) -> ModelArtifac
 
     art = object.__new__(ModelArtifact)
     object.__setattr__(art, "model_id", "test_var")
-    object.__setattr__(art, "family", "var")
+    object.__setattr__(art, "model", "var")
     object.__setattr__(art, "fitted_object", _FakeVARWrapper(var_results))
     object.__setattr__(art, "framework", "statsmodels")
     object.__setattr__(art, "fit_metadata", {})

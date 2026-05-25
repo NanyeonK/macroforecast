@@ -124,12 +124,12 @@ import macroforecast.recipes as mf_recipes
 recipe = """
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:

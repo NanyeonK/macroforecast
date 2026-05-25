@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 class L5Evaluation:
@@ -213,7 +213,7 @@ def make_l5_yaml(primary_metric: str = "mse") -> str:
     return f"""
 4_forecasting_model:
   nodes:
-    - {{id: fit_a, type: step, op: fit_model, params: {{family: ridge}}, inputs: [src_X, src_y]}}
+    - {{id: fit_a, type: step, op: fit, params: {{model: ridge}}, inputs: [src_X, src_y]}}
 5_evaluation:
   fixed_axes:
     primary_metric: {primary_metric}
@@ -225,7 +225,7 @@ def make_recipe_with_benchmark() -> L5Recipe:
         """
 4_forecasting_model:
   nodes:
-    - {id: fit_bench, type: step, op: fit_model, params: {family: ar_p}, is_benchmark: true, inputs: [src_y]}
+    - {id: fit_bench, type: step, op: fit, params: {model: ar_p}, is_benchmark: true, inputs: [src_y]}
 5_evaluation:
   fixed_axes: {}
 """
@@ -235,7 +235,7 @@ def make_recipe_with_benchmark() -> L5Recipe:
 def make_recipe_without_benchmark() -> dict[str, Any]:
     return {
         "4_forecasting_model": {
-            "nodes": [{"id": "fit_a", "type": "step", "op": "fit_model", "params": {"family": "ridge"}, "inputs": ["src_X", "src_y"]}]
+            "nodes": [{"id": "fit_a", "type": "step", "op": "fit", "params": {"model": "ridge"}, "inputs": ["src_X", "src_y"]}]
         },
         "5_evaluation": {"fixed_axes": {}},
     }

@@ -49,7 +49,7 @@ def test_sgt_helper_eta_depth_step_default_is_paper_value():
 
     recipe = slow_growing_tree()
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     assert fit["params"]["eta_depth_step"] == 0.01
 
@@ -83,7 +83,7 @@ def test_sgt_helper_exposes_mtry_frac_and_eta_max_plateau():
     # And the defaults must flow into the recipe's fit_params dict.
     recipe = slow_growing_tree()
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     assert fit["params"]["mtry_frac"] == 0.75
     assert fit["params"]["eta_max_plateau"] == 0.5
@@ -115,7 +115,7 @@ def test_sgt_grid_matches_paper_figure_2():
         fit = next(
             n
             for n in recipe["4_forecasting_model"]["nodes"]
-            if n.get("op") == "fit_model"
+            if n.get("op") == "fit"
         )
         eta = float(fit["params"]["split_shrinkage"])
         h_bar = float(fit["params"]["herfindahl_threshold"])
@@ -154,7 +154,7 @@ def test_sgt_eta_zero_warns_about_cart_fallback():
     # Recipe still built.
     assert recipe is not None
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     assert fit["params"]["split_shrinkage"] == 0.0
 

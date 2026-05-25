@@ -3,7 +3,7 @@
 Verifies:
 * PARALLEL_UNIT_OPTIONS now contains "cells".
 * ParallelUnit Literal includes "cells".
-* mf.run with compute_mode=parallel + parallel_unit=cells + n_workers=2 completes.
+* mf.run with compute_policy=parallel + parallel_unit=cells + n_workers=2 completes.
 * cell_ids match between serial and cells-parallel runs (structural equivalence).
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ import macroforecast
 
 def _multi_cell_recipe(
     *,
-    compute_mode: str = "serial",
+    compute_policy: str = "serial",
     n_workers: int | None = None,
     parallel_unit: str | None = None,
     n_cells: int = 2,
@@ -32,13 +32,13 @@ def _multi_cell_recipe(
         0_meta:
           fixed_axes:
             failure_policy: fail_fast
-            reproducibility_mode: seeded_reproducible
-            compute_mode: {compute_mode}
+            reproducibility_policy: seeded_reproducible
+            compute_policy: {compute_policy}
           leaf_config:
             random_seed: 42{parallel_unit_block}{n_workers_block}
         1_data:
           fixed_axes:
-            custom_source_policy: custom_panel_only
+            panel_composition: custom_panel_only
             frequency: monthly
             horizon_set: custom_list
           leaf_config:
@@ -66,8 +66,8 @@ def _multi_cell_recipe(
             - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
             - id: fit
               type: step
-              op: fit_model
-              params: {{family: ridge, alpha: 1.0, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
+              op: fit
+              params: {{model: ridge, alpha: 1.0, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
               inputs: [src_X, src_y]
             - {{id: predict, type: step, op: predict, inputs: [fit, src_X]}}
           sinks:
@@ -96,9 +96,9 @@ def test_parallel_unit_cells_all_original_options_retained():
 
 
 def test_parallel_unit_cells_run(tmp_path):
-    """Cycle 16 N-2: mf.run with compute_mode=parallel + parallel_unit=cells succeeds."""
+    """Cycle 16 N-2: mf.run with compute_policy=parallel + parallel_unit=cells succeeds."""
     result = macroforecast.run(
-        _multi_cell_recipe(compute_mode="parallel", n_workers=2, parallel_unit="cells", n_cells=2),
+        _multi_cell_recipe(compute_policy="parallel", n_workers=2, parallel_unit="cells", n_cells=2),
         output_directory=tmp_path,
     )
     assert len(result.cells) == 2
@@ -112,12 +112,12 @@ def test_parallel_unit_cells_bit_exact_serial(tmp_path):
     cells_dir = tmp_path / "cells"
 
     serial = macroforecast.run(
-        _multi_cell_recipe(compute_mode="serial", n_cells=2),
+        _multi_cell_recipe(compute_policy="serial", n_cells=2),
         output_directory=serial_dir,
         cache_root=shared_cache,
     )
     cells = macroforecast.run(
-        _multi_cell_recipe(compute_mode="parallel", n_workers=2, parallel_unit="cells", n_cells=2),
+        _multi_cell_recipe(compute_policy="parallel", n_workers=2, parallel_unit="cells", n_cells=2),
         output_directory=cells_dir,
         cache_root=shared_cache,
     )

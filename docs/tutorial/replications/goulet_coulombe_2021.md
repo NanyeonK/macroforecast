@@ -32,11 +32,11 @@ are paper-faithful.
 
 | Layer | Choice |
 |---|---|
-| L0 | `failure_policy=fail_fast`, `reproducibility_mode=seeded_reproducible`, `random_seed=42` |
+| L0 | `failure_policy=fail_fast`, `reproducibility_policy=seeded_reproducible`, `random_seed=42` |
 | L1 | `target=INDPRO`, `target_horizons=[1, 3, 6, 12]`, `information_set_type=final_revised_data`, custom_panel_inline (smoke; see below) |
 | L2 | McCracken-Ng official tcodes (`apply_official_tcode`) |
 | L3 | Lag features + `target_construction(direct, h)` |
-| L4 | Ridge (`alpha=1.0`) + AR(BIC) benchmark, expanding-window walk-forward, `refit_policy=every_origin`, `forecast_strategy=direct` |
+| L4 | Ridge (`alpha=1.0`) + AR(BIC) benchmark, expanding-window walk-forward, `refit_policy=every_origin`, `forecast_policy=direct` |
 | L5 | MSE primary + relative metrics (vs AR benchmark) |
 | L6 | DM (HLN-corrected) horse-race test, `dependence_correction=newey_west` |
 | L8 | Manifest + per-cell artifacts |
@@ -84,8 +84,8 @@ the full FRED-MD vintage), swap two YAML keys:
 ```diff
  1_data:
    fixed_axes:
--    custom_source_policy: custom_panel_only
-+    custom_source_policy: official_only
+-    panel_composition: custom_panel_only
++    panel_composition: official_only
 +    dataset: fred_md
      frequency: monthly
      horizon_set: custom_list
@@ -106,7 +106,7 @@ for vintage configuration) and the recipe runs the actual paper
 horse race.
 
 To extend to MRF (the paper's headline result), add another L4 fit
-node with `family: macroeconomic_random_forest` alongside the ridge
+node with `model: macroeconomic_random_forest` alongside the ridge
 (`is_benchmark: true`). See
 [encyclopedia L4](../encyclopedia/l4/index.md) for the full family
 list.

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, Node, NodeRef, SourceSelector
 from ..ops.registry import TypeSpec
 from ..sweep import expand_sweeps as _expand_core_sweeps
 from ..types import ColumnLineage, L3MetadataArtifact, PipelineDefinition, StepRef

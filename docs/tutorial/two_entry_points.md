@@ -69,7 +69,7 @@ assert replication.sink_hashes_match   # bit-exact
 If you start with standalone models and later need reproducibility or
 systematic sweeps, graduate to the recipe pipeline. The model families are
 the same underneath. `LinearAR(p=2)` in standalone mode uses the same
-implementation as `family: ar_p` in a recipe. Adding a YAML recipe around
+implementation as `model: ar_p` in a recipe. Adding a YAML recipe around
 your study gains provenance, sweep expansion, and the full L6 test battery
 without changing the underlying models.
 

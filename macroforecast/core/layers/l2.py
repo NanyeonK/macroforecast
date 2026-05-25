@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from ..dag import DAG, GatePredicate, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, GatePredicate, Node, NodeRef, SourceSelector
 from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
 from ..types import L2CleanPanelArtifact, Panel
 
@@ -19,19 +19,15 @@ class L2Preprocessing:
 L2_AXIS_NAMES: tuple[str, ...] = (
     "sd_series_frequency_filter",
     "mixed_frequency_representation",
-    "quarterly_to_monthly_rule",
-    "monthly_to_quarterly_rule",
+    "quarterly_to_monthly_policy",
+    "monthly_to_quarterly_policy",
     "transform_policy",
     "sd_tcode_policy",
-    "transform_scope",
     "outlier_policy",
     "outlier_action",
-    "outlier_scope",
     "imputation_policy",
     "imputation_temporal_rule",
-    "imputation_scope",
     "frame_edge_policy",
-    "frame_edge_scope",
 )
 
 FRED_SD_DATASETS = frozenset({"fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"})
@@ -40,8 +36,8 @@ ALL_SWEEPABLE_AXES = frozenset(L2_AXIS_NAMES)
 DEFAULT_AXES: dict[str, Any] = {
     "sd_series_frequency_filter": "both",
     "mixed_frequency_representation": "calendar_aligned_frame",
-    "quarterly_to_monthly_rule": "step_backward",
-    "monthly_to_quarterly_rule": "quarterly_average",
+    "quarterly_to_monthly_policy": "step_backward",
+    "monthly_to_quarterly_policy": "quarterly_average",
     "transform_policy": "apply_official_tcode",
     "sd_tcode_policy": "none",
     "outlier_policy": "mccracken_ng_iqr",
@@ -183,9 +179,6 @@ def resolve_axes_from_raw(
         if axis_name in fixed_axes:
             values[axis_name] = fixed_axes[axis_name]
             source[axis_name] = "explicit"
-        elif axis_name.endswith("_scope"):
-            values[axis_name] = _derived_scope(axis_name, values)
-            source[axis_name] = "derived"
         elif axis_name in DEFAULT_AXES:
             values[axis_name] = DEFAULT_AXES[axis_name]
             source[axis_name] = "package_default"
@@ -193,8 +186,8 @@ def resolve_axes_from_raw(
         for axis_name in (
             "sd_series_frequency_filter",
             "mixed_frequency_representation",
-            "quarterly_to_monthly_rule",
-            "monthly_to_quarterly_rule",
+            "quarterly_to_monthly_policy",
+            "monthly_to_quarterly_policy",
         ):
             if axis_name not in fixed_axes:
                 values.pop(axis_name, None)
@@ -322,19 +315,15 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes) -> l
             "native_frequency_block_payload",
             "mixed_frequency_model_adapter",
         },
-        "quarterly_to_monthly_rule": {"linear_interpolation", "step_backward", "step_forward", "chow_lin"},
-        "monthly_to_quarterly_rule": {"quarterly_average", "quarterly_endpoint", "quarterly_sum"},
+        "quarterly_to_monthly_policy": {"linear_interpolation", "step_backward", "step_forward", "chow_lin"},
+        "monthly_to_quarterly_policy": {"quarterly_average", "quarterly_endpoint", "quarterly_sum"},
         "transform_policy": {"apply_official_tcode", "no_transform", "custom_tcode"},
         "sd_tcode_policy": {"none", "inferred", "empirical"},
-        "transform_scope": {"target_and_predictors", "predictors_only", "target_only", "not_applicable"},
         "outlier_policy": {"mccracken_ng_iqr", "winsorize", "zscore_threshold", "none"},
         "outlier_action": {"flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator"},
-        "outlier_scope": {"target_and_predictors", "predictors_only", "target_only", "not_applicable"},
         "imputation_policy": {"em_factor", "em_multivariate", "mean", "forward_fill", "linear_interpolation", "none_propagate"},
         "imputation_temporal_rule": {"expanding_window_per_origin", "rolling_window_per_origin", "block_recompute"},
-        "imputation_scope": {"target_and_predictors", "predictors_only", "target_only", "not_applicable"},
         "frame_edge_policy": {"truncate_to_balanced", "drop_unbalanced_series", "keep_unbalanced", "zero_fill_leading"},
-        "frame_edge_scope": {"target_and_predictors", "predictors_only", "target_only", "not_applicable"},
     }
     issues = []
     for axis_name, allowed in option_sets.items():
@@ -354,8 +343,8 @@ def _validate_l2a_gates(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes, l1
         for axis in (
             "sd_series_frequency_filter",
             "mixed_frequency_representation",
-            "quarterly_to_monthly_rule",
-            "monthly_to_quarterly_rule",
+            "quarterly_to_monthly_policy",
+            "monthly_to_quarterly_policy",
             "sd_tcode_policy",
         ):
             if axis in fixed_axes:
@@ -365,12 +354,12 @@ def _validate_l2a_gates(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes, l1
     filter_value = resolved.get("sd_series_frequency_filter")
     q_to_m_active = frequency == "monthly" and filter_value in {"quarterly_only", "both"}
     m_to_q_active = frequency == "quarterly" and filter_value in {"monthly_only", "both"}
-    if "quarterly_to_monthly_rule" in fixed_axes and not q_to_m_active:
-        issues.append(_issue("l2.quarterly_to_monthly_rule", "quarterly_to_monthly_rule is inactive for this L1 frequency/filter"))
-    if "monthly_to_quarterly_rule" in fixed_axes and not m_to_q_active:
-        issues.append(_issue("l2.monthly_to_quarterly_rule", "monthly_to_quarterly_rule is inactive for this L1 frequency/filter"))
+    if "quarterly_to_monthly_policy" in fixed_axes and not q_to_m_active:
+        issues.append(_issue("l2.quarterly_to_monthly_policy", "quarterly_to_monthly_policy is inactive for this L1 frequency/filter"))
+    if "monthly_to_quarterly_policy" in fixed_axes and not m_to_q_active:
+        issues.append(_issue("l2.monthly_to_quarterly_policy", "monthly_to_quarterly_policy is inactive for this L1 frequency/filter"))
     if q_to_m_active and m_to_q_active:
-        issues.append(_issue("l2.frequency_alignment", "quarterly_to_monthly_rule and monthly_to_quarterly_rule cannot both be active"))
+        issues.append(_issue("l2.frequency_alignment", "quarterly_to_monthly_policy and monthly_to_quarterly_policy cannot both be active"))
     # C50: chow_lin is now operational. The runtime branch at runtime.py:14925
     # was already wired; removing the hard-reject here activates it.
     return issues
@@ -382,7 +371,7 @@ def _validate_transform(leaf_config: dict[str, Any], resolved: L2ResolvedAxes, l
         mapping = leaf_config.get("custom_tcode_map")
         if not isinstance(mapping, dict) or any(not isinstance(v, int) or v < 1 or v > 7 for v in mapping.values()):
             return [_issue("l2.custom_tcode_map", "custom_tcode requires custom_tcode_map with tcode integers 1..7")]
-    if policy == "apply_official_tcode" and l1_context and l1_context.get("custom_source_policy") == "custom_panel_only":
+    if policy == "apply_official_tcode" and l1_context and l1_context.get("panel_composition") == "custom_panel_only":
         if not l1_context.get("custom_has_tcode_column"):
             return [_issue("l2.transform_policy", "apply_official_tcode requires FRED-MD/QD metadata or documented custom tcode column")]
     return []
@@ -471,30 +460,19 @@ def _validate_frame_edge(leaf_config: dict[str, Any], resolved: L2ResolvedAxes) 
     return []
 
 
-def _derived_scope(axis_name: str, values: dict[str, Any]) -> str:
-    if axis_name == "transform_scope":
-        return "not_applicable" if values.get("transform_policy") == "no_transform" else "target_and_predictors"
-    if axis_name == "outlier_scope":
-        return "not_applicable" if values.get("outlier_policy") == "none" else "predictors_only"
-    if axis_name == "imputation_scope":
-        return "not_applicable" if values.get("imputation_policy") == "none_propagate" else "predictors_only"
-    if axis_name == "frame_edge_scope":
-        return "not_applicable" if values.get("frame_edge_policy") == "keep_unbalanced" else "predictors_only"
-    raise KeyError(axis_name)
-
 
 def _step_axes(step_id: str) -> tuple[str, ...]:
     return {
-        "freq_alignment": ("sd_series_frequency_filter", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule"),
-        "transform": ("transform_policy", "transform_scope"),
-        "outlier_handle": ("outlier_policy", "outlier_action", "outlier_scope"),
-        "imputation": ("imputation_policy", "imputation_temporal_rule", "imputation_scope"),
-        "frame_edge": ("frame_edge_policy", "frame_edge_scope"),
+        "freq_alignment": ("sd_series_frequency_filter", "quarterly_to_monthly_policy", "monthly_to_quarterly_policy"),
+        "transform": ("transform_policy",),
+        "outlier_handle": ("outlier_policy", "outlier_action"),
+        "imputation": ("imputation_policy", "imputation_temporal_rule"),
+        "frame_edge": ("frame_edge_policy",),
     }[step_id]
 
 
 def _axis_gates(axis_name: str) -> tuple[GatePredicate, ...]:
-    if axis_name == "quarterly_to_monthly_rule":
+    if axis_name == "quarterly_to_monthly_policy":
         return (
             GatePredicate(
                 kind="combined",
@@ -505,7 +483,7 @@ def _axis_gates(axis_name: str) -> tuple[GatePredicate, ...]:
                 ),
             ),
         )
-    if axis_name == "monthly_to_quarterly_rule":
+    if axis_name == "monthly_to_quarterly_policy":
         return (
             GatePredicate(
                 kind="combined",
@@ -536,7 +514,7 @@ def _l1_context_from_recipe(root: dict[str, Any]) -> dict[str, Any]:
         "dataset": dataset,
         "frequency": frequency,
         "has_fred_sd": dataset in FRED_SD_DATASETS,
-        "custom_source_policy": fixed.get("custom_source_policy", "official_only"),
+        "panel_composition": fixed.get("panel_composition", "official_only"),
     }
 
 
@@ -586,11 +564,11 @@ L2_LAYER_SPEC = LayerImplementationSpec(
     ui_mode="list",
     layer_globals=(),
     sub_layers=(
-        SubLayerSpec(id="l2_a", name="Mixed frequency alignment", axes=("sd_series_frequency_filter", "mixed_frequency_representation", "quarterly_to_monthly_rule", "monthly_to_quarterly_rule")),
-        SubLayerSpec(id="l2_b", name="Transform", axes=("transform_policy", "sd_tcode_policy", "transform_scope")),
-        SubLayerSpec(id="l2_c", name="Outlier handling", axes=("outlier_policy", "outlier_action", "outlier_scope")),
-        SubLayerSpec(id="l2_d", name="Imputation", axes=("imputation_policy", "imputation_temporal_rule", "imputation_scope")),
-        SubLayerSpec(id="l2_e", name="Frame edge", axes=("frame_edge_policy", "frame_edge_scope")),
+        SubLayerSpec(id="l2_a", name="Mixed frequency alignment", axes=("sd_series_frequency_filter", "mixed_frequency_representation", "quarterly_to_monthly_policy", "monthly_to_quarterly_policy")),
+        SubLayerSpec(id="l2_b", name="Transform", axes=("transform_policy", "sd_tcode_policy")),
+        SubLayerSpec(id="l2_c", name="Outlier handling", axes=("outlier_policy", "outlier_action")),
+        SubLayerSpec(id="l2_d", name="Imputation", axes=("imputation_policy", "imputation_temporal_rule")),
+        SubLayerSpec(id="l2_e", name="Frame edge", axes=("frame_edge_policy",)),
     ),
     axes={
         "l2_a": {
@@ -606,27 +584,23 @@ L2_LAYER_SPEC = LayerImplementationSpec(
                 )),
                 "calendar_aligned_frame",
             ),
-            "quarterly_to_monthly_rule": AxisSpec("quarterly_to_monthly_rule", _options(("linear_interpolation", "step_backward", "step_forward", "chow_lin")), "step_backward"),
-            "monthly_to_quarterly_rule": AxisSpec("monthly_to_quarterly_rule", _options(("quarterly_average", "quarterly_endpoint", "quarterly_sum")), "quarterly_average"),
+            "quarterly_to_monthly_policy": AxisSpec("quarterly_to_monthly_policy", _options(("linear_interpolation", "step_backward", "step_forward", "chow_lin")), "step_backward"),
+            "monthly_to_quarterly_policy": AxisSpec("monthly_to_quarterly_policy", _options(("quarterly_average", "quarterly_endpoint", "quarterly_sum")), "quarterly_average"),
         },
         "l2_b": {
             "transform_policy": AxisSpec("transform_policy", _options(("apply_official_tcode", "no_transform", "custom_tcode")), "apply_official_tcode"),
             "sd_tcode_policy": AxisSpec("sd_tcode_policy", _options(("none", "inferred", "empirical")), "none"),
-            "transform_scope": AxisSpec("transform_scope", _options(("target_and_predictors", "predictors_only", "target_only", "not_applicable")), "derived"),
         },
         "l2_c": {
             "outlier_policy": AxisSpec("outlier_policy", _options(("mccracken_ng_iqr", "winsorize", "zscore_threshold", "none")), "mccracken_ng_iqr"),
             "outlier_action": AxisSpec("outlier_action", _options(("flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator")), "flag_as_nan"),
-            "outlier_scope": AxisSpec("outlier_scope", _options(("target_and_predictors", "predictors_only", "target_only", "not_applicable")), "derived"),
         },
         "l2_d": {
             "imputation_policy": AxisSpec("imputation_policy", _options(("em_factor", "em_multivariate", "mean", "forward_fill", "linear_interpolation", "none_propagate")), "em_factor"),
             "imputation_temporal_rule": AxisSpec("imputation_temporal_rule", _options(("expanding_window_per_origin", "rolling_window_per_origin", "block_recompute")), "expanding_window_per_origin"),
-            "imputation_scope": AxisSpec("imputation_scope", _options(("target_and_predictors", "predictors_only", "target_only", "not_applicable")), "derived"),
         },
         "l2_e": {
             "frame_edge_policy": AxisSpec("frame_edge_policy", _options(("truncate_to_balanced", "drop_unbalanced_series", "keep_unbalanced", "zero_fill_leading")), "truncate_to_balanced"),
-            "frame_edge_scope": AxisSpec("frame_edge_scope", _options(("target_and_predictors", "predictors_only", "target_only", "not_applicable")), "derived"),
         },
     },
 )

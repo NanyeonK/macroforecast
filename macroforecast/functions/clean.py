@@ -892,7 +892,7 @@ def freq_align_quarterly_to_monthly_clean(
     Equivalent recipe configuration::
 
         l2:
-          quarterly_to_monthly_rule: step_backward
+          quarterly_to_monthly_policy: step_backward
           # (within _apply_fred_sd_frequency_alignment)
 
     Examples
@@ -988,7 +988,7 @@ def freq_align_monthly_to_quarterly_clean(
     Equivalent recipe configuration::
 
         l2:
-          monthly_to_quarterly_rule: quarterly_average
+          monthly_to_quarterly_policy: quarterly_average
           # (within _apply_fred_sd_frequency_alignment)
 
     Examples

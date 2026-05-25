@@ -27,7 +27,7 @@ assert replication.sink_hashes_match
 
 ## Seed-policy modes (L0)
 
-The L0 layer's `reproducibility_mode` axis selects one of two regimes:
+The L0 layer's `reproducibility_policy` axis selects one of two regimes:
 
 | Mode | When | Seed source | Best for |
 |------|------|-------------|----------|
@@ -40,7 +40,7 @@ validator. Pass `random_seed` explicitly when you want a non-zero base.
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
 ```
@@ -138,7 +138,7 @@ artifacts.
 |----------|-----------|---------|
 | Two re-runs of the same recipe in the same Python session | byte-identical sinks (excluding `l1_data_definition_v1` + `l8_artifacts_v1` when output paths differ) | -- |
 | Two re-runs in **different processes** with the same package + lockfile | byte-identical sinks (validated by `tests/core/test_v01_1_hot_patch.py::test_hash_sink_with_set_payload_is_stable_across_processes`, which rotates `PYTHONHASHSEED`) | -- |
-| `compute_mode = parallel` cell loop | byte-identical sinks vs. serial run for the same cells (validated by `tests/core/test_compute_mode_parallel.py::test_parallel_matches_serial_sink_hashes`) | `l8_artifacts_v1` legitimately differs because of output paths |
+| `compute_policy = parallel` cell loop | byte-identical sinks vs. serial run for the same cells (validated by `tests/core/test_compute_policy_parallel.py::test_parallel_matches_serial_sink_hashes`) | `l8_artifacts_v1` legitimately differs because of output paths |
 | Across machines with the same package version + lockfile | numerical equality at machine epsilon | floating-point summation order across BLAS implementations can drift on the last bit |
 | Across `xgboost` / `lightgbm` / `catboost` versions | best-effort | C++ trees are sensitive to library upgrades; pin via the lockfile |
 | Deep-NN families (`lstm` / `gru` / `transformer`) | seeded (we call `torch.manual_seed`) but **not** guaranteed bit-exact across torch versions or CUDA driver versions | install `torch[cpu]` for tighter portability |
@@ -168,7 +168,7 @@ for left, right in zip(a.cells, b.cells):
 ```python
 recipe = """
 0_meta:
-  fixed_axes: {reproducibility_mode: seeded_reproducible}
+  fixed_axes: {reproducibility_policy: seeded_reproducible}
   leaf_config: {random_seed: 100}
 3_feature_engineering:
   nodes:
@@ -209,7 +209,7 @@ assert replication.sink_hashes_match
 | `tests/core/test_deterministic_replay.py` | identical recipe twice -> identical sinks + byte-identical CSVs |
 | `tests/core/test_execution_cache.py` | `cache_root` precedence + shared cache + independence |
 | `tests/core/test_v01_1_hot_patch.py` | `set` hashing across `PYTHONHASHSEED` |
-| `tests/core/test_compute_mode_parallel.py` | parallel run matches serial run |
+| `tests/core/test_compute_policy_parallel.py` | parallel run matches serial run |
 | `tests/core/test_execute_recipe_dispatch.py` | str-vs-Path dispatch + deprecation |
 
 ## Related issues

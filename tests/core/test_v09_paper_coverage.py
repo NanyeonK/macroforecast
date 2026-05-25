@@ -404,10 +404,10 @@ def test_b3_dual_decomposition_rejects_unsupported_nonlinear_families():
 def _savgol_recipe(seed: int = 42) -> str:
     return f"""
 0_meta:
-  fixed_axes: {{failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}}
+  fixed_axes: {{failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}}
   leaf_config: {{random_seed: {seed}}}
 1_data:
-  fixed_axes: {{custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
+  fixed_axes: {{panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -437,11 +437,11 @@ def _savgol_recipe(seed: int = 42) -> str:
       selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}
     - id: fit_ridge
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 1.0
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -473,10 +473,10 @@ def _gated_l4_recipe(family: str, extra_params: dict) -> str:
     pp = ", ".join(f"{k}: {v!r}" for k, v in extra_params.items()).replace("'", "")
     return f"""
 0_meta:
-  fixed_axes: {{failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}}
+  fixed_axes: {{failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}}
   leaf_config: {{random_seed: 42}}
 1_data:
-  fixed_axes: {{custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
+  fixed_axes: {{panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -501,8 +501,8 @@ def _gated_l4_recipe(family: str, extra_params: dict) -> str:
     - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
     - id: fit
       type: step
-      op: fit_model
-      params: {{family: {family}, {pp}, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none, min_train_size: 6}}
+      op: fit
+      params: {{model: {family}, {pp}, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none, min_train_size: 6}}
       inputs: [src_X, src_y]
     - {{id: predict, type: step, op: predict, inputs: [fit, src_X]}}
   sinks:
@@ -602,9 +602,9 @@ def test_v090b_2srr_alpha_to_infinity_collapses_to_static_ols():
     X = pd.DataFrame(rng.standard_normal((T, K)), columns=["a", "b"])
     y = pd.Series(rng.standard_normal(T), index=X.index)
 
-    # Phase B-8: pin alpha_strategy="fixed" so the second CV (paper §2.5
+    # Phase B-8: pin alpha_search_policy="fixed" so the second CV (paper §2.5
     # Algorithm 1 step 4) does not override the test-supplied α=1e6.
-    model = _TwoStageRandomWalkRidge(alpha=1e6, alpha_strategy="fixed").fit(X, y)
+    model = _TwoStageRandomWalkRidge(alpha=1e6, alpha_search_policy="fixed").fit(X, y)
     cross_time_sd = model._beta_path.std(axis=0)
     assert (cross_time_sd < 1e-2).all(), (
         f"large-α limit should yield near-flat β path; got SD = {cross_time_sd}"
@@ -2496,7 +2496,7 @@ def test_block_cv_search_picks_alpha_via_non_overlapping_blocks():
     y = pd.Series(2.0 * X["a"] - 0.5 * X["b"] + rng.normal(scale=0.5, size=n))
     custom_alphas = [0.01, 0.1, 1.0, 10.0]
     params = {
-        "family": "ridge",
+        "model": "ridge",
         "search_algorithm": "block_cv",
         "alpha": 99.0,
         "_l4_leaf_config": {"cv_path_alphas": custom_alphas, "block_cv_splits": 5},
@@ -2567,7 +2567,7 @@ def test_slow_growing_tree_helper_exposes_all_paper_axes():
         max_depth=8,
     )
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     assert fit["params"]["split_shrinkage"] == 0.25
     assert fit["params"]["herfindahl_threshold"] == 0.05
@@ -2584,9 +2584,9 @@ def test_slow_growing_tree_helper_exposes_all_paper_axes():
         fit = next(
             n
             for n in recipe["4_forecasting_model"]["nodes"]
-            if n.get("op") == "fit_model"
+            if n.get("op") == "fit"
         )
-        assert fit["params"]["family"] == "decision_tree"
+        assert fit["params"]["model"] == "decision_tree"
 
 
 def test_anatomy_oos_helper_exposes_initial_window_and_n_iterations():
@@ -2645,14 +2645,14 @@ def test_mrf_block_size_default_is_24_and_is_overridable():
 
     recipe = macroeconomic_random_forest()
     fit_node = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     assert fit_node["params"]["block_size"] == 24
     recipe_q = macroeconomic_random_forest(block_size=8)
     fit_node_q = next(
         n
         for n in recipe_q["4_forecasting_model"]["nodes"]
-        if n.get("op") == "fit_model"
+        if n.get("op") == "fit"
     )
     assert fit_node_q["params"]["block_size"] == 8
 
@@ -2675,15 +2675,15 @@ def test_ml_useful_macro_attach_eval_blocks_wires_dm_and_mcs():
     recipe = next(iter(grid.values()))
     # L4 has both a benchmark fit and a cell fit.
     l4_nodes = recipe["4_forecasting_model"]["nodes"]
-    fit_nodes = [n for n in l4_nodes if n.get("op") == "fit_model"]
+    fit_nodes = [n for n in l4_nodes if n.get("op") == "fit"]
     assert len(fit_nodes) == 2
     benchmark = next(n for n in fit_nodes if n.get("is_benchmark"))
     cell = next(n for n in fit_nodes if not n.get("is_benchmark"))
     # Phase A3 fix: paper §4.4 specifies the (ARDI, BIC) reference, not
     # AR(p). The default benchmark is now factor_augmented_ar + BIC.
-    assert benchmark["params"]["family"] == "factor_augmented_ar"
+    assert benchmark["params"]["model"] == "factor_augmented_ar"
     assert benchmark["params"]["search_algorithm"] == "bic"
-    assert cell["params"]["family"] == "ridge"
+    assert cell["params"]["model"] == "ridge"
     # L5 block present.
     assert "5_evaluation" in recipe
     # L6 block present and configured for DM + MCS.
@@ -2716,7 +2716,7 @@ def test_ml_useful_macro_attach_eval_blocks_default_off_preserves_minimal_recipe
     assert "5_evaluation" not in recipe
     assert "6_statistical_tests" not in recipe
     fit_nodes = [
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     ]
     assert len(fit_nodes) == 1
 
@@ -2795,7 +2795,7 @@ def test_ml_useful_macro_cv_schemes_are_first_class_search_algorithms():
     for recipe in grid.values():
         # Walk down to the L4 fit_model node and read search_algorithm.
         l4 = recipe["4_forecasting_model"]
-        fit_node = next(n for n in l4["nodes"] if n.get("op") == "fit_model")
+        fit_node = next(n for n in l4["nodes"] if n.get("op") == "fit")
         assert fit_node["params"]["search_algorithm"] in SEARCH_ALGORITHMS
 
 
@@ -3010,9 +3010,9 @@ def test_paper13_default_variant_is_ranks():
         f"step; found {len(trim_nodes)} matching nodes."
     )
     # L4: ridge fit_model with prior=fused_difference.
-    fit_nodes = [n for n in l4_nodes if n.get("op") == "fit_model"]
+    fit_nodes = [n for n in l4_nodes if n.get("op") == "fit"]
     assert len(fit_nodes) == 1
-    assert fit_nodes[0]["params"]["family"] == "ridge"
+    assert fit_nodes[0]["params"]["model"] == "ridge"
     assert fit_nodes[0]["params"]["prior"] == "fused_difference", (
         "variant='ranks' (default) must wire prior=fused_difference at L4; "
         f"got prior={fit_nodes[0]['params'].get('prior')!r}."
@@ -3051,7 +3051,7 @@ def test_paper13_variant_comps_drops_asymmetric_trim():
         f"variant='comps' must drop the asymmetric_trim L3 step; found {trim_nodes!r}."
     )
     # L4: ridge with prior=shrink_to_target.
-    fit_nodes = [n for n in l4_nodes if n.get("op") == "fit_model"]
+    fit_nodes = [n for n in l4_nodes if n.get("op") == "fit"]
     assert len(fit_nodes) == 1
     assert fit_nodes[0]["params"]["prior"] == "shrink_to_target", (
         "variant='comps' must wire prior=shrink_to_target at L4; got "
@@ -3059,7 +3059,7 @@ def test_paper13_variant_comps_drops_asymmetric_trim():
     )
 
     # variant='comps' with explicit prior_target carries it into fit_params.
-    fit2 = next(n for n in l4_nodes if n.get("op") == "fit_model")
+    fit2 = next(n for n in l4_nodes if n.get("op") == "fit")
     assert fit2["params"]["prior_target"] == [0.5, 0.5]
 
 
@@ -3080,12 +3080,12 @@ def test_paper16_default_benchmark_is_factor_augmented_ar():
     recipe = next(iter(grid.values()))
     l4_nodes = recipe["4_forecasting_model"]["nodes"]
     benchmark = next(
-        n for n in l4_nodes if n.get("op") == "fit_model" and n.get("is_benchmark")
+        n for n in l4_nodes if n.get("op") == "fit" and n.get("is_benchmark")
     )
-    assert benchmark["params"]["family"] == "factor_augmented_ar", (
+    assert benchmark["params"]["model"] == "factor_augmented_ar", (
         "Paper §4.4 specifies the (ARDI, BIC) reference; default helper "
         f"benchmark must be factor_augmented_ar, got "
-        f"{benchmark['params']['family']!r}."
+        f"{benchmark['params']['model']!r}."
     )
     assert benchmark["params"]["search_algorithm"] == "bic", (
         f"Default benchmark must use search_algorithm='bic'; got "
@@ -3129,7 +3129,7 @@ def test_a4a_elastic_net_l1_ratio_tuned_under_kfold():
     custom_alphas = [0.001, 0.01, 0.1, 1.0]
     custom_l1 = [0.1, 0.3, 0.5, 0.7, 0.9]
     params = {
-        "family": "elastic_net",
+        "model": "elastic_net",
         "search_algorithm": "kfold",
         "alpha": 99.0,
         "l1_ratio": 0.7,
@@ -3293,7 +3293,7 @@ def test_a4d_paper13_variant_comps_no_prior_target_raises():
     fit = next(
         n
         for n in recipe_comps["4_forecasting_model"]["nodes"]
-        if n.get("op") == "fit_model"
+        if n.get("op") == "fit"
     )
     assert fit["params"]["prior_target"] == [0.5, 0.5]
 

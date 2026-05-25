@@ -650,7 +650,7 @@ class TestRidgeVariantCallables:
     def test_G6_random_walk_ridge_predict_shape(self) -> None:
         from macroforecast.functions import random_walk_ridge_fit
         X, y = self._make_xy()
-        r = random_walk_ridge_fit(X, y, alpha=1.0, vol_model="ewma", alpha_strategy="fixed")
+        r = random_walk_ridge_fit(X, y, alpha=1.0, vol_model="ewma", alpha_search_policy="fixed")
         preds = r.predict(X)
         assert preds.shape == (len(X),)
         assert np.isfinite(preds).all()
@@ -658,7 +658,7 @@ class TestRidgeVariantCallables:
     def test_G6_random_walk_ridge_coef_shape(self) -> None:
         from macroforecast.functions import random_walk_ridge_fit
         X, y = self._make_xy()
-        r = random_walk_ridge_fit(X, y, alpha=1.0, vol_model="ewma", alpha_strategy="fixed")
+        r = random_walk_ridge_fit(X, y, alpha=1.0, vol_model="ewma", alpha_search_policy="fixed")
         assert r.coef_.shape == (X.shape[1],)
 
     def test_G7_shrink_to_target_simplex(self) -> None:
@@ -688,7 +688,7 @@ class TestRidgeVariantCallables:
         X, y = self._make_xy()
         r1 = nonneg_ridge_fit(X, y, alpha=1.0)
         assert isinstance(r1, RidgeFitResult)
-        r2 = random_walk_ridge_fit(X, y, vol_model="ewma", alpha_strategy="fixed")
+        r2 = random_walk_ridge_fit(X, y, vol_model="ewma", alpha_search_policy="fixed")
         assert isinstance(r2, RidgeFitResult)
         r3 = fused_difference_ridge_fit(X, y, mean_equality=False, nonneg=False)
         assert isinstance(r3, RidgeFitResult)

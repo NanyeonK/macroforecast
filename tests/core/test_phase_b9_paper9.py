@@ -129,7 +129,7 @@ def test_hnn_helper_exposes_paper_hyperparameters():
         forecast_object="quantile",
     )
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     assert fit["params"]["B"] == 10
     assert fit["params"]["neurons"] == 16
@@ -328,10 +328,10 @@ def test_hnn_eq10_reality_check_active_on_public_path():
     }
     fit_nodes = [
         {
-            "op": "fit_model",
+            "op": "fit",
             "params": {
                 "forecast_object": "quantile",
-                "family": "mlp",
+                "model": "mlp",
                 "architecture": "hemisphere",
                 "loss": "volatility_emphasis",
                 "quantile_levels": [0.1, 0.5, 0.9],

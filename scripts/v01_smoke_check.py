@@ -91,7 +91,7 @@ def _custom_recipe(*, n_lag, family="ridge", with_l7=False, with_l8=True, output
     - id: fit_model
       type: step
       op: fit_model
-      params: {{family: {family}, alpha: 1.0, min_train_size: 6, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
+      params: {{model: {family}, alpha: 1.0, min_train_size: 6, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
       inputs: [src_X, src_y]
     - {{id: predict, type: step, op: predict, inputs: [fit_model, src_X]}}
   sinks:

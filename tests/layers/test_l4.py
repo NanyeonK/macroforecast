@@ -54,7 +54,7 @@ def test_l4_benchmark_detected_via_is_benchmark_flag():
     layer = parse_layer_yaml(_example("l4_ensemble_ridge_xgb_vs_ar1.yaml"), "l4")
     benchmark_nodes = [node for node in layer["nodes"] if node.get("is_benchmark")]
     assert len(benchmark_nodes) == 1
-    assert benchmark_nodes[0]["params"]["family"] == "ar_p"
+    assert benchmark_nodes[0]["params"]["model"] == "ar_p"
 
 
 def test_l4_two_benchmarks_hard_error():
@@ -63,8 +63,8 @@ def test_l4_two_benchmarks_hard_error():
   nodes:
     - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
-    - {id: fit_a, type: step, op: fit_model, params: {family: ar_p, n_lag: 1}, is_benchmark: true, inputs: [src_y]}
-    - {id: fit_b, type: step, op: fit_model, params: {family: ar_p, n_lag: 4}, is_benchmark: true, inputs: [src_y]}
+    - {id: fit_a, type: step, op: fit, params: {model: ar_p, n_lag: 1}, is_benchmark: true, inputs: [src_y]}
+    - {id: fit_b, type: step, op: fit, params: {model: ar_p, n_lag: 4}, is_benchmark: true, inputs: [src_y]}
     - {id: predict_a, type: step, op: predict, inputs: [fit_a]}
     - {id: predict_b, type: step, op: predict, inputs: [fit_b]}
   sinks:
@@ -204,8 +204,8 @@ def test_l4_regime_wrapper_requires_l1_regime_active():
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, regime_wrapper: separate_fit_per_regime}
+      op: fit
+      params: {model: ridge, regime_wrapper: separate_fit_per_regime}
       inputs: [src_X, src_y]
     - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
   sinks:

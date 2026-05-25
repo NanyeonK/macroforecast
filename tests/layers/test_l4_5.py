@@ -62,7 +62,7 @@ def test_l4_5_coef_view_models_inactive_without_linear_model():
     yaml_text = """
     4_forecasting_model:
       nodes:
-        - {id: fit_xgb, type: step, op: fit_model, params: {family: xgboost}}
+        - {id: fit_xgb, type: step, op: fit, params: {model: xgboost}}
       sinks: {}
     4_5_generator_diagnostics:
       enabled: true
@@ -77,7 +77,7 @@ def test_l4_5_tuning_view_inactive_without_search():
     yaml_text = """
     4_forecasting_model:
       nodes:
-        - {id: fit_xgb, type: step, op: fit_model, params: {family: xgboost, search_algorithm: none}}
+        - {id: fit_xgb, type: step, op: fit, params: {model: xgboost, search_algorithm: none}}
       sinks: {}
     4_5_generator_diagnostics:
       enabled: true
@@ -92,7 +92,7 @@ def test_l4_5_ensemble_view_inactive_without_ensemble():
     yaml_text = """
     4_forecasting_model:
       nodes:
-        - {id: fit_ridge, type: step, op: fit_model, params: {family: ridge}}
+        - {id: fit_ridge, type: step, op: fit, params: {model: ridge}}
         - {id: predict_ridge, type: step, op: predict}
       sinks: {}
     4_5_generator_diagnostics:

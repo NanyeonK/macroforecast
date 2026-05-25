@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from .dag import DAG, GatePredicate, Node, NodeRef, implicit_edges
+from .pipeline import DAG, GatePredicate, Node, NodeRef, implicit_edges
 from .ops import get_op
 from .ops.registry import TypeSpec, type_matches
 from .selectors import SourceContext, resolve_source_selector

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Callable, Literal
 
-from ..dag import LayerCategory, LayerId
+from ..pipeline import LayerCategory, LayerId
 from ..types import (
     ArtifactManifest,
     DataFrameArtifact,
@@ -161,7 +161,7 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
 
 
 LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
-    "l0": ("failure_policy", "reproducibility_mode", "compute_mode"),
+    "l0": ("failure_policy", "reproducibility_policy", "compute_policy"),
     "l1": (),
     "l1_5": ("enabled",),
     "l2": (),

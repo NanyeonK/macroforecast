@@ -30,13 +30,13 @@ _MINI_RECIPE = {
     "0_meta": {
         "fixed_axes": {
             "failure_policy": "fail_fast",
-            "reproducibility_mode": "seeded_reproducible",
+            "reproducibility_policy": "seeded_reproducible",
         },
         "leaf_config": {"random_seed": 1},
     },
     "1_data": {
         "fixed_axes": {
-            "custom_source_policy": "custom_panel_only",
+            "panel_composition": "custom_panel_only",
             "frequency": "monthly",
             "horizon_set": "custom_list",
         },

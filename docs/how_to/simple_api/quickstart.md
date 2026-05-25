@@ -39,10 +39,10 @@ All defaults live in `macroforecast.defaults`. To inspect or override them progr
 
 ```python
 from macroforecast.defaults import (
-    DEFAULT_MODEL_FAMILY,
+    DEFAULT_MODEL,
     DEFAULT_RANDOM_SEED,
     DEFAULT_HORIZONS,
-    DEFAULT_FORECAST_STRATEGY,
+    DEFAULT_FORECAST_POLICY,
     DEFAULT_TRAINING_START_RULE,
     DEFAULT_REFIT_POLICY,
 )

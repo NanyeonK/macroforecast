@@ -19,12 +19,12 @@ _INLINE_RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 1
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -72,12 +72,12 @@ _INLINE_RECIPE = """
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
     - id: fit_model
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 0.1
         min_train_size: 4
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -144,7 +144,7 @@ def test_l1_hash_excludes_cache_root_directly():
     from macroforecast.core.types import L1DataDefinitionArtifact
 
     artifact = L1DataDefinitionArtifact(
-        custom_source_policy="custom_panel_only",
+        panel_composition="custom_panel_only",
         dataset=None,
         frequency="monthly",
         vintage_policy=None,

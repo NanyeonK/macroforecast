@@ -200,7 +200,7 @@ def test_l7_mcs_inclusion_requires_l6_mcs_active():
 7_interpretation:
   enabled: true
   nodes:
-    - {id: src_mcs, type: source, selector: {layer_ref: l6, sink_name: l6_tests_v1, subset: {family: multiple_model, name: mcs_inclusion}}}
+    - {id: src_mcs, type: source, selector: {layer_ref: l6, sink_name: l6_tests_v1, subset: {model: multiple_model, name: mcs_inclusion}}}
     - {id: shap_filtered, type: step, op: shap_tree, params: {model_family: xgboost}, inputs: [src_mcs]}
   sinks:
     l7_importance_v1: {global: shap_filtered}

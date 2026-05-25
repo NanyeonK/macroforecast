@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .cache import recipe_hash
-from .dag import DAG, LayerId
+from .pipeline import DAG, LayerId
 from .sweep import Cell, SweepCombination, expand_sweeps
 from .yaml import RecipeMetadata, LayerYamlSpec, normalize_to_dag_form, parse_recipe_yaml, recipe_layers_from_yaml
 

@@ -1,8 +1,10 @@
-"""Internal: recipe graph (DAG) implementation for the 12-layer execution runtime.
+"""Internal: pipeline graph implementation for the 12-layer execution runtime.
 
-This module is named 'dag' for historical reasons. In user-facing documentation
-and public API, the concept is described as 'recipe pipeline' or 'step graph'.
-Do not expose these names in public docstrings or user-visible error messages.
+This module provides the core pipeline types used by the recipe execution runtime.
+The internal ``DAG`` class name is retained for backward compatibility within
+this module. In public documentation and user-visible contexts, the concept
+is described as 'recipe pipeline' or 'step graph'.
+Do not expose 'DAG' in public docstrings or user-visible error messages.
 """
 from __future__ import annotations
 

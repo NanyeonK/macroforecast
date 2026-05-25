@@ -23,10 +23,10 @@ future data leaks.
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
     - id: fit_ridge
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
-        forecast_strategy: direct
+        model: ridge
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: grid
@@ -83,10 +83,10 @@ the criterion at each origin:
 ```yaml
     - id: fit_ar
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ar_p
-        forecast_strategy: direct
+        model: ar_p
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: bic

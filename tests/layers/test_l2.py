@@ -27,30 +27,6 @@ def test_l2_no_scaling_axis_exists():
     assert not any("scale" == axis for axis in axes)
 
 
-def test_l2_dynamic_scope_default_for_outlier_none():
-    yaml_text = """
-    2_preprocessing:
-      fixed_axes:
-        outlier_policy: none
-    """
-    layer = parse_layer_yaml(yaml_text, "l2")
-    resolved = resolve_axes(normalize_to_dag_form(layer, "l2"))
-    assert resolved["outlier_scope"] == "not_applicable"
-    assert resolved.source["outlier_scope"] == "derived"
-
-
-def test_l2_explicit_scope_overrides_default():
-    yaml_text = """
-    2_preprocessing:
-      fixed_axes:
-        outlier_policy: mccracken_ng_iqr
-        outlier_scope: target_and_predictors
-    """
-    layer = parse_layer_yaml(yaml_text, "l2")
-    resolved = resolve_axes(normalize_to_dag_form(layer, "l2"))
-    assert resolved["outlier_scope"] == "target_and_predictors"
-    assert resolved.source["outlier_scope"] == "explicit"
-
 
 def test_l2_full_sample_once_rejected_for_imputation():
     yaml_text = """
@@ -74,7 +50,7 @@ def test_l2_chow_lin_now_operational():
     2_preprocessing:
       fixed_axes:
         sd_series_frequency_filter: both
-        quarterly_to_monthly_rule: chow_lin
+        quarterly_to_monthly_policy: chow_lin
     """
     recipe = parse_recipe_yaml(yaml_text)
     report = validate_recipe(recipe)
@@ -117,7 +93,7 @@ def test_l2_a_quarterly_to_monthly_only_active_for_monthly_frequency():
         frequency: quarterly
     2_preprocessing:
       fixed_axes:
-        quarterly_to_monthly_rule: step_backward
+        quarterly_to_monthly_policy: step_backward
     """
     recipe = parse_recipe_yaml(yaml_text)
     report = validate_recipe(recipe)

@@ -220,7 +220,7 @@ def _option_info(option: Option) -> OptionInfo:
 
 def _build_l4_fallback() -> tuple[AxisInfo, ...]:
     """L4's spec lists sub-layers but stores axes via module constants.
-    Surface ``family`` / ``forecast_strategy`` / ``training_start_rule``
+    Surface ``family`` / ``forecast_policy`` / ``training_start_rule``
     / ``refit_policy`` / ``search_algorithm`` here so the wizard + sphinx
     docs can iterate them."""
 
@@ -257,7 +257,7 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
         AxisInfo(
             layer="l4",
             sublayer="L4_B_forecast_strategy",
-            name="forecast_strategy",
+            name="forecast_policy",
             default="direct",
             status="operational",
             sweepable=True,

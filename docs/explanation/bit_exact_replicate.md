@@ -92,12 +92,12 @@ To enable seed propagation, the recipe must set:
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
 ```
 
-Without `reproducibility_mode: seeded_reproducible`, stochastic layers
+Without `reproducibility_policy: seeded_reproducible`, stochastic layers
 receive no deterministic seed and the replication guarantee does not hold.
 The manifest records the mode that was in effect, so a reader auditing a
 manifest can immediately see whether the run was seeded.

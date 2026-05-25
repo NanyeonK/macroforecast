@@ -28,7 +28,7 @@ from macroforecast.core import (
     is_runnable,
     normalize_status,
 )
-from macroforecast.core.dag import NodeStatus
+from macroforecast.core.pipeline import NodeStatus
 from macroforecast.core.ops.registry import OpStatus, OpSpec, _OPS, register_op
 from macroforecast.core.types import Panel
 

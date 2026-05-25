@@ -86,10 +86,10 @@ def test_demoted_l4_family_rejected_by_validator(family):
           - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
           - id: fit
             type: step
-            op: fit_model
+            op: fit
             params:
-              family: {family}
-              forecast_strategy: direct
+              model: {family}
+              forecast_policy: direct
               training_start_rule: expanding
               refit_policy: every_origin
               search_algorithm: none
@@ -138,7 +138,7 @@ def test_demoted_l7_op_rejected_by_validator(op_name):
     yaml_text = dedent(
         f"""
         nodes:
-          - {{id: src_model, type: source, selector: {{layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {{model_id: fit_model}}}}}}
+          - {{id: src_model, type: source, selector: {{layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {{model_id: fit}}}}}}
           - {{id: src_X, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: X_final}}}}}}
           - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
           - {{id: imp, type: step, op: {op_name}, params: {{model_family: {family_hint}}}, inputs: [src_model, src_X, src_y]}}

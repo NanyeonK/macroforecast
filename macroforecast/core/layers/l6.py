@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 class AxisGroup(dict):
@@ -297,7 +297,7 @@ def make_recipe_without_benchmark() -> dict[str, Any]:
     return {
         "4_forecasting_model": {
             "forecast_object": "point",
-            "nodes": [{"id": "fit_a", "type": "step", "op": "fit_model", "params": {"family": "ridge"}, "inputs": ["src_X", "src_y"]}],
+            "nodes": [{"id": "fit_a", "type": "step", "op": "fit", "params": {"model": "ridge"}, "inputs": ["src_X", "src_y"]}],
         },
         "5_evaluation": {"fixed_axes": {}},
     }
@@ -421,7 +421,7 @@ def _extract_model_ids(nodes: Any) -> tuple[str, ...]:
     return tuple(
         node_id
         for node in nodes
-        if isinstance(node, dict) and node.get("type") == "step" and node.get("op") == "fit_model"
+        if isinstance(node, dict) and node.get("type") == "step" and node.get("op") == "fit"
         for node_id in (node.get("id"),)
         if isinstance(node_id, str)
     )

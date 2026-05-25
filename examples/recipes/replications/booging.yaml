@@ -9,10 +9,10 @@
 # Helper docstring is the canonical decomposition note; this YAML
 # is the hand-readable mirror.
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
   leaf_config: {random_seed: 42}
 1_data:
-  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -68,8 +68,8 @@
       subset: {component: y_final}
   - id: fit_booging
     type: step
-    op: fit_model
-    params: {family: bagging, forecast_strategy: direct, training_start_rule: expanding,
+    op: fit
+    params: {model: bagging, forecast_policy: direct, training_start_rule: expanding,
       refit_policy: every_origin, search_algorithm: none, min_train_size: 6, strategy: sequential_residual,
       base_family: decision_tree, n_estimators: 10}
     inputs: [src_X, src_y]

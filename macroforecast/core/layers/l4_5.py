@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 @dataclass(frozen=True)
@@ -252,8 +252,8 @@ def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
             ops.add(str(op))
         params = node.get("params") or {}
         if isinstance(params, dict):
-            if "family" in params:
-                families.add(str(params["family"]))
+            if "model" in params:
+                families.add(str(params["model"]))
             if "search_algorithm" in params:
                 search_algorithms.add(str(params["search_algorithm"]))
     return {

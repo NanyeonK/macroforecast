@@ -17,12 +17,12 @@ _RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 9
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -54,8 +54,8 @@ _RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_model
       type: step
-      op: fit_model
-      params: {family: random_forest, n_estimators: 8, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: random_forest, n_estimators: 8, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_model, src_X]}
   sinks:

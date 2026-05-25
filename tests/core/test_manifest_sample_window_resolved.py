@@ -31,12 +31,12 @@ _WINDOWED_RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 1
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
     sample_start_rule: fixed_date
@@ -108,12 +108,12 @@ _WINDOWED_RECIPE = """
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
     - id: fit_model
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 0.1
         min_train_size: 4
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none

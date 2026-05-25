@@ -75,7 +75,7 @@ def _build_var_panel(t: int = 120, k: int = 3, seed: int = 0) -> dict[str, list]
 
 def _fit_node_params(recipe: dict) -> dict:
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     return fit["params"]
 
@@ -93,8 +93,8 @@ def test_arctic_var_helper_routes_to_bvar_minnesota_not_ols_var():
 
     recipe = arctic_var()
     params = _fit_node_params(recipe)
-    assert params["family"] == "bvar_minnesota", (
-        f"Expected bvar_minnesota, got {params['family']!r}"
+    assert params["model"] == "bvar_minnesota", (
+        f"Expected bvar_minnesota, got {params['model']!r}"
     )
 
 

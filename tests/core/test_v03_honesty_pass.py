@@ -115,10 +115,10 @@ def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
 
     recipe = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -146,8 +146,8 @@ def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_model
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 0.1, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 0.1, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_model, src_X]}
   sinks:
@@ -175,10 +175,10 @@ def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
 
     recipe = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -205,8 +205,8 @@ def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_model
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 0.1, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 0.1, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_model, src_X]}
   sinks:
@@ -233,11 +233,11 @@ def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
 
     recipe = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible, parallel_unit: oos_dates}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible, parallel_unit: oos_dates}
   leaf_config: {n_workers_inner: 4, random_seed: 42}
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -264,8 +264,8 @@ def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_model
       type: step
-      op: fit_model
-      params: {family: random_forest, n_estimators: 6, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: random_forest, n_estimators: 6, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_model, src_X]}
   sinks:

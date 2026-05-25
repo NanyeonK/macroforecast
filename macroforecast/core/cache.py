@@ -8,7 +8,7 @@ from pathlib import Path
 import pickle
 from typing import Any
 
-from .dag import DAG, LayerId, Node
+from .pipeline import DAG, LayerId, Node
 from .ops import get_op
 
 

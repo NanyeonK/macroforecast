@@ -115,7 +115,7 @@ enabled), then L8. Each layer's output is passed to the next layer as a
 typed sink.
 
 The per-cell seed is derived at this stage. If the recipe sets
-`reproducibility_mode: seeded_reproducible`, the runtime computes
+`reproducibility_policy: seeded_reproducible`, the runtime computes
 `cell_seed = base_seed + cell_position` and injects it into every layer
 that uses randomness. The position is the cell's index in the expanded grid,
 assigned deterministically at Stage 3.

@@ -50,13 +50,13 @@ def test_planned_bucket_is_empty_after_v0_1_honesty_pass():
     assert PLANNED_MODEL_FAMILIES == ()
 
 
-@pytest.mark.parametrize("family", _HONESTY_DEMOTED)
+@pytest.mark.parametrize("model", _HONESTY_DEMOTED)
 def test_demoted_families_are_in_future_bucket(family):
     assert family in FUTURE_MODEL_FAMILIES
     assert family not in OPERATIONAL_MODEL_FAMILIES
 
 
-@pytest.mark.parametrize("family", _HONESTY_DEMOTED)
+@pytest.mark.parametrize("model", _HONESTY_DEMOTED)
 def test_demoted_families_report_future_status(family):
     assert get_family_status(family) == FUTURE
 
@@ -75,7 +75,7 @@ def test_operational_families_report_operational_status():
         assert get_family_status(family) == OPERATIONAL
 
 
-@pytest.mark.parametrize("family", _HONESTY_DEMOTED)
+@pytest.mark.parametrize("model", _HONESTY_DEMOTED)
 def test_demoted_family_rejected_by_l4_validator(family):
     yaml_text = f"""
 nodes:
@@ -83,10 +83,10 @@ nodes:
   - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
   - id: fit
     type: step
-    op: fit_model
+    op: fit
     params:
-      family: {family}
-      forecast_strategy: direct
+      model: {family}
+      forecast_policy: direct
       training_start_rule: expanding
       refit_policy: every_origin
       search_algorithm: none
@@ -112,10 +112,10 @@ nodes:
   - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
   - id: fit
     type: step
-    op: fit_model
+    op: fit
     params:
-      family: realized_garch
-      forecast_strategy: direct
+      model: realized_garch
+      forecast_policy: direct
       training_start_rule: expanding
       refit_policy: every_origin
       search_algorithm: none

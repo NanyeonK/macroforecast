@@ -240,7 +240,7 @@ def test_set_at_rejects_traversal_into_scalar():
 def test_experiment_init_normalizes_lone_fit_node_to_fit_main():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
     nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
-    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     assert len(fit_nodes) == 1
     assert fit_nodes[0]["id"] == "fit_main"
     # And the predict node now references fit_main, not fit_1_ridge.
@@ -255,7 +255,7 @@ def test_experiment_compare_models_emits_fit_main_id():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
     exp.compare_models(["ridge", "lasso", "ols"])
     nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
-    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     assert len(fit_nodes) == 1
     assert fit_nodes[0]["id"] == "fit_main"
     assert fit_nodes[0]["params"]["family"] == {"sweep": ["ridge", "lasso", "ols"]}
@@ -279,5 +279,5 @@ def test_experiment_init_with_ar_p_also_normalizes_to_fit_main():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
     # Default model_family="ar_p" -- still normalize.
     nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
-    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     assert fit_nodes[0]["id"] == "fit_main"

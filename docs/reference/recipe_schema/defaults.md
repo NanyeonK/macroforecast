@@ -7,9 +7,9 @@ Public defaults:
 | Constant | Value |
 | --- | --- |
 | `DEFAULT_RANDOM_SEED` | `42` |
-| `DEFAULT_MODEL_FAMILY` | `"ar_p"` |
+| `DEFAULT_MODEL` | `"ar_p"` |
 | `DEFAULT_HORIZONS` | `(1,)` |
-| `DEFAULT_FORECAST_STRATEGY` | `"direct"` |
+| `DEFAULT_FORECAST_POLICY` | `"direct"` |
 | `DEFAULT_TRAINING_START_RULE` | `"expanding"` |
 | `DEFAULT_REFIT_POLICY` | `"every_origin"` |
 

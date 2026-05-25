@@ -13,12 +13,12 @@ _BASE_RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 7
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -50,8 +50,8 @@ _BASE_RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
   sinks:
@@ -108,7 +108,7 @@ def test_execute_recipe_fail_fast_raises():
 
 def test_execute_recipe_continue_on_failure_captures_error():
     bad = _BASE_RECIPE.replace("failure_policy: fail_fast", "failure_policy: continue_on_failure").replace("__NLAG__", "1")
-    bad = bad.replace("custom_source_policy: custom_panel_only", "custom_source_policy: official_only")
+    bad = bad.replace("panel_composition: custom_panel_only", "panel_composition: official_only")
     bad = bad.replace("    custom_panel_inline:", "    custom_panel_inline_OFF:")
     result = execute_recipe(bad)
     assert len(result.cells) == 1

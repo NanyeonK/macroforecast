@@ -12,7 +12,7 @@ DEFAULT_PROFILE_NAME = "macroforecast-default-v1"
 #   - mf.forecast() / mf.Experiment() signatures (via import)
 #   - DEFAULT_PROFILE (below)
 #   - Docs (simple_api/quickstart.md etc.)
-DEFAULT_MODEL_FAMILY: str = "ar_p"
+DEFAULT_MODEL: str = "ar_p"
 DEFAULT_RANDOM_SEED: int = 42
 DEFAULT_HORIZONS: tuple[int, ...] = (1,)
 
@@ -33,12 +33,12 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "framework": DEFAULT_TRAINING_START_RULE,
     "benchmark_family": "zero_change",
     "feature_builder": "target_lag_features",
-    "model_family": DEFAULT_MODEL_FAMILY,
+    "model_family": DEFAULT_MODEL,
     "primary_metric": "mse",
     "importance_method": "none",
-    "reproducibility_mode": "seeded_reproducible",
+    "reproducibility_policy": "seeded_reproducible",
     "failure_policy": "fail_fast",
-    "compute_mode": "serial",
+    "compute_policy": "serial",
     "random_seed": DEFAULT_RANDOM_SEED,
     "benchmark_config": {"minimum_train_size": 5},
     "preprocessing": dict(DEFAULT_PREPROCESSING_AXES),
@@ -103,7 +103,7 @@ def _normalize_dataset(dataset: str) -> str:
         raise ValueError(
             "custom_csv/custom_parquet are no longer dataset choices; "
             "choose dataset='fred_md'/'fred_qd'/'fred_sd' and set "
-            "custom_source_policy plus custom_source_path"
+            "panel_composition plus custom_source_path"
         )
     if "fred_md" in parts and "fred_qd" in parts:
         raise ValueError("fred_md and fred_qd cannot be combined in one default experiment")
@@ -145,25 +145,25 @@ def _custom_source_contract(
     *,
     dataset: str,
     frequency: str,
-    custom_source_policy: str,
+    panel_composition: str,
     custom_source_format: str,
     custom_source_schema: str | None,
     custom_source_path: str | None,
 ) -> tuple[str, str | None, str | None]:
     if custom_source_schema == "none":
         custom_source_schema = None
-    if custom_source_policy not in _CUSTOM_SOURCE_POLICIES:
-        raise ValueError(f"custom_source_policy must be one of {sorted(_CUSTOM_SOURCE_POLICIES)}")
+    if panel_composition not in _CUSTOM_SOURCE_POLICIES:
+        raise ValueError(f"panel_composition must be one of {sorted(_CUSTOM_SOURCE_POLICIES)}")
     if custom_source_format not in _CUSTOM_SOURCE_FORMATS:
         raise ValueError(f"custom_source_format must be one of {sorted(_CUSTOM_SOURCE_FORMATS)}")
 
-    if custom_source_policy == "official_only":
+    if panel_composition == "official_only":
         if custom_source_format != "none":
-            raise ValueError("custom_source_format applies only when custom_source_policy selects custom data")
+            raise ValueError("custom_source_format applies only when panel_composition selects custom data")
         if custom_source_schema is not None:
-            raise ValueError("custom_source_schema applies only when custom_source_policy selects custom data")
+            raise ValueError("custom_source_schema applies only when panel_composition selects custom data")
         if custom_source_path is not None:
-            raise ValueError("custom_source_path applies only when custom_source_policy selects custom data")
+            raise ValueError("custom_source_path applies only when panel_composition selects custom data")
         return "none", None, None
 
     if not custom_source_path:
@@ -178,11 +178,11 @@ def _custom_source_contract(
     resolved_schema = custom_source_schema or _schema_from_route(
         dataset=dataset,
         frequency=frequency,
-        custom_source_policy=custom_source_policy,
+        panel_composition=panel_composition,
     )
     if resolved_schema not in _CUSTOM_SOURCE_SCHEMAS:
         raise ValueError(f"custom_source_schema must be one of {sorted(_CUSTOM_SOURCE_SCHEMAS)}")
-    if custom_source_policy == "custom_panel_only":
+    if panel_composition == "custom_panel_only":
         if "+" in dataset:
             raise ValueError("custom_panel_only supports a single FRED dataset, not a composite")
         if custom_source_schema is not None and resolved_schema != dataset:
@@ -214,8 +214,8 @@ def _resolve_custom_source_format(*, custom_source_path: str, custom_source_form
     return custom_source_format if custom_source_format != "none" else inferred
 
 
-def _schema_from_route(*, dataset: str, frequency: str, custom_source_policy: str) -> str:
-    if custom_source_policy == "custom_panel_only" and dataset == "fred_sd":
+def _schema_from_route(*, dataset: str, frequency: str, panel_composition: str) -> str:
+    if panel_composition == "custom_panel_only" and dataset == "fred_sd":
         return "fred_sd"
     return "fred_qd" if frequency == "quarterly" else "fred_md"
 
@@ -232,20 +232,20 @@ def build_default_recipe_dict(
     information_set_type: str = "final_revised_data",
     frequency: str | None = None,
     vintage: str | None = None,
-    custom_source_policy: str = "official_only",
+    panel_composition: str = "official_only",
     custom_source_format: str = "none",
     custom_source_schema: str | None = None,
     custom_source_path: str | None = None,
     framework: str = "expanding",
     benchmark_family: str = "zero_change",
     feature_builder: str = "target_lag_features",
-    model_family: str = DEFAULT_MODEL_FAMILY,
+    model_family: str = DEFAULT_MODEL,
     model_families: Iterable[str] | None = None,
     primary_metric: str = "mse",
     importance_method: str = "none",
-    reproducibility_mode: str = "seeded_reproducible",
+    reproducibility_policy: str = "seeded_reproducible",
     failure_policy: str = "fail_fast",
-    compute_mode: str = "serial",
+    compute_policy: str = "serial",
     random_seed: int = 42,
     benchmark_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -267,7 +267,7 @@ def build_default_recipe_dict(
     resolved_custom_format, resolved_custom_schema, resolved_custom_path = _custom_source_contract(
         dataset=resolved_dataset,
         frequency=resolved_frequency,
-        custom_source_policy=custom_source_policy,
+        panel_composition=panel_composition,
         custom_source_format=custom_source_format,
         custom_source_schema=custom_source_schema,
         custom_source_path=custom_source_path,
@@ -304,12 +304,12 @@ def build_default_recipe_dict(
         "training_start_date": str(start),
         "data_vintage": vintage,
     }
-    if custom_source_policy != "official_only":
+    if panel_composition != "official_only":
         data_leaf["custom_source_path"] = resolved_custom_path
 
     layer1_fixed_axes = {
         "dataset": resolved_dataset,
-        "custom_source_policy": custom_source_policy,
+        "panel_composition": panel_composition,
         "official_transform_policy": "apply_official_tcode",
         "official_transform_scope": "target_and_predictors",
         "frequency": resolved_frequency,
@@ -330,9 +330,9 @@ def build_default_recipe_dict(
         "0_meta": {
             "fixed_axes": {
                 "study_scope": study_scope,
-                "reproducibility_mode": reproducibility_mode,
+                "reproducibility_policy": reproducibility_policy,
                 "failure_policy": failure_policy,
-                "compute_mode": compute_mode,
+                "compute_policy": compute_policy,
             },
             "leaf_config": {
                 "default_profile": default_profile,

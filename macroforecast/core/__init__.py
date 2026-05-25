@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .dag import DAG, Edge, GatePredicate, LayerCategory, LayerId, Node, NodeRef, SourceSelector
+from .pipeline import DAG, Edge, GatePredicate, LayerCategory, LayerId, Node, NodeRef, SourceSelector
 from .layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
 from .status import FUTURE, OPERATIONAL, ItemStatus, KNOWN_STATUSES, is_future, is_runnable, normalize_status
 from .layers import LAYER_GLOBALS, LAYER_SINKS, get_layer, list_layers, register_layer

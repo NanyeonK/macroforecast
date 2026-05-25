@@ -218,30 +218,30 @@ def _family_operational(dag, nref) -> bool:
     with a pointer at the v0.2 implementation issue.
     """
 
-    family = dag.node(nref.node_id).params.get("family")
+    family = dag.node(nref.node_id).params.get("model")
     return is_runnable(MODEL_FAMILY_STATUS.get(family))
 
 
 def _valid_strategy(dag, nref) -> bool:
     return (
-        dag.node(nref.node_id).params.get("forecast_strategy", "direct")
+        dag.node(nref.node_id).params.get("forecast_policy", "direct")
         in FORECAST_STRATEGIES
     )
 
 
 @register_op(
-    name="fit_model",
+    name="fit",
     layer_scope=("l4",),
     input_types={"default": (L3FeaturesArtifact, L1RegimeMetadataArtifact)},
     output_type=L4ModelArtifactsArtifact,
     params_schema={
-        "family": {
+        "model": {
             "type": str,
             "default": "ridge",
             "sweepable": True,
             "options": OPERATIONAL_MODEL_FAMILIES + FUTURE_MODEL_FAMILIES,
         },
-        "forecast_strategy": {
+        "forecast_policy": {
             "type": str,
             "default": "direct",
             "sweepable": True,
@@ -282,11 +282,11 @@ def _valid_strategy(dag, nref) -> bool:
         Rule(
             "hard",
             _valid_strategy,
-            "forecast_strategy must be one of direct, iterated, path_average, path_average_eq4",
+            "forecast_policy must be one of direct, iterated, path_average, path_average_eq4",
         ),
     ),
 )
-def fit_model(inputs, params):
+def fit(inputs, params):
     """Estimator-builder used by the cache-driven DAG executor.
 
     Returns the fitted estimator instance directly. The full forecast loop
@@ -299,7 +299,7 @@ def fit_model(inputs, params):
 
     from ..runtime import _build_l4_model
 
-    return _build_l4_model(params.get("family", "ridge"), dict(params))
+    return _build_l4_model(params.get("model", "ridge"), dict(params))
 
 
 @register_op(

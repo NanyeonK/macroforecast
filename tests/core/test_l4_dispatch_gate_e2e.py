@@ -54,10 +54,10 @@ def _e2e_recipe(scheme: str) -> str:
 
     return f"""
 0_meta:
-  fixed_axes: {{failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}}
+  fixed_axes: {{failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}}
   leaf_config: {{random_seed: 42}}
 1_data:
-  fixed_axes: {{custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
+  fixed_axes: {{panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -84,8 +84,8 @@ def _e2e_recipe(scheme: str) -> str:
     - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
     - id: fit
       type: step
-      op: fit_model
-      params: {{family: ridge, alpha: 99.0, search_algorithm: {scheme}, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, min_train_size: 24}}
+      op: fit
+      params: {{model: ridge, alpha: 99.0, search_algorithm: {scheme}, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, min_train_size: 24}}
       inputs: [src_X, src_y]
     - {{id: predict, type: step, op: predict, inputs: [fit, src_X]}}
   sinks:
@@ -102,7 +102,7 @@ def _run_and_extract_alpha(recipe: str, tmp_path) -> float:
     result = macroforecast.run(recipe, output_directory=tmp_path)
     assert result.cells, "recipe should produce at least one cell"
     artifacts = result.cells[0].runtime_result.artifacts["l4_model_artifacts_v1"].artifacts
-    assert "fit" in artifacts, "fit_model node should appear in l4_model_artifacts_v1"
+    assert "fit" in artifacts, "fit node should appear in l4_model_artifacts_v1"
     metadata = artifacts["fit"].fit_metadata
     assert "alpha" in metadata, f"alpha missing from fit_metadata: {metadata!r}"
     return float(metadata["alpha"])

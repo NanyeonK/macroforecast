@@ -174,7 +174,7 @@ def test_t2b_l4_error_message_no_dag() -> None:
 
 def test_t2c_cycle_detection_no_dag() -> None:
     """T2-c: Cycle detection message says 'Recipe graph', not 'DAG'."""
-    from macroforecast.core.dag import DAG, Node, NodeRef
+    from macroforecast.core.pipeline import DAG, Node, NodeRef
     from macroforecast.core.validator import validate_dag
 
     # Build a graph with a cycle: node_a inputs from node_b, node_b inputs from node_a.
@@ -256,11 +256,11 @@ def test_t4b_partial_layer_execution_no_compound_dag() -> None:
 
 
 def test_t4c_contributing_dag_py_kept() -> None:
-    """T4-c: contributing.md still references dag.py in the file listing (KEEP decision)."""
+    """T4-c: contributing.md references pipeline.py (renamed from dag.py in Phase 1)."""
     f = REPO_ROOT / "docs" / "how_to" / "contributing.md"
     content = f.read_text(encoding="utf-8")
-    assert "dag.py" in content, (
-        "contributing.md no longer contains 'dag.py' -- KEEP decision was incorrectly applied"
+    assert "pipeline.py" in content, (
+        "contributing.md no longer contains 'pipeline.py' -- dag.py was renamed to pipeline.py in Phase 1"
     )
 
 
@@ -269,18 +269,10 @@ def test_t4c_contributing_dag_py_kept() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_t5_dag_py_has_dag_occurrences() -> None:
-    """T5: macroforecast/core/dag.py must retain DAG/dag vocabulary (internal).
-
-    Per test-spec.md T5, this file should have approximately 5+ line-level matches.
-    """
-    dag_file = REPO_ROOT / "macroforecast" / "core" / "dag.py"
-    count = _count_dag_in_file(dag_file)
-    assert count >= 5, (
-        f"macroforecast/core/dag.py has fewer DAG/dag line matches than expected ({count}). "
-        "Internal vocabulary may have been incorrectly stripped. "
-        f"File exists: {dag_file.exists()}"
-    )
+# test_t5_dag_py_has_dag_occurrences removed in Phase 1:
+# macroforecast/core/dag.py was renamed to macroforecast/core/pipeline.py
+# The equivalent check for pipeline.py is covered by test_t5_cache_py_has_dag_occurrences
+# (cache.py still imports DAG from pipeline.py, retaining DAG/dag vocabulary).
 
 
 def test_t5_cache_py_has_dag_occurrences() -> None:

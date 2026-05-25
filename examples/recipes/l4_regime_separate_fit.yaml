@@ -15,11 +15,11 @@
       selector: {layer_ref: l1, sink_name: l1_regime_metadata_v1}
     - id: fit_ridge_per_regime
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 1.0
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: cv_path

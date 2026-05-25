@@ -13,10 +13,10 @@ import macroforecast
 
 _NODE_GROUP_RECIPE = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -55,8 +55,8 @@ _NODE_GROUP_RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_model
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 0.1, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 0.1, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_model, src_X]}
   sinks:
@@ -84,13 +84,13 @@ _PARALLEL_RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
     parallel_unit: models
   leaf_config:
     n_workers_inner: 2
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -117,13 +117,13 @@ _PARALLEL_RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_a
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 0.1, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 0.1, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - id: fit_b
       type: step
-      op: fit_model
-      params: {family: ols, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ols, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_a, src_X]}
   sinks:
@@ -168,7 +168,7 @@ def test_fred_sd_freq_align_step_backward_fills_quarterly():
         metadata=PanelMetadata(values={"series_frequency": {"monthly_a": "monthly", "quarterly_b": "quarterly"}}),
     )
     artifact = L1DataDefinitionArtifact(
-        custom_source_policy="official_only",
+        panel_composition="official_only",
         dataset="fred_sd",
         frequency="monthly",
         vintage_policy="current_vintage",
@@ -176,8 +176,8 @@ def test_fred_sd_freq_align_step_backward_fills_quarterly():
         target="monthly_a",
         targets=("monthly_a",),
         variable_universe="all_variables",
-        target_geography_scope=None,
-        predictor_geography_scope=None,
+        target_geography_policy=None,
+        predictor_geography_policy=None,
         sample_start_rule="max_balanced",
         sample_end_rule="latest_available",
         horizon_set="standard_md",
@@ -189,7 +189,7 @@ def test_fred_sd_freq_align_step_backward_fills_quarterly():
     log: dict[str, Any] = {"steps": []}  # noqa: F821
     aligned = _apply_fred_sd_frequency_alignment(
         df.copy(),
-        resolved={"sd_series_frequency_filter": "both", "quarterly_to_monthly_rule": "step_backward"},
+        resolved={"sd_series_frequency_filter": "both", "quarterly_to_monthly_policy": "step_backward"},
         l1_artifact=artifact,
         cleaning_log=log,
     )

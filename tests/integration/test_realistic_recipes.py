@@ -32,12 +32,12 @@ def _custom_panel_recipe(target: str, n_lag: int = 4, family: str = "ridge") -> 
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 13
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -67,12 +67,12 @@ def _custom_panel_recipe(target: str, n_lag: int = 4, family: str = "ridge") -> 
     - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
     - id: fit
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: {family}
+        model: {family}
         alpha: 1.0
         min_train_size: 20
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -105,7 +105,7 @@ def test_realistic_recipe_runs_l1_through_l5(tmp_path):
     assert metrics["mse"].iloc[0] >= 0
 
 
-@pytest.mark.parametrize("family", ["ridge", "lasso", "random_forest"])
+@pytest.mark.parametrize("model", ["ridge", "lasso", "random_forest"])
 def test_realistic_fixture_supports_multiple_families(tmp_path, family):
     recipe = _custom_panel_recipe(target="UNRATE", n_lag=3, family=family)
     result = macroforecast.run(recipe, output_directory=tmp_path / family)

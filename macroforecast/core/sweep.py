@@ -5,7 +5,7 @@ from itertools import product
 from typing import Any, Literal
 
 from .cache import recipe_hash
-from .dag import DAG, LayerId, Node, NodeRef
+from .pipeline import DAG, LayerId, Node, NodeRef
 from .ops import get_op
 
 SweepKind = Literal["param", "node_group", "external_axis"]

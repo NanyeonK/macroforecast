@@ -92,7 +92,7 @@ class DMTestResult:
         True when reject H0 at 5% significance.
     alternative :
         Always ``"two_sided"``.
-    correction_method :
+    correction_policy :
         ``"hln_nw"`` (with HLN correction) or ``"nw"`` (without).
     n_obs :
         Number of finite observations used.
@@ -107,7 +107,7 @@ class DMTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs: int
     horizon: int
     hln_correction: bool
@@ -124,7 +124,7 @@ class DMTestResult:
             f"Horizon:                                         {self.horizon}\n"
             f"N observations:                                  {self.n_obs}\n"
             f"HLN correction:                                  {self.hln_correction}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"Alternative:                                     two_sided\n"
             "------------------------------------------------------------------------------\n"
             f"Statistic:                                       {stat_str}\n"
@@ -147,7 +147,7 @@ class GWTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs: int
     horizon: int
     hln_correction: bool
@@ -164,7 +164,7 @@ class GWTestResult:
             f"Horizon:                                         {self.horizon}\n"
             f"N observations:                                  {self.n_obs}\n"
             f"HLN correction:                                  {self.hln_correction}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"Alternative:                                     two_sided\n"
             "------------------------------------------------------------------------------\n"
             f"Statistic:                                       {stat_str}\n"
@@ -189,7 +189,7 @@ class DMPTestResult:
         True when reject H0 at 5%.
     alternative :
         Always ``"two_sided"``.
-    correction_method :
+    correction_policy :
         Always ``"nw"`` (HAC Newey-West, no HLN).
     n_obs_stacked :
         Total stacked observations across all horizons.
@@ -201,7 +201,7 @@ class DMPTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs_stacked: int
     horizon: None
 
@@ -215,7 +215,7 @@ class DMPTestResult:
             "          Diebold-Mariano-Pesaran Multi-Horizon Test Results\n"
             "==============================================================================\n"
             f"N observations (stacked):                        {self.n_obs_stacked}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"Alternative:                                     two_sided\n"
             "Note: This is a joint test across all horizons.\n"
             "------------------------------------------------------------------------------\n"
@@ -241,7 +241,7 @@ class HNTestResult:
         True when reject H0 at 5%.
     alternative :
         Always ``"one_sided"``.
-    correction_method :
+    correction_policy :
         Always ``"hln_nw"``.
     n_obs :
         Number of finite observations.
@@ -255,7 +255,7 @@ class HNTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs: int
     horizon: int
     encompassing: str
@@ -271,7 +271,7 @@ class HNTestResult:
             "==============================================================================\n"
             f"Horizon:                                         {self.horizon}\n"
             f"N observations:                                  {self.n_obs}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"Alternative:                                     one_sided\n"
             f"Encompassing direction:                          {self.encompassing}\n"
             "Note: H0: forecast A encompasses forecast B.\n"
@@ -298,7 +298,7 @@ class CWTestResult:
         True when reject H0 at 5%.
     alternative :
         Always ``"one_sided"``.
-    correction_method :
+    correction_policy :
         Always ``"nw"`` (no HLN for nested tests).
     n_obs :
         Number of finite observations.
@@ -312,7 +312,7 @@ class CWTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs: int
     horizon: int
     cw_adjustment: bool
@@ -328,7 +328,7 @@ class CWTestResult:
             "==============================================================================\n"
             f"Horizon:                                         {self.horizon}\n"
             f"N observations:                                  {self.n_obs}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"CW adjustment:                                   {self.cw_adjustment}\n"
             f"Alternative:                                     one_sided\n"
             "Note: H0: small model as accurate as large model.\n"
@@ -355,7 +355,7 @@ class EncNewTestResult:
         True when reject H0 at 5%.
     alternative :
         Always ``"one_sided"``.
-    correction_method :
+    correction_policy :
         Always ``"nw"``.
     n_obs :
         Number of finite observations.
@@ -367,7 +367,7 @@ class EncNewTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs: int
     horizon: int
 
@@ -382,7 +382,7 @@ class EncNewTestResult:
             "==============================================================================\n"
             f"Horizon:                                         {self.horizon}\n"
             f"N observations:                                  {self.n_obs}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"Alternative:                                     one_sided\n"
             "------------------------------------------------------------------------------\n"
             f"Statistic:                                       {stat_str}\n"
@@ -407,7 +407,7 @@ class EncTTestResult:
         True when reject H0 at 5%.
     alternative :
         Always ``"one_sided"``.
-    correction_method :
+    correction_policy :
         Always ``"nw"``.
     n_obs :
         Number of finite observations.
@@ -419,7 +419,7 @@ class EncTTestResult:
     pvalue: float | None
     decision: bool
     alternative: str
-    correction_method: str
+    correction_policy: str
     n_obs: int
     horizon: int
 
@@ -434,7 +434,7 @@ class EncTTestResult:
             "==============================================================================\n"
             f"Horizon:                                         {self.horizon}\n"
             f"N observations:                                  {self.n_obs}\n"
-            f"Correction method:                               {self.correction_method}\n"
+            f"Correction method:                               {self.correction_policy}\n"
             f"Alternative:                                     one_sided\n"
             "------------------------------------------------------------------------------\n"
             f"Statistic:                                       {stat_str}\n"
@@ -521,14 +521,14 @@ def dm_test(
     # Count finite observations (mirrors runtime's clean = diff.dropna())
     n_obs = int(np.isfinite(diff.to_numpy()).sum())
     decision = pvalue is not None and pvalue < 0.05
-    correction_method = "hln_nw" if hln else "nw"
+    correction_policy = "hln_nw" if hln else "nw"
 
     return DMTestResult(
         stat=stat,
         pvalue=pvalue,
         decision=bool(decision),
         alternative="two_sided",
-        correction_method=correction_method,
+        correction_policy=correction_policy,
         n_obs=n_obs,
         horizon=int(horizon),
         hln_correction=hln,
@@ -604,14 +604,14 @@ def gw_test(
 
     n_obs = int(np.isfinite(diff.to_numpy()).sum())
     decision = pvalue is not None and pvalue < 0.05
-    correction_method = "hln_nw" if hln else "nw"
+    correction_policy = "hln_nw" if hln else "nw"
 
     return GWTestResult(
         stat=stat,
         pvalue=pvalue,
         decision=bool(decision),
         alternative="two_sided",
-        correction_method=correction_method,
+        correction_policy=correction_policy,
         n_obs=n_obs,
         horizon=int(horizon),
         hln_correction=hln,
@@ -681,7 +681,7 @@ def dmp_test(
             pvalue=None,
             decision=False,
             alternative="two_sided",
-            correction_method="nw",
+            correction_policy="nw",
             n_obs_stacked=n,
             horizon=None,
         )
@@ -698,7 +698,7 @@ def dmp_test(
         pvalue=float(pvalue),
         decision=decision,
         alternative="two_sided",
-        correction_method="nw",
+        correction_policy="nw",
         n_obs_stacked=n,
         horizon=None,
     )
@@ -783,7 +783,7 @@ def hn_test(
         pvalue=pvalue,
         decision=bool(decision),
         alternative="one_sided",
-        correction_method="hln_nw",
+        correction_policy="hln_nw",
         n_obs=n_obs,
         horizon=int(horizon),
         encompassing="a_over_b",
@@ -881,7 +881,7 @@ def cw_test(
             pvalue=None,
             decision=False,
             alternative="one_sided",
-            correction_method="nw",
+            correction_policy="nw",
             n_obs=n_obs,
             horizon=int(horizon),
             cw_adjustment=True,
@@ -903,7 +903,7 @@ def cw_test(
         pvalue=pvalue,
         decision=bool(decision),
         alternative="one_sided",
-        correction_method="nw",
+        correction_policy="nw",
         n_obs=n_obs,
         horizon=int(horizon),
         cw_adjustment=True,
@@ -979,7 +979,7 @@ def enc_new_test(
             pvalue=None,
             decision=False,
             alternative="one_sided",
-            correction_method="nw",
+            correction_policy="nw",
             n_obs=n_obs,
             horizon=int(horizon),
         )
@@ -1000,7 +1000,7 @@ def enc_new_test(
         pvalue=pvalue,
         decision=bool(decision),
         alternative="one_sided",
-        correction_method="nw",
+        correction_policy="nw",
         n_obs=n_obs,
         horizon=int(horizon),
     )
@@ -1078,7 +1078,7 @@ def enc_t_test(
             pvalue=None,
             decision=False,
             alternative="one_sided",
-            correction_method="nw",
+            correction_policy="nw",
             n_obs=n_obs,
             horizon=int(horizon),
         )
@@ -1099,7 +1099,7 @@ def enc_t_test(
         pvalue=pvalue,
         decision=bool(decision),
         alternative="one_sided",
-        correction_method="nw",
+        correction_policy="nw",
         n_obs=n_obs,
         horizon=int(horizon),
     )

@@ -19,12 +19,12 @@ from macroforecast.core.runtime import (
 # ---------------------------------------------------------------------------
 
 def test_resolve_forecast_object_picks_quantile_when_set():
-    nodes = [{"op": "fit_model", "params": {"forecast_object": "quantile"}}]
+    nodes = [{"op": "fit", "params": {"forecast_object": "quantile"}}]
     assert _resolve_forecast_object(nodes) == "quantile"
 
 
 def test_resolve_forecast_object_defaults_to_point():
-    nodes = [{"op": "fit_model", "params": {}}]
+    nodes = [{"op": "fit", "params": {}}]
     assert _resolve_forecast_object(nodes) == "point"
 
 
@@ -32,7 +32,7 @@ def test_emit_quantile_intervals_produces_one_value_per_level():
     forecasts = {("m", "y", 1, "2018-01-01"): 5.0, ("m", "y", 1, "2018-02-01"): 6.0}
     nodes = [
         {
-            "op": "fit_model",
+            "op": "fit",
             "params": {
                 "forecast_object": "quantile",
                 "quantile_levels": [0.1, 0.5, 0.9],

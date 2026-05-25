@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from .dag import DAG, Edge, GatePredicate, LayerId, Node, NodeRef, SourceSelector
+from .pipeline import DAG, Edge, GatePredicate, LayerId, Node, NodeRef, SourceSelector
 from .layers import list_layers
 
 

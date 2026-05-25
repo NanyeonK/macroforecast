@@ -234,7 +234,7 @@ class TestR1OLSDefault:
         """TEST-R1-03: Default fit_model family == 'ols', not ridge.
 
         Navigates recipe['4_forecasting_model']['nodes'] to find fit_model node.
-        Spec: fit_node["params"]["family"] == "ols".
+        Spec: fit_node["params"]["model"] == "ols".
         """
         recipe = u_midas(
             target="y", horizon=1, freq_ratio=3, n_lags_high=3,
@@ -249,11 +249,11 @@ class TestR1OLSDefault:
         )
         fit_nodes = [
             n for n in layer["nodes"]
-            if n.get("op") == "fit_model"
+            if n.get("op") == "fit"
         ]
         assert fit_nodes, "No fit_model node found in layer 4"
         fit_node = fit_nodes[0]
-        family = fit_node["params"]["family"]
+        family = fit_node["params"]["model"]
         assert family == "ols", (
             "Default family should be 'ols'; got {!r}".format(family)
         )
