@@ -8,7 +8,7 @@
 [![python](https://img.shields.io/badge/python-3.10+-blue)](#)
 [![docs](https://readthedocs.org/projects/macroforecast/badge/?version=latest)](https://macroforecast.readthedocs.io/en/latest/)
 
-> **v0.9.3b1** — extensive test suite (counts vary by extras and Python version; see CI badges above).
+> **v0.9.5a0** — extensive test suite (counts vary by extras and Python version; see CI badges above).
 >
 > **Renamed from `macrocast` -> `macroforecast`** in v0.6.0 (PyPI
 > namespace ownership). See ``CHANGELOG.md`` for the migration diff.
@@ -26,7 +26,7 @@ pip install 'macroforecast[shap]'            # + shap package for richer L7 figu
 Or pin to a tagged release directly from GitHub:
 
 ```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.3b1"
+pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.5a0"
 ```
 
 For development:
@@ -203,7 +203,7 @@ v0.1.1 audit table is now `operational`).
 
 If you use macroforecast in published work, please cite:
 
-> macroforecast: Fair, reproducible macro forecasting benchmarking. v0.9.3b1, 2026.
+> macroforecast: Fair, reproducible macro forecasting benchmarking. v0.9.5a0, 2026.
 
 ## License
 
