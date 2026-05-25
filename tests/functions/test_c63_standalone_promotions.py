@@ -147,14 +147,10 @@ class TestModelsPackageImport:
 
         assert isinstance(VAR(), _VARWrapper)
 
-    def test_lazy_import_from_mf(self) -> None:
-        """macroforecast.models is accessible via the lazy __getattr__."""
-        import macroforecast as mf
-
-        mod = mf.models  # triggers lazy import
-        assert hasattr(mod, "RealizedGARCH")
-        assert hasattr(mod, "MidasAlmon")
-
+# NOTE (hotfix-3b-5): test_lazy_import_from_mf removed — Phase 3b moved
+# macroforecast.models to macroforecast.layers.l4_models and dropped the
+# "models" lazy-module alias from __init__.py.  The remaining methods in
+# this class already use macroforecast.layers.l4_models directly and are valid.
 
 # ===========================================================================
 # B. mf.feature_selection — 5 sklearn-style wrappers
@@ -620,12 +616,8 @@ class TestRidgeVariantCallables:
 class TestLazyImports:
     """Verify all four new submodules are accessible via mf.<name>."""
 
-    def test_models_lazy_import(self) -> None:
-        import macroforecast as mf
-
-        mod = mf.models
-        from macroforecast.layers.l4_models import RealizedGARCH
-        assert mod.RealizedGARCH is RealizedGARCH
+    # NOTE (hotfix-3b-5): test_models_lazy_import removed — Phase 3b dropped
+    # the "models" lazy-module alias; mf.models no longer exists.
 
     def test_feature_selection_lazy_import(self) -> None:
         import macroforecast as mf
@@ -649,9 +641,13 @@ class TestLazyImports:
         assert mod.GIRF is GIRF
 
     def test_all_four_in_dir(self) -> None:
-        """All four new submodule names appear in macroforecast.__dir__()."""
+        """Remaining lazy submodule names appear in macroforecast.__dir__().
+
+        NOTE (hotfix-3b-5): "models" removed from the check — Phase 3b dropped
+        the mf.models alias (moved to macroforecast.layers.l4_models).
+        """
         import macroforecast as mf
 
         d = dir(mf)
-        for name in ("models", "feature_selection", "transforms", "interpretation"):
+        for name in ("feature_selection", "transforms", "interpretation"):
             assert name in d, f"{name!r} not found in mf.__dir__()"
