@@ -26,8 +26,8 @@ _LAYER_MODULES: tuple[tuple[str, str], ...] = (
     ("l2_5", "macroforecast.core.layers.l2_5"),
     ("l3", "macroforecast.core.layers.l3"),
     ("l3_5", "macroforecast.core.layers.l3_5"),
-    ("l4", "macroforecast.core.layers.l4"),
-    ("l4_5", "macroforecast.core.layers.l4_5"),
+    ("l4", "macroforecast.layers.l4_models.schema"),
+    ("l4_5", "macroforecast.layers.l4_5_diagnostic.schema"),
     ("l5", "macroforecast.core.layers.l5"),
     ("l6", "macroforecast.core.layers.l6"),
     ("l7", "macroforecast.core.layers.l7"),
@@ -224,7 +224,7 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
     / ``refit_policy`` / ``search_algorithm`` here so the wizard + sphinx
     docs can iterate them."""
 
-    from ..core.ops.l4_ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES
+    from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES
 
     family_options = tuple(
         OptionInfo(
