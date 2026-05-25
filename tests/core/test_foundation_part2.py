@@ -174,8 +174,8 @@ def test_yaml_sugar_form_normalizes_to_dag() -> None:
         {
             "fixed_axes": {
                 "failure_policy": "fail_fast",
-                "reproducibility_mode": "seeded_reproducible",
-                "compute_mode": "serial",
+                "reproducibility_policy": "seeded_reproducible",
+                "compute_policy": "serial",
             },
             "leaf_config": {"random_seed": 42},
         },

@@ -15,7 +15,7 @@ def test_execute_l1_l2_materializes_inline_custom_panel():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
         frequency: monthly
       leaf_config:
         target: y
@@ -48,7 +48,7 @@ def test_execute_l1_l2_applies_sample_window_and_tcode():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
         frequency: monthly
         sample_start_rule: fixed_date
       leaf_config:
@@ -88,7 +88,7 @@ def test_materialize_l1_supports_custom_source_path(tmp_path):
         f"""
         1_data:
           fixed_axes:
-            custom_source_policy: custom_panel_only
+            panel_composition: custom_panel_only
             frequency: monthly
           leaf_config:
             target: y
@@ -106,7 +106,7 @@ def test_materialize_l1_supports_official_fred_md_local_source(tmp_path):
         f"""
         1_data:
           fixed_axes:
-            custom_source_policy: official_only
+            panel_composition: official_only
             dataset: fred_md
             frequency: monthly
           leaf_config:
@@ -118,7 +118,7 @@ def test_materialize_l1_supports_official_fred_md_local_source(tmp_path):
 
     artifact, _, resolved = materialize_l1(root)
 
-    assert resolved["custom_source_policy"] == "official_only"
+    assert resolved["panel_composition"] == "official_only"
     assert artifact.raw_panel.shape[1] == 4
     assert artifact.raw_panel.column_names == ("INDPRO", "RPI", "UNRATE", "CPIAUCSL")
     assert artifact.raw_panel.data.index[0] == pd.Timestamp("2000-01-01")
@@ -131,7 +131,7 @@ def test_execute_l1_l2_applies_official_fred_md_transform_codes(tmp_path):
     yaml_text = f"""
     1_data:
       fixed_axes:
-        custom_source_policy: official_only
+        panel_composition: official_only
         dataset: fred_md
         frequency: monthly
       leaf_config:
@@ -160,7 +160,7 @@ def test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
         frequency: monthly
       leaf_config:
         target: y
@@ -192,7 +192,7 @@ def test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
         frequency: monthly
       leaf_config:
         target: y
@@ -241,7 +241,7 @@ def test_execute_l1_l2_materializes_disabled_diagnostic_artifact():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
         frequency: monthly
       leaf_config:
         target: y
@@ -273,7 +273,7 @@ def test_materialize_l1_loads_fred_sd_from_local_fixture(tmp_path):
         f"""
         1_data:
           fixed_axes:
-            custom_source_policy: official_only
+            panel_composition: official_only
             dataset: fred_sd
             frequency: monthly
           leaf_config:

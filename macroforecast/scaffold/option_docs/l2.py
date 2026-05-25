@@ -401,7 +401,7 @@ _L2E_ZERO_FILL = _e(
 
 # L2.A FRED-SD frequency rules (one example each — most users default)
 _L2A_QM_BACKWARD = _e(
-    "l2_a", "quarterly_to_monthly_rule", "step_backward",
+    "l2_a", "quarterly_to_monthly_policy", "step_backward",
     "Step-function: each month inherits the most-recent published quarterly value.",
     (
         "When a quarterly series needs to align with a monthly target, "
@@ -418,7 +418,7 @@ _L2A_QM_BACKWARD = _e(
     return_type="pd.DataFrame")
 
 _L2A_QM_LINEAR = _e(
-    "l2_a", "quarterly_to_monthly_rule", "linear_interpolation",
+    "l2_a", "quarterly_to_monthly_policy", "linear_interpolation",
     "Linear interpolation between quarterly observations.",
     "Smoother than step_backward but introduces look-ahead unless used per-origin.",
     "Studies with smooth quarterly series and per-origin alignment.",
@@ -427,7 +427,7 @@ _L2A_QM_LINEAR = _e(
 )
 
 _L2A_QM_FORWARD = _e(
-    "l2_a", "quarterly_to_monthly_rule", "step_forward",
+    "l2_a", "quarterly_to_monthly_policy", "step_forward",
     "Step-function: each month inherits the next-published quarterly value.",
     "Use when later observations are informative for current state (rare in real-time work).",
     "Hindsight-feasible studies (e.g., counterfactual nowcasts).",
@@ -449,7 +449,7 @@ _chow_lin_indicator_arg = ParameterDoc(
     ),
 )
 _L2A_QM_CHOW_LIN = _e(
-    "l2_a", "quarterly_to_monthly_rule", "chow_lin",
+    "l2_a", "quarterly_to_monthly_policy", "chow_lin",
     "Chow-Lin (1971) regression-based temporal disaggregation.",
     (
         "Implements the best linear unbiased interpolation procedure of "
@@ -481,7 +481,7 @@ _L2A_QM_CHOW_LIN = _e(
 
 
 _L2A_MQ_AVG = _e(
-    "l2_a", "monthly_to_quarterly_rule", "quarterly_average",
+    "l2_a", "monthly_to_quarterly_policy", "quarterly_average",
     "Aggregate to quarterly via mean of the three monthly observations.",
     "Standard NIPA aggregation for stocks / averages.",
     "Default. Stock variables (interest rates, prices, employment levels).",
@@ -493,7 +493,7 @@ _L2A_MQ_AVG = _e(
     return_type="pd.DataFrame")
 
 _L2A_MQ_END = _e(
-    "l2_a", "monthly_to_quarterly_rule", "quarterly_endpoint",
+    "l2_a", "monthly_to_quarterly_policy", "quarterly_endpoint",
     "Aggregate via the end-of-quarter observation.",
     "Use for series that snap to a quarter-end (e.g., balance-sheet data).",
     "End-of-period stocks (M2 month-end, balance-sheet series).",
@@ -502,7 +502,7 @@ _L2A_MQ_END = _e(
 )
 
 _L2A_MQ_SUM = _e(
-    "l2_a", "monthly_to_quarterly_rule", "quarterly_sum",
+    "l2_a", "monthly_to_quarterly_policy", "quarterly_sum",
     "Aggregate via the sum of the three monthly observations.",
     "Standard for flow variables (production, sales, payroll growth).",
     "Flow variables; cumulative-quantity series.",
@@ -542,7 +542,7 @@ register(
        "Keep both monthly and quarterly FRED-SD series.",
        (
            "Default; defers to the L2.A frequency-alignment rules "
-           "(``monthly_to_quarterly_rule`` / ``quarterly_to_monthly_rule``) "
+           "(``monthly_to_quarterly_policy`` / ``quarterly_to_monthly_policy``) "
            "to render the mixed-frequency panel into a single grid."
        ),
        "Default for FRED-SD recipes; mixed-frequency panels.",
@@ -675,7 +675,7 @@ _L2A_MFR_CALENDAR = _e(
         "default; any custom panel that declares per-column native "
         "frequency in metadata), the default representation flattens all "
         "columns to the experiment calendar via the L2.A "
-        "``quarterly_to_monthly_rule`` / ``monthly_to_quarterly_rule`` "
+        "``quarterly_to_monthly_policy`` / ``monthly_to_quarterly_policy`` "
         "alignment rules. The panel emerges as a single rectangular "
         "frame; downstream layers see a uniform sampling grid."
     ),

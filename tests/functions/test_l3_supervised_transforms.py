@@ -397,38 +397,38 @@ class TestFeatureSelectionTransform:
 
 
 class TestBLK1SirScalingMethod:
-    """BLK-1: sliced_inverse_regression_transform scaling_method kwarg."""
+    """BLK-1: sliced_inverse_regression_transform scaling_policy kwarg."""
 
     def test_default_scaling_method_accepted(self):
-        # Should not raise — default scaling_method="scaled_pca"
+        # Should not raise — default scaling_policy="scaled_pca"
         out = sliced_inverse_regression_transform(PANEL, TARGET, n_components=2)
         assert out.shape == (50, 2)
 
     def test_explicit_scaled_pca(self):
         out = sliced_inverse_regression_transform(
-            PANEL, TARGET, n_components=2, scaling_method="scaled_pca"
+            PANEL, TARGET, n_components=2, scaling_policy="scaled_pca"
         )
         assert out.shape == (50, 2)
 
     def test_none_scaling_method(self):
         out = sliced_inverse_regression_transform(
-            PANEL, TARGET, n_components=2, scaling_method="none"
+            PANEL, TARGET, n_components=2, scaling_policy="none"
         )
         assert out.shape == (50, 2)
 
     def test_invalid_scaling_method_raises(self):
-        with pytest.raises(ValueError, match="scaling_method must be one of"):
+        with pytest.raises(ValueError, match="scaling_policy must be one of"):
             sliced_inverse_regression_transform(
-                PANEL, TARGET, n_components=2, scaling_method="bogus"
+                PANEL, TARGET, n_components=2, scaling_policy="bogus"
             )
 
     def test_forwarded_to_runtime(self):
         """scaled_pca and none give identical shapes but potentially different values."""
         out_sp = sliced_inverse_regression_transform(
-            PANEL, TARGET, n_components=2, scaling_method="scaled_pca"
+            PANEL, TARGET, n_components=2, scaling_policy="scaled_pca"
         )
         out_none = sliced_inverse_regression_transform(
-            PANEL, TARGET, n_components=2, scaling_method="none"
+            PANEL, TARGET, n_components=2, scaling_policy="none"
         )
         assert out_sp.shape == out_none.shape == (50, 2)
 

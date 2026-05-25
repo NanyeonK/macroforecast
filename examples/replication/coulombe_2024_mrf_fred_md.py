@@ -21,12 +21,12 @@ RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 1989  # Hamilton (1989) MS year, in honour of v0.2 #195
 1_data:
   fixed_axes:
-    custom_source_policy: official_only
+    panel_composition: official_only
     dataset: fred_md
     frequency: monthly
     horizon_set: standard_md
@@ -58,11 +58,11 @@ RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_ridge
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 1.0
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -70,12 +70,12 @@ RECIPE = """
       is_benchmark: true
     - id: fit_mrf
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: macroeconomic_random_forest
+        model: macroeconomic_random_forest
         n_estimators: 100
         max_depth: 6
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none

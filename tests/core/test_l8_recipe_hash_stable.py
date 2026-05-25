@@ -27,14 +27,14 @@ def _compute_hash_via_runtime(recipe: dict) -> str:
 
 _RECIPE_A = {
     "1_data": {
-        "fixed_axes": {"custom_source_policy": "custom_panel_only", "frequency": "monthly"},
+        "fixed_axes": {"panel_composition": "custom_panel_only", "frequency": "monthly"},
         "leaf_config": {"target": "y"},
     }
 }
 
 _RECIPE_B = {
     "1_data": {
-        "fixed_axes": {"custom_source_policy": "custom_panel_only", "frequency": "quarterly"},
+        "fixed_axes": {"panel_composition": "custom_panel_only", "frequency": "quarterly"},
         "leaf_config": {"target": "y"},
     }
 }
@@ -71,7 +71,7 @@ class TestRecipeHashStable:
             "import sys, hashlib, json\n"
             "sys.path.insert(0, '/home/nanyeon99/project/macroforecast')\n"
             "from macroforecast.core.runtime import _jsonable\n"
-            "recipe = {'1_data': {'fixed_axes': {'custom_source_policy': 'custom_panel_only', 'frequency': 'monthly'}, 'leaf_config': {'target': 'y'}}}\n"
+            "recipe = {'1_data': {'fixed_axes': {'panel_composition': 'custom_panel_only', 'frequency': 'monthly'}, 'leaf_config': {'target': 'y'}}}\n"
             "cj = json.dumps(_jsonable(recipe), sort_keys=True, default=str, separators=(',', ':'))\n"
             "print(hashlib.sha256(cj.encode()).hexdigest()[:16])\n"
         )

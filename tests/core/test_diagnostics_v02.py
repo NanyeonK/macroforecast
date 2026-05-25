@@ -59,7 +59,7 @@ def test_l2_5_delta_matrix_when_axis_set():
         failure_policy: fail_fast
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
         frequency: monthly
         horizon_set: custom_list
       leaf_config:

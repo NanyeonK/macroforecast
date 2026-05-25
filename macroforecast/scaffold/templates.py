@@ -105,14 +105,14 @@ def fred_sd_geographic(*, target: str = "PAYEMS") -> RecipeBuilder:
     b = RecipeBuilder()
     b.l0(random_seed=42)
     b.l1(
-        custom_source_policy="official_only",
+        panel_composition="official_only",
         dataset="fred_sd",
         frequency="monthly",
         horizon_set="standard_md",
         target_structure="single_target",
         target=target,
-        target_geography_scope="all_states",
-        predictor_geography_scope="all_states",
+        target_geography_policy="all_states",
+        predictor_geography_policy="all_states",
         fred_sd_state_group="all_states",
     )
     b.l2.standard()

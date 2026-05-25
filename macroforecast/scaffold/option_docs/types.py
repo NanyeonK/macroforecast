@@ -85,7 +85,7 @@ class ParameterDoc:
         default:     Default value, or ``None`` when the parameter has no
                      default (i.e. it is *required* when the option is active).
         constraint:  Free-text constraint description (e.g. ``">=0"``,
-                     ``"must be set if compute_mode=parallel"``).
+                     ``"must be set if compute_policy=parallel"``).
         description: One-line summary of what the parameter controls.
     """
 

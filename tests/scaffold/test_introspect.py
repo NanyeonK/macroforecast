@@ -46,8 +46,8 @@ def test_axis_info_carries_options():
     the expected (axis -> options) structure."""
 
     l1_axes = {a.name: a for a in introspect.axes("l1")}
-    assert "custom_source_policy" in l1_axes
-    options = {o.value for o in l1_axes["custom_source_policy"].options}
+    assert "panel_composition" in l1_axes
+    options = {o.value for o in l1_axes["panel_composition"].options}
     # All three documented options for the source policy must surface.
     assert {"official_only", "custom_panel_only", "official_plus_custom"} <= options
 

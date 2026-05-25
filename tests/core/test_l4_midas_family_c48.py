@@ -133,9 +133,9 @@ class TestValidation:
       selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}
     - id: fit_1
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: {family}
+        model: {family}
         freq_ratio: 1
         n_lags_high: 4
       inputs: [src_X, src_y]
@@ -174,9 +174,9 @@ class TestValidation:
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
     - id: f
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: realized_garch
+        model: realized_garch
         n_lag: 4
       inputs: [src_X, src_y]
     - id: predict_1
@@ -225,7 +225,7 @@ class TestContract:
         Verifies test-spec.md behavioral contract #5.
         """
         X, y = midas_lf_data
-        model = _build_l4_model(family, {"family": family, **params})
+        model = _build_l4_model(family, {"model": family, **params})
         model.fit(X, y)
         preds = model.predict(X)
         assert isinstance(preds, np.ndarray), f"{family}: predict must return np.ndarray"
@@ -239,7 +239,7 @@ class TestContract:
         Verifies test-spec.md §2.4 C-2.
         """
         X, y = midas_lf_data
-        model = _build_l4_model(family, {"family": family, **params})
+        model = _build_l4_model(family, {"model": family, **params})
         model.fit(X, y)
         preds = model.predict(X.iloc[[0]])
         assert preds.shape == (1,), f"{family}: single-row predict shape wrong: {preds.shape}"
@@ -252,7 +252,7 @@ class TestContract:
         Verifies test-spec.md §2.4 C-3 property-based invariant #1.
         """
         X, y = midas_lf_data
-        model = _build_l4_model(family, {"family": family, **params})
+        model = _build_l4_model(family, {"model": family, **params})
         model.fit(X, y)
         preds = model.predict(X)
         assert np.issubdtype(preds.dtype, np.floating) or np.issubdtype(preds.dtype, np.integer), (
@@ -300,7 +300,7 @@ class TestRecovery:
         )
         model = _build_l4_model(
             "midas_almon",
-            {"family": "midas_almon", "freq_ratio": 1, "n_lags_high": K,
+            {"model": "midas_almon", "freq_ratio": 1, "n_lags_high": K,
              "polynomial_order": 1, "n_starts": 5, "random_state": 42},
         )
         model.fit(X, y)
@@ -338,7 +338,7 @@ class TestRecovery:
         )
         model = _build_l4_model(
             "midas_beta",
-            {"family": "midas_beta", "freq_ratio": 1, "n_lags_high": K,
+            {"model": "midas_beta", "freq_ratio": 1, "n_lags_high": K,
              "n_starts": 5, "random_state": 42},
         )
         model.fit(X, y)
@@ -371,7 +371,7 @@ class TestRecovery:
         )
         model = _build_l4_model(
             "midas_step",
-            {"family": "midas_step", "freq_ratio": 1, "n_lags_high": K, "n_steps": S},
+            {"model": "midas_step", "freq_ratio": 1, "n_lags_high": K, "n_steps": S},
         )
         model.fit(X, y)
         preds = model.predict(X)
@@ -400,7 +400,7 @@ class TestRecovery:
         )
         model = _build_l4_model(
             "dfm_unrestricted_midas",
-            {"family": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": K},
+            {"model": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": K},
         )
         model.fit(X, y)
         preds = model.predict(X)
@@ -429,7 +429,7 @@ class TestSeedDeterminism:
         Verifies test-spec.md behavioral contract #7.
         """
         X, y = midas_lf_data
-        params = {"family": "midas_almon", "freq_ratio": 1, "n_lags_high": 4,
+        params = {"model": "midas_almon", "freq_ratio": 1, "n_lags_high": 4,
                   "polynomial_order": 2, "n_starts": 3, "random_state": 7}
         m1 = _build_l4_model("midas_almon", params)
         m1.fit(X, y)
@@ -450,7 +450,7 @@ class TestSeedDeterminism:
         Verifies test-spec.md §2.6 SD-2.
         """
         X, y = midas_lf_data
-        params = {"family": "midas_beta", "freq_ratio": 1, "n_lags_high": 4,
+        params = {"model": "midas_beta", "freq_ratio": 1, "n_lags_high": 4,
                   "n_starts": 3, "random_state": 7}
         m1 = _build_l4_model("midas_beta", params)
         m1.fit(X, y)
@@ -473,10 +473,10 @@ class TestSeedDeterminism:
         """
         X, y = midas_lf_data
         p1 = _build_l4_model("midas_almon",
-            {"family": "midas_almon", "random_state": 0, "n_starts": 3, "n_lags_high": 4}
+            {"model": "midas_almon", "random_state": 0, "n_starts": 3, "n_lags_high": 4}
         ).fit(X, y).predict(X)
         p2 = _build_l4_model("midas_almon",
-            {"family": "midas_almon", "random_state": 9999, "n_starts": 3, "n_lags_high": 4}
+            {"model": "midas_almon", "random_state": 9999, "n_starts": 3, "n_lags_high": 4}
         ).fit(X, y).predict(X)
         assert p1.shape == p2.shape
 
@@ -492,7 +492,7 @@ class TestSeedDeterminism:
         test-spec.md §2.6 SD-4.
         """
         X, y = midas_lf_data
-        full_params = {"family": family, **params}
+        full_params = {"model": family, **params}
         p1 = _build_l4_model(family, full_params).fit(X, y).predict(X)
         p2 = _build_l4_model(family, full_params).fit(X, y).predict(X)
         np.testing.assert_array_equal(
@@ -524,7 +524,7 @@ class TestBitExactReplicate:
             index=range(T),
         )
         y = pd.Series(rng.standard_normal(T), index=range(T), name="y")
-        params = {"family": "midas_almon", "freq_ratio": 1, "n_lags_high": 3,
+        params = {"model": "midas_almon", "freq_ratio": 1, "n_lags_high": 3,
                   "polynomial_order": 2, "n_starts": 2, "random_state": 42}
         p1 = _build_l4_model("midas_almon", params).fit(X, y).predict(X)
         p2 = _build_l4_model("midas_almon", params).fit(X, y).predict(X)
@@ -545,7 +545,7 @@ class TestBitExactReplicate:
             index=range(T),
         )
         y = pd.Series(rng.standard_normal(T), index=range(T), name="y")
-        params = {"family": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": 2}
+        params = {"model": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": 2}
         p1 = _build_l4_model("dfm_unrestricted_midas", params).fit(X, y).predict(X)
         p2 = _build_l4_model("dfm_unrestricted_midas", params).fit(X, y).predict(X)
         np.testing.assert_array_equal(
@@ -573,7 +573,7 @@ class TestEdgeCases:
         """
         X = pd.DataFrame({"a": [], "b": []})
         y = pd.Series([], dtype=float, name="y")
-        params = {"family": family, "freq_ratio": 1, "n_lags_high": 2}
+        params = {"model": family, "freq_ratio": 1, "n_lags_high": 2}
         model = _build_l4_model(family, params)
         model.fit(X, y)
         preds = model.predict(X)
@@ -589,7 +589,7 @@ class TestEdgeCases:
         """
         X = pd.DataFrame({"a": [1.0], "b": [2.0]})
         y = pd.Series([3.0], name="y")
-        params = {"family": family, "freq_ratio": 1, "n_lags_high": 2}
+        params = {"model": family, "freq_ratio": 1, "n_lags_high": 2}
         model = _build_l4_model(family, params)
         model.fit(X, y)
         preds = model.predict(X)
@@ -606,7 +606,7 @@ class TestEdgeCases:
         X = pd.DataFrame({"a": x, "b": x * 2.0, "c": x * 3.0})
         y = pd.Series(x + 1.0, name="y")
         for family in ("midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas"):
-            params = {"family": family, "freq_ratio": 1, "n_lags_high": 2}
+            params = {"model": family, "freq_ratio": 1, "n_lags_high": 2}
             model = _build_l4_model(family, params)
             model.fit(X, y)
             preds = model.predict(X)
@@ -622,7 +622,7 @@ class TestEdgeCases:
         X = pd.DataFrame({"a": [1.0, 2.0]})
         y = pd.Series([1.5, 2.5], name="y")
         for family in ("midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas"):
-            params = {"family": family, "freq_ratio": 1, "n_lags_high": 10}
+            params = {"model": family, "freq_ratio": 1, "n_lags_high": 10}
             model = _build_l4_model(family, params)
             model.fit(X, y)
             preds = model.predict(X)
@@ -663,7 +663,7 @@ class TestCrossReference:
         # Model under test
         model = _build_l4_model(
             "dfm_unrestricted_midas",
-            {"family": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": K},
+            {"model": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": K},
         )
         model.fit(X, y)
         preds_model = model.predict(X)
@@ -690,7 +690,7 @@ class TestCrossReference:
         y = pd.Series(X.mean(axis=1) + 0.01 * rng.standard_normal(T), index=range(T), name="y")
         model = _build_l4_model(
             "midas_almon",
-            {"family": "midas_almon", "freq_ratio": 1, "n_lags_high": K,
+            {"model": "midas_almon", "freq_ratio": 1, "n_lags_high": K,
              "polynomial_order": 1, "n_starts": 5, "random_state": 0},
         )
         model.fit(X, y)
@@ -729,7 +729,7 @@ class TestPropertyInvariants:
         if family not in ("midas_almon", "midas_beta"):
             pytest.skip(f"{family} does not expose _w_hat for non-negativity check")
         X, y = midas_lf_data
-        model = _build_l4_model(family, {"family": family, **params})
+        model = _build_l4_model(family, {"model": family, **params})
         model.fit(X, y)
         w_hat = model._w_hat
         assert np.all(w_hat >= -1e-12), (
@@ -744,11 +744,11 @@ class TestPropertyInvariants:
         """
         X, y = midas_lf_data
         n_lags = 4
-        params = {"family": family, "freq_ratio": 1, "n_lags_high": n_lags,
+        params = {"model": family, "freq_ratio": 1, "n_lags_high": n_lags,
                   "n_starts": 2, "random_state": 0}
         if family == "midas_almon":
             params["polynomial_order"] = 2
-        model = _build_l4_model(family, {"family": family, **params})
+        model = _build_l4_model(family, {"model": family, **params})
         model.fit(X, y)
         assert len(model._w_hat) == n_lags, (
             f"PI-7 {family}: len(_w_hat)={len(model._w_hat)}, expected {n_lags}"
@@ -762,10 +762,10 @@ class TestPropertyInvariants:
         """
         X, y = midas_lf_data
         if family == "midas_step":
-            params = {"family": family, "freq_ratio": 1, "n_lags_high": 3, "n_steps": 2}
+            params = {"model": family, "freq_ratio": 1, "n_lags_high": 3, "n_steps": 2}
         else:
-            params = {"family": family, "freq_ratio": 1, "n_lags_high": 3}
-        model = _build_l4_model(family, {"family": family, **params})
+            params = {"model": family, "freq_ratio": 1, "n_lags_high": 3}
+        model = _build_l4_model(family, {"model": family, **params})
         model.fit(X, y)
         intercept = model._intercept
         assert isinstance(intercept, float) or np.isscalar(intercept), (
@@ -789,7 +789,7 @@ class TestPropertyInvariants:
         y = pd.Series(rng.standard_normal(T), name="y")
         model = _build_l4_model(
             "dfm_unrestricted_midas",
-            {"family": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": "bic"},
+            {"model": "dfm_unrestricted_midas", "freq_ratio": 1, "n_lags_high": "bic"},
         )
         model.fit(X, y)
         assert model._K_fit >= 1, f"PI-9: _K_fit={model._K_fit}, expected >= 1"
