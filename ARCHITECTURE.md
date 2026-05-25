@@ -700,6 +700,27 @@ No module structure changes. Tree-family optional dependency failures (xgboost/l
 
 ---
 
+## Version: v0.9.5a0 (C69 — Round 3: documentation + naming + refactor release cut)
+
+Round 3 (C62-C68) delivers the standalone-first paradigm shift, DAG jargon
+cleanup, and complete tutorial + how-to overhaul planned in the R3 execution
+roadmap (C62 audit). No algorithmic logic changed. The `mf.models` public API
+grows from 22 to 30 classes; `mf.feature_selection`, `mf.interpretation`, and
+`mf.recipes` namespaces are formalized.
+
+| Cycle | Change Type | Core Contribution |
+| --- | --- | --- |
+| C62 | Audit | R3 execution plan: class inventory (35 entries), naming spec, recipe extraction spec, DAG cleanup plan |
+| C63 | Promotion | `mf.models` 0 -> 22 public classes; `mf.feature_selection` (5); `mf.interpretation` (2); 8 gap callables |
+| C63.1 | Fix | Canonical Chow-Lin GLS; `BVARMinnesota` prior enforcement |
+| C64 | Promotion | `mf.models` 22 -> 30; `BaseEstimator` refactor on 5 selectors; 2 runtime bug fixes |
+| C65 | Refactor | `mf.recipes` canonical home; backward-compat lazy-import identity |
+| C66 | Cleanup | DAG jargon: `macroforecast/` 98% reduction, `docs/` 95% reduction |
+| C67 | Docs | Tutorials 01-03 standalone-first rewrite (598 lines removed) |
+| C68 | Docs | 6 per-algorithm how-tos + advanced recipes orchestration guide |
+
+---
+
 ## Version: v0.9.3b1 (C61 — Round 2 cross-review remediation release cut)
 
 Round 2 of the Codex + MiniMax external cross-review remediation series is complete
