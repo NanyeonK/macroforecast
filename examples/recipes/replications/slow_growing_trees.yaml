@@ -5,7 +5,7 @@
 # Decomposition: decision_tree.split_shrinkage sub-axis (future).
 # Reference: doi:10.1007/978-3-031-43601-7_4.
 # 
-# Generated from macroforecast.recipes.paper_methods (v0.9 Phase 2).
+# Canonical recipe (v0.9 Phase 2).
 # Helper docstring is the canonical decomposition note; this YAML
 # is the hand-readable mirror.
 0_meta:

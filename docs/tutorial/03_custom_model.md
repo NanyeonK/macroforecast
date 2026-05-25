@@ -9,7 +9,7 @@ this tutorial.
 
 ## The sklearn subclassing contract
 
-macroforecast model classes in `macroforecast.models` all follow the sklearn
+macroforecast model classes in `macroforecast.layers.l4_models` all follow the sklearn
 estimator convention. Any class that inherits from `sklearn.base.BaseEstimator`
 and `sklearn.base.RegressorMixin` can be used in the same way.
 
@@ -142,7 +142,7 @@ argument name.
 
 If your custom model is a variant of an existing macroforecast model family, you
 can subclass both the private implementation class and the sklearn mixins. The 30
-public model classes in `mf.models` follow exactly this pattern. For example,
+public model classes in `mf.layers.l4_models` follow exactly this pattern. For example,
 `LinearAR` is defined as `class LinearAR(_LinearARModel): pass`. A custom variant
 that adds a constraint would look like:
 

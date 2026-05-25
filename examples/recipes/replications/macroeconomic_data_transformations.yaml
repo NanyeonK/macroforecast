@@ -5,7 +5,7 @@
 # Decomposition: ma_increasing_order (MARX) + pca + random_forest (all operational since v0.1).
 # Reference: doi:10.1016/j.ijforecast.2021.05.005.
 # 
-# Generated from macroforecast.recipes.paper_methods (v0.9 Phase 2).
+# Canonical recipe (v0.9 Phase 2).
 # Helper docstring is the canonical decomposition note; this YAML
 # is the hand-readable mirror.
 0_meta:
