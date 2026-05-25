@@ -82,8 +82,8 @@ The package-native route uses:
 2_preprocessing.tcode_policy=official_tcode_then_extra_preprocess
 2_preprocessing.scaling_policy=standard
 3_feature_engineering.op=source/raw-panel-plus-target-construction
-4_forecasting_model.fit_model.family=ridge
-4_forecasting_model.benchmark_forecast.family=autoregressive_bic
+4_forecasting_model.fit.model=ridge
+4_forecasting_model.benchmark_forecast.model=autoregressive_bic
 5_evaluation.primary_metric=mse
 6_stat_tests.equal_predictive=dm
 ```
@@ -99,8 +99,8 @@ This entry exercises the package-owned mixed-frequency route:
 1_data.frequency=monthly
 2_preprocessing.fred_sd_mixed_frequency_representation=mixed_frequency_model_adapter
 3_feature_engineering.op=source/raw-panel-plus-target-construction
-4_forecasting_model.fit_model.family=midasr
-4_forecasting_model.fit_model.params.weight_family=almonp
+4_forecasting_model.fit.model=midasr
+4_forecasting_model.fit.params.weight_family=almonp
 4_forecasting_model.predict.params.forecast_type=direct
 ```
 

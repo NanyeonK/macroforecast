@@ -501,7 +501,7 @@
 <hr class="docutils" />
 <section id="use-in-a-recipe">
 <h2>Use in a recipe<a class="headerlink" href="#use-in-a-recipe" title="Link to this heading">#</a></h2>
-<p>Reference the registered name via <code class="docutils literal notranslate"><span class="pre">family:</span></code> in any <code class="docutils literal notranslate"><span class="pre">fit_model</span></code> node:</p>
+<p>Reference the registered name via <code class="docutils literal notranslate"><span class="pre">model:</span></code> in any <code class="docutils literal notranslate"><span class="pre">fit</span></code> node:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">4_forecasting_model</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_X</span>
@@ -512,10 +512,10 @@
 <span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_custom</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit</span>
 <span class="w">      </span><span class="nt">params</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_model</span>
-<span class="w">        </span><span class="nt">forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_model</span>
+<span class="w">        </span><span class="nt">forecast_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
 <span class="w">        </span><span class="nt">training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expanding</span>
 <span class="w">        </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
 <span class="w">        </span><span class="nt">search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
@@ -545,7 +545,7 @@ YAML does not import Python modules.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">unknown</span> <span class="pre">model</span> <span class="pre">family</span> <span class="pre">'my_model'</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">unknown</span> <span class="pre">model</span> <span class="pre">'my_model'</span></code></p></td>
 <td><p>Registration module not imported before <code class="docutils literal notranslate"><span class="pre">mf.run()</span></code></p></td>
 <td><p>Import the module at the top of your script; YAML cannot register callables</p></td>
 </tr>

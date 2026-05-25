@@ -26,7 +26,7 @@ macroforecast/
     figures.py            # matplotlib backend + US choropleth
     layers/               # l0..l8 + l1_5/l2_5/l3_5/l4_5 schema definitions
     ops/                  # universal/l3/l4/l5/l6/l7/l8/diagnostic op registry
-    cache.py, dag.py, sweep.py, manifest.py, validator.py, yaml.py, types.py
+    cache.py, pipeline.py, sweep.py, manifest.py, validator.py, yaml.py, types.py
   raw/                    # FRED-MD/QD/SD adapters + vintage manager
   preprocessing/          # contract helpers (legacy support)
   custom.py               # register_model / register_preprocessor / ...

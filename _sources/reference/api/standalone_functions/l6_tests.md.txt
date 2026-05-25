@@ -8,7 +8,7 @@ L6 test callables take arrays of forecast losses or errors and return a frozen r
 
 Diebold-Mariano (1995) equal predictive ability test with optional HLN small-sample correction.
 
-Returns `DMTestResult`: `.alternative`, `.correction_method`, `.decision`, `.hln_correction`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+Returns `DMTestResult`: `.alternative`, `.correction_policy`, `.decision`, `.hln_correction`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)
@@ -24,7 +24,7 @@ print(result.stat, result.pvalue, result.decision)
 
 Panel Diebold-Mariano test (stacked loss differentials).
 
-Returns `DMPTestResult`: `.alternative`, `.correction_method`, `.decision`, `.horizon`, `.n_obs_stacked`, `.pvalue`, `.stat`, `.summary()`.
+Returns `DMPTestResult`: `.alternative`, `.correction_policy`, `.decision`, `.horizon`, `.n_obs_stacked`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)
@@ -39,7 +39,7 @@ print(result.stat, result.pvalue, result.decision)
 
 Giacomini-White (2006) conditional predictive ability test.
 
-Returns `GWTestResult`: `.alternative`, `.correction_method`, `.decision`, `.hln_correction`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+Returns `GWTestResult`: `.alternative`, `.correction_policy`, `.decision`, `.hln_correction`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)
@@ -55,7 +55,7 @@ print(result.stat, result.pvalue, result.decision)
 
 Harvey-Newbold (1998) forecast encompassing test.
 
-Returns `HNTestResult`: `.alternative`, `.correction_method`, `.decision`, `.encompassing`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+Returns `HNTestResult`: `.alternative`, `.correction_policy`, `.decision`, `.encompassing`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)
@@ -73,7 +73,7 @@ print(result.stat, result.pvalue, result.decision)
 
 Clark-West (2006/2007) nested-model predictive ability test (4 positional args).
 
-Returns `CWTestResult`: `.alternative`, `.correction_method`, `.cw_adjustment`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+Returns `CWTestResult`: `.alternative`, `.correction_policy`, `.cw_adjustment`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)
@@ -91,7 +91,7 @@ print(result.stat, result.pvalue, result.decision)
 
 ENC-NEW test (Clark and McCracken 2001) for nested-model encompassing.
 
-Returns `EncNewTestResult`: `.alternative`, `.correction_method`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+Returns `EncNewTestResult`: `.alternative`, `.correction_policy`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)
@@ -107,7 +107,7 @@ print(result.stat, result.pvalue, result.decision)
 
 ENC-t test (Clark and McCracken 2001) for nested-model encompassing.
 
-Returns `EncTTestResult`: `.alternative`, `.correction_method`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
+Returns `EncTTestResult`: `.alternative`, `.correction_policy`, `.decision`, `.horizon`, `.n_obs`, `.pvalue`, `.stat`, `.summary()`.
 
 ```python
 rng = np.random.default_rng(42)

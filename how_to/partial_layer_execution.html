@@ -511,7 +511,7 @@ hook is registered against.</p>
 <tr class="row-odd"><td><p>“Bridge from a custom-panel YAML straight to the L2 sink”</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">execute_l1_l2</span></code> – L1 + L2 only, no L3+ overhead.</p></td>
 </tr>
-<tr class="row-even"><td><p>“Replay one DAG node from cache”</p></td>
+<tr class="row-even"><td><p>“Replay one pipeline node from cache”</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">execute_node</span></code> – foundation primitive used by <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code>.</p></td>
 </tr>
 </tbody>
@@ -570,7 +570,7 @@ hook is registered against.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code> with L1 → L5 sinks + any enabled L1.5 / L2.5 / L3.5 / L4.5 / L6 / L7 / L8 sinks.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">execute_node(node,</span> <span class="pre">dag,</span> <span class="pre">runtime_context,</span> <span class="pre">cache_dir)</span></code></p></td>
-<td><p>one DAG <code class="docutils literal notranslate"><span class="pre">Node</span></code></p></td>
+<td><p>one pipeline <code class="docutils literal notranslate"><span class="pre">Node</span></code></p></td>
 <td><p>the materialized node value (cached on disk).</p></td>
 </tr>
 </tbody>
@@ -621,7 +621,7 @@ hand.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L1 frequency : monthly
 L1 target    : y
 L1 raw_panel : (12, 2) rows x cols
-L1 axes keys : [&#39;custom_source_policy&#39;, &#39;dataset&#39;, &#39;frequency&#39;, ...]
+L1 axes keys : [&#39;panel_composition&#39;, &#39;dataset&#39;, &#39;frequency&#39;, ...]
 L2 panel     : (12, 2)
 L2 cleaning_log steps: [{&#39;transform&#39;: &#39;no_transform&#39;}, {&#39;outlier&#39;: &#39;none&#39;}, ...]
 L2 n_outliers: 0
@@ -681,7 +681,7 @@ manages the cell loop).</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_source_policy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Literal[&quot;official_only&quot;,</span> <span class="pre">&quot;custom_panel_only&quot;,</span> <span class="pre">&quot;official_plus_custom&quot;]</span></code></p></td>
 <td><p>Resolved from L1 fixed_axes.</p></td>
 </tr>
@@ -713,7 +713,7 @@ manages the cell loop).</p>
 <td><p>enum or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>–</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_geography_scope</span></code> / <code class="docutils literal notranslate"><span class="pre">predictor_geography_scope</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code> / <code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></p></td>
 <td><p>enums or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>FRED-SD only.</p></td>
 </tr>
@@ -1032,9 +1032,9 @@ manages the cell loop).</p>
 
 <span class="n">recipe_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">0_meta:</span>
-<span class="s2">  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}</span>
+<span class="s2">  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}</span>
 <span class="s2">1_data:</span>
-<span class="s2">  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}</span>
+<span class="s2">  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}</span>
 <span class="s2">  leaf_config:</span>
 <span class="s2">    target: y</span>
 <span class="s2">    target_horizons: [1]</span>

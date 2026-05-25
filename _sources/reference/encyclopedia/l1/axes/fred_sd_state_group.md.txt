@@ -27,7 +27,7 @@ All 50 states + DC (51 jurisdictions).
 
 FRED-SD state grouping: Default. Includes every US state and the District of Columbia. Use as the broadest possible FRED-SD panel; subset thereafter via state_selection if specific filtering is needed.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -49,7 +49,7 @@ Census Northeast Region (9 states): CT, ME, MA, NH, NJ, NY, PA, RI, VT.
 
 FRED-SD state grouping: Census Bureau's Region 1. Combines New England (CT, ME, MA, NH, RI, VT) and Mid-Atlantic (NJ, NY, PA) divisions. Heavily-populated, services-dominated regional economy.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -71,7 +71,7 @@ Census Midwest Region (12 states): IL, IN, IA, KS, MI, MN, MO, NE, ND, OH, SD, W
 
 FRED-SD state grouping: Census Bureau's Region 2. Combines East North Central (IL, IN, MI, OH, WI) and West North Central (IA, KS, MN, MO, NE, ND, SD) divisions. Manufacturing-heavy 'Rust Belt' + agricultural Plains economies.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -93,7 +93,7 @@ Census South Region (16 states + DC): AL, AR, DE, DC, FL, GA, KY, LA, MD, MS, NC
 
 FRED-SD state grouping: Census Bureau's Region 3. Combines South Atlantic (DE, DC, FL, GA, MD, NC, SC, VA, WV), East South Central (AL, KY, MS, TN), and West South Central (AR, LA, OK, TX) divisions. Largest Census region by population; mix of energy (TX, LA, OK) and Sun Belt service economies.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -115,7 +115,7 @@ Census West Region (13 states): AK, AZ, CA, CO, HI, ID, MT, NV, NM, OR, UT, WA, 
 
 FRED-SD state grouping: Census Bureau's Region 4. Combines Mountain (AZ, CO, ID, MT, NV, NM, UT, WY) and Pacific (AK, CA, HI, OR, WA) divisions. Tech-heavy Pacific Coast + commodity / tourism Mountain economies.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -137,7 +137,7 @@ Census New England Division (6 states): CT, ME, MA, NH, RI, VT.
 
 FRED-SD state grouping: Census Bureau's Division 1. Tight-knit historical region with finance / education / biotech concentration.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -159,7 +159,7 @@ Census Middle Atlantic Division (3 states): NJ, NY, PA.
 
 FRED-SD state grouping: Census Bureau's Division 2. Hosts the New York metropolitan financial centre; largest population Census division.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -181,7 +181,7 @@ Census East North Central Division (5 states): IL, IN, MI, OH, WI.
 
 FRED-SD state grouping: Census Bureau's Division 3. Great Lakes manufacturing belt; the historical 'Industrial Heartland' of the US.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -203,7 +203,7 @@ Census West North Central Division (7 states): IA, KS, MN, MO, NE, ND, SD.
 
 FRED-SD state grouping: Census Bureau's Division 4. Agricultural Great Plains with grain / livestock concentration.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -225,7 +225,7 @@ Census South Atlantic Division (8 states + DC): DE, DC, FL, GA, MD, NC, SC, VA, 
 
 FRED-SD state grouping: Census Bureau's Division 5. Atlantic Seaboard from Delaware to Florida; mix of government (DC, VA), tech (NC, MD), and Sun Belt service economies (FL, GA).
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -247,7 +247,7 @@ Census East South Central Division (4 states): AL, KY, MS, TN.
 
 FRED-SD state grouping: Census Bureau's Division 6. Tennessee Valley region; automotive-supplier and traditional manufacturing concentration.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -269,7 +269,7 @@ Census West South Central Division (4 states): AR, LA, OK, TX.
 
 FRED-SD state grouping: Census Bureau's Division 7. Energy-dominated regional economy (TX, LA, OK oil & gas).
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -291,7 +291,7 @@ Census Mountain Division (8 states): AZ, CO, ID, MT, NV, NM, UT, WY.
 
 FRED-SD state grouping: Census Bureau's Division 8. Mountain West; mining, tourism (NV, CO, UT), and tech-corridor (CO, UT) economies.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -313,7 +313,7 @@ Census Pacific Division (5 states): AK, CA, HI, OR, WA.
 
 FRED-SD state grouping: Census Bureau's Division 9. Pacific Coast tech concentration (CA, WA, OR) + non-contiguous states (AK, HI).
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -335,7 +335,7 @@ Contiguous 48 states + DC (excludes AK, HI).
 
 FRED-SD state grouping: Drops Alaska and Hawaii from the all-states panel. Useful when the analysis assumes a contiguous geographic structure (e.g. spatial econometrics with adjacency weights).
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 
@@ -357,7 +357,7 @@ User-supplied state list (leaf_config.custom_state_list).
 
 FRED-SD state grouping: Bespoke regional groupings -- e.g. 'oil-producing states' (TX, OK, ND, NM, LA), 'eurozone-equivalent BEA regions', or 'states with right-to-work laws'. Reads the explicit state list from ``leaf_config.custom_state_list``.
 
-This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_scope`` to control whether predictors follow the target's geographic scope or use a different state set.
+This option selects which state-level series enter the predictor / target panels. The grouping does not affect national-aggregate variables; combine with ``predictor_geography_policy`` to control whether predictors follow the target's geographic scope or use a different state set.
 
 **When to use**
 

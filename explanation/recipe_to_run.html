@@ -546,7 +546,7 @@ then L2, then L3, then L4, then L5, then L6 (if enabled), then L7 (if
 enabled), then L8. Each layer’s output is passed to the next layer as a
 typed sink.</p>
 <p>The per-cell seed is derived at this stage. If the recipe sets
-<code class="docutils literal notranslate"><span class="pre">reproducibility_mode:</span> <span class="pre">seeded_reproducible</span></code>, the runtime computes
+<code class="docutils literal notranslate"><span class="pre">reproducibility_policy:</span> <span class="pre">seeded_reproducible</span></code>, the runtime computes
 <code class="docutils literal notranslate"><span class="pre">cell_seed</span> <span class="pre">=</span> <span class="pre">base_seed</span> <span class="pre">+</span> <span class="pre">cell_position</span></code> and injects it into every layer
 that uses randomness. The position is the cell’s index in the expanded grid,
 assigned deterministically at Stage 3.</p>

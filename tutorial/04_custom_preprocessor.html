@@ -658,13 +658,13 @@ each forecast origin, after all built-in L2 operations finish.</p>
 <span class="s2">0_meta:</span>
 <span class="s2">  fixed_axes:</span>
 <span class="s2">    failure_policy: fail_fast</span>
-<span class="s2">    reproducibility_mode: seeded_reproducible</span>
+<span class="s2">    reproducibility_policy: seeded_reproducible</span>
 <span class="s2">  leaf_config:</span>
 <span class="s2">    random_seed: 0</span>
 
 <span class="s2">1_data:</span>
 <span class="s2">  fixed_axes:</span>
-<span class="s2">    custom_source_policy: custom_panel_only</span>
+<span class="s2">    panel_composition: custom_panel_only</span>
 <span class="s2">    frequency: monthly</span>
 <span class="s2">    horizon_set: custom_list</span>
 <span class="s2">  leaf_config:</span>
@@ -725,12 +725,12 @@ each forecast origin, after all built-in L2 operations finish.</p>
 <span class="s2">    - id: src_y</span>
 <span class="s2">      type: source</span>
 <span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
-<span class="s2">    - id: fit_model</span>
+<span class="s2">    - id: fit_main</span>
 <span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
+<span class="s2">      op: fit</span>
 <span class="s2">      params:</span>
-<span class="s2">        family: ridge</span>
-<span class="s2">        forecast_strategy: direct</span>
+<span class="s2">        model: ridge</span>
+<span class="s2">        forecast_policy: direct</span>
 <span class="s2">        training_start_rule: expanding</span>
 <span class="s2">        refit_policy: every_origin</span>
 <span class="s2">        search_algorithm: none</span>
@@ -739,10 +739,10 @@ each forecast origin, after all built-in L2 operations finish.</p>
 <span class="s2">    - id: predict_model</span>
 <span class="s2">      type: step</span>
 <span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_model]</span>
+<span class="s2">      inputs: [fit_main]</span>
 <span class="s2">  sinks:</span>
 <span class="s2">    l4_forecasts_v1: predict_model</span>
-<span class="s2">    l4_model_artifacts_v1: fit_model</span>
+<span class="s2">    l4_model_artifacts_v1: fit_main</span>
 <span class="s2">    l4_training_metadata_v1: auto</span>
 
 <span class="s2">5_evaluation:</span>

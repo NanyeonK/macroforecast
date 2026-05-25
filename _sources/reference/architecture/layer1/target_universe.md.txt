@@ -48,7 +48,7 @@ The current all-column dictionaries live in
 [5.1 FRED-MD](../../recipe_api/fred_datasets.md) and
 [5.2 FRED-QD](../../recipe_api/fred_datasets.md).
 
-For `custom_source_policy: custom_panel_only` or standalone `dataset: fred_sd`,
+For `panel_composition: custom_panel_only` or standalone `dataset: fred_sd`,
 this axis is hidden by default. Custom-only x columns are defined by the custom
 file itself. FRED-SD x columns are defined by state scope and series scope in
 [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md), with the current

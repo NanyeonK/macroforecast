@@ -33,7 +33,7 @@ Output:
 - `manifest_format: json`;
 - `artifact_granularity: per_cell`;
 - `naming_convention: descriptive`;
-- `descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}"`.
+- `descriptive_naming_template: "{model_family}_{forecast_policy}_h{horizon}"`.
 
 When `saved_objects` is omitted, L8 derives it from the active recipe:
 
@@ -71,7 +71,7 @@ When `saved_objects` is omitted, L8 derives it from the active recipe:
     naming_convention: descriptive
   leaf_config:
     output_directory: ./paper_replication/main/
-    descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}_{combine_method}"
+    descriptive_naming_template: "{model_family}_{forecast_policy}_h{horizon}_{combine_method}"
 ```
 
 ## See encyclopedia

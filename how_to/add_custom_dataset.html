@@ -497,7 +497,7 @@
 <h2>Recipe snippet for a CSV file<a class="headerlink" href="#recipe-snippet-for-a-csv-file" title="Link to this heading">#</a></h2>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
+<span class="w">    </span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
 <span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
 <span class="w">    </span><span class="nt">horizon_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_list</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
@@ -523,7 +523,7 @@ where you call <code class="docutils literal notranslate"><span class="pre">mf.r
 This removes any dependency on external files:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
+<span class="w">    </span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
 <span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
 <span class="w">    </span><span class="nt">horizon_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_list</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
@@ -541,11 +541,11 @@ any external files.</p>
 <hr class="docutils" />
 <section id="adding-custom-series-to-fred">
 <h2>Adding custom series to FRED<a class="headerlink" href="#adding-custom-series-to-fred" title="Link to this heading">#</a></h2>
-<p>To run FRED-MD plus your own extra series, use <code class="docutils literal notranslate"><span class="pre">custom_source_policy:</span> <span class="pre">official_plus_custom</span></code>.
+<p>To run FRED-MD plus your own extra series, use <code class="docutils literal notranslate"><span class="pre">panel_composition:</span> <span class="pre">official_plus_custom</span></code>.
 The <code class="docutils literal notranslate"><span class="pre">custom_merge_rule</span></code> controls how the two panels are aligned:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">custom_source_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_plus_custom</span>
+<span class="w">    </span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_plus_custom</span>
 <span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
 <span class="w">    </span><span class="nt">horizon_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_list</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>

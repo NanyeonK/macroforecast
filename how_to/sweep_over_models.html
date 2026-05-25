@@ -477,9 +477,9 @@
 <h1>How to sweep over models<a class="headerlink" href="#how-to-sweep-over-models" title="Link to this heading">#</a></h1>
 <p>Run a sweep over multiple model families and collect per-cell metrics.</p>
 <hr class="docutils" />
-<section id="sweep-over-families-with-the-sweep-marker">
-<h2>Sweep over families with the <code class="docutils literal notranslate"><span class="pre">{sweep}</span></code> marker<a class="headerlink" href="#sweep-over-families-with-the-sweep-marker" title="Link to this heading">#</a></h2>
-<p>Place a <code class="docutils literal notranslate"><span class="pre">{sweep:</span> <span class="pre">[...]}</span></code> marker on the <code class="docutils literal notranslate"><span class="pre">family</span></code> parameter to run each family as
+<section id="sweep-over-models-with-the-sweep-marker">
+<h2>Sweep over models with the <code class="docutils literal notranslate"><span class="pre">{sweep}</span></code> marker<a class="headerlink" href="#sweep-over-models-with-the-sweep-marker" title="Link to this heading">#</a></h2>
+<p>Place a <code class="docutils literal notranslate"><span class="pre">{sweep:</span> <span class="pre">[...]}</span></code> marker on the <code class="docutils literal notranslate"><span class="pre">model</span></code> parameter to run each model as
 an independent cell. Each cell gets its own seed and produces its own evaluation
 artifact.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
@@ -488,13 +488,13 @@ artifact.</p>
 <span class="s2">0_meta:</span>
 <span class="s2">  fixed_axes:</span>
 <span class="s2">    failure_policy: fail_fast</span>
-<span class="s2">    reproducibility_mode: seeded_reproducible</span>
+<span class="s2">    reproducibility_policy: seeded_reproducible</span>
 <span class="s2">  leaf_config:</span>
 <span class="s2">    random_seed: 0</span>
 
 <span class="s2">1_data:</span>
 <span class="s2">  fixed_axes:</span>
-<span class="s2">    custom_source_policy: custom_panel_only</span>
+<span class="s2">    panel_composition: custom_panel_only</span>
 <span class="s2">    frequency: monthly</span>
 <span class="s2">    horizon_set: custom_list</span>
 <span class="s2">  leaf_config:</span>
@@ -553,15 +553,15 @@ artifact.</p>
 <span class="s2">    - id: src_y</span>
 <span class="s2">      type: source</span>
 <span class="s2">      selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}</span>
-<span class="s2">    - id: fit_model</span>
+<span class="s2">    - id: fit_main</span>
 <span class="s2">      type: step</span>
-<span class="s2">      op: fit_model</span>
+<span class="s2">      op: fit</span>
 <span class="s2">      params:</span>
-<span class="s2">        family: {sweep: [ar_p, ridge, random_forest]}</span>
+<span class="s2">        model: {sweep: [ar_p, ridge, random_forest]}</span>
 <span class="s2">        n_lag: 2</span>
 <span class="s2">        alpha: 1.0</span>
 <span class="s2">        n_estimators: 50</span>
-<span class="s2">        forecast_strategy: direct</span>
+<span class="s2">        forecast_policy: direct</span>
 <span class="s2">        training_start_rule: expanding</span>
 <span class="s2">        refit_policy: every_origin</span>
 <span class="s2">        search_algorithm: none</span>
@@ -570,10 +570,10 @@ artifact.</p>
 <span class="s2">    - id: predict_model</span>
 <span class="s2">      type: step</span>
 <span class="s2">      op: predict</span>
-<span class="s2">      inputs: [fit_model]</span>
+<span class="s2">      inputs: [fit_main]</span>
 <span class="s2">  sinks:</span>
 <span class="s2">    l4_forecasts_v1: predict_model</span>
-<span class="s2">    l4_model_artifacts_v1: fit_model</span>
+<span class="s2">    l4_model_artifacts_v1: fit_main</span>
 <span class="s2">    l4_training_metadata_v1: auto</span>
 
 <span class="s2">5_evaluation:</span>
@@ -599,11 +599,11 @@ families use the same target-only input path.</p>
 <p>Sweep <code class="docutils literal notranslate"><span class="pre">alpha</span></code> across values for ridge regression:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit</span>
 <span class="w">      </span><span class="nt">params</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
 <span class="w">        </span><span class="nt">alpha</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">sweep</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10.0</span><span class="p p-Indicator">]}</span>
-<span class="w">        </span><span class="nt">forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
+<span class="w">        </span><span class="nt">forecast_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
 <span class="w">        </span><span class="nt">training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expanding</span>
 <span class="w">        </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
 <span class="w">        </span><span class="nt">search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
@@ -611,8 +611,8 @@ families use the same target-only input path.</p>
 <span class="w">      </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">src_X</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">src_y</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
-<p>Combining a family sweep with a parameter sweep creates a combinatorial grid. With
-3 families and 4 alpha values, you get 12 cells.</p>
+<p>Combining a model sweep with a parameter sweep creates a combinatorial grid. With
+3 models and 4 alpha values, you get 12 cells.</p>
 </section>
 <hr class="docutils" />
 <section id="reading-sweep-results-into-a-summary-table">
@@ -682,7 +682,7 @@ families use the same target-only input path.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sweep-over-families-with-the-sweep-marker">Sweep over families with the <code class="docutils literal notranslate"><span class="pre">{sweep}</span></code> marker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sweep-over-models-with-the-sweep-marker">Sweep over models with the <code class="docutils literal notranslate"><span class="pre">{sweep}</span></code> marker</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sweeping-over-hyperparameter-values">Sweeping over hyperparameter values</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-sweep-results-into-a-summary-table">Reading sweep results into a summary table</a></li>
 </ul>

@@ -502,7 +502,7 @@ deliberately <em>out of scope</em>.</p>
 </section>
 <section id="seed-policy-modes-l0">
 <h2>Seed-policy modes (L0)<a class="headerlink" href="#seed-policy-modes-l0" title="Link to this heading">#</a></h2>
-<p>The L0 layer’s <code class="docutils literal notranslate"><span class="pre">reproducibility_mode</span></code> axis selects one of two regimes:</p>
+<p>The L0 layer’s <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code> axis selects one of two regimes:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Mode</p></th>
@@ -529,7 +529,7 @@ deliberately <em>out of scope</em>.</p>
 validator. Pass <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> explicitly when you want a non-zero base.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
+<span class="w">    </span><span class="nt">reproducibility_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
 </pre></div>
@@ -652,8 +652,8 @@ artifacts.</p>
 <td><p>byte-identical sinks (validated by <code class="docutils literal notranslate"><span class="pre">tests/core/test_v01_1_hot_patch.py::test_hash_sink_with_set_payload_is_stable_across_processes</span></code>, which rotates <code class="docutils literal notranslate"><span class="pre">PYTHONHASHSEED</span></code>)</p></td>
 <td><p>–</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_mode</span> <span class="pre">=</span> <span class="pre">parallel</span></code> cell loop</p></td>
-<td><p>byte-identical sinks vs. serial run for the same cells (validated by <code class="docutils literal notranslate"><span class="pre">tests/core/test_compute_mode_parallel.py::test_parallel_matches_serial_sink_hashes</span></code>)</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compute_policy</span> <span class="pre">=</span> <span class="pre">parallel</span></code> cell loop</p></td>
+<td><p>byte-identical sinks vs. serial run for the same cells (validated by <code class="docutils literal notranslate"><span class="pre">tests/core/test_compute_policy_parallel.py::test_parallel_matches_serial_sink_hashes</span></code>)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">l8_artifacts_v1</span></code> legitimately differs because of output paths</p></td>
 </tr>
 <tr class="row-odd"><td><p>Across machines with the same package version + lockfile</p></td>
@@ -699,7 +699,7 @@ artifacts.</p>
 <h3>Sweep variant ID -&gt; distinct seed<a class="headerlink" href="#sweep-variant-id-distinct-seed" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">recipe</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">0_meta:</span>
-<span class="s2">  fixed_axes: {reproducibility_mode: seeded_reproducible}</span>
+<span class="s2">  fixed_axes: {reproducibility_policy: seeded_reproducible}</span>
 <span class="s2">  leaf_config: </span><span class="si">{random_seed: 100}</span>
 <span class="s2">3_feature_engineering:</span>
 <span class="s2">  nodes:</span>
@@ -757,7 +757,7 @@ hash equality is not guaranteed.</p></li>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_v01_1_hot_patch.py</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">set</span></code> hashing across <code class="docutils literal notranslate"><span class="pre">PYTHONHASHSEED</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_compute_mode_parallel.py</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_compute_policy_parallel.py</span></code></p></td>
 <td><p>parallel run matches serial run</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/core/test_execute_recipe_dispatch.py</span></code></p></td>

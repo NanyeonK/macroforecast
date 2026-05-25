@@ -25,7 +25,7 @@
 
 Default: keep selected mixed-frequency columns on the experiment calendar.
 
-When a panel mixes monthly and quarterly columns (FRED-SD by default; any custom panel that declares per-column native frequency in metadata), the default representation flattens all columns to the experiment calendar via the L2.A ``quarterly_to_monthly_rule`` / ``monthly_to_quarterly_rule`` alignment rules. The panel emerges as a single rectangular frame; downstream layers see a uniform sampling grid.
+When a panel mixes monthly and quarterly columns (FRED-SD by default; any custom panel that declares per-column native frequency in metadata), the default representation flattens all columns to the experiment calendar via the L2.A ``quarterly_to_monthly_policy`` / ``monthly_to_quarterly_policy`` alignment rules. The panel emerges as a single rectangular frame; downstream layers see a uniform sampling grid.
 
 **When to use**
 

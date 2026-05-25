@@ -30,7 +30,7 @@ def mean_baseline(X_train, y_train, X_test, context):
     return float(y_train.mean())
 ```
 
-Reference in recipe: `params: {family: mean_baseline, ...}`
+Reference in recipe: `params: {model: mean_baseline, ...}`
 
 ### custom_preprocessor
 

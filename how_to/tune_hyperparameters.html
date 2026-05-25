@@ -494,10 +494,10 @@ future data leaks.</p>
 <span class="w">      </span><span class="nt">selector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">layer_ref</span><span class="p">:</span><span class="w"> </span><span class="nv">l3</span><span class="p p-Indicator">,</span><span class="nt"> sink_name</span><span class="p">:</span><span class="w"> </span><span class="nv">l3_features_v1</span><span class="p p-Indicator">,</span><span class="nt"> subset</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">component</span><span class="p">:</span><span class="w"> </span><span class="nv">y_final</span><span class="p p-Indicator">}}</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ridge</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit</span>
 <span class="w">      </span><span class="nt">params</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
-<span class="w">        </span><span class="nt">forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+<span class="w">        </span><span class="nt">forecast_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
 <span class="w">        </span><span class="nt">training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expanding</span>
 <span class="w">        </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
 <span class="w">        </span><span class="nt">search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grid</span>
@@ -547,10 +547,10 @@ fits AR models with lags from 1 to <code class="docutils literal notranslate"><s
 the criterion at each origin:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_ar</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">step</span>
-<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit_model</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit</span>
 <span class="w">      </span><span class="nt">params</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ar_p</span>
-<span class="w">        </span><span class="nt">forecast_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
+<span class="w">        </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ar_p</span>
+<span class="w">        </span><span class="nt">forecast_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">direct</span>
 <span class="w">        </span><span class="nt">training_start_rule</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expanding</span>
 <span class="w">        </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
 <span class="w">        </span><span class="nt">search_algorithm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bic</span>

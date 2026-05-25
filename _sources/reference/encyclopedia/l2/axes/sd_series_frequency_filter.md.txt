@@ -65,7 +65,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Keep both monthly and quarterly FRED-SD series.
 
-Default; defers to the L2.A frequency-alignment rules (``monthly_to_quarterly_rule`` / ``quarterly_to_monthly_rule``) to render the mixed-frequency panel into a single grid.
+Default; defers to the L2.A frequency-alignment rules (``monthly_to_quarterly_policy`` / ``quarterly_to_monthly_policy``) to render the mixed-frequency panel into a single grid.
 
 **When to use**
 

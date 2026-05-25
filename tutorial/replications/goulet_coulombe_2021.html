@@ -493,7 +493,7 @@ forecasting horse race. The full MRF / GTVP route lives at
 </thead>
 <tbody>
 <tr class="row-even"><td><p>L0</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">failure_policy=fail_fast</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_mode=seeded_reproducible</span></code>, <code class="docutils literal notranslate"><span class="pre">random_seed=42</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">failure_policy=fail_fast</span></code>, <code class="docutils literal notranslate"><span class="pre">reproducibility_policy=seeded_reproducible</span></code>, <code class="docutils literal notranslate"><span class="pre">random_seed=42</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target=INDPRO</span></code>, <code class="docutils literal notranslate"><span class="pre">target_horizons=[1,</span> <span class="pre">3,</span> <span class="pre">6,</span> <span class="pre">12]</span></code>, <code class="docutils literal notranslate"><span class="pre">information_set_type=final_revised_data</span></code>, custom_panel_inline (smoke; see below)</p></td>
@@ -505,7 +505,7 @@ forecasting horse race. The full MRF / GTVP route lives at
 <td><p>Lag features + <code class="docutils literal notranslate"><span class="pre">target_construction(direct,</span> <span class="pre">h)</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>L4</p></td>
-<td><p>Ridge (<code class="docutils literal notranslate"><span class="pre">alpha=1.0</span></code>) + AR(BIC) benchmark, expanding-window walk-forward, <code class="docutils literal notranslate"><span class="pre">refit_policy=every_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_strategy=direct</span></code></p></td>
+<td><p>Ridge (<code class="docutils literal notranslate"><span class="pre">alpha=1.0</span></code>) + AR(BIC) benchmark, expanding-window walk-forward, <code class="docutils literal notranslate"><span class="pre">refit_policy=every_origin</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_policy=direct</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>L5</p></td>
 <td><p>MSE primary + relative metrics (vs AR benchmark)</p></td>
@@ -557,8 +557,8 @@ is expected. Regenerate your manifest at v0.9.1 to establish the new baseline.</
 the full FRED-MD vintage), swap two YAML keys:</p>
 <div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w"> </span>1_data:
 <span class="w"> </span>  fixed_axes:
-<span class="gd">-    custom_source_policy: custom_panel_only</span>
-<span class="gi">+    custom_source_policy: official_only</span>
+<span class="gd">-    panel_composition: custom_panel_only</span>
+<span class="gi">+    panel_composition: official_only</span>
 <span class="gi">+    dataset: fred_md</span>
 <span class="w"> </span>    frequency: monthly
 <span class="w"> </span>    horizon_set: custom_list
@@ -578,7 +578,7 @@ manager (see
 for vintage configuration) and the recipe runs the actual paper
 horse race.</p>
 <p>To extend to MRF (the paper’s headline result), add another L4 fit
-node with <code class="docutils literal notranslate"><span class="pre">family:</span> <span class="pre">macroeconomic_random_forest</span></code> alongside the ridge
+node with <code class="docutils literal notranslate"><span class="pre">model:</span> <span class="pre">macroeconomic_random_forest</span></code> alongside the ridge
 (<code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code>). See
 <a class="reference internal" href="#../encyclopedia/l4/index.md"><span class="xref myst">encyclopedia L4</span></a> for the full family
 list.</p>

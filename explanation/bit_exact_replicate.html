@@ -521,12 +521,12 @@ ensuring that cells cannot interfere with each other’s random state.</p>
 <p>To enable seed propagation, the recipe must set:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">0_meta</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">reproducibility_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
+<span class="w">    </span><span class="nt">reproducibility_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">seeded_reproducible</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
 </pre></div>
 </div>
-<p>Without <code class="docutils literal notranslate"><span class="pre">reproducibility_mode:</span> <span class="pre">seeded_reproducible</span></code>, stochastic layers
+<p>Without <code class="docutils literal notranslate"><span class="pre">reproducibility_policy:</span> <span class="pre">seeded_reproducible</span></code>, stochastic layers
 receive no deterministic seed and the replication guarantee does not hold.
 The manifest records the mode that was in effect, so a reader auditing a
 manifest can immediately see whether the run was seeded.</p>

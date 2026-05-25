@@ -1,0 +1,1217 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>model &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+    <script src="../../../../_static/documentation_options.js?v=dfd5ba7c"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/encyclopedia/l4/axes/model';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="forecast_policy" href="forecast_policy.html" />
+    <link rel="prev" title="Layer L4 – Forecasting model" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a0" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../tutorial/index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../how_to/index.html">
+    How-to guides
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../explanation/index.html">
+    Explanation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../help.html">
+    Help
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../tutorial/index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../how_to/index.html">
+    How-to guides
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../explanation/index.html">
+    Explanation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../help.html">
+    Help
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../architecture/layer0/index.html">Layer 0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer0/study_scope.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer0/failure_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer0/reproducibility_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer0/compute_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer0/axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../architecture/layer1/index.html">Layer 1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/raw_source_cleaning.html">Raw Source Cleaning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/official_transforms.html">Official Transforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/frame_availability.html">Frame Availability</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer2/index.html">Layer 2: Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer3/index.html">Layer 3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer4/index.html">Layer 4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer5/index.html">Layer 5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer6/index.html">Layer 6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer7/index.html">Layer 7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer8/index.html">Layer 8: Output / Provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/foundation.html">Foundation Core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/philosophy.html">Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/layer_boundary_contract.html">Layer Boundary Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/recipe_layers.html">Recipe Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/artifacts_and_manifest.html">Artifacts And Manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../architecture/terminology.html">Terminology</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/standalone_functions/index.html">Standalone functions - namespace overview</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/navigator/index.html">Navigator Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/navigator/path_resolver.html">Path Resolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/navigator/compatibility_engine.html">Compatibility Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/navigator/replication_library.html">Replication Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/navigator/yaml_execution.html">YAML And Execution</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../recipe_schema/index.html">Recipe API</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../index.html">Encyclopedia</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l0/index.html">Layer L0  –  Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l0/axes/failure_policy.html"><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l0/axes/reproducibility_policy.html"><code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l0/axes/compute_policy.html"><code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l1/index.html">Layer L1  –  Data</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/panel_composition.html"><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1/axes/regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l1_5/index.html">Layer L1.5  –  Data summary</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/coverage_view.html"><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/summary_metrics.html"><code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/summary_split.html"><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/stationarity_test.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/stationarity_test_scope.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/missing_view.html"><code class="docutils literal notranslate"><span class="pre">missing_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/outlier_view.html"><code class="docutils literal notranslate"><span class="pre">outlier_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l1_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l2/index.html">Layer L2  –  Preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/sd_series_frequency_filter.html"><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/mixed_frequency_representation.html"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/quarterly_to_monthly_policy.html"><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/monthly_to_quarterly_policy.html"><code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/transform_policy.html"><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/sd_tcode_policy.html"><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/outlier_action.html"><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/imputation_policy.html"><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/imputation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">imputation_temporal_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2/axes/frame_edge_policy.html"><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/comparison_pair.html"><code class="docutils literal notranslate"><span class="pre">comparison_pair</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/distribution_metric.html"><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/distribution_view.html"><code class="docutils literal notranslate"><span class="pre">distribution_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/correlation_shift.html"><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/cleaning_summary_view.html"><code class="docutils literal notranslate"><span class="pre">cleaning_summary_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/t_code_application_log.html"><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l2_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l3/index.html">Layer L3  –  Feature engineering</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l3/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l3_5/index.html">Layer L3.5  –  Feature diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/comparison_stages.html"><code class="docutils literal notranslate"><span class="pre">comparison_stages</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/factor_view.html"><code class="docutils literal notranslate"><span class="pre">factor_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/dfm_diagnostics.html"><code class="docutils literal notranslate"><span class="pre">dfm_diagnostics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/feature_correlation.html"><code class="docutils literal notranslate"><span class="pre">feature_correlation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/lag_view.html"><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/marx_view.html"><code class="docutils literal notranslate"><span class="pre">marx_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/selection_view.html"><code class="docutils literal notranslate"><span class="pre">selection_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/stability_metric.html"><code class="docutils literal notranslate"><span class="pre">stability_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l3_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../index.html">Layer L4  –  Forecasting model</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="forecast_policy.html"><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="training_start_rule.html"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="refit_policy.html"><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="search_algorithm.html"><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pi_correction.html"><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l4_5/index.html">Layer L4.5  –  Generator diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/fit_view.html"><code class="docutils literal notranslate"><span class="pre">fit_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/fit_per_origin.html"><code class="docutils literal notranslate"><span class="pre">fit_per_origin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/forecast_scale_view.html"><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/back_transform_method.html"><code class="docutils literal notranslate"><span class="pre">back_transform_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/window_view.html"><code class="docutils literal notranslate"><span class="pre">window_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/coef_view_models.html"><code class="docutils literal notranslate"><span class="pre">coef_view_models</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/tuning_view.html"><code class="docutils literal notranslate"><span class="pre">tuning_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/ensemble_view.html"><code class="docutils literal notranslate"><span class="pre">ensemble_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/weights_over_time_method.html"><code class="docutils literal notranslate"><span class="pre">weights_over_time_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l4_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l5/index.html">Layer L5  –  Evaluation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/primary_metric.html"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/density_metrics.html"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l5/axes/report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l6/index.html">Layer L6  –  Statistical tests</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/equal_predictive_test.html"><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/loss_function.html"><code class="docutils literal notranslate"><span class="pre">loss_function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/model_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">model_pair_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/hln_correction.html"><code class="docutils literal notranslate"><span class="pre">hln_correction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/nested_test.html"><code class="docutils literal notranslate"><span class="pre">nested_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/nested_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/cw_adjustment.html"><code class="docutils literal notranslate"><span class="pre">cw_adjustment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/enc_test_one_sided.html"><code class="docutils literal notranslate"><span class="pre">enc_test_one_sided</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/cpa_test.html"><code class="docutils literal notranslate"><span class="pre">cpa_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/cpa_window_type.html"><code class="docutils literal notranslate"><span class="pre">cpa_window_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/cpa_conditioning_info.html"><code class="docutils literal notranslate"><span class="pre">cpa_conditioning_info</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/cpa_critical_value_method.html"><code class="docutils literal notranslate"><span class="pre">cpa_critical_value_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/multiple_model_test.html"><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/mcs_alpha.html"><code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/mmt_loss_function.html"><code class="docutils literal notranslate"><span class="pre">mmt_loss_function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/bootstrap_method.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/bootstrap_n_replications.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_n_replications</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/bootstrap_block_length.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_block_length</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/mcs_t_statistic.html"><code class="docutils literal notranslate"><span class="pre">mcs_t_statistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/spa_studentization.html"><code class="docutils literal notranslate"><span class="pre">spa_studentization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/stepm_alpha.html"><code class="docutils literal notranslate"><span class="pre">stepm_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/density_test.html"><code class="docutils literal notranslate"><span class="pre">density_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/interval_test.html"><code class="docutils literal notranslate"><span class="pre">interval_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/coverage_levels.html"><code class="docutils literal notranslate"><span class="pre">coverage_levels</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/pit_n_bins.html"><code class="docutils literal notranslate"><span class="pre">pit_n_bins</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/pit_test_horizon_dependence.html"><code class="docutils literal notranslate"><span class="pre">pit_test_horizon_dependence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/direction_test.html"><code class="docutils literal notranslate"><span class="pre">direction_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/direction_threshold.html"><code class="docutils literal notranslate"><span class="pre">direction_threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/direction_alpha.html"><code class="docutils literal notranslate"><span class="pre">direction_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/residual_test.html"><code class="docutils literal notranslate"><span class="pre">residual_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/residual_lag_count.html"><code class="docutils literal notranslate"><span class="pre">residual_lag_count</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/residual_test_scope.html"><code class="docutils literal notranslate"><span class="pre">residual_test_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l6/axes/residual_alpha.html"><code class="docutils literal notranslate"><span class="pre">residual_alpha</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l7/index.html">Layer L7  –  Interpretation / importance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/output_table_format.html"><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/figure_type.html"><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/top_k_features_to_show.html"><code class="docutils literal notranslate"><span class="pre">top_k_features_to_show</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/precision_digits.html"><code class="docutils literal notranslate"><span class="pre">precision_digits</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/figure_format.html"><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/latex_table_export.html"><code class="docutils literal notranslate"><span class="pre">latex_table_export</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/markdown_table_export.html"><code class="docutils literal notranslate"><span class="pre">markdown_table_export</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l7/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../l8/index.html">Layer L8  –  Output / provenance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/export_format.html"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/compression.html"><code class="docutils literal notranslate"><span class="pre">compression</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/saved_objects.html"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/model_artifacts_format.html"><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/provenance_fields.html"><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/manifest_format.html"><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/artifact_granularity.html"><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../l8/axes/naming_convention.html"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../public_api.html">Public Python API</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Encyclopedia</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Layer L4  –  Forecasting model</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis"><code class="docutils literal notranslate"><span class="pre">model</span></code></span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="model">
+<h1><code class="docutils literal notranslate"><span class="pre">model</span></code><a class="headerlink" href="#model" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to L4</span></a> | <a class="reference internal" href="../../browse_by_axis.html"><span class="std std-doc">Browse all axes</span></a> | <a class="reference internal" href="../../browse_by_option.html"><span class="std std-doc">Browse all options</span></a></p>
+<blockquote>
+<div><p>Axis <code class="docutils literal notranslate"><span class="pre">model</span></code> on sub-layer <code class="docutils literal notranslate"><span class="pre">L4_A_model_selection</span></code> (layer <code class="docutils literal notranslate"><span class="pre">l4</span></code>).</p>
+</div></blockquote>
+<section id="sub-layer">
+<h2>Sub-layer<a class="headerlink" href="#sub-layer" title="Link to this heading">#</a></h2>
+<p><strong>L4_A_model_selection</strong></p>
+</section>
+<section id="axis-metadata">
+<h2>Axis metadata<a class="headerlink" href="#axis-metadata" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Default: <code class="docutils literal notranslate"><span class="pre">'ridge'</span></code></p></li>
+<li><p>Sweepable: True</p></li>
+<li><p>Status: operational</p></li>
+</ul>
+</section>
+<section id="operational-status-summary">
+<h2>Operational status summary<a class="headerlink" href="#operational-status-summary" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Operational: 47 option(s)</p></li>
+<li><p>Future: 0 option(s)</p></li>
+</ul>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<section id="ar-p-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ar_p</span></code>  –  operational<a class="headerlink" href="#ar-p-operational" title="Link to this heading">#</a></h3>
+<p>Autoregressive AR(p) on the target.</p>
+<p>See <a class="reference internal" href="../model/ar_p.html"><span class="std std-doc">ar_p function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.ar_fit</span></code>.</p>
+</section>
+<section id="ols-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ols</span></code>  –  operational<a class="headerlink" href="#ols-operational" title="Link to this heading">#</a></h3>
+<p>Ordinary least squares – baseline linear regression.</p>
+<p>See <a class="reference internal" href="../model/ols.html"><span class="std std-doc">ols function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.ols_fit</span></code>.</p>
+</section>
+<section id="ridge-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ridge</span></code>  –  operational<a class="headerlink" href="#ridge-operational" title="Link to this heading">#</a></h3>
+<p>Ridge regression (L2-regularised OLS).</p>
+<p>See <a class="reference internal" href="../model/ridge.html"><span class="std std-doc">ridge function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.ridge_fit</span></code>.</p>
+</section>
+<section id="lasso-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso</span></code>  –  operational<a class="headerlink" href="#lasso-operational" title="Link to this heading">#</a></h3>
+<p>Lasso regression (L1-regularised OLS).</p>
+<p>See <a class="reference internal" href="../model/lasso.html"><span class="std std-doc">lasso function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.lasso_fit</span></code>.</p>
+</section>
+<section id="elastic-net-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>  –  operational<a class="headerlink" href="#elastic-net-operational" title="Link to this heading">#</a></h3>
+<p>Elastic net (L1 + L2 hybrid).</p>
+<p>See <a class="reference internal" href="../model/elastic_net.html"><span class="std std-doc">elastic_net function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.elastic_net_fit</span></code>.</p>
+</section>
+<section id="lasso-path-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code>  –  operational<a class="headerlink" href="#lasso-path-operational" title="Link to this heading">#</a></h3>
+<p>Lasso with CV-selected alpha (LassoCV).</p>
+<p>See <a class="reference internal" href="../model/lasso_path.html"><span class="std std-doc">lasso_path function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.lasso_path_fit</span></code>.</p>
+</section>
+<section id="bayesian-ridge-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code>  –  operational<a class="headerlink" href="#bayesian-ridge-operational" title="Link to this heading">#</a></h3>
+<p>Bayesian ridge with empirical-Bayes prior.</p>
+<p>See <a class="reference internal" href="../model/bayesian_ridge.html"><span class="std std-doc">bayesian_ridge function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.bayesian_ridge_fit</span></code>.</p>
+</section>
+<section id="glmboost-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">glmboost</span></code>  –  operational<a class="headerlink" href="#glmboost-operational" title="Link to this heading">#</a></h3>
+<p>Componentwise L2-boosting with linear base learners.</p>
+<p>See <a class="reference internal" href="../model/glmboost.html"><span class="std std-doc">glmboost function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.glmboost_fit</span></code>.</p>
+</section>
+<section id="huber-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">huber</span></code>  –  operational<a class="headerlink" href="#huber-operational" title="Link to this heading">#</a></h3>
+<p>Huber regression (robust to outliers).</p>
+<p>See <a class="reference internal" href="../model/huber.html"><span class="std std-doc">huber function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.huber_fit</span></code>.</p>
+</section>
+<section id="var-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">var</span></code>  –  operational<a class="headerlink" href="#var-operational" title="Link to this heading">#</a></h3>
+<p>Vector autoregression VAR(p).</p>
+<p>See <a class="reference internal" href="../model/var.html"><span class="std std-doc">var function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.var_fit</span></code>.</p>
+</section>
+<section id="factor-augmented-ar-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code>  –  operational<a class="headerlink" href="#factor-augmented-ar-operational" title="Link to this heading">#</a></h3>
+<p>Factor-augmented AR (PCA factors + AR lags on target).</p>
+<p>See <a class="reference internal" href="../model/factor_augmented_ar.html"><span class="std std-doc">factor_augmented_ar function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.far_fit</span></code>.</p>
+</section>
+<section id="principal-component-regression-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">principal_component_regression</span></code>  –  operational<a class="headerlink" href="#principal-component-regression-operational" title="Link to this heading">#</a></h3>
+<p>Principal component regression (PCA → OLS).</p>
+<p>See <a class="reference internal" href="../model/principal_component_regression.html"><span class="std std-doc">principal_component_regression function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.pcr_fit</span></code>.</p>
+</section>
+<section id="decision-tree-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code>  –  operational<a class="headerlink" href="#decision-tree-operational" title="Link to this heading">#</a></h3>
+<p>Single decision tree (sklearn) or Slow-Growing Tree (SGT, in-fit shrinkage).</p>
+<p>Cheapest non-linear model. Useful as an ablation against random forests / boosting – if a single tree matches RF performance, the ensemble isn’t buying much.</p>
+<p><strong>v0.9 sub-axis <code class="docutils literal notranslate"><span class="pre">params.split_shrinkage</span></code> = η</strong> – per-split soft-weight learning rate. <code class="docutils literal notranslate"><span class="pre">0.0</span></code> (default) keeps the standard greedy sklearn CART. Non-zero values activate <strong>Slow-Growing Trees</strong> (Goulet Coulombe 2024 — operational v0.9.1 dev-stage v0.9.0B-6): a <em>soft-weighted</em> tree where rows on the side that does not satisfy the split rule receive weight <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">−</span> <span class="pre">η)</span></code> instead of 0. Implements Algorithm 1 from the paper exactly: leaf weights propagate multiplicatively through every split, the Herfindahl index <code class="docutils literal notranslate"><span class="pre">H_l</span> <span class="pre">=</span> <span class="pre">Σ(ω²)/(Σω)²</span></code> of the leaf weight vector controls stopping, and the leaf prediction is the weighted mean.</p>
+<p>Limit cases (verified by tests):</p>
+<ul class="simple">
+<li><p>η = 1.0 → recovers standard CART (hard splits).</p></li>
+<li><p>η ≈ 0.1, H̄ ≈ 0.05 → SGT regime (‘matches RF on Linear DGP at high R²’ per paper Figure 2).</p></li>
+</ul>
+<p><strong>Sub-axis params</strong> (only consulted when split_shrinkage ≠ 0):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">herfindahl_threshold</span></code> = H̄ (default 0.25; smaller → deeper tree). Practice: <code class="docutils literal notranslate"><span class="pre">{0.05,</span> <span class="pre">0.1,</span> <span class="pre">0.25}</span></code> per paper.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eta_depth_step</span></code> – paper rule-of-thumb increases η by <code class="docutils literal notranslate"><span class="pre">eta_depth_step·depth</span></code> per level (default 0.0 keeps η constant).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_depth</span></code> – additional safety bound on tree depth.</p></li>
+</ul>
+<p><strong>Note</strong>: sklearn <code class="docutils literal notranslate"><span class="pre">DecisionTreeRegressor</span></code> cannot reproduce SGT via post-fit leaf-multiplication because the <em>splits themselves</em> depend on soft weights (every row, including rule-violators, contributes to the SSE objective). The custom helper <code class="docutils literal notranslate"><span class="pre">_SlowGrowingTree</span></code> implements the soft-weighted CART from scratch.</p>
+<p><strong>When to use</strong></p>
+<p>Ablation studies; cheap non-linear baselines; SLOTH single-tree replacement for RF on small samples.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Breiman, Friedman, Stone &amp; Olshen (1984) ‘Classification and Regression Trees’, CRC Press.</p></li>
+<li><p>Goulet Coulombe (2024) ‘Slow-Growing Trees’, in Machine Learning for Econometrics and Related Topics, Studies in Systems, Decision and Control 508 (Springer). doi:10.1007/978-3-031-43601-7_4.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="random-forest-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">random_forest</span></code>  –  operational<a class="headerlink" href="#random-forest-operational" title="Link to this heading">#</a></h3>
+<p>Random forest (sklearn).</p>
+<p>See <a class="reference internal" href="../model/random_forest.html"><span class="std std-doc">random_forest function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.random_forest_fit</span></code>.</p>
+</section>
+<section id="extra-trees-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>  –  operational<a class="headerlink" href="#extra-trees-operational" title="Link to this heading">#</a></h3>
+<p>Extremely randomized trees (sklearn).</p>
+<p>See <a class="reference internal" href="../model/extra_trees.html"><span class="std std-doc">extra_trees function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.extra_trees_fit</span></code>.</p>
+</section>
+<section id="gradient-boosting-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code>  –  operational<a class="headerlink" href="#gradient-boosting-operational" title="Link to this heading">#</a></h3>
+<p>Gradient-boosted regression trees (sklearn).</p>
+<p>See <a class="reference internal" href="../model/gradient_boosting.html"><span class="std std-doc">gradient_boosting function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.gradient_boosting_fit</span></code>.</p>
+</section>
+<section id="xgboost-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">xgboost</span></code>  –  operational<a class="headerlink" href="#xgboost-operational" title="Link to this heading">#</a></h3>
+<p>XGBoost gradient-boosted trees (optional dependency).</p>
+<p>See <a class="reference internal" href="../model/xgboost.html"><span class="std std-doc">xgboost function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.xgboost_fit</span></code>.</p>
+</section>
+<section id="lightgbm-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>  –  operational<a class="headerlink" href="#lightgbm-operational" title="Link to this heading">#</a></h3>
+<p>LightGBM gradient-boosted trees (optional dependency).</p>
+<p>See <a class="reference internal" href="../model/lightgbm.html"><span class="std std-doc">lightgbm function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.lightgbm_fit</span></code>.</p>
+</section>
+<section id="catboost-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">catboost</span></code>  –  operational<a class="headerlink" href="#catboost-operational" title="Link to this heading">#</a></h3>
+<p>CatBoost gradient-boosted trees (optional dependency).</p>
+<p>See <a class="reference internal" href="../model/catboost.html"><span class="std std-doc">catboost function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.catboost_fit</span></code>.</p>
+</section>
+<section id="svr-linear-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code>  –  operational<a class="headerlink" href="#svr-linear-operational" title="Link to this heading">#</a></h3>
+<p>Support vector regression with linear kernel.</p>
+<p>See <a class="reference internal" href="../model/svr_linear.html"><span class="std std-doc">svr_linear function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.svr_linear_fit</span></code>.</p>
+</section>
+<section id="svr-rbf-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code>  –  operational<a class="headerlink" href="#svr-rbf-operational" title="Link to this heading">#</a></h3>
+<p>Support vector regression with RBF kernel.</p>
+<p>See <a class="reference internal" href="../model/svr_rbf.html"><span class="std std-doc">svr_rbf function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.svr_rbf_fit</span></code>.</p>
+</section>
+<section id="svr-poly-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code>  –  operational<a class="headerlink" href="#svr-poly-operational" title="Link to this heading">#</a></h3>
+<p>Support vector regression with polynomial kernel.</p>
+<p>See <a class="reference internal" href="../model/svr_poly.html"><span class="std std-doc">svr_poly function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.svr_poly_fit</span></code>.</p>
+</section>
+<section id="kernel-ridge-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code>  –  operational<a class="headerlink" href="#kernel-ridge-operational" title="Link to this heading">#</a></h3>
+<p>Kernel Ridge Regression – closed-form non-linear ridge in the dual.</p>
+<p>See <a class="reference internal" href="../model/kernel_ridge.html"><span class="std std-doc">kernel_ridge function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.kernel_ridge_fit</span></code>.</p>
+</section>
+<section id="mlp-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mlp</span></code>  –  operational<a class="headerlink" href="#mlp-operational" title="Link to this heading">#</a></h3>
+<p>Multi-layer perceptron (sklearn).</p>
+<p>See <a class="reference internal" href="../model/mlp.html"><span class="std std-doc">mlp function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.mlp_fit</span></code>.</p>
+</section>
+<section id="lstm-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">lstm</span></code>  –  operational<a class="headerlink" href="#lstm-operational" title="Link to this heading">#</a></h3>
+<p>Long short-term memory recurrent NN (torch, optional).</p>
+<p>See <a class="reference internal" href="../model/lstm.html"><span class="std std-doc">lstm function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.lstm_fit</span></code>.</p>
+</section>
+<section id="gru-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">gru</span></code>  –  operational<a class="headerlink" href="#gru-operational" title="Link to this heading">#</a></h3>
+<p>Gated recurrent unit RNN (torch, optional).</p>
+<p>See <a class="reference internal" href="../model/gru.html"><span class="std std-doc">gru function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.gru_fit</span></code>.</p>
+</section>
+<section id="transformer-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">transformer</span></code>  –  operational<a class="headerlink" href="#transformer-operational" title="Link to this heading">#</a></h3>
+<p>Transformer encoder regressor (torch, optional).</p>
+<p>See <a class="reference internal" href="../model/transformer.html"><span class="std std-doc">transformer function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.transformer_fit</span></code>.</p>
+</section>
+<section id="knn-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">knn</span></code>  –  operational<a class="headerlink" href="#knn-operational" title="Link to this heading">#</a></h3>
+<p>k-nearest-neighbours regression.</p>
+<p>See <a class="reference internal" href="../model/knn.html"><span class="std std-doc">knn function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.knn_fit</span></code>.</p>
+</section>
+<section id="bvar-minnesota-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>  –  operational<a class="headerlink" href="#bvar-minnesota-operational" title="Link to this heading">#</a></h3>
+<p>Bayesian VAR with Minnesota prior shrinkage.</p>
+<p>See <a class="reference internal" href="../model/bvar_minnesota.html"><span class="std std-doc">bvar_minnesota function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.bvar_minnesota_fit</span></code>.</p>
+</section>
+<section id="bvar-normal-inverse-wishart-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>  –  operational<a class="headerlink" href="#bvar-normal-inverse-wishart-operational" title="Link to this heading">#</a></h3>
+<p>Bayesian VAR with Normal-Inverse-Wishart prior.</p>
+<p>See <a class="reference internal" href="../model/bvar_normal_inverse_wishart.html"><span class="std std-doc">bvar_normal_inverse_wishart function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.bvar_niw_fit</span></code>.</p>
+</section>
+<section id="factor-augmented-var-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code>  –  operational<a class="headerlink" href="#factor-augmented-var-operational" title="Link to this heading">#</a></h3>
+<p>Factor-augmented VAR (Bernanke-Boivin-Eliasz 2005).</p>
+<p>See <a class="reference internal" href="../model/factor_augmented_var.html"><span class="std std-doc">factor_augmented_var function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.favar_fit</span></code>.</p>
+</section>
+<section id="macroeconomic-random-forest-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>  –  operational<a class="headerlink" href="#macroeconomic-random-forest-operational" title="Link to this heading">#</a></h3>
+<p>Goulet Coulombe (2024) MRF: random walk regularised forest with per-leaf local linear regression and Block Bayesian Bootstrap forecast ensembles.</p>
+<p>Macroeconomic Random Forest. Each leaf fits a local linear regression of y on the state vector S; coefficient series are smoothed via random-walk regularisation (<code class="docutils literal notranslate"><span class="pre">rw_regul</span></code> parameter); forecast ensembles use the Block Bayesian Bootstrap (Taddy 2015 extension). Surfaces Generalised Time-Varying Parameters (GTVPs) via the L7 <code class="docutils literal notranslate"><span class="pre">mrf_gtvp</span></code> op.</p>
+<p>Backed by Ryan Lucas’s reference implementation, vendored under <code class="docutils literal notranslate"><span class="pre">macroforecast/_vendor/macro_random_forest/</span></code> with surgical numpy 2.x / pandas 2.x compatibility patches (no algorithmic changes). Upstream: https://github.com/RyanLucas3/MacroRandomForest. No extra required – the family works out of the box.</p>
+<p><strong>Citation requirement</strong>: research using this family must cite Goulet Coulombe (2024) ‘The Macroeconomy as a Random Forest’, Journal of Applied Econometrics (arXiv:2006.12724) and acknowledge the upstream implementation by Ryan Lucas (https://github.com/RyanLucas3/MacroRandomForest).</p>
+<p>Tunable params: <code class="docutils literal notranslate"><span class="pre">B</span></code> (bootstrap iterations, default 50), <code class="docutils literal notranslate"><span class="pre">ridge_lambda</span></code> (default 0.1), <code class="docutils literal notranslate"><span class="pre">rw_regul</span></code> (RW penalty 0..1, default 0.75), <code class="docutils literal notranslate"><span class="pre">mtry_frac</span></code> (default 1/3), <code class="docutils literal notranslate"><span class="pre">trend_push</span></code> (default 1), <code class="docutils literal notranslate"><span class="pre">quantile_rate</span></code> (default 0.3), <code class="docutils literal notranslate"><span class="pre">fast_rw</span></code> (default True), <code class="docutils literal notranslate"><span class="pre">parallelise</span></code> (default False), <code class="docutils literal notranslate"><span class="pre">n_cores</span></code> (default 1).</p>
+<p><strong>When to use</strong></p>
+<p>Macro forecasting with non-stationary parameter dynamics; alternative to switching models.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Goulet Coulombe, P. (2024) ‘The Macroeconomy as a Random Forest’, Journal of Applied Econometrics. arXiv:2006.12724.</p></li>
+<li><p>Lucas, R. (2022) ‘MacroRandomForest’ (Python implementation). https://github.com/RyanLucas3/MacroRandomForest. MIT licence.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#bvar-minnesota"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="dfm-mixed-mariano-murasawa-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>  –  operational<a class="headerlink" href="#dfm-mixed-mariano-murasawa-operational" title="Link to this heading">#</a></h3>
+<p>Mariano-Murasawa-style mixed-frequency dynamic factor model.</p>
+<p>See <a class="reference internal" href="../model/dfm_mixed_mariano_murasawa.html"><span class="std std-doc">dfm_mixed_mariano_murasawa function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.dfm_fit</span></code>.</p>
+</section>
+<section id="quantile-regression-forest-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code>  –  operational<a class="headerlink" href="#quantile-regression-forest-operational" title="Link to this heading">#</a></h3>
+<p>Meinshausen (2006) quantile regression forest.</p>
+<p>Records the per-leaf empirical training-target distribution and forecasts arbitrary quantiles by averaging leaf-conditional CDFs. Surfaces <code class="docutils literal notranslate"><span class="pre">forecast_intervals</span></code> directly without a Gaussian shortcut. Pairs with <code class="docutils literal notranslate"><span class="pre">forecast_object:</span> <span class="pre">quantile</span></code>.</p>
+<p><strong>When to use</strong></p>
+<p>Growth-at-risk / VaR studies; density forecasting.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Meinshausen (2006) ‘Quantile Regression Forests’, JMLR 7.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference external" href="https://scikit-learn.org/stable/modules/ensemble.html#bagging" title="scikit-learn 1.8"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">bagging</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="bagging-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">bagging</span></code>  –  operational<a class="headerlink" href="#bagging-operational" title="Link to this heading">#</a></h3>
+<p>Bootstrap-aggregating wrapper around any base family; supports Booging.</p>
+<p><code class="docutils literal notranslate"><span class="pre">params.base_family</span></code> selects the base estimator; <code class="docutils literal notranslate"><span class="pre">params.n_estimators</span></code> (default 50) bootstrap resamples are fit; predict averages. <code class="docutils literal notranslate"><span class="pre">predict_quantiles</span></code> surfaces empirical bag-quantiles.</p>
+<p><strong>v0.9 sub-axis <code class="docutils literal notranslate"><span class="pre">params.strategy</span></code></strong> – bag composition strategy:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">standard</span></code> (default) – plain Breiman (1996) bagging; i.i.d. bootstrap with replacement.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">block</span></code> (operational v0.8.9) – <em>circular</em> moving-block bootstrap (Künsch 1989 variant: block starts wrap at n via modulo) for serially-correlated panels (Taddy 2015 ext. used in MRF).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">booging</span></code> (operational v0.9.1) – Goulet Coulombe (2024) ‘To Bag is to Prune’. Outer <code class="docutils literal notranslate"><span class="pre">B</span></code> bags of (intentionally over-fitted) inner Stochastic Gradient Boosted Trees + Data Augmentation: each predictor column is duplicated as <code class="docutils literal notranslate"><span class="pre">X̃_k</span> <span class="pre">=</span> <span class="pre">X_k</span> <span class="pre">+</span> <span class="pre">N(0,</span> <span class="pre">(σ_k</span> <span class="pre">·</span> <span class="pre">da_noise_frac)²)</span></code>; per-bag column-drop of rate <code class="docutils literal notranslate"><span class="pre">da_drop_rate</span></code> (default 0.2); inner SGB at <code class="docutils literal notranslate"><span class="pre">inner_n_estimators=500,</span> <span class="pre">inner_learning_rate=0.1,</span> <span class="pre">inner_max_depth=4,</span> <span class="pre">inner_subsample=0.5</span></code>. Sampling without replacement at <code class="docutils literal notranslate"><span class="pre">max_samples=0.75</span></code>. Outer <code class="docutils literal notranslate"><span class="pre">n_estimators=B</span></code> (default 100) replaces tuning the boosting depth <code class="docutils literal notranslate"><span class="pre">S</span></code> – the bag-prune theorem (paper §2) lets us over-fit the inner SGB and let the bag average prune. Helper <code class="docutils literal notranslate"><span class="pre">_BoogingWrapper</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sequential_residual</span></code> – legacy alias for <code class="docutils literal notranslate"><span class="pre">booging</span></code> retained for back-compat. Pre-2026-05-07 plan sketch (“K rounds bag-on-residuals”) was an inaccurate description of the same paper’s algorithm; the option now routes to the outer-bagging-of-inner-SGB construction.</p></li>
+</ul>
+<p><strong>When to use</strong></p>
+<p>Variance reduction on noisy series; quantile bands without quantile regression; Booging / block-bootstrap recipes; over-fit-then-bag pruning.</p>
+<p><strong>References</strong></p>
+<ul class="simple">
+<li><p>macroforecast design Part 2, L4: ‘forecasting model is the layer where every authoring iteration ends – pick family, tune, repeat.’</p></li>
+<li><p>Breiman (1996) ‘Bagging Predictors’, Machine Learning 24(2).</p></li>
+<li><p>Künsch (1989) ‘The jackknife and the bootstrap for general stationary observations’, Annals of Statistics 17(3) – moving-block variant.</p></li>
+<li><p>Goulet Coulombe (2024) ‘To Bag is to Prune’, arXiv:2008.07063 – Booging algorithm.</p></li>
+</ul>
+<p><strong>Related options</strong>: <a class="reference internal" href="#random-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></span></a>, <a class="reference internal" href="#extra-trees"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></span></a>, <a class="reference internal" href="#quantile-regression-forest"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></span></a>, <a class="reference internal" href="#gradient-boosting"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></span></a></p>
+<p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
+</section>
+<section id="mars-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">mars</span></code>  –  operational<a class="headerlink" href="#mars-operational" title="Link to this heading">#</a></h3>
+<p>Multivariate Adaptive Regression Splines (Friedman 1991).</p>
+<p>See <a class="reference internal" href="../model/mars.html"><span class="std std-doc">mars function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.mars_fit</span></code>.</p>
+</section>
+<section id="garch11-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">garch11</span></code>  –  operational<a class="headerlink" href="#garch11-operational" title="Link to this heading">#</a></h3>
+<p>GARCH(1,1) univariate conditional-variance model (Bollerslev 1986).</p>
+<p>See <a class="reference internal" href="../model/garch11.html"><span class="std std-doc">garch11 function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.garch11_fit</span></code>.</p>
+</section>
+<section id="egarch-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">egarch</span></code>  –  operational<a class="headerlink" href="#egarch-operational" title="Link to this heading">#</a></h3>
+<p>Exponential GARCH with leverage asymmetry (Nelson 1991).</p>
+<p>See <a class="reference internal" href="../model/egarch.html"><span class="std std-doc">egarch function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.egarch_fit</span></code>.</p>
+</section>
+<section id="realized-garch-with-rv-exog-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">realized_garch_with_rv_exog</span></code>  –  operational<a class="headerlink" href="#realized-garch-with-rv-exog-operational" title="Link to this heading">#</a></h3>
+<p>GARCH(1,1) with realised-variance series fed as the exogenous regressor (NOT Hansen-Huang-Shek 2012 joint MLE).</p>
+<p>See <a class="reference internal" href="../model/realized_garch_with_rv_exog.html"><span class="std std-doc">realized_garch_with_rv_exog function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.realized_garch_fit</span></code>.</p>
+</section>
+<section id="ets-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">ets</span></code>  –  operational<a class="headerlink" href="#ets-operational" title="Link to this heading">#</a></h3>
+<p>Exponential Smoothing State-Space (Hyndman-Koehler-Ord-Snyder 2008) – ETS family.</p>
+<p>See <a class="reference internal" href="../model/ets.html"><span class="std std-doc">ets function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.ets_fit</span></code>.</p>
+</section>
+<section id="theta-method-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">theta_method</span></code>  –  operational<a class="headerlink" href="#theta-method-operational" title="Link to this heading">#</a></h3>
+<p>Theta method (Assimakopoulos-Nikolopoulos 2000) – M3-competition winning baseline.</p>
+<p>See <a class="reference internal" href="../model/theta_method.html"><span class="std std-doc">theta_method function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.theta_fit</span></code>.</p>
+</section>
+<section id="holt-winters-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code>  –  operational<a class="headerlink" href="#holt-winters-operational" title="Link to this heading">#</a></h3>
+<p>Holt-Winters additive / multiplicative seasonal exponential smoothing.</p>
+<p>See <a class="reference internal" href="../model/holt_winters.html"><span class="std std-doc">holt_winters function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.holt_winters_fit</span></code>.</p>
+</section>
+<section id="midas-almon-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  operational<a class="headerlink" href="#midas-almon-operational" title="Link to this heading">#</a></h3>
+<p>MIDAS with Almon polynomial lag weights (Ghysels-Santa-Clara-Valkanov 2004).</p>
+<p>See <a class="reference internal" href="../model/midas_almon.html"><span class="std std-doc">midas_almon function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.midas_almon</span></code>.</p>
+</section>
+<section id="midas-beta-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  operational<a class="headerlink" href="#midas-beta-operational" title="Link to this heading">#</a></h3>
+<p>MIDAS with Beta distribution kernel lag weights (Ghysels-Sinko-Valkanov 2007).</p>
+<p>See <a class="reference internal" href="../model/midas_beta.html"><span class="std std-doc">midas_beta function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.midas_beta</span></code>.</p>
+</section>
+<section id="midas-step-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  operational<a class="headerlink" href="#midas-step-operational" title="Link to this heading">#</a></h3>
+<p>MIDAS with piecewise-constant step-function weights, OLS (Foroni-Marcellino-Schumacher 2015).</p>
+<p>See <a class="reference internal" href="../model/midas_step.html"><span class="std std-doc">midas_step function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.midas_step</span></code>.</p>
+</section>
+<section id="dfm-unrestricted-midas-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  operational<a class="headerlink" href="#dfm-unrestricted-midas-operational" title="Link to this heading">#</a></h3>
+<p>Unrestricted MIDAS (U-MIDAS) – OLS on all HF lags (Foroni-Marcellino-Schumacher 2015).</p>
+<p>See <a class="reference internal" href="../model/dfm_unrestricted_midas.html"><span class="std std-doc">dfm_unrestricted_midas function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.dfm_unrestricted_midas</span></code>.</p>
+</section>
+<section id="realized-garch-operational">
+<h3><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>  –  operational<a class="headerlink" href="#realized-garch-operational" title="Link to this heading">#</a></h3>
+<p>Hansen-Huang-Shek (2012) Realized GARCH – joint return + measurement MLE.</p>
+<p>See <a class="reference internal" href="../model/realized_garch.html"><span class="std std-doc">realized_garch function page</span></a> for full documentation + parameters + standalone usage. Standalone: <code class="docutils literal notranslate"><span class="pre">mf.functions.realized_garch</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Layer L4  –  Forecasting model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="forecast_policy.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sub-layer">Sub-layer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#axis-metadata">Axis metadata</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#operational-status-summary">Operational status summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ar-p-operational"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ols-operational"><code class="docutils literal notranslate"><span class="pre">ols</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ridge-operational"><code class="docutils literal notranslate"><span class="pre">ridge</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lasso-operational"><code class="docutils literal notranslate"><span class="pre">lasso</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#elastic-net-operational"><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lasso-path-operational"><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bayesian-ridge-operational"><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#glmboost-operational"><code class="docutils literal notranslate"><span class="pre">glmboost</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#huber-operational"><code class="docutils literal notranslate"><span class="pre">huber</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#var-operational"><code class="docutils literal notranslate"><span class="pre">var</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#factor-augmented-ar-operational"><code class="docutils literal notranslate"><span class="pre">factor_augmented_ar</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#principal-component-regression-operational"><code class="docutils literal notranslate"><span class="pre">principal_component_regression</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decision-tree-operational"><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-forest-operational"><code class="docutils literal notranslate"><span class="pre">random_forest</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#extra-trees-operational"><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-boosting-operational"><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xgboost-operational"><code class="docutils literal notranslate"><span class="pre">xgboost</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lightgbm-operational"><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#catboost-operational"><code class="docutils literal notranslate"><span class="pre">catboost</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#svr-linear-operational"><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#svr-rbf-operational"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#svr-poly-operational"><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-ridge-operational"><code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mlp-operational"><code class="docutils literal notranslate"><span class="pre">mlp</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lstm-operational"><code class="docutils literal notranslate"><span class="pre">lstm</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gru-operational"><code class="docutils literal notranslate"><span class="pre">gru</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transformer-operational"><code class="docutils literal notranslate"><span class="pre">transformer</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#knn-operational"><code class="docutils literal notranslate"><span class="pre">knn</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bvar-minnesota-operational"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bvar-normal-inverse-wishart-operational"><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#factor-augmented-var-operational"><code class="docutils literal notranslate"><span class="pre">factor_augmented_var</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#macroeconomic-random-forest-operational"><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfm-mixed-mariano-murasawa-operational"><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantile-regression-forest-operational"><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bagging-operational"><code class="docutils literal notranslate"><span class="pre">bagging</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mars-operational"><code class="docutils literal notranslate"><span class="pre">mars</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#garch11-operational"><code class="docutils literal notranslate"><span class="pre">garch11</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#egarch-operational"><code class="docutils literal notranslate"><span class="pre">egarch</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#realized-garch-with-rv-exog-operational"><code class="docutils literal notranslate"><span class="pre">realized_garch_with_rv_exog</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ets-operational"><code class="docutils literal notranslate"><span class="pre">ets</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#theta-method-operational"><code class="docutils literal notranslate"><span class="pre">theta_method</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#holt-winters-operational"><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-almon-operational"><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-beta-operational"><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#midas-step-operational"><code class="docutils literal notranslate"><span class="pre">midas_step</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dfm-unrestricted-midas-operational"><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>  –  operational</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#realized-garch-operational"><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>  –  operational</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/reference/encyclopedia/l4/axes/model.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../../../_sources/reference/encyclopedia/l4/axes/model.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

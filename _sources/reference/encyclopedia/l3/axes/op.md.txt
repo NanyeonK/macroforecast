@@ -430,7 +430,7 @@ See [supervised_pca function page](../op/supervised_pca.md) for full documentati
 
 Build the supervised target (``y``) from the panel.
 
-Constructs the regression target according to ``forecast_strategy`` (direct / iterated / cumulative_average) and the L1.F horizon set. Outputs the ``y`` artifact that L4 fit_model nodes consume.
+Constructs the regression target according to ``forecast_policy`` (direct / iterated / cumulative_average) and the L1.F horizon set. Outputs the ``y`` artifact that L4 fit nodes consume.
 
 Required as the leaf of every L3 pipeline; the runtime auto-injects it when the user does not.
 

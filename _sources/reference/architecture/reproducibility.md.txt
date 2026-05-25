@@ -33,7 +33,7 @@ granularity and `recipe_match` to confirm the stored recipe was not altered.
 
 ## Seed propagation
 
-Set `reproducibility_mode: seeded_reproducible` and `random_seed` in
+Set `reproducibility_policy: seeded_reproducible` and `random_seed` in
 `leaf_config` (L0 `0_meta`) to propagate a deterministic seed through the
 entire run. The runtime derives per-cell seeds from the base seed plus cell
 position so sweeps remain independently reproducible.
@@ -41,7 +41,7 @@ position so sweeps remain independently reproducible.
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
 ```
