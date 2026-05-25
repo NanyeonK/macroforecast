@@ -59,7 +59,7 @@ def test_l4_error_string_contains_prefix():
     mock_report = MagicMock()
     mock_report.has_hard_errors = False
 
-    with patch("macroforecast.core.layers.l4.validate_layer", return_value=mock_report):
+    with patch("macroforecast.layers.l4_models.schema.validate_layer", return_value=mock_report):
         recipe = {"4_forecasting_model": {"nodes": []}}
         with pytest.raises(ValueError, match=r"\[L4/4_forecasting_model"):
             rt.materialize_l4_minimal(recipe, l3)
