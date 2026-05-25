@@ -258,7 +258,7 @@ def test_experiment_compare_models_emits_fit_main_id():
     fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     assert len(fit_nodes) == 1
     assert fit_nodes[0]["id"] == "fit_main"
-    assert fit_nodes[0]["params"]["family"] == {"sweep": ["ridge", "lasso", "ols"]}
+    assert fit_nodes[0]["params"]["model"] == {"sweep": ["ridge", "lasso", "ols"]}
 
 
 def test_experiment_compare_models_then_compare_alpha_chains_via_fit_main(tmp_path):

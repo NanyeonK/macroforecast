@@ -67,7 +67,7 @@ def test_booging_helper_default_B_100():
     recipe = booging()
     params = _fit_node_params(recipe)
     assert params["n_estimators"] == 100
-    assert params["family"] == "bagging"
+    assert params["model"] == "bagging"
     assert params["strategy"] == "booging"
 
 
