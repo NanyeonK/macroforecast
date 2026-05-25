@@ -195,7 +195,7 @@ class L1Recipe:
 def parse_layer_yaml(yaml_text: str, layer_id: Literal["l1"] = "l1") -> Any:
     if layer_id != "l1":
         raise ValueError("L1 parser only accepts layer_id='l1'")
-    from ..yaml import LayerYamlSpec, parse_recipe_yaml
+    from macroforecast.core.yaml import LayerYamlSpec, parse_recipe_yaml
 
     root = parse_recipe_yaml(yaml_text)
     raw = root.get("1_data", {})
@@ -317,7 +317,7 @@ def resolve_axes_from_raw(
 
 
 def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
-    from ..validator import Issue, Severity, ValidationReport
+    from macroforecast.core.validator import Issue, Severity, ValidationReport
 
     if isinstance(layer, str):
         layer = parse_layer_yaml(layer)
@@ -396,7 +396,7 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
 
 
 def validate_regime_source_reference(layer: Any | dict[str, Any] | str, selector: Any) -> Any:
-    from ..validator import ValidationReport
+    from macroforecast.core.validator import ValidationReport
 
     if isinstance(layer, str):
         layer = parse_layer_yaml(layer)
@@ -754,7 +754,7 @@ def _validate_horizons(leaf_config: dict[str, Any], resolved: dict[str, Any]) ->
             issues.append(_issue("l1.max_horizon", "range_up_to_h requires positive integer max_horizon"))
     resolved_horizons = _resolved_horizons(resolved, leaf_config)
     if resolved_horizons and max(resolved_horizons) > (12 if resolved.get("frequency") == "monthly" else 8):
-        from ..validator import Issue, Severity
+        from macroforecast.core.validator import Issue, Severity
 
         issues.append(
             Issue(
@@ -769,7 +769,7 @@ def _validate_horizons(leaf_config: dict[str, Any], resolved: dict[str, Any]) ->
 
 
 def _validate_regime(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     regime = resolved.get("regime_definition")
     if regime in {None, "none"}:
@@ -962,7 +962,7 @@ def _raw_layer(layer: Any | dict[str, Any]) -> dict[str, Any]:
 
 
 def _issue(location: str, message: str) -> Any:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     return Issue("l1_contract", Severity.HARD, "layer", location, message)
 
