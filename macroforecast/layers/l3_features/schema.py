@@ -4,11 +4,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from ..pipeline import DAG, Node, NodeRef, SourceSelector
-from ..ops.registry import TypeSpec
-from ..sweep import expand_sweeps as _expand_core_sweeps
-from ..types import ColumnLineage, L3MetadataArtifact, PipelineDefinition, StepRef
-
 
 class L3FeatureEngineering:
     """Layer 3 Feature Engineering implementation marker."""
@@ -16,6 +11,12 @@ class L3FeatureEngineering:
     @classmethod
     def list_sublayers(cls) -> tuple[str, ...]:
         return ("L3.A", "L3.B", "L3.C", "L3.D")
+
+
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
+from macroforecast.core.ops.registry import TypeSpec  # noqa: E402
+from macroforecast.core.sweep import expand_sweeps as _expand_core_sweeps  # noqa: E402
+from macroforecast.core.types import ColumnLineage, L3MetadataArtifact, PipelineDefinition, StepRef  # noqa: E402
 
 
 ALLOWED_SOURCE_SUBSET_KEYS = frozenset(
@@ -51,7 +52,7 @@ class L3Recipe:
 def parse_layer_yaml(yaml_text: str, layer_id: Literal["l3"] = "l3") -> dict[str, Any]:
     if layer_id != "l3":
         raise ValueError("L3 parser only accepts layer_id='l3'")
-    from ..yaml import parse_recipe_yaml
+    from macroforecast.core.yaml import parse_recipe_yaml
 
     root = parse_recipe_yaml(yaml_text)
     raw = root.get("3_feature_engineering", root)
@@ -61,7 +62,7 @@ def parse_layer_yaml(yaml_text: str, layer_id: Literal["l3"] = "l3") -> dict[str
 
 
 def parse_recipe_yaml(yaml_text: str) -> dict[str, Any]:
-    from ..yaml import parse_recipe_yaml as parse
+    from macroforecast.core.yaml import parse_recipe_yaml as parse
 
     return parse(yaml_text)
 
@@ -141,7 +142,7 @@ def normalize_to_dag_form(layer: dict[str, Any], layer_id: Literal["l3"] = "l3")
 
 
 def validate_layer(layer: dict[str, Any] | str, recipe_context: dict[str, Any] | None = None) -> ValidationReport:
-    from ..validator import Issue, Severity, ValidationReport, validate_dag
+    from macroforecast.core.validator import Issue, Severity, ValidationReport, validate_dag
 
     raw = parse_layer_yaml(layer) if isinstance(layer, str) else layer
     issues: list[Issue] = []
@@ -171,7 +172,7 @@ def validate_layer(layer: dict[str, Any] | str, recipe_context: dict[str, Any] |
 
 
 def validate_recipe(recipe_yaml: dict[str, Any] | str) -> ValidationReport:
-    from ..validator import ValidationReport
+    from macroforecast.core.validator import ValidationReport
 
     root = parse_recipe_yaml(recipe_yaml) if isinstance(recipe_yaml, str) else recipe_yaml
     if "3_feature_engineering" not in root:
@@ -359,7 +360,7 @@ def _validate_forecast_combination_absent(dag: DAG) -> list[Issue]:
 
 
 def _validate_output_contract(dag: DAG, output_types: dict[str, TypeSpec]) -> list[Issue]:
-    from ..types import Panel, Series
+    from macroforecast.core.types import Panel, Series
 
     issues = []
     features_sink = dag.nodes.get(dag.sinks.get("l3_features_v1", ""))
@@ -405,7 +406,7 @@ def _validate_regime_reference(dag: DAG, recipe_context: dict[str, Any] | None) 
 
 
 def _soft_ordering_warnings(dag: DAG) -> list[Issue]:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     warnings = []
     for node in dag.nodes.values():
@@ -470,13 +471,13 @@ def _type_matches(actual: TypeSpec, expected: type) -> bool:
 
 
 def _type_is_panel_like(actual: TypeSpec) -> bool:
-    from ..types import Factor, LaggedPanel, Panel
+    from macroforecast.core.types import Factor, LaggedPanel, Panel
 
     return _type_matches(actual, Panel) or _type_matches(actual, LaggedPanel) or _type_matches(actual, Factor)
 
 
 def _issue(location: str, message: str) -> Issue:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     return Issue("l3_contract", Severity.HARD, "layer", location, message)
 
@@ -485,7 +486,7 @@ def _issue(location: str, message: str) -> Issue:
 # Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
 # ---------------------------------------------------------------------------
 
-from ..layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (  # noqa: E402
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,

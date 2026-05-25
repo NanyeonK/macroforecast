@@ -107,7 +107,7 @@ def _load_layer_modules() -> None:
         "macroforecast.scaffold.option_docs.l0",
         "macroforecast.layers.l1_data.option_docs",
         "macroforecast.layers.l2_preprocessing.option_docs",
-        "macroforecast.scaffold.option_docs.l3",
+        "macroforecast.layers.l3_features.option_docs",
         "macroforecast.layers.l4_models.option_docs",
         "macroforecast.scaffold.option_docs.l5",
         "macroforecast.scaffold.option_docs.l6",
