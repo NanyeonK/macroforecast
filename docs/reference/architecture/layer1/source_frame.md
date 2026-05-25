@@ -60,15 +60,16 @@ Contracts:
   [4.1.2 Forecast-Time Information](availability_timing.md), not by the source
   mode itself.
 - FRED metadata axes are hidden by default for custom-only studies:
-  `dataset`, `information_set_type`, `release_lag_rule`, `variable_universe`,
-  `official_transform_policy`, and `official_transform_scope`. The
-  same-period predictor rule remains visible because custom files can still
+  `dataset`, `information_set_type`, `release_lag_rule`, and `variable_universe`.
+  The same-period predictor rule remains visible because custom files can still
   define nowcasting-style contemporaneous x availability.
-- `variable_universe`, `official_transform_policy`, and
-  `official_transform_scope` are also hidden by default for standalone
-  FRED-SD, because those axes are FRED-MD/QD metadata controls. FRED-SD uses
-  the dedicated state and series scope controls in
+- `variable_universe` is also hidden by default for standalone FRED-SD, because
+  that axis is a FRED-MD/QD metadata control. FRED-SD uses the dedicated state
+  and series scope controls in
   [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md).
+- Official FRED-MD/QD transform codes are applied by Layer 2 `transform_policy`.
+  Layer 1 no longer exposes transform decisions; they belong to Layer 2
+  representation and research preprocessing.
 
 > **Warning:** Custom files are user-supplied source data. The Navigator can
 > enforce the route contract, but it cannot prove that the file's date index,

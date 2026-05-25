@@ -7,6 +7,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Removed
 
+- L1 axis `official_transform_policy` (duplicates L2 `transform_policy`)
+- L1 axis `official_transform_scope` (L2 transform is global by axis; no replacement)
+- L1 axis `raw_missing_policy` (duplicates L2 `imputation_policy`)
+- L1 axis `raw_outlier_policy` (duplicates L2 `outlier_policy`)
+- Preprocessing parameter `tcode_application_scope` (absorbed into L2 `transform_policy` semantics)
+- Documentation pages `docs/reference/architecture/layer1/raw_source_cleaning.md` and
+  `docs/reference/architecture/layer1/official_transforms.md` (described the removed axes)
 - `macroforecast.wizard` package and all Solara UI dependencies (`solara`,
   `[wizard]` optional extra) per the v0.10 restructure plan, Phase 0.
 - `macroforecast.scaffold.wizard` companion module.
