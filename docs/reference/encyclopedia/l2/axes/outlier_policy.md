@@ -43,7 +43,7 @@ See [zscore_threshold function page](../outlier_policy/zscore_threshold.md) for 
 
 Skip outlier handling.
 
-Pass series through unchanged. Useful when L1 already cleaned outliers (``raw_outlier_policy``) or when the study wants to compare against a no-cleaning baseline.
+Pass series through unchanged. Useful when the study wants to compare against a no-cleaning baseline, or when upstream data is already pre-cleaned.
 
 **When to use**
 

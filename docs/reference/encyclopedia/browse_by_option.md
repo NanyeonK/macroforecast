@@ -21,7 +21,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`all_variables`](l1/axes/variable_universe.md) | L1 | `variable_universe` | operational |
 | [`allow_mixed_frequency`](l1/axes/fred_sd_frequency_policy.md) | L1 | `fred_sd_frequency_policy` | operational |
 | [`allow_same_period_predictors`](l1/axes/contemporaneous_x_rule.md) | L1 | `contemporaneous_x_rule` | operational |
-| [`apply_official_tcode`](l1/axes/official_transform_policy.md) | L1 | `official_transform_policy` | operational |
 | [`apply_official_tcode`](l2/axes/transform_policy.md) | L2 | `transform_policy` | operational |
 | [`ar_p`](l4/axes/model.md) | L4 | `model` | operational |
 | [`asymmetric_trim`](l3/axes/op.md) | L3 | `op` | operational |
@@ -120,7 +119,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`dm_diebold_mariano`](l6/axes/equal_predictive_test.md) | L6 | `equal_predictive_test` | operational |
 | [`dmp_multi_horizon`](l6/axes/equal_predictive_test.md) | L6 | `equal_predictive_test` | operational |
 | [`drop_non_target_native_frequency`](l2/axes/mixed_frequency_representation.md) | L2 | `mixed_frequency_representation` | operational |
-| [`drop_raw_missing_rows`](l1/axes/raw_missing_policy.md) | L1 | `raw_missing_policy` | operational |
 | [`drop_unbalanced_series`](l2/axes/frame_edge_policy.md) | L2 | `frame_edge_policy` | operational |
 | [`drop_unknown_native_frequency`](l2/axes/mixed_frequency_representation.md) | L2 | `mixed_frequency_representation` | operational |
 | [`dual_decomposition`](l7/axes/op.md) | L7 | `op` | operational |
@@ -229,13 +227,11 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`ignore_release_lag`](l1/axes/release_lag_rule.md) | L1 | `release_lag_rule` | operational |
 | [`importance`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
 | [`impute_predictors_only`](l1/axes/missing_availability.md) | L1 | `missing_availability` | operational |
-| [`impute_raw_predictors`](l1/axes/raw_missing_policy.md) | L1 | `raw_missing_policy` | operational |
 | [`income`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
 | [`inferred`](l2/axes/sd_tcode_policy.md) | L2 | `sd_tcode_policy` | operational |
 | [`integrated_gradients`](l7/axes/op.md) | L7 | `op` | operational |
 | [`interaction`](l3/axes/op.md) | L3 | `op` | operational |
 | [`interval_score`](l5/axes/density_metrics.md) | L5 | `density_metrics` | operational |
-| [`iqr_clip_raw`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`iqr_flag`](l1_5/axes/outlier_view.md) | L1.5 | `outlier_view` | operational |
 | [`iterated`](l4/axes/forecast_policy.md) | L4 | `forecast_policy` | operational |
 | [`jaccard`](l3_5/axes/stability_metric.md) | L3.5 | `stability_metric` | operational |
@@ -251,7 +247,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`json_parquet`](l8/axes/export_format.md) | L8 | `export_format` | operational |
 | [`julia_version`](l8/axes/provenance_fields.md) | L8 | `provenance_fields` | operational |
 | [`keep_available_rows`](l1/axes/missing_availability.md) | L1 | `missing_availability` | operational |
-| [`keep_official_raw_scale`](l1/axes/official_transform_policy.md) | L1 | `official_transform_policy` | operational |
 | [`keep_unbalanced`](l2/axes/frame_edge_policy.md) | L2 | `frame_edge_policy` | operational |
 | [`keep_with_indicator`](l2/axes/outlier_action.md) | L2 | `outlier_action` | operational |
 | [`kendall`](l1_5/axes/correlation_method.md) | L1.5 | `correlation_method` | operational |
@@ -300,7 +295,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`ma_increasing_order`](l3/axes/op.md) | L3 | `op` | operational |
 | [`ma_window`](l3/axes/op.md) | L3 | `op` | operational |
 | [`macroeconomic_random_forest`](l4/axes/model.md) | L4 | `model` | operational |
-| [`mad_clip_raw`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`mae`](l5/axes/point_metrics.md) | L5 | `point_metrics` | operational |
 | [`mae`](l5/axes/primary_metric.md) | L5 | `primary_metric` | operational |
 | [`maf_per_variable_pca`](l3/axes/op.md) | L3 | `op` | operational |
@@ -373,7 +367,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`native_frequency_block_payload`](l2/axes/mixed_frequency_representation.md) | L2 | `mixed_frequency_representation` | operational |
 | [`no_reliable_analog`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
 | [`no_transform`](l2/axes/transform_policy.md) | L2 | `transform_policy` | operational |
-| [`none`](l1/axes/official_transform_scope.md) | L1 | `official_transform_scope` | operational |
 | [`none`](l1/axes/regime_definition.md) | L1 | `regime_definition` | operational |
 | [`none`](l1_5/axes/correlation_view.md) | L1.5 | `correlation_view` | operational |
 | [`none`](l1_5/axes/outlier_view.md) | L1.5 | `outlier_view` | operational |
@@ -445,10 +438,7 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`pp`](l1_5/axes/stationarity_test.md) | L1.5 | `stationarity_test` | operational |
 | [`pre_oos_only`](l1_5/axes/summary_split.md) | L1.5 | `summary_split` | operational |
 | [`pre_post_overlay`](l2_5/axes/correlation_shift.md) | L2.5 | `correlation_shift` | operational |
-| [`predictors_only`](l1/axes/official_transform_scope.md) | L1 | `official_transform_scope` | operational |
 | [`predictors_only`](l1_5/axes/stationarity_test_scope.md) | L1.5 | `stationarity_test_scope` | operational |
-| [`preserve_raw_missing`](l1/axes/raw_missing_policy.md) | L1 | `raw_missing_policy` | operational |
-| [`preserve_raw_outliers`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`principal_component_regression`](l4/axes/model.md) | L4 | `model` | operational |
 | [`provisional_analog_medium`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
 | [`pseudo_oos_on_revised_data`](l1/axes/information_set_type.md) | L1 | `information_set_type` | operational |
@@ -531,7 +521,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`semantic_review_outputs`](l1/axes/fred_sd_variable_group.md) | L1 | `fred_sd_variable_group` | operational |
 | [`serial`](l0/axes/compute_policy.md) | L0 | `compute_policy` | operational |
 | [`series_specific_lag`](l1/axes/release_lag_rule.md) | L1 | `release_lag_rule` | operational |
-| [`set_raw_outliers_to_missing`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`shap_deep`](l7/axes/op.md) | L7 | `op` | operational |
 | [`shap_interaction`](l7/axes/op.md) | L7 | `op` | operational |
 | [`shap_kernel`](l7/axes/op.md) | L7 | `op` | operational |
@@ -568,10 +557,8 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`svr_linear`](l4/axes/model.md) | L4 | `model` | operational |
 | [`svr_poly`](l4/axes/model.md) | L4 | `model` | operational |
 | [`svr_rbf`](l4/axes/model.md) | L4 | `model` | operational |
-| [`target_and_predictors`](l1/axes/official_transform_scope.md) | L1 | `official_transform_scope` | operational |
 | [`target_and_predictors`](l1_5/axes/stationarity_test_scope.md) | L1.5 | `stationarity_test_scope` | operational |
 | [`target_construction`](l3/axes/op.md) | L3 | `op` | operational |
-| [`target_only`](l1/axes/official_transform_scope.md) | L1 | `official_transform_scope` | operational |
 | [`target_only`](l1_5/axes/stationarity_test_scope.md) | L1.5 | `stationarity_test_scope` | operational |
 | [`target_specific_variables`](l1/axes/variable_universe.md) | L1 | `variable_universe` | operational |
 | [`tests`](l8/axes/saved_objects.md) | L8 | `saved_objects` | operational |
@@ -610,15 +597,12 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`weights_over_time`](l4_5/axes/ensemble_view.md) | L4.5 | `ensemble_view` | operational |
 | [`wide`](l7/axes/output_table_format.md) | L7 | `output_table_format` | operational |
 | [`winsorize`](l2/axes/outlier_policy.md) | L2 | `outlier_policy` | operational |
-| [`winsorize_raw`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`with_target`](l3_5/axes/feature_correlation.md) | L3.5 | `feature_correlation` | operational |
 | [`within_block`](l3_5/axes/feature_correlation.md) | L3.5 | `feature_correlation` | operational |
 | [`xgboost`](l4/axes/model.md) | L4 | `model` | operational |
 | [`yaml`](l8/axes/manifest_format.md) | L8 | `manifest_format` | operational |
 | [`zero_fill_leading`](l2/axes/frame_edge_policy.md) | L2 | `frame_edge_policy` | operational |
 | [`zero_fill_leading_predictor_gaps`](l1/axes/missing_availability.md) | L1 | `missing_availability` | operational |
-| [`zero_fill_leading_predictor_missing_before_tcode`](l1/axes/raw_missing_policy.md) | L1 | `raw_missing_policy` | operational |
 | [`zip`](l8/axes/compression.md) | L8 | `compression` | operational |
-| [`zscore_clip_raw`](l1/axes/raw_outlier_policy.md) | L1 | `raw_outlier_policy` | operational |
 | [`zscore_flag`](l1_5/axes/outlier_view.md) | L1.5 | `outlier_view` | operational |
 | [`zscore_threshold`](l2/axes/outlier_policy.md) | L2 | `outlier_policy` | operational |

@@ -3,11 +3,11 @@
 Verifies that L1.C Predictor Universe axis options have ParameterDoc
 entries for their conditional leaf_config keys:
 - variable_universe/explicit_variable_list -> variable_universe_columns
-- raw_outlier_policy/winsorize_raw -> winsorize_quantiles
-- raw_outlier_policy/iqr_clip_raw -> outlier_iqr_threshold
-- raw_outlier_policy/zscore_clip_raw -> zscore_threshold_value
 - release_lag_rule/fixed_lag_all_series -> fixed_lag_periods
 - release_lag_rule/series_specific_lag -> release_lag_per_series
+
+Note: raw_outlier_policy, raw_missing_policy, official_transform_policy,
+and official_transform_scope were removed in Phase 2 restructure.
 """
 from __future__ import annotations
 
@@ -44,66 +44,6 @@ def test_l1c_all_variables_has_no_params():
 def test_l1c_core_variables_has_no_params():
     """core_variables has no conditional parameters."""
     doc = OPTION_DOCS[("l1", "l1_c", "variable_universe", "core_variables")]
-    assert doc.parameters == ()
-
-
-# ---------------------------------------------------------------------------
-# raw_outlier_policy
-# ---------------------------------------------------------------------------
-
-
-def test_l1c_winsorize_raw_has_quantiles_param():
-    """winsorize_raw has 1 ParameterDoc for winsorize_quantiles."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_outlier_policy", "winsorize_raw")]
-    assert isinstance(doc.parameters, tuple)
-    assert len(doc.parameters) == 1
-    p = doc.parameters[0]
-    assert p.name == "winsorize_quantiles"
-    assert "list" in p.type or "float" in p.type
-    assert p.default == "[0.01, 0.99]"
-    assert p.constraint is not None
-
-
-def test_l1c_iqr_clip_raw_has_threshold_param():
-    """iqr_clip_raw has 1 ParameterDoc for outlier_iqr_threshold."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_outlier_policy", "iqr_clip_raw")]
-    assert isinstance(doc.parameters, tuple)
-    assert len(doc.parameters) == 1
-    p = doc.parameters[0]
-    assert p.name == "outlier_iqr_threshold"
-    assert p.type == "float"
-    assert p.default == "10.0"
-    assert p.constraint is not None
-    assert ">0" in p.constraint or "> 0" in p.constraint
-
-
-def test_l1c_zscore_clip_raw_has_threshold_param():
-    """zscore_clip_raw has 1 ParameterDoc for zscore_threshold_value."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_outlier_policy", "zscore_clip_raw")]
-    assert isinstance(doc.parameters, tuple)
-    assert len(doc.parameters) == 1
-    p = doc.parameters[0]
-    assert p.name == "zscore_threshold_value"
-    assert p.type == "float"
-    assert p.default == "3.0"
-    assert p.constraint is not None
-
-
-def test_l1c_preserve_raw_outliers_has_no_params():
-    """preserve_raw_outliers has no conditional parameters."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_outlier_policy", "preserve_raw_outliers")]
-    assert doc.parameters == ()
-
-
-def test_l1c_mad_clip_raw_has_no_params():
-    """mad_clip_raw has no conditional leaf_config parameters (runtime not yet parametrized)."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_outlier_policy", "mad_clip_raw")]
-    assert doc.parameters == ()
-
-
-def test_l1c_set_raw_outliers_to_missing_has_no_params():
-    """set_raw_outliers_to_missing has no conditional parameters."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_outlier_policy", "set_raw_outliers_to_missing")]
     assert doc.parameters == ()
 
 
@@ -168,12 +108,6 @@ def test_l1c_contemporaneous_x_rule_no_params():
         assert doc.parameters == (), f"{option} should have parameters=()"
 
 
-def test_l1c_official_transform_scope_no_params():
-    """official_transform_scope options have no conditional leaf_config parameters."""
-    for option in ("target_only", "predictors_only", "target_and_predictors", "none"):
-        doc = OPTION_DOCS[("l1", "l1_c", "official_transform_scope", option)]
-        assert doc.parameters == (), f"{option} should have parameters=()"
-
 
 # ---------------------------------------------------------------------------
 # _KNOWN_LEAF_CONFIG_KEYS extension (P-3)
@@ -202,17 +136,11 @@ def test_known_leaf_config_keys_extended():
 
 
 def test_l1c_encyclopedia_page_contains_parameters_tables():
-    """Encyclopedia pages for L1.C raw_outlier_policy / release_lag_rule render Parameters tables."""
+    """Encyclopedia pages for L1.C release_lag_rule render Parameters tables."""
     from macroforecast.scaffold.render_encyclopedia import _render_axis_page
     from macroforecast.scaffold.introspect import axes
 
     l1_axes = {ax.name: ax for ax in axes("l1")}
-
-    outlier_page = _render_axis_page("l1", l1_axes["raw_outlier_policy"])
-    assert "**Parameters**" in outlier_page
-    assert "winsorize_quantiles" in outlier_page
-    assert "outlier_iqr_threshold" in outlier_page
-    assert "zscore_threshold_value" in outlier_page
 
     lag_page = _render_axis_page("l1", l1_axes["release_lag_rule"])
     assert "**Parameters**" in lag_page
@@ -232,21 +160,6 @@ def test_l1c_impute_predictors_only_has_x_imputation_param():
     assert len(doc.parameters) == 1
     p = doc.parameters[0]
     assert p.name == "x_imputation"
-    assert p.type == "str"
-    assert p.default is REQUIRED  # REQUIRED sentinel (C26)
-    assert p.constraint is not None
-    assert "required" in p.constraint.lower()
-    for method in ("bfill", "ffill", "mean", "median"):
-        assert method in p.constraint
-
-
-def test_l1c_impute_raw_predictors_has_raw_x_imputation_param():
-    """impute_raw_predictors has 1 ParameterDoc for raw_x_imputation."""
-    doc = OPTION_DOCS[("l1", "l1_c", "raw_missing_policy", "impute_raw_predictors")]
-    assert isinstance(doc.parameters, tuple)
-    assert len(doc.parameters) == 1
-    p = doc.parameters[0]
-    assert p.name == "raw_x_imputation"
     assert p.type == "str"
     assert p.default is REQUIRED  # REQUIRED sentinel (C26)
     assert p.constraint is not None

@@ -71,7 +71,7 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "outlier_iqr_threshold",
         "zscore_threshold_value",
         "winsorize_quantiles",
-        # missing_availability / raw_missing_policy conditional keys (C19 follow-up)
+        # missing_availability conditional keys (C19 follow-up)
         "x_imputation",
         "raw_x_imputation",
         # L1.D Geography conditional leaf_config keys (Cycle 20)

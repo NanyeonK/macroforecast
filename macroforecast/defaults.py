@@ -310,8 +310,6 @@ def build_default_recipe_dict(
     layer1_fixed_axes = {
         "dataset": resolved_dataset,
         "panel_composition": panel_composition,
-        "official_transform_policy": "apply_official_tcode",
-        "official_transform_scope": "target_and_predictors",
         "frequency": resolved_frequency,
         "information_set_type": information_set_type,
         "fred_sd_frequency_policy": "report_only",

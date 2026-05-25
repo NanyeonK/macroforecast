@@ -195,7 +195,7 @@ _L2C_ZSCORE = _e(
 _L2C_NONE = _e(
     "l2_c", "outlier_policy", "none",
     "Skip outlier handling.",
-    "Pass series through unchanged. Useful when L1 already cleaned outliers (``raw_outlier_policy``) or when the study wants to compare against a no-cleaning baseline.",
+    "Pass series through unchanged. Useful when the study wants to compare against a no-cleaning baseline, or when upstream data is already pre-cleaned.",
     "Custom panels already cleaned upstream; no-cleaning ablations.",
     references=(_REF_DESIGN_L2,),
     related_options=("mccracken_ng_iqr", "winsorize", "zscore_threshold"),

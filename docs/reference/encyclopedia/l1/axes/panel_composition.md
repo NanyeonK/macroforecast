@@ -70,7 +70,7 @@ Bypasses the FRED adapter entirely. The user provides:
 * an inline ``custom_panel_inline`` dict (small synthetic panels), or
 * a ``custom_source_path`` pointing to a CSV / Parquet file.
 
-The L1 runtime applies no schema-level validation beyond 'has a date column and at least the requested target series'. Variable metadata that the McCracken-Ng panel ships (group tags, t-codes, release dates) is unavailable, so axes that depend on it -- ``official_transform_policy``, ``fred_sd_state_group``, etc. -- are inactive.
+The L1 runtime applies no schema-level validation beyond 'has a date column and at least the requested target series'. Variable metadata that the McCracken-Ng panel ships (group tags, t-codes, release dates) is unavailable, so axes that depend on it -- ``fred_sd_state_group``, etc. -- are inactive.
 
 **When to use**
 
