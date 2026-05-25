@@ -717,9 +717,7 @@
 </pre></div>
 </div>
 <p>The layer system defines how a recipe flows from study setup through output.
-Each layer has a well-defined role, a schema contract, and a stage label
-(<code class="docutils literal notranslate"><span class="pre">STAGE_BY_LAYER</span></code> in <code class="docutils literal notranslate"><span class="pre">macroforecast.core.stages</span></code>) used for color coding and
-future Kedro adapter tagging.</p>
+Each layer has a well-defined role and a schema contract, identified by <code class="docutils literal notranslate"><span class="pre">layer_id</span></code>.</p>
 <section id="canonical-layer-roles">
 <h2>Canonical Layer Roles<a class="headerlink" href="#canonical-layer-roles" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -774,29 +772,11 @@ future Kedro adapter tagging.</p>
 <p>Compatibility checks and YAML previews treat the layer map as the source of
 truth for package architecture.</p>
 </section>
-<section id="authoring-recipes-with-macroforecast-wizard">
-<h2>Authoring recipes with <code class="docutils literal notranslate"><span class="pre">macroforecast</span> <span class="pre">wizard</span></code><a class="headerlink" href="#authoring-recipes-with-macroforecast-wizard" title="Link to this heading">#</a></h2>
-<p>Recipe authoring and layer visualization are provided by the Solara-based
-web wizard (added in v0.9.1, post-v0.9.0):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;macroforecast[wizard]&#39;</span>
-macroforecast<span class="w"> </span>wizard<span class="w"> </span>--port<span class="w"> </span><span class="m">8765</span>
-</pre></div>
-</div>
-<p>Open <code class="docutils literal notranslate"><span class="pre">http://localhost:8765</span></code> to see a 3-pane editor with:</p>
-<ul class="simple">
-<li><p>left rail: layer navigation (color coded by <code class="docutils literal notranslate"><span class="pre">STAGE_BY_LAYER</span></code> stage)</p></li>
-<li><p>center workspace: layer form (L0 currently; L1/L2/L5/L6 in P2b/c)</p></li>
-<li><p>right pane: live YAML preview</p></li>
-</ul>
-<p>See <a class="reference internal" href="#../../macroforecast/wizard/"><span class="xref myst">the wizard module README</span></a> for current
-phase status (P2a MVP) and upcoming features (P3 step editor for L3/L4/L7).</p>
-</section>
-<section id="visualization-with-kedro-viz-future">
-<h2>Visualization with Kedro-viz (future)<a class="headerlink" href="#visualization-with-kedro-viz-future" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macroforecast.adapters.kedro</span></code> (Phase P1, planned post-P2c) will expose
-recipe → <code class="docutils literal notranslate"><span class="pre">kedro.Pipeline</span></code> conversion. Run <code class="docutils literal notranslate"><span class="pre">kedro</span> <span class="pre">viz</span></code> to get layer-color
-band visualization. <code class="docutils literal notranslate"><span class="pre">STAGE_BY_LAYER</span></code> serves as the Kedro <code class="docutils literal notranslate"><span class="pre">layer</span></code> tag
-source.</p>
+<section id="authoring-recipes">
+<h2>Authoring recipes<a class="headerlink" href="#authoring-recipes" title="Link to this heading">#</a></h2>
+<p>Write YAML recipes directly using the layer and axis reference in these docs.
+Use <code class="docutils literal notranslate"><span class="pre">macroforecast.scaffold.list_templates()</span></code> to start from a known-good
+starter recipe, then edit axes with the encyclopedia as a guide.</p>
 </section>
 <section id="recommended-flow">
 <h2>Recommended Flow<a class="headerlink" href="#recommended-flow" title="Link to this heading">#</a></h2>
@@ -897,8 +877,7 @@ source.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#canonical-layer-roles">Canonical Layer Roles</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layer-flow">Layer Flow</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authoring-recipes-with-macroforecast-wizard">Authoring recipes with <code class="docutils literal notranslate"><span class="pre">macroforecast</span> <span class="pre">wizard</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-with-kedro-viz-future">Visualization with Kedro-viz (future)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authoring-recipes">Authoring recipes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recommended-flow">Recommended Flow</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pages">Pages</a></li>
 </ul>
