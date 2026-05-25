@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.core.layers.l1 import _is_iso_date, _normalize_iso_partial
+from macroforecast.layers.l1_data.schema import _is_iso_date, _normalize_iso_partial
 
 
 class TestIsIsoDate:
@@ -79,7 +79,7 @@ class TestPartialIsoInRecipe:
     def test_year_month_accepted_in_recipe(self):
         """A recipe with sample_start_date="1980-01" must not raise at L1 validate."""
         from macroforecast.core.yaml import parse_recipe_yaml
-        from macroforecast.core.layers import l1 as l1_layer
+        from macroforecast.layers.l1_data import schema as l1_layer
 
         yaml_text = """
 1_data:

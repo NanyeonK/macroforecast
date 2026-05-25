@@ -36,17 +36,17 @@ from sklearn.tree import DecisionTreeRegressor
 from .layers import l6 as l6_layer
 from .layers import l7 as l7_layer
 from .layers import l8 as l8_layer
-from .layers import l1_5 as l1_5_layer
+import macroforecast.layers.l1_5_diagnostic.schema as l1_5_layer
 from .layers import l2_5 as l2_5_layer
 from .layers import l3_5 as l3_5_layer
 from .layers import l4_5 as l4_5_layer
 from .layers import l3 as l3_layer
 from .layers import l4 as l4_layer
 from .layers import l5 as l5_layer
-from .layers import l1 as l1_layer
+import macroforecast.layers.l1_data.schema as l1_layer
 from .layers import l2 as l2_layer
-from ..raw import load_fred_md, load_fred_qd, load_fred_sd
-from ..raw.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
+from ..layers.l1_data import load_fred_md, load_fred_qd, load_fred_sd
+from ..layers.l1_data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
     DiagnosticArtifact,
     L1DataDefinitionArtifact,
@@ -14679,7 +14679,7 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
     # C50: ALFRED vintage correction -- applies when vintage_policy="real_time_alfred".
     # Replaces panel column values with vintage-correct ALFRED snapshots.
     if resolved.get("vintage_policy") == "real_time_alfred":
-        from ..raw.alfred_adapter import apply_alfred_vintage_to_panel
+        from ..layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
         frame = apply_alfred_vintage_to_panel(frame, resolved, leaf_config)
         metadata["vintage_policy"] = "real_time_alfred"
     return _panel_from_frame(frame, metadata=metadata)

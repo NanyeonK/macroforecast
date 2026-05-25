@@ -20,8 +20,8 @@ from ..core.layer_specs import AxisSpec, LayerImplementationSpec, Option
 # dependency order.
 _LAYER_MODULES: tuple[tuple[str, str], ...] = (
     ("l0", "macroforecast.core.layers.l0"),
-    ("l1", "macroforecast.core.layers.l1"),
-    ("l1_5", "macroforecast.core.layers.l1_5"),
+    ("l1", "macroforecast.layers.l1_data.schema"),
+    ("l1_5", "macroforecast.layers.l1_5_diagnostic.schema"),
     ("l2", "macroforecast.core.layers.l2"),
     ("l2_5", "macroforecast.core.layers.l2_5"),
     ("l3", "macroforecast.core.layers.l3"),

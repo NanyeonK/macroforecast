@@ -105,7 +105,7 @@ def _load_layer_modules() -> None:
 
     for layer_module in (
         "macroforecast.scaffold.option_docs.l0",
-        "macroforecast.scaffold.option_docs.l1",
+        "macroforecast.layers.l1_data.option_docs",
         "macroforecast.scaffold.option_docs.l2",
         "macroforecast.scaffold.option_docs.l3",
         "macroforecast.scaffold.option_docs.l4",

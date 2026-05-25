@@ -3,9 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from ..pipeline import DAG, Node, NodeRef, SourceSelector
-
-
 @dataclass(frozen=True)
 class SubLayerSpec:
     axes: tuple[str, ...]
@@ -30,6 +27,12 @@ class L1_5DataSummary:
     @classmethod
     def list_sublayers(cls) -> tuple[str, ...]:
         return tuple(cls.sub_layers)
+
+
+# Deferred core imports: placed after L1_5DataSummary so that registry.py can import
+# L1_5DataSummary without hitting a circular-dependency error.  By the time these
+# lines execute, macroforecast.core.pipeline is already in sys.modules.
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
 
 
 class L1_5ResolvedAxes(dict):
@@ -76,7 +79,7 @@ SUMMARY_METRICS = {"mean", "sd", "min", "max", "skew", "kurtosis", "n_obs", "n_m
 def parse_layer_yaml(yaml_text: str, layer_id: Literal["l1_5"] = "l1_5") -> dict[str, Any]:
     if layer_id != "l1_5":
         raise ValueError("L1.5 parser only accepts layer_id='l1_5'")
-    from ..yaml import parse_recipe_yaml
+    from macroforecast.core.yaml import parse_recipe_yaml
 
     root = parse_recipe_yaml(yaml_text)
     raw = root.get("1_5_data_summary", root)
@@ -88,7 +91,7 @@ def parse_layer_yaml(yaml_text: str, layer_id: Literal["l1_5"] = "l1_5") -> dict
 
 
 def parse_recipe_yaml(yaml_text_or_root: str | dict[str, Any]) -> Any:
-    from ..yaml import parse_recipe_yaml as parse
+    from macroforecast.core.yaml import parse_recipe_yaml as parse
 
     root = parse(yaml_text_or_root) if isinstance(yaml_text_or_root, str) else yaml_text_or_root
     return L1_5Recipe(root)
@@ -166,7 +169,7 @@ def resolve_axes_from_raw(raw: dict[str, Any], context: dict[str, Any] | None = 
 
 
 def validate_layer(layer: dict[str, Any] | str, context: dict[str, Any] | None = None):
-    from ..validator import ValidationReport
+    from macroforecast.core.validator import ValidationReport
 
     raw = parse_layer_yaml(layer) if isinstance(layer, str) else layer
     context = context or {}
@@ -183,7 +186,7 @@ def validate_layer(layer: dict[str, Any] | str, context: dict[str, Any] | None =
 
 
 def validate_recipe(recipe: L1_5Recipe | dict[str, Any] | str):
-    from ..validator import ValidationReport
+    from macroforecast.core.validator import ValidationReport
 
     obj = parse_recipe_yaml(recipe) if isinstance(recipe, (str, dict)) else recipe
     if "1_5_data_summary" not in obj.root:
@@ -231,7 +234,7 @@ def _copy_default(value: Any) -> Any:
 
 
 def _issue(path: str, message: str) -> Any:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     return Issue("l1_5_contract", Severity.HARD, "layer", path, message)
 
@@ -240,7 +243,7 @@ def _issue(path: str, message: str) -> Any:
 # Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
 # ---------------------------------------------------------------------------
 
-from ..layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (  # noqa: E402
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,
