@@ -32,7 +32,7 @@ Outputs:
 
 ## Benchmark Contract
 
-A benchmark is not a separate axis. Mark exactly one `fit_model` node with `is_benchmark: true`. L5 and L6 detect the benchmark from L4 model artifacts. Zero benchmark nodes is valid; two or more benchmark nodes is a hard error.
+A benchmark is not a separate axis. Mark exactly one `fit` node with `is_benchmark: true`. L5 and L6 detect the benchmark from L4 model artifacts. Zero benchmark nodes is valid; two or more benchmark nodes is a hard error.
 
 ## Forecast Combination
 
@@ -53,9 +53,9 @@ Forecast combination belongs in L4 and consumes forecast artifacts:
   nodes:
     - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
-    - {id: fit_ar, type: step, op: fit_model, params: {family: ar_p}, is_benchmark: true, inputs: [src_y]}
+    - {id: fit_ar, type: step, op: fit, params: {model: ar_p}, is_benchmark: true, inputs: [src_y]}
     - {id: predict_ar, type: step, op: predict, inputs: [fit_ar]}
-    - {id: fit_ridge, type: step, op: fit_model, params: {family: ridge}, inputs: [src_X, src_y]}
+    - {id: fit_ridge, type: step, op: fit, params: {model: ridge}, inputs: [src_X, src_y]}
     - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
     - {id: ensemble, type: combine, op: weighted_average_forecast, params: {weights_method: dmsfe}, inputs: [predict_ar, predict_ridge]}
   sinks:

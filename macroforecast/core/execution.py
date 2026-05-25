@@ -75,7 +75,7 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "x_imputation",
         "raw_x_imputation",
         # L1.D Geography conditional leaf_config keys (Cycle 20)
-        "target_state",  # singular, for target_geography_scope=single_state (C20 follow-up)
+        "target_state",  # singular, for target_geography_policy=single_state (C20 follow-up)
         "target_states",
         "predictor_states",
         "sd_states",
@@ -273,16 +273,16 @@ def _expand_variants(recipe_root: dict[str, Any]) -> list[dict[str, Any]]:
         if isinstance(overrides, dict):
             for key, value in overrides.items():
                 if key == "model_family":
-                    # Convenience alias: rewrite the L4 fit_model family
+                    # Convenience alias: rewrite the L4 fit family
                     # in-place rather than introducing a sweep marker.
                     l4 = cell.setdefault("4_forecasting_model", {})
                     nodes = l4.setdefault("nodes", [])
                     fit_nodes = [
                         n for n in nodes
-                        if isinstance(n, dict) and n.get("op") == "fit_model"
+                        if isinstance(n, dict) and n.get("op") == "fit"
                     ]
                     for node in fit_nodes:
-                        node.setdefault("params", {})["family"] = value
+                        node.setdefault("params", {})["model"] = value
                     continue
                 # Treat the override key as a dotted path into the recipe.
                 _variant_set(cell, key, value)
@@ -343,7 +343,7 @@ def _resolve_seed(recipe_root: dict[str, Any]) -> int | None:
     fixed = (l0.get("fixed_axes", {}) or {})
     if "random_seed" in leaf:
         return int(leaf["random_seed"])
-    repro = fixed.get("reproducibility_mode", "seeded_reproducible")
+    repro = fixed.get("reproducibility_policy", "seeded_reproducible")
     return DEFAULT_RANDOM_SEED if repro == "seeded_reproducible" else None
 
 
@@ -913,7 +913,7 @@ def execute_recipe(
         argument wins and we override the in-recipe value (a soft warning is
         attached to the manifest's environment metadata).
 
-    Cell loop concurrency is controlled by L0 ``compute_mode``:
+    Cell loop concurrency is controlled by L0 ``compute_policy``:
 
     * ``serial`` (default) -- iterate cells in-process.
     * ``parallel`` -- dispatch cells to a ``ProcessPoolExecutor`` of size
@@ -974,14 +974,14 @@ def execute_recipe(
     fixed_axes = (recipe_root.get(L0_KEY, {}) or {}).get("fixed_axes", {}) or {}
     leaf = (recipe_root.get(L0_KEY, {}) or {}).get("leaf_config", {}) or {}
     failure_policy = fixed_axes.get("failure_policy") or "fail_fast"
-    compute_mode = fixed_axes.get("compute_mode") or "serial"
+    compute_policy = fixed_axes.get("compute_policy") or "serial"
     n_workers = int(leaf.get("n_workers", _default_n_workers()))
     base_seed = _resolve_seed(recipe_root)
 
     concrete_roots, sweep_paths = _expand_cells(recipe_root)
     sweep_paths_str = tuple(_path_label(path) for path, _ in sweep_paths)
 
-    parallel_active = compute_mode == "parallel" and n_workers > 1 and len(concrete_roots) > 1
+    parallel_active = compute_policy == "parallel" and n_workers > 1 and len(concrete_roots) > 1
 
     cell_jobs: list[tuple[int, dict[str, Any], dict[str, Any], str, int | None]] = []
     for index, concrete in enumerate(concrete_roots, start=1):

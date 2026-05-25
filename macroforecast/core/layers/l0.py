@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from ..dag import DAG, Node, NodeRef
+from ..pipeline import DAG, Node, NodeRef
 from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
 from ..types import L0MetaArtifact
 
@@ -18,12 +18,12 @@ FAILURE_POLICY_OPTIONS: tuple[FailurePolicy, ...] = ("fail_fast", "continue_on_f
 REPRODUCIBILITY_MODE_OPTIONS: tuple[ReproducibilityMode, ...] = ("seeded_reproducible", "exploratory")
 COMPUTE_MODE_OPTIONS: tuple[ComputeMode, ...] = ("serial", "parallel")
 PARALLEL_UNIT_OPTIONS: tuple[ParallelUnit, ...] = ("cells", "models", "horizons", "targets", "oos_dates")  # Cycle 16 N-2 fix: parallel_unit=cells operational
-L0_AXIS_NAMES: tuple[str, ...] = ("failure_policy", "reproducibility_mode", "compute_mode")
+L0_AXIS_NAMES: tuple[str, ...] = ("failure_policy", "reproducibility_policy", "compute_policy")
 
 DEFAULT_FIXED_AXES: dict[str, str] = {
     "failure_policy": "fail_fast",
-    "reproducibility_mode": "seeded_reproducible",
-    "compute_mode": "serial",
+    "reproducibility_policy": "seeded_reproducible",
+    "compute_policy": "serial",
 }
 
 
@@ -124,8 +124,8 @@ def resolve_axes(dag: DAG, recipe_context: dict[str, Any] | None = None) -> dict
 
     resolved = {
         "failure_policy": axis_values["failure_policy"],
-        "reproducibility_mode": axis_values["reproducibility_mode"],
-        "compute_mode": axis_values["compute_mode"],
+        "reproducibility_policy": axis_values["reproducibility_policy"],
+        "compute_policy": axis_values["compute_policy"],
         "random_seed": leaf_config.get("random_seed"),
         "parallel_unit": leaf_config.get("parallel_unit"),
         "n_workers": leaf_config.get("n_workers"),
@@ -133,7 +133,7 @@ def resolve_axes(dag: DAG, recipe_context: dict[str, Any] | None = None) -> dict
         "derived_study_scope": study_scope,
         "derived_execution_route": "comparison_sweep",
     }
-    if resolved["reproducibility_mode"] == "seeded_reproducible" and resolved["random_seed"] is None:
+    if resolved["reproducibility_policy"] == "seeded_reproducible" and resolved["random_seed"] is None:
         resolved["random_seed"] = 42
     return resolved
 
@@ -167,34 +167,34 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
             issues.append(_issue(f"l0.{axis_name}", f"{axis_name} must be one of {sorted(allowed)}"))
 
     failure_policy = fixed_axes.get("failure_policy", DEFAULT_FIXED_AXES["failure_policy"])
-    reproducibility_mode = fixed_axes.get("reproducibility_mode", DEFAULT_FIXED_AXES["reproducibility_mode"])
-    compute_mode = fixed_axes.get("compute_mode", DEFAULT_FIXED_AXES["compute_mode"])
+    reproducibility_policy = fixed_axes.get("reproducibility_policy", DEFAULT_FIXED_AXES["reproducibility_policy"])
+    compute_policy = fixed_axes.get("compute_policy", DEFAULT_FIXED_AXES["compute_policy"])
 
     if not _is_sweep_marker(failure_policy) and failure_policy in FAILURE_POLICY_OPTIONS:
         pass
 
-    if reproducibility_mode == "seeded_reproducible":
+    if reproducibility_policy == "seeded_reproducible":
         random_seed = leaf_config.get("random_seed", 42)
         if not isinstance(random_seed, int):
             issues.append(_issue("l0.random_seed", "leaf_config.random_seed must be int for seeded_reproducible"))
-    elif reproducibility_mode == "exploratory" and "random_seed" in leaf_config:
+    elif reproducibility_policy == "exploratory" and "random_seed" in leaf_config:
         issues.append(_issue("l0.random_seed", "leaf_config.random_seed must not be present in exploratory mode"))
 
-    if compute_mode == "parallel":
+    if compute_policy == "parallel":
         if "parallel_unit" not in leaf_config:
-            issues.append(_issue("l0.parallel_unit", "compute_mode=parallel requires leaf_config.parallel_unit"))
+            issues.append(_issue("l0.parallel_unit", "compute_policy=parallel requires leaf_config.parallel_unit"))
         elif leaf_config["parallel_unit"] not in PARALLEL_UNIT_OPTIONS:
             issues.append(
                 _issue("l0.parallel_unit", f"parallel_unit must be one of {sorted(PARALLEL_UNIT_OPTIONS)}")
             )
         if "n_workers" not in leaf_config:
-            issues.append(_issue("l0.n_workers", "compute_mode=parallel requires leaf_config.n_workers"))
+            issues.append(_issue("l0.n_workers", "compute_policy=parallel requires leaf_config.n_workers"))
         elif not _valid_n_workers(leaf_config["n_workers"]):
             issues.append(_issue("l0.n_workers", "n_workers must be a positive int or 'auto'"))
-    elif compute_mode == "serial":
+    elif compute_policy == "serial":
         for key in ("parallel_unit", "n_workers"):
             if key in leaf_config:
-                issues.append(_issue(f"l0.{key}", f"leaf_config.{key} must not be present when compute_mode=serial"))
+                issues.append(_issue(f"l0.{key}", f"leaf_config.{key} must not be present when compute_policy=serial"))
 
     if "gpu_deterministic" in leaf_config and not isinstance(leaf_config["gpu_deterministic"], bool):
         issues.append(_issue("l0.gpu_deterministic", "leaf_config.gpu_deterministic must be bool"))
@@ -226,8 +226,8 @@ def execute_recipe(recipe: L0Recipe) -> L0Manifest:
     resolved_axes = _resolved_axis_entries(resolved, fixed_axes, leaf_config)
     artifact = L0MetaArtifact(
         failure_policy=resolved["failure_policy"],
-        reproducibility_mode=resolved["reproducibility_mode"],
-        compute_mode=resolved["compute_mode"],
+        reproducibility_policy=resolved["reproducibility_policy"],
+        compute_policy=resolved["compute_policy"],
         random_seed=resolved["random_seed"],
         parallel_unit=resolved["parallel_unit"],
         n_workers=resolved["n_workers"],
@@ -287,8 +287,8 @@ L0_LAYER_SPEC = LayerImplementationSpec(
                 default="fail_fast",
                 sweepable=False,
             ),
-            "reproducibility_mode": AxisSpec(
-                name="reproducibility_mode",
+            "reproducibility_policy": AxisSpec(
+                name="reproducibility_policy",
                 options=(
                     Option("seeded_reproducible", "Seeded reproducible", "Use a fixed random seed."),
                     Option("exploratory", "Exploratory", "Do not fix stochastic seeds."),
@@ -297,8 +297,8 @@ L0_LAYER_SPEC = LayerImplementationSpec(
                 sweepable=False,
                 leaf_config_keys=("random_seed",),
             ),
-            "compute_mode": AxisSpec(
-                name="compute_mode",
+            "compute_policy": AxisSpec(
+                name="compute_policy",
                 options=(
                     Option("serial", "Serial", "Use one worker."),
                     Option("parallel", "Parallel", "Use multiple workers over a leaf_config unit."),
@@ -346,9 +346,9 @@ def _resolved_axis_entries(
 def _allowed_values(axis_name: str) -> set[str]:
     if axis_name == "failure_policy":
         return set(FAILURE_POLICY_OPTIONS)
-    if axis_name == "reproducibility_mode":
+    if axis_name == "reproducibility_policy":
         return set(REPRODUCIBILITY_MODE_OPTIONS)
-    if axis_name == "compute_mode":
+    if axis_name == "compute_policy":
         return set(COMPUTE_MODE_OPTIONS)
     raise KeyError(axis_name)
 

@@ -38,7 +38,7 @@ def test_parameter_doc_full():
         name="parallel_unit",
         type="str enum {cells, models}",
         default=None,
-        constraint="required when compute_mode=parallel",
+        constraint="required when compute_policy=parallel",
         description="Parallelization granularity.",
     )
     assert p.name == "parallel_unit"
@@ -66,7 +66,7 @@ def test_option_doc_accepts_parameters():
     o = OptionDoc(
         layer="l0",
         sublayer="l0_a",
-        axis="reproducibility_mode",
+        axis="reproducibility_policy",
         option="seeded_reproducible",
         summary="Test summary for seeded option.",
         description="Test description with enough chars to pass the quality floor gate for v1.0 completeness.",
@@ -105,7 +105,7 @@ def test_option_doc_default_parameters_empty():
 
 def test_l0_seeded_reproducible_has_random_seed_param():
     """L0 seeded_reproducible option has random_seed ParameterDoc."""
-    doc = OPTION_DOCS[("l0", "l0_a", "reproducibility_mode", "seeded_reproducible")]
+    doc = OPTION_DOCS[("l0", "l0_a", "reproducibility_policy", "seeded_reproducible")]
     assert len(doc.parameters) == 1
     p = doc.parameters[0]
     assert p.name == "random_seed"
@@ -117,13 +117,13 @@ def test_l0_seeded_reproducible_has_random_seed_param():
 
 def test_l0_exploratory_has_no_parameters():
     """L0 exploratory option explicitly sets parameters=() (no args)."""
-    doc = OPTION_DOCS[("l0", "l0_a", "reproducibility_mode", "exploratory")]
+    doc = OPTION_DOCS[("l0", "l0_a", "reproducibility_policy", "exploratory")]
     assert doc.parameters == ()
 
 
 def test_l0_parallel_has_parallel_unit_and_n_workers():
     """L0 parallel option has parallel_unit and n_workers ParameterDocs."""
-    doc = OPTION_DOCS[("l0", "l0_a", "compute_mode", "parallel")]
+    doc = OPTION_DOCS[("l0", "l0_a", "compute_policy", "parallel")]
     assert len(doc.parameters) == 2
     names = [p.name for p in doc.parameters]
     assert "parallel_unit" in names
@@ -137,7 +137,7 @@ def test_l0_parallel_has_parallel_unit_and_n_workers():
 
 def test_l0_serial_has_no_parameters():
     """L0 serial option explicitly sets parameters=() (no conditional leaf_config)."""
-    doc = OPTION_DOCS[("l0", "l0_a", "compute_mode", "serial")]
+    doc = OPTION_DOCS[("l0", "l0_a", "compute_policy", "serial")]
     assert doc.parameters == ()
 
 
@@ -171,7 +171,7 @@ def test_render_option_body_emits_parameters_table():
     doc = OptionDoc(
         layer="l0",
         sublayer="l0_a",
-        axis="reproducibility_mode",
+        axis="reproducibility_policy",
         option="seeded_reproducible",
         summary="Test summary for the seeded reproducible option.",
         description="Test description with adequate length to satisfy quality floor constraints in v1.0.",
@@ -183,7 +183,7 @@ def test_render_option_body_emits_parameters_table():
     )
     opt_info = _make_option_info("seeded_reproducible")
     rendered = _render_option_body(
-        opt_info, doc, layer_id="l0", sublayer="l0_a", axis="reproducibility_mode"
+        opt_info, doc, layer_id="l0", sublayer="l0_a", axis="reproducibility_policy"
     )
     assert "**Parameters**" in rendered
     assert "| name | type | default | constraint | description |" in rendered
@@ -227,7 +227,7 @@ def test_render_option_body_none_default_renders_dash():
     doc = OptionDoc(
         layer="l0",
         sublayer="l0_a",
-        axis="compute_mode",
+        axis="compute_policy",
         option="parallel",
         summary="Distribute work across workers.",
         description="Activates the parallel cell loop; granularity set by parallel_unit leaf_config key.",
@@ -239,7 +239,7 @@ def test_render_option_body_none_default_renders_dash():
     )
     opt_info = _make_option_info("parallel")
     rendered = _render_option_body(
-        opt_info, doc, layer_id="l0", sublayer="l0_a", axis="compute_mode"
+        opt_info, doc, layer_id="l0", sublayer="l0_a", axis="compute_policy"
     )
     assert "| `parallel_unit` |" in rendered
     assert "| — |" in rendered
@@ -252,11 +252,11 @@ def test_encyclopedia_l0_pages_contain_parameters_table():
 
     l0_axes = {ax.name: ax for ax in axes("l0")}
 
-    repro_page = _render_axis_page("l0", l0_axes["reproducibility_mode"])
+    repro_page = _render_axis_page("l0", l0_axes["reproducibility_policy"])
     assert "**Parameters**" in repro_page
     assert "random_seed" in repro_page
 
-    compute_page = _render_axis_page("l0", l0_axes["compute_mode"])
+    compute_page = _render_axis_page("l0", l0_axes["compute_policy"])
     assert "**Parameters**" in compute_page
     assert "parallel_unit" in compute_page
     assert "n_workers" in compute_page

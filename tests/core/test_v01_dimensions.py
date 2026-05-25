@@ -47,7 +47,7 @@ def _custom_recipe(*, family: str = "ridge", n_lag: object = 1, l3_extra_node: s
 7_interpretation:
   enabled: true
   nodes:
-    - {id: src_model, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: fit_model}}}
+    - {id: src_model, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: fit}}}
     - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - {id: imp_perm, type: step, op: permutation_importance, inputs: [src_model, src_X, src_y]}
@@ -73,12 +73,12 @@ def _custom_recipe(*, family: str = "ridge", n_lag: object = 1, l3_extra_node: s
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 7
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -109,16 +109,16 @@ def _custom_recipe(*, family: str = "ridge", n_lag: object = 1, l3_extra_node: s
   nodes:
     - {{id: src_X, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: X_final}}}}}}
     - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
-    - id: fit_model
+    - id: fit
       type: step
-      op: fit_model
-      params: {{family: {family}, alpha: 1.0, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
+      op: fit
+      params: {{model: {family}, alpha: 1.0, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
       {benchmark_node}
       inputs: [src_X, src_y]
-    - {{id: predict, type: step, op: predict, inputs: [fit_model, src_X]}}
+    - {{id: predict, type: step, op: predict, inputs: [fit, src_X]}}
   sinks:
     l4_forecasts_v1: predict
-    l4_model_artifacts_v1: fit_model
+    l4_model_artifacts_v1: fit
     l4_training_metadata_v1: auto
 5_evaluation:
   fixed_axes:
@@ -139,11 +139,11 @@ def test_dim1_l1_loads_fred_sd_from_local_fixture(tmp_path):
         f"""
 1_data:
   fixed_axes:
-    custom_source_policy: official_only
+    panel_composition: official_only
     dataset: fred_sd
     frequency: monthly
-    target_geography_scope: selected_states
-    predictor_geography_scope: match_target
+    target_geography_policy: selected_states
+    predictor_geography_policy: match_target
     sample_start_rule: max_balanced
   leaf_config:
     target: UR_CA
@@ -213,14 +213,14 @@ def test_dim4_l4_extended_model_families(family):
     recipe = _custom_recipe(family=family)
     result = execute_recipe(recipe)
     artifact = result.cells[0].runtime_result.artifacts["l4_model_artifacts_v1"]
-    assert artifact.artifacts["fit_model"].family == family
+    assert artifact.artifacts["fit"].family == family
 
 
 def test_dim4_l4_records_alpha_in_fit_metadata():
     recipe = _custom_recipe(family="ridge")
     result = execute_recipe(recipe)
     artifact = result.cells[0].runtime_result.artifacts["l4_model_artifacts_v1"]
-    assert "alpha" in artifact.artifacts["fit_model"].fit_metadata
+    assert "alpha" in artifact.artifacts["fit"].fit_metadata
 
 
 def test_dim4_l4_rolling_window_runs():
@@ -229,7 +229,7 @@ def test_dim4_l4_rolling_window_runs():
     recipe = recipe.replace("'min_train_size': 4", "'min_train_size': 3, 'rolling_window': 3")
     recipe = recipe.replace("min_train_size: 4", "min_train_size: 3, rolling_window: 3")
     result = execute_recipe(recipe)
-    fit_meta = result.cells[0].runtime_result.artifacts["l4_model_artifacts_v1"].artifacts["fit_model"].fit_metadata
+    fit_meta = result.cells[0].runtime_result.artifacts["l4_model_artifacts_v1"].artifacts["fit"].fit_metadata
     assert fit_meta["runtime"].startswith("rolling_")
 
 

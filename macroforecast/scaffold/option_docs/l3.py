@@ -1232,9 +1232,9 @@ _OP_TARGET_CONSTRUCTION = _o(
     "Build the supervised target (``y``) from the panel.",
     (
         "Constructs the regression target according to "
-        "``forecast_strategy`` (direct / iterated / cumulative_average) "
+        "``forecast_policy`` (direct / iterated / cumulative_average) "
         "and the L1.F horizon set. Outputs the ``y`` artifact that L4 "
-        "fit_model nodes consume.\n\n"
+        "fit nodes consume.\n\n"
         "Required as the leaf of every L3 pipeline; the runtime auto-injects "
         "it when the user does not."
     ),
@@ -2146,7 +2146,7 @@ _OP_SLICED_INVERSE_REGRESSION = _o(
     (
         "Supervised dimension reduction extending ``scaled_pca`` to "
         "non-linear y → X dependence. Pipeline: (1) standardise X; "
-        "(2) optional column-wise predictive scaling (``scaling_method`` "
+        "(2) optional column-wise predictive scaling (``scaling_policy`` "
         "= ``scaled_pca`` reuses the Huang-Zhou OLS-slope; "
         "``marginal_R2`` uses sign(β_j)·√R²_j; ``none`` skips); "
         "(3) sort rows by y and partition into ``n_slices`` H "
@@ -2158,7 +2158,7 @@ _OP_SLICED_INVERSE_REGRESSION = _o(
         "with higher correlation than plain SIR in the macro-panel "
         "regime where signals are sparse over predictors.\n\n"
         "Defaults: ``n_components = 2``, ``n_slices = 10``, "
-        "``scaling_method = 'scaled_pca'``. Requires a "
+        "``scaling_policy = 'scaled_pca'``. Requires a "
         "``target_signal`` input port; ``temporal_rule`` is required "
         "and rejects ``full_sample_once``."
     ),

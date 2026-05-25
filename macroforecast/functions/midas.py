@@ -39,7 +39,7 @@ class MidasFitResult:
         OLS coefficient vector on the lag design matrix).
     intercept_ :
         Fitted intercept scalar.
-    family :
+    model :
         Descriptor string: one of "midas_almon", "midas_beta", "midas_step",
         "dfm_unrestricted_midas".
     _model :

@@ -10,7 +10,7 @@ from macroforecast.core.types import L6TestsArtifact, L7ImportanceArtifact, L8Ar
 MINIMAL_RECIPE = """
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -42,8 +42,8 @@ MINIMAL_RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
   sinks:
@@ -91,19 +91,19 @@ def test_execute_minimal_forecast_computes_l5_relative_metrics_against_benchmark
     yaml_text = MINIMAL_RECIPE.replace(
         """    - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]""",
         """    - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - id: fit_ols
       type: step
-      op: fit_model
+      op: fit
       is_benchmark: true
-      params: {family: ols, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      params: {model: ols, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]""",
     ).replace("l4_model_artifacts_v1: fit_ridge", "l4_model_artifacts_v1: [fit_ridge, fit_ols]").replace(
         "primary_metric: mse",
@@ -225,7 +225,7 @@ def test_execute_minimal_forecast_materializes_l4_5_diagnostic():
     assert diagnostic.enabled is True
     assert diagnostic.layer_hooked == "l4"
     assert diagnostic.metadata["forecast_summary"]["n_forecasts"] == 2
-    assert diagnostic.metadata["model_summary"]["fit_ridge"]["family"] == "ridge"
+    assert diagnostic.metadata["model_summary"]["fit_ridge"]["model"] == "ridge"
     assert diagnostic.metadata["training_summary"]["refit_origin_count"] == {"fit_ridge": 2}
     assert diagnostic.metadata["fit_summary"]["fit_ridge|y|h1"]["n"] == 2
 
@@ -235,19 +235,19 @@ def test_execute_minimal_forecast_materializes_enabled_l6_runtime():
         MINIMAL_RECIPE.replace(
             """    - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]""",
             """    - id: fit_ridge
       type: step
-      op: fit_model
-      params: {family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - id: fit_ols
       type: step
-      op: fit_model
+      op: fit
       is_benchmark: true
-      params: {family: ols, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      params: {model: ols, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]""",
         ).replace("l4_model_artifacts_v1: fit_ridge", "l4_model_artifacts_v1: [fit_ridge, fit_ols]")
         + """
@@ -311,7 +311,7 @@ def test_execute_minimal_forecast_materializes_enabled_l7_importance():
 
 
 def test_execute_minimal_forecast_rejects_unknown_family():
-    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: nonexistent_family_xyz")
+    yaml_text = MINIMAL_RECIPE.replace("model: ridge", "model: nonexistent_family_xyz")
 
     # The L4 schema rejects via the params_schema options check first
     # ("unknown model family 'X'") and the validator hard rule second
@@ -325,7 +325,7 @@ def test_execute_minimal_forecast_realized_garch_now_operational_after_c49():
     # C49 promoted realized_garch to operational (Hansen-Huang-Shek 2012 joint MLE).
     # FUTURE_MODEL_FAMILIES is now empty. realized_garch no longer raises; recipe proceeds.
     # We use a truly unknown name to test the "future or unknown" rejection path.
-    yaml_text = MINIMAL_RECIPE.replace("family: ridge", "family: nonexistent_future_c49_placeholder_xyz")
+    yaml_text = MINIMAL_RECIPE.replace("model: ridge", "model: nonexistent_future_c49_placeholder_xyz")
     with pytest.raises(ValueError, match=r"(unknown model family|model family is future)"):
         execute_minimal_forecast(yaml_text)
 
@@ -347,7 +347,7 @@ def test_execute_minimal_forecast_realized_garch_now_operational_after_c49():
     ],
 )
 def test_execute_minimal_forecast_supports_operational_families(family):
-    yaml_text = MINIMAL_RECIPE.replace("family: ridge", f"family: {family}")
+    yaml_text = MINIMAL_RECIPE.replace("model: ridge", f"model: {family}")
 
     result = execute_minimal_forecast(yaml_text)
     l4_models = result.sink("l4_model_artifacts_v1")

@@ -1,7 +1,7 @@
 """test(c50): L2 axes -- chow_lin + keep_with_indicator -- 10 scenarios.
 
 Tests behavioral contracts for:
-  - quarterly_to_monthly_rule="chow_lin": conservation property, non-trivial
+  - quarterly_to_monthly_policy="chow_lin": conservation property, non-trivial
     computation vs step_backward, determinism.
   - outlier_action="keep_with_indicator": value preservation, indicator column
     naming, per-column logic, determinism, regression guard for existing actions.
@@ -31,7 +31,7 @@ def test_l2_chow_lin_now_accepted():
     yaml_text = """
     2_preprocessing:
       fixed_axes:
-        quarterly_to_monthly_rule: chow_lin
+        quarterly_to_monthly_policy: chow_lin
         sd_series_frequency_filter: both
     """
     # validate_layer with l1_context that activates the quarterly_to_monthly gate.

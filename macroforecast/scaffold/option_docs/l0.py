@@ -127,13 +127,13 @@ _FAILURE_POLICY_CONTINUE = OptionDoc(
 
 
 # ---------------------------------------------------------------------------
-# L0.A reproducibility_mode
+# L0.A reproducibility_policy
 # ---------------------------------------------------------------------------
 
 _REPRODUCIBILITY_SEEDED = OptionDoc(
     layer="l0",
     sublayer="l0_a",
-    axis="reproducibility_mode",
+    axis="reproducibility_policy",
     option="seeded_reproducible",
     summary="Fix a deterministic seed and propagate it through every RNG.",
     description=(
@@ -177,7 +177,7 @@ _REPRODUCIBILITY_SEEDED = OptionDoc(
             code=(
                 "0_meta:\n"
                 "  fixed_axes:\n"
-                "    reproducibility_mode: seeded_reproducible\n"
+                "    reproducibility_policy: seeded_reproducible\n"
                 "  leaf_config:\n"
                 "    random_seed: 42\n"
             ),
@@ -204,7 +204,7 @@ _REPRODUCIBILITY_SEEDED = OptionDoc(
 _REPRODUCIBILITY_EXPLORATORY = OptionDoc(
     layer="l0",
     sublayer="l0_a",
-    axis="reproducibility_mode",
+    axis="reproducibility_policy",
     option="exploratory",
     summary="Do not fix stochastic seeds; each run draws fresh randomness.",
     description=(
@@ -241,7 +241,7 @@ _REPRODUCIBILITY_EXPLORATORY = OptionDoc(
             code=(
                 "0_meta:\n"
                 "  fixed_axes:\n"
-                "    reproducibility_mode: exploratory\n"
+                "    reproducibility_policy: exploratory\n"
             ),
         ),
     ),
@@ -252,13 +252,13 @@ _REPRODUCIBILITY_EXPLORATORY = OptionDoc(
 
 
 # ---------------------------------------------------------------------------
-# L0.A compute_mode
+# L0.A compute_policy
 # ---------------------------------------------------------------------------
 
 _COMPUTE_SERIAL = OptionDoc(
     layer="l0",
     sublayer="l0_a",
-    axis="compute_mode",
+    axis="compute_policy",
     option="serial",
     summary="Run every sweep cell sequentially in the calling process.",
     description=(
@@ -280,7 +280,7 @@ _COMPUTE_SERIAL = OptionDoc(
     references=(
         Reference(
             citation=(
-                "macroforecast design Part 1, L0 §A: 'compute_mode = serial is the "
+                "macroforecast design Part 1, L0 §A: 'compute_policy = serial is the "
                 "deterministic default; parallel modes are opt-in for "
                 "wall-clock-sensitive sweeps.'"
             ),
@@ -298,7 +298,7 @@ _COMPUTE_SERIAL = OptionDoc(
             code=(
                 "0_meta:\n"
                 "  fixed_axes:\n"
-                "    compute_mode: serial\n"
+                "    compute_policy: serial\n"
             ),
         ),
     ),
@@ -311,7 +311,7 @@ _COMPUTE_SERIAL = OptionDoc(
 _COMPUTE_PARALLEL = OptionDoc(
     layer="l0",
     sublayer="l0_a",
-    axis="compute_mode",
+    axis="compute_policy",
     option="parallel",
     summary="Distribute work over multiple workers; pick the unit via parallel_unit.",
     description=(
@@ -320,7 +320,7 @@ _COMPUTE_PARALLEL = OptionDoc(
         "* ``cells`` -- one process per sweep cell (``ProcessPoolExecutor``). "
         "  Cell-level parallelism is the safest path because cells are by "
         "  construction independent.\n"
-        "* ``models`` -- threads over ``fit_model`` nodes inside a single "
+        "* ``models`` -- threads over ``fit`` nodes inside a single "
         "  cell (issue #204). Sklearn-family estimators release the GIL; the "
         "  thread pool avoids the pickling overhead of processes.\n"
         "* ``oos_dates`` -- threads over walk-forward origins inside a fit "
@@ -333,7 +333,7 @@ _COMPUTE_PARALLEL = OptionDoc(
     ),
     when_to_use=(
         "Long sweeps on multi-core machines. Validate the manifest under "
-        "``compute_mode = serial`` first to confirm the recipe is "
+        "``compute_policy = serial`` first to confirm the recipe is "
         "deterministic, then flip to ``parallel`` and verify "
         "``replicate()`` still passes."
     ),
@@ -361,7 +361,7 @@ _COMPUTE_PARALLEL = OptionDoc(
             code=(
                 "0_meta:\n"
                 "  fixed_axes:\n"
-                "    compute_mode: parallel\n"
+                "    compute_policy: parallel\n"
                 "    parallel_unit: cells\n"
                 "  leaf_config:\n"
                 "    n_workers: 4\n"
@@ -373,7 +373,7 @@ _COMPUTE_PARALLEL = OptionDoc(
             name="parallel_unit",
             type="str enum {cells, models, horizons, targets, oos_dates}",
             default=REQUIRED,
-            constraint="required when compute_mode=parallel; validator hard-rejects missing",
+            constraint="required when compute_policy=parallel; validator hard-rejects missing",
             description=(
                 "Parallelization granularity. ``cells`` runs each sweep cell in a "
                 "ProcessPoolExecutor worker; ``models``/``horizons``/``targets``/"

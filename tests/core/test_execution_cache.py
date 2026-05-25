@@ -33,12 +33,12 @@ def _fred_md_recipe(*, target: str = "y") -> str:
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 0
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -65,8 +65,8 @@ def _fred_md_recipe(*, target: str = "y") -> str:
     - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
     - id: fit_model
       type: step
-      op: fit_model
-      params: {{family: ridge, alpha: 1.0, min_train_size: 2, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
+      op: fit
+      params: {{model: ridge, alpha: 1.0, min_train_size: 2, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
       inputs: [src_X, src_y]
     - {{id: predict, type: step, op: predict, inputs: [fit_model, src_X]}}
   sinks:
@@ -150,14 +150,14 @@ def test_official_fred_md_with_shared_cache_root_writes_one_artifact(tmp_path):
     shared_cache.mkdir()
     recipe_a = f"""
 1_data:
-  fixed_axes: {{custom_source_policy: official_only, dataset: fred_md, frequency: monthly}}
+  fixed_axes: {{panel_composition: official_only, dataset: fred_md, frequency: monthly}}
   leaf_config:
     target: INDPRO
     local_raw_source: {_FRED_MD_LOCAL}
 """
     recipe_b = f"""
 1_data:
-  fixed_axes: {{custom_source_policy: official_only, dataset: fred_md, frequency: monthly}}
+  fixed_axes: {{panel_composition: official_only, dataset: fred_md, frequency: monthly}}
   leaf_config:
     target: INDPRO
     local_raw_source: {_FRED_MD_LOCAL}
@@ -188,7 +188,7 @@ def test_distinct_cache_roots_are_independent(tmp_path):
     cache_b.mkdir()
     recipe = f"""
 1_data:
-  fixed_axes: {{custom_source_policy: official_only, dataset: fred_md, frequency: monthly}}
+  fixed_axes: {{panel_composition: official_only, dataset: fred_md, frequency: monthly}}
   leaf_config:
     target: INDPRO
     local_raw_source: {_FRED_MD_LOCAL}

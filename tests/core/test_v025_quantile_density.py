@@ -39,8 +39,8 @@ def test_emit_quantile_intervals_runs_per_quantile_when_X_y_supplied():
     forecasts = {("m", "y", 1, idx): float(y.iloc[i]) for i, idx in enumerate(X.index)}
     fit_nodes = [
         {
-            "op": "fit_model",
-            "params": {"forecast_object": "quantile", "family": "ridge", "quantile_levels": [0.1, 0.5, 0.9]},
+            "op": "fit",
+            "params": {"forecast_object": "quantile", "model": "ridge", "quantile_levels": [0.1, 0.5, 0.9]},
         }
     ]
     intervals = _emit_quantile_intervals(forecasts, fit_nodes, X=X, y=y)
@@ -68,10 +68,10 @@ def _build_l3_l1():
         horizon_set=(1,),
     )
     l1 = L1DataDefinitionArtifact(
-        custom_source_policy="custom_panel_only", dataset="custom", frequency="monthly",
+        panel_composition="custom_panel_only", dataset="custom", frequency="monthly",
         vintage_policy="current_vintage", target_structure="single_target", target="y",
-        targets=("y",), variable_universe="all_variables", target_geography_scope=None,
-        predictor_geography_scope=None, sample_start_rule="max_balanced",
+        targets=("y",), variable_universe="all_variables", target_geography_policy=None,
+        predictor_geography_policy=None, sample_start_rule="max_balanced",
         sample_end_rule="latest_available", horizon_set="custom_list", target_horizons=(1,),
         regime_definition="none",
         raw_panel=Panel(data=pd.DataFrame(), shape=(0, 0), column_names=(), index=pd.Index([]), metadata=PanelMetadata()),

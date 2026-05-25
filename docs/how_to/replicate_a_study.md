@@ -79,7 +79,7 @@ result = mf.run(original_recipe, output_directory="my_study_output_v2/")
 
 **3. Check data:**
 
-If `custom_source_policy: official_only`, FRED data may have been revised since
+If `panel_composition: official_only`, FRED data may have been revised since
 the original run. Use `custom_panel_inline` or a fixed CSV to avoid vintage drift.
 
 **4. Pin the lockfile:**

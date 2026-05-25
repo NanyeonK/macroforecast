@@ -59,8 +59,8 @@ class MappingArtifact(MetadataArtifact):
 @dataclass(frozen=True)
 class L0MetaArtifact(DataType):
     failure_policy: Literal["fail_fast", "continue_on_failure"]
-    reproducibility_mode: Literal["seeded_reproducible", "exploratory"]
-    compute_mode: Literal["serial", "parallel"]
+    reproducibility_policy: Literal["seeded_reproducible", "exploratory"]
+    compute_policy: Literal["serial", "parallel"]
     random_seed: int | None
     parallel_unit: Literal["models", "horizons", "targets", "oos_dates"] | None
     n_workers: int | Literal["auto"] | None
@@ -71,7 +71,7 @@ class L0MetaArtifact(DataType):
 
 @dataclass(frozen=True)
 class L1DataDefinitionArtifact(DataType):
-    custom_source_policy: Literal["official_only", "custom_panel_only", "official_plus_custom"]
+    panel_composition: Literal["official_only", "custom_panel_only", "official_plus_custom"]
     dataset: Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"] | None
     frequency: Literal["monthly", "quarterly"]
     vintage_policy: Literal["current_vintage", "real_time_alfred"] | None
@@ -88,8 +88,8 @@ class L1DataDefinitionArtifact(DataType):
         ]
         | None
     ) = None
-    target_geography_scope: Literal["single_state", "all_states", "selected_states"] | None = None
-    predictor_geography_scope: Literal["match_target", "all_states", "selected_states", "national_only"] | None = None
+    target_geography_policy: Literal["single_state", "all_states", "selected_states"] | None = None
+    predictor_geography_policy: Literal["match_target", "all_states", "selected_states", "national_only"] | None = None
     sample_start_rule: Literal["earliest_available", "fixed_date", "max_balanced"] = "max_balanced"
     sample_end_rule: Literal["latest_available", "fixed_date"] = "latest_available"
     horizon_set: Literal["standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"] = "standard_md"

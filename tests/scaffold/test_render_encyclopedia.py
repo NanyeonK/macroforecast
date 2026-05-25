@@ -60,9 +60,9 @@ def test_public_api_page_preserved(tmp_path: Path) -> None:
     assert "macroforecast.replicate" in body
 
 
-def test_l4_family_axis_includes_documented_option(tmp_path: Path) -> None:
+def test_l4_model_axis_includes_documented_option(tmp_path: Path) -> None:
     render_encyclopedia.write_all(tmp_path)
-    family_md = (tmp_path / "l4" / "axes" / "family.md").read_text(encoding="utf-8")
+    family_md = (tmp_path / "l4" / "axes" / "model.md").read_text(encoding="utf-8")
     # ar_p has a Tier-1 OptionDoc registered; full prose must surface.
     assert "### `ar_p`" in family_md
     assert "Autoregressive AR(p)" in family_md
@@ -114,7 +114,7 @@ def test_browse_by_axis_lists_every_axis(tmp_path: Path) -> None:
     body = (tmp_path / "browse_by_axis.md").read_text(encoding="utf-8")
     # Every layer's axes must show up. Grab a representative axis from
     # each layer and check the link text appears.
-    for axis_name in ("failure_policy", "dataset", "family", "search_algorithm"):
+    for axis_name in ("failure_policy", "dataset", "model", "search_algorithm"):
         assert f"`{axis_name}`" in body, axis_name
 
 

@@ -31,7 +31,7 @@ def test_l1_standard_fred_md_yaml_parses():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: official_only
+        panel_composition: official_only
         dataset: fred_md
         target_structure: single_target
         variable_universe: all_variables
@@ -44,7 +44,7 @@ def test_l1_standard_fred_md_yaml_parses():
     assert resolved["frequency"] == "monthly"
     assert resolved["horizon_set"] == "standard_md"
     assert "l1_data_definition_v1" in dag.sinks
-    assert "target_geography_scope" not in resolved or resolved["target_geography_scope"] is None
+    assert "target_geography_policy" not in resolved or resolved["target_geography_policy"] is None
 
 
 def test_l1_fred_qd_derives_quarterly_and_standard_qd():
@@ -80,8 +80,8 @@ def test_l1_fred_sd_requires_frequency_and_geography():
       fixed_axes:
         dataset: fred_sd
         frequency: monthly
-        target_geography_scope: selected_states
-        predictor_geography_scope: selected_states
+        target_geography_policy: selected_states
+        predictor_geography_policy: selected_states
       leaf_config:
         target: PAYEMS
         target_states: [CA, NY]
@@ -91,8 +91,8 @@ def test_l1_fred_sd_requires_frequency_and_geography():
     report = validate_layer(layer)
     resolved = resolve_axes(normalize_to_dag_form(layer))
     assert not report.has_hard_errors
-    assert resolved["target_geography_scope"] == "selected_states"
-    assert resolved["predictor_geography_scope"] == "selected_states"
+    assert resolved["target_geography_policy"] == "selected_states"
+    assert resolved["predictor_geography_policy"] == "selected_states"
     assert resolved["variable_universe"] is None
 
 
@@ -113,7 +113,7 @@ def test_l1_custom_panel_requires_path_and_frequency():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: custom_panel_only
+        panel_composition: custom_panel_only
       leaf_config:
         target: y
     """
@@ -128,7 +128,7 @@ def test_l1_official_plus_custom_requires_merge_keys():
     yaml_text = """
     1_data:
       fixed_axes:
-        custom_source_policy: official_plus_custom
+        panel_composition: official_plus_custom
       leaf_config:
         target: CPIAUCSL
         custom_source_path: custom.csv
@@ -312,7 +312,7 @@ def test_l1_manifest_records_resolved_defaults():
     """
     manifest = execute_recipe(build_recipe_with_l1_only(yaml_text))
     record = manifest.layer_execution_log["l1"]
-    assert record.resolved_axes["custom_source_policy"].source == "package_default"
+    assert record.resolved_axes["panel_composition"].source == "package_default"
     assert record.resolved_axes["frequency"].value == "monthly"
     assert record.produced_sinks == ("l1_data_definition_v1", "l1_regime_metadata_v1")
 

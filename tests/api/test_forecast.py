@@ -31,8 +31,8 @@ def test_forecast_default_recipe_layer0_seed_and_axes():
     recipe = b.build()
     l0 = recipe["0_meta"]
     assert l0["fixed_axes"]["failure_policy"] == "fail_fast"
-    assert l0["fixed_axes"]["reproducibility_mode"] == "seeded_reproducible"
-    assert l0["fixed_axes"]["compute_mode"] == "serial"
+    assert l0["fixed_axes"]["reproducibility_policy"] == "seeded_reproducible"
+    assert l0["fixed_axes"]["compute_policy"] == "serial"
     assert l0["leaf_config"]["random_seed"] == 42
 
 
@@ -116,9 +116,9 @@ def test_forecast_default_layer4_has_single_fit_model_with_chosen_family():
     )
     recipe = b.build()
     l4 = recipe["4_forecasting_model"]
-    fit_nodes = [n for n in l4["nodes"] if n.get("op") == "fit_model"]
+    fit_nodes = [n for n in l4["nodes"] if n.get("op") == "fit"]
     assert len(fit_nodes) == 1
-    assert fit_nodes[0]["params"]["family"] == "ridge"
+    assert fit_nodes[0]["params"]["model"] == "ridge"
 
 
 def test_forecast_default_layer5_primary_metric_mse():

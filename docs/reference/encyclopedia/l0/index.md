@@ -12,13 +12,13 @@
 
 | Sub-layer | Name | Gate | Axes |
 |---|---|---|---|
-| `l0_a` | Execution policy | always | [failure_policy](axes/failure_policy.md), [reproducibility_mode](axes/reproducibility_mode.md), [compute_mode](axes/compute_mode.md) |
+| `l0_a` | Execution policy | always | [failure_policy](axes/failure_policy.md), [reproducibility_policy](axes/reproducibility_policy.md), [compute_policy](axes/compute_policy.md) |
 
 ```{toctree}
 :hidden:
 :maxdepth: 1
 
 axes/failure_policy
-axes/reproducibility_mode
-axes/compute_mode
+axes/reproducibility_policy
+axes/compute_policy
 ```

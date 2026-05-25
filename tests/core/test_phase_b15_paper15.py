@@ -23,7 +23,7 @@ shrinkage by ~30%) unreproducible from the helper:
   ``macroeconomic_data_transformations_horse_race`` did not.
 
 The five tests below close F4 + F5. Implementation choice (per spec
-F4 alternative): introduce an opt-in ``forecast_strategy="path_average_eq4"``
+F4 alternative): introduce an opt-in ``forecast_policy="path_average_eq4"``
 flag rather than mutating the existing ``"path_average"`` semantics, so
 old recipes keep their (degenerate) behavior. See ``implementation.md``.
 
@@ -83,19 +83,19 @@ def _build_h4_panel(T: int = 120, K: int = 3, seed: int = 0):
 
 def _make_eq4_recipe(panel: dict, *, horizon: int = 4) -> dict:
     """Build a path_average recipe with the new
-    ``forecast_strategy="path_average_eq4"`` flag, riding on the paper-15
+    ``forecast_policy="path_average_eq4"`` flag, riding on the paper-15
     helper's L1/L2 wiring (custom_panel_inline) and the paper-15 L3
     cell-F transform."""
 
     # Use the paper-15 helper's L4 single-fit shape and overwrite the
-    # forecast_strategy / family params for path_average_eq4. Use the
+    # forecast_policy / family params for path_average_eq4. Use the
     # cell-F L3 graph (PCA factors) with mode="path_average" so the
     # target construction stamps y_orig on attrs.
     l4_block = _l4_single_fit(
         "ridge",
         {
             "alpha": 1.0,
-            "forecast_strategy": "path_average_eq4",
+            "forecast_policy": "path_average_eq4",
             "min_train_size": 24,
         },
         fit_node_id="fit",
@@ -124,7 +124,7 @@ def _make_eq4_recipe(panel: dict, *, horizon: int = 4) -> dict:
 
 def test_data_transforms_path_average_eq4_fits_h_separate_models():
     """Phase B-15 F4: with ``target_method="path_average"`` AND
-    ``forecast_strategy="path_average_eq4"``, the L4 walk-forward must
+    ``forecast_policy="path_average_eq4"``, the L4 walk-forward must
     fit ``h`` separate models (one per per-horizon target ``y.shift(-h')``,
     h' = 1..h) and store them on the model artifact. The legacy
     ``"path_average"`` strategy fits a single model on the
@@ -259,15 +259,15 @@ def test_data_transforms_horse_race_attach_eval_blocks():
     # F5 closure (b): benchmark fit_node uses factor_augmented_ar / BIC.
     l4_nodes = recipe["4_forecasting_model"]["nodes"]
     benchmark = next(
-        (n for n in l4_nodes if n.get("op") == "fit_model" and n.get("is_benchmark")),
+        (n for n in l4_nodes if n.get("op") == "fit" and n.get("is_benchmark")),
         None,
     )
     assert benchmark is not None, (
-        "attach_eval_blocks=True must add a fit_model node flagged is_benchmark=True"
+        "attach_eval_blocks=True must add a fit node flagged is_benchmark=True"
     )
-    assert benchmark["params"]["family"] == "factor_augmented_ar", (
-        f"paper §4.4 (ARDI, BIC) reference: benchmark family must be "
-        f"factor_augmented_ar, got {benchmark['params']['family']!r}"
+    assert benchmark["params"]["model"] == "factor_augmented_ar", (
+        f"paper §4.4 (ARDI, BIC) reference: benchmark model must be "
+        f"factor_augmented_ar, got {benchmark['params']['model']!r}"
     )
     assert benchmark["params"]["search_algorithm"] == "bic", (
         f"benchmark search_algorithm must be 'bic'; got "

@@ -118,7 +118,7 @@ def random_walk_ridge_fit(
     alpha: float = 1.0,
     vol_model: Literal["garch11", "ewma"] = "garch11",
     max_alpha_ratio: float = 1e6,
-    alpha_strategy: Literal["second_cv", "fixed"] = "second_cv",
+    alpha_search_policy: Literal["second_cv", "fixed"] = "second_cv",
     alpha_grid: list[float] | None = None,
     cv_folds: int = 5,
     random_state: int = 0,
@@ -144,7 +144,7 @@ def random_walk_ridge_fit(
         paper spec) or "ewma" (RiskMetrics lambda=0.94; no extra deps).
     max_alpha_ratio : float
         Upper bound on step-2 alpha / step-1 alpha ratio. Default 1e6.
-    alpha_strategy : str
+    alpha_search_policy : str
         "second_cv" (default; re-runs CV after warm-start step 1) or
         "fixed" (uses ``alpha`` as-is for both steps).
     alpha_grid : list[float] or None
@@ -175,7 +175,7 @@ def random_walk_ridge_fit(
         alpha=float(alpha),
         vol_model=vol_model,
         max_alpha_ratio=float(max_alpha_ratio),
-        alpha_strategy=alpha_strategy,
+        alpha_search_policy=alpha_search_policy,
         alpha_grid=alpha_grid,
         cv_folds=cv_folds,
         random_state=random_state,

@@ -59,7 +59,7 @@ def _l1_minimal(
 
     return {
         "fixed_axes": {
-            "custom_source_policy": "custom_panel_only",
+            "panel_composition": "custom_panel_only",
             "frequency": "monthly",
             "horizon_set": "custom_list",
         },
@@ -123,15 +123,15 @@ def _l3_lag_target(horizon: int) -> dict[str, Any]:
 def _l4_single_fit(
     family: str, fit_params: dict[str, Any], fit_node_id: str = "fit"
 ) -> dict[str, Any]:
-    """L4 block with one fit_model node + predict node."""
+    """L4 block with one fit node + predict node."""
 
     fit = {
         "id": fit_node_id,
         "type": "step",
-        "op": "fit_model",
+        "op": "fit",
         "params": {
-            "family": family,
-            "forecast_strategy": "direct",
+            "model": family,
+            "forecast_policy": "direct",
             "training_start_rule": "expanding",
             "refit_policy": "every_origin",
             "search_algorithm": "none",
@@ -183,7 +183,7 @@ def _l4_with_benchmark(
     benchmark_family: str = "factor_augmented_ar",
     benchmark_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """L4 block with two fit_model nodes: the cell's family plus a
+    """L4 block with two fit nodes: the cell's family plus a
     benchmark flagged ``is_benchmark: true`` for downstream L6 DM / MCS
     routing.
 
@@ -202,8 +202,8 @@ def _l4_with_benchmark(
     """
 
     bench_params = {
-        "family": benchmark_family,
-        "forecast_strategy": "direct",
+        "model": benchmark_family,
+        "forecast_policy": "direct",
         "training_start_rule": "expanding",
         "refit_policy": "every_origin",
         "search_algorithm": "bic",
@@ -212,8 +212,8 @@ def _l4_with_benchmark(
         **(benchmark_params or {}),
     }
     cell_params = {
-        "family": family,
-        "forecast_strategy": "direct",
+        "model": family,
+        "forecast_policy": "direct",
         "training_start_rule": "expanding",
         "refit_policy": "every_origin",
         "search_algorithm": "none",
@@ -243,7 +243,7 @@ def _l4_with_benchmark(
             {
                 "id": "fit_benchmark",
                 "type": "step",
-                "op": "fit_model",
+                "op": "fit",
                 "params": bench_params,
                 "is_benchmark": True,
                 "inputs": ["src_X", "src_y"],
@@ -257,7 +257,7 @@ def _l4_with_benchmark(
             {
                 "id": "fit_cell",
                 "type": "step",
-                "op": "fit_model",
+                "op": "fit",
                 "params": cell_params,
                 "inputs": ["src_X", "src_y"],
             },
@@ -329,7 +329,7 @@ def _base_recipe(
         "0_meta": {
             "fixed_axes": {
                 "failure_policy": "fail_fast",
-                "reproducibility_mode": "seeded_reproducible",
+                "reproducibility_policy": "seeded_reproducible",
             },
             "leaf_config": {"random_seed": seed},
         },
@@ -647,7 +647,7 @@ def two_step_ridge(
     horizon: int = 1,
     alpha_step2: float = 0.1,
     vol_model: str = "garch11",
-    alpha_strategy: str = "second_cv",
+    alpha_search_policy: str = "second_cv",
     alpha_grid: list[float] | None = None,
     cv_folds: int = 5,
     panel: dict[str, list[Any]] | None = None,
@@ -661,7 +661,7 @@ def two_step_ridge(
     before a closed-form heterogeneous-Ω solve. The second CV is the
     paper's "crucial" step (§2.5 footnote 4 + §2.4.1): heterogeneous
     variance changes the effective regularization, so the warm-start λ
-    is no longer the optimum. Default ``alpha_strategy="second_cv"``
+    is no longer the optimum. Default ``alpha_search_policy="second_cv"``
     enables the K-fold CV; set to ``"fixed"`` to bypass it.
 
     Phase B-8 audit-fix:
@@ -669,7 +669,7 @@ def two_step_ridge(
     * Dropped ``alpha_step1`` (paper-faithful 2SRR uses ONE λ across
       step 1 + step 2, picked by the second CV; the previous wired
       ``fit_step1`` ridge node was unused dead weight).
-    * Surfaced ``alpha_strategy`` (``"second_cv"`` default,
+    * Surfaced ``alpha_search_policy`` (``"second_cv"`` default,
       ``"fixed"``), ``alpha_grid`` (default
       ``[0.01, 0.1, 1.0, 10.0, 100.0]``), and ``cv_folds`` (default
       ``5``) as first-class kwargs for paper §2.5 step 4.
@@ -686,13 +686,13 @@ def two_step_ridge(
     """
 
     step2_params: dict[str, Any] = {
-        "family": "ridge",
+        "model": "ridge",
         "alpha": alpha_step2,
         "prior": "random_walk",
         "vol_model": vol_model,
-        "alpha_strategy": alpha_strategy,
+        "alpha_search_policy": alpha_search_policy,
         "cv_folds": cv_folds,
-        "forecast_strategy": "direct",
+        "forecast_policy": "direct",
         "training_start_rule": "expanding",
         "refit_policy": "every_origin",
         "search_algorithm": "none",
@@ -723,7 +723,7 @@ def two_step_ridge(
             {
                 "id": "fit_step2",
                 "type": "step",
-                "op": "fit_model",
+                "op": "fit",
                 "params": step2_params,
                 "inputs": ["src_X", "src_y"],
             },
@@ -1016,7 +1016,7 @@ def macroeconomic_random_forest(
       preference (paper §3.2; values >1 bias splits toward the trend
       column for explicit time-axis non-stationarity handling).
 
-    All six are forwarded into the L4 ``fit_model`` ``params`` dict and
+    All six are forwarded into the L4 ``fit`` ``params`` dict and
     plumbed through ``_MRFExternalWrapper`` to the vendored
     ``MacroRandomForest`` constructor.
 
@@ -3513,12 +3513,12 @@ def sliced_inverse_regression(
     horizon: int = 1,
     n_components: int = 2,
     n_slices: int = 10,
-    scaling_method: str = "scaled_pca",
+    scaling_policy: str = "scaled_pca",
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
 ) -> dict[str, Any]:
     """Fan-Xue-Yao (2017) sliced inverse regression with optional Huang-Zhou
-    (2022) predictive scaling (``scaling_method='scaled_pca'`` = sSUFF).
+    (2022) predictive scaling (``scaling_policy='scaled_pca'`` = sSUFF).
 
     **Decomposition.** Single ``sliced_inverse_regression`` L3 op (paper-
     faithful: standardise → optional column-wise scaling → sort by y →
@@ -3567,7 +3567,7 @@ def sliced_inverse_regression(
                 "params": {
                     "n_components": n_components,
                     "n_slices": n_slices,
-                    "scaling_method": scaling_method,
+                    "scaling_policy": scaling_policy,
                     "temporal_rule": "expanding_window_per_origin",
                 },
                 "inputs": ["src_X", "y_h"],
@@ -3791,12 +3791,12 @@ def bai_ng_corrected_factor_ar(
     """
 
     fit_params = {
-        "family": "factor_augmented_ar",
+        "model": "factor_augmented_ar",
         "n_factors": n_factors,
         "n_lag": n_lag,
         "forecast_object": "quantile",
         "quantile_levels": list(quantile_levels),
-        "forecast_strategy": "direct",
+        "forecast_policy": "direct",
         "training_start_rule": "expanding",
         "refit_policy": "every_origin",
         "search_algorithm": "none",
@@ -3825,7 +3825,7 @@ def bai_ng_corrected_factor_ar(
             {
                 "id": "fit",
                 "type": "step",
-                "op": "fit_model",
+                "op": "fit",
                 "params": fit_params,
                 "inputs": ["src_X", "src_y"],
             },

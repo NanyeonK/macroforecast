@@ -1,9 +1,9 @@
-"""Regression tests for L0 ``compute_mode = parallel`` cell loop (issue #165).
+"""Regression tests for L0 ``compute_policy = parallel`` cell loop (issue #165).
 
 Verifies:
 
-* Default ``compute_mode = serial`` keeps the legacy in-process loop.
-* ``compute_mode = parallel`` dispatches cells via ProcessPoolExecutor
+* Default ``compute_policy = serial`` keeps the legacy in-process loop.
+* ``compute_policy = parallel`` dispatches cells via ProcessPoolExecutor
   and returns identical sink hashes as the serial run (determinism).
 * fail_fast still aborts the rest of the sweep when a cell fails.
 * continue_on_failure captures the failed cell and keeps going.
@@ -19,7 +19,7 @@ import pytest
 import macroforecast
 
 
-def _multi_cell_recipe(*, compute_mode: str = "serial", n_workers: int | None = None, n_cells: int = 4) -> str:
+def _multi_cell_recipe(*, compute_policy: str = "serial", n_workers: int | None = None, n_cells: int = 4) -> str:
     n_workers_block = f"\n            n_workers: {n_workers}" if n_workers is not None else ""
     sweep_values = list(range(1, n_cells + 1))
     return textwrap.dedent(
@@ -27,13 +27,13 @@ def _multi_cell_recipe(*, compute_mode: str = "serial", n_workers: int | None = 
         0_meta:
           fixed_axes:
             failure_policy: fail_fast
-            reproducibility_mode: seeded_reproducible
-            compute_mode: {compute_mode}
+            reproducibility_policy: seeded_reproducible
+            compute_policy: {compute_policy}
           leaf_config:
             random_seed: 7{n_workers_block}
         1_data:
           fixed_axes:
-            custom_source_policy: custom_panel_only
+            panel_composition: custom_panel_only
             frequency: monthly
             horizon_set: custom_list
           leaf_config:
@@ -61,8 +61,8 @@ def _multi_cell_recipe(*, compute_mode: str = "serial", n_workers: int | None = 
             - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
             - id: fit
               type: step
-              op: fit_model
-              params: {{family: ridge, alpha: 1.0, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
+              op: fit
+              params: {{model: ridge, alpha: 1.0, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}}
               inputs: [src_X, src_y]
             - {{id: predict, type: step, op: predict, inputs: [fit, src_X]}}
           sinks:
@@ -76,7 +76,7 @@ def _multi_cell_recipe(*, compute_mode: str = "serial", n_workers: int | None = 
 
 
 def test_serial_default_unchanged_when_compute_mode_omitted(tmp_path):
-    recipe = _multi_cell_recipe(compute_mode="serial", n_cells=2)
+    recipe = _multi_cell_recipe(compute_policy="serial", n_cells=2)
     result = macroforecast.run(recipe, output_directory=tmp_path)
     assert len(result.cells) == 2
     assert all(c.succeeded for c in result.cells)
@@ -94,12 +94,12 @@ def test_parallel_matches_serial_sink_hashes(tmp_path):
     # which differs by construction.
     shared_cache = tmp_path / "shared_raw_cache"
     serial = macroforecast.run(
-        _multi_cell_recipe(compute_mode="serial", n_cells=4),
+        _multi_cell_recipe(compute_policy="serial", n_cells=4),
         output_directory=serial_dir,
         cache_root=shared_cache,
     )
     parallel = macroforecast.run(
-        _multi_cell_recipe(compute_mode="parallel", n_workers=2, n_cells=4),
+        _multi_cell_recipe(compute_policy="parallel", n_workers=2, n_cells=4),
         output_directory=parallel_dir,
         cache_root=shared_cache,
     )
@@ -118,7 +118,7 @@ def test_parallel_matches_serial_sink_hashes(tmp_path):
 
 def test_parallel_preserves_cell_index_order(tmp_path):
     parallel = macroforecast.run(
-        _multi_cell_recipe(compute_mode="parallel", n_workers=4, n_cells=6),
+        _multi_cell_recipe(compute_policy="parallel", n_workers=4, n_cells=6),
         output_directory=tmp_path,
     )
     indices = [c.index for c in parallel.cells]
@@ -127,12 +127,12 @@ def test_parallel_preserves_cell_index_order(tmp_path):
 
 
 def test_parallel_with_n_workers_one_falls_back_to_serial(tmp_path):
-    """``n_workers=1`` and ``compute_mode=parallel`` should not bother
+    """``n_workers=1`` and ``compute_policy=parallel`` should not bother
     spinning up a process pool -- single-worker pool would just add IPC
     overhead. The implementation falls back to the serial loop."""
 
     result = macroforecast.run(
-        _multi_cell_recipe(compute_mode="parallel", n_workers=1, n_cells=2),
+        _multi_cell_recipe(compute_policy="parallel", n_workers=1, n_cells=2),
         output_directory=tmp_path,
     )
     assert len(result.cells) == 2 and all(c.succeeded for c in result.cells)
@@ -143,7 +143,7 @@ def test_parallel_with_single_cell_runs_serial(tmp_path):
     needed) and emit one CellExecutionResult."""
 
     result = macroforecast.run(
-        _multi_cell_recipe(compute_mode="parallel", n_workers=4, n_cells=1),
+        _multi_cell_recipe(compute_policy="parallel", n_workers=4, n_cells=1),
         output_directory=tmp_path,
     )
     assert len(result.cells) == 1 and result.cells[0].succeeded

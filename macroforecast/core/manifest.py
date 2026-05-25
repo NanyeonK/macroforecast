@@ -15,7 +15,7 @@ from uuid import uuid4
 import yaml
 
 from .cache import canonical_dict, recipe_hash
-from .dag import LayerId
+from .pipeline import LayerId
 from .recipe import Recipe
 from .sweep import Cell, SweepCombination
 from .validator import ValidationReport, validate_recipe

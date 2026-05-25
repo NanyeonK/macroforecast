@@ -401,7 +401,7 @@ _L2E_ZERO_FILL = _e(
 
 # L2.A FRED-SD frequency rules (one example each — most users default)
 _L2A_QM_BACKWARD = _e(
-    "l2_a", "quarterly_to_monthly_rule", "step_backward",
+    "l2_a", "quarterly_to_monthly_policy", "step_backward",
     "Step-function: each month inherits the most-recent published quarterly value.",
     (
         "When a quarterly series needs to align with a monthly target, "
@@ -418,7 +418,7 @@ _L2A_QM_BACKWARD = _e(
     return_type="pd.DataFrame")
 
 _L2A_QM_LINEAR = _e(
-    "l2_a", "quarterly_to_monthly_rule", "linear_interpolation",
+    "l2_a", "quarterly_to_monthly_policy", "linear_interpolation",
     "Linear interpolation between quarterly observations.",
     "Smoother than step_backward but introduces look-ahead unless used per-origin.",
     "Studies with smooth quarterly series and per-origin alignment.",
@@ -427,7 +427,7 @@ _L2A_QM_LINEAR = _e(
 )
 
 _L2A_QM_FORWARD = _e(
-    "l2_a", "quarterly_to_monthly_rule", "step_forward",
+    "l2_a", "quarterly_to_monthly_policy", "step_forward",
     "Step-function: each month inherits the next-published quarterly value.",
     "Use when later observations are informative for current state (rare in real-time work).",
     "Hindsight-feasible studies (e.g., counterfactual nowcasts).",
@@ -449,7 +449,7 @@ _chow_lin_indicator_arg = ParameterDoc(
     ),
 )
 _L2A_QM_CHOW_LIN = _e(
-    "l2_a", "quarterly_to_monthly_rule", "chow_lin",
+    "l2_a", "quarterly_to_monthly_policy", "chow_lin",
     "Chow-Lin (1971) regression-based temporal disaggregation.",
     (
         "Implements the best linear unbiased interpolation procedure of "
@@ -481,7 +481,7 @@ _L2A_QM_CHOW_LIN = _e(
 
 
 _L2A_MQ_AVG = _e(
-    "l2_a", "monthly_to_quarterly_rule", "quarterly_average",
+    "l2_a", "monthly_to_quarterly_policy", "quarterly_average",
     "Aggregate to quarterly via mean of the three monthly observations.",
     "Standard NIPA aggregation for stocks / averages.",
     "Default. Stock variables (interest rates, prices, employment levels).",
@@ -493,7 +493,7 @@ _L2A_MQ_AVG = _e(
     return_type="pd.DataFrame")
 
 _L2A_MQ_END = _e(
-    "l2_a", "monthly_to_quarterly_rule", "quarterly_endpoint",
+    "l2_a", "monthly_to_quarterly_policy", "quarterly_endpoint",
     "Aggregate via the end-of-quarter observation.",
     "Use for series that snap to a quarter-end (e.g., balance-sheet data).",
     "End-of-period stocks (M2 month-end, balance-sheet series).",
@@ -502,7 +502,7 @@ _L2A_MQ_END = _e(
 )
 
 _L2A_MQ_SUM = _e(
-    "l2_a", "monthly_to_quarterly_rule", "quarterly_sum",
+    "l2_a", "monthly_to_quarterly_policy", "quarterly_sum",
     "Aggregate via the sum of the three monthly observations.",
     "Standard for flow variables (production, sales, payroll growth).",
     "Flow variables; cumulative-quantity series.",
@@ -542,64 +542,12 @@ register(
        "Keep both monthly and quarterly FRED-SD series.",
        (
            "Default; defers to the L2.A frequency-alignment rules "
-           "(``monthly_to_quarterly_rule`` / ``quarterly_to_monthly_rule``) "
+           "(``monthly_to_quarterly_policy`` / ``quarterly_to_monthly_policy``) "
            "to render the mixed-frequency panel into a single grid."
        ),
        "Default for FRED-SD recipes; mixed-frequency panels.",
        related_options=("monthly_only", "quarterly_only")),
 )
-
-
-# L2.{B,C,D,E} scope axes -- target / predictors / both / not_applicable
-_SCOPE_DOCS = {
-    "target_and_predictors": (
-        "Apply the rule to target and all predictors.",
-        (
-            "Default scope: every series in the panel passes through the "
-            "stage. Maintains consistency between target and predictors "
-            "(e.g. both differenced, both winsorised)."
-        ),
-        "Default; matches McCracken-Ng's convention.",
-    ),
-    "predictors_only": (
-        "Apply only to predictors; leave the target untouched.",
-        (
-            "Used when the target's transform / cleaning policy is "
-            "controlled separately (e.g. user already applied a tcode "
-            "to the target via raw_panel)."
-        ),
-        "When the target enters the pipeline already cleaned.",
-    ),
-    "target_only": (
-        "Apply only to the target.",
-        (
-            "Rare scope; used when predictors are pre-engineered and "
-            "do not need this stage (e.g. PCA scores are already "
-            "stationary)."
-        ),
-        "Pre-engineered predictor panels.",
-    ),
-    "not_applicable": (
-        "Skip the stage entirely (gate inactive).",
-        (
-            "Used when an upstream stage already produced the desired "
-            "form. Equivalent in effect to selecting the no-op option "
-            "on the primary axis."
-        ),
-        "Pipelines that bypass this stage by construction.",
-    ),
-}
-for _axis, _sub in (
-    ("transform_scope",   "l2_b"),
-    ("outlier_scope",     "l2_c"),
-    ("imputation_scope",  "l2_d"),
-    ("frame_edge_scope",  "l2_e"),
-):
-    for _opt, (_summary, _desc, _when) in _SCOPE_DOCS.items():
-        register(_e(
-            _sub, _axis, _opt, _summary, _desc, _when,
-            related_options=tuple(k for k in _SCOPE_DOCS if k != _opt),
-        ))
 
 
 # L2.D imputation_temporal_rule
@@ -675,7 +623,7 @@ _L2A_MFR_CALENDAR = _e(
         "default; any custom panel that declares per-column native "
         "frequency in metadata), the default representation flattens all "
         "columns to the experiment calendar via the L2.A "
-        "``quarterly_to_monthly_rule`` / ``monthly_to_quarterly_rule`` "
+        "``quarterly_to_monthly_policy`` / ``monthly_to_quarterly_policy`` "
         "alignment rules. The panel emerges as a single rectangular "
         "frame; downstream layers see a uniform sampling grid."
     ),

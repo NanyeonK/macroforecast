@@ -15,7 +15,7 @@ metadata:
 2_preprocessing:
   fixed_axes:
     sd_series_frequency_filter: both
-    quarterly_to_monthly_rule: step_backward
+    quarterly_to_monthly_policy: step_backward
     transform_policy: apply_official_tcode
     outlier_policy: mccracken_ng_iqr
     imputation_policy: em_factor

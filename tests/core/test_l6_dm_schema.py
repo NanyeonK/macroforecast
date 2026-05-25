@@ -1,9 +1,9 @@
-"""Cycle 14 L1-5 -- DM/CW result dicts expose decision, alternative, correction_method.
+"""Cycle 14 L1-5 -- DM/CW result dicts expose decision, alternative, correction_policy.
 
 Verifies that every L6 result dict has the three new fields:
   - decision (bool)
   - alternative (str: one_sided / two_sided)
-  - correction_method (str: hln_nw / nw)
+  - correction_policy (str: hln_nw / nw)
 """
 from __future__ import annotations
 
@@ -54,11 +54,11 @@ def test_dm_result_has_decision_field():
     for key, val in results.items():
         assert "decision" in val, f"Missing 'decision' in DM result at {key}: {list(val)}"
         assert "alternative" in val, f"Missing 'alternative' in DM result at {key}: {list(val)}"
-        assert "correction_method" in val, f"Missing 'correction_method' in DM result at {key}: {list(val)}"
+        assert "correction_policy" in val, f"Missing 'correction_policy' in DM result at {key}: {list(val)}"
 
 
 def test_cw_result_has_decision_field():
-    """CW (nested) result must have 'decision', 'alternative', 'correction_method'."""
+    """CW (nested) result must have 'decision', 'alternative', 'correction_policy'."""
     from macroforecast.core.runtime import _l6_nested_results
     from unittest.mock import MagicMock
 
@@ -78,7 +78,7 @@ def test_cw_result_has_decision_field():
     for key, val in results.items():
         assert "decision" in val, f"Missing 'decision' in CW result at {key}: {list(val)}"
         assert "alternative" in val, f"Missing 'alternative' in CW result at {key}: {list(val)}"
-        assert "correction_method" in val, f"Missing 'correction_method' in CW result at {key}: {list(val)}"
+        assert "correction_policy" in val, f"Missing 'correction_policy' in CW result at {key}: {list(val)}"
         assert val["alternative"] == "one_sided", f"CW should be one_sided, got {val['alternative']}"
 
 

@@ -13,10 +13,10 @@
 #
 # Generated from macroforecast.recipes.paper_methods (v0.9 Phase 2).
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
   leaf_config: {random_seed: 42}
 1_data:
-  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -72,10 +72,10 @@
       subset: {component: y_final}
   - id: fit_varctic
     type: step
-    op: fit_model
+    op: fit
     params:
-      family: bvar_minnesota
-      forecast_strategy: direct
+      model: bvar_minnesota
+      forecast_policy: direct
       training_start_rule: expanding
       refit_policy: every_origin
       search_algorithm: none

@@ -76,17 +76,17 @@ def _step2_node(recipe: dict) -> dict:
 def test_2srr_helper_default_alpha_strategy_second_cv():
     """Phase B-8 F3: paper §2.5 step 4 says rerun CV is "crucial"
     after the warm-start. Helper default must therefore route
-    ``alpha_strategy="second_cv"`` into the fit_step2 params."""
+    ``alpha_search_policy="second_cv"`` into the fit_step2 params."""
 
     sig = inspect.signature(two_step_ridge)
-    assert "alpha_strategy" in sig.parameters
-    assert sig.parameters["alpha_strategy"].default == "second_cv"
+    assert "alpha_search_policy" in sig.parameters
+    assert sig.parameters["alpha_search_policy"].default == "second_cv"
     assert "cv_folds" in sig.parameters
     assert sig.parameters["cv_folds"].default == 5
 
     recipe = two_step_ridge()
     step2 = _step2_node(recipe)
-    assert step2["params"]["alpha_strategy"] == "second_cv"
+    assert step2["params"]["alpha_search_policy"] == "second_cv"
     assert step2["params"]["cv_folds"] == 5
 
 
@@ -107,7 +107,7 @@ def test_2srr_second_cv_picks_alpha_from_grid():
         warnings.simplefilter("ignore")
         tuned = _TwoStageRandomWalkRidge(
             alpha=1.0,
-            alpha_strategy="second_cv",
+            alpha_search_policy="second_cv",
             alpha_grid=grid,
             cv_folds=5,
             vol_model="ewma",
@@ -115,7 +115,7 @@ def test_2srr_second_cv_picks_alpha_from_grid():
         ).fit(X_df, y)
         baseline = _TwoStageRandomWalkRidge(
             alpha=1.0,
-            alpha_strategy="fixed",
+            alpha_search_policy="fixed",
             vol_model="ewma",
             random_state=0,
         ).fit(X_df, y)
@@ -138,12 +138,12 @@ def test_2srr_second_cv_picks_alpha_from_grid():
 
 
 # ----------------------------------------------------------------------
-# Test 3 -- alpha_strategy="fixed" preserves the user-supplied λ
+# Test 3 -- alpha_search_policy="fixed" preserves the user-supplied λ
 # ----------------------------------------------------------------------
 
 
 def test_2srr_alpha_strategy_fixed_uses_user_alpha():
-    """Phase B-8 F3 escape hatch: ``alpha_strategy="fixed"`` must
+    """Phase B-8 F3 escape hatch: ``alpha_search_policy="fixed"`` must
     bypass the second CV and keep the user-supplied λ as the
     tuned/effective λ. Lets users pin λ when they want to."""
 
@@ -152,7 +152,7 @@ def test_2srr_alpha_strategy_fixed_uses_user_alpha():
         warnings.simplefilter("ignore")
         m = _TwoStageRandomWalkRidge(
             alpha=42.0,
-            alpha_strategy="fixed",
+            alpha_search_policy="fixed",
             vol_model="ewma",
             random_state=0,
         ).fit(X_df, y)
@@ -179,7 +179,7 @@ def test_2srr_helper_drops_dead_alpha_step1():
     assert "fit_step1" not in node_ids
     # Single fit_model node = fit_step2 (the heterogeneous-Ω solve).
     fit_nodes = [
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     ]
     assert len(fit_nodes) == 1
     assert fit_nodes[0]["id"] == "fit_step2"

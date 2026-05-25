@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .dag import LayerId, SourceSelector
+from .pipeline import LayerId, SourceSelector
 from .layers import LAYER_SINKS
 from .ops.registry import TypeSpec
 

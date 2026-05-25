@@ -4,9 +4,9 @@ Run a sweep over multiple model families and collect per-cell metrics.
 
 ---
 
-## Sweep over families with the `{sweep}` marker
+## Sweep over models with the `{sweep}` marker
 
-Place a `{sweep: [...]}` marker on the `family` parameter to run each family as
+Place a `{sweep: [...]}` marker on the `model` parameter to run each model as
 an independent cell. Each cell gets its own seed and produces its own evaluation
 artifact.
 
@@ -17,13 +17,13 @@ recipe = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 0
 
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -82,15 +82,15 @@ recipe = """
     - id: src_y
       type: source
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
-    - id: fit_model
+    - id: fit_main
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: {sweep: [ar_p, ridge, random_forest]}
+        model: {sweep: [ar_p, ridge, random_forest]}
         n_lag: 2
         alpha: 1.0
         n_estimators: 50
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -99,10 +99,10 @@ recipe = """
     - id: predict_model
       type: step
       op: predict
-      inputs: [fit_model]
+      inputs: [fit_main]
   sinks:
     l4_forecasts_v1: predict_model
-    l4_model_artifacts_v1: fit_model
+    l4_model_artifacts_v1: fit_main
     l4_training_metadata_v1: auto
 
 5_evaluation:
@@ -131,11 +131,11 @@ Sweep `alpha` across values for ridge regression:
 ```yaml
     - id: fit_ridge
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: {sweep: [0.01, 0.1, 1.0, 10.0]}
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -143,8 +143,8 @@ Sweep `alpha` across values for ridge regression:
       inputs: [src_X, src_y]
 ```
 
-Combining a family sweep with a parameter sweep creates a combinatorial grid. With
-3 families and 4 alpha values, you get 12 cells.
+Combining a model sweep with a parameter sweep creates a combinatorial grid. With
+3 models and 4 alpha values, you get 12 cells.
 
 ---
 

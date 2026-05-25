@@ -23,7 +23,7 @@ source route Layer 1 loads.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
-| `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` | Default is `official_only`. First source choice: FRED data only, custom data only, or FRED data plus custom data. |
+| `panel_composition` | `official_only`, `custom_panel_only`, `official_plus_custom` | Default is `official_only`. First source choice: FRED data only, custom data only, or FRED data plus custom data. |
 | `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` | FRED source-panel choice. Active only when source mode uses FRED data. |
 | `frequency` | `monthly`, `quarterly` | Derived for FRED-MD/QD/composites. Required for standalone FRED-SD and custom-only data. |
 
@@ -32,15 +32,15 @@ Contracts:
 - `fred_md` and `fred_md+fred_sd` are monthly.
 - `fred_qd` and `fred_qd+fred_sd` are quarterly.
 - standalone `fred_sd` must choose monthly or quarterly because the source contains mixed native frequencies.
-- `custom_source_policy: official_only` means FRED data only. It requires no
+- `panel_composition: official_only` means FRED data only. It requires no
   `leaf_config.custom_source_path`; `dataset` selects the FRED loader.
-- `custom_source_policy: custom_panel_only` means custom data only. It loads a
+- `panel_composition: custom_panel_only` means custom data only. It loads a
   custom file as the source panel. The UI should ask for file path and
   frequency, not for a FRED source panel.
-- `custom_source_policy: official_plus_custom` loads the selected FRED
+- `panel_composition: official_plus_custom` loads the selected FRED
   panel and appends custom columns. It can be used with single or composite
   FRED panel routes.
-- User-supplied files are configured with `custom_source_policy` plus
+- User-supplied files are configured with `panel_composition` plus
   `leaf_config.custom_source_path`, not as `dataset` values.
 - custom sources require `leaf_config.custom_source_path`. The compiler infers
   `csv` from `.csv` and `parquet` from `.parquet`/`.pq`. Legacy recipes may
@@ -86,7 +86,7 @@ Additional custom-source fields:
 
 | Field | Where | Required when | Meaning |
 |---|---|---|---|
-| `custom_source_path` | `leaf_config` | `custom_source_policy != official_only` | Local file path. This is not an enum axis because it is study-specific. |
+| `custom_source_path` | `leaf_config` | `panel_composition != official_only` | Local file path. This is not an enum axis because it is study-specific. |
 
 Compatibility fields:
 
@@ -102,7 +102,7 @@ path:
   1_data:
     fixed_axes:
       dataset: fred_md
-      custom_source_policy: official_only
+      panel_composition: official_only
       information_set_type: final_revised_data
     leaf_config:
       target: INDPRO
@@ -117,7 +117,7 @@ Replace FRED-MD with a custom CSV:
 path:
   1_data:
     fixed_axes:
-      custom_source_policy: custom_panel_only
+      panel_composition: custom_panel_only
       frequency: monthly
       information_set_type: final_revised_data
     leaf_config:
@@ -133,7 +133,7 @@ path:
   1_data:
     fixed_axes:
       dataset: fred_md
-      custom_source_policy: official_plus_custom
+      panel_composition: official_plus_custom
       frequency: monthly
       information_set_type: final_revised_data
     leaf_config:

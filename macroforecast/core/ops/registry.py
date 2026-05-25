@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal, Sequence
 
-from ..dag import DAG, LayerId, Node, NodeRef
+from ..pipeline import DAG, LayerId, Node, NodeRef
 from ..status import ItemStatus, normalize_status
 from ..types import DataType
 

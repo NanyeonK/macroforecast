@@ -37,7 +37,7 @@ from .core.execution import (
 from .scaffold.builder import RecipeBuilder
 from .defaults import (
     DEFAULT_HORIZONS,
-    DEFAULT_MODEL_FAMILY,
+    DEFAULT_MODEL,
     DEFAULT_RANDOM_SEED,
 )
 
@@ -151,7 +151,7 @@ def _build_default_recipe(
     pass-through (the default profile already routes through the real
     McCracken-Ng pipeline when L2 is set ``standard()``, but PR 1's contract
     is "minimal viable"); L3 ``lag_only(n_lag=1)`` + ``target_construction``;
-    L4 a single fit_model node with the requested family; L5 ``standard``.
+    L4 a single fit node with the requested model; L5 ``standard``.
     """
 
     horizons_list = [int(h) for h in horizons]
@@ -164,7 +164,7 @@ def _build_default_recipe(
     b.l0(random_seed=int(random_seed))
     # L1 -- official source path.
     b.l1(
-        custom_source_policy="official_only",
+        panel_composition="official_only",
         dataset=dataset,
         frequency=resolved_frequency,
         horizon_set="custom_list",
@@ -182,7 +182,7 @@ def _build_default_recipe(
     b.l2.no_op()
     # L3 -- minimal lag1 + target construction.
     b.l3.lag_only(n_lag=1)
-    # L4 -- single fit_model node + predict.
+    # L4 -- single fit node + predict.
     b.l4.fit(model_family).is_benchmark()
     # L5 -- mse primary metric.
     b.l5.standard(primary_metric="mse")
@@ -202,7 +202,7 @@ def forecast(
     frequency: str | None = None,
     start: str | None = None,
     end: str | None = None,
-    model_family: str = DEFAULT_MODEL_FAMILY,
+    model_family: str = DEFAULT_MODEL,
     output_directory: str | Path | None = None,
     cache_root: str | Path | None = None,
     random_seed: int = DEFAULT_RANDOM_SEED,
@@ -230,7 +230,7 @@ def forecast(
         ISO sample window endpoints (e.g. ``"1985-01"``); written into L1
         ``sample_start_date`` / ``sample_end_date``.
     model_family
-        L4 ``fit_model`` family. Defaults to ``"ar_p"`` (see ``macroforecast.defaults.DEFAULT_MODEL_FAMILY``).
+        L4 ``fit`` family. Defaults to ``"ar_p"`` (see ``macroforecast.defaults.DEFAULT_MODEL``).
     output_directory
         Directory to write ``manifest.json`` and per-cell artifacts.
     cache_root
@@ -285,7 +285,7 @@ def _set_at(root: dict[str, Any], dotted: str, value: Any) -> None:
       lists are addressed by ``id``-keyed sub-dict at the spec level, not
       by raw list index).
     * If a segment names an existing list, we walk through entries and
-      match by the ``id`` field (so ``4_forecasting_model.nodes.fit_model``
+      match by the ``id`` field (so ``4_forecasting_model.nodes.fit``
       finds the fit node regardless of position).
     * Missing intermediate dict keys are auto-created. A non-dict /
       non-list collision (e.g. trying to traverse through a leaf integer)
@@ -352,7 +352,7 @@ def _set_at(root: dict[str, Any], dotted: str, value: Any) -> None:
 
 
 def _normalize_fit_main_id(recipe: dict[str, Any]) -> None:
-    """Rename the lone L4 fit_model node to the stable id ``fit_main``.
+    """Rename the lone L4 fit node to the stable id ``fit_main``.
 
     v0.8.6 Gap 2: ``RecipeBuilder.l4.fit(family)`` auto-names the node
     ``fit_<n>_<family>``. That id leaks the family name (and the fit
@@ -361,7 +361,7 @@ def _normalize_fit_main_id(recipe: dict[str, Any]) -> None:
     *first* family the user passed to ``Experiment(model_family=...)``,
     so users had to memorise the auto-generated id (``fit_1_ridge`` etc.).
 
-    This helper walks the L4 nodes and renames the lone fit_model node
+    This helper walks the L4 nodes and renames the lone fit node
     to ``fit_main``. All references in the ``predict`` step inputs and
     in the L4 ``sinks`` (``l4_forecasts_v1`` / ``l4_model_artifacts_v1``)
     are updated atomically.
@@ -370,9 +370,9 @@ def _normalize_fit_main_id(recipe: dict[str, Any]) -> None:
 
     * If the node id is already ``fit_main`` -- no-op.
     * If the L4 block already contains a node literally named
-      ``fit_main`` *and* a different fit_model node -- skip (the user
+      ``fit_main`` *and* a different fit node -- skip (the user
       hand-rolled this layout via ``to_recipe_dict()`` round-trip).
-    * If there are multiple fit_model nodes (ensemble / horse-race
+    * If there are multiple fit nodes (ensemble / horse-race
       authored manually) -- skip; the user must use the explicit ids.
     """
 
@@ -382,7 +382,7 @@ def _normalize_fit_main_id(recipe: dict[str, Any]) -> None:
     nodes = l4.get("nodes")
     if not isinstance(nodes, list):
         return
-    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+    fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     if len(fit_nodes) != 1:
         return
     fit_node = fit_nodes[0]
@@ -449,7 +449,7 @@ class Experiment:
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
-        model_family: str = DEFAULT_MODEL_FAMILY,
+        model_family: str = DEFAULT_MODEL,
         random_seed: int = DEFAULT_RANDOM_SEED,
     ) -> None:
         self._dataset = dataset
@@ -482,7 +482,7 @@ class Experiment:
     # -- sweep methods -----------------------------------------------------
 
     def compare_models(self, families: Sequence[str]) -> "Experiment":
-        """Sweep the L4 fit_model family.
+        """Sweep the L4 fit family.
 
         Idiomatic shortcut around
         ``.sweep("4_forecasting_model.nodes.<fit_id>.params.family", [...])``
@@ -495,15 +495,15 @@ class Experiment:
             raise ValueError("compare_models requires at least one family")
         l4 = self._builder._recipe.setdefault("4_forecasting_model", {})
         nodes = l4.setdefault("nodes", [])
-        fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit_model"]
+        fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
         if not fit_nodes:
             raise RuntimeError(
                 "compare_models() called before any L4 fit node exists "
                 "(did you instantiate Experiment without a model_family?)"
             )
-        # In PR 1 we always have exactly one fit_model node. Sweep its family.
+        # In PR 1 we always have exactly one fit node. Sweep its family.
         fit_node = fit_nodes[0]
-        fit_node.setdefault("params", {})["family"] = {"sweep": list(families_list)}
+        fit_node.setdefault("params", {})["model"] = {"sweep": list(families_list)}
         # v0.8.6 Gap 2: normalize the swept fit node to ``fit_main`` so
         # ``.compare("4_forecasting_model.nodes.fit_main.params.alpha", ...)``
         # follow-ups have a stable dotted path independent of the

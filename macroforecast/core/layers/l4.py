@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from ..dag import DAG, Node, NodeRef, SourceSelector
+from ..pipeline import DAG, Node, NodeRef, SourceSelector
 from ..ops.l4_ops import MODEL_FAMILY_STATUS
 
 if TYPE_CHECKING:
@@ -75,7 +75,7 @@ def normalize_to_dag_form(layer: dict[str, Any], layer_id: Literal["l4"] = "l4")
             sink_map[sink_name] = aggregate_id
         elif sink_name == "l4_training_metadata_v1" and target == "auto":
             fit_nodes = tuple(
-                NodeRef(node.id) for node in nodes.values() if node.op == "fit_model"
+                NodeRef(node.id) for node in nodes.values() if node.op == "fit"
             )
             aggregate_id = "sink:l4_training_metadata_v1"
             nodes[aggregate_id] = Node(
@@ -100,10 +100,10 @@ def normalize_to_dag_form(layer: dict[str, Any], layer_id: Literal["l4"] = "l4")
 def resolve_axes(dag: DAG) -> L4ResolvedAxes:
     values: dict[str, Any] = {"_active": {}}
     for node in dag.nodes.values():
-        if node.op != "fit_model":
+        if node.op != "fit":
             continue
         for key, default in {
-            "forecast_strategy": "direct",
+            "forecast_policy": "direct",
             "training_start_rule": "expanding",
             "refit_policy": "every_origin",
             "search_algorithm": "none",
@@ -210,8 +210,8 @@ def resolve_combine_node(layer: dict[str, Any] | str) -> dict[str, Any]:
 
 def make_l4_yaml(family: str = "ridge", **params: Any) -> str:
     params = {
-        "family": family,
-        "forecast_strategy": "direct",
+        "model": family,
+        "forecast_policy": "direct",
         "training_start_rule": "expanding",
         "refit_policy": "every_origin",
         "search_algorithm": "none",
@@ -224,15 +224,15 @@ def make_l4_yaml(family: str = "ridge", **params: Any) -> str:
   nodes:
     - {{id: src_X, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: X_final}}}}}}
     - {{id: src_y, type: source, selector: {{layer_ref: l3, sink_name: l3_features_v1, subset: {{component: y_final}}}}}}
-    - id: fit_model
+    - id: fit
       type: step
-      op: fit_model
+      op: fit
       params: {param_text}
       inputs: {inputs}
-    - {{id: predict_model, type: step, op: predict, inputs: [fit_model, src_X]}}
+    - {{id: predict_model, type: step, op: predict, inputs: [fit, src_X]}}
   sinks:
     l4_forecasts_v1: predict_model
-    l4_model_artifacts_v1: fit_model
+    l4_model_artifacts_v1: fit
     l4_training_metadata_v1: auto
 """
 
@@ -242,7 +242,7 @@ def make_l4_yaml_no_benchmark() -> str:
 
 
 def make_l4_yaml_with_strategy(strategy: str) -> str:
-    return make_l4_yaml("ridge", forecast_strategy=strategy)
+    return make_l4_yaml("ridge", forecast_policy=strategy)
 
 
 def make_l4_yaml_with_cv_path(family: str) -> str:
@@ -338,12 +338,12 @@ def _validate_benchmark(raw: dict[str, Any]) -> list[Issue]:
     benchmarks = [
         node
         for node in raw.get("nodes", ())
-        if node.get("op") == "fit_model" and node.get("is_benchmark")
+        if node.get("op") == "fit" and node.get("is_benchmark")
     ]
     if len(benchmarks) > 1:
         return [
             _issue(
-                "l4.benchmark", "exactly one or zero benchmark fit_model nodes allowed"
+                "l4.benchmark", "exactly one or zero benchmark fit nodes allowed"
             )
         ]
     return []
@@ -364,10 +364,10 @@ def _validate_fit_nodes(raw: dict[str, Any]) -> list[Issue]:
     issues = []
     leaf = raw.get("leaf_config", {}) or {}
     for node in raw.get("nodes", ()):
-        if node.get("op") != "fit_model":
+        if node.get("op") != "fit":
             continue
         params = node.get("params", {}) or {}
-        family = params.get("family", "ridge")
+        family = params.get("model", "ridge")
         if MODEL_FAMILY_STATUS.get(family) == "future":
             issues.append(
                 _issue(
@@ -381,12 +381,12 @@ def _validate_fit_nodes(raw: dict[str, Any]) -> list[Issue]:
             issues.append(
                 _issue(f"l4.{node['id']}", f"unknown model family {family!r}")
             )
-        strategy = params.get("forecast_strategy", "direct")
+        strategy = params.get("forecast_policy", "direct")
         if strategy not in {"direct", "iterated", "path_average", "path_average_eq4"}:
             issues.append(
                 _issue(
                     f"l4.{node['id']}",
-                    "forecast_strategy must be direct, iterated, path_average, or path_average_eq4",
+                    "forecast_policy must be direct, iterated, path_average, or path_average_eq4",
                 )
             )
         search = params.get("search_algorithm", "none")
@@ -506,7 +506,7 @@ def _validate_regime(
     if not recipe_context or recipe_context.get("regime_definition") != "none":
         return []
     for node in raw.get("nodes", ()):
-        if node.get("op") == "fit_model" and (node.get("params", {}) or {}).get(
+        if node.get("op") == "fit" and (node.get("params", {}) or {}).get(
             "regime_wrapper"
         ):
             return [
@@ -526,8 +526,8 @@ def _validate_path_average(
     if recipe_context.get("target_mode") in {None, "cumulative_average"}:
         return []
     for node in raw.get("nodes", ()):
-        if node.get("op") == "fit_model" and (node.get("params", {}) or {}).get(
-            "forecast_strategy"
+        if node.get("op") == "fit" and (node.get("params", {}) or {}).get(
+            "forecast_policy"
         ) in {"path_average", "path_average_eq4"}:
             return [
                 _issue(
@@ -564,7 +564,7 @@ def _ensemble_yaml(
     inputs = []
     for idx in range(n_inputs):
         fit_predict.append(
-            f"    - {{id: fit_{idx}, type: step, op: fit_model, params: {{family: ridge}}, inputs: [src_X, src_y]}}"
+            f"    - {{id: fit_{idx}, type: step, op: fit, params: {{model: ridge}}, inputs: [src_X, src_y]}}"
         )
         fit_predict.append(
             f"    - {{id: predict_{idx}, type: step, op: predict, inputs: [fit_{idx}, src_X]}}"

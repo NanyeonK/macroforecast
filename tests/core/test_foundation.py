@@ -159,7 +159,7 @@ def test_combined_gate_propagation() -> None:
                 id="alignment_rule",
                 type="axis",
                 layer_id="l2",
-                op="quarterly_to_monthly_rule",
+                op="quarterly_to_monthly_policy",
                 params={"value": "step_backward"},
                 gates=(
                     GatePredicate(

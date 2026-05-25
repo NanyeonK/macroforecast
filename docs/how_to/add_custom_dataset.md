@@ -27,7 +27,7 @@ Rules:
 ```yaml
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -58,7 +58,7 @@ This removes any dependency on external files:
 ```yaml
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -77,13 +77,13 @@ any external files.
 
 ## Adding custom series to FRED
 
-To run FRED-MD plus your own extra series, use `custom_source_policy: official_plus_custom`.
+To run FRED-MD plus your own extra series, use `panel_composition: official_plus_custom`.
 The `custom_merge_rule` controls how the two panels are aligned:
 
 ```yaml
 1_data:
   fixed_axes:
-    custom_source_policy: official_plus_custom
+    panel_composition: official_plus_custom
     frequency: monthly
     horizon_set: custom_list
   leaf_config:

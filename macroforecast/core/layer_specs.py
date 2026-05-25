@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
-from .dag import GatePredicate, LayerCategory, LayerId
+from .pipeline import GatePredicate, LayerCategory, LayerId
 from .ops.registry import Rule
 
 if TYPE_CHECKING:

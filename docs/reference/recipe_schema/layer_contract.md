@@ -6,11 +6,11 @@ This complete recipe is runnable on a stock install:
 
 ~~~yaml
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
   leaf_config: {random_seed: 42}
 
 1_data:
-  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -42,11 +42,11 @@ This complete recipe is runnable on a stock install:
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
     - id: fit_ridge
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 1.0
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none

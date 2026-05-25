@@ -1,4 +1,4 @@
-"""Determinism regression tests for L0 reproducibility_mode + seed propagation.
+"""Determinism regression tests for L0 reproducibility_policy + seed propagation.
 
 Implements issue #6 part 1 of the phase-00 stability plan: pin down the
 seed-resolution and seed-application contracts so a future change can't
@@ -27,7 +27,7 @@ from macroforecast.defaults import DEFAULT_RANDOM_SEED
 def test_resolve_seed_explicit_leaf_config_takes_precedence():
     root = {
         "0_meta": {
-            "fixed_axes": {"reproducibility_mode": "exploratory"},
+            "fixed_axes": {"reproducibility_policy": "exploratory"},
             "leaf_config": {"random_seed": 42},
         }
     }
@@ -35,7 +35,7 @@ def test_resolve_seed_explicit_leaf_config_takes_precedence():
 
 
 def test_resolve_seed_seeded_reproducible_default_returns_default_random_seed():
-    root = {"0_meta": {"fixed_axes": {"reproducibility_mode": "seeded_reproducible"}}}
+    root = {"0_meta": {"fixed_axes": {"reproducibility_policy": "seeded_reproducible"}}}
     assert _resolve_seed(root) == DEFAULT_RANDOM_SEED
 
 
@@ -47,7 +47,7 @@ def test_resolve_seed_default_mode_returns_default_random_seed():
 
 
 def test_resolve_seed_exploratory_returns_none():
-    root = {"0_meta": {"fixed_axes": {"reproducibility_mode": "exploratory"}}}
+    root = {"0_meta": {"fixed_axes": {"reproducibility_policy": "exploratory"}}}
     assert _resolve_seed(root) is None
 
 
@@ -55,12 +55,12 @@ def test_resolve_seed_unknown_mode_returns_none():
     # ``strict`` (and any value other than ``seeded_reproducible``) is treated
     # as non-seeded by _resolve_seed. The L0 validator catches the schema
     # rejection upstream so this code path stays simple.
-    root = {"0_meta": {"fixed_axes": {"reproducibility_mode": "strict"}}}
+    root = {"0_meta": {"fixed_axes": {"reproducibility_policy": "strict"}}}
     assert _resolve_seed(root) is None
 
 
 def test_execution_seed_fallback_uses_default_random_seed():
-    recipe = {"0_meta": {"fixed_axes": {"reproducibility_mode": "seeded_reproducible"}, "leaf_config": {}}}
+    recipe = {"0_meta": {"fixed_axes": {"reproducibility_policy": "seeded_reproducible"}, "leaf_config": {}}}
     assert _resolve_seed(recipe) == DEFAULT_RANDOM_SEED
 
 
@@ -132,12 +132,12 @@ def test_distinct_cells_get_distinct_seeds(tmp_path):
         0_meta:
           fixed_axes:
             failure_policy: fail_fast
-            reproducibility_mode: seeded_reproducible
+            reproducibility_policy: seeded_reproducible
           leaf_config:
             random_seed: 100
         1_data:
           fixed_axes:
-            custom_source_policy: custom_panel_only
+            panel_composition: custom_panel_only
             frequency: monthly
             horizon_set: custom_list
           leaf_config:
@@ -165,8 +165,8 @@ def test_distinct_cells_get_distinct_seeds(tmp_path):
             - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
             - id: fit_rf
               type: step
-              op: fit_model
-              params: {family: random_forest, n_estimators: 8, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+              op: fit
+              params: {model: random_forest, n_estimators: 8, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
               inputs: [src_X, src_y]
             - {id: predict, type: step, op: predict, inputs: [fit_rf, src_X]}
           sinks:
@@ -208,12 +208,12 @@ _SEED_PROPAGATION_RECIPE = """
 0_meta:
   fixed_axes:
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: __SEED__
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     horizon_set: custom_list
   leaf_config:
@@ -241,8 +241,8 @@ _SEED_PROPAGATION_RECIPE = """
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_rf
       type: step
-      op: fit_model
-      params: {family: random_forest, n_estimators: 8, min_train_size: 4, forecast_strategy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
+      op: fit
+      params: {model: random_forest, n_estimators: 8, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
       inputs: [src_X, src_y]
     - {id: predict, type: step, op: predict, inputs: [fit_rf, src_X]}
   sinks:

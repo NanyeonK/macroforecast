@@ -39,7 +39,7 @@ def install_custom_panel(experiment: "mf.Experiment", *, n: int = 24, target: st
     recipe = experiment._builder._recipe
     recipe["1_data"] = {
         "fixed_axes": {
-            "custom_source_policy": "custom_panel_only",
+            "panel_composition": "custom_panel_only",
             "frequency": "monthly",
             "horizon_set": "custom_list",
             "target_structure": "single_target",
@@ -54,5 +54,5 @@ def install_custom_panel(experiment: "mf.Experiment", *, n: int = 24, target: st
     # produce at least a few origins.
     l4 = recipe.get("4_forecasting_model", {})
     for node in l4.get("nodes", []):
-        if isinstance(node, dict) and node.get("op") == "fit_model":
+        if isinstance(node, dict) and node.get("op") == "fit":
             node.setdefault("params", {}).setdefault("min_train_size", 4)

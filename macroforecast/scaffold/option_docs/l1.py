@@ -6,14 +6,14 @@ regime definition. This module ships Tier-1 documentation for all L1
 axes that have been through a reviewer-stamped review pass.
 
 Tier-1-complete sub-layers (all axes Tier-1 unless noted):
-* L1.A -- all 6 axes (custom_source_policy, dataset, vintage_policy,
+* L1.A -- all 6 axes (panel_composition, dataset, vintage_policy,
   frequency, information_set_type, fred_sd_frequency_policy) -- Cycle 17
 * L1.B -- target_structure (1 axis) -- Cycle 18
 * L1.C -- all 8 axes (variable_universe, missing_availability,
   raw_missing_policy, raw_outlier_policy, release_lag_rule,
   contemporaneous_x_rule, official_transform_policy,
   official_transform_scope) -- Cycle 19
-* L1.D -- all 6 axes (target_geography_scope, predictor_geography_scope,
+* L1.D -- all 6 axes (target_geography_policy, predictor_geography_policy,
   fred_sd_state_group, fred_sd_variable_group, state_selection,
   sd_variable_selection) -- Cycle 20
 * L1.E -- sample_start_rule / sample_end_rule (Cycle 21)
@@ -112,11 +112,11 @@ def _entry(
 
 
 # ---------------------------------------------------------------------------
-# L1.A custom_source_policy
+# L1.A panel_composition
 # ---------------------------------------------------------------------------
 
 _L1A_SOURCE_OFFICIAL_ONLY = _entry(
-    "l1_a", "custom_source_policy", "official_only",
+    "l1_a", "panel_composition", "official_only",
     summary="Use the McCracken-Ng curated FRED-MD/QD/SD vintages.",
     description=(
         "Loads the bundled FRED snapshot via macroforecast's raw adapter -- no "
@@ -144,7 +144,7 @@ _L1A_SOURCE_OFFICIAL_ONLY = _entry(
             code=(
                 "1_data:\n"
                 "  fixed_axes:\n"
-                "    custom_source_policy: official_only\n"
+                "    panel_composition: official_only\n"
                 "    dataset: fred_md\n"
                 "  leaf_config:\n"
                 "    target: CPIAUCSL\n"
@@ -154,7 +154,7 @@ _L1A_SOURCE_OFFICIAL_ONLY = _entry(
 )
 
 _L1A_SOURCE_CUSTOM_PANEL = _entry(
-    "l1_a", "custom_source_policy", "custom_panel_only",
+    "l1_a", "panel_composition", "custom_panel_only",
     summary="Load a single user-supplied panel (CSV / Parquet / inline dict).",
     description=(
         "Bypasses the FRED adapter entirely. The user provides:\n\n"
@@ -185,7 +185,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _entry(
             code=(
                 "1_data:\n"
                 "  fixed_axes:\n"
-                "    custom_source_policy: custom_panel_only\n"
+                "    panel_composition: custom_panel_only\n"
                 "  leaf_config:\n"
                 "    target: y\n"
                 "    custom_panel_inline:\n"
@@ -198,7 +198,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _entry(
 )
 
 _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _entry(
-    "l1_a", "custom_source_policy", "official_plus_custom",
+    "l1_a", "panel_composition", "official_plus_custom",
     summary="Merge the official FRED panel with a user-supplied auxiliary panel.",
     description=(
         "Loads the FRED vintage (per ``dataset``) and joins a user CSV / "
@@ -226,7 +226,7 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _entry(
             code=(
                 "1_data:\n"
                 "  fixed_axes:\n"
-                "    custom_source_policy: official_plus_custom\n"
+                "    panel_composition: official_plus_custom\n"
                 "    dataset: fred_md\n"
                 "  leaf_config:\n"
                 "    target: CPIAUCSL\n"
@@ -296,7 +296,7 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM.__class__(
                name="custom_source_path",
                type="str | Path",
                default=REQUIRED,
-               constraint="Required when custom_source_policy=official_plus_custom.",
+               constraint="Required when panel_composition=official_plus_custom.",
                description=(
                    "Filesystem path (CSV or Parquet) to the auxiliary panel to merge "
                    "onto the official FRED panel. Joined on the date index."
@@ -307,7 +307,7 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM.__class__(
                type="str",
                default=REQUIRED,
                constraint=(
-                   "Required when custom_source_policy=official_plus_custom. "
+                   "Required when panel_composition=official_plus_custom. "
                    "Must be one of: 'left_join', 'inner_join', 'outer_join'."
                ),
                description=(
@@ -332,7 +332,7 @@ def _dataset_entry(option: str, summary: str, description: str, when_to_use: str
         description=description,
         when_to_use=when_to_use,
         references=refs,
-        related_options=("custom_source_policy", "frequency", "horizon_set"),
+        related_options=("panel_composition", "frequency", "horizon_set"),
     )
 
 
@@ -372,7 +372,7 @@ _L1A_FRED_SD = _dataset_entry(
     "FRED-SD: state-level US series with geographic axes.",
     (
         "State-level macro panel covering ~50 states + DC. Activates the "
-        "L1.D geography axes (target_geography_scope / predictor_geography_scope) "
+        "L1.D geography axes (target_geography_policy / predictor_geography_policy) "
         "and the L7 ``us_state_choropleth`` figure type for spatial "
         "interpretation.\n\n"
         "FRED-SD ships with mixed monthly + quarterly frequencies; the "
@@ -841,11 +841,11 @@ _L1C_TRANSFORM_RAW = _entry(
 
 
 # ---------------------------------------------------------------------------
-# L1.D target_geography_scope
+# L1.D target_geography_policy
 # ---------------------------------------------------------------------------
 
 _L1D_GEO_SINGLE = _entry(
-    "l1_d", "target_geography_scope", "single_state",
+    "l1_d", "target_geography_policy", "single_state",
     summary="Single FRED-SD state target (e.g., California payrolls).",
     description=(
         "Selects one US state as the target. Requires "
@@ -854,7 +854,7 @@ _L1D_GEO_SINGLE = _entry(
     ),
     when_to_use="State-level case studies (e.g., CA / TX / NY-specific forecasts).",
     references=(_REF_DESIGN_L1,),
-    related_options=("all_states", "selected_states", "predictor_geography_scope"),
+    related_options=("all_states", "selected_states", "predictor_geography_policy"),
 )
 
 # C20 follow-up: ParameterDoc for target_state (singular, single_state option).
@@ -865,7 +865,7 @@ _L1D_GEO_SINGLE = _L1D_GEO_SINGLE.__class__(
                name="target_state",
                type="str",
                default=REQUIRED,
-               constraint="required US state code or 'US' when target_geography_scope=single_state",
+               constraint="required US state code or 'US' when target_geography_policy=single_state",
                description=(
                    "Single target state code (e.g. 'CA', 'TX') or 'US' for national target. "
                    "Must be a valid two-letter postal code present in FRED-SD."
@@ -876,7 +876,7 @@ _L1D_GEO_SINGLE = _L1D_GEO_SINGLE.__class__(
 )
 
 _L1D_GEO_ALL = _entry(
-    "l1_d", "target_geography_scope", "all_states",
+    "l1_d", "target_geography_policy", "all_states",
     summary="Forecast every state's series jointly (50+DC targets).",
     description=(
         "Treats every state series as a target. The L5 metrics table "
@@ -892,7 +892,7 @@ _L1D_GEO_ALL = _entry(
 )
 
 _L1D_GEO_SELECTED = _entry(
-    "l1_d", "target_geography_scope", "selected_states",
+    "l1_d", "target_geography_policy", "selected_states",
     summary="Forecast a user-supplied subset of states.",
     description=(
         "Like ``all_states`` but restricted to ``leaf_config.target_states "
@@ -912,7 +912,7 @@ _L1D_GEO_SELECTED = _L1D_GEO_SELECTED.__class__(
                type="list[str]",
                default=REQUIRED,
                constraint="non-empty list required; each element a valid US state code or DC",
-               description="Explicit target state list when target_geography_scope=selected_states.",
+               description="Explicit target state list when target_geography_policy=selected_states.",
            ),
        ),
     }
@@ -1045,7 +1045,7 @@ _L1F_HORIZON_STD_MD = _entry(
     description=(
         "The canonical multi-horizon set used in the McCracken-Ng / Stock-Watson "
         "tradition for monthly forecasting. Models are fit per-horizon (when "
-        "``forecast_strategy = direct``) and metrics report per-(model, "
+        "``forecast_policy = direct``) and metrics report per-(model, "
         "horizon) rows."
     ),
     when_to_use="Default for monthly studies. Comparable to published monthly benchmarks.",
@@ -1138,7 +1138,7 @@ _L1F_HORIZON_CUSTOM = _L1F_HORIZON_CUSTOM.__class__(
                    ),
                    description=(
                        "Explicit list of forecasting horizons h. One model fit per "
-                       "horizon per cell when forecast_strategy=direct."
+                       "horizon per cell when forecast_policy=direct."
                    ),
                ),
            ))
@@ -1891,24 +1891,24 @@ _L1C_OFFICIAL_SCOPE = (
         related=("target_and_predictors",)),
 )
 
-# L1.D predictor_geography_scope (FRED-SD)
+# L1.D predictor_geography_policy (FRED-SD)
 _L1D_PRED_GEO: tuple[OptionDoc, ...] = (
-    _t1("l1_d", "predictor_geography_scope", "match_target",
+    _t1("l1_d", "predictor_geography_policy", "match_target",
         "Use the same geography scope as the target.",
-        "Default; predictor states match the L1.D ``target_geography_scope``. Ensures spatial coherence for state-level forecasts.",
+        "Default; predictor states match the L1.D ``target_geography_policy``. Ensures spatial coherence for state-level forecasts.",
         "Default for state-level forecasts.",
         related=("all_states", "selected_states", "national_only")),
-    _t1("l1_d", "predictor_geography_scope", "all_states",
+    _t1("l1_d", "predictor_geography_policy", "all_states",
         "Use predictors from every state regardless of target geography.",
         "All-50-states predictor block. Useful when cross-state spillovers matter and the target is a single state.",
         "Spillover / cross-state interaction studies.",
         related=("match_target", "selected_states")),
-    _t1("l1_d", "predictor_geography_scope", "selected_states",
+    _t1("l1_d", "predictor_geography_policy", "selected_states",
         "Use predictors from a user-supplied state list.",
         "Reads ``leaf_config.predictor_states`` and restricts the predictor block to that subset.",
         "Custom regional studies (e.g. neighbouring states).",
         related=("match_target", "all_states")),
-    _t1("l1_d", "predictor_geography_scope", "national_only",
+    _t1("l1_d", "predictor_geography_policy", "national_only",
         "Use only national-aggregate predictors.",
         "Strips state-level predictors and keeps only national series. Reduces panel dimension when state-level features are noise.",
         "When national variables alone explain target variation.",
@@ -1918,7 +1918,7 @@ _L1D_PRED_GEO: tuple[OptionDoc, ...] = (
 # Cycle 20 L1.D fix: ParameterDoc for predictor_states
 _L1D_PRED_GEO_SELECTED = next(
     d for d in _L1D_PRED_GEO
-    if d.axis == "predictor_geography_scope" and d.option == "selected_states"
+    if d.axis == "predictor_geography_policy" and d.option == "selected_states"
 )
 _L1D_PRED_GEO_SELECTED_PATCHED = _L1D_PRED_GEO_SELECTED.__class__(
     **{**_L1D_PRED_GEO_SELECTED.__dict__,
@@ -2101,7 +2101,7 @@ _L1D_STATE_GROUP = tuple(
             f"This option selects which state-level series enter the "
             f"predictor / target panels. The grouping does not affect "
             f"national-aggregate variables; combine with "
-            f"``predictor_geography_scope`` to control whether "
+            f"``predictor_geography_policy`` to control whether "
             f"predictors follow the target's geographic scope or use "
             f"a different state set."
         ),

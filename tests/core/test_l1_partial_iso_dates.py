@@ -84,7 +84,7 @@ class TestPartialIsoInRecipe:
         yaml_text = """
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
     sample_start_rule: fixed_date
   leaf_config:

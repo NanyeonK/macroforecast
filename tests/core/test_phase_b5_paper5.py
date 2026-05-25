@@ -38,7 +38,7 @@ from macroforecast.recipes.paper_methods import macroeconomic_random_forest
 
 def _fit_node_params(recipe: dict) -> dict:
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     return fit["params"]
 
@@ -151,7 +151,7 @@ def test_mrf_helper_args_plumb_to_vendored_wrapper():
         **overrides,
     )
     for node in recipe["4_forecasting_model"]["nodes"]:
-        if node.get("op") == "fit_model":
+        if node.get("op") == "fit":
             node["params"]["min_train_size"] = 80
             node["params"]["B"] = 2
 

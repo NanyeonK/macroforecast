@@ -20,14 +20,14 @@ sink hash matches bit-for-bit.
 
 ```yaml
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_mode: seeded_reproducible}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
   leaf_config: {random_seed: 42}
 ```
 
 - `failure_policy: fail_fast` — abort the sweep on first cell failure
   (default while developing a recipe; switch to `continue_on_failure`
   for large unsupervised sweeps).
-- `reproducibility_mode: seeded_reproducible` + `random_seed: 42` — every
+- `reproducibility_policy: seeded_reproducible` + `random_seed: 42` — every
   stochastic step receives a deterministic seed derived from the L0 seed
   plus the cell index. This is what makes
   `macroforecast.replicate(manifest_path)` bit-exact.
@@ -36,7 +36,7 @@ sink hash matches bit-for-bit.
 
 ```yaml
 1_data:
-  fixed_axes: {custom_source_policy: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
   leaf_config:
     target: y
     target_horizons: [1]
@@ -46,7 +46,7 @@ sink hash matches bit-for-bit.
       x1:  [0.5, 1.0, 1.5, ..., 6.0]
 ```
 
-- `custom_source_policy: custom_panel_only` — bypass the FRED loaders;
+- `panel_composition: custom_panel_only` — bypass the FRED loaders;
   use the inline panel. Real recipes use `dataset: fred_md` (or
   `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd`) plus
   `start` / `end`.
@@ -114,11 +114,11 @@ operational ops.
     - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
     - id: fit_ridge
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: ridge
+        model: ridge
         alpha: 1.0
-        forecast_strategy: direct
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -132,12 +132,12 @@ operational ops.
     l4_training_metadata_v1: auto
 ```
 
-- `family: ridge` with `alpha: 1.0` — standard L2-regularised OLS.
+- `model: ridge` with `alpha: 1.0` — standard L2-regularised OLS.
   Replace with `lasso`, `elastic_net`, `ar_p`, `random_forest`,
   `xgboost`, `bayesian_ridge`, `bvar_minnesota`,
   `macroeconomic_random_forest`, `dfm_mixed_mariano_murasawa`, ... see
   the [encyclopedia L4 page](../encyclopedia/l4/index.md) for all 35+.
-- `forecast_strategy: direct` — train one model per horizon (vs.
+- `forecast_policy: direct` — train one model per horizon (vs.
   `iterated` which recursively rolls h=1 forecasts).
 - `training_start_rule: expanding` + `refit_policy: every_origin` —
   expanding-window walk-forward, refit at every OOS origin.

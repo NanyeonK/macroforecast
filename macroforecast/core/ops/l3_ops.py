@@ -1150,7 +1150,7 @@ def midas(inputs, params):
     params_schema={
         "n_components": {"type": (int, str), "default": 2, "sweepable": True},
         "n_slices": {"type": int, "default": 10, "sweepable": True},
-        "scaling_method": {
+        "scaling_policy": {
             "type": str,
             "default": "scaled_pca",
             "options": ("scaled_pca", "marginal_R2", "none"),
@@ -1181,7 +1181,7 @@ def midas(inputs, params):
 def sliced_inverse_regression(inputs, params):
     """Fan-Xue-Yao (2017) sliced inverse regression for factor models.
 
-    Optional Huang-Zhou (2022) predictive scaling (``scaling_method=
+    Optional Huang-Zhou (2022) predictive scaling (``scaling_policy=
     'scaled_pca'``) applies a univariate target-supervised slope per
     column before slicing -- the ``sSUFF`` variant. The output is the
     ``n_components``-column factor frame projected by the top SIR

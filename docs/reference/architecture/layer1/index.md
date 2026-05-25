@@ -34,7 +34,7 @@ Layer 1 should be read as a hierarchy, not a flat checklist.
 
 | Level | Group | Axes | Rule |
 |---|---|---|---|
-| Primary decision | Data Source Mode / Frequency | `custom_source_policy`, `dataset`, `frequency` | First choose FRED-only, custom-only, or FRED-plus-custom data. Then close the analysis frequency. `dataset` is a FRED source-panel choice, not a custom-only choice. |
+| Primary decision | Data Source Mode / Frequency | `panel_composition`, `dataset`, `frequency` | First choose FRED-only, custom-only, or FRED-plus-custom data. Then close the analysis frequency. `dataset` is a FRED source-panel choice, not a custom-only choice. |
 | Primary policy | Forecast-Time Information | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` | Defines the data revision/vintage regime, publication lag, and same-period x availability at each forecast origin. For custom-only data, only same-period x availability is exposed by default. |
 | Contract-derived | Target (y) Definition | `target_structure` | Constrained by Layer 0 `study_scope`; y IDs, horizons, and dates live in `leaf_config`. |
 | Secondary policy | Predictor (x) Definition | `variable_universe` | Limits eligible FRED-MD/QD x columns before Layer 2 builds representations. Custom-only x columns are defined by the custom file; standalone FRED-SD x columns are defined by state and series scope. |
@@ -48,7 +48,7 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 
 | Step | Group | Axes |
 |---|---|---|
-| 4.1.1 | [Data source mode / frequency](source_frame.md) | `custom_source_policy`, `dataset`, `frequency`; custom paths live in `leaf_config.custom_source_path` |
+| 4.1.1 | [Data source mode / frequency](source_frame.md) | `panel_composition`, `dataset`, `frequency`; custom paths live in `leaf_config.custom_source_path` |
 | 4.1.2 | [Forecast-time information](availability_timing.md) | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` |
 | 4.1.3 | [Target (y) and predictor (x) definitions](target_universe.md) | `target_structure`, `variable_universe`; target IDs, horizons, sample dates, and x column lists live in `leaf_config` |
 | 4.1.4 | [FRED-SD predictor scope](fred_sd_source_selection.md) | `fred_sd_frequency_policy`, `fred_sd_state_group`, `state_selection`, `fred_sd_variable_group`, `sd_variable_selection` |
@@ -60,9 +60,9 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 
 | Axis | Simple default | Full rule |
 |---|---|---|
-| `custom_source_policy` | `official_only` | first source choice; choose FRED-only, custom-only, or FRED-plus-custom data |
+| `panel_composition` | `official_only` | first source choice; choose FRED-only, custom-only, or FRED-plus-custom data |
 | `dataset` | required only when FRED data is used | FRED source panel only: `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`; custom-only should not expose this as a user choice |
-| `custom_source_path` | none | required in `leaf_config` when `custom_source_policy` is not `official_only`; parser/schema are inferred |
+| `custom_source_path` | none | required in `leaf_config` when `panel_composition` is not `official_only`; parser/schema are inferred |
 | `frequency` | inferred for FRED-MD/QD/composites; required for standalone FRED-SD and custom-only | analysis frequency: monthly or quarterly |
 | `information_set_type` | `final_revised_data` | data revision/vintage regime; hidden by default for custom-only data |
 | `release_lag_rule` | `ignore_release_lag` | publication-lag rule; hidden by default for custom-only data; `series_specific_lag` requires `leaf_config.release_lag_per_series` |

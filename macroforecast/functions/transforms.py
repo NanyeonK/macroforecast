@@ -1699,7 +1699,7 @@ def sliced_inverse_regression_transform(
     *,
     n_components: int = 3,
     n_slices: int = 10,
-    scaling_method: str = "scaled_pca",
+    scaling_policy: str = "scaled_pca",
 ) -> pd.DataFrame:
     """Fan-Xue-Yao (2017) Sliced Inverse Regression with Huang-Zhou predictive scaling.
 
@@ -1718,7 +1718,7 @@ def sliced_inverse_regression_transform(
     n_slices : int, default 10
         Number of contiguous slices of the target distribution. Must
         be >= 2. Clamped internally to the number of aligned rows.
-    scaling_method : str, default ``"scaled_pca"``
+    scaling_policy : str, default ``"scaled_pca"``
         Predictive scaling variant forwarded to ``_sliced_inverse_regression``.
         Allowed values: ``"scaled_pca"`` (Huang-Zhou 2022 sSUFF augmentation)
         and ``"none"`` (plain SIR without predictive scaling). Raises
@@ -1735,7 +1735,7 @@ def sliced_inverse_regression_transform(
     Notes
     -----
     Calls ``_sliced_inverse_regression`` from
-    ``macroforecast.core.runtime`` with ``scaling_method="scaled_pca"``
+    ``macroforecast.core.runtime`` with ``scaling_policy="scaled_pca"``
     (sSUFF variant; Huang-Jiang-Li-Tong-Zhou 2022 augmentation applies
     a univariate predictive slope weight per column before slicing).
     Equivalent recipe configuration::
@@ -1788,17 +1788,17 @@ def sliced_inverse_regression_transform(
             "index values; cannot align supervisory signal with panel rows."
         )
     _ALLOWED_SCALING_METHODS = {"scaled_pca", "none"}
-    if scaling_method not in _ALLOWED_SCALING_METHODS:
+    if scaling_policy not in _ALLOWED_SCALING_METHODS:
         raise ValueError(
-            f"sliced_inverse_regression_transform: scaling_method must be one of "
-            f"{sorted(_ALLOWED_SCALING_METHODS)!r}; got {scaling_method!r}"
+            f"sliced_inverse_regression_transform: scaling_policy must be one of "
+            f"{sorted(_ALLOWED_SCALING_METHODS)!r}; got {scaling_policy!r}"
         )
     return _sliced_inverse_regression(
         frame,
         target=target,
         n_components=n_components,
         n_slices=n_slices,
-        scaling_method=scaling_method,
+        scaling_policy=scaling_policy,
     )
 
 

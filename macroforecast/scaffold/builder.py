@@ -70,15 +70,15 @@ class _L0(_LayerNamespace):
         self,
         *,
         failure_policy: str = "fail_fast",
-        reproducibility_mode: str = "seeded_reproducible",
-        compute_mode: str = "serial",
+        reproducibility_policy: str = "seeded_reproducible",
+        compute_policy: str = "serial",
         random_seed: int | None = 0,
         **leaf: Any,
     ) -> "_L0":
         self.set_axis(
             failure_policy=failure_policy,
-            reproducibility_mode=reproducibility_mode,
-            compute_mode=compute_mode,
+            reproducibility_policy=reproducibility_policy,
+            compute_policy=compute_policy,
         )
         if random_seed is not None:
             self.leaf_config["random_seed"] = int(random_seed)
@@ -93,7 +93,7 @@ class _L1(_LayerNamespace):
     def __call__(
         self,
         *,
-        custom_source_policy: str = "official_only",
+        panel_composition: str = "official_only",
         dataset: str = "fred_md",
         frequency: str = "monthly",
         horizon_set: str = "standard_md",
@@ -103,7 +103,7 @@ class _L1(_LayerNamespace):
         **leaf: Any,
     ) -> "_L1":
         self.set_axis(
-            custom_source_policy=custom_source_policy,
+            panel_composition=panel_composition,
             dataset=dataset,
             frequency=frequency,
             horizon_set=horizon_set,
@@ -120,14 +120,14 @@ class _L1(_LayerNamespace):
     def fred_md(self, *, target: str, **kwargs: Any) -> "_L1":
         """Preset: official FRED-MD with a single target."""
 
-        kwargs.setdefault("custom_source_policy", "official_only")
+        kwargs.setdefault("panel_composition", "official_only")
         kwargs.setdefault("dataset", "fred_md")
         kwargs.setdefault("frequency", "monthly")
         kwargs.setdefault("horizon_set", "standard_md")
         return self(target=target, **kwargs)
 
     def fred_qd(self, *, target: str, **kwargs: Any) -> "_L1":
-        kwargs.setdefault("custom_source_policy", "official_only")
+        kwargs.setdefault("panel_composition", "official_only")
         kwargs.setdefault("dataset", "fred_qd")
         kwargs.setdefault("frequency", "quarterly")
         kwargs.setdefault("horizon_set", "standard_qd")
@@ -136,7 +136,7 @@ class _L1(_LayerNamespace):
     def custom_panel(self, *, target: str, panel: dict[str, list[Any]], **kwargs: Any) -> "_L1":
         """Preset: inline custom panel (no FRED dependency).
 
-        ``dataset`` is inactive when ``custom_source_policy = custom_panel_only``,
+        ``dataset`` is inactive when ``panel_composition = custom_panel_only``,
         so we deliberately omit it from the fixed-axes block (the validator
         rejects studies that set both).
         """
@@ -145,7 +145,7 @@ class _L1(_LayerNamespace):
         # axis through the canonical ``__call__`` path.
         self.fixed_axes.update(
             {
-                "custom_source_policy": kwargs.pop("custom_source_policy", "custom_panel_only"),
+                "panel_composition": kwargs.pop("panel_composition", "custom_panel_only"),
                 "frequency": kwargs.pop("frequency", "monthly"),
                 "horizon_set": kwargs.pop("horizon_set", "custom_list"),
                 "target_structure": kwargs.pop("target_structure", "single_target"),
@@ -225,7 +225,7 @@ class _L4(_LayerNamespace):
         self,
         family: str,
         *,
-        forecast_strategy: str = "direct",
+        forecast_policy: str = "direct",
         training_start_rule: str = "expanding",
         refit_policy: str = "every_origin",
         search_algorithm: str = "none",
@@ -233,7 +233,7 @@ class _L4(_LayerNamespace):
         is_benchmark: bool = False,
         **params: Any,
     ) -> "_FitNodeHandle":
-        """Add a fit_model node with the supplied family + params. Returns
+        """Add a fit node with the supplied family + params. Returns
         a handle that supports ``.is_benchmark()``."""
 
         self._ensure_sources()
@@ -242,10 +242,10 @@ class _L4(_LayerNamespace):
         node = {
             "id": node_id,
             "type": "step",
-            "op": "fit_model",
+            "op": "fit",
             "params": {
-                "family": family,
-                "forecast_strategy": forecast_strategy,
+                "model": family,
+                "forecast_policy": forecast_policy,
                 "training_start_rule": training_start_rule,
                 "refit_policy": refit_policy,
                 "search_algorithm": search_algorithm,

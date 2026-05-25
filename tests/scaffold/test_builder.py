@@ -23,17 +23,17 @@ def test_l0_default_call_emits_three_axes_plus_seed():
     block = b.build()["0_meta"]
     assert block["fixed_axes"] == {
         "failure_policy": "fail_fast",
-        "reproducibility_mode": "seeded_reproducible",
-        "compute_mode": "serial",
+        "reproducibility_policy": "seeded_reproducible",
+        "compute_policy": "serial",
     }
     assert block["leaf_config"]["random_seed"] == 0
 
 
 def test_l0_explicit_overrides():
     b = RecipeBuilder()
-    b.l0(random_seed=42, compute_mode="parallel", n_workers=4)
+    b.l0(random_seed=42, compute_policy="parallel", n_workers=4)
     block = b.build()["0_meta"]
-    assert block["fixed_axes"]["compute_mode"] == "parallel"
+    assert block["fixed_axes"]["compute_policy"] == "parallel"
     assert block["leaf_config"]["random_seed"] == 42
     assert block["leaf_config"]["n_workers"] == 4
 
@@ -61,7 +61,7 @@ def test_l1_custom_panel_inlines_data():
     b = RecipeBuilder()
     b.l1.custom_panel(target="y", panel=panel)
     l1 = b.build()["1_data"]
-    assert l1["fixed_axes"]["custom_source_policy"] == "custom_panel_only"
+    assert l1["fixed_axes"]["panel_composition"] == "custom_panel_only"
     assert l1["leaf_config"]["custom_panel_inline"]["y"] == [1.0, 2.0]
 
 
@@ -96,7 +96,7 @@ def test_l4_fit_adds_node_and_predict():
     b = RecipeBuilder()
     b.l4.fit("ridge", alpha=0.5)
     l4 = b.build()["4_forecasting_model"]
-    families = [n["params"]["family"] for n in l4["nodes"] if n.get("op") == "fit_model"]
+    families = [n["params"]["model"] for n in l4["nodes"] if n.get("op") == "fit"]
     assert families == ["ridge"]
     assert any(n.get("op") == "predict" for n in l4["nodes"])
     assert l4["sinks"]["l4_forecasts_v1"] == "predict"
@@ -107,7 +107,7 @@ def test_l4_multiple_fits_keep_unique_node_ids():
     b.l4.fit("ridge")
     b.l4.fit("random_forest", n_estimators=50)
     nodes = b.build()["4_forecasting_model"]["nodes"]
-    fit_ids = [n["id"] for n in nodes if n.get("op") == "fit_model"]
+    fit_ids = [n["id"] for n in nodes if n.get("op") == "fit"]
     assert len(set(fit_ids)) == len(fit_ids)
     assert "fit_1_ridge" in fit_ids
     assert "fit_2_random_forest" in fit_ids

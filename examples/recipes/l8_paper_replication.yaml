@@ -7,4 +7,4 @@
     manifest_format: json
   leaf_config:
     output_directory: ./paper_replication/coulombe_2021/
-    descriptive_naming_template: "{model_family}_{forecast_strategy}_h{horizon}_{combine_method}"
+    descriptive_naming_template: "{model_family}_{forecast_policy}_h{horizon}_{combine_method}"

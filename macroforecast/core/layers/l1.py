@@ -6,7 +6,7 @@ import re
 from datetime import date
 from typing import Any, Literal
 
-from ..dag import DAG, GatePredicate, Node, NodeRef
+from ..pipeline import DAG, GatePredicate, Node, NodeRef
 from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
 from ..types import L1DataDefinitionArtifact, L1RegimeMetadataArtifact
 
@@ -99,7 +99,7 @@ VALID_STATE_CODES = frozenset(
 )
 
 DEFAULT_AXES: dict[str, Any] = {
-    "custom_source_policy": "official_only",
+    "panel_composition": "official_only",
     "dataset": "fred_md",
     "information_set_type": "final_revised_data",
     "vintage_policy": "current_vintage",
@@ -115,15 +115,15 @@ DEFAULT_AXES: dict[str, Any] = {
     "contemporaneous_x_rule": "allow_same_period_predictors",
     "official_transform_policy": "apply_official_tcode",
     "official_transform_scope": "target_and_predictors",
-    "target_geography_scope": "all_states",
-    "predictor_geography_scope": "match_target",
+    "target_geography_policy": "all_states",
+    "predictor_geography_policy": "match_target",
     "sample_start_rule": "max_balanced",
     "sample_end_rule": "latest_available",
     "regime_definition": "none",
 }
 
 L1_AXIS_NAMES: tuple[str, ...] = (
-    "custom_source_policy",
+    "panel_composition",
     "dataset",
     "frequency",
     "information_set_type",
@@ -142,8 +142,8 @@ L1_AXIS_NAMES: tuple[str, ...] = (
     "contemporaneous_x_rule",
     "official_transform_policy",
     "official_transform_scope",
-    "target_geography_scope",
-    "predictor_geography_scope",
+    "target_geography_policy",
+    "predictor_geography_policy",
     "sample_start_rule",
     "sample_end_rule",
     "horizon_set",
@@ -260,7 +260,7 @@ def resolve_axes(dag: DAG) -> dict[str, Any]:
 def resolve_axes_from_raw(
     fixed_axes: dict[str, Any], leaf_config: dict[str, Any], *, tolerate_invalid: bool = False
 ) -> dict[str, Any]:
-    custom_policy = fixed_axes.get("custom_source_policy", DEFAULT_AXES["custom_source_policy"])
+    custom_policy = fixed_axes.get("panel_composition", DEFAULT_AXES["panel_composition"])
     dataset = None if custom_policy == "custom_panel_only" else fixed_axes.get("dataset", DEFAULT_AXES["dataset"])
     target_structure = _canonical_target_structure(
         fixed_axes.get("target_structure", DEFAULT_AXES["target_structure"])
@@ -283,7 +283,7 @@ def resolve_axes_from_raw(
         regime_temporal_rule = "expanding_window_per_origin"
 
     resolved = {
-        "custom_source_policy": custom_policy,
+        "panel_composition": custom_policy,
         "dataset": dataset,
         "frequency": frequency,
         "information_set_type": fixed_axes.get("information_set_type", DEFAULT_AXES["information_set_type"]),
@@ -302,8 +302,8 @@ def resolve_axes_from_raw(
         "contemporaneous_x_rule": fixed_axes.get("contemporaneous_x_rule", DEFAULT_AXES["contemporaneous_x_rule"]),
         "official_transform_policy": None if custom_policy == "custom_panel_only" else fixed_axes.get("official_transform_policy", DEFAULT_AXES["official_transform_policy"]),
         "official_transform_scope": None if custom_policy == "custom_panel_only" else fixed_axes.get("official_transform_scope", DEFAULT_AXES["official_transform_scope"]),
-        "target_geography_scope": None,
-        "predictor_geography_scope": None,
+        "target_geography_policy": None,
+        "predictor_geography_policy": None,
         "sample_start_rule": fixed_axes.get("sample_start_rule", DEFAULT_AXES["sample_start_rule"]),
         "sample_end_rule": fixed_axes.get("sample_end_rule", DEFAULT_AXES["sample_end_rule"]),
         "horizon_set": horizon_set,
@@ -318,8 +318,8 @@ def resolve_axes_from_raw(
         resolved["state_selection"] = fixed_axes.get("state_selection", DEFAULT_AXES["state_selection"])
         resolved["fred_sd_variable_group"] = fixed_axes.get("fred_sd_variable_group")
         resolved["sd_variable_selection"] = fixed_axes.get("sd_variable_selection", DEFAULT_AXES["sd_variable_selection"])
-        resolved["target_geography_scope"] = fixed_axes.get("target_geography_scope", "all_states")
-        resolved["predictor_geography_scope"] = fixed_axes.get("predictor_geography_scope", "match_target")
+        resolved["target_geography_policy"] = fixed_axes.get("target_geography_policy", "all_states")
+        resolved["predictor_geography_policy"] = fixed_axes.get("predictor_geography_policy", "match_target")
     if tolerate_invalid:
         return resolved
     return resolved
@@ -356,13 +356,13 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
     issues.extend(_validate_public_data_policy_axes(leaf_config, resolved))
     issues.extend(_validate_regime(leaf_config, resolved))
 
-    if resolved.get("custom_source_policy") == "custom_panel_only":
+    if resolved.get("panel_composition") == "custom_panel_only":
         issues.append(
             Issue(
                 "l1_custom_source_policy",
                 Severity.SOFT,
                 "layer",
-                "l1.custom_source_policy",
+                "l1.panel_composition",
                 "custom_panel_only makes FRED-specific axes inactive",
             )
         )
@@ -388,15 +388,15 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
             )
         )
     if (
-        resolved.get("target_geography_scope") == "single_state"
-        and resolved.get("predictor_geography_scope") == "all_states"
+        resolved.get("target_geography_policy") == "single_state"
+        and resolved.get("predictor_geography_policy") == "all_states"
     ):
         issues.append(
             Issue(
                 "l1_geography_overfit_warning",
                 Severity.SOFT,
                 "layer",
-                "l1.predictor_geography_scope",
+                "l1.predictor_geography_policy",
                 "many predictors for one target may overfit; consider match_target",
             )
         )
@@ -457,7 +457,7 @@ def _artifact_from_resolved(resolved: dict[str, Any], leaf_config: dict[str, Any
     target = leaf_config.get("target")
     targets = tuple(leaf_config.get("targets", ()) or ((target,) if target else ()))
     return L1DataDefinitionArtifact(
-        custom_source_policy=resolved["custom_source_policy"],
+        panel_composition=resolved["panel_composition"],
         dataset=resolved["dataset"],
         frequency=resolved["frequency"],
         vintage_policy=resolved["vintage_policy"],
@@ -465,8 +465,8 @@ def _artifact_from_resolved(resolved: dict[str, Any], leaf_config: dict[str, Any
         target=target,
         targets=targets,
         variable_universe=resolved["variable_universe"],
-        target_geography_scope=resolved["target_geography_scope"],
-        predictor_geography_scope=resolved["predictor_geography_scope"],
+        target_geography_policy=resolved["target_geography_policy"],
+        predictor_geography_policy=resolved["predictor_geography_policy"],
         sample_start_rule=resolved["sample_start_rule"],
         sample_end_rule=resolved["sample_end_rule"],
         horizon_set=resolved["horizon_set"],
@@ -518,7 +518,7 @@ def _regime_artifact_from_resolved(
 def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
     issues = []
     option_sets = {
-        "custom_source_policy": {"official_only", "custom_panel_only", "official_plus_custom"},
+        "panel_composition": {"official_only", "custom_panel_only", "official_plus_custom"},
         "dataset": set(DATASET_OPTIONS),
         "frequency": {"monthly", "quarterly"},
         "information_set_type": {"final_revised_data", "pseudo_oos_on_revised_data"},
@@ -595,8 +595,8 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
         "contemporaneous_x_rule": {"allow_same_period_predictors", "forbid_same_period_predictors"},
         "official_transform_policy": {"apply_official_tcode", "keep_official_raw_scale"},
         "official_transform_scope": {"target_only", "predictors_only", "target_and_predictors", "none"},
-        "target_geography_scope": {"single_state", "all_states", "selected_states"},
-        "predictor_geography_scope": {"match_target", "all_states", "selected_states", "national_only"},
+        "target_geography_policy": {"single_state", "all_states", "selected_states"},
+        "predictor_geography_policy": {"match_target", "all_states", "selected_states", "national_only"},
         "sample_start_rule": {"earliest_available", "fixed_date", "max_balanced"},
         "sample_end_rule": {"latest_available", "fixed_date"},
         "horizon_set": {"standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"},
@@ -614,7 +614,7 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
 
 def _validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
     issues = []
-    custom_policy = resolved["custom_source_policy"]
+    custom_policy = resolved["panel_composition"]
     dataset = resolved["dataset"]
     if custom_policy == "custom_panel_only":
         if not any(key in leaf_config for key in ("custom_source_path", "custom_panel_inline", "custom_panel_records")):
@@ -625,7 +625,7 @@ def _validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str
                 )
             )
         if "dataset" in fixed_axes:
-            issues.append(_issue("l1.dataset", "dataset is inactive when custom_source_policy=custom_panel_only"))
+            issues.append(_issue("l1.dataset", "dataset is inactive when panel_composition=custom_panel_only"))
     if custom_policy == "official_plus_custom":
         for key in ("custom_source_path", "custom_merge_rule"):
             if key not in leaf_config:
@@ -668,7 +668,7 @@ def _validate_target(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> l
 def _validate_variable_universe(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[Any]:
     issues = []
     variable_universe = resolved.get("variable_universe")
-    custom_policy = resolved.get("custom_source_policy")
+    custom_policy = resolved.get("panel_composition")
     dataset = resolved.get("dataset")
     if (custom_policy == "custom_panel_only" or dataset == "fred_sd") and variable_universe is not None:
         issues.append(_issue("l1.variable_universe", "variable_universe is inactive for custom-only or standalone fred_sd"))
@@ -706,22 +706,22 @@ def _validate_geography(leaf_config: dict[str, Any], resolved: dict[str, Any]) -
                 issues.append(_issue(f"l1.{axis_name}", f"{axis_name} requires a FRED-SD dataset"))
         if issues:
             return issues
-        if "target_geography_scope" in resolved and resolved.get("target_geography_scope") is None:
+        if "target_geography_policy" in resolved and resolved.get("target_geography_policy") is None:
             return issues
-    target_scope = resolved.get("target_geography_scope")
-    predictor_scope = resolved.get("predictor_geography_scope")
+    target_scope = resolved.get("target_geography_policy")
+    predictor_scope = resolved.get("predictor_geography_policy")
     if target_scope == "single_state":
         state = leaf_config.get("target_state")
         if state not in VALID_STATE_CODES:
             issues.append(_issue("l1.target_state", "single_state requires valid leaf_config.target_state"))
         if state == "US" and predictor_scope not in {"national_only", "match_target"}:
-            issues.append(_issue("l1.predictor_geography_scope", "US target requires national_only or match_target predictors"))
+            issues.append(_issue("l1.predictor_geography_policy", "US target requires national_only or match_target predictors"))
     if target_scope == "selected_states":
         issues.extend(_validate_state_list("target_states", leaf_config.get("target_states")))
     if predictor_scope == "selected_states":
         issues.extend(_validate_state_list("predictor_states", leaf_config.get("predictor_states")))
     if predictor_scope == "national_only" and dataset == "fred_sd":
-        issues.append(_issue("l1.predictor_geography_scope", "national_only requires a dataset with fred_md or fred_qd"))
+        issues.append(_issue("l1.predictor_geography_policy", "national_only requires a dataset with fred_md or fred_qd"))
     if resolved.get("state_selection") == "selected_states":
         issues.extend(_validate_state_list("sd_states", leaf_config.get("sd_states")))
     if resolved.get("sd_variable_selection") == "selected_sd_variables":
@@ -893,10 +893,10 @@ def _active_axis_names(resolved: dict[str, Any]) -> tuple[str, ...]:
 
 def _axis_gates(axis_name: str) -> tuple[GatePredicate, ...]:
     if axis_name in {"dataset", "vintage_policy"}:
-        return (GatePredicate(kind="axis_not_equals", target="custom_source_policy", value="custom_panel_only"),)
+        return (GatePredicate(kind="axis_not_equals", target="panel_composition", value="custom_panel_only"),)
     if axis_name == "variable_universe":
         return (GatePredicate(kind="axis_not_in", target="dataset", value=["fred_sd"]),)
-    if axis_name in {"target_geography_scope", "predictor_geography_scope"}:
+    if axis_name in {"target_geography_policy", "predictor_geography_policy"}:
         return (GatePredicate(kind="axis_in", target="dataset", value=list(FRED_SD_DATASETS)),)
     if axis_name in {"fred_sd_frequency_policy", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection"}:
         return (GatePredicate(kind="axis_in", target="dataset", value=list(FRED_SD_DATASETS)),)
@@ -1007,17 +1007,17 @@ L1_LAYER_SPEC = LayerImplementationSpec(
     ui_mode="list",
     layer_globals=(),
     sub_layers=(
-        SubLayerSpec(id="l1_a", name="Source selection", axes=("custom_source_policy", "dataset", "frequency", "information_set_type", "vintage_policy", "fred_sd_frequency_policy")),
+        SubLayerSpec(id="l1_a", name="Source selection", axes=("panel_composition", "dataset", "frequency", "information_set_type", "vintage_policy", "fred_sd_frequency_policy")),
         SubLayerSpec(id="l1_b", name="Target definition", axes=("target_structure",)),
         SubLayerSpec(id="l1_c", name="Predictor universe", axes=("variable_universe", "missing_availability", "raw_missing_policy", "raw_outlier_policy", "release_lag_rule", "contemporaneous_x_rule", "official_transform_policy", "official_transform_scope")),
-        SubLayerSpec(id="l1_d", name="Geography scope", axes=("target_geography_scope", "predictor_geography_scope", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection")),
+        SubLayerSpec(id="l1_d", name="Geography scope", axes=("target_geography_policy", "predictor_geography_policy", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection")),
         SubLayerSpec(id="l1_e", name="Sample window", axes=("sample_start_rule", "sample_end_rule")),
         SubLayerSpec(id="l1_f", name="Horizon set", axes=("horizon_set",)),
         SubLayerSpec(id="l1_g", name="Regime definition", axes=("regime_definition", "regime_estimation_temporal_rule")),
     ),
     axes={
         "l1_a": {
-            "custom_source_policy": AxisSpec("custom_source_policy", _options(("official_only", "custom_panel_only", "official_plus_custom")), "official_only", sweepable=False),
+            "panel_composition": AxisSpec("panel_composition", _options(("official_only", "custom_panel_only", "official_plus_custom")), "official_only", sweepable=False),
             "dataset": AxisSpec("dataset", _options(DATASET_OPTIONS), "fred_md", sweepable=True),
             "frequency": AxisSpec("frequency", _options(("monthly", "quarterly")), "derived", sweepable=False),
             "information_set_type": AxisSpec("information_set_type", _options(("final_revised_data", "pseudo_oos_on_revised_data")), "final_revised_data", sweepable=False),
@@ -1049,9 +1049,9 @@ L1_LAYER_SPEC = LayerImplementationSpec(
             "official_transform_scope": AxisSpec("official_transform_scope", _options(("target_only", "predictors_only", "target_and_predictors", "none")), "target_and_predictors", sweepable=False),
         },
         "l1_d": {
-            "target_geography_scope": AxisSpec("target_geography_scope", _options(("single_state", "all_states", "selected_states")), "all_states", sweepable=False),
-            "predictor_geography_scope": AxisSpec(
-                "predictor_geography_scope",
+            "target_geography_policy": AxisSpec("target_geography_policy", _options(("single_state", "all_states", "selected_states")), "all_states", sweepable=False),
+            "predictor_geography_policy": AxisSpec(
+                "predictor_geography_policy",
                 _options(("match_target", "all_states", "selected_states", "national_only")),
                 "match_target",
                 sweepable=False,

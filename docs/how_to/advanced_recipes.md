@@ -43,7 +43,7 @@ random_seed: 0
   outlier: winsor_1_99
 
 4_forecasting_model:
-  family: ridge
+  model: ridge
   refit_policy: every_origin
 ```
 
@@ -54,7 +54,7 @@ expands sweep markers into independent cells, and returns a
 ## Custom-step registration
 
 Custom estimators register through the top-level `mf.register_model`
-decorator. The registered name then becomes a valid `family:` value in
+decorator. The registered name then becomes a valid `model:` value in
 the L4 layer.
 
 ```python
@@ -70,7 +70,7 @@ The recipe references the registered name verbatim.
 
 ```yaml
 4_forecasting_model:
-  family: my_baseline
+  model: my_baseline
   refit_policy: every_origin
 ```
 
@@ -96,7 +96,7 @@ reproducibility is automatic.
 
 ```yaml
 4_forecasting_model:
-  family: {sweep: [ridge, lasso, elastic_net]}
+  model: {sweep: [ridge, lasso, elastic_net]}
   refit_policy: every_origin
 ```
 
@@ -149,7 +149,7 @@ The equivalent recipe nominates `boruta_selection` as an L3 op and
         alpha: 0.05
 
 4_forecasting_model:
-  family: ridge
+  model: ridge
 ```
 
 The recipe form earns the user manifest-backed replication, sweep

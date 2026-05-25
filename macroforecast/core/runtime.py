@@ -270,7 +270,7 @@ def materialize_l1(
     target = leaf_config.get("target")
     targets = tuple(leaf_config.get("targets", ()) or ((target,) if target else ()))
     artifact = L1DataDefinitionArtifact(
-        custom_source_policy=resolved["custom_source_policy"],
+        panel_composition=resolved["panel_composition"],
         dataset=resolved["dataset"],
         frequency=resolved["frequency"],
         vintage_policy=resolved["vintage_policy"],
@@ -278,8 +278,8 @@ def materialize_l1(
         target=target,
         targets=targets,
         variable_universe=resolved["variable_universe"],
-        target_geography_scope=resolved["target_geography_scope"],
-        predictor_geography_scope=resolved["predictor_geography_scope"],
+        target_geography_policy=resolved["target_geography_policy"],
+        predictor_geography_policy=resolved["predictor_geography_policy"],
         sample_start_rule=resolved["sample_start_rule"],
         sample_end_rule=resolved["sample_end_rule"],
         horizon_set=resolved["horizon_set"],
@@ -451,8 +451,8 @@ def materialize_l2(
         transform_map_applied=transform_map,
         cleaning_temporal_rules={
             "imputation": resolved.get("imputation_temporal_rule", ""),
-            "outlier": resolved.get("outlier_scope", ""),
-            "frame_edge": resolved.get("frame_edge_scope", ""),
+            "outlier": "not_applicable" if resolved.get("outlier_policy") == "none" else "predictors_only",
+            "frame_edge": "not_applicable" if resolved.get("frame_edge_policy") == "keep_unbalanced" else "predictors_only",
         },
     )
     return artifact, resolved
@@ -1262,7 +1262,7 @@ def _diagnostic_l4_forecast_summary(
 def _diagnostic_l4_model_summary(l4_models: L4ModelArtifactsArtifact) -> dict[str, Any]:
     return {
         model_id: {
-            "family": artifact.family,
+            "model": artifact.family,
             "framework": artifact.framework,
             "n_features": len(artifact.feature_names),
             "is_benchmark": bool(l4_models.is_benchmark.get(model_id, False)),
@@ -1458,7 +1458,7 @@ def materialize_l3_minimal(
     y_meta = {"stage": "l3_y_final", "horizon": horizon, "data": y_aligned}
     # Phase B-15 paper-15 F4: forward the un-averaged source y so the L4
     # walk-forward can fit Eq. 4 (h separate per-horizon models) when
-    # ``forecast_strategy="path_average_eq4"`` is opted in. The L3
+    # ``forecast_policy="path_average_eq4"`` is opted in. The L3
     # ``target_construction`` op stashes ``y_orig`` on the series ``attrs``
     # only for ``cumulative_average`` / ``path_average`` modes.
     y_orig_attr = (y.attrs or {}).get("y_orig")
@@ -1793,7 +1793,7 @@ def materialize_l3_per_origin(
 
 def _resolve_l0_seed(recipe_root: dict[str, Any]) -> int | None:
     """Mirror ``execution._resolve_seed`` so L4 estimator construction can
-    inherit the L0 ``random_seed`` when a fit_model node does not pin its
+    inherit the L0 ``random_seed`` when a fit node does not pin its
     own ``params.random_state`` (issue #215)."""
 
     l0 = recipe_root.get("0_meta", {}) or {}
@@ -1801,7 +1801,7 @@ def _resolve_l0_seed(recipe_root: dict[str, Any]) -> int | None:
     fixed = l0.get("fixed_axes", {}) or {}
     if "random_seed" in leaf:
         return int(leaf["random_seed"])
-    repro = fixed.get("reproducibility_mode", "seeded_reproducible")
+    repro = fixed.get("reproducibility_policy", "seeded_reproducible")
     return 0 if repro == "seeded_reproducible" else None
 
 
@@ -1817,10 +1817,10 @@ def materialize_l4_minimal(
     fit_nodes = [
         node
         for node in raw.get("nodes", ()) or ()
-        if isinstance(node, dict) and node.get("op") == "fit_model"
+        if isinstance(node, dict) and node.get("op") == "fit"
     ]
     if not fit_nodes:
-        raise ValueError("[L4/4_forecasting_model.nodes] L4 runtime requires a fit_model node")  # Cycle 14 L1-1 fix:
+        raise ValueError("[L4/4_forecasting_model.nodes] L4 runtime requires a fit node")  # Cycle 14 L1-1 fix:
     X = l3_features.X_final.data
     y = l3_features.y_final.metadata.values.get("data")
     if not isinstance(y, pd.Series):
@@ -1830,7 +1830,7 @@ def materialize_l4_minimal(
     # Phase B-15 paper-15 F4: ``y_orig`` is the un-averaged source y stashed
     # by ``target_construction`` when L3 mode is ``cumulative_average`` /
     # ``path_average``. The L4 walk-forward consumes it when
-    # ``forecast_strategy="path_average_eq4"`` to fit h per-horizon models.
+    # ``forecast_policy="path_average_eq4"`` to fit h per-horizon models.
     y_orig = l3_features.y_final.metadata.values.get("y_orig")
     l0_seed = _resolve_l0_seed(recipe_root)
     # Phase B-1 F2/F3 fix: pull the per-origin L3 rematerialization closure
@@ -1979,8 +1979,8 @@ def materialize_l4_minimal(
         params = dict(fit_node.get("params", {}) or {})
         if l0_seed is not None and "random_state" not in params:
             params["random_state"] = l0_seed
-        family = params.get("family", "ridge")
-        forecast_strategy = params.get("forecast_strategy", "direct")
+        family = params.get("model", "ridge")
+        forecast_policy = params.get("forecast_policy", "direct")
         training_start_rule = params.get("training_start_rule", "expanding")
         refit_policy = params.get("refit_policy", "every_origin")
         rolling_window = int(
@@ -2015,7 +2015,7 @@ def materialize_l4_minimal(
         min_train_size = _minimal_train_size(
             params, n_obs=len(X), n_features=len(X.columns)
         )
-        model_id = fit_node.get("id", "fit_model")
+        model_id = fit_node.get("id", "fit")
         model_ids.append(model_id)
         origins: list[Any] = []
         last_fit_position: int | None = None
@@ -2073,7 +2073,7 @@ def materialize_l4_minimal(
                 )
             )
             if should_refit and refit_policy != "single_fit":
-                if forecast_strategy == "path_average_eq4" and isinstance(
+                if forecast_policy == "path_average_eq4" and isinstance(
                     y_orig, pd.Series
                 ):
                     # Phase B-15 paper-15 F4: fit h per-horizon models and
@@ -2092,7 +2092,7 @@ def materialize_l4_minimal(
                     last_model.fit(train_X, train_y)
                 last_fit_position = position
             elif refit_policy == "single_fit" and last_model is None:
-                if forecast_strategy == "path_average_eq4" and isinstance(
+                if forecast_policy == "path_average_eq4" and isinstance(
                     y_orig, pd.Series
                 ):
                     last_model = _fit_path_average_eq4_models(
@@ -2112,14 +2112,14 @@ def materialize_l4_minimal(
                 last_model,
                 X_origin_full,
                 position_in_origin,
-                forecast_strategy=forecast_strategy,
+                forecast_policy=forecast_policy,
                 horizon=horizon,
             )
             forecasts[(model_id, target, horizon, origin)] = forecast_value
             origins.append(origin)
             training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
 
-        if forecast_strategy == "path_average_eq4" and isinstance(y_orig, pd.Series):
+        if forecast_policy == "path_average_eq4" and isinstance(y_orig, pd.Series):
             # Full-sample artifact: also store the h per-horizon models.
             model = _fit_path_average_eq4_models(
                 family=family,
@@ -2141,7 +2141,7 @@ def materialize_l4_minimal(
             fit_metadata={
                 "n_obs": len(X),
                 "min_train_size": min_train_size,
-                "runtime": f"{training_start_rule}_{forecast_strategy}",
+                "runtime": f"{training_start_rule}_{forecast_policy}",
                 "refit_policy": refit_policy,
                 "rolling_window": rolling_window,
                 **{
@@ -2252,7 +2252,7 @@ def _emit_quantile_intervals(
         params = node.get("params", {}) or {}
         if params.get("forecast_object") in {"quantile", "density"}:
             levels = list(params.get("quantile_levels", [0.05, 0.25, 0.5, 0.75, 0.95]))
-            family = str(params.get("family", "ridge"))
+            family = str(params.get("model", "ridge"))
             quantile_capable = bool(params.get("forecast_object") == "quantile")
             break
     if not levels:
@@ -2261,7 +2261,7 @@ def _emit_quantile_intervals(
 
     out: dict[tuple[str, str, int, Any, float], float] = {}
 
-    # Phase B-9 paper-9 F1: HNN dispatch. Detect any fit_model whose
+    # Phase B-9 paper-9 F1: HNN dispatch. Detect any fit whose
     # fitted estimator is an HNN (paper's mean + Eq. 10 reality-checked
     # variance bands). Restricted to ``_HemisphereNN`` instances so we
     # do not collide with the family-engine path used by QRF / Bagging
@@ -2698,8 +2698,8 @@ def _run_l4_fit_node(
     params = dict(fit_node.get("params", {}) or {})
     if l0_seed is not None and "random_state" not in params:
         params["random_state"] = l0_seed
-    family = params.get("family", "ridge")
-    forecast_strategy = params.get("forecast_strategy", "direct")
+    family = params.get("model", "ridge")
+    forecast_policy = params.get("forecast_policy", "direct")
     training_start_rule = params.get("training_start_rule", "expanding")
     refit_policy = params.get("refit_policy", "every_origin")
     rolling_window = int(params.get("rolling_window", max(24, min(len(X) // 2, 120))))
@@ -2727,7 +2727,7 @@ def _run_l4_fit_node(
     min_train_size = _minimal_train_size(
         params, n_obs=len(X), n_features=len(X.columns)
     )
-    model_id = fit_node.get("id", "fit_model")
+    model_id = fit_node.get("id", "fit")
     forecasts: dict[tuple[str, str, int, Any], float] = {}
     origins: list[Any] = []
     training_windows: dict[tuple[str, Any], tuple[Any, Any]] = {}
@@ -2759,7 +2759,7 @@ def _run_l4_fit_node(
             per_origin_params["random_state"] = (
                 int(per_origin_params["random_state"]) + position
             ) % (2**31 - 1)
-        if forecast_strategy == "path_average_eq4" and isinstance(y_orig, pd.Series):
+        if forecast_policy == "path_average_eq4" and isinstance(y_orig, pd.Series):
             # Phase B-15 paper-15 F4
             model = _fit_path_average_eq4_models(
                 family=family,
@@ -2777,7 +2777,7 @@ def _run_l4_fit_node(
             model,
             X_origin,
             position_in_origin,
-            forecast_strategy=forecast_strategy,
+            forecast_policy=forecast_policy,
             horizon=horizon,
         )
         return origin, forecast_value, (train_X.index[0], train_X.index[-1])
@@ -2830,7 +2830,7 @@ def _run_l4_fit_node(
                 )
             )
             if should_refit and refit_policy != "single_fit":
-                if forecast_strategy == "path_average_eq4" and isinstance(
+                if forecast_policy == "path_average_eq4" and isinstance(
                     y_orig, pd.Series
                 ):
                     last_model = _fit_path_average_eq4_models(
@@ -2847,7 +2847,7 @@ def _run_l4_fit_node(
                     last_model.fit(train_X, train_y)
                 last_fit_position = position
             elif refit_policy == "single_fit" and last_model is None:
-                if forecast_strategy == "path_average_eq4" and isinstance(
+                if forecast_policy == "path_average_eq4" and isinstance(
                     y_orig, pd.Series
                 ):
                     last_model = _fit_path_average_eq4_models(
@@ -2867,13 +2867,13 @@ def _run_l4_fit_node(
                 last_model,
                 X_origin,
                 position_in_origin,
-                forecast_strategy=forecast_strategy,
+                forecast_policy=forecast_policy,
                 horizon=horizon,
             )
             forecasts[(model_id, target, horizon, origin)] = forecast_value
             origins.append(origin)
             training_windows[(model_id, origin)] = (train_X.index[0], train_X.index[-1])
-    if forecast_strategy == "path_average_eq4" and isinstance(y_orig, pd.Series):
+    if forecast_policy == "path_average_eq4" and isinstance(y_orig, pd.Series):
         full_model = _fit_path_average_eq4_models(
             family=family,
             params=params,
@@ -2894,7 +2894,7 @@ def _run_l4_fit_node(
         fit_metadata={
             "n_obs": len(X),
             "min_train_size": min_train_size,
-            "runtime": f"{training_start_rule}_{forecast_strategy}",
+            "runtime": f"{training_start_rule}_{forecast_policy}",
             "refit_policy": refit_policy,
             "rolling_window": rolling_window,
             **{
@@ -2945,13 +2945,13 @@ def _build_l4_model(
             # Coulombe (2025 IJF) "Time-Varying Parameters as Ridge".
             # Phase B-8 audit-fix: paper §2.5 Algorithm 1 step 4 calls
             # for a second λ-CV after the warm-start; default routes
-            # ``alpha_strategy="second_cv"``. Set ``alpha_strategy=
+            # ``alpha_search_policy="second_cv"``. Set ``alpha_search_policy=
             # "fixed"`` to bypass the CV and use ``alpha`` as-is.
             return _TwoStageRandomWalkRidge(
                 alpha=alpha,
                 vol_model=str(params.get("vol_model", "garch11")),
                 max_alpha_ratio=float(params.get("max_alpha_ratio", 1e6)),
-                alpha_strategy=str(params.get("alpha_strategy", "second_cv")),
+                alpha_search_policy=str(params.get("alpha_search_policy", "second_cv")),
                 alpha_grid=params.get("alpha_grid"),
                 cv_folds=int(params.get("cv_folds", 5)),
                 random_state=seed,
@@ -3359,7 +3359,7 @@ def _build_l4_model(
                 for k, v in params.items()
                 if k
                 not in {
-                    "family",
+                    "model",
                     "base_family",
                     "n_estimators",
                     "max_samples",
@@ -4742,9 +4742,9 @@ def _fit_path_average_eq4_models(
 
 
 def _l4_predict_one(
-    model, X: pd.DataFrame, position: int, *, forecast_strategy: str, horizon: int
+    model, X: pd.DataFrame, position: int, *, forecast_policy: str, horizon: int
 ) -> float:
-    if forecast_strategy == "iterated":
+    if forecast_policy == "iterated":
         # Roll predictions one step at a time using a copy of the row.
         row = X.iloc[[position]].copy()
         last_value = float(model.predict(row)[0])
@@ -4755,7 +4755,7 @@ def _l4_predict_one(
                 row.loc[:, "y_lag1"] = last_value
             last_value = float(model.predict(row)[0])
         return last_value
-    if forecast_strategy in {"path_average", "path_average_eq4"}:
+    if forecast_policy in {"path_average", "path_average_eq4"}:
         # average h consecutive forecasts (path); for ``path_average`` this
         # is equivalent to direct on a cumulative_average target (Eq. 5 OLS
         # limit). For ``path_average_eq4`` ``model`` is a
@@ -4789,7 +4789,7 @@ def _resolve_l4_tuning(
     ``params.random_state`` for determinism.
     """
 
-    family = params.get("family", "ridge")
+    family = params.get("model", "ridge")
     n_obs = len(X)
     if n_obs < 8:
         return params
@@ -5391,7 +5391,7 @@ class _TwoStageRandomWalkRidge:
         Initial ridge penalty λ for step 1. The step-2 re-CV is
         bounded above by ``alpha * max_alpha_ratio`` to avoid
         runaway shrinkage on degenerate residuals. When
-        ``alpha_strategy="second_cv"`` (the default), this value is
+        ``alpha_search_policy="second_cv"`` (the default), this value is
         only used as a fallback / starting hint; the fitted λ is the
         cross-validated minimiser over ``alpha_grid``.
     vol_model:
@@ -5404,7 +5404,7 @@ class _TwoStageRandomWalkRidge:
         Upper bound on the ratio of step-2 to step-1 lambda. Default
         ``1e6``; the paper does not pin this explicitly but the dual
         ZZ' + λI invert becomes numerically unstable beyond.
-    alpha_strategy:
+    alpha_search_policy:
         ``"second_cv"`` (default; paper §2.5 Algorithm 1 step 4 — "Use
         solution (17) to **rerun CV** and get β̂_2, the final
         estimator"; footnote 4 + §2.4.1 justify the second λ-CV
@@ -5431,7 +5431,7 @@ class _TwoStageRandomWalkRidge:
         alpha: float = 1.0,
         vol_model: str = "garch11",
         max_alpha_ratio: float = 1e6,
-        alpha_strategy: str = "second_cv",
+        alpha_search_policy: str = "second_cv",
         alpha_grid: list[float] | None = None,
         cv_folds: int = 5,
         random_state: int = 0,
@@ -5439,10 +5439,10 @@ class _TwoStageRandomWalkRidge:
         self.alpha = float(max(alpha, 1e-6))
         self.vol_model = str(vol_model).lower()
         self.max_alpha_ratio = float(max_alpha_ratio)
-        self.alpha_strategy = str(alpha_strategy).lower()
-        if self.alpha_strategy not in {"fixed", "second_cv"}:
+        self.alpha_search_policy = str(alpha_search_policy).lower()
+        if self.alpha_search_policy not in {"fixed", "second_cv"}:
             raise ValueError(
-                f"alpha_strategy={alpha_strategy!r} not supported; "
+                f"alpha_search_policy={alpha_search_policy!r} not supported; "
                 f"use 'fixed' or 'second_cv'."
             )
         self.alpha_grid = (
@@ -5620,7 +5620,7 @@ class _TwoStageRandomWalkRidge:
         # to pick the final λ. Footnote 4 + §2.4.1 justify the second
         # CV because heterogeneous variance changes the effective
         # regularization.
-        if self.alpha_strategy == "second_cv":
+        if self.alpha_search_policy == "second_cv":
             lam = self._second_cv_pick_alpha(Xa, y_c)
         else:  # "fixed"
             lam = float(self.alpha)
@@ -11568,7 +11568,7 @@ def _dual_decomposition_frame(
         W = _rf_leaf_cooccurrence_weights(fitted, X_train, X_test)
     else:
         _nn_families = {"mlp", "lstm", "gru", "transformer"}
-        if getattr(model, "family", None) in _nn_families:
+        if getattr(model, "model", None) in _nn_families:
             raise ValueError(
                 f"dual_decomposition: NN family {model.family!r} is "
                 f"FUTURE — paper §2.3 (Eqs. 9-12) NN dual via auxiliary "
@@ -12531,7 +12531,7 @@ def _l6_equal_predictive_results(
                     "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
                     "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
                     "alternative": "two_sided",  # Cycle 14 L1-5 fix:
-                    "correction_method": "hln_nw" if apply_hln else "nw",  # Cycle 14 L1-5 fix:
+                    "correction_policy": "hln_nw" if apply_hln else "nw",  # Cycle 14 L1-5 fix:
                     "n_obs": int(diff.notna().sum()),
                     "mean_loss_difference": _float_or_none(diff.mean())
                     if not diff.empty
@@ -12600,7 +12600,7 @@ def _l6_harvey_newbold_results(
                 "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
                 "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
                 "alternative": "one_sided",  # Cycle 14 L1-5 fix: HN is one-sided (a encompasses b)
-                "correction_method": "hln_nw",  # Cycle 14 L1-5 fix: Harvey-Leybourne-Newbold small-sample
+                "correction_policy": "hln_nw",  # Cycle 14 L1-5 fix: Harvey-Leybourne-Newbold small-sample
                 "n_obs": int(np.sum(np.isfinite(e_a) & np.isfinite(e_b))),
                 "encompassing": "a_over_b",
                 "mean_d": float(np.nanmean(e_a * (e_a - e_b))) if e_a.size else None,
@@ -12697,7 +12697,7 @@ def _l6_dmp_multi_horizon(
                 "decision": bool(p_value < 0.05),  # Cycle 14 L1-5 fix:
                 "decision_at_5pct": bool(p_value < 0.05),  # kept for backward compat
                 "alternative": "two_sided",  # Cycle 14 L1-5 fix:
-                "correction_method": "nw",  # Cycle 14 L1-5 fix: DMP uses HAC kernel, no HLN
+                "correction_policy": "nw",  # Cycle 14 L1-5 fix: DMP uses HAC kernel, no HLN
                 "n_obs_stacked": n,
                 "mean_loss_difference": mean_diff,
                 "hac_kernel": hac_kernel,
@@ -12757,7 +12757,7 @@ def _l6_nested_results(
                     "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
                     "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
                     "alternative": "one_sided",  # Cycle 14 L1-5 fix: CW is one-sided (large improves on small)
-                    "correction_method": "nw",  # Cycle 14 L1-5 fix: HAC NW kernel, no HLN for nested
+                    "correction_policy": "nw",  # Cycle 14 L1-5 fix: HAC NW kernel, no HLN for nested
                     "n_obs": int(f_value.notna().sum()),
                     "mean_adjusted_improvement": _float_or_none(f_value.mean())
                     if not f_value.empty
@@ -12829,7 +12829,7 @@ def _l6_density_interval_results(
     if not intervals and not allow_synth:
         return {
             "status": "requires_quantile_or_density_forecast",
-            "remediation": "set ``forecast_object: quantile`` on the fit_model node, or pass ``L6.E.allow_residual_synth: true`` to opt into the residual-Gaussian fallback (not the published procedure)",
+            "remediation": "set ``forecast_object: quantile`` on the fit node, or pass ``L6.E.allow_residual_synth: true`` to opt into the residual-Gaussian fallback (not the published procedure)",
             "tests": {},
         }
     by_model: dict[str, list[tuple[Any, float, float]]] = {}
@@ -14236,8 +14236,8 @@ def _l8_render_html_report(
     for node in (recipe_root.get("4_forecasting_model", {}) or {}).get(
         "nodes", []
     ) or []:
-        if isinstance(node, dict) and node.get("op") == "fit_model":
-            family = (node.get("params") or {}).get("family")
+        if isinstance(node, dict) and node.get("op") == "fit":
+            family = (node.get("params") or {}).get("model")
             break
     if family:
         lines.append(f"<p><b>Model family</b>: <code>{_esc(str(family))}</code></p>")
@@ -14537,7 +14537,7 @@ def _capture_random_seed_used(recipe_root: dict[str, Any]) -> int | None:
             return int(fixed["random_seed"])
         except (TypeError, ValueError):
             return None
-    repro = fixed.get("reproducibility_mode", "seeded_reproducible")
+    repro = fixed.get("reproducibility_policy", "seeded_reproducible")
     return 0 if repro == "seeded_reproducible" else None
 
 
@@ -14629,7 +14629,7 @@ def _ks_statistic(left: pd.Series, right: pd.Series) -> float | None:
 
 
 def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Panel:
-    policy = resolved["custom_source_policy"]
+    policy = resolved["panel_composition"]
     if policy == "official_only":
         raw_result = _load_official_raw_result(resolved, leaf_config)
         frame = raw_result.data.copy()
@@ -14671,7 +14671,7 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
             )
     else:
         raise NotImplementedError(
-            f"custom_source_policy={policy!r} core runtime loading is deferred"
+            f"panel_composition={policy!r} core runtime loading is deferred"
         )
     frame = _normalize_datetime_index(frame, leaf_config)
     frame = _apply_sample_window(frame, resolved, leaf_config)
@@ -14777,7 +14777,7 @@ def _resolve_fred_sd_states(
     )
     if group_key and group_key in FRED_SD_STATE_GROUPS:
         return list(FRED_SD_STATE_GROUPS[group_key])
-    target_scope = resolved.get("target_geography_scope")
+    target_scope = resolved.get("target_geography_policy")
     if target_scope == "single_state":
         target = leaf_config.get("target_state")
         return [target] if target else None
@@ -15021,8 +15021,8 @@ def _apply_fred_sd_frequency_alignment(
 ) -> pd.DataFrame:
     """Issue #202 -- align mixed-frequency FRED-SD panels.
 
-    Reads ``sd_series_frequency_filter``, ``quarterly_to_monthly_rule``
-    and ``monthly_to_quarterly_rule`` from the L2 resolved axes and the
+    Reads ``sd_series_frequency_filter``, ``quarterly_to_monthly_policy``
+    and ``monthly_to_quarterly_policy`` from the L2 resolved axes and the
     per-series frequency map from the L1 raw_panel metadata.
     """
 
@@ -15054,8 +15054,8 @@ def _apply_fred_sd_frequency_alignment(
         list(df.columns),
     )
     sd_filter = resolved.get("sd_series_frequency_filter", "both")
-    qm_rule = resolved.get("quarterly_to_monthly_rule", "step_backward")
-    mq_rule = resolved.get("monthly_to_quarterly_rule", "quarterly_average")
+    qm_rule = resolved.get("quarterly_to_monthly_policy", "step_backward")
+    mq_rule = resolved.get("monthly_to_quarterly_policy", "quarterly_average")
 
     if sd_filter == "monthly_only":
         df = df[
@@ -15183,8 +15183,9 @@ def _apply_transform(
         return frame, {}
     if policy == "custom_tcode" and not tcode_map:
         raise ValueError("custom_tcode runtime requires custom_tcode_map")
-    # F-P1-14 fix: honour official_transform_scope (BREAKING)
-    scope = resolved.get("transform_scope", "target_and_predictors") or "target_and_predictors"
+    # F-P1-14 fix: honour transform scope (BREAKING)
+    # transform_scope axis removed in Phase 1; scope is inlined from transform_policy
+    scope = "not_applicable" if resolved.get("transform_policy") == "no_transform" else "target_and_predictors"
     target_col = l1_leaf.get("target") or l2_leaf.get("target")
     transformed = frame.copy()
     applied: dict[str, int] = {}
@@ -15984,7 +15985,7 @@ def _execute_l3_op(
             # Phase B-15 paper-15 F4: stash the source (un-averaged) y so
             # ``materialize_l4_minimal`` can fit the paper Eq. 4 path-average
             # estimator (h separate models on per-horizon shifted targets)
-            # when ``forecast_strategy="path_average_eq4"`` is opted in.
+            # when ``forecast_policy="path_average_eq4"`` is opted in.
             target.attrs["y_orig"] = y_series.copy()
         else:
             target = y_series.shift(-horizon).rename(target_name)
@@ -16035,7 +16036,7 @@ def _execute_l3_op(
             target=_first_series(inputs),
             n_components=n_comp_resolved,
             n_slices=int(params.get("n_slices", 10)),
-            scaling_method=str(params.get("scaling_method", "scaled_pca")),
+            scaling_policy=str(params.get("scaling_policy", "scaled_pca")),
         )
     if op == "boruta_selection":
         return _boruta_selection(
@@ -16497,11 +16498,11 @@ def _sliced_inverse_regression(
     target: pd.Series | None,
     n_components: int,
     n_slices: int,
-    scaling_method: str = "scaled_pca",
+    scaling_policy: str = "scaled_pca",
 ) -> pd.DataFrame:
     """Fan-Xue-Yao (2017) sliced inverse regression for factor models.
 
-    Optional Huang-Zhou (2022) predictive scaling (``scaling_method=
+    Optional Huang-Zhou (2022) predictive scaling (``scaling_policy=
     'scaled_pca'``) applies a univariate target-supervised slope per
     column before slicing -- the ``sSUFF`` variant.
     """
@@ -16533,12 +16534,12 @@ def _sliced_inverse_regression(
 
     # 2. Optional column-wise predictive scaling (sSUFF).
     beta_j: np.ndarray | None = None
-    if scaling_method == "scaled_pca":
+    if scaling_policy == "scaled_pca":
         beta_j = np.array(
             [_univariate_slope(Xs[c], y) for c in Xs.columns], dtype=float
         )
         Xs_scaled = Xs * beta_j
-    elif scaling_method == "marginal_R2":
+    elif scaling_policy == "marginal_R2":
         beta_j = np.array(
             [_univariate_slope(Xs[c], y) for c in Xs.columns], dtype=float
         )
@@ -16594,9 +16595,9 @@ def _sliced_inverse_regression(
 
     # 8. Project all rows (re-using full standardised+scaled X for non-train rows).
     Xs_full = ((frame - mu_X) / sd_X).fillna(0.0)
-    if scaling_method == "scaled_pca" and beta_j is not None:
+    if scaling_policy == "scaled_pca" and beta_j is not None:
         Xs_full = Xs_full * beta_j
-    elif scaling_method == "marginal_R2" and beta_j is not None:
+    elif scaling_policy == "marginal_R2" and beta_j is not None:
         signs = np.sign(beta_j)
         Xs_full = Xs_full * (signs * np.abs(beta_j))
     factors_arr = Xs_full.to_numpy(dtype=float) @ V_K
@@ -18867,7 +18868,7 @@ def _build_user_provided_regime_series(
 
 def _l1_context(artifact: L1DataDefinitionArtifact) -> dict[str, Any]:
     return {
-        "custom_source_policy": artifact.custom_source_policy,
+        "panel_composition": artifact.panel_composition,
         "dataset": artifact.dataset,
         "frequency": artifact.frequency,
         "custom_has_tcode_column": bool(artifact.leaf_config.get("custom_tcode_map")),

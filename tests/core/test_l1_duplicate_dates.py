@@ -13,7 +13,7 @@ from macroforecast.core import execute_l1_l2
 _BASE_YAML = """
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
     frequency: monthly
   leaf_config:
     target: y
@@ -32,7 +32,7 @@ def _recipe_with_inline(rows: dict) -> str:
     recipe = {
         "1_data": {
             "fixed_axes": {
-                "custom_source_policy": "custom_panel_only",
+                "panel_composition": "custom_panel_only",
                 "frequency": "monthly",
             },
             "leaf_config": {

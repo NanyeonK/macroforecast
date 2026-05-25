@@ -2,8 +2,8 @@
 
 Verifies that L1.D Geography axis options have ParameterDoc entries for
 their conditional leaf_config keys:
-- target_geography_scope/selected_states  -> target_states
-- predictor_geography_scope/selected_states -> predictor_states
+- target_geography_policy/selected_states  -> target_states
+- predictor_geography_policy/selected_states -> predictor_states
 - state_selection/selected_states         -> sd_states
 - sd_variable_selection/selected_sd_variables -> sd_variables
 - fred_sd_state_group/custom_state_group  -> sd_state_group_members OR sd_state_groups
@@ -18,13 +18,13 @@ from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
-# target_geography_scope
+# target_geography_policy
 # ---------------------------------------------------------------------------
 
 
 def test_l1d_target_geography_selected_states_has_target_states():
     """selected_states has 1 ParameterDoc for target_states."""
-    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_scope", "selected_states")]
+    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_policy", "selected_states")]
     assert isinstance(doc.parameters, tuple)
     assert len(doc.parameters) == 1
     p = doc.parameters[0]
@@ -37,7 +37,7 @@ def test_l1d_target_geography_selected_states_has_target_states():
 
 def test_l1d_target_geography_other_options_no_params():
     """all_states has no conditional parameters."""
-    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_scope", "all_states")]
+    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_policy", "all_states")]
     assert doc.parameters == (), "all_states should have parameters=()"
 
 
@@ -46,7 +46,7 @@ def test_l1d_target_geography_single_state_has_target_state():
 
     C20 follow-up: pre-existing gap surfaced by reviewer cross-model grep.
     """
-    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_scope", "single_state")]
+    doc = OPTION_DOCS[("l1", "l1_d", "target_geography_policy", "single_state")]
     assert isinstance(doc.parameters, tuple)
     assert len(doc.parameters) == 1
     p = doc.parameters[0]
@@ -59,13 +59,13 @@ def test_l1d_target_geography_single_state_has_target_state():
 
 
 # ---------------------------------------------------------------------------
-# predictor_geography_scope
+# predictor_geography_policy
 # ---------------------------------------------------------------------------
 
 
 def test_l1d_predictor_geography_selected_states_has_predictor_states():
     """selected_states has 1 ParameterDoc for predictor_states."""
-    doc = OPTION_DOCS[("l1", "l1_d", "predictor_geography_scope", "selected_states")]
+    doc = OPTION_DOCS[("l1", "l1_d", "predictor_geography_policy", "selected_states")]
     assert isinstance(doc.parameters, tuple)
     assert len(doc.parameters) == 1
     p = doc.parameters[0]
@@ -80,7 +80,7 @@ def test_l1d_predictor_geography_selected_states_has_predictor_states():
 def test_l1d_predictor_geography_other_options_no_params():
     """match_target, all_states, national_only have no conditional parameters."""
     for option in ("match_target", "all_states", "national_only"):
-        doc = OPTION_DOCS[("l1", "l1_d", "predictor_geography_scope", option)]
+        doc = OPTION_DOCS[("l1", "l1_d", "predictor_geography_policy", option)]
         assert doc.parameters == (), f"{option} should have parameters=()"
 
 

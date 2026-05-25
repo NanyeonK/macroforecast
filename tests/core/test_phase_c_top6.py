@@ -199,7 +199,7 @@ class TestM1UMIDAS:
                 fit_node = node
                 break
             # Also check params for family key
-            if node.get("type") == "step" and "family" in node.get("params", {}):
+            if node.get("type") == "step" and "model" in node.get("params", {}):
                 fit_node = node
                 break
         # Alternatively verify via recipe structure: l4 should be OLS
@@ -208,7 +208,7 @@ class TestM1UMIDAS:
             n for n in recipe["4_forecasting_model"]["nodes"]
             if n.get("type") == "step"
         ]
-        families = [n.get("params", {}).get("family", n.get("op", "")) for n in fit_nodes]
+        families = [n.get("params", {}).get("model", n.get("op", "")) for n in fit_nodes]
         assert any(f == "ols" for f in families), (
             f"Expected OLS family in L4 fit nodes; got families={families}"
         )
@@ -558,7 +558,7 @@ class TestM3SIR:
             target=y_s,
             n_components=2,
             n_slices=5,
-            scaling_method="scaled_pca",
+            scaling_policy="scaled_pca",
         )
         assert factors.shape[0] == T
         assert factors.shape[1] == 2
@@ -596,10 +596,10 @@ class TestM3SIR:
         y_s = pd.Series(y, index=idx, name="y")
 
         a = _sliced_inverse_regression(
-            x_df, target=y_s, n_components=2, n_slices=5, scaling_method="none"
+            x_df, target=y_s, n_components=2, n_slices=5, scaling_policy="none"
         )
         b = _sliced_inverse_regression(
-            x_df, target=y_s, n_components=2, n_slices=5, scaling_method="scaled_pca"
+            x_df, target=y_s, n_components=2, n_slices=5, scaling_policy="scaled_pca"
         )
         f1_a = a.iloc[:, 0].dropna().to_numpy()
         f1_b = b.iloc[:, 0].dropna().to_numpy()
@@ -639,7 +639,7 @@ class TestM9GARCHPublicHelper:
         recipe = garch_volatility(family="garch11")
         fit = _fit_node(recipe, "fit_garch")
 
-        assert fit["params"]["family"] == "garch11"
+        assert fit["params"]["model"] == "garch11"
         assert fit["params"]["min_train_size"] == 60
 
     def test_garch_helper_rejects_legacy_realized_garch_name(self):
@@ -656,7 +656,7 @@ class TestM9GARCHPublicHelper:
         recipe = garch_volatility(family="realized_garch_with_rv_exog")
         fit = _fit_node(recipe, "fit_garch")
 
-        assert fit["params"]["family"] == "realized_garch_with_rv_exog"
+        assert fit["params"]["model"] == "realized_garch_with_rv_exog"
         assert fit["params"]["min_train_size"] == 60
 
 
@@ -1643,12 +1643,12 @@ class TestD2aM3NSlicesDefault:
         y_s = pd.Series(y, index=idx, name="y")
         # Explicit n_slices=10 should match the runtime default path result.
         result_explicit = _sliced_inverse_regression(
-            x_df, target=y_s, n_components=2, n_slices=10, scaling_method="scaled_pca"
+            x_df, target=y_s, n_components=2, n_slices=10, scaling_policy="scaled_pca"
         )
         # Run via runtime params dict with no n_slices key (uses default).
         # We verify the two results are identical (default == 10).
         result_default = _sliced_inverse_regression(
-            x_df, target=y_s, n_components=2, n_slices=10, scaling_method="scaled_pca"
+            x_df, target=y_s, n_components=2, n_slices=10, scaling_policy="scaled_pca"
         )
         pd.testing.assert_frame_equal(result_explicit, result_default)
 

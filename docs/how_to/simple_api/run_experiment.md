@@ -36,7 +36,7 @@ inherited from the L4 schema defaults (kept in sync with
 
 | Setting | Default | Where to change |
 |--------|--------|-----------------|
-| Forecast strategy | `direct` | `.compare("4_forecasting_model.nodes.fit_main.params.forecast_strategy", [...])` |
+| Forecast policy | `direct` | `.compare("4_forecasting_model.nodes.fit_main.params.forecast_policy", [...])` |
 | Training window | `expanding` | `.compare("4_forecasting_model.nodes.fit_main.params.training_start_rule", [...])` |
 | Refit policy | `every_origin` | `.compare("4_forecasting_model.nodes.fit_main.params.refit_policy", [...])` |
 | Benchmark min train size | 5 (zero_change benchmark) | Recipe API |

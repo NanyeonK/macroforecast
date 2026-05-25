@@ -6,7 +6,7 @@ Core source axes:
 
 | Axis | Common values |
 | --- | --- |
-| `custom_source_policy` | `official_only`, `custom_panel_only`, `official_plus_custom` |
+| `panel_composition` | `official_only`, `custom_panel_only`, `official_plus_custom` |
 | `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` |
 | `frequency` | `monthly`, `quarterly` |
 | `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` |
@@ -24,4 +24,4 @@ Target and horizon axes:
 
 Use `leaf_config.target` for `single_target`, `leaf_config.targets` for `multi_target`, `leaf_config.target_horizons` for `single` or `custom_list`, and `leaf_config.max_horizon` for `range_up_to_h`.
 
-FRED-SD geography is controlled by `target_geography_scope`, `predictor_geography_scope`, `fred_sd_state_group`, `state_selection`, `fred_sd_variable_group`, and `sd_variable_selection`.
+FRED-SD geography is controlled by `target_geography_policy`, `predictor_geography_policy`, `fred_sd_state_group`, `state_selection`, `fred_sd_variable_group`, and `sd_variable_selection`.

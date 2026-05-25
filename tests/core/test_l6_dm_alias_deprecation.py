@@ -30,7 +30,7 @@ def _make_alias_dict():
         "decision": True,
         "decision_at_5pct": True,  # alias — same value
         "alternative": "two_sided",
-        "correction_method": "hln_nw",
+        "correction_policy": "hln_nw",
         "n_obs": 30,
         "mean_loss_difference": 0.01,
         "hln_correction": True,
@@ -63,7 +63,7 @@ def test_iter_excludes_deprecated_alias():
 def test_len_excludes_deprecated_alias():
     """len() must NOT count decision_at_5pct."""
     d = _make_alias_dict()
-    # 8 real keys: statistic, p_value, decision, alternative, correction_method,
+    # 8 real keys: statistic, p_value, decision, alternative, correction_policy,
     # n_obs, mean_loss_difference, hln_correction
     assert len(d) == 8, f"expected 8 keys (excl. alias), got {len(d)}"
 

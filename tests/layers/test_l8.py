@@ -109,7 +109,7 @@ def test_l8_provenance_fields_default_all():
 def test_l8_descriptive_naming_default():
     resolved = resolve_axes(normalize_to_dag_form(parse_layer_yaml("8_output:\n  fixed_axes: {}", "l8"), "l8"))
     assert resolved["naming_convention"] == "descriptive"
-    assert resolved["leaf_config"]["descriptive_naming_template"] == "{model_family}_{forecast_strategy}_h{horizon}"
+    assert resolved["leaf_config"]["descriptive_naming_template"] == "{model_family}_{forecast_policy}_h{horizon}"
 
 
 def test_l8_custom_naming_requires_callable_path():

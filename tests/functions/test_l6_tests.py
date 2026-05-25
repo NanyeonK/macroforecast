@@ -87,7 +87,7 @@ class TestDmTest:
         assert isinstance(result, mf.functions.DMTestResult)
         assert result.alternative == "two_sided"
         assert result.hln_correction is True
-        assert result.correction_method == "hln_nw"
+        assert result.correction_policy == "hln_nw"
 
     def test_frozen_dataclass(self, loss_arrays_100):
         loss_a, loss_b = loss_arrays_100
@@ -235,7 +235,7 @@ class TestDmpTest:
         result = mf.functions.dmp_test([rng.randn(30)])
         assert isinstance(result, mf.functions.DMPTestResult)
         assert result.alternative == "two_sided"
-        assert result.correction_method == "nw"
+        assert result.correction_policy == "nw"
         assert result.horizon is None
 
     def test_summary_content(self):
@@ -300,7 +300,7 @@ class TestHnTest:
         result = mf.functions.hn_test(e_a, e_b)
         assert isinstance(result, mf.functions.HNTestResult)
         assert result.alternative == "one_sided"
-        assert result.correction_method == "hln_nw"
+        assert result.correction_policy == "hln_nw"
         assert result.encompassing == "a_over_b"
 
     def test_summary_content(self, error_arrays_100):
@@ -362,7 +362,7 @@ class TestCwTest:
         result = mf.functions.cw_test(loss_s, loss_l, f_s, f_l)
         assert isinstance(result, mf.functions.CWTestResult)
         assert result.alternative == "one_sided"
-        assert result.correction_method == "nw"
+        assert result.correction_policy == "nw"
         assert result.cw_adjustment is True
 
     def test_summary_content(self, nested_arrays_100):
@@ -427,7 +427,7 @@ class TestEncNewTest:
         result = mf.functions.enc_new_test(loss_s, loss_l)
         assert isinstance(result, mf.functions.EncNewTestResult)
         assert result.alternative == "one_sided"
-        assert result.correction_method == "nw"
+        assert result.correction_policy == "nw"
 
     def test_summary_header(self, nested_arrays_100):
         loss_s, loss_l, _, _ = nested_arrays_100

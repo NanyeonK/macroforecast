@@ -236,9 +236,9 @@ def test_chain_use_methods_round_trips_recipe():
     # compare_models should still have inserted a sweep marker on family.
     fit_node = next(
         n for n in recipe["4_forecasting_model"]["nodes"]
-        if isinstance(n, dict) and n.get("op") == "fit_model"
+        if isinstance(n, dict) and n.get("op") == "fit"
     )
-    assert fit_node["params"]["family"] == {"sweep": ["ridge", "ols"]}
+    assert fit_node["params"]["model"] == {"sweep": ["ridge", "ols"]}
 
 
 # ---------------------------------------------------------------------------

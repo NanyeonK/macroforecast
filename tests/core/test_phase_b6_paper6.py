@@ -43,7 +43,7 @@ from macroforecast.recipes.paper_methods import booging
 
 def _fit_node_params(recipe: dict) -> dict:
     fit = next(
-        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit_model"
+        n for n in recipe["4_forecasting_model"]["nodes"] if n.get("op") == "fit"
     )
     return fit["params"]
 
@@ -67,7 +67,7 @@ def test_booging_helper_default_B_100():
     recipe = booging()
     params = _fit_node_params(recipe)
     assert params["n_estimators"] == 100
-    assert params["family"] == "bagging"
+    assert params["model"] == "bagging"
     assert params["strategy"] == "booging"
 
 
@@ -207,7 +207,7 @@ def test_booging_helper_e2e_runs_on_friedman_dgp(tmp_path):
     # Force min_train_size high enough to leave a hold-out tail but
     # low enough to give the bag enough rows to fit.
     for node in recipe["4_forecasting_model"]["nodes"]:
-        if node.get("op") == "fit_model":
+        if node.get("op") == "fit":
             node["params"]["min_train_size"] = 50
 
     result = macroforecast.run(recipe, output_directory=tmp_path / "booging_e2e")

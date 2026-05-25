@@ -34,7 +34,7 @@ print(mf.list_custom_models())  # ('my_model',)
 
 ## Use in a recipe
 
-Reference the registered name via `family:` in any `fit_model` node:
+Reference the registered name via `model:` in any `fit` node:
 
 ```yaml
 4_forecasting_model:
@@ -47,10 +47,10 @@ Reference the registered name via `family:` in any `fit_model` node:
       selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}
     - id: fit_custom
       type: step
-      op: fit_model
+      op: fit
       params:
-        family: my_model
-        forecast_strategy: direct
+        model: my_model
+        forecast_policy: direct
         training_start_rule: expanding
         refit_policy: every_origin
         search_algorithm: none
@@ -75,7 +75,7 @@ YAML does not import Python modules.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `ValueError: unknown model family 'my_model'` | Registration module not imported before `mf.run()` | Import the module at the top of your script; YAML cannot register callables |
+| `ValueError: unknown model 'my_model'` | Registration module not imported before `mf.run()` | Import the module at the top of your script; YAML cannot register callables |
 | Predictions are wrong shape | Return value has more than one element | Return a scalar: `return float(pred[0])` |
 | Predictions are all NaN | Callable returned `np.nan` or raised silently | Guard inside the callable; raise `ValueError` on degenerate windows |
 | Registry persists across test runs | Module-level dict survives in the same process | Call `mf.clear_custom_models()` in test teardown or notebook re-runs |

@@ -364,7 +364,7 @@ out = mf.functions.scaled_pca_transform(panel, target, n_components=2)
 
 [Encyclopedia](../encyclopedia/l3/op/scaled_pca.md)
 
-#### `sliced_inverse_regression_transform(panel: pd.DataFrame, target: pd.Series, *, n_components: int = 3, n_slices: int = 10, scaling_method: str = scaled_pca) -> pd.DataFrame`
+#### `sliced_inverse_regression_transform(panel: pd.DataFrame, target: pd.Series, *, n_components: int = 3, n_slices: int = 10, scaling_policy: str = scaled_pca) -> pd.DataFrame`
 
 Sliced inverse regression (Li 1991) dimension reduction.
 

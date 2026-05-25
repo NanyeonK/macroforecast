@@ -556,7 +556,7 @@ class TestRidgeVariantCallables:
         X, y = xy
         # Use ewma vol model (no arch dependency) and fixed strategy for speed.
         r = random_walk_ridge_fit(X, y, alpha=1.0, vol_model="ewma",
-                                  alpha_strategy="fixed")
+                                  alpha_search_policy="fixed")
         assert r.coef_.shape == (X.shape[1],)
         preds = r.predict(X)
         assert preds.shape == (len(X),)
@@ -606,7 +606,7 @@ class TestRidgeVariantCallables:
         r1 = nonneg_ridge_fit(X, y)
         assert isinstance(r1, RidgeFitResult)
 
-        r2 = random_walk_ridge_fit(X, y, vol_model="ewma", alpha_strategy="fixed")
+        r2 = random_walk_ridge_fit(X, y, vol_model="ewma", alpha_search_policy="fixed")
         assert isinstance(r2, RidgeFitResult)
 
         r3 = fused_difference_ridge_fit(X, y, mean_equality=False, nonneg=False)

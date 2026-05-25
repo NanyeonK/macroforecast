@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
-from ..dag import DAG, LayerId, Node, NodeRef, NodeType, SourceSelector
+from ..pipeline import DAG, LayerId, Node, NodeRef, NodeType, SourceSelector
 from ..ops.l7_ops import FUTURE_OPS, PRE_DEFINED_BLOCKS
 
 
@@ -274,7 +274,7 @@ def _validate_nodes(raw: dict[str, Any], context: dict[str, Any]) -> list[Any]:
             continue
         if node.get("type") == "source" and node.get("selector", {}).get("layer_ref") == "l6":
             subset = node.get("selector", {}).get("subset", {}) or {}
-            if subset.get("family") == "multiple_model" and subset.get("name") == "mcs_inclusion" and not context.get("l6_mcs_active", False):
+            if subset.get("model") == "multiple_model" and subset.get("name") == "mcs_inclusion" and not context.get("l6_mcs_active", False):
                 issues.append(_issue(f"l7.{node.get('id')}", "mcs_inclusion source requires L6.D MCS active"))
         if node.get("type") != "step":
             continue

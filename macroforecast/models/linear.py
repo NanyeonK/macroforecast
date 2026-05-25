@@ -205,7 +205,7 @@ class TwoStageRandomWalkRidge(_TwoStageRandomWalkRidge):
         Default "garch11".
     max_alpha_ratio : float
         Upper bound on the second-step alpha/alpha_1 ratio. Default 1e6.
-    alpha_strategy : str
+    alpha_search_policy : str
         Strategy for second-step alpha: "second_cv" (default) or "fixed".
     random_state : int
         RNG seed. Default 0.
