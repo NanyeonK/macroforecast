@@ -826,3 +826,7 @@ plans/design/             # 4-part design document (canonical source of truth)
 tests/                    # 1345+ tests (core, layers, integration)
 examples/recipes/         # YAML recipe examples per layer
 ```
+
+## Cycle 68 — Per-Algorithm How-Tos + Advanced Recipes (R3-P4b)
+
+Six new per-algorithm how-tos (RealizedGARCH, Boruta, BVARMinnesota, Chow-Lin, GIRF, MIDAS variants) plus one advanced recipes doc and a reorganized how-to index. All snippets use public API class imports verified against `feba598c`. Custom-step registration uses `mf.register_model` from `macroforecast/custom.py`. Net documentation growth: 705 lines across 8 files.

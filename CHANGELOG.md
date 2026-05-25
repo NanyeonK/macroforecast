@@ -250,6 +250,35 @@ User direction: standalone-first paradigm should reach new users via the introdu
 
 ---
 
+### Added — Cycle 68 (R3-P4b) — Per-algorithm how-tos + advanced recipes
+
+Six per-algorithm how-to documents teach the standalone API for the most-used model families. Each is 60-100 lines, includes a synthetic-data worked example, lists common pitfalls, and cites the source paper. The documents target users who have completed tutorials 01-03 and need algorithm-specific guidance.
+
+- `docs/how_to/forecast_volatility_realized_garch.md` (64 lines) — Hansen, Huang and Shek (2012) Realized GARCH with C56 safety hardening.
+- `docs/how_to/feature_selection_boruta.md` (69 lines) — Kursa and Rudnicki (2010) Boruta with proper FP control via Bonferroni-corrected MISA (C59 fix).
+- `docs/how_to/bayesian_var_minnesota.md` (93 lines) — Litterman (1986) Minnesota prior via `BVARMinnesota` with `prior` argument validation (C63.1).
+- `docs/how_to/chow_lin_disaggregation.md` (86 lines) — Chow and Lin (1971) GLS disaggregation with machine-precision aggregation conservation (C63.1).
+- `docs/how_to/irf_pesaran_shin_girf.md` (76 lines) — Pesaran and Shin (1998) generalized impulse response on a fitted VAR.
+- `docs/how_to/compare_midas_variants.md` (97 lines) — Almon, Beta, Step, Unrestricted MIDAS side-by-side comparison.
+
+One advanced recipe document covers the recipe orchestration topic in depth:
+
+- `docs/how_to/advanced_recipes.md` (164 lines) — When to use recipes versus standalone, recipe YAML structure, custom step registration via `mf.register_model`, recipe composition, manifest semantics, and migration guide from standalone code to recipe.
+
+The `docs/how_to/index.md` table of contents reorganized by category (per-algorithm, custom extensions, infrastructure, replication) and grew from 33 to 56 lines.
+
+### Notes — Cycle 68
+
+- All code snippets use the public API (`from macroforecast.models import RealizedGARCH`, `from macroforecast.feature_selection import Boruta`, etc.), not internal `mf.functions.<name>_fit` callables.
+- Custom-step registration in `advanced_recipes.md` uses `mf.register_model` from `macroforecast/custom.py`. The previously-assumed `mf.recipes.register_step` does not exist and is explicitly forbidden in the test suite to prevent regression.
+- Initial Opus planner produced an incorrect spec based on a stale C58-era worktree checkout. Spec was overwritten after the main worktree was pulled to `feba598c`. This is documented in `runs/2026-05-23-cycle68-per-algorithm-howtos/comprehension.md`.
+
+### Source — Cycle 68
+
+User direction (Round 3 P4b): per-algorithm how-tos fill the gap between introductory tutorials (C67) and the API reference. Selection prioritizes algorithms most touched by Round 2 and Round 3 cycles (RealizedGARCH C56, Boruta C59, BVARMinnesota C63.1, Chow-Lin C63.1, GIRF C63, MIDAS C63).
+
+---
+
 ## [0.9.3b1] -- 2026-05-22 -- "Round 2 cross-review remediation"
 
 Codex + MiniMax external cross-review identified P0/P1/P2 statistical and governance gaps in v0.9.2b2. This release closes them.
