@@ -765,7 +765,7 @@ def _render_public_api() -> str:
         "| `macroforecast.core` | 12-layer recipe runtime (foundation, layers, ops, runtime, execution, figures) |\n"
         "| `macroforecast.layers.l1_data` | FRED-MD/QD/SD adapters, vintage manager, manifest |\n"
         "| `macroforecast.preprocessing` | Preprocessing contract helpers |\n"
-        "| `macroforecast.tuning` | Hyperparameter search engines |\n"
+        "| `macroforecast.layers.l4_models.tuning` | Hyperparameter search engines |\n"
         "| `macroforecast.custom` | User-defined model/preprocessor/feature registration |\n"
         "| `macroforecast.defaults` | Default profile dict template |\n"
         "\n"

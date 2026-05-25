@@ -34,7 +34,7 @@ import pandas as pd
 import pytest
 
 from macroforecast.core.runtime import _build_l4_model
-from macroforecast.core.ops.l4_ops import (
+from macroforecast.layers.l4_models.ops import (
     OPERATIONAL_MODEL_FAMILIES,
     FUTURE_MODEL_FAMILIES,
     get_family_status,

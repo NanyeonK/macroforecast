@@ -12,7 +12,7 @@ Test IDs map to test-spec.md:
     B5 — Other kwargs (lambda1, p) pass through to _BayesianVAR
     B6 — fit/predict pipeline works after construction
     B7 — isinstance backward compat: public -> private True, private -> public False
-    B8 — Flat re-export from macroforecast.models works
+    B8 — Flat re-export from macroforecast.layers.l4_models works
     I3 — Property invariant: prior enforcement is unconditional
     I4 — Property invariant: BVARMinnesota is always a _BayesianVAR
 """
@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macroforecast.models.bayesian import BVARMinnesota
+from macroforecast.layers.l4_models.bayesian import BVARMinnesota
 from macroforecast.core.runtime import _BayesianVAR
 
 
@@ -170,12 +170,12 @@ def test_B7_isinstance_backward_compat() -> None:
 
 
 # ---------------------------------------------------------------------------
-# B8 — Flat re-export from macroforecast.models works
+# B8 — Flat re-export from macroforecast.layers.l4_models works
 # ---------------------------------------------------------------------------
 
 def test_B8_flat_reexport() -> None:
-    """B8: from macroforecast.models import BVARMinnesota works."""
-    from macroforecast.models import BVARMinnesota as BVARMinnesota_flat  # noqa: F401
+    """B8: from macroforecast.layers.l4_models import BVARMinnesota works."""
+    from macroforecast.layers.l4_models import BVARMinnesota as BVARMinnesota_flat  # noqa: F401
 
     m = BVARMinnesota_flat()
     assert isinstance(m, _BayesianVAR), (

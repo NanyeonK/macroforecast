@@ -43,7 +43,7 @@ def test_scaled_pca_helper_routes_y_h_not_y_t():
     Series-shaped value -- so the second positional input of the
     ``scaled_pca`` step must be ``y_h``."""
 
-    from macroforecast.recipes.paper_methods import scaled_pca
+    from macroforecast.layers.l4_models.paper_methods import scaled_pca
 
     recipe = scaled_pca(target="y", horizon=4, n_components=2)
     nodes = recipe["3_feature_engineering"]["nodes"]
@@ -119,7 +119,7 @@ def test_scaled_pca_no_future_leakage_via_per_origin_l3(tmp_path):
     """
 
     import macroforecast
-    from macroforecast.recipes.paper_methods import scaled_pca
+    from macroforecast.layers.l4_models.paper_methods import scaled_pca
     from macroforecast.core.runtime import (
         materialize_l1,
         materialize_l2,
@@ -189,7 +189,7 @@ def test_temporal_rule_expanding_window_actually_executes_per_origin(tmp_path):
 
     import macroforecast
     from macroforecast.core import runtime as rt
-    from macroforecast.recipes.paper_methods import scaled_pca
+    from macroforecast.layers.l4_models.paper_methods import scaled_pca
 
     # Synthetic panel sized so the walk-forward executes at least 10 origins.
     rng = np.random.default_rng(7)
@@ -271,7 +271,7 @@ def test_temporal_rule_full_sample_executes_once(tmp_path):
     # Build a minimal recipe that uses identity (no temporal_rule). The
     # _l3_per_origin_callable should be absent from the L3 X_final
     # metadata under this configuration.
-    from macroforecast.recipes.paper_methods import _base_recipe, _l4_single_fit
+    from macroforecast.layers.l4_models.paper_methods import _base_recipe, _l4_single_fit
 
     recipe = _base_recipe(
         target="y",
@@ -398,7 +398,7 @@ def test_scaled_pca_target_signal_has_no_post_origin_leak(tmp_path):
 
     import macroforecast
     from macroforecast.core import runtime as rt
-    from macroforecast.recipes.paper_methods import scaled_pca
+    from macroforecast.layers.l4_models.paper_methods import scaled_pca
 
     # Step-function DGP: y[t] = 0 for t < 20, y[t] = 100 for t >= 20.
     # T=60 monthly observations, K=8 random predictors. The sharp jump

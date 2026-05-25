@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.core.runtime import _BayesianVAR
-from macroforecast.core.ops.l4_ops import (
+from macroforecast.layers.l4_models.ops import (
     OPERATIONAL_MODEL_FAMILIES,
     FUTURE_MODEL_FAMILIES,
     get_family_status,

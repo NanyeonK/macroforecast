@@ -29,7 +29,7 @@ import inspect
 import numpy as np
 import pandas as pd
 
-from macroforecast.recipes.paper_methods import adaptive_ma
+from macroforecast.layers.l4_models.paper_methods import adaptive_ma
 
 
 # ----------------------------------------------------------------------

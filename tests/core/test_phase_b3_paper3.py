@@ -45,7 +45,7 @@ def test_sgt_helper_eta_depth_step_default_is_paper_value():
     (paper p.87 rule-of-thumb), NOT ``0.0`` which silently disables the
     depth-step rule."""
 
-    from macroforecast.recipes.paper_methods import slow_growing_tree
+    from macroforecast.layers.l4_models.paper_methods import slow_growing_tree
 
     recipe = slow_growing_tree()
     fit = next(
@@ -68,7 +68,7 @@ def test_sgt_helper_exposes_mtry_frac_and_eta_max_plateau():
 
     import inspect
 
-    from macroforecast.recipes.paper_methods import slow_growing_tree
+    from macroforecast.layers.l4_models.paper_methods import slow_growing_tree
 
     sig = inspect.signature(slow_growing_tree)
     assert "mtry_frac" in sig.parameters, (
@@ -104,7 +104,7 @@ def test_sgt_grid_matches_paper_figure_2():
     * ``(η = 0.01, H̄ = 0.05)``
     """
 
-    from macroforecast.recipes.paper_methods import slow_growing_tree_grid
+    from macroforecast.layers.l4_models.paper_methods import slow_growing_tree_grid
 
     grid = slow_growing_tree_grid()
     assert len(grid) == 3, f"paper §3 p.90 specifies 3 SGT cells, got {len(grid)}"
@@ -145,7 +145,7 @@ def test_sgt_eta_zero_warns_about_cart_fallback():
     sklearn ``DecisionTreeRegressor`` (CART) and the SGT mechanism is
     bypassed. The warning is informational; the recipe still builds."""
 
-    from macroforecast.recipes.paper_methods import slow_growing_tree
+    from macroforecast.layers.l4_models.paper_methods import slow_growing_tree
 
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")

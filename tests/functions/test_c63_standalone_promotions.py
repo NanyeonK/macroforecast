@@ -52,7 +52,7 @@ class TestModelsPackageImport:
     """Verify all 21 public model classes are importable and subclass correctly."""
 
     def test_flat_import_21_classes(self) -> None:
-        from macroforecast.models import (
+        from macroforecast.layers.l4_models import (
             MidasAlmon, MidasBeta, MidasStep, UnrestrictedMidas,
             LinearAR, FactorAugmentedAR,
             NonNegRidge, TwoStageRandomWalkRidge, ShrinkToTargetRidge,
@@ -77,72 +77,72 @@ class TestModelsPackageImport:
         assert len(classes) == 22
 
     def test_submodule_imports(self) -> None:
-        from macroforecast.models.linear import MidasAlmon, GLMBoost, VAR
-        from macroforecast.models.bayesian import BVAR, BVARMinnesota, DFMMixedFrequency
-        from macroforecast.models.volatility import GARCH, RealizedGARCH
-        from macroforecast.models.timeseries import ETS, Theta, HoltWinters
+        from macroforecast.layers.l4_models.linear import MidasAlmon, GLMBoost, VAR
+        from macroforecast.layers.l4_models.bayesian import BVAR, BVARMinnesota, DFMMixedFrequency
+        from macroforecast.layers.l4_models.volatility import GARCH, RealizedGARCH
+        from macroforecast.layers.l4_models.timeseries import ETS, Theta, HoltWinters
         assert True  # all imports succeeded
 
     def test_isinstance_realized_garch(self) -> None:
         """RealizedGARCH instance must satisfy isinstance check for private class."""
-        from macroforecast.models import RealizedGARCH
+        from macroforecast.layers.l4_models import RealizedGARCH
         from macroforecast.core.runtime import _RealizedGARCHModel
 
         obj = RealizedGARCH()
         assert isinstance(obj, _RealizedGARCHModel)
 
     def test_isinstance_midas_almon(self) -> None:
-        from macroforecast.models import MidasAlmon
+        from macroforecast.layers.l4_models import MidasAlmon
         from macroforecast.core.runtime import _MidasAlmonModel
 
         obj = MidasAlmon()
         assert isinstance(obj, _MidasAlmonModel)
 
     def test_isinstance_bvar(self) -> None:
-        from macroforecast.models import BVAR, BVARMinnesota
+        from macroforecast.layers.l4_models import BVAR, BVARMinnesota
         from macroforecast.core.runtime import _BayesianVAR
 
         assert isinstance(BVAR(), _BayesianVAR)
         assert isinstance(BVARMinnesota(), _BayesianVAR)
 
     def test_isinstance_garch(self) -> None:
-        from macroforecast.models import GARCH
+        from macroforecast.layers.l4_models import GARCH
         from macroforecast.core.runtime import _GARCHFamily
 
         assert isinstance(GARCH(), _GARCHFamily)
 
     def test_isinstance_ets(self) -> None:
-        from macroforecast.models import ETS
+        from macroforecast.layers.l4_models import ETS
         from macroforecast.core.runtime import _ETSWrapper
 
         assert isinstance(ETS(), _ETSWrapper)
 
     def test_isinstance_theta(self) -> None:
-        from macroforecast.models import Theta
+        from macroforecast.layers.l4_models import Theta
         from macroforecast.core.runtime import _ThetaWrapper
 
         assert isinstance(Theta(), _ThetaWrapper)
 
     def test_isinstance_holt_winters(self) -> None:
-        from macroforecast.models import HoltWinters
+        from macroforecast.layers.l4_models import HoltWinters
         from macroforecast.core.runtime import _HoltWintersWrapper
 
         assert isinstance(HoltWinters(), _HoltWintersWrapper)
 
     def test_isinstance_dfm(self) -> None:
-        from macroforecast.models import DFMMixedFrequency
+        from macroforecast.layers.l4_models import DFMMixedFrequency
         from macroforecast.core.runtime import _DFMMixedFrequency
 
         assert isinstance(DFMMixedFrequency(), _DFMMixedFrequency)
 
     def test_isinstance_nonneg_ridge(self) -> None:
-        from macroforecast.models import NonNegRidge
+        from macroforecast.layers.l4_models import NonNegRidge
         from macroforecast.core.runtime import _NonNegRidge
 
         assert isinstance(NonNegRidge(), _NonNegRidge)
 
     def test_isinstance_var(self) -> None:
-        from macroforecast.models import VAR
+        from macroforecast.layers.l4_models import VAR
         from macroforecast.core.runtime import _VARWrapper
 
         assert isinstance(VAR(), _VARWrapper)
@@ -624,7 +624,7 @@ class TestLazyImports:
         import macroforecast as mf
 
         mod = mf.models
-        from macroforecast.models import RealizedGARCH
+        from macroforecast.layers.l4_models import RealizedGARCH
         assert mod.RealizedGARCH is RealizedGARCH
 
     def test_feature_selection_lazy_import(self) -> None:

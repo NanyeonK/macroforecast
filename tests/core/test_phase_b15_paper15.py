@@ -42,7 +42,7 @@ import numpy as np
 import pandas as pd
 
 import macroforecast
-from macroforecast.recipes.paper_methods import (
+from macroforecast.layers.l4_models.paper_methods import (
     _base_recipe,
     _l3_data_transforms_cell,
     _l4_single_fit,

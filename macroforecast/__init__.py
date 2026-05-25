@@ -27,7 +27,7 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.layers.l1_data`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
 - ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
 - ``macroforecast.scaffold`` -- recipe scaffold (RecipeBuilder + OptionDoc)
-- ``macroforecast.tuning`` -- hyperparameter search engines
+- ``macroforecast.layers.l4_models.tuning`` -- hyperparameter search engines
 """
 
 from __future__ import annotations
@@ -140,7 +140,6 @@ _LAZY_MODULES: tuple[str, ...] = (
     "recipes",
     "functions",
     # Cycle 63: promoted public namespaces
-    "models",
     "feature_selection",
     "transforms",
     "interpretation",

@@ -35,7 +35,7 @@ import warnings
 import numpy as np
 
 import macroforecast
-from macroforecast.recipes.paper_methods import arctic_var
+from macroforecast.layers.l4_models.paper_methods import arctic_var
 
 
 # ----------------------------------------------------------------------
@@ -324,7 +324,7 @@ def test_arctic_var_e2e_returns_90_percent_band():
     import warnings
 
     import macroforecast
-    from macroforecast.recipes.paper_methods import arctic_var
+    from macroforecast.layers.l4_models.paper_methods import arctic_var
 
     panel = _build_var_panel(t=80, k=3, seed=5)
     recipe = arctic_var(

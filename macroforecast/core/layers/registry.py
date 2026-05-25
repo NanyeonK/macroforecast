@@ -36,7 +36,7 @@ from .l0 import L0StudySetup
 from macroforecast.layers.l1_data.schema import L1Data
 from .l2 import L2Preprocessing
 from .l3 import L3FeatureEngineering
-from .l4 import L4ForecastingModel
+from macroforecast.layers.l4_models.schema import L4ForecastingModel
 from .l5 import L5Evaluation
 from .l6 import L6StatisticalTests
 from .l7 import L7Interpretation
@@ -44,7 +44,7 @@ from .l8 import L8Output
 from macroforecast.layers.l1_5_diagnostic.schema import L1_5DataSummary
 from .l2_5 import L2_5PrePostPreprocessing
 from .l3_5 import L3_5FeatureDiagnostics
-from .l4_5 import L4_5GeneratorDiagnostics
+from macroforecast.layers.l4_5_diagnostic.schema import L4_5GeneratorDiagnostics
 from ..ops.registry import TypeSpec
 
 

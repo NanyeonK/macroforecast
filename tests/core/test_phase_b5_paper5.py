@@ -28,7 +28,7 @@ import pytest
 
 import macroforecast
 from macroforecast.core.runtime import _MRFExternalWrapper
-from macroforecast.recipes.paper_methods import macroeconomic_random_forest
+from macroforecast.layers.l4_models.paper_methods import macroeconomic_random_forest
 
 
 # ----------------------------------------------------------------------

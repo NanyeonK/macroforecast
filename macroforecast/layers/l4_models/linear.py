@@ -7,7 +7,7 @@ internal ``_Private`` naming convention.
 
 ``isinstance`` works correctly for both names::
 
-    from macroforecast.models.linear import MidasAlmon
+    from macroforecast.layers.l4_models.linear import MidasAlmon
     from macroforecast.core.runtime import _MidasAlmonModel
 
     model = MidasAlmon(freq_ratio=3)

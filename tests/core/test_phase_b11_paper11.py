@@ -38,7 +38,7 @@ import pandas as pd
 import pytest
 
 import macroforecast
-from macroforecast.recipes.paper_methods import anatomy_oos
+from macroforecast.layers.l4_models.paper_methods import anatomy_oos
 
 
 def _anatomy_extra_available() -> bool:

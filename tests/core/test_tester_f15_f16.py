@@ -23,12 +23,12 @@ class TestF15SparseRiskPreemia:
 
     def test_t15_01_importable(self):
         """T-15-01: importable from public API."""
-        from macroforecast.recipes.paper_methods import sparse_macro_factors_risk_premia  # noqa: F401
+        from macroforecast.layers.l4_models.paper_methods import sparse_macro_factors_risk_premia  # noqa: F401
         assert callable(sparse_macro_factors_risk_premia)
 
     def test_t15_02_finite_gamma_hat_on_synthetic(self):
         """T-15-02: Returns finite gamma_hat of shape (J,)."""
-        from macroforecast.recipes.paper_methods import sparse_macro_factors_risk_premia
+        from macroforecast.layers.l4_models.paper_methods import sparse_macro_factors_risk_premia
 
         rng = np.random.default_rng(42)
         T_eff, J, N = 60, 3, 20
@@ -55,7 +55,7 @@ class TestF15SparseRiskPreemia:
 
     def test_t15_03_shape_mismatch_raises(self):
         """T-15-03: Row mismatch raises ValueError."""
-        from macroforecast.recipes.paper_methods import sparse_macro_factors_risk_premia
+        from macroforecast.layers.l4_models.paper_methods import sparse_macro_factors_risk_premia
 
         rng = np.random.default_rng(0)
         sparse_factors = rng.standard_normal((60, 3))
@@ -68,7 +68,7 @@ class TestF15SparseRiskPreemia:
 
     def test_t15_04_boundary_row_drop(self):
         """T-15-04: Row 0 dropped; fmp_returns.shape[0] == T - 1."""
-        from macroforecast.recipes.paper_methods import sparse_macro_factors_risk_premia
+        from macroforecast.layers.l4_models.paper_methods import sparse_macro_factors_risk_premia
 
         rng = np.random.default_rng(0)
         T, J, N = 61, 2, 10
@@ -85,7 +85,7 @@ class TestF15SparseRiskPreemia:
 
     def test_t15_05_q_selected_in_grid(self):
         """T-15-05: q_selected is always in provided q_grid."""
-        from macroforecast.recipes.paper_methods import sparse_macro_factors_risk_premia
+        from macroforecast.layers.l4_models.paper_methods import sparse_macro_factors_risk_premia
 
         rng = np.random.default_rng(42)
         T_eff, J, N = 60, 3, 20

@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.core.runtime import _sparse_pca_chen_rohe
-from macroforecast.recipes.paper_methods import sparse_macro_factors
+from macroforecast.layers.l4_models.paper_methods import sparse_macro_factors
 
 
 # ---------------------------------------------------------------------

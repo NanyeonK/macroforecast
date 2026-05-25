@@ -73,7 +73,7 @@ class SequenceModel(_TorchSequenceModel, BaseEstimator, RegressorMixin):
 
     Standalone usage::
 
-        from macroforecast.models import SequenceModel
+        from macroforecast.layers.l4_models import SequenceModel
         m = SequenceModel(kind="lstm", hidden_size=64)
         m.fit(X_train, y_train)
         preds = m.predict(X_test)

@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 import macroforecast
-from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
 
 # ---------------------------------------------------------------------------

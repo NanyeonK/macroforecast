@@ -4,8 +4,9 @@ The ``recipes`` module provides YAML-driven orchestration for end-to-end
 forecasting studies. It is the appropriate entry point for replication
 research and systematic benchmarking where every decision must be recorded
 in a YAML recipe for reproducibility. For exploratory analysis, custom model
-development, or one-off forecasts, the standalone API (``macroforecast.models``,
-``macroforecast.functions``) is simpler and does not require YAML.
+development, or one-off forecasts, the standalone API
+(``macroforecast.layers.l4_models``, ``macroforecast.functions``) is simpler
+and does not require YAML.
 
 **Canonical API (new in v0.9.5a)**
 
@@ -28,9 +29,9 @@ above and will continue to work through v0.9.5a without deprecation warnings.
 
 **Paper-method recipe builders**
 
-``macroforecast.recipes.paper_methods`` contains per-paper recipe constructor
-functions (v0.9 Phase 2 paper-coverage pass). Each helper returns a recipe dict
-ready for ``run()``.
+``macroforecast.layers.l4_models.paper_methods`` contains per-paper recipe
+constructor functions (v0.9 Phase 2 paper-coverage pass). Each helper returns
+a recipe dict ready for ``run()``.
 """
 from __future__ import annotations
 
@@ -51,16 +52,12 @@ from ..api_high import (
     forecast,
 )
 
-# Paper-method recipe builders (v0.9 Phase 2; pre-existing).
-from . import paper_methods
-
 __all__ = [
     "Experiment",
     "ForecastResult",
     "ManifestExecutionResult",
     "ReplicationResult",
     "forecast",
-    "paper_methods",
     "replicate",
     "run",
     "run_file",

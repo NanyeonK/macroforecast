@@ -240,11 +240,11 @@ class TestRecipesDocstring:
         )
 
     def test_docstring_mentions_models_namespace(self):
-        """T11: __doc__ mentions 'macroforecast.models' (the standalone API alternative)."""
+        """T11: __doc__ mentions the standalone model API (macroforecast.layers.l4_models)."""
         import macroforecast as mf
-        assert "macroforecast.models" in mf.recipes.__doc__, (
-            f"Expected 'macroforecast.models' in recipes.__doc__.\n"
-            f"Actual docstring excerpt: {mf.recipes.__doc__[:200]!r}"
+        assert "macroforecast.layers.l4_models" in mf.recipes.__doc__, (
+            f"Expected 'macroforecast.layers.l4_models' in recipes.__doc__.\n"
+            f"Actual docstring excerpt: {mf.recipes.__doc__[:300]!r}"
         )
 
 
