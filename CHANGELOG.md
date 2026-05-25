@@ -20,6 +20,8 @@ None.
 
 ### Added
 
+#### Added — Cycle 63 (standalone-first promotion, L4/L3/L7)
+
 - (C63) **Standalone model API** (`mf.models`): 22 previously private `_<Name>` classes
   promoted to public. `mf.models.linear` (8), `mf.models.tree` (6), `mf.models.neural`
   (2), `mf.models.timeseries` (4), `mf.models.factor` (2). Backward compat preserved
@@ -68,6 +70,10 @@ None.
 
 ### Fixed
 
+- (C63.1) Documentation restatement of `BaseEstimator` inheritance semantics:
+  `isinstance(public_instance, _PrivateClass)` continues to hold in the forward
+  direction; the reverse check (private inherits from public) is False, as
+  expected with single inheritance.
 - (C63.1) `mf.transforms.chow_lin_disaggregate` replaced with canonical Chow-Lin (1971)
   GLS implementation that preserves temporal totals. Previous OLS wrapper did not
   enforce the conservation constraint.
