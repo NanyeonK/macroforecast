@@ -42,7 +42,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`cpa_critical_value_method`](l6/axes/cpa_critical_value_method.md) | L6 | `L6_C_cpa` | operational | no | 0 |
 | [`cpa_test`](l6/axes/cpa_test.md) | L6 | `L6_C_cpa` | operational | no | 3 |
 | [`cpa_window_type`](l6/axes/cpa_window_type.md) | L6 | `L6_C_cpa` | operational | no | 0 |
-| [`panel_composition`](l1/axes/panel_composition.md) | L1 | `l1_a` | operational | no | 3 |
 | [`cw_adjustment`](l6/axes/cw_adjustment.md) | L6 | `L6_B_nested` | operational | no | 0 |
 | [`dataset`](l1/axes/dataset.md) | L1 | `l1_a` | operational | yes | 5 |
 | [`decomposition_order`](l5/axes/decomposition_order.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |
@@ -77,8 +76,8 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`figure_type`](l7/axes/figure_type.md) | L7 | `L7_B_output_shape_export` | operational | no | 6 |
 | [`fit_per_origin`](l4_5/axes/fit_per_origin.md) | L4.5 | `L4_5_A_in_sample_fit` | operational | no | 3 |
 | [`fit_view`](l4_5/axes/fit_view.md) | L4.5 | `L4_5_A_in_sample_fit` | operational | no | 5 |
+| [`forecast_policy`](l4/axes/forecast_policy.md) | L4 | `L4_B_forecast_strategy` | operational | yes | 3 |
 | [`forecast_scale_view`](l4_5/axes/forecast_scale_view.md) | L4.5 | `L4_5_B_forecast_scale_view` | operational | no | 3 |
-| [`forecast_policy`](l4/axes/forecast_policy.md) | L4 | `L4_B_forecast_policy` | operational | yes | 3 |
 | [`frame_edge_policy`](l2/axes/frame_edge_policy.md) | L2 | `l2_e` | operational | yes | 4 |
 | [`fred_sd_frequency_policy`](l1/axes/fred_sd_frequency_policy.md) | L1 | `l1_a` | operational | no | 4 |
 | [`fred_sd_state_group`](l1/axes/fred_sd_state_group.md) | L1 | `l1_d` | operational | no | 16 |
@@ -122,6 +121,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`outlier_policy`](l2/axes/outlier_policy.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_view`](l1_5/axes/outlier_view.md) | L1.5 | `L1_5_D_missing_outlier_audit` | operational | no | 4 |
 | [`output_table_format`](l7/axes/output_table_format.md) | L7 | `L7_B_output_shape_export` | operational | no | 2 |
+| [`panel_composition`](l1/axes/panel_composition.md) | L1 | `l1_a` | operational | no | 3 |
 | [`pi_correction`](l4/axes/pi_correction.md) | L4 | `L4_E_predict` | operational | yes | 2 |
 | [`pit_n_bins`](l6/axes/pit_n_bins.md) | L6 | `L6_E_density_interval` | operational | no | 0 |
 | [`pit_test_horizon_dependence`](l6/axes/pit_test_horizon_dependence.md) | L6 | `L6_E_density_interval` | operational | no | 0 |

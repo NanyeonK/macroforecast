@@ -91,7 +91,7 @@ class MidasFitResult:
             sep,
             f"{title:^78}",
             sep,
-            f"{'Family:':35s} {self.model:>20s}",
+            f"{'Family:':35s} {self.family:>20s}",
             f"{'No. Weight Parameters:':35s} {k:>20d}",
             sep,
             f"{'':30s} {'weight':>12s}",

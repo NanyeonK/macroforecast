@@ -60,6 +60,6 @@ params:
 
 ## Related ops
 
-See also: `no_transform`, `custom_tcode`.
+See also: `no_transform`, `custom_tcode`, `transform_scope` (on the same axis).
 
 _Last reviewed 2026-05-04 by macroforecast author._

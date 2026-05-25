@@ -105,7 +105,7 @@ def test_realistic_recipe_runs_l1_through_l5(tmp_path):
     assert metrics["mse"].iloc[0] >= 0
 
 
-@pytest.mark.parametrize("model", ["ridge", "lasso", "random_forest"])
+@pytest.mark.parametrize("family", ["ridge", "lasso", "random_forest"])
 def test_realistic_fixture_supports_multiple_families(tmp_path, family):
     recipe = _custom_panel_recipe(target="UNRATE", n_lag=3, family=family)
     result = macroforecast.run(recipe, output_directory=tmp_path / family)

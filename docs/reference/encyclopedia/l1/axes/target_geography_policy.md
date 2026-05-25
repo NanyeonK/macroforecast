@@ -35,7 +35,7 @@ State-level case studies (e.g., CA / TX / NY-specific forecasts).
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`all_states`](#all-states), [`selected_states`](#selected-states), [`predictor_geography_policy`](#predictor-geography-scope)
+**Related options**: [`all_states`](#all-states), [`selected_states`](#selected-states), [`predictor_geography_policy`](#predictor-geography-policy)
 
 **Parameters**
 

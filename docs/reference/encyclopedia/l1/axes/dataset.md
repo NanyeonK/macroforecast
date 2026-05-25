@@ -37,7 +37,7 @@ Monthly inflation, employment, industrial-production, and term-structure forecas
 
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#panel-composition), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -57,7 +57,7 @@ GDP, consumption, investment, productivity nowcasting / forecasting.
 
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
-**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#panel-composition), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -77,7 +77,7 @@ State-level employment / payroll / housing forecasting; geographic-importance st
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#panel-composition), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -95,7 +95,7 @@ Studies where state-level targets need national-aggregate predictors.
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#panel-composition), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -113,6 +113,6 @@ Quarterly state-level studies (rare; use only when the target is quarterly state
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#panel-composition), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
