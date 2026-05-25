@@ -550,58 +550,6 @@ register(
 )
 
 
-# L2.{B,C,D,E} scope axes -- target / predictors / both / not_applicable
-_SCOPE_DOCS = {
-    "target_and_predictors": (
-        "Apply the rule to target and all predictors.",
-        (
-            "Default scope: every series in the panel passes through the "
-            "stage. Maintains consistency between target and predictors "
-            "(e.g. both differenced, both winsorised)."
-        ),
-        "Default; matches McCracken-Ng's convention.",
-    ),
-    "predictors_only": (
-        "Apply only to predictors; leave the target untouched.",
-        (
-            "Used when the target's transform / cleaning policy is "
-            "controlled separately (e.g. user already applied a tcode "
-            "to the target via raw_panel)."
-        ),
-        "When the target enters the pipeline already cleaned.",
-    ),
-    "target_only": (
-        "Apply only to the target.",
-        (
-            "Rare scope; used when predictors are pre-engineered and "
-            "do not need this stage (e.g. PCA scores are already "
-            "stationary)."
-        ),
-        "Pre-engineered predictor panels.",
-    ),
-    "not_applicable": (
-        "Skip the stage entirely (gate inactive).",
-        (
-            "Used when an upstream stage already produced the desired "
-            "form. Equivalent in effect to selecting the no-op option "
-            "on the primary axis."
-        ),
-        "Pipelines that bypass this stage by construction.",
-    ),
-}
-for _axis, _sub in (
-    ("transform_scope",   "l2_b"),
-    ("outlier_scope",     "l2_c"),
-    ("imputation_scope",  "l2_d"),
-    ("frame_edge_scope",  "l2_e"),
-):
-    for _opt, (_summary, _desc, _when) in _SCOPE_DOCS.items():
-        register(_e(
-            _sub, _axis, _opt, _summary, _desc, _when,
-            related_options=tuple(k for k in _SCOPE_DOCS if k != _opt),
-        ))
-
-
 # L2.D imputation_temporal_rule
 register(
     _e("l2_d", "imputation_temporal_rule", "expanding_window_per_origin",
