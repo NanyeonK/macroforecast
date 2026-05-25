@@ -384,6 +384,11 @@ def _build_l3_fallback() -> tuple[AxisInfo, ...]:
     the encyclopedia with a 'pre-promotion' caveat.
     """
 
+    # Ensure L3 ops module loaded so its registrations populate _OPS_REGISTRY.
+    try:
+        import macroforecast.layers.l3_features.ops  # noqa: F401
+    except ImportError:
+        pass
     try:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
@@ -551,6 +556,11 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
     same fallback pattern.
     """
 
+    # Ensure L3 ops module loaded so its registrations populate _OPS_REGISTRY.
+    try:
+        import macroforecast.layers.l3_features.ops  # noqa: F401
+    except ImportError:
+        pass
     try:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
