@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from sklearn.preprocessing import StandardScaler
 
-from macroforecast.preprocessing.separation import LeakError, apply_separation_rule
+from macroforecast.layers.l2_preprocessing.separation import LeakError, apply_separation_rule
 
 
 @pytest.fixture

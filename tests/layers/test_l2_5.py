@@ -1,4 +1,4 @@
-from macroforecast.core.layers.l2_5 import normalize_to_dag_form, parse_layer_yaml, parse_recipe_yaml, resolve_axes, validate_layer
+from macroforecast.layers.l2_5_diagnostic.schema import normalize_to_dag_form, parse_layer_yaml, parse_recipe_yaml, resolve_axes, validate_layer
 from macroforecast.core.layers.registry import get_layer
 
 
@@ -79,7 +79,7 @@ def test_l2_5_z_diagnostic_format_default():
 
 def test_l2_5_registered_with_spec_correct_class():
     spec = get_layer("l2_5")
-    from macroforecast.core.layers.l2_5 import L2_5PrePostPreprocessing
+    from macroforecast.layers.l2_5_diagnostic.schema import L2_5PrePostPreprocessing
 
     assert spec.cls is L2_5PrePostPreprocessing
     assert spec.produces == ("l2_5_diagnostic_v1",)

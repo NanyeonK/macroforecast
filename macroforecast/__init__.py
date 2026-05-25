@@ -23,7 +23,7 @@ Horse race research benchmarking package for macro forecasting.
   backward-compatible aliases pointing here.
 - ``macroforecast.custom`` -- user-defined model / preprocessor / feature registration
 - ``macroforecast.defaults`` -- default profile dict template
-- ``macroforecast.preprocessing`` -- preprocessing contract helpers
+- ``macroforecast.layers.l2_preprocessing`` -- preprocessing contract helpers
 - ``macroforecast.layers.l1_data`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
 - ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
 - ``macroforecast.scaffold`` -- recipe scaffold (RecipeBuilder + OptionDoc)
@@ -112,26 +112,26 @@ _LAZY_EXPORTS = {
     "RawArtifactRecord": ".layers.l1_data",
     "RawLoadResult": ".layers.l1_data",
     # preprocessing
-    "build_preprocess_contract": ".preprocessing",
-    "check_preprocess_governance": ".preprocessing",
-    "is_operational_preprocess_contract": ".preprocessing",
-    "preprocess_summary": ".preprocessing",
-    "preprocess_to_dict": ".preprocessing",
-    "PreprocessContractError": ".preprocessing",
-    "PreprocessValidationError": ".preprocessing",
-    "PreprocessContract": ".preprocessing",
-    "TargetTransformPolicy": ".preprocessing",
-    "XTransformPolicy": ".preprocessing",
-    "TcodePolicy": ".preprocessing",
-    "MissingPolicy": ".preprocessing",
-    "OutlierPolicy": ".preprocessing",
-    "ScalingPolicy": ".preprocessing",
-    "DimensionalityReductionPolicy": ".preprocessing",
-    "FeatureSelectionPolicy": ".preprocessing",
-    "PreprocessOrder": ".preprocessing",
-    "PreprocessFitScope": ".preprocessing",
-    "InverseTransformPolicy": ".preprocessing",
-    "EvaluationScale": ".preprocessing",
+    "build_preprocess_contract": ".layers.l2_preprocessing",
+    "check_preprocess_governance": ".layers.l2_preprocessing",
+    "is_operational_preprocess_contract": ".layers.l2_preprocessing",
+    "preprocess_summary": ".layers.l2_preprocessing",
+    "preprocess_to_dict": ".layers.l2_preprocessing",
+    "PreprocessContractError": ".layers.l2_preprocessing",
+    "PreprocessValidationError": ".layers.l2_preprocessing",
+    "PreprocessContract": ".layers.l2_preprocessing",
+    "TargetTransformPolicy": ".layers.l2_preprocessing",
+    "XTransformPolicy": ".layers.l2_preprocessing",
+    "TcodePolicy": ".layers.l2_preprocessing",
+    "MissingPolicy": ".layers.l2_preprocessing",
+    "OutlierPolicy": ".layers.l2_preprocessing",
+    "ScalingPolicy": ".layers.l2_preprocessing",
+    "DimensionalityReductionPolicy": ".layers.l2_preprocessing",
+    "FeatureSelectionPolicy": ".layers.l2_preprocessing",
+    "PreprocessOrder": ".layers.l2_preprocessing",
+    "PreprocessFitScope": ".layers.l2_preprocessing",
+    "InverseTransformPolicy": ".layers.l2_preprocessing",
+    "EvaluationScale": ".layers.l2_preprocessing",
 }
 
 _LAZY_MODULES: tuple[str, ...] = (

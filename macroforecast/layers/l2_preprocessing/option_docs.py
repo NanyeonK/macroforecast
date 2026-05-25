@@ -8,8 +8,8 @@ plus a scope axis controlling which series the stage applies to
 """
 from __future__ import annotations
 
-from . import register
-from .types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
+from macroforecast.scaffold.option_docs import register
+from macroforecast.scaffold.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"

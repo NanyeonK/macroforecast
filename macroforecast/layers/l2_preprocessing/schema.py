@@ -3,10 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from ..pipeline import DAG, GatePredicate, Node, NodeRef, SourceSelector
-from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
-from ..types import L2CleanPanelArtifact, Panel
-
 
 class L2Preprocessing:
     """Layer 2 Preprocessing implementation marker."""
@@ -14,6 +10,11 @@ class L2Preprocessing:
     @classmethod
     def list_axes(cls) -> tuple[str, ...]:
         return L2_AXIS_NAMES
+
+
+from macroforecast.core.pipeline import DAG, GatePredicate, Node, NodeRef, SourceSelector
+from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
+from macroforecast.core.types import L2CleanPanelArtifact, Panel
 
 
 L2_AXIS_NAMES: tuple[str, ...] = (
@@ -79,7 +80,7 @@ class L2Recipe:
 def parse_layer_yaml(yaml_text: str, layer_id: Literal["l2"] = "l2") -> Any:
     if layer_id != "l2":
         raise ValueError("L2 parser only accepts layer_id='l2'")
-    from ..yaml import LayerYamlSpec, parse_recipe_yaml
+    from macroforecast.core.yaml import LayerYamlSpec, parse_recipe_yaml
 
     root = parse_recipe_yaml(yaml_text)
     raw = root.get("2_preprocessing", {})
@@ -91,7 +92,7 @@ def parse_layer_yaml(yaml_text: str, layer_id: Literal["l2"] = "l2") -> Any:
 
 
 def parse_recipe_yaml(yaml_text: str) -> dict[str, Any]:
-    from ..yaml import parse_recipe_yaml as parse
+    from macroforecast.core.yaml import parse_recipe_yaml as parse
 
     return parse(yaml_text)
 
@@ -200,7 +201,7 @@ def resolve_axes_from_raw(
 
 
 def validate_layer(layer: Any | dict[str, Any] | str, l1_context: dict[str, Any] | None = None) -> Any:
-    from ..validator import Issue, Severity, ValidationReport
+    from macroforecast.core.validator import Issue, Severity, ValidationReport
 
     if isinstance(layer, str):
         layer = parse_layer_yaml(layer)
@@ -251,7 +252,7 @@ def validate_layer(layer: Any | dict[str, Any] | str, l1_context: dict[str, Any]
 
 
 def validate_recipe(recipe_yaml: dict[str, Any] | str) -> Any:
-    from ..validator import ValidationReport
+    from macroforecast.core.validator import ValidationReport
 
     root = parse_recipe_yaml(recipe_yaml) if isinstance(recipe_yaml, str) else recipe_yaml
     l1_context = _l1_context_from_recipe(root)
@@ -546,7 +547,7 @@ def _raw_layer(layer: Any | dict[str, Any]) -> dict[str, Any]:
 
 
 def _issue(location: str, message: str) -> Any:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     return Issue("l2_contract", Severity.HARD, "layer", location, message)
 
