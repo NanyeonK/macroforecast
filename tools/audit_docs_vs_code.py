@@ -48,7 +48,7 @@ if _REPO_ROOT not in sys.path:
 
 def _bootstrap_ops() -> None:
     """Import all ops modules to populate the registry."""
-    import macroforecast.core.ops.l3_ops  # noqa: F401
+    import macroforecast.layers.l3_features.ops  # noqa: F401
     import macroforecast.layers.l4_models.ops  # noqa: F401
     import macroforecast.core.ops.l5_ops  # noqa: F401
     import macroforecast.core.ops.l6_ops  # noqa: F401

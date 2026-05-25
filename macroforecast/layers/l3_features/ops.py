@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from .registry import Rule, register_op
-from ..types import (
+from macroforecast.core.ops.registry import Rule, register_op
+from macroforecast.core.types import (
     DataType,
     Factor,
     L3FeaturesArtifact,
@@ -87,7 +87,7 @@ def _delegate(op_name: str):
     """
 
     def run(inputs, params):
-        from ..runtime import _execute_l3_op
+        from macroforecast.core.runtime import _execute_l3_op
 
         target_name = (params or {}).get("__target_name__", "y")
         return _execute_l3_op(
@@ -122,7 +122,7 @@ def _rewire_l3_ops() -> None:
     the runtime result (pre-existing op definitions used ``_stub`` without
     ``return``, dropping the value)."""
 
-    from .registry import _OPS
+    from macroforecast.core.ops.registry import _OPS
 
     for op_name, spec in list(_OPS.items()):
         scope = (
@@ -678,7 +678,7 @@ def feature_selection(inputs, params):
     ),
 )
 def boruta_selection(inputs, params):
-    from ..runtime import _execute_l3_op
+    from macroforecast.core.runtime import _execute_l3_op
     target_name = params.get("__target_name__", "y") if params else "y"
     return _execute_l3_op(
         "boruta_selection",
@@ -717,7 +717,7 @@ def boruta_selection(inputs, params):
     ),
 )
 def recursive_feature_elimination(inputs, params):
-    from ..runtime import _execute_l3_op
+    from macroforecast.core.runtime import _execute_l3_op
     target_name = params.get("__target_name__", "y") if params else "y"
     return _execute_l3_op(
         "recursive_feature_elimination",
@@ -748,7 +748,7 @@ def recursive_feature_elimination(inputs, params):
     ),
 )
 def lasso_path_selection(inputs, params):
-    from ..runtime import _execute_l3_op
+    from macroforecast.core.runtime import _execute_l3_op
     target_name = params.get("__target_name__", "y") if params else "y"
     return _execute_l3_op(
         "lasso_path_selection",
@@ -787,7 +787,7 @@ def lasso_path_selection(inputs, params):
     ),
 )
 def stability_selection(inputs, params):
-    from ..runtime import _execute_l3_op
+    from macroforecast.core.runtime import _execute_l3_op
     target_name = params.get("__target_name__", "y") if params else "y"
     return _execute_l3_op(
         "stability_selection",
@@ -826,7 +826,7 @@ def stability_selection(inputs, params):
     ),
 )
 def genetic_algorithm_selection(inputs, params):
-    from ..runtime import _execute_l3_op
+    from macroforecast.core.runtime import _execute_l3_op
     target_name = params.get("__target_name__", "y") if params else "y"
     return _execute_l3_op(
         "genetic_algorithm_selection",

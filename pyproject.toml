@@ -109,6 +109,8 @@ module = [
     "macroforecast.layers.l1_data.schema",
     "macroforecast.layers.l1_5_diagnostic.schema",
     "macroforecast.core.layers.l3",
+    "macroforecast.layers.l3_features.schema",
+    "macroforecast.layers.l3_5_diagnostic.schema",
     "macroforecast.core.runtime",
     "macroforecast.scaffold.builder",
     "macroforecast.layers.l4_models.tuning.engine",

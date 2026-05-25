@@ -398,7 +398,7 @@ class RecipeBuilder:
             ("0_meta", "macroforecast.core.layers.l0"),
             ("1_data", "macroforecast.layers.l1_data.schema"),
             ("2_preprocessing", "macroforecast.layers.l2_preprocessing.schema"),
-            ("3_feature_engineering", "macroforecast.core.layers.l3"),
+            ("3_feature_engineering", "macroforecast.layers.l3_features.schema"),
             ("4_forecasting_model", "macroforecast.layers.l4_models.schema"),
             ("5_evaluation", "macroforecast.core.layers.l5"),
             ("6_statistical_tests", "macroforecast.core.layers.l6"),

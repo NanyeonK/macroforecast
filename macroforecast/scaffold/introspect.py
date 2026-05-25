@@ -24,8 +24,8 @@ _LAYER_MODULES: tuple[tuple[str, str], ...] = (
     ("l1_5", "macroforecast.layers.l1_5_diagnostic.schema"),
     ("l2", "macroforecast.layers.l2_preprocessing.schema"),
     ("l2_5", "macroforecast.layers.l2_5_diagnostic.schema"),
-    ("l3", "macroforecast.core.layers.l3"),
-    ("l3_5", "macroforecast.core.layers.l3_5"),
+    ("l3", "macroforecast.layers.l3_features.schema"),
+    ("l3_5", "macroforecast.layers.l3_5_diagnostic.schema"),
     ("l4", "macroforecast.layers.l4_models.schema"),
     ("l4_5", "macroforecast.layers.l4_5_diagnostic.schema"),
     ("l5", "macroforecast.core.layers.l5"),
@@ -384,6 +384,11 @@ def _build_l3_fallback() -> tuple[AxisInfo, ...]:
     the encyclopedia with a 'pre-promotion' caveat.
     """
 
+    # Ensure L3 ops module loaded so its registrations populate _OPS_REGISTRY.
+    try:
+        import macroforecast.layers.l3_features.ops  # noqa: F401
+    except ImportError:
+        pass
     try:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
@@ -551,6 +556,11 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
     same fallback pattern.
     """
 
+    # Ensure L3 ops module loaded so its registrations populate _OPS_REGISTRY.
+    try:
+        import macroforecast.layers.l3_features.ops  # noqa: F401
+    except ImportError:
+        pass
     try:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
