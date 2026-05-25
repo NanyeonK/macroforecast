@@ -19,7 +19,7 @@ Curated reference for the public surface of the macroforecast package. The encyc
 |--------|---------|
 | `macroforecast.core` | 12-layer recipe runtime (foundation, layers, ops, runtime, execution, figures) |
 | `macroforecast.layers.l1_data` | FRED-MD/QD/SD adapters, vintage manager, manifest |
-| `macroforecast.layers.l2_preprocessing` | Preprocessing contract helpers |
+| `macroforecast.preprocessing` | Preprocessing contract helpers |
 | `macroforecast.layers.l4_models.tuning` | Hyperparameter search engines |
 | `macroforecast.custom` | User-defined model/preprocessor/feature registration |
 | `macroforecast.defaults` | Default profile dict template |
