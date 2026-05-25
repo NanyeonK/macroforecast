@@ -393,8 +393,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/raw_source_cleaning.html">Raw Source Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/official_transforms.html">Official Transforms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../architecture/layer1/frame_availability.html">Frame Availability</a></li>
 </ul>
 </details></li>
@@ -444,12 +442,8 @@
 <li class="toctree-l3"><a class="reference internal" href="target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
@@ -745,7 +739,7 @@
 <li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a>, <a class="reference internal" href="#official-transform-policy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
 <section id="core-variables-operational">
@@ -759,7 +753,7 @@
 <li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a>, <a class="reference internal" href="#official-transform-policy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
 <section id="category-variables-operational">
@@ -773,7 +767,7 @@
 <li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a>, <a class="reference internal" href="#official-transform-policy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
 <section id="target-specific-variables-operational">
@@ -787,7 +781,7 @@
 <li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a>, <a class="reference internal" href="#official-transform-policy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a></p>
 <p><em>Last reviewed 2026-05-04 by macroforecast author.</em></p>
 </section>
 <section id="explicit-variable-list-operational">
@@ -801,7 +795,7 @@
 <li><p>macroforecast design Part 1, L1: ‘data definition is the recipe layer that pins source, target, geography, and horizon – everything downstream branches off these choices.’</p></li>
 <li><p>McCracken &amp; Ng (2016) ‘FRED-MD: A Monthly Database for Macroeconomic Research’, Journal of Business &amp; Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)</p></li>
 </ul>
-<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a>, <a class="reference internal" href="#official-transform-policy"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></span></a></p>
+<p><strong>Related options</strong>: <a class="reference internal" href="#missing-availability"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></span></a></p>
 <p><strong>Parameters</strong></p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>

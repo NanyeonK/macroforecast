@@ -393,8 +393,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../architecture/layer1/availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../architecture/layer1/target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../architecture/layer1/fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../architecture/layer1/raw_source_cleaning.html">Raw Source Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../architecture/layer1/official_transforms.html">Official Transforms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../architecture/layer1/frame_availability.html">Frame Availability</a></li>
 </ul>
 </details></li>
@@ -444,12 +442,8 @@
 <li class="toctree-l3"><a class="reference internal" href="axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="axes/raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="axes/raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="axes/official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="axes/official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
@@ -711,8 +705,8 @@
 <li><p>Layer ID: <code class="docutils literal notranslate"><span class="pre">l1</span></code></p></li>
 <li><p>Category: <code class="docutils literal notranslate"><span class="pre">construction</span></code></p></li>
 <li><p>Sub-layers: 7</p></li>
-<li><p>Axes: 26</p></li>
-<li><p>Options across axes: 108</p></li>
+<li><p>Axes: 22</p></li>
+<li><p>Options across axes: 92</p></li>
 </ul>
 <section id="sub-layers">
 <h2>Sub-layers<a class="headerlink" href="#sub-layers" title="Link to this heading">#</a></h2>
@@ -738,7 +732,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l1_c</span></code></p></td>
 <td><p>Predictor universe</p></td>
 <td><p>always</p></td>
-<td><p><a class="reference internal" href="axes/variable_universe.html"><span class="std std-doc">variable_universe</span></a>, <a class="reference internal" href="axes/missing_availability.html"><span class="std std-doc">missing_availability</span></a>, <a class="reference internal" href="axes/raw_missing_policy.html"><span class="std std-doc">raw_missing_policy</span></a>, <a class="reference internal" href="axes/raw_outlier_policy.html"><span class="std std-doc">raw_outlier_policy</span></a>, <a class="reference internal" href="axes/release_lag_rule.html"><span class="std std-doc">release_lag_rule</span></a>, <a class="reference internal" href="axes/contemporaneous_x_rule.html"><span class="std std-doc">contemporaneous_x_rule</span></a>, <a class="reference internal" href="axes/official_transform_policy.html"><span class="std std-doc">official_transform_policy</span></a>, <a class="reference internal" href="axes/official_transform_scope.html"><span class="std std-doc">official_transform_scope</span></a></p></td>
+<td><p><a class="reference internal" href="axes/variable_universe.html"><span class="std std-doc">variable_universe</span></a>, <a class="reference internal" href="axes/missing_availability.html"><span class="std std-doc">missing_availability</span></a>, <a class="reference internal" href="axes/release_lag_rule.html"><span class="std std-doc">release_lag_rule</span></a>, <a class="reference internal" href="axes/contemporaneous_x_rule.html"><span class="std std-doc">contemporaneous_x_rule</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_d</span></code></p></td>
 <td><p>Geography scope</p></td>

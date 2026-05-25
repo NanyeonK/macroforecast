@@ -39,8 +39,7 @@ Layer 1 should be read as a hierarchy, not a flat checklist.
 | Contract-derived | Target (y) Definition | `target_structure` | Constrained by Layer 0 `study_scope`; y IDs, horizons, and dates live in `leaf_config`. |
 | Secondary policy | Predictor (x) Definition | `variable_universe` | Limits eligible FRED-MD/QD x columns before Layer 2 builds representations. Custom-only x columns are defined by the custom file; standalone FRED-SD x columns are defined by state and series scope. |
 | Conditional subgroup | FRED-SD Predictor Scope | `fred_sd_frequency_policy`, `fred_sd_state_group`, `state_selection`, `fred_sd_variable_group`, `sd_variable_selection` | Active only when the FRED source panel includes FRED-SD. |
-| Secondary policy | Raw source quality | `raw_missing_policy`, `raw_outlier_policy` | Handles defects present in raw source data before FRED transforms/T-codes. |
-| Secondary policy | Official transform / frame availability | `official_transform_policy`, `official_transform_scope`, `missing_availability` | Applies FRED-MD/QD official transform codes when available and closes source-frame availability gaps before Layer 2 begins. |
+| Secondary policy | Frame availability | `missing_availability` | Closes source-frame availability gaps before Layer 2 begins. |
 
 ## Decision order
 
@@ -52,9 +51,7 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 | 4.1.2 | [Forecast-time information](availability_timing.md) | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` |
 | 4.1.3 | [Target (y) and predictor (x) definitions](target_universe.md) | `target_structure`, `variable_universe`; target IDs, horizons, sample dates, and x column lists live in `leaf_config` |
 | 4.1.4 | [FRED-SD predictor scope](fred_sd_source_selection.md) | `fred_sd_frequency_policy`, `fred_sd_state_group`, `state_selection`, `fred_sd_variable_group`, `sd_variable_selection` |
-| 4.1.5 | [Raw source cleaning](raw_source_cleaning.md) | `raw_missing_policy`, `raw_outlier_policy` before FRED transforms/T-codes |
-| 4.1.6 | [Official transforms](official_transforms.md) | `official_transform_policy`, `official_transform_scope` |
-| 4.1.7 | [Frame availability](frame_availability.md) | `missing_availability` after the source frame exists |
+| 4.1.5 | [Frame availability](frame_availability.md) | `missing_availability` after the source frame exists |
 
 ## Defaults and Required Choices
 
@@ -74,10 +71,6 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 | `sd_variable_selection` | `all_sd_variables` | conditional FRED-SD Series List selector; `selected_sd_variables` requires `leaf_config.sd_variables` |
 | `target_structure` | `single_target` | write `single_target` with `leaf_config.target` or `multi_target` with `leaf_config.targets`; docs call these Single Target and Multiple Targets |
 | `variable_universe` | `all_variables` | FRED-MD/QD predictor metadata axis; hidden by default when no FRED-MD/QD source is selected |
-| `raw_missing_policy` | `preserve_raw_missing` | defaulted; non-default values act before FRED transforms/T-codes |
-| `raw_outlier_policy` | `preserve_raw_outliers` | defaulted; non-default values act before FRED transforms/T-codes |
-| `official_transform_policy` | `apply_official_tcode` | FRED-MD/QD official t-code axis; hidden by default when no FRED-MD/QD source is selected |
-| `official_transform_scope` | `target_and_predictors` | FRED-MD/QD official t-code scope; hidden by default when no FRED-MD/QD source is selected |
 | `missing_availability` | `zero_fill_leading_predictor_gaps` | defaulted after the Layer 1 source frame exists |
 
 ## Layer contract
@@ -106,8 +99,6 @@ source_frame
 availability_timing
 target_universe
 fred_sd_source_selection
-raw_source_cleaning
-official_transforms
 frame_availability
 ```
 

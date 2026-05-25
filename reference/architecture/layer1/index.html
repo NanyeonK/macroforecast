@@ -393,8 +393,6 @@
 <li class="toctree-l3"><a class="reference internal" href="availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
-<li class="toctree-l3"><a class="reference internal" href="raw_source_cleaning.html">Raw Source Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="official_transforms.html">Official Transforms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="frame_availability.html">Frame Availability</a></li>
 </ul>
 </details></li>
@@ -444,12 +442,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../encyclopedia/l1/axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
@@ -771,14 +765,9 @@ resolution.</p>
 <td><p>Active only when the FRED source panel includes FRED-SD.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Secondary policy</p></td>
-<td><p>Raw source quality</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
-<td><p>Handles defects present in raw source data before FRED transforms/T-codes.</p></td>
-</tr>
-<tr class="row-even"><td><p>Secondary policy</p></td>
-<td><p>Official transform / frame availability</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
-<td><p>Applies FRED-MD/QD official transform codes when available and closes source-frame availability gaps before Layer 2 begins.</p></td>
+<td><p>Frame availability</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
+<td><p>Closes source-frame availability gaps before Layer 2 begins.</p></td>
 </tr>
 </tbody>
 </table>
@@ -812,14 +801,6 @@ resolution.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code>, <code class="docutils literal notranslate"><span class="pre">state_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code>, <code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>4.1.5</p></td>
-<td><p><a class="reference internal" href="raw_source_cleaning.html"><span class="std std-doc">Raw source cleaning</span></a></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code> before FRED transforms/T-codes</p></td>
-</tr>
-<tr class="row-odd"><td><p>4.1.6</p></td>
-<td><p><a class="reference internal" href="official_transforms.html"><span class="std std-doc">Official transforms</span></a></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>4.1.7</p></td>
 <td><p><a class="reference internal" href="frame_availability.html"><span class="std std-doc">Frame availability</span></a></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code> after the source frame exists</p></td>
 </tr>
@@ -893,22 +874,6 @@ resolution.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">all_variables</span></code></p></td>
 <td><p>FRED-MD/QD predictor metadata axis; hidden by default when no FRED-MD/QD source is selected</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code></p></td>
-<td><p>defaulted; non-default values act before FRED transforms/T-codes</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code></p></td>
-<td><p>defaulted; non-default values act before FRED transforms/T-codes</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></p></td>
-<td><p>FRED-MD/QD official t-code axis; hidden by default when no FRED-MD/QD source is selected</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></p></td>
-<td><p>FRED-MD/QD official t-code scope; hidden by default when no FRED-MD/QD source is selected</p></td>
-</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_gaps</span></code></p></td>
 <td><p>defaulted after the Layer 1 source frame exists</p></td>
@@ -946,8 +911,6 @@ resolution.</p>
 <li class="toctree-l1"><a class="reference internal" href="availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l1"><a class="reference internal" href="target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
-<li class="toctree-l1"><a class="reference internal" href="raw_source_cleaning.html">Raw Source Cleaning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="official_transforms.html">Official Transforms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="frame_availability.html">Frame Availability</a></li>
 </ul>
 </div>

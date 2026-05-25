@@ -36,7 +36,7 @@ Default. Any high-dimensional benchmark following McCracken-Ng.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`missing_availability`](#missing-availability), [`official_transform_policy`](#official-transform-policy)
+**Related options**: [`missing_availability`](#missing-availability)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -55,7 +55,7 @@ Low-dimensional benchmark; comparison against published 'core' panel results.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`missing_availability`](#missing-availability), [`official_transform_policy`](#official-transform-policy)
+**Related options**: [`missing_availability`](#missing-availability)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -74,7 +74,7 @@ Within-category importance studies; testing whether one block alone is sufficien
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`missing_availability`](#missing-availability), [`official_transform_policy`](#official-transform-policy)
+**Related options**: [`missing_availability`](#missing-availability)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -93,7 +93,7 @@ Domain-specific studies where each target has a known predictor block.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`missing_availability`](#missing-availability), [`official_transform_policy`](#official-transform-policy)
+**Related options**: [`missing_availability`](#missing-availability)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -112,7 +112,7 @@ Replication scripts that need an exact predictor set; ablations.
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`missing_availability`](#missing-availability), [`official_transform_policy`](#official-transform-policy)
+**Related options**: [`missing_availability`](#missing-availability)
 
 **Parameters**
 

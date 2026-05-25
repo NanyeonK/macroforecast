@@ -112,8 +112,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`naming_convention`](l8/axes/naming_convention.md) | L8 | `L8_D_artifact_granularity` | operational | no | 4 |
 | [`nested_pair_strategy`](l6/axes/nested_pair_strategy.md) | L6 | `L6_B_nested` | operational | no | 0 |
 | [`nested_test`](l6/axes/nested_test.md) | L6 | `L6_B_nested` | operational | no | 4 |
-| [`official_transform_policy`](l1/axes/official_transform_policy.md) | L1 | `l1_c` | operational | no | 2 |
-| [`official_transform_scope`](l1/axes/official_transform_scope.md) | L1 | `l1_c` | operational | no | 4 |
 | [`oos_period`](l5/axes/oos_period.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |
 | [`op`](l3/axes/op.md) | L3 | `L3_A_step_op` | operational | no | 53 |
 | [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 36 |
@@ -132,8 +130,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`provenance_fields`](l8/axes/provenance_fields.md) | L8 | `L8_C_provenance` | operational | no | 14 |
 | [`quarterly_to_monthly_policy`](l2/axes/quarterly_to_monthly_policy.md) | L2 | `l2_a` | operational | yes | 4 |
 | [`ranking`](l5/axes/ranking.md) | L5 | `L5_E_ranking_reporting` | operational | no | 0 |
-| [`raw_missing_policy`](l1/axes/raw_missing_policy.md) | L1 | `l1_c` | operational | no | 4 |
-| [`raw_outlier_policy`](l1/axes/raw_outlier_policy.md) | L1 | `l1_c` | operational | no | 6 |
 | [`refit_policy`](l4/axes/refit_policy.md) | L4 | `L4_C_training_window` | operational | yes | 3 |
 | [`regime_definition`](l1/axes/regime_definition.md) | L1 | `l1_g` | operational | no | 6 |
 | [`regime_estimation_temporal_rule`](l1/axes/regime_estimation_temporal_rule.md) | L1 | `l1_g` | operational | no | 3 |

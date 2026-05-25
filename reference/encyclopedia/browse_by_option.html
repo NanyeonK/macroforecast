@@ -393,8 +393,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/raw_source_cleaning.html">Raw Source Cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/official_transforms.html">Official Transforms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/frame_availability.html">Frame Availability</a></li>
 </ul>
 </details></li>
@@ -444,12 +442,8 @@
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="l1/axes/raw_missing_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="l1/axes/official_transform_policy.html"><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="l1/axes/official_transform_scope.html"><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
@@ -792,504 +786,494 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/official_transform_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/transform_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/transform_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">apply_official_tcode</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ar_p</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">asymmetric_trim</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">attention_weights</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">attention_weights</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/back_transform_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/back_transform_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">back_transform_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">auto</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/lag_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">autocorrelation_per_lag</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/lag_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">autocorrelation_per_lag</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/forecast_scale_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">back_transformed_only</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/forecast_scale_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">back_transformed_only</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bagging</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bagging</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/pi_correction.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bai_ng</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/pi_correction.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bai_ng</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bar</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/search_algorithm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bayesian_optimization</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/search_algorithm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bayesian_optimization</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/regime_estimation_temporal_rule.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">block_recompute</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/regime_estimation_temporal_rule.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">block_recompute</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/imputation_temporal_rule.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">block_recompute</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/imputation_temporal_rule.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">block_recompute</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">imputation_temporal_rule</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bootstrap_jackknife</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bootstrap_jackknife</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/sd_series_frequency_filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">both</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/sd_series_frequency_filter.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">both</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/forecast_scale_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">both_overlay</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/forecast_scale_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">both_overlay</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">boxplot</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bvar_pip</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">bvar_pip</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/mixed_frequency_representation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/mixed_frequency_representation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">calendar_aligned_frame</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">catboost</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">catboost</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/variable_universe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">category_variables</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/variable_universe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">category_variables</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/naming_convention.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cell_id</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/naming_convention.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cell_id</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cell_resolved_axes</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cell_resolved_axes</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_east_north_central</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_east_north_central</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_east_south_central</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_east_south_central</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_middle_atlantic</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_middle_atlantic</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_mountain</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_mountain</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_new_england</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_new_england</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_pacific</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_pacific</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_south_atlantic</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_south_atlantic</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_west_north_central</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_west_north_central</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_west_south_central</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_division_west_south_central</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_midwest</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_northeast</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_south</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_south</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_west</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">census_region_west</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">chow_lin</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">chow_lin</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregation</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregation</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l6/axes/nested_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clark_west</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l6/axes/nested_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clark_west</span></code></span></a></p></td>
 <td><p>L6</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">nested_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clean_panel</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/comparison_stages.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cleaned_vs_features</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/comparison_stages.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cleaned_vs_features</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_stages</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">clustered_heatmap</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">combination_weights</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">combination_weights</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contiguous_48_plus_dc</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">contiguous_48_plus_dc</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l0/axes/failure_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">continue_on_failure</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l0/axes/failure_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">continue_on_failure</span></code></span></a></p></td>
 <td><p>L0</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/variable_universe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">core_variables</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/variable_universe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">core_variables</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/feature_correlation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cross_block</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/feature_correlation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cross_block</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">feature_correlation</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">crps</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/export_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/export_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">csv</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">export_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumsum</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumulative_r2_contribution</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumulative_r2_contribution</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/factor_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumulative_variance</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/factor_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cumulative_variance</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">factor_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/vintage_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">current_vintage</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/vintage_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">current_vintage</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/naming_convention.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/naming_convention.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_list</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_list</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/panel_composition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/panel_composition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_panel_only</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_sd_variable_group</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_sd_variable_group</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_state_group</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_state_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_state_group</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/transform_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_tcode</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/transform_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">custom_tcode</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/search_algorithm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cv_path</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/search_algorithm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cv_path</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/tuning_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cv_score_distribution</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/tuning_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">cv_score_distribution</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tuning_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">data_revision_tag</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">data_revision_tag</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">decomposition</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">decomposition</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">deep_lift</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">deep_lift</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/correlation_shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">delta_matrix</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/correlation_shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">delta_matrix</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dependency_lockfile</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dependency_lockfile</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/naming_convention.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">descriptive</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/naming_convention.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">descriptive</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dfm</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dfm</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l1_5</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l2_5</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l3_5</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diagnostics_l4_5</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">diff</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">difference_table</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">difference_table</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dimension_summary</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dimension_summary</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/forecast_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">direct</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/forecast_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">direct</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">direct_analog_high_confidence</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">direct_analog_high_confidence</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distribution_shift</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distribution_shift</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distribution_shift</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">distribution_shift</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l6/axes/equal_predictive_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l6/axes/equal_predictive_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dm_diebold_mariano</span></code></span></a></p></td>
 <td><p>L6</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l6/axes/equal_predictive_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dmp_multi_horizon</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l6/axes/equal_predictive_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">dmp_multi_horizon</span></code></span></a></p></td>
 <td><p>L6</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/mixed_frequency_representation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop_non_target_native_frequency</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/mixed_frequency_representation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop_non_target_native_frequency</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/raw_missing_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop_raw_missing_rows</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/frame_edge_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">drop_unbalanced_series</span></code></span></a></p></td>
@@ -1832,39 +1816,29 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/raw_missing_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">impute_raw_predictors</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">income</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">income</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/sd_tcode_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inferred</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/sd_tcode_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">inferred</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">integrated_gradients</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">integrated_gradients</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">interaction</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">interaction</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">interval_score</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">interval_score</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">iqr_clip_raw</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/outlier_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">iqr_flag</span></code></span></a></p></td>
@@ -1942,254 +1916,244 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/official_transform_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keep_official_raw_scale</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/frame_edge_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keep_unbalanced</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/frame_edge_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keep_unbalanced</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/outlier_action.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/outlier_action.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">keep_with_indicator</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kendall</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kendall</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kernel</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kernel</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kernel_features</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">knn</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">knn</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kpss</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kpss</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/distribution_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ks_statistic</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/distribution_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ks_statistic</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/stability_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kuncheva</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/stability_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kuncheva</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stability_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/summary_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/summary_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kurtosis</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/distribution_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kurtosis_change</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/distribution_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">kurtosis_change</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">l3_feature_bundle</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">l3_metadata_build</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">labor_market_core</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/lag_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag_correlation_decay</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/lag_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lag_correlation_decay</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso_inclusion_frequency</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso_inclusion_frequency</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso_path</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/fit_per_origin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">last_origin_only</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/fit_per_origin.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">last_origin_only</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fit_per_origin</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/sample_end_rule.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latest_available</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/sample_end_rule.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latest_available</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_table</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/export_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/export_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">latex_tables</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">export_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">level</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/weights_over_time_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line_plot</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/weights_over_time_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">line_plot</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">weights_over_time_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lineage_attribution</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lineage_attribution</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/imputation_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/imputation_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">linear_interpolation</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_type.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lineplot</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/factor_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">loadings_heatmap</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/factor_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">loadings_heatmap</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">factor_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lofo</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lofo</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log_diff</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/density_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">log_score</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/output_table_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">long</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/output_table_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">long</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/missing_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">longest_gap</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/missing_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">longest_gap</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">missing_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstm_hidden_state</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">lstm_hidden_state</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ma_window</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mad_clip_raw</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/point_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mae</span></code></span></a></p></td>
@@ -2552,384 +2516,364 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/official_transform_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/regime_definition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/regime_definition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/outlier_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/outlier_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">outlier_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/sd_tcode_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/sd_tcode_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/correlation_shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/correlation_shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/t_code_application_log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/t_code_application_log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/dfm_diagnostics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/dfm_diagnostics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dfm_diagnostics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/feature_correlation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/feature_correlation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">feature_correlation</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/marx_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/marx_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">marx_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/selection_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/selection_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">selection_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/pi_correction.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/pi_correction.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/search_algorithm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/search_algorithm.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/compression.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/compression.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">compression</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/imputation_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none_propagate</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/imputation_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">none_propagate</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nystroem</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nystroem_features</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">nystroem_features</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/tuning_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">objective_trace</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/tuning_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">objective_trace</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tuning_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/coverage_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">observation_count</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/coverage_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">observation_count</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/panel_composition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">official_only</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/panel_composition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">official_only</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/panel_composition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/panel_composition.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">official_plus_custom</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ols</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">ols</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/model_artifacts_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">onnx</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/model_artifacts_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">onnx</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">orthogonalised_irf</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">oshapley_vi</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">overlay_timeseries</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">overlay_timeseries</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">package_version</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/provenance_fields.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">package_version</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/coverage_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/coverage_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">panel_balance_matrix</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l0/axes/compute_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parallel</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l0/axes/compute_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parallel</span></code></span></a></p></td>
 <td><p>L0</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/window_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parameter_stability</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/window_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parameter_stability</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">window_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/export_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/export_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">parquet</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">export_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/lag_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partial_autocorrelation</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/lag_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partial_autocorrelation</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partial_dependence</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">partial_least_squares</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/forecast_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path_average</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/forecast_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">path_average</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pbsv</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pbsv</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pca</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pct_change</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pdf</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pearson</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pearson</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pearson</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pearson</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pearson</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pearson</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_cell</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_cell</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/summary_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_decade</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/summary_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_decade</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_horizon</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_horizon</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/summary_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_regime</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/summary_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_regime</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/missing_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_series_count</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/missing_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_series_count</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">missing_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/t_code_application_log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_series_detail</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/t_code_application_log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_series_detail</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/coverage_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/coverage_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_series_start_end</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_target</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_target</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/artifact_granularity.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">per_target_horizon</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permutation_importance</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permutation_importance_strobl</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">permutation_importance_strobl</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/direction_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_metric</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/direction_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_metric</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/model_artifacts_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pickle</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/model_artifacts_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pickle</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/model_artifacts_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pmml</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/model_artifacts_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pmml</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/diagnostic_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">png</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polynomial</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polynomial</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pp</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pp</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/summary_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/summary_split.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pre_oos_only</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/correlation_shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pre_post_overlay</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/correlation_shift.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">pre_post_overlay</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/official_transform_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">predictors_only</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">predictors_only</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/raw_missing_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">preserve_raw_missing</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">preserve_raw_outliers</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">principal_component_regression</span></code></span></a></p></td>
@@ -3342,194 +3286,184 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">set_raw_outliers_to_missing</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_deep</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_deep</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_interaction</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_kernel</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_kernel</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_linear</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_linear</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_tree</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">shap_tree</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">side_by_side</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">side_by_side</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">side_by_side_summary</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/comparison_output_form.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">side_by_side_summary</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/refit_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single_fit</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/refit_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single_fit</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/target_geography_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single_state</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/target_geography_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single_state</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/target_structure.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single_target</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/target_structure.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">single_target</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/summary_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">skew</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/summary_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">skew</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/distribution_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">skew_change</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/distribution_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">skew_change</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l6/axes/multiple_model_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spa_hansen</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l6/axes/multiple_model_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spa_hansen</span></code></span></a></p></td>
 <td><p>L6</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sparse_pca</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spearman</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spearman</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spearman</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spearman</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spearman</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/correlation_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">spearman</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/weights_over_time_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stacked_area</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/weights_over_time_method.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">stacked_area</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">weights_over_time_method</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standard_md</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standard_md</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standard_qd</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/horizon_set.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">standard_qd</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">state_metrics</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">state_metrics</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step_backward</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step_backward</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step_forward</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/quarterly_to_monthly_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step_forward</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l6/axes/multiple_model_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step_m_romano_wolf</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l6/axes/multiple_model_test.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">step_m_romano_wolf</span></code></span></a></p></td>
 <td><p>L6</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/direction_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">success_ratio</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/direction_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">success_ratio</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/t_code_application_log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">summary</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/t_code_application_log.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">summary</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/distribution_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">summary_table</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/distribution_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">summary_table</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">distribution_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/figure_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svg</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/figure_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svg</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svr_linear</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svr_poly</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">svr_rbf</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/official_transform_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_and_predictors</span></code></span></a></p></td>
@@ -3542,204 +3476,194 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/official_transform_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_only</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">official_transform_scope</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_only</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/stationarity_test_scope.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_only</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/variable_universe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/variable_universe.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">target_specific_variables</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tests</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">tests</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/point_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u1</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/point_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u1</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u1</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u1</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/point_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/point_metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l5/axes/primary_metric.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code></span></a></p></td>
 <td><p>L5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">time_trend</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">time_trend</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">top_k</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">top_k</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/correlation_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">top_k_per_target</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trade</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/fred_sd_variable_group.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">trade</span></code></span></a></p></td>
 <td><p>L1</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/saved_objects.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformation_attribution</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/forecast_scale_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformed_only</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/forecast_scale_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformed_only</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformer</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">transformer</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L1.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L2.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/attach_to_manifest.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/latex_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/latex_table_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/latex_table_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">latex_table_export</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/markdown_table_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/markdown_table_export.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">true</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">markdown_table_export</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/frame_edge_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truncate_to_balanced</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/frame_edge_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">truncate_to_balanced</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">u_midas</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">u_midas</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/coef_view_models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">user_list</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/coef_view_models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">user_list</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">coef_view_models</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4/axes/model.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">var</span></code></span></a></p></td>
 <td><p>L4</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">varimax</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">varimax</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">varimax_rotation</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">varimax_rotation</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wavelet</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3/axes/op.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wavelet</span></code></span></a></p></td>
 <td><p>L3</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">op</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/ensemble_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weight_concentration</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/ensemble_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weight_concentration</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ensemble_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l3_5/axes/marx_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weight_decay_visualization</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/marx_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weight_decay_visualization</span></code></span></a></p></td>
 <td><p>L3.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">marx_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l4_5/axes/ensemble_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weights_over_time</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l4_5/axes/ensemble_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">weights_over_time</span></code></span></a></p></td>
 <td><p>L4.5</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ensemble_view</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l7/axes/output_table_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wide</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l7/axes/output_table_format.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">wide</span></code></span></a></p></td>
 <td><p>L7</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l2/axes/outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">winsorize</span></code></span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="l2/axes/outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">winsorize</span></code></span></a></p></td>
 <td><p>L2</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">winsorize_raw</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="l3_5/axes/feature_correlation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">with_target</span></code></span></a></p></td>
@@ -3772,19 +3696,9 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/raw_missing_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zero_fill_leading_predictor_missing_before_tcode</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_missing_policy</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="l8/axes/compression.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zip</span></code></span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="l8/axes/compression.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zip</span></code></span></a></p></td>
 <td><p>L8</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">compression</span></code></p></td>
-<td><p>operational</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="l1/axes/raw_outlier_policy.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zscore_clip_raw</span></code></span></a></p></td>
-<td><p>L1</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raw_outlier_policy</span></code></p></td>
 <td><p>operational</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="l1_5/axes/outlier_view.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">zscore_flag</span></code></span></a></p></td>

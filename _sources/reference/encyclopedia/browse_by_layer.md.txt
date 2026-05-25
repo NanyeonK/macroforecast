@@ -5,7 +5,7 @@
 | Layer | Name | Category | Sub-layers | Axes | Options |
 |---|---|---|---:|---:|---:|
 | [`l0`](l0/index.md) | Study Setup | `setup` | 1 | 3 | 6 |
-| [`l1`](l1/index.md) | Data | `construction` | 7 | 26 | 108 |
+| [`l1`](l1/index.md) | Data | `construction` | 7 | 22 | 92 |
 | [`l1_5`](l1_5/index.md) | Data summary | `diagnostic` | 6 | 13 | 50 |
 | [`l2`](l2/index.md) | Preprocessing | `construction` | 5 | 11 | 42 |
 | [`l2_5`](l2_5/index.md) | Pre vs post preprocessing | `diagnostic` | 5 | 12 | 42 |
