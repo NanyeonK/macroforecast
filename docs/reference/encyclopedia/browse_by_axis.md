@@ -65,7 +65,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`export_format`](l8/axes/export_format.md) | L8 | `L8_A_export_format` | operational | no | 9 |
 | [`factor_view`](l3_5/axes/factor_view.md) | L3.5 | `L3_5_B_factor_block_inspection` | operational | no | 5 |
 | [`failure_policy`](l0/axes/failure_policy.md) | L0 | `l0_a` | operational | no | 2 |
-| [`family`](l4/axes/family.md) | L4 | `L4_A_model_selection` | operational | yes | 47 |
 | [`feature_correlation`](l3_5/axes/feature_correlation.md) | L3.5 | `L3_5_C_feature_correlation` | operational | no | 5 |
 | [`figure_dpi`](l1_5/axes/figure_dpi.md) | L1.5 | `L1_5_Z_export` | operational | no | 0 |
 | [`figure_dpi`](l2_5/axes/figure_dpi.md) | L2.5 | `L2_5_Z_export` | operational | no | 0 |
@@ -105,6 +104,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`missing_view`](l1_5/axes/missing_view.md) | L1.5 | `L1_5_D_missing_outlier_audit` | operational | no | 4 |
 | [`mixed_frequency_representation`](l2/axes/mixed_frequency_representation.md) | L2 | `l2_a` | operational | yes | 5 |
 | [`mmt_loss_function`](l6/axes/mmt_loss_function.md) | L6 | `L6_D_multiple_model` | operational | no | 0 |
+| [`model`](l4/axes/model.md) | L4 | `L4_A_model_selection` | operational | yes | 47 |
 | [`model_artifacts_format`](l8/axes/model_artifacts_format.md) | L8 | `L8_B_saved_objects` | operational | no | 4 |
 | [`model_pair_strategy`](l6/axes/model_pair_strategy.md) | L6 | `L6_A_equal_predictive` | operational | no | 0 |
 | [`monthly_to_quarterly_policy`](l2/axes/monthly_to_quarterly_policy.md) | L2 | `l2_a` | operational | yes | 3 |
