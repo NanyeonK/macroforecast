@@ -24,17 +24,6 @@ DEFAULT_REFIT_POLICY: str = "every_origin"
 
 DEFAULT_PREPROCESSING_AXES: dict[str, str] = {
     "mixed_frequency_representation": "calendar_aligned_frame",
-    "target_missing_policy": "none",
-    "x_missing_policy": "none",
-    "target_outlier_policy": "none",
-    "x_outlier_policy": "none",
-    "scaling_policy": "none",
-    "dimensionality_reduction_policy": "none",
-    "feature_selection_policy": "none",
-    "feature_selection_semantics": "select_before_factor",
-    "preprocess_fit_scope": "not_applicable",
-    "inverse_transform_policy": "none",
-    "evaluation_scale": "raw_level",
 }
 
 DEFAULT_PROFILE: dict[str, Any] = {

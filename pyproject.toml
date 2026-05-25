@@ -65,7 +65,6 @@ docs = [
     "sphinx-copybutton>=0.5",
 ]
 typecheck = ["mypy>=1.13"]
-wizard = ["solara>=1.30"]
 # Cycle 14 L2-1 fix: tabulate required for markdown_report export_format (DataFrame.to_markdown)
 markdown = ["tabulate>=0.9"]
 # C50: ALFRED vintage adapter -- requests is only needed for API mode;
@@ -73,7 +72,7 @@ markdown = ["tabulate>=0.9"]
 alfred = ["requests>=2.28"]
 # rpy2 bridge for R cross-implementation validation (Boruta / midasr / rugarch)
 validation = ["rpy2>=3.5"]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,wizard,markdown,alfred,validation]"]
+all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,markdown,alfred,validation]"]
 ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy,markdown]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
