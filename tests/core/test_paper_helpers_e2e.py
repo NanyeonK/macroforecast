@@ -230,7 +230,7 @@ def test_paper_05_macroeconomic_random_forest(synth_panel_long):
         block_size=4,
     )
     for node in recipe["4_forecasting_model"]["nodes"]:
-        if node.get("op") == "fit_model":
+        if node.get("op") == "fit":
             node["params"]["min_train_size"] = 80
             node["params"]["B"] = 2
     _assert_recipe_runs(recipe)
@@ -243,7 +243,7 @@ def test_paper_06_booging(synth_panel):
     # Booging is bagging-of-trees; bound depth on the base decision_tree
     # and trim the walk-forward range so per-origin refit stays cheap.
     for node in recipe["4_forecasting_model"]["nodes"]:
-        if node.get("op") == "fit_model":
+        if node.get("op") == "fit":
             node["params"]["min_train_size"] = 100
             node["params"]["max_depth"] = 3
             node["params"]["n_estimators"] = 2
@@ -275,7 +275,7 @@ def test_paper_09_hemisphere_neural_network(synth_panel):
     # change the xfail-flagged procedure mismatch (Round 1: HNN sub-axes
     # route to LinearRegression).
     for node in recipe["4_forecasting_model"]["nodes"]:
-        if node.get("op") == "fit_model":
+        if node.get("op") == "fit":
             node["params"]["min_train_size"] = 110
             node["params"]["max_iter"] = 50
     _assert_recipe_runs(recipe)

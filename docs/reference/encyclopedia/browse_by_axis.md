@@ -80,7 +80,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`forecast_scale_view`](l4_5/axes/forecast_scale_view.md) | L4.5 | `L4_5_B_forecast_scale_view` | operational | no | 3 |
 | [`forecast_policy`](l4/axes/forecast_policy.md) | L4 | `L4_B_forecast_policy` | operational | yes | 3 |
 | [`frame_edge_policy`](l2/axes/frame_edge_policy.md) | L2 | `l2_e` | operational | yes | 4 |
-| [`frame_edge_scope`](l2/axes/frame_edge_scope.md) | L2 | `l2_e` | operational | yes | 4 |
 | [`fred_sd_frequency_policy`](l1/axes/fred_sd_frequency_policy.md) | L1 | `l1_a` | operational | no | 4 |
 | [`fred_sd_state_group`](l1/axes/fred_sd_state_group.md) | L1 | `l1_d` | operational | no | 16 |
 | [`fred_sd_variable_group`](l1/axes/fred_sd_variable_group.md) | L1 | `l1_d` | operational | no | 12 |
@@ -88,7 +87,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`hln_correction`](l6/axes/hln_correction.md) | L6 | `L6_A_equal_predictive` | operational | no | 0 |
 | [`horizon_set`](l1/axes/horizon_set.md) | L1 | `l1_f` | operational | no | 5 |
 | [`imputation_policy`](l2/axes/imputation_policy.md) | L2 | `l2_d` | operational | yes | 6 |
-| [`imputation_scope`](l2/axes/imputation_scope.md) | L2 | `l2_d` | operational | yes | 4 |
 | [`imputation_temporal_rule`](l2/axes/imputation_temporal_rule.md) | L2 | `l2_d` | operational | yes | 3 |
 | [`information_set_type`](l1/axes/information_set_type.md) | L1 | `l1_a` | operational | no | 2 |
 | [`interval_test`](l6/axes/interval_test.md) | L6 | `L6_E_density_interval` | operational | no | 0 |
@@ -122,7 +120,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`op`](l7/axes/op.md) | L7 | `L7_A_importance_dag_body` | operational | no | 36 |
 | [`outlier_action`](l2/axes/outlier_action.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_policy`](l2/axes/outlier_policy.md) | L2 | `l2_c` | operational | yes | 4 |
-| [`outlier_scope`](l2/axes/outlier_scope.md) | L2 | `l2_c` | operational | yes | 4 |
 | [`outlier_view`](l1_5/axes/outlier_view.md) | L1.5 | `L1_5_D_missing_outlier_audit` | operational | no | 4 |
 | [`output_table_format`](l7/axes/output_table_format.md) | L7 | `L7_B_output_shape_export` | operational | no | 2 |
 | [`pi_correction`](l4/axes/pi_correction.md) | L4 | `L4_E_predict` | operational | yes | 2 |
@@ -172,7 +169,6 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`top_k_features_to_show`](l7/axes/top_k_features_to_show.md) | L7 | `L7_B_output_shape_export` | operational | no | 0 |
 | [`training_start_rule`](l4/axes/training_start_rule.md) | L4 | `L4_C_training_window` | operational | yes | 3 |
 | [`transform_policy`](l2/axes/transform_policy.md) | L2 | `l2_b` | operational | yes | 3 |
-| [`transform_scope`](l2/axes/transform_scope.md) | L2 | `l2_b` | operational | yes | 4 |
 | [`tuning_view`](l4_5/axes/tuning_view.md) | L4.5 | `L4_5_D_tuning_history` | operational | no | 4 |
 | [`variable_universe`](l1/axes/variable_universe.md) | L1 | `l1_c` | operational | no | 5 |
 | [`vintage_policy`](l1/axes/vintage_policy.md) | L1 | `l1_a` | operational | no | 2 |
