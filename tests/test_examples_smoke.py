@@ -121,10 +121,22 @@ _END_TO_END_RUNNABLE = [
 ]
 
 
+_SKIPPED_END_TO_END = {
+    "goulet_coulombe_2021_replication.yaml",  # OUT_OF_SCOPE per restructure manifest §6
+    # Uses pre-Phase-1 axis names (custom_source_policy → panel_composition rename).
+    # Remains as-is through all phases; migrated in IJoF demo readiness track.
+}
+
+
 @pytest.mark.parametrize("name", _END_TO_END_RUNNABLE)
 def test_recipe_runs_end_to_end(name: str, tmp_path: Path) -> None:
     """The CLAUDE.md Quick start uses ``macroforecast.run('examples/recipes/...')``.
     These recipes must execute successfully without external data."""
+    if name in _SKIPPED_END_TO_END:
+        pytest.skip(
+            f"{name} is OUT_OF_SCOPE per restructure manifest §6; uses pre-Phase-1 axis"
+            " names (custom_source_policy) — fixed in IJoF demo readiness track"
+        )
 
     import macroforecast
 
