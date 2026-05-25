@@ -172,20 +172,19 @@ class TestModelsImport:
         assert Theta is not None
         assert HoltWinters is not None
 
-    # --- A3: lazy import via mf.models ---
+    # --- A3: direct import via macroforecast.layers.l4_models ---
 
     def test_A3_mf_models_lazy_accessible(self) -> None:
-        import macroforecast as mf
-        mod = mf.models
-        assert hasattr(mod, "RealizedGARCH")
-        assert hasattr(mod, "MidasAlmon")
-        assert hasattr(mod, "BVAR")
-        assert hasattr(mod, "ETS")
+        import macroforecast.layers.l4_models as mmod
+        assert hasattr(mmod, "RealizedGARCH")
+        assert hasattr(mmod, "MidasAlmon")
+        assert hasattr(mmod, "BVAR")
+        assert hasattr(mmod, "ETS")
 
     def test_A3_mf_models_identity_preserved(self) -> None:
-        import macroforecast as mf
+        import macroforecast.layers.l4_models as mmod
         from macroforecast.layers.l4_models import RealizedGARCH
-        assert mf.models.RealizedGARCH is RealizedGARCH
+        assert mmod.RealizedGARCH is RealizedGARCH
 
     # --- A4: __all__ count ---
 
@@ -704,13 +703,18 @@ class TestLazyImportsInit:
     def test_H1_four_names_in_dir(self) -> None:
         import macroforecast as mf
         d = dir(mf)
-        for name in ("models", "feature_selection", "transforms", "interpretation"):
+        # models namespace moved to macroforecast.layers.l4_models (Phase 3b);
+        # the remaining three lazy modules are still in mf.__dir__()
+        for name in ("feature_selection", "transforms", "interpretation"):
             assert name in d, f"'{name}' not found in macroforecast.__dir__()"
+        # layers.l4_models is accessible via direct subpackage import
+        import macroforecast.layers.l4_models as mmod
+        assert hasattr(mmod, "RealizedGARCH")
 
     def test_H2_models_identity(self) -> None:
-        import macroforecast as mf
+        import macroforecast.layers.l4_models as mmod
         from macroforecast.layers.l4_models import RealizedGARCH
-        assert mf.models.RealizedGARCH is RealizedGARCH
+        assert mmod.RealizedGARCH is RealizedGARCH
 
     def test_H2_feature_selection_identity(self) -> None:
         import macroforecast as mf

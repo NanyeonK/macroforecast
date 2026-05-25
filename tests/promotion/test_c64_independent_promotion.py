@@ -481,8 +481,8 @@ class TestC63Regression:
         assert MidasAlmon is not None
 
     def test_total_models_count_is_30(self):
-        """After C64, mf.models.__all__ must have exactly 30 entries."""
-        from macroforecast import models
+        """After C64, macroforecast.layers.l4_models.__all__ must have exactly 30 entries."""
+        import macroforecast.layers.l4_models as models
         assert len(models.__all__) == 30, f"Expected 30, got {len(models.__all__)}"
 
     def test_feature_selection_fit_transform_still_works(self):
