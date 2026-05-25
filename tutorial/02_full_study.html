@@ -453,7 +453,7 @@
   <section id="full-out-of-sample-study">
 <h1>Full out-of-sample study<a class="headerlink" href="#full-out-of-sample-study" title="Link to this heading">#</a></h1>
 <p>Run a full out-of-sample evaluation comparing three model classes from
-<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code> using scikit-learn’s <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code>, then graduate to
+<code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l4_models</span></code> using scikit-learn’s <code class="docutils literal notranslate"><span class="pre">TimeSeriesSplit</span></code>, then graduate to
 the recipe pipeline for systematic benchmarking. No YAML is required for the
 main body of this tutorial.</p>
 <hr class="docutils" />
@@ -501,7 +501,7 @@ autoregressive and factor-based models should find signal.</p>
 per fold. <code class="docutils literal notranslate"><span class="pre">LinearAR</span></code> is a target-only model that accepts <code class="docutils literal notranslate"><span class="pre">X</span></code> for API uniformity
 but does not use it in estimation. We pass the predictor frame anyway so that
 the loop structure is uniform across all three models.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearAR</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearAR</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeSeriesSplit</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -536,7 +536,7 @@ procedure. Both models require <code class="docutils literal notranslate"><span 
 <li><p><code class="docutils literal notranslate"><span class="pre">PrincipalComponentRegression(n_components=3)</span></code> – number of PC factors</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">FactorAugmentedAR(p=2,</span> <span class="pre">n_factors=3)</span></code> – lag order <code class="docutils literal notranslate"><span class="pre">p</span></code> and number of factors</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrincipalComponentRegression</span><span class="p">,</span> <span class="n">FactorAugmentedAR</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrincipalComponentRegression</span><span class="p">,</span> <span class="n">FactorAugmentedAR</span>
 
 <span class="k">for</span> <span class="n">ModelClass</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="p">[</span>
     <span class="p">(</span><span class="n">PrincipalComponentRegression</span><span class="p">,</span> <span class="s2">&quot;PCR&quot;</span><span class="p">,</span>  <span class="p">{</span><span class="s2">&quot;n_components&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}),</span>

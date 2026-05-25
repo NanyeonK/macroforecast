@@ -477,7 +477,7 @@
 <h1>How to compare MIDAS variants side by side<a class="headerlink" href="#how-to-compare-midas-variants-side-by-side" title="Link to this heading">#</a></h1>
 <p>The goal is to compare four MIDAS variants on a common mixed-frequency
 dataset. We import <code class="docutils literal notranslate"><span class="pre">MidasAlmon</span></code>, <code class="docutils literal notranslate"><span class="pre">MidasBeta</span></code>, <code class="docutils literal notranslate"><span class="pre">MidasStep</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">UnrestrictedMidas</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code> and fit all four to the
+<code class="docutils literal notranslate"><span class="pre">UnrestrictedMidas</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l4_models</span></code> and fit all four to the
 same low-frequency target with the same high-frequency predictor lags.
 The four estimators differ only in how they parametrize the lag-weight
 function, so the comparison isolates the parsimony-flexibility
@@ -486,7 +486,7 @@ tradeoff.</p>
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">MidasAlmon</span><span class="p">,</span> <span class="n">MidasBeta</span><span class="p">,</span> <span class="n">MidasStep</span><span class="p">,</span> <span class="n">UnrestrictedMidas</span><span class="p">,</span>
 <span class="p">)</span>
 

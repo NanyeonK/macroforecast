@@ -464,7 +464,7 @@ narrative, start with <a class="reference internal" href="01_first_forecast.html
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Interface</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">macroforecast.models</span> <span class="pre">import</span> <span class="pre">X</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">macroforecast.layers.l4_models</span> <span class="pre">import</span> <span class="pre">X</span></code></p></td>
 <td><p>YAML file</p></td>
 </tr>
 <tr class="row-odd"><td><p>Scope</p></td>
@@ -499,7 +499,7 @@ compute a metric without writing YAML.</p></li>
 <li><p>You want to <strong>mix and match</strong> macroforecast model classes with scikit-learn or
 pandas code directly.</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearAR</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearAR</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">LinearAR</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -549,7 +549,7 @@ without changing the underlying models.</p>
 <section id="decision-guide">
 <h2>Decision guide<a class="headerlink" href="#decision-guide" title="Link to this heading">#</a></h2>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Working in a notebook or one-off script?
-    YES  -&gt;  Standalone  -&gt;  from macroforecast.models import X
+    YES  -&gt;  Standalone  -&gt;  from macroforecast.layers.l4_models import X
     NO
      |
      v

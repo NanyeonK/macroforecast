@@ -1,7 +1,7 @@
 # Tutorials
 
 New to macroforecast? The tutorials below start with the standalone model classes in
-`macroforecast.models`. No YAML is required for tutorials 01 through 03. Each tutorial
+`macroforecast.layers.l4_models`. No YAML is required for tutorials 01 through 03. Each tutorial
 ends with a short section on graduating to the recipe pipeline when reproducibility or
 systematic sweeps are needed.
 

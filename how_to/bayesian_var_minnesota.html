@@ -477,7 +477,7 @@
 <h1>How to fit a Bayesian VAR with the Minnesota prior<a class="headerlink" href="#how-to-fit-a-bayesian-var-with-the-minnesota-prior" title="Link to this heading">#</a></h1>
 <p>The goal is to fit a Bayesian VAR with the Litterman (1986) Minnesota
 prior using the public class <code class="docutils literal notranslate"><span class="pre">BVARMinnesota</span></code> from
-<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>. The model implements the closed-form posterior
+<code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l4_models</span></code>. The model implements the closed-form posterior
 mean <code class="docutils literal notranslate"><span class="pre">β̂</span> <span class="pre">=</span> <span class="pre">(V⁻¹</span> <span class="pre">+</span> <span class="pre">X'X)⁻¹</span> <span class="pre">(V⁻¹</span> <span class="pre">m</span> <span class="pre">+</span> <span class="pre">X'y)</span></code> with a random-walk anchor on
 the first own-lag-1 column. The parent class <code class="docutils literal notranslate"><span class="pre">BVAR</span></code> exposes the more
 general interface for users who want to choose between the Minnesota and
@@ -486,7 +486,7 @@ Normal-Inverse-Wishart priors directly.</p>
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BVAR</span><span class="p">,</span> <span class="n">BVARMinnesota</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BVAR</span><span class="p">,</span> <span class="n">BVARMinnesota</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">T</span> <span class="o">=</span> <span class="mi">200</span>
