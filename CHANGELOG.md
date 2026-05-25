@@ -5,6 +5,16 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Removed
+
+- `macroforecast.wizard` package and all Solara UI dependencies (`solara`,
+  `[wizard]` optional extra) per the v0.10 restructure plan, Phase 0.
+- `macroforecast.scaffold.wizard` companion module.
+- `macroforecast.core.stages` and the `STAGE_BY_LAYER` / `StageLabel` /
+  `stage_of` re-exports from `macroforecast.core`. Use `layer_id` directly.
+- Stale entries in `defaults.DEFAULT_PREPROCESSING_AXES` that referenced
+  L2 axes which no longer exist.
+
 ---
 
 ## [0.9.5a0] -- 2026-05-25 -- "Round 3: documentation + naming + refactor"

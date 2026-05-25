@@ -9,9 +9,7 @@ L0 -> L1 -> L2 -> L3(graph) -> L4(graph) -> L5 -> L6 -> L7(graph) -> L8
 ```
 
 The layer system defines how a recipe flows from study setup through output.
-Each layer has a well-defined role, a schema contract, and a stage label
-(`STAGE_BY_LAYER` in `macroforecast.core.stages`) used for color coding and
-future Kedro adapter tagging.
+Each layer has a well-defined role and a schema contract, identified by `layer_id`.
 
 ## Canonical Layer Roles
 
@@ -40,31 +38,11 @@ future Kedro adapter tagging.
 Compatibility checks and YAML previews treat the layer map as the source of
 truth for package architecture.
 
-## Authoring recipes with `macroforecast wizard`
+## Authoring recipes
 
-Recipe authoring and layer visualization are provided by the Solara-based
-web wizard (added in v0.9.1, post-v0.9.0):
-
-```bash
-pip install 'macroforecast[wizard]'
-macroforecast wizard --port 8765
-```
-
-Open `http://localhost:8765` to see a 3-pane editor with:
-
-- left rail: layer navigation (color coded by `STAGE_BY_LAYER` stage)
-- center workspace: layer form (L0 currently; L1/L2/L5/L6 in P2b/c)
-- right pane: live YAML preview
-
-See [the wizard module README](../../macroforecast/wizard/) for current
-phase status (P2a MVP) and upcoming features (P3 step editor for L3/L4/L7).
-
-## Visualization with Kedro-viz (future)
-
-`macroforecast.adapters.kedro` (Phase P1, planned post-P2c) will expose
-recipe → `kedro.Pipeline` conversion. Run `kedro viz` to get layer-color
-band visualization. `STAGE_BY_LAYER` serves as the Kedro `layer` tag
-source.
+Write YAML recipes directly using the layer and axis reference in these docs.
+Use `macroforecast.scaffold.list_templates()` to start from a known-good
+starter recipe, then edit axes with the encyclopedia as a guide.
 
 ## Recommended Flow
 
