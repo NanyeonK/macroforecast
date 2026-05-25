@@ -123,9 +123,9 @@ _L3_CASES: list[tuple[str, Path]] = [
 
 # L4: 47 OPERATIONAL_MODEL_FAMILIES, 4 have op_page=False -> 43 checked.
 _L4_CASES: list[tuple[str, Path]] = [
-    (name, ENC_ROOT / "l4" / "family" / f"{name}.md")
+    (name, ENC_ROOT / "l4" / "model" / f"{name}.md")
     for name in sorted(OPERATIONAL_MODEL_FAMILIES)
-    if _should_check("l4", "L4_A_model_selection", "family", name)
+    if _should_check("l4", "L4_A_model_selection", "model", name)
 ]
 
 # L7: 36 OPERATIONAL_OPS, 26 have op_page=False -> 10 checked.
