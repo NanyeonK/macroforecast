@@ -10,7 +10,7 @@ def _parse_layer_yaml(yaml_text: str, layer_id: str):
     if layer_id == "l1_5":
         from macroforecast.layers.l1_5_diagnostic.schema import parse_layer_yaml
     else:
-        from macroforecast.core.layers.l2_5 import parse_layer_yaml
+        from macroforecast.layers.l2_5_diagnostic.schema import parse_layer_yaml
 
     return parse_layer_yaml(yaml_text, layer_id)
 
@@ -19,7 +19,7 @@ def _normalize(layer: dict, layer_id: str):
     if layer_id == "l1_5":
         from macroforecast.layers.l1_5_diagnostic.schema import normalize_to_dag_form
     else:
-        from macroforecast.core.layers.l2_5 import normalize_to_dag_form
+        from macroforecast.layers.l2_5_diagnostic.schema import normalize_to_dag_form
 
     return normalize_to_dag_form(layer, layer_id)
 
@@ -28,7 +28,7 @@ def _resolve(dag, layer_id: str):
     if layer_id == "l1_5":
         from macroforecast.layers.l1_5_diagnostic.schema import resolve_axes
     else:
-        from macroforecast.core.layers.l2_5 import resolve_axes
+        from macroforecast.layers.l2_5_diagnostic.schema import resolve_axes
 
     return resolve_axes(dag)
 

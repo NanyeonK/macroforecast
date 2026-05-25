@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from .preprocessing.feature_blocks import (
+from .layers.l2_preprocessing.feature_blocks import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
     FeatureBlockCallable,

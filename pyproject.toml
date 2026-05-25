@@ -112,6 +112,8 @@ module = [
     "macroforecast.core.runtime",
     "macroforecast.scaffold.builder",
     "macroforecast.layers.l4_models.tuning.engine",
+    "macroforecast.layers.l2_preprocessing.schema",
+    "macroforecast.layers.l2_5_diagnostic.schema",
 ]
 ignore_errors = true
 
