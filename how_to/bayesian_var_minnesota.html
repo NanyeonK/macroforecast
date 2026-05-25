@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Redirect notice &#8212; macroforecast</title>
+    <title>How to fit a Bayesian VAR with the Minnesota prior &#8212; macroforecast</title>
   
   
   
@@ -47,12 +47,12 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/custom_hooks';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/bayesian_var_minnesota';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Redirect notice" href="partial_execution.html" />
-    <link rel="prev" title="Redirect notice" href="custom_model.html" />
+    <link rel="next" title="How to disaggregate a quarterly series with Chow-Lin" href="chow_lin_disaggregation.html" />
+    <link rel="prev" title="How to select features with Boruta" href="feature_selection_boruta.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.3b1" />
@@ -378,10 +378,10 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="forecast_volatility_realized_garch.html">How to forecast volatility with Realized GARCH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selection_boruta.html">How to select features with Boruta</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bayesian_var_minnesota.html">How to fit a Bayesian VAR with the Minnesota prior</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How to fit a Bayesian VAR with the Minnesota prior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chow_lin_disaggregation.html">How to disaggregate a quarterly series with Chow-Lin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="irf_pesaran_shin_girf.html">How to compute generalized impulse response functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compare_midas_variants.html">How to compare MIDAS variants side by side</a></li>
@@ -407,11 +407,11 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
 </ul>
 </div>
@@ -456,7 +456,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">How-to guides</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Redirect notice</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How to fit a Bayesian VAR with the Minnesota prior</span></li>
   </ul>
 </nav>
 </div>
@@ -473,9 +473,118 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="redirect-notice">
-<h1>Redirect notice<a class="headerlink" href="#redirect-notice" title="Link to this heading">#</a></h1>
-<p>This page has moved. See <a class="reference internal" href="use_custom_hooks.html"><span class="std std-doc">How to use custom hooks</span></a>.</p>
+  <section id="how-to-fit-a-bayesian-var-with-the-minnesota-prior">
+<h1>How to fit a Bayesian VAR with the Minnesota prior<a class="headerlink" href="#how-to-fit-a-bayesian-var-with-the-minnesota-prior" title="Link to this heading">#</a></h1>
+<p>The goal is to fit a Bayesian VAR with the Litterman (1986) Minnesota
+prior using the public class <code class="docutils literal notranslate"><span class="pre">BVARMinnesota</span></code> from
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>. The model implements the closed-form posterior
+mean <code class="docutils literal notranslate"><span class="pre">β̂</span> <span class="pre">=</span> <span class="pre">(V⁻¹</span> <span class="pre">+</span> <span class="pre">X'X)⁻¹</span> <span class="pre">(V⁻¹</span> <span class="pre">m</span> <span class="pre">+</span> <span class="pre">X'y)</span></code> with a random-walk anchor on
+the first own-lag-1 column. The parent class <code class="docutils literal notranslate"><span class="pre">BVAR</span></code> exposes the more
+general interface for users who want to choose between the Minnesota and
+Normal-Inverse-Wishart priors directly.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">BVAR</span><span class="p">,</span> <span class="n">BVARMinnesota</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">trend</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+<span class="n">y_series</span> <span class="o">=</span> <span class="n">trend</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+<span class="c1"># BVAR fit expects X with lagged columns named y_lagK so the random-walk</span>
+<span class="c1"># anchor activates on y_lag1.</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_series</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">&quot;y_lag1&quot;</span><span class="p">:</span> <span class="n">y</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+    <span class="s2">&quot;y_lag2&quot;</span><span class="p">:</span> <span class="n">y</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+<span class="p">})</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<span class="n">y_aligned</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="fit-and-predict">
+<h2>Fit and predict<a class="headerlink" href="#fit-and-predict" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">BVARMinnesota</span><span class="p">(</span>
+    <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">lambda1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">lambda_decay</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">lambda_cross</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">b_AR</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_aligned</span><span class="p">)</span>
+
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The hyperparameter <code class="docutils literal notranslate"><span class="pre">lambda1</span></code> is the overall shrinkage tightness,
+<code class="docutils literal notranslate"><span class="pre">lambda_decay</span></code> controls how quickly the prior shrinks higher-order lags,
+and <code class="docutils literal notranslate"><span class="pre">lambda_cross</span></code> regularizes cross-equation terms more strongly than
+own-lag terms. The random-walk anchor <code class="docutils literal notranslate"><span class="pre">b_AR=1.0</span></code> recovers the I(1)
+default, while setting <code class="docutils literal notranslate"><span class="pre">b_AR=0.9</span></code> matches the VARCTIC Appx-A.3
+calibration.</p>
+</section>
+<section id="validating-the-prior-constraint">
+<h2>Validating the prior constraint<a class="headerlink" href="#validating-the-prior-constraint" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BVARMinnesota</span></code> is a thin subclass that pins <code class="docutils literal notranslate"><span class="pre">prior='minnesota'</span></code>.
+Attempting to override the prior on the subclass raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>,
+which guards against silent prior substitution.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">BVARMinnesota</span><span class="p">(</span><span class="n">prior</span><span class="o">=</span><span class="s2">&quot;bvar_normal_inverse_wishart&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;rejected:&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For the NIW alternative, use the parent class directly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">niw</span> <span class="o">=</span> <span class="n">BVAR</span><span class="p">(</span><span class="n">prior</span><span class="o">=</span><span class="s2">&quot;bvar_normal_inverse_wishart&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p>The call <code class="docutils literal notranslate"><span class="pre">fit</span></code> returns <code class="docutils literal notranslate"><span class="pre">self</span></code>. The call <code class="docutils literal notranslate"><span class="pre">predict(X)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray</span></code>
+produces point forecasts for each row of <code class="docutils literal notranslate"><span class="pre">X</span></code>. The posterior parameters
+live on <code class="docutils literal notranslate"><span class="pre">model._params</span></code> once <code class="docutils literal notranslate"><span class="pre">fit</span></code> has completed.</p>
+</section>
+<section id="common-pitfalls">
+<h2>Common pitfalls<a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">BVARMinnesota</span> <span class="pre">requires</span> <span class="pre">prior='minnesota'</span></code></p></td>
+<td><p>Tried to override the prior on the subclass</p></td>
+<td><p>Use the <code class="docutils literal notranslate"><span class="pre">BVAR</span></code> parent class directly and set <code class="docutils literal notranslate"><span class="pre">prior='bvar_normal_inverse_wishart'</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Posterior mean very close to OLS</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lambda1</span></code> set too large, so the prior is loose</p></td>
+<td><p>Reduce <code class="docutils literal notranslate"><span class="pre">lambda1</span></code> toward 0.1 for tighter shrinkage</p></td>
+</tr>
+<tr class="row-even"><td><p>Forecasts look like a random walk regardless of data</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">b_AR=1.0</span></code> with very small <code class="docutils literal notranslate"><span class="pre">lambda1</span></code> (tight prior on the unit-root anchor)</p></td>
+<td><p>Either loosen the prior or set <code class="docutils literal notranslate"><span class="pre">b_AR=0.9</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Random-walk anchor not active</p></td>
+<td><p>Lag columns not named <code class="docutils literal notranslate"><span class="pre">y_lag1</span></code>, <code class="docutils literal notranslate"><span class="pre">y_lag2</span></code>, …</p></td>
+<td><p>Follow the column naming convention so <code class="docutils literal notranslate"><span class="pre">_classify_columns</span></code> detects the anchor</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="irf_pesaran_shin_girf.html"><span class="doc">How to compute generalized impulse response functions</span></a></p></li>
+<li><p>Paper: Litterman (1986), Journal of Business and Economic Statistics 4(1).</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -489,20 +598,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="custom_model.html"
+       href="feature_selection_boruta.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">How to select features with Boruta</p>
       </div>
     </a>
     <a class="right-next"
-       href="partial_execution.html"
+       href="chow_lin_disaggregation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">How to disaggregate a quarterly series with Chow-Lin</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -518,10 +627,27 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-and-predict">Fit and predict</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validating-the-prior-constraint">Validating the prior constraint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/custom_hooks.md">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/bayesian_var_minnesota.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -536,7 +662,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/how_to/custom_hooks.md.txt">
+    <a href="../_sources/how_to/bayesian_var_minnesota.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

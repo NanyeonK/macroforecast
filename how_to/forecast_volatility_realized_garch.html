@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Redirect notice &#8212; macroforecast</title>
+    <title>How to forecast volatility with Realized GARCH &#8212; macroforecast</title>
   
   
   
@@ -47,12 +47,12 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/custom_hooks';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/forecast_volatility_realized_garch';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Redirect notice" href="partial_execution.html" />
-    <link rel="prev" title="Redirect notice" href="custom_model.html" />
+    <link rel="next" title="How to select features with Boruta" href="feature_selection_boruta.html" />
+    <link rel="prev" title="How-to guides" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.3b1" />
@@ -378,8 +378,8 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="forecast_volatility_realized_garch.html">How to forecast volatility with Realized GARCH</a></li>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How to forecast volatility with Realized GARCH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selection_boruta.html">How to select features with Boruta</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesian_var_minnesota.html">How to fit a Bayesian VAR with the Minnesota prior</a></li>
 <li class="toctree-l1"><a class="reference internal" href="chow_lin_disaggregation.html">How to disaggregate a quarterly series with Chow-Lin</a></li>
@@ -407,11 +407,11 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
 </ul>
 </div>
@@ -456,7 +456,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">How-to guides</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Redirect notice</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How to forecast volatility with Realized GARCH</span></li>
   </ul>
 </nav>
 </div>
@@ -473,9 +473,92 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="redirect-notice">
-<h1>Redirect notice<a class="headerlink" href="#redirect-notice" title="Link to this heading">#</a></h1>
-<p>This page has moved. See <a class="reference internal" href="use_custom_hooks.html"><span class="std std-doc">How to use custom hooks</span></a>.</p>
+  <section id="how-to-forecast-volatility-with-realized-garch">
+<h1>How to forecast volatility with Realized GARCH<a class="headerlink" href="#how-to-forecast-volatility-with-realized-garch" title="Link to this heading">#</a></h1>
+<p>The goal is to forecast one-step-ahead conditional variance using the
+Hansen-Huang-Shek (2012) Realized GARCH model with a realized-variance
+side channel. We use the public class <code class="docutils literal notranslate"><span class="pre">RealizedGARCH</span></code> from
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>, which exposes a sklearn-style <code class="docutils literal notranslate"><span class="pre">fit</span></code> and
+<code class="docutils literal notranslate"><span class="pre">predict_variance</span></code> interface. The model does not require the optional
+<code class="docutils literal notranslate"><span class="pre">arch</span></code> package because the joint MLE is implemented in scipy.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RealizedGARCH</span>
+
+<span class="c1"># Synthetic daily returns with a stylized realized-variance series.</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">true_h</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">))</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span> <span class="o">/</span> <span class="n">T</span>
+<span class="n">returns</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">true_h</span><span class="p">)</span>
+<span class="n">realized_var</span> <span class="o">=</span> <span class="n">true_h</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+
+<span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2018-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ret&quot;</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;rv&quot;</span><span class="p">:</span> <span class="n">realized_var</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fit-and-predict">
+<h2>Fit and predict<a class="headerlink" href="#fit-and-predict" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">RealizedGARCH</span><span class="p">(</span><span class="n">realized_variance</span><span class="o">=</span><span class="s2">&quot;rv&quot;</span><span class="p">,</span> <span class="n">n_starts</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">one_step_variance</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_variance</span><span class="p">(</span><span class="n">h_steps</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ten_step_variance</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_variance</span><span class="p">(</span><span class="n">h_steps</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">realized_variance</span></code> argument names the column in <code class="docutils literal notranslate"><span class="pre">X</span></code> that carries
+the realized-variance side channel. The constructor defaults to
+<code class="docutils literal notranslate"><span class="pre">n_starts=8</span></code> multi-starts and <code class="docutils literal notranslate"><span class="pre">random_state=0</span></code>. If every start returns a
+non-finite objective the model raises <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>, the C56 safety
+guard against silent convergence to a degenerate parameter vector.</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">predict_variance(h_steps)</span></code> returns a length-<code class="docutils literal notranslate"><span class="pre">h_steps</span></code> numpy array of
+conditional-variance forecasts. The companion <code class="docutils literal notranslate"><span class="pre">predict(X)</span></code> returns the
+constant conditional mean broadcast over <code class="docutils literal notranslate"><span class="pre">len(X)</span></code>. The fitted parameter
+dictionary is exposed via <code class="docutils literal notranslate"><span class="pre">model._params</span></code> for diagnostic inspection.</p>
+</section>
+<section id="common-pitfalls">
+<h2>Common pitfalls<a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NotImplementedError:</span> <span class="pre">...</span> <span class="pre">requires</span> <span class="pre">&gt;=</span> <span class="pre">30</span> <span class="pre">observations</span></code></p></td>
+<td><p>Sample below minimum</p></td>
+<td><p>Provide at least 30 non-missing returns</p></td>
+</tr>
+<tr class="row-odd"><td><p>Variance forecast is constant across <code class="docutils literal notranslate"><span class="pre">h_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">realized_variance</span></code> column missing in X, model fell back to the <code class="docutils literal notranslate"><span class="pre">r^2</span></code> proxy</p></td>
+<td><p>Pass the realized-variance column name and confirm it is present in <code class="docutils literal notranslate"><span class="pre">X.columns</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RuntimeError:</span> <span class="pre">all</span> <span class="pre">multi-starts</span> <span class="pre">produced</span> <span class="pre">non-finite</span> <span class="pre">objective</span></code></p></td>
+<td><p>Pathological data such as a vector of zeros</p></td>
+<td><p>Inspect <code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">X['rv']</span></code> for degeneracy and rescale returns if needed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">dist=...</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">supported</span></code></p></td>
+<td><p>Passed <code class="docutils literal notranslate"><span class="pre">dist='t'</span></code> or another non-default distribution</p></td>
+<td><p>Only <code class="docutils literal notranslate"><span class="pre">dist='normal'</span></code> is implemented in the current release</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="bayesian_var_minnesota.html"><span class="doc">How to fit a Bayesian VAR with the Minnesota prior</span></a></p></li>
+<li><p>Paper: Hansen, Huang, and Shek (2012), Journal of Applied Econometrics 27(6).</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -489,20 +572,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="custom_model.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">How-to guides</p>
       </div>
     </a>
     <a class="right-next"
-       href="partial_execution.html"
+       href="feature_selection_boruta.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">How to select features with Boruta</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -518,10 +601,26 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-and-predict">Fit and predict</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/custom_hooks.md">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/forecast_volatility_realized_garch.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -536,7 +635,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/how_to/custom_hooks.md.txt">
+    <a href="../_sources/how_to/forecast_volatility_realized_garch.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

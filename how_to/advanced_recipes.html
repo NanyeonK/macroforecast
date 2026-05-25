@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Redirect notice &#8212; macroforecast</title>
+    <title>Advanced recipe orchestration &#8212; macroforecast</title>
   
   
   
@@ -47,12 +47,12 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/custom_hooks';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/advanced_recipes';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Redirect notice" href="partial_execution.html" />
-    <link rel="prev" title="Redirect notice" href="custom_model.html" />
+    <link rel="next" title="Redirect notice" href="add_dataset.html" />
+    <link rel="prev" title="Docs Conventions" href="conventions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.3b1" />
@@ -404,14 +404,14 @@
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="conventions.html">Docs Conventions</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
-</ul>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Advanced recipe orchestration</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
 </ul>
 </div>
@@ -456,7 +456,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">How-to guides</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Redirect notice</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Advanced recipe orchestration</span></li>
   </ul>
 </nav>
 </div>
@@ -473,9 +473,159 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="redirect-notice">
-<h1>Redirect notice<a class="headerlink" href="#redirect-notice" title="Link to this heading">#</a></h1>
-<p>This page has moved. See <a class="reference internal" href="use_custom_hooks.html"><span class="std std-doc">How to use custom hooks</span></a>.</p>
+  <section id="advanced-recipe-orchestration">
+<h1>Advanced recipe orchestration<a class="headerlink" href="#advanced-recipe-orchestration" title="Link to this heading">#</a></h1>
+<p>The goal is to explain recipe orchestration in depth for users who have
+graduated from the standalone tutorial track. A recipe is a single YAML
+file that fully specifies a 12-layer pipeline (L0 through L8) and the
+sweep markers needed to expand into independent cells. Recipes provide
+bit-exact replication via the manifest, custom-step extension via
+<code class="docutils literal notranslate"><span class="pre">mf.register_model</span></code>, and composition via sweep markers. Standalone code
+remains the right choice for exploratory work, and recipes pay off when
+the study needs to be replicated, audited, or shared.</p>
+<section id="when-to-use-recipes">
+<h2>When to use recipes<a class="headerlink" href="#when-to-use-recipes" title="Link to this heading">#</a></h2>
+<p>We recommend the recipe path when any one of the following holds. The
+study needs bit-exact replication. The study sweeps over more than a few
+configurations. The study will be shared as a unit, for example as a
+paper replication package or a CI artifact. The study depends on
+cross-layer references such as L4 <code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code>, L6.D <code class="docutils literal notranslate"><span class="pre">mcs_inclusion</span></code>,
+or L3 <code class="docutils literal notranslate"><span class="pre">lineage</span></code>. We recommend standalone code (<code class="docutils literal notranslate"><span class="pre">mf.models.*</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mf.feature_selection.*</span></code>, and the other public submodules) when the
+study is exploratory, when the user is iterating on a single estimator,
+or when the input data does not match the FRED-MD, QD, or SD adapter
+contracts.</p>
+</section>
+<section id="basic-recipe-structure">
+<h2>Basic recipe structure<a class="headerlink" href="#basic-recipe-structure" title="Link to this heading">#</a></h2>
+<p>A minimal L4 recipe selects a model family and runs it on a default
+dataset. The structure follows the canonical 12-layer order. The recipe
+gallery in <code class="docutils literal notranslate"><span class="pre">examples/recipes/</span></code> ships runnable templates including
+<code class="docutils literal notranslate"><span class="pre">l4_minimal_ridge.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">l7_minimal_shap.yaml</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">study_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minimal_ridge</span>
+<span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+
+<span class="nt">1_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
+<span class="w">  </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
+<span class="w">  </span><span class="nt">horizon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">transform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">difference</span>
+<span class="w">  </span><span class="nt">outlier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">winsor_1_99</span>
+
+<span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+<span class="w">  </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
+</pre></div>
+</div>
+<p>The call <code class="docutils literal notranslate"><span class="pre">mf.run(&quot;path/to/recipe.yaml&quot;)</span></code> materializes every layer,
+expands sweep markers into independent cells, and returns a
+<code class="docutils literal notranslate"><span class="pre">ManifestExecutionResult</span></code>.</p>
+</section>
+<section id="custom-step-registration">
+<h2>Custom-step registration<a class="headerlink" href="#custom-step-registration" title="Link to this heading">#</a></h2>
+<p>Custom estimators register through the top-level <code class="docutils literal notranslate"><span class="pre">mf.register_model</span></code>
+decorator. The registered name then becomes a valid <code class="docutils literal notranslate"><span class="pre">family:</span></code> value in
+the L4 layer.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="nd">@mf</span><span class="o">.</span><span class="n">register_model</span><span class="p">(</span><span class="s2">&quot;my_baseline&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Tail-mean baseline forecaster&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_baseline</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="c1"># Return a scalar, or a one-element sequence for compatibility.</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">tail</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The recipe references the registered name verbatim.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_baseline</span>
+<span class="w">  </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
+</pre></div>
+</div>
+<p>Confirm the registration before <code class="docutils literal notranslate"><span class="pre">mf.run</span></code> by calling
+<code class="docutils literal notranslate"><span class="pre">mf.list_custom_models()</span></code>. The same pattern applies to the four related
+registries. <code class="docutils literal notranslate"><span class="pre">mf.register_preprocessor</span></code> registers an L2 matrix
+post-processor. <code class="docutils literal notranslate"><span class="pre">mf.register_target_transformer</span></code> registers a wrapper
+that fits at the L5 boundary. The call
+<code class="docutils literal notranslate"><span class="pre">mf.register_feature_block(name,</span> <span class="pre">fn,</span> <span class="pre">block_kind='temporal')</span></code> registers
+an L2 feature block, with valid <code class="docutils literal notranslate"><span class="pre">block_kind</span></code> values of <code class="docutils literal notranslate"><span class="pre">temporal</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rotation</span></code>, and <code class="docutils literal notranslate"><span class="pre">factor</span></code>. The call <code class="docutils literal notranslate"><span class="pre">mf.register_feature_combiner</span></code>
+registers an L3 feature combiner. Registration lives in the current
+Python process only, since YAML does not import Python modules. The
+script that calls <code class="docutils literal notranslate"><span class="pre">mf.run</span></code> must therefore import the registration
+module first.</p>
+</section>
+<section id="recipe-composition">
+<h2>Recipe composition<a class="headerlink" href="#recipe-composition" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">{sweep:</span> <span class="pre">[...]}</span></code> marker at any layer parameter expands into
+independent cells. Each cell inherits a deterministic seed derived from
+the study’s <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> plus the cell’s position, so cell-level
+reproducibility is automatic.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">sweep</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ridge</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">lasso</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">elastic_net</span><span class="p p-Indicator">]}</span>
+<span class="w">  </span><span class="nt">refit_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">every_origin</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ManifestExecutionResult.cells</span></code> is a list of <code class="docutils literal notranslate"><span class="pre">RuntimeResult</span></code> objects,
+one per cell. The leader uses <code class="docutils literal notranslate"><span class="pre">result.cells[i].sink_hashes</span></code> to confirm
+each cell’s artifact integrity at completion time. Sweep markers compose
+freely across layers, so a recipe with two sweeps of length three and
+four expands into twelve cells under the default grid mode.</p>
+</section>
+<section id="manifest-semantics">
+<h2>Manifest semantics<a class="headerlink" href="#manifest-semantics" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mf.run</span></code> writes a <code class="docutils literal notranslate"><span class="pre">manifest.json</span></code> to the output directory. The manifest
+records the recipe source, the resolved cell parameters, per-cell sink
+hashes, and provenance fields (14 fields after v0.2). The companion
+function <code class="docutils literal notranslate"><span class="pre">mf.replicate(manifest_path)</span></code> re-runs the stored recipe and
+verifies that every sink hash matches bit-for-bit. The bit-exact
+guarantee is what underwrites paper replication packages.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;study.yaml&quot;</span><span class="p">,</span> <span class="n">output_directory</span><span class="o">=</span><span class="s2">&quot;out/&quot;</span><span class="p">)</span>
+<span class="n">replication</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="s2">&quot;out/manifest.json&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">replication</span><span class="o">.</span><span class="n">sink_hashes_match</span>
+</pre></div>
+</div>
+</section>
+<section id="migration-from-standalone-to-recipe">
+<h2>Migration from standalone to recipe<a class="headerlink" href="#migration-from-standalone-to-recipe" title="Link to this heading">#</a></h2>
+<p>Consider a standalone study that fits a Boruta selector and a Ridge
+estimator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
+
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_my_data</span><span class="p">()</span>
+<span class="n">sel</span> <span class="o">=</span> <span class="n">Boruta</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="n">X_sel</span> <span class="o">=</span> <span class="n">sel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="c1"># ... fit ridge on X_sel, evaluate, and so on.</span>
+</pre></div>
+</div>
+<p>The equivalent recipe nominates <code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code> as an L3 op and
+<code class="docutils literal notranslate"><span class="pre">ridge</span></code> as the L4 family. The relevant lines are as follows.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">3_feature_engineering_dag</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boruta</span>
+<span class="w">      </span><span class="nt">op</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boruta_selection</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">n_estimators_rf</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">        </span><span class="nt">alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+
+<span class="nt">4_forecasting_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">family</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ridge</span>
+</pre></div>
+</div>
+<p>The recipe form earns the user manifest-backed replication, sweep
+support, and CI auditability, in exchange for the YAML overhead.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="add_custom_model.html"><span class="doc">How to add a custom model</span></a></p></li>
+<li><p><a class="reference internal" href="replicate_a_study.html"><span class="doc">How to replicate a study</span></a></p></li>
+<li><p><a class="reference internal" href="tune_hyperparameters.html"><span class="doc">How to tune hyperparameters</span></a></p></li>
+<li><p><a class="reference internal" href="sweep_over_models.html"><span class="doc">How to sweep over models</span></a></p></li>
+<li><p><a class="reference internal" href="reproducibility_policy.html"><span class="doc">Reproducibility Policy</span></a></p></li>
+</ul>
+</section>
 </section>
 
 
@@ -489,16 +639,16 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="custom_model.html"
+       href="conventions.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">Docs Conventions</p>
       </div>
     </a>
     <a class="right-next"
-       href="partial_execution.html"
+       href="add_dataset.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
@@ -518,10 +668,28 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-recipes">When to use recipes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-recipe-structure">Basic recipe structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-step-registration">Custom-step registration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-composition">Recipe composition</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#manifest-semantics">Manifest semantics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-from-standalone-to-recipe">Migration from standalone to recipe</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/custom_hooks.md">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/advanced_recipes.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -536,7 +704,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/how_to/custom_hooks.md.txt">
+    <a href="../_sources/how_to/advanced_recipes.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Redirect notice &#8212; macroforecast</title>
+    <title>How to disaggregate a quarterly series with Chow-Lin &#8212; macroforecast</title>
   
   
   
@@ -47,12 +47,12 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/custom_hooks';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'how_to/chow_lin_disaggregation';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Redirect notice" href="partial_execution.html" />
-    <link rel="prev" title="Redirect notice" href="custom_model.html" />
+    <link rel="next" title="How to compute generalized impulse response functions" href="irf_pesaran_shin_girf.html" />
+    <link rel="prev" title="How to fit a Bayesian VAR with the Minnesota prior" href="bayesian_var_minnesota.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.3b1" />
@@ -378,11 +378,11 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="forecast_volatility_realized_garch.html">How to forecast volatility with Realized GARCH</a></li>
 <li class="toctree-l1"><a class="reference internal" href="feature_selection_boruta.html">How to select features with Boruta</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bayesian_var_minnesota.html">How to fit a Bayesian VAR with the Minnesota prior</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chow_lin_disaggregation.html">How to disaggregate a quarterly series with Chow-Lin</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">How to disaggregate a quarterly series with Chow-Lin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="irf_pesaran_shin_girf.html">How to compute generalized impulse response functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compare_midas_variants.html">How to compare MIDAS variants side by side</a></li>
 </ul>
@@ -407,11 +407,11 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Redirect notice</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
 </ul>
 </div>
@@ -456,7 +456,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">How-to guides</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Redirect notice</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">How to disaggregate a quarterly series with Chow-Lin</span></li>
   </ul>
 </nav>
 </div>
@@ -473,9 +473,113 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="redirect-notice">
-<h1>Redirect notice<a class="headerlink" href="#redirect-notice" title="Link to this heading">#</a></h1>
-<p>This page has moved. See <a class="reference internal" href="use_custom_hooks.html"><span class="std std-doc">How to use custom hooks</span></a>.</p>
+  <section id="how-to-disaggregate-a-quarterly-series-with-chow-lin">
+<h1>How to disaggregate a quarterly series with Chow-Lin<a class="headerlink" href="#how-to-disaggregate-a-quarterly-series-with-chow-lin" title="Link to this heading">#</a></h1>
+<p>The goal is to disaggregate a quarterly series to monthly frequency
+using the Chow and Lin (1971) canonical GLS method with an AR(1) error
+structure and a related high-frequency indicator. We use the public
+function <code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregate</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.transforms</span></code>. The
+C63.1 promotion implements the full canonical algorithm directly (BLUE
+correction with AR(1) covariance), in contrast to the simpler OLS
+fallback used in older internal helpers.</p>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">chow_lin_disaggregate</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># 36 months of a monthly indicator series, for example retail sales.</span>
+<span class="n">idx_m</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2018-01-31&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;ME&quot;</span><span class="p">)</span>
+<span class="n">indicator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">36</span><span class="p">),</span>
+                      <span class="n">index</span><span class="o">=</span><span class="n">idx_m</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;retail_sales&quot;</span><span class="p">)</span>
+
+<span class="c1"># 12 quarters of an observed quarterly target series, for example GDP.</span>
+<span class="n">idx_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2018-03-31&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;QE&quot;</span><span class="p">)</span>
+<span class="n">indicator_q</span> <span class="o">=</span> <span class="n">indicator</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;QE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">gdp_q</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">indicator_q</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="mf">0.2</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span>
+                  <span class="n">index</span><span class="o">=</span><span class="n">idx_q</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gdp_q&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="disaggregate-mean-mode">
+<h2>Disaggregate, mean mode<a class="headerlink" href="#disaggregate-mean-mode" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gdp_m_mean</span> <span class="o">=</span> <span class="n">chow_lin_disaggregate</span><span class="p">(</span>
+    <span class="n">low_freq</span><span class="o">=</span><span class="n">gdp_q</span><span class="p">,</span>
+    <span class="n">indicator_high_freq</span><span class="o">=</span><span class="n">indicator</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+    <span class="n">rho_method</span><span class="o">=</span><span class="s2">&quot;min_chi_squared&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The default <code class="docutils literal notranslate"><span class="pre">rho_method='min_chi_squared'</span></code> estimates the AR(1)
+autocorrelation parameter over a 50-point grid in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0.98]</span></code>. Pass
+<code class="docutils literal notranslate"><span class="pre">rho=0.7</span></code> explicitly to fix the parameter. The default
+<code class="docutils literal notranslate"><span class="pre">aggregation='mean'</span></code> is appropriate when the low-frequency observation
+is the quarterly average of the monthly flow.</p>
+</section>
+<section id="disaggregate-sum-mode">
+<h2>Disaggregate, sum mode<a class="headerlink" href="#disaggregate-sum-mode" title="Link to this heading">#</a></h2>
+<p>For series where the quarterly figure is the sum of the three monthly
+values, use <code class="docutils literal notranslate"><span class="pre">aggregation='sum'</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gdp_m_sum</span> <span class="o">=</span> <span class="n">chow_lin_disaggregate</span><span class="p">(</span>
+    <span class="n">low_freq</span><span class="o">=</span><span class="n">gdp_q</span><span class="p">,</span>
+    <span class="n">indicator_high_freq</span><span class="o">=</span><span class="n">indicator</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Round-trip conservation check.</span>
+<span class="n">recovered_q</span> <span class="o">=</span> <span class="n">gdp_m_sum</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s2">&quot;QE&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">recovered_q</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">gdp_q</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p>The function returns a <code class="docutils literal notranslate"><span class="pre">pd.Series</span></code> aligned to the indicator index,
+trimmed to <code class="docutils literal notranslate"><span class="pre">n_l</span> <span class="pre">*</span> <span class="pre">m</span></code> observations. The conservation property holds to
+numerical tolerance. With <code class="docutils literal notranslate"><span class="pre">aggregation='sum'</span></code>, <code class="docutils literal notranslate"><span class="pre">gdp_m.resample('QE').sum()</span></code>
+matches <code class="docutils literal notranslate"><span class="pre">gdp_q</span></code> to atol <code class="docutils literal notranslate"><span class="pre">1e-8</span></code>, and the corresponding mean-aggregation
+identity holds for <code class="docutils literal notranslate"><span class="pre">aggregation='mean'</span></code>.</p>
+</section>
+<section id="common-pitfalls">
+<h2>Common pitfalls<a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symptom</p></th>
+<th class="head"><p>Cause</p></th>
+<th class="head"><p>Fix</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">aggregation</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">'sum'</span> <span class="pre">or</span> <span class="pre">'mean'</span></code></p></td>
+<td><p>Invalid mode</p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">'sum'</span></code> for flows aggregated by sum and <code class="docutils literal notranslate"><span class="pre">'mean'</span></code> otherwise</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">rho</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">open</span> <span class="pre">interval</span> <span class="pre">(-1,</span> <span class="pre">1)</span></code></p></td>
+<td><p>Passed rho outside the valid range</p></td>
+<td><p>Pass <code class="docutils literal notranslate"><span class="pre">rho=None</span></code> to let the function estimate it, or supply rho in (-1, 1)</p></td>
+</tr>
+<tr class="row-even"><td><p>Returned series is the bfill/ffill fallback</p></td>
+<td><p>Fewer than three aligned low-frequency observations after resampling</p></td>
+<td><p>Provide more quarters of data, or check that the indicator index covers the low-frequency span</p></td>
+</tr>
+<tr class="row-odd"><td><p>Conservation property does not hold</p></td>
+<td><p>Wrong aggregation mode for the underlying data type</p></td>
+<td><p>Match <code class="docutils literal notranslate"><span class="pre">aggregation</span></code> to the stock-vs-flow nature of the series</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="user_data_workflow.html"><span class="doc">Redirect notice</span></a></p></li>
+<li><p>Paper: Chow and Lin (1971), Review of Economics and Statistics 53(4).</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -489,20 +593,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="custom_model.html"
+       href="bayesian_var_minnesota.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">How to fit a Bayesian VAR with the Minnesota prior</p>
       </div>
     </a>
     <a class="right-next"
-       href="partial_execution.html"
+       href="irf_pesaran_shin_girf.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">How to compute generalized impulse response functions</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -518,10 +622,27 @@
 
 
   <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disaggregate-mean-mode">Disaggregate, mean mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disaggregate-sum-mode">Disaggregate, sum mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/custom_hooks.md">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/how_to/chow_lin_disaggregation.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -536,7 +657,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/how_to/custom_hooks.md.txt">
+    <a href="../_sources/how_to/chow_lin_disaggregation.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
