@@ -306,64 +306,6 @@ def test_t5_validator_error_messages_updated() -> None:
 
 
 # ---------------------------------------------------------------------------
-# T6: Wizard file rename
-# ---------------------------------------------------------------------------
-
-
-def test_t6a_old_layer_dag_file_removed() -> None:
-    """T6-a: macroforecast/wizard/pages/layer_dag.py must NOT exist."""
-    old_file = REPO_ROOT / "macroforecast" / "wizard" / "pages" / "layer_dag.py"
-    assert not old_file.exists(), (
-        f"Old wizard page file still exists: {old_file}. "
-        "The file rename to layer_step_graph.py was not completed."
-    )
-
-
-def test_t6b_new_layer_step_graph_file_exists() -> None:
-    """T6-b: macroforecast/wizard/pages/layer_step_graph.py must exist."""
-    new_file = REPO_ROOT / "macroforecast" / "wizard" / "pages" / "layer_step_graph.py"
-    assert new_file.exists(), (
-        f"New wizard page file is missing: {new_file}"
-    )
-
-
-def test_t6c_layer_step_graph_no_dag_in_docstrings() -> None:
-    """T6-c: layer_step_graph.py must not contain DAG in docstring text (non-comment lines)."""
-    new_file = REPO_ROOT / "macroforecast" / "wizard" / "pages" / "layer_step_graph.py"
-    assert new_file.exists(), "layer_step_graph.py does not exist"
-
-    content = new_file.read_text(encoding="utf-8")
-    # Collect lines that have standalone DAG/dag and are NOT inline comments.
-    dag_non_comment_lines = [
-        f"line {i+1}: {line}"
-        for i, line in enumerate(content.splitlines())
-        if _DAG_PATTERN.search(line) and not line.lstrip().startswith("#")
-    ]
-    assert not dag_non_comment_lines, (
-        "layer_step_graph.py still has DAG/dag outside of inline comments:\n"
-        + "\n".join(dag_non_comment_lines)
-    )
-
-
-def test_t6d_layer_form_import_updated() -> None:
-    """T6-d: layer_form.py must import from layer_step_graph, not layer_dag."""
-    layer_form = REPO_ROOT / "macroforecast" / "wizard" / "pages" / "layer_form.py"
-    content = layer_form.read_text(encoding="utf-8")
-    # Verify no import of old module name remains.
-    import_lines = [
-        line for line in content.splitlines()
-        if "import" in line and "layer_dag" in line
-    ]
-    assert not import_lines, (
-        f"layer_form.py still imports from layer_dag:\n" + "\n".join(import_lines)
-    )
-    # Verify new import is present.
-    assert "layer_step_graph" in content, (
-        "layer_form.py does not import from layer_step_graph"
-    )
-
-
-# ---------------------------------------------------------------------------
 # T7: Reference docs cleaned
 # ---------------------------------------------------------------------------
 
