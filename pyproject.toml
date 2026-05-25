@@ -106,7 +106,8 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [
     "macroforecast.core.layers.l0",
-    "macroforecast.core.layers.l1",
+    "macroforecast.layers.l1_data.schema",
+    "macroforecast.layers.l1_5_diagnostic.schema",
     "macroforecast.core.layers.l3",
     "macroforecast.core.runtime",
     "macroforecast.scaffold.builder",
