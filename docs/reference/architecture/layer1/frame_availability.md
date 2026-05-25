@@ -1,7 +1,7 @@
 # Frame Availability
 
 - Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
-- Current group: Official transform / frame availability
+- Current group: Frame availability
 
 `missing_availability` decides how Layer 1 closes availability gaps after the
 source frame exists. It is a source-frame policy, not a forecast-time
@@ -10,10 +10,12 @@ information policy and not raw-source repair.
 Runtime order:
 
 1. Load FRED data, custom data, or FRED-plus-custom data.
-2. Apply raw-source missing/outlier policies when non-default values are set.
-3. Apply official FRED transform codes when available and enabled.
-4. Apply `missing_availability` to the resulting Layer 1 source frame.
-5. Hand the source frame to Layer 2 representation and research preprocessing.
+2. Apply `missing_availability` to the resulting Layer 1 source frame.
+3. Hand the source frame to Layer 2 representation and research preprocessing.
+
+Layer 2 `transform_policy` applies official FRED transform codes. Raw-source
+cleaning (missing/outlier handling before transforms) is now also a Layer 2
+decision via `imputation_policy` and `outlier_policy`.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
@@ -30,8 +32,8 @@ Runtime order:
 
 Boundary rule:
 
-- Raw missing values already present in loaded source files belong to
-  [4.1.5 Raw Source Cleaning](raw_source_cleaning.md).
+- Raw missing values already present in loaded source files are handled by
+  Layer 2 `imputation_policy` and `outlier_policy`.
 - Publication timing belongs to
   [4.1.2 Forecast-Time Information](availability_timing.md).
 - Researcher-chosen missing-data strategies after representation construction

@@ -25,7 +25,7 @@
 
 Start at the panel's earliest date; tolerates leading missing values.
 
-Keeps every row; lets the L1.C ``raw_missing_policy`` and L2 imputation handle leading NaNs. Useful when the L2 EM-factor imputer can recover early observations and dropping them would lose informative history.
+Keeps every row; lets L2 imputation handle leading NaNs. Useful when the L2 EM-factor imputer can recover early observations and dropping them would lose informative history.
 
 **When to use**
 

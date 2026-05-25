@@ -36,13 +36,6 @@ PreprocessingAxisRole = Literal[
     "ablation_preprocessing",
 ]
 
-TcodeApplicationScope = Literal[
-    "target_only",
-    "predictors_only",
-    "target_and_predictors",
-    "none",
-]
-
 MissingPolicy = Literal[
     "none",
     "drop",
@@ -216,7 +209,6 @@ class PreprocessContract:
     evaluation_scale: str
     feature_selection_semantics: str = "select_before_factor"
     representation_policy: str = "raw_only"
-    tcode_application_scope: str = "none"
     target_transform: str = "level"
     target_normalization: str = "none"
     target_domain: str = "unconstrained"

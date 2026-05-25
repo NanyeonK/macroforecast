@@ -129,7 +129,6 @@ def test_build_preprocess_contract_tcode_then_extra_is_not_supported() -> None:
         inverse_transform_policy="target_only",
         evaluation_scale="raw_level",
         representation_policy="official_tcode_only",
-        tcode_application_scope="target_and_predictors",
     )
 
     assert contract.preprocess_order == "official_tcode_then_extra"
@@ -154,7 +153,6 @@ def test_build_preprocess_contract_tcode_then_train_only_extra_is_operational() 
         inverse_transform_policy="none",
         evaluation_scale="raw_level",
         representation_policy="official_tcode_only",
-        tcode_application_scope="target_and_predictors",
     )
 
     assert is_operational_preprocess_contract(contract) is True
@@ -330,7 +328,6 @@ def test_build_preprocess_contract_supports_stage2_governance_defaults() -> None
     contract = _raw_only_contract()
     payload = preprocess_to_dict(contract)
     assert payload["representation_policy"] == "raw_only"
-    assert payload["tcode_application_scope"] == "none"
 
 
 def test_build_preprocess_contract_mean_impute_minmax_is_operational() -> None:

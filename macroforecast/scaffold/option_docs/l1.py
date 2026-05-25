@@ -1,6 +1,6 @@
 """L1 data definition -- per-option documentation.
 
-L1 is the largest layer: 26 axes spanning data source, target structure,
+L1 is the largest layer: 22 axes spanning data source, target structure,
 variable universe, geography (FRED-SD), sample window, horizons, and
 regime definition. This module ships Tier-1 documentation for all L1
 axes that have been through a reviewer-stamped review pass.
@@ -9,10 +9,10 @@ Tier-1-complete sub-layers (all axes Tier-1 unless noted):
 * L1.A -- all 6 axes (panel_composition, dataset, vintage_policy,
   frequency, information_set_type, fred_sd_frequency_policy) -- Cycle 17
 * L1.B -- target_structure (1 axis) -- Cycle 18
-* L1.C -- all 8 axes (variable_universe, missing_availability,
-  raw_missing_policy, raw_outlier_policy, release_lag_rule,
-  contemporaneous_x_rule, official_transform_policy,
-  official_transform_scope) -- Cycle 19
+* L1.C -- all 4 axes (variable_universe, missing_availability,
+  release_lag_rule, contemporaneous_x_rule) -- Cycle 19
+  (4 axes removed in Phase 2 restructure: raw source policy axes
+  now live exclusively in L2)
 * L1.D -- all 6 axes (target_geography_policy, predictor_geography_policy,
   fred_sd_state_group, fred_sd_variable_group, state_selection,
   sd_variable_selection) -- Cycle 20
@@ -164,7 +164,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _entry(
         "date column and at least the requested target series'. Variable "
         "metadata that the McCracken-Ng panel ships (group tags, t-codes, "
         "release dates) is unavailable, so axes that depend on it -- "
-        "``official_transform_policy``, ``fred_sd_state_group``, etc. -- "
+        "``fred_sd_state_group``, etc. -- "
         "are inactive."
     ),
     when_to_use=(
@@ -723,7 +723,7 @@ def _variable_universe(option: str, summary: str, description: str, when_to_use:
         "l1_c", "variable_universe", option,
         summary=summary, description=description, when_to_use=when_to_use,
         references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2016),
-        related_options=("missing_availability", "official_transform_policy"),
+        related_options=("missing_availability",),
     )
 
 
@@ -800,43 +800,6 @@ _L1C_VARS_EXPLICIT = _L1C_VARS_EXPLICIT.__class__(
            ),
        ),
     }
-)
-
-
-# ---------------------------------------------------------------------------
-# L1.C official_transform_policy
-# ---------------------------------------------------------------------------
-
-_L1C_TRANSFORM_OFFICIAL = _entry(
-    "l1_c", "official_transform_policy", "apply_official_tcode",
-    summary="Apply McCracken-Ng's series-by-series stationarity transforms.",
-    description=(
-        "Each FRED-MD/QD series ships with a transformation code (t-code) "
-        "1-7 that maps to a stationarity transform: 1=level, 2=Δlevel, "
-        "5=Δlog, 6=Δ²log, etc. ``apply_official_tcode`` runs the canonical "
-        "transform per series so downstream estimators see stationary "
-        "inputs.\n\n"
-        "This is the canonical preprocessing path for the McCracken-Ng "
-        "benchmark family. Every published replication on FRED-MD/QD uses "
-        "it."
-    ),
-    when_to_use="Default for FRED-MD/QD studies. Canonical replication path.",
-    when_not_to_use="Studies that want to compare alternative transform schemes (use ``keep_official_raw_scale`` and apply transforms in L2 manually).",
-    references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2016),
-    related_options=("keep_official_raw_scale", "official_transform_scope"),
-)
-
-_L1C_TRANSFORM_RAW = _entry(
-    "l1_c", "official_transform_policy", "keep_official_raw_scale",
-    summary="Skip the canonical t-codes; keep raw level data.",
-    description=(
-        "Series stay on their native scale (levels, ratios, indices). "
-        "Useful for tree-based models that don't need stationarity, or "
-        "for studies that apply alternative transforms in L2 / L3."
-    ),
-    when_to_use="Tree / forest models that don't require stationarity; alternative-transform studies.",
-    references=(_REF_DESIGN_L1,),
-    related_options=("apply_official_tcode",),
 )
 
 
@@ -943,8 +906,7 @@ _L1E_START_EARLIEST = _entry(
     "l1_e", "sample_start_rule", "earliest_available",
     summary="Start at the panel's earliest date; tolerates leading missing values.",
     description=(
-        "Keeps every row; lets the L1.C ``raw_missing_policy`` and L2 "
-        "imputation handle leading NaNs. Useful when the L2 EM-factor "
+        "Keeps every row; lets L2 imputation handle leading NaNs. Useful when the L2 EM-factor "
         "imputer can recover early observations and dropping them would "
         "lose informative history."
     ),
@@ -1634,162 +1596,6 @@ _L1C_MISSING = (
         related=("require_complete_rows",)),
 )
 
-# L1.C raw_missing_policy
-_L1C_RAW_MISSING_IMPUTE = _t1(
-    "l1_c", "raw_missing_policy", "impute_raw_predictors",
-    "Impute raw predictor NaNs at L1 (before any L2 stage).",
-    "Runs a simple per-series imputation (mean / median / forward-fill) at L1. Useful when L2.D is disabled or when the user wants to pre-clean raw data before the t-code stage.",
-    "Pipelines that use ``no_transform`` t-codes and need cleaning at L1.",
-    related=("preserve_raw_missing", "drop_raw_missing_rows"),
-)
-_L1C_RAW_MISSING_IMPUTE = _L1C_RAW_MISSING_IMPUTE.__class__(
-    **{**_L1C_RAW_MISSING_IMPUTE.__dict__,
-       "parameters": (
-           ParameterDoc(
-               name="raw_x_imputation",
-               type="str",
-               default=REQUIRED,
-               constraint="required; one of ['bfill', 'ffill', 'mean', 'median'].",
-               description=(
-                   "Imputation method applied to raw predictor NaNs at L1. Used only when "
-                   "raw_missing_policy=impute_raw_predictors."
-               ),
-           ),
-       ),
-    }
-)
-_L1C_RAW_MISSING = (
-    _t1("l1_c", "raw_missing_policy", "preserve_raw_missing",
-        "Pass raw NaN values through unchanged.",
-        "Default; raw missingness flows into L2.D imputation. Required for the McCracken-Ng EM-factor imputation workflow. "
-        "See also: L2 ``imputation_policy`` (same surface, different stage: raw vs post-tcode).",
-        "Default; required when L2.D will run EM-factor or similar global imputation.",
-        related=("zero_fill_leading_predictor_missing_before_tcode", "impute_raw_predictors", "drop_raw_missing_rows")),
-    _t1("l1_c", "raw_missing_policy", "zero_fill_leading_predictor_missing_before_tcode",
-        "Zero-fill leading predictor NaNs prior to t-code application.",
-        "Important for level-difference t-codes that fail when leading NaNs are interspersed with observed values. The zero-fill creates a clean prefix for differencing.",
-        "Tcode 1 / 2 / 5 / 6 pipelines where leading NaNs would propagate after differencing.",
-        when_not_to_use="When zero is a meaningful value for the predictor.",
-        related=("preserve_raw_missing",)),
-    _L1C_RAW_MISSING_IMPUTE,
-    _t1("l1_c", "raw_missing_policy", "drop_raw_missing_rows",
-        "Drop rows containing any raw missing predictor.",
-        "Aggressive listwise deletion at the raw stage. Reduces panel size before any cleaning runs.",
-        "Sensitivity analyses; sanity checks against imputation effects.",
-        when_not_to_use="When the panel is small -- you'll lose a lot of rows.",
-        related=("preserve_raw_missing",)),
-)
-
-# L1.C raw_outlier_policy
-_L1C_RAW_OUTLIER_PRESERVE = _t1(
-    "l1_c", "raw_outlier_policy", "preserve_raw_outliers",
-    "Pass raw outliers through to L2.C.",
-    "Default; relies on L2.C McCracken-Ng IQR detection and the configured ``outlier_action`` to handle "
-    "extreme values. See also: L2 ``outlier_policy`` / ``outlier_action`` (same surface, different stage: "
-    "raw vs post-tcode).",
-    "Default; the canonical workflow.",
-    related=("winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing"),
-)
-_L1C_RAW_OUTLIER_WINSORIZE = _t1(
-    "l1_c", "raw_outlier_policy", "winsorize_raw",
-    "Winsorise raw series at quantile cutpoints (default p1 / p99).",
-    "Caps extreme values at the specified quantile before t-coding. Preserves observation count but compresses "
-    "tails. Configured via ``leaf_config.winsorize_quantiles`` (default [0.01, 0.99]). Compare: L2 "
-    "``outlier_policy=winsorize`` operates on the post-tcode panel.",
-    "Heavy-tailed financial / macro series where extreme observations would dominate downstream estimates.",
-    related=("preserve_raw_outliers", "iqr_clip_raw"),
-)
-_L1C_RAW_OUTLIER_WINSORIZE = _L1C_RAW_OUTLIER_WINSORIZE.__class__(
-    **{**_L1C_RAW_OUTLIER_WINSORIZE.__dict__,
-       "parameters": (
-           ParameterDoc(
-               name="winsorize_quantiles",
-               type="list[float, float]",
-               default="[0.01, 0.99]",
-               constraint="0 <= low < high <= 1; both elements required.",
-               description=(
-                   "Lower and upper quantile clip thresholds. Defaults to symmetric 1%/99% winsorization. "
-                   "Values outside [low, high] quantile bounds are clipped to the bound value."
-               ),
-           ),
-       ),
-    }
-)
-_L1C_RAW_OUTLIER_IQR = _t1(
-    "l1_c", "raw_outlier_policy", "iqr_clip_raw",
-    "Clip raw observations beyond k×IQR thresholds.",
-    "Clips values outside ``Q1 - k·IQR``, ``Q3 + k·IQR`` (k default 10.0, matching McCracken-Ng). Robust to "
-    "non-Gaussian distributions. Configured via ``leaf_config.outlier_iqr_threshold``. Compare: L2 "
-    "``outlier_policy=mccracken_ng_iqr`` uses the same k but on the post-tcode panel.",
-    "Robust outlier handling on non-normal series.",
-    related=("winsorize_raw", "mad_clip_raw", "zscore_clip_raw"),
-)
-_L1C_RAW_OUTLIER_IQR = _L1C_RAW_OUTLIER_IQR.__class__(
-    **{**_L1C_RAW_OUTLIER_IQR.__dict__,
-       "parameters": (
-           ParameterDoc(
-               name="outlier_iqr_threshold",
-               type="float",
-               default="10.0",
-               constraint=">0",
-               description=(
-                   "IQR multiplier above which raw observations are clipped. McCracken-Ng default is 10.0. "
-                   "Observations satisfying |x - median| > k * IQR are clipped to the band boundary."
-               ),
-           ),
-       ),
-    }
-)
-_L1C_RAW_OUTLIER_MAD = _t1(
-    "l1_c", "raw_outlier_policy", "mad_clip_raw",
-    "Clip raw observations beyond k×MAD thresholds.",
-    "Median Absolute Deviation -based clipping; even more robust than IQR. Default k = 3 maps to roughly 3σ "
-    "for normal data.",
-    "Highly non-Gaussian series with sparse outliers.",
-    related=("iqr_clip_raw", "zscore_clip_raw"),
-)
-_L1C_RAW_OUTLIER_ZSCORE = _t1(
-    "l1_c", "raw_outlier_policy", "zscore_clip_raw",
-    "Clip raw observations beyond k standard deviations.",
-    "Standard z-score rule (typically k = 3). Cheapest option but assumes approximate normality. Configured via "
-    "``leaf_config.zscore_threshold_value``.",
-    "Approximately Gaussian series; quick baseline.",
-    when_not_to_use="Heavy-tailed series -- use ``iqr_clip_raw`` or ``mad_clip_raw``.",
-    related=("iqr_clip_raw", "mad_clip_raw"),
-)
-_L1C_RAW_OUTLIER_ZSCORE = _L1C_RAW_OUTLIER_ZSCORE.__class__(
-    **{**_L1C_RAW_OUTLIER_ZSCORE.__dict__,
-       "parameters": (
-           ParameterDoc(
-               name="zscore_threshold_value",
-               type="float",
-               default="3.0",
-               constraint=">0",
-               description=(
-                   "Z-score threshold; observations with |z| > threshold are clipped to the threshold boundary. "
-                   "z is computed as (x - mean) / std over the series."
-               ),
-           ),
-       ),
-    }
-)
-_L1C_RAW_OUTLIER_SET_MISSING = _t1(
-    "l1_c", "raw_outlier_policy", "set_raw_outliers_to_missing",
-    "Set raw outliers to NaN and defer to L2.D imputation.",
-    "Replaces flagged outliers with NaN. The L2.D imputation method then fills the resulting gaps; preserves "
-    "observation count for downstream stages.",
-    "Pipelines where outliers should be re-imputed coherently with other missing data.",
-    related=("preserve_raw_outliers", "winsorize_raw"),
-)
-_L1C_RAW_OUTLIER = (
-    _L1C_RAW_OUTLIER_PRESERVE,
-    _L1C_RAW_OUTLIER_WINSORIZE,
-    _L1C_RAW_OUTLIER_IQR,
-    _L1C_RAW_OUTLIER_MAD,
-    _L1C_RAW_OUTLIER_ZSCORE,
-    _L1C_RAW_OUTLIER_SET_MISSING,
-)
-
 # L1.C release_lag_rule
 _L1C_RELEASE_LAG_IGNORE = _t1(
     "l1_c", "release_lag_rule", "ignore_release_lag",
@@ -1865,30 +1671,6 @@ _L1C_CONTEMP = (
         "Forces predictors to be lagged ``y_t`` is forecast from ``x_{t-1}, x_{t-2}, ...``. Cleanest causal interpretation.",
         "Pure forecasting setups where contemporaneous information would create look-ahead.",
         related=("allow_same_period_predictors",)),
-)
-
-# L1.C official_transform_scope
-_L1C_OFFICIAL_SCOPE = (
-    _t1("l1_c", "official_transform_scope", "target_only",
-        "Apply official t-codes only to the target column.",
-        "Restricts McCracken-Ng tcode application to ``y``. Predictors flow through untransformed.",
-        "When predictors are already pre-transformed.",
-        related=("predictors_only", "target_and_predictors", "none")),
-    _t1("l1_c", "official_transform_scope", "predictors_only",
-        "Apply official t-codes only to predictor columns.",
-        "Used when the user supplies an externally-transformed target.",
-        "When the target is pre-engineered (e.g. growth rate).",
-        related=("target_only", "target_and_predictors")),
-    _t1("l1_c", "official_transform_scope", "target_and_predictors",
-        "Apply official t-codes to both target and predictors.",
-        "Default; canonical McCracken-Ng workflow.",
-        "Default; FRED-MD / -QD recipes.",
-        related=("target_only", "predictors_only", "none")),
-    _t1("l1_c", "official_transform_scope", "none",
-        "Skip official t-codes entirely.",
-        "Disables L1's official tcode application. Used together with ``transform_policy = no_transform`` or ``custom_tcode``.",
-        "Custom panels with bespoke transforms.",
-        related=("target_and_predictors",)),
 )
 
 # L1.D predictor_geography_policy (FRED-SD)
@@ -2393,11 +2175,8 @@ _L1G_TEMP_RULE = (
 
 register(*_L1A_FRED_SD_FREQ)
 register(*_L1C_MISSING)
-register(*_L1C_RAW_MISSING)
-register(*_L1C_RAW_OUTLIER)
 register(*_L1C_RELEASE_LAG)
 register(*_L1C_CONTEMP)
-register(*_L1C_OFFICIAL_SCOPE)
 register(*_L1D_PRED_GEO)
 register(*_L1D_STATE_GROUP)
 register(*_L1D_VAR_GROUP)
@@ -2415,7 +2194,6 @@ register(
     _L1A_INFOSET_FINAL, _L1A_INFOSET_PSEUDO,
     _L1B_TARGET_SINGLE, _L1B_TARGET_MULTI,
     _L1C_VARS_ALL, _L1C_VARS_CORE, _L1C_VARS_CATEGORY, _L1C_VARS_TARGET_SPEC, _L1C_VARS_EXPLICIT,
-    _L1C_TRANSFORM_OFFICIAL, _L1C_TRANSFORM_RAW,
     _L1D_GEO_SINGLE, _L1D_GEO_ALL, _L1D_GEO_SELECTED,
     _L1E_START_MAX_BAL, _L1E_START_EARLIEST, _L1E_START_FIXED,
     _L1E_END_LATEST, _L1E_END_FIXED,

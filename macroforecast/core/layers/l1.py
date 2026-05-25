@@ -109,12 +109,8 @@ DEFAULT_AXES: dict[str, Any] = {
     "state_selection": "all_states",
     "sd_variable_selection": "all_sd_variables",
     "missing_availability": "zero_fill_leading_predictor_gaps",
-    "raw_missing_policy": "preserve_raw_missing",
-    "raw_outlier_policy": "preserve_raw_outliers",
     "release_lag_rule": "ignore_release_lag",
     "contemporaneous_x_rule": "allow_same_period_predictors",
-    "official_transform_policy": "apply_official_tcode",
-    "official_transform_scope": "target_and_predictors",
     "target_geography_policy": "all_states",
     "predictor_geography_policy": "match_target",
     "sample_start_rule": "max_balanced",
@@ -136,12 +132,8 @@ L1_AXIS_NAMES: tuple[str, ...] = (
     "fred_sd_variable_group",
     "sd_variable_selection",
     "missing_availability",
-    "raw_missing_policy",
-    "raw_outlier_policy",
     "release_lag_rule",
     "contemporaneous_x_rule",
-    "official_transform_policy",
-    "official_transform_scope",
     "target_geography_policy",
     "predictor_geography_policy",
     "sample_start_rule",
@@ -296,12 +288,8 @@ def resolve_axes_from_raw(
         "fred_sd_variable_group": fixed_axes.get("fred_sd_variable_group"),
         "sd_variable_selection": fixed_axes.get("sd_variable_selection"),
         "missing_availability": fixed_axes.get("missing_availability", DEFAULT_AXES["missing_availability"]),
-        "raw_missing_policy": fixed_axes.get("raw_missing_policy", DEFAULT_AXES["raw_missing_policy"]),
-        "raw_outlier_policy": fixed_axes.get("raw_outlier_policy", DEFAULT_AXES["raw_outlier_policy"]),
         "release_lag_rule": fixed_axes.get("release_lag_rule", DEFAULT_AXES["release_lag_rule"]),
         "contemporaneous_x_rule": fixed_axes.get("contemporaneous_x_rule", DEFAULT_AXES["contemporaneous_x_rule"]),
-        "official_transform_policy": None if custom_policy == "custom_panel_only" else fixed_axes.get("official_transform_policy", DEFAULT_AXES["official_transform_policy"]),
-        "official_transform_scope": None if custom_policy == "custom_panel_only" else fixed_axes.get("official_transform_scope", DEFAULT_AXES["official_transform_scope"]),
         "target_geography_policy": None,
         "predictor_geography_policy": None,
         "sample_start_rule": fixed_axes.get("sample_start_rule", DEFAULT_AXES["sample_start_rule"]),
@@ -577,24 +565,8 @@ def _validate_options(fixed_axes: dict[str, Any], resolved: dict[str, Any]) -> l
             "impute_predictors_only",
             "zero_fill_leading_predictor_gaps",
         },
-        "raw_missing_policy": {
-            "preserve_raw_missing",
-            "zero_fill_leading_predictor_missing_before_tcode",
-            "impute_raw_predictors",
-            "drop_raw_missing_rows",
-        },
-        "raw_outlier_policy": {
-            "preserve_raw_outliers",
-            "winsorize_raw",
-            "iqr_clip_raw",
-            "mad_clip_raw",
-            "zscore_clip_raw",
-            "set_raw_outliers_to_missing",
-        },
         "release_lag_rule": {"ignore_release_lag", "fixed_lag_all_series", "series_specific_lag"},
         "contemporaneous_x_rule": {"allow_same_period_predictors", "forbid_same_period_predictors"},
-        "official_transform_policy": {"apply_official_tcode", "keep_official_raw_scale"},
-        "official_transform_scope": {"target_only", "predictors_only", "target_and_predictors", "none"},
         "target_geography_policy": {"single_state", "all_states", "selected_states"},
         "predictor_geography_policy": {"match_target", "all_states", "selected_states", "national_only"},
         "sample_start_rule": {"earliest_available", "fixed_date", "max_balanced"},
@@ -744,8 +716,6 @@ def _validate_public_data_policy_axes(leaf_config: dict[str, Any], resolved: dic
     imputation_methods = {"mean", "median", "ffill", "bfill"}
     if resolved.get("missing_availability") == "impute_predictors_only" and leaf_config.get("x_imputation") not in imputation_methods:
         issues.append(_issue("l1.x_imputation", "impute_predictors_only requires leaf_config.x_imputation in ['bfill', 'ffill', 'mean', 'median']"))
-    if resolved.get("raw_missing_policy") == "impute_raw_predictors" and leaf_config.get("raw_x_imputation") not in imputation_methods:
-        issues.append(_issue("l1.raw_x_imputation", "impute_raw_predictors requires leaf_config.raw_x_imputation in ['bfill', 'ffill', 'mean', 'median']"))
     if resolved.get("release_lag_rule") == "series_specific_lag":
         lag_map = leaf_config.get("release_lag_per_series")
         if not isinstance(lag_map, dict) or not lag_map:
@@ -1009,7 +979,7 @@ L1_LAYER_SPEC = LayerImplementationSpec(
     sub_layers=(
         SubLayerSpec(id="l1_a", name="Source selection", axes=("panel_composition", "dataset", "frequency", "information_set_type", "vintage_policy", "fred_sd_frequency_policy")),
         SubLayerSpec(id="l1_b", name="Target definition", axes=("target_structure",)),
-        SubLayerSpec(id="l1_c", name="Predictor universe", axes=("variable_universe", "missing_availability", "raw_missing_policy", "raw_outlier_policy", "release_lag_rule", "contemporaneous_x_rule", "official_transform_policy", "official_transform_scope")),
+        SubLayerSpec(id="l1_c", name="Predictor universe", axes=("variable_universe", "missing_availability", "release_lag_rule", "contemporaneous_x_rule")),
         SubLayerSpec(id="l1_d", name="Geography scope", axes=("target_geography_policy", "predictor_geography_policy", "fred_sd_state_group", "state_selection", "fred_sd_variable_group", "sd_variable_selection")),
         SubLayerSpec(id="l1_e", name="Sample window", axes=("sample_start_rule", "sample_end_rule")),
         SubLayerSpec(id="l1_f", name="Horizon set", axes=("horizon_set",)),
@@ -1041,12 +1011,8 @@ L1_LAYER_SPEC = LayerImplementationSpec(
                 sweepable=False,
             ),
             "missing_availability": AxisSpec("missing_availability", _options(("require_complete_rows", "keep_available_rows", "impute_predictors_only", "zero_fill_leading_predictor_gaps")), "zero_fill_leading_predictor_gaps", sweepable=False),
-            "raw_missing_policy": AxisSpec("raw_missing_policy", _options(("preserve_raw_missing", "zero_fill_leading_predictor_missing_before_tcode", "impute_raw_predictors", "drop_raw_missing_rows")), "preserve_raw_missing", sweepable=False),
-            "raw_outlier_policy": AxisSpec("raw_outlier_policy", _options(("preserve_raw_outliers", "winsorize_raw", "iqr_clip_raw", "mad_clip_raw", "zscore_clip_raw", "set_raw_outliers_to_missing")), "preserve_raw_outliers", sweepable=False),
             "release_lag_rule": AxisSpec("release_lag_rule", _options(("ignore_release_lag", "fixed_lag_all_series", "series_specific_lag")), "ignore_release_lag", sweepable=False),
             "contemporaneous_x_rule": AxisSpec("contemporaneous_x_rule", _options(("allow_same_period_predictors", "forbid_same_period_predictors")), "allow_same_period_predictors", sweepable=False),
-            "official_transform_policy": AxisSpec("official_transform_policy", _options(("apply_official_tcode", "keep_official_raw_scale")), "apply_official_tcode", sweepable=False),
-            "official_transform_scope": AxisSpec("official_transform_scope", _options(("target_only", "predictors_only", "target_and_predictors", "none")), "target_and_predictors", sweepable=False),
         },
         "l1_d": {
             "target_geography_policy": AxisSpec("target_geography_policy", _options(("single_state", "all_states", "selected_states")), "all_states", sweepable=False),
