@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 import macroforecast
-from macroforecast.recipes.paper_methods import (
+from macroforecast.layers.l4_models.paper_methods import (
     bai_ng_corrected_factor_ar,
     ets,
     garch_volatility,

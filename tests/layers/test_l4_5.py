@@ -1,4 +1,4 @@
-from macroforecast.core.layers.l4_5 import (
+from macroforecast.layers.l4_5_diagnostic.schema import (
     normalize_to_dag_form,
     parse_layer_yaml,
     parse_recipe_yaml,
@@ -125,7 +125,7 @@ def test_l4_5_z_diagnostic_format_default():
 
 def test_l4_5_registered_with_spec_correct_class():
     spec = get_layer("l4_5")
-    from macroforecast.core.layers.l4_5 import L4_5GeneratorDiagnostics
+    from macroforecast.layers.l4_5_diagnostic.schema import L4_5GeneratorDiagnostics
 
     assert spec.cls is L4_5GeneratorDiagnostics
     assert spec.produces == ("l4_5_diagnostic_v1",)

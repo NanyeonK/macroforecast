@@ -85,7 +85,7 @@ class SlowGrowingTree(_SlowGrowingTree, BaseEstimator, RegressorMixin):
 
     Standalone usage::
 
-        from macroforecast.models import SlowGrowingTree
+        from macroforecast.layers.l4_models import SlowGrowingTree
         m = SlowGrowingTree(eta=0.1)
         m.fit(X_train, y_train)
         preds = m.predict(X_test)

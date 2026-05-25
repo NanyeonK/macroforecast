@@ -41,17 +41,15 @@ existing primitives rather than inflating the registry.
 
 ## Calling them programmatically
 
-The Python helper module `macroforecast.recipes.paper_methods` exposes
-each replication as a function that returns a recipe dict ready for
-`macroforecast.run`:
+Each replication YAML can be run directly via `macroforecast.run`:
 
 ```python
 import macroforecast as mf
-from macroforecast.recipes.paper_methods import perfectly_random_forest
 
-result = mf.run(perfectly_random_forest(target="y", horizon=1))
+result = mf.run_file("examples/recipes/replications/scaled_pca.yaml",
+                     output_directory="./out/")
 print(result.cells[0].runtime_result.artifacts["l4_forecasts_v1"].forecasts)
 ```
 
-Helper docstrings mirror the YAML's top comment so the algorithmic
-decomposition is visible from either entry point.
+Recipe files are self-contained YAML documents. The algorithmic decomposition
+is visible in the top comment of each YAML file.

@@ -2,11 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from ..pipeline import DAG, Node, NodeRef, SourceSelector
-from ..ops.l4_ops import MODEL_FAMILY_STATUS
-
 if TYPE_CHECKING:
-    from ..validator import Issue, ValidationReport
+    from macroforecast.core.validator import Issue, ValidationReport
 
 
 class L4ForecastingModel:
@@ -17,6 +14,18 @@ class L4ForecastingModel:
         return ("L4.A", "L4.B", "L4.C", "L4.D")
 
 
+# Deferred core imports: placed after L4ForecastingModel so that registry.py can
+# import L4ForecastingModel without hitting a circular-dependency error
+# (schema.py -> macroforecast.core.pipeline -> core/__init__ -> registry.py ->
+# schema.py). By the time these lines execute, macroforecast.core.pipeline is
+# already in sys.modules.
+# MODEL_FAMILY_STATUS from macroforecast.layers.l4_models.ops is also deferred:
+# ops.py imports macroforecast.core.ops.registry which triggers core/__init__ ->
+# registry.py -> this file again. It is imported lazily inside _validate_fit_nodes()
+# instead of here at module level.
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
+
+
 class L4ResolvedAxes(dict):
     def get_active(self, key: str) -> bool:
         return bool(self.get("_active", {}).get(key, True))
@@ -25,7 +34,7 @@ class L4ResolvedAxes(dict):
 def parse_layer_yaml(yaml_text: str, layer_id: Literal["l4"] = "l4") -> dict[str, Any]:
     if layer_id != "l4":
         raise ValueError("L4 parser only accepts layer_id='l4'")
-    from ..yaml import parse_recipe_yaml
+    from macroforecast.core.yaml import parse_recipe_yaml
 
     root = parse_recipe_yaml(yaml_text)
     raw = root.get("4_forecasting_model", root)
@@ -35,7 +44,7 @@ def parse_layer_yaml(yaml_text: str, layer_id: Literal["l4"] = "l4") -> dict[str
 
 
 def parse_recipe_yaml(yaml_text: str) -> dict[str, Any]:
-    from ..yaml import parse_recipe_yaml as parse
+    from macroforecast.core.yaml import parse_recipe_yaml as parse
 
     return parse(yaml_text)
 
@@ -122,7 +131,7 @@ def resolve_axes(dag: DAG) -> L4ResolvedAxes:
 def validate_layer(
     layer: dict[str, Any] | str, recipe_context: dict[str, Any] | None = None
 ) -> ValidationReport:
-    from ..validator import Issue, Severity, ValidationReport, validate_dag
+    from macroforecast.core.validator import Issue, Severity, ValidationReport, validate_dag
 
     raw = parse_layer_yaml(layer) if isinstance(layer, str) else layer
     issues: list[Issue] = []
@@ -153,7 +162,7 @@ def validate_layer(
 
 
 def validate_recipe(recipe_yaml: dict[str, Any] | str) -> ValidationReport:
-    from ..validator import ValidationReport
+    from macroforecast.core.validator import ValidationReport
 
     root = (
         parse_recipe_yaml(recipe_yaml) if isinstance(recipe_yaml, str) else recipe_yaml
@@ -173,7 +182,7 @@ def execute_layer(layer: dict[str, Any] | str):
     artifacts to be passed in via ``recipe_root``.
     """
 
-    from ..runtime import (
+    from macroforecast.core.runtime import (
         materialize_l4_minimal,
         materialize_l1,
         materialize_l2,
@@ -181,7 +190,7 @@ def execute_layer(layer: dict[str, Any] | str):
     )
 
     if isinstance(layer, str):
-        from ..yaml import parse_recipe_yaml
+        from macroforecast.core.yaml import parse_recipe_yaml
 
         root = parse_recipe_yaml(layer)
     elif isinstance(layer, dict) and "4_forecasting_model" in layer:
@@ -354,13 +363,15 @@ def _is_user_registered_family(family: str) -> bool:
     the L4 validator (issue #216)."""
 
     try:
-        from ...custom import is_custom_model
+        from macroforecast.custom import is_custom_model
     except ImportError:  # pragma: no cover - macroforecast.custom is package-local
         return False
     return bool(is_custom_model(family))
 
 
 def _validate_fit_nodes(raw: dict[str, Any]) -> list[Issue]:
+    from macroforecast.layers.l4_models.ops import MODEL_FAMILY_STATUS  # lazy: avoids circular import at module load
+
     issues = []
     leaf = raw.get("leaf_config", {}) or {}
     for node in raw.get("nodes", ()):
@@ -600,7 +611,7 @@ def _yaml_inline(params: dict[str, Any]) -> str:
 
 
 def _issue(location: str, message: str) -> Issue:
-    from ..validator import Issue, Severity
+    from macroforecast.core.validator import Issue, Severity
 
     return Issue("l4_contract", Severity.HARD, "layer", location, message)
 
@@ -609,7 +620,7 @@ def _issue(location: str, message: str) -> Issue:
 # Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
 # ---------------------------------------------------------------------------
 
-from ..layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (  # noqa: E402
     LayerImplementationSpec as _LayerImplSpec,
     SubLayerSpec as _CanonicalSubLayerSpec,
 )

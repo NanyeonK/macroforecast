@@ -5,7 +5,7 @@
 # Decomposition: sparse_pca op + ridge family (both operational).
 # Reference: Zhou et al. technical report.
 # 
-# Generated from macroforecast.recipes.paper_methods (v0.9 Phase 2).
+# Canonical recipe (v0.9 Phase 2).
 # Helper docstring is the canonical decomposition note; this YAML
 # is the hand-readable mirror.
 0_meta:

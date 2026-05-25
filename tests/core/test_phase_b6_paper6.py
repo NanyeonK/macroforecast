@@ -33,7 +33,7 @@ import pandas as pd
 import pytest
 
 from macroforecast.core.runtime import _BoogingWrapper
-from macroforecast.recipes.paper_methods import booging
+from macroforecast.layers.l4_models.paper_methods import booging
 
 
 # ----------------------------------------------------------------------

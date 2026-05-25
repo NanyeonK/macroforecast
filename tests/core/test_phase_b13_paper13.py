@@ -35,7 +35,7 @@ import pandas as pd
 import pytest
 
 import macroforecast
-from macroforecast.recipes.paper_methods import maximally_forward_looking
+from macroforecast.layers.l4_models.paper_methods import maximally_forward_looking
 
 
 # ---------------------------------------------------------------------

@@ -28,7 +28,7 @@ import pandas as pd
 
 import macroforecast
 from macroforecast.core.ops.l7_ops import FUTURE_OPS, OPERATIONAL_OPS
-from macroforecast.recipes.paper_methods import ols_attention_demo
+from macroforecast.layers.l4_models.paper_methods import ols_attention_demo
 
 
 # ----------------------------------------------------------------------

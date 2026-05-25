@@ -49,7 +49,7 @@ if _REPO_ROOT not in sys.path:
 def _bootstrap_ops() -> None:
     """Import all ops modules to populate the registry."""
     import macroforecast.core.ops.l3_ops  # noqa: F401
-    import macroforecast.core.ops.l4_ops  # noqa: F401
+    import macroforecast.layers.l4_models.ops  # noqa: F401
     import macroforecast.core.ops.l5_ops  # noqa: F401
     import macroforecast.core.ops.l6_ops  # noqa: F401
     import macroforecast.core.ops.l7_ops  # noqa: F401
@@ -263,7 +263,7 @@ def resolve_yaml_recipe_key(
     if key == "family":
         # Check against MODEL_FAMILY_STATUS
         try:
-            from macroforecast.core.ops.l4_ops import MODEL_FAMILY_STATUS
+            from macroforecast.layers.l4_models.ops import MODEL_FAMILY_STATUS
             if value in MODEL_FAMILY_STATUS:
                 return "PASS", f"family {value!r} in MODEL_FAMILY_STATUS"
             return "DRIFT", f"family {value!r} not in MODEL_FAMILY_STATUS"

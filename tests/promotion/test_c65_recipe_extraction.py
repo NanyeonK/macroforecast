@@ -146,7 +146,11 @@ class TestIdentityInvariants:
 # ---------------------------------------------------------------------------
 
 class TestRecipesNamespaceCompleteness:
-    """T6: All 9 symbols are in macroforecast.recipes and its __all__."""
+    """T6: All 8 symbols are in macroforecast.recipes and its __all__.
+
+    Phase 3b removed paper_methods from macroforecast.recipes; it now lives at
+    macroforecast.layers.l4_models.paper_methods.
+    """
 
     _EXPECTED_SYMBOLS = [
         "run",
@@ -157,7 +161,6 @@ class TestRecipesNamespaceCompleteness:
         "ForecastResult",
         "ManifestExecutionResult",
         "ReplicationResult",
-        "paper_methods",
     ]
 
     def test_all_symbols_are_attributes(self):
@@ -177,10 +180,10 @@ class TestRecipesNamespaceCompleteness:
         )
 
     def test_dunder_all_exact_count(self):
-        """macroforecast.recipes.__all__ contains exactly 9 symbols."""
+        """macroforecast.recipes.__all__ contains exactly 8 symbols."""
         import macroforecast as mf
-        assert len(mf.recipes.__all__) == 9, (
-            f"Expected 9 symbols in __all__, got {len(mf.recipes.__all__)}: "
+        assert len(mf.recipes.__all__) == 8, (
+            f"Expected 8 symbols in __all__, got {len(mf.recipes.__all__)}: "
             f"{sorted(mf.recipes.__all__)}"
         )
 
@@ -240,11 +243,11 @@ class TestRecipesDocstring:
         )
 
     def test_docstring_mentions_models_namespace(self):
-        """T11: __doc__ mentions 'macroforecast.models' (the standalone API alternative)."""
+        """T11: __doc__ mentions the standalone model API (macroforecast.layers.l4_models)."""
         import macroforecast as mf
-        assert "macroforecast.models" in mf.recipes.__doc__, (
-            f"Expected 'macroforecast.models' in recipes.__doc__.\n"
-            f"Actual docstring excerpt: {mf.recipes.__doc__[:200]!r}"
+        assert "macroforecast.layers.l4_models" in mf.recipes.__doc__, (
+            f"Expected 'macroforecast.layers.l4_models' in recipes.__doc__.\n"
+            f"Actual docstring excerpt: {mf.recipes.__doc__[:300]!r}"
         )
 
 
@@ -268,9 +271,12 @@ class TestEdgeCaseImports:
         assert callable(mf_recipes.run)
 
     def test_EC3_paper_methods_accessible(self):
-        """EC3: macroforecast.recipes.paper_methods is the paper_methods module."""
-        import macroforecast as mf
-        pm = mf.recipes.paper_methods
+        """EC3: macroforecast.layers.l4_models.paper_methods is the paper_methods module.
+
+        Phase 3b relocated paper_methods from macroforecast.recipes to
+        macroforecast.layers.l4_models.paper_methods.
+        """
+        import macroforecast.layers.l4_models.paper_methods as pm
         # The module should have at least one callable (e.g., macroeconomic_random_forest)
         assert pm is not None
         assert hasattr(pm, "__name__"), "paper_methods should be a module"

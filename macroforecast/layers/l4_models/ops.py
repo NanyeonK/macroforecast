@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from .registry import Rule, register_op
-from ..status import FUTURE, OPERATIONAL, ItemStatus, is_runnable
-from ..types import (
+from macroforecast.core.ops.registry import Rule, register_op
+from macroforecast.core.status import FUTURE, OPERATIONAL, ItemStatus, is_runnable
+from macroforecast.core.types import (
     L1RegimeMetadataArtifact,
     L3FeaturesArtifact,
     L4ForecastsArtifact,
@@ -297,7 +297,7 @@ def fit(inputs, params):
     :func:`predict` can fit-then-predict in a single DAG pass.
     """
 
-    from ..runtime import _build_l4_model
+    from macroforecast.core.runtime import _build_l4_model
 
     return _build_l4_model(params.get("model", "ridge"), dict(params))
 

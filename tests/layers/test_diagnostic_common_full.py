@@ -19,7 +19,7 @@ def _module(layer_id: str):
     elif layer_id == "l3_5":
         from macroforecast.core.layers import l3_5 as module
     else:
-        from macroforecast.core.layers import l4_5 as module
+        from macroforecast.layers.l4_5_diagnostic import schema as module  # type: ignore[assignment]
     return module
 
 

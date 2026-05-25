@@ -163,7 +163,7 @@ def test_t2a_l3_error_message_no_dag() -> None:
 
 def test_t2b_l4_error_message_no_dag() -> None:
     """T2-b: L4 normalize_to_dag_form error says 'step graph', not 'DAG'."""
-    from macroforecast.core.layers.l4 import normalize_to_dag_form
+    from macroforecast.layers.l4_models.schema import normalize_to_dag_form
 
     with pytest.raises(ValueError, match="L4 uses a step graph") as exc_info:
         normalize_to_dag_form({"fixed_axes": {}})

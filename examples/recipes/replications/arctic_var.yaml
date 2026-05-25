@@ -11,7 +11,7 @@
 #
 # Reference: doi:10.1175/JCLI-D-20-0324.1.
 #
-# Generated from macroforecast.recipes.paper_methods (v0.9 Phase 2).
+# Canonical recipe (v0.9 Phase 2).
 0_meta:
   fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
   leaf_config: {random_seed: 42}

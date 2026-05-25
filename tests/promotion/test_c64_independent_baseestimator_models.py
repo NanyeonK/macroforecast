@@ -34,8 +34,8 @@ _ALL_NEW_CLASSES = _TREE_CLASSES + _NEURAL_CLASSES
 
 
 def _import(name: str):
-    """Import a public model class by name from macroforecast.models."""
-    from macroforecast import models
+    """Import a public model class by name from macroforecast.layers.l4_models."""
+    from macroforecast.layers import l4_models as models
     return getattr(models, name)
 
 
@@ -143,7 +143,7 @@ class TestBaseEstimatorContractModels:
 class TestHemisphereNNNuContract:
     def test_nu_in_get_params(self) -> None:
         """Critical: nu must appear in get_params(), nu_target must NOT."""
-        from macroforecast.models import HemisphereNN
+        from macroforecast.layers.l4_models import HemisphereNN
         m = HemisphereNN(nu=0.3)
         params = m.get_params()
         assert "nu" in params, (
@@ -158,7 +158,7 @@ class TestHemisphereNNNuContract:
 
     def test_nu_none_in_get_params(self) -> None:
         """nu=None (default) is preserved in get_params()."""
-        from macroforecast.models import HemisphereNN
+        from macroforecast.layers.l4_models import HemisphereNN
         m = HemisphereNN()
         params = m.get_params()
         assert "nu" in params
@@ -166,7 +166,7 @@ class TestHemisphereNNNuContract:
 
     def test_nu_clone_preserves_value(self) -> None:
         """clone preserves nu=0.7 exactly."""
-        from macroforecast.models import HemisphereNN
+        from macroforecast.layers.l4_models import HemisphereNN
         m = HemisphereNN(nu=0.7)
         m2 = clone(m)
         assert m2.get_params()["nu"] == pytest.approx(0.7)

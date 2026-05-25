@@ -30,7 +30,7 @@ import pytest
 
 import macroforecast
 from macroforecast.core.runtime import _TwoStageRandomWalkRidge
-from macroforecast.recipes.paper_methods import two_step_ridge
+from macroforecast.layers.l4_models.paper_methods import two_step_ridge
 
 
 # ----------------------------------------------------------------------

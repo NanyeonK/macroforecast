@@ -3,7 +3,7 @@
 The goal is to compute generalized impulse response functions from a
 fitted VAR using the Pesaran and Shin (1998) order-invariant
 formulation. We fit the VAR via the public class `VAR` from
-`macroforecast.models` and pass the fitted result to the `GIRF` class
+`macroforecast.layers.l4_models` and pass the fitted result to the `GIRF` class
 from `macroforecast.interpretation`. The generalized IRF avoids the
 dependency of orthogonalized IRFs on the Cholesky ordering, which is one
 of the central limitations of structural VAR analysis.
@@ -13,7 +13,7 @@ of the central limitations of structural VAR analysis.
 ```python
 import numpy as np
 import pandas as pd
-from macroforecast.models import VAR
+from macroforecast.layers.l4_models import VAR
 from macroforecast.interpretation import GIRF
 
 rng = np.random.RandomState(0)
@@ -66,7 +66,7 @@ input is not a statsmodels VAR.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `importance` column matches permutation importance | Input was not a statsmodels VAR result | Confirm the model was fit via `mf.models.VAR` or another VAR-producing function |
+| `importance` column matches permutation importance | Input was not a statsmodels VAR result | Confirm the model was fit via `mf.layers.l4_models.VAR` or another VAR-producing function |
 | `n_periods` ignored | Passed as a positional arg in the wrong position | Pass `n_periods=12` as a keyword argument |
 | Importance values look orthogonalized (depend on column order) | Confused GIRF with Cholesky IRF | The GIRF formula uses `irf.irfs`, not `orth_irfs`, so column ordering should not affect results |
 

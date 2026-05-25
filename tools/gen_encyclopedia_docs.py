@@ -53,7 +53,7 @@ if _REPO_ROOT not in sys.path:
 def _bootstrap_ops() -> None:
     """Import all ops modules so the registry is fully populated."""
     import macroforecast.core.ops.l3_ops  # noqa: F401
-    import macroforecast.core.ops.l4_ops  # noqa: F401
+    import macroforecast.layers.l4_models.ops  # noqa: F401
     import macroforecast.core.ops.l5_ops  # noqa: F401
     import macroforecast.core.ops.l6_ops  # noqa: F401
     import macroforecast.core.ops.l7_ops  # noqa: F401
@@ -998,7 +998,7 @@ def collect_work_items(
     work: list[tuple[str, str, str, str, str, str | None]] = []
 
     # Lazily import L4 family lists (available after _bootstrap_ops)
-    from macroforecast.core.ops.l4_ops import (
+    from macroforecast.layers.l4_models.ops import (
         OPERATIONAL_MODEL_FAMILIES,
         FUTURE_MODEL_FAMILIES,
     )

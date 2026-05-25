@@ -36,7 +36,7 @@ import numpy as np
 import pytest
 
 import macroforecast
-from macroforecast.recipes.paper_methods import (
+from macroforecast.layers.l4_models.paper_methods import (
     adaptive_ma,
     anatomy_oos,
     arctic_var,

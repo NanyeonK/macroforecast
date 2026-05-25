@@ -1,7 +1,7 @@
 # Full out-of-sample study
 
 Run a full out-of-sample evaluation comparing three model classes from
-`macroforecast.models` using scikit-learn's `TimeSeriesSplit`, then graduate to
+`macroforecast.layers.l4_models` using scikit-learn's `TimeSeriesSplit`, then graduate to
 the recipe pipeline for systematic benchmarking. No YAML is required for the
 main body of this tutorial.
 
@@ -57,7 +57,7 @@ but does not use it in estimation. We pass the predictor frame anyway so that
 the loop structure is uniform across all three models.
 
 ```python
-from macroforecast.models import LinearAR
+from macroforecast.layers.l4_models import LinearAR
 from sklearn.model_selection import TimeSeriesSplit
 import numpy as np
 
@@ -93,7 +93,7 @@ The constructor signatures, verified from source:
 - `FactorAugmentedAR(p=2, n_factors=3)` -- lag order `p` and number of factors
 
 ```python
-from macroforecast.models import PrincipalComponentRegression, FactorAugmentedAR
+from macroforecast.layers.l4_models import PrincipalComponentRegression, FactorAugmentedAR
 
 for ModelClass, name, kwargs in [
     (PrincipalComponentRegression, "PCR",  {"n_components": 3}),

@@ -108,7 +108,7 @@ def test_T2_no_DAG_jargon() -> None:
 def test_T3_import_symbol_in_all(symbol: str) -> None:
     """B5: Required model classes must be in macroforecast.models.__all__."""
     sys.path.insert(0, str(REPO_ROOT))
-    import macroforecast.models as m  # noqa: PLC0415
+    import macroforecast.layers.l4_models as m  # noqa: PLC0415
     assert symbol in m.__all__, (
         f"'{symbol}' not found in macroforecast.models.__all__. "
         f"__all__ = {m.__all__}"
@@ -164,7 +164,7 @@ def test_T5a_tutorial01_runtime(tmp_path: Path) -> None:
     y = pd.Series(y_vals, index=dates, name="gdp_growth")
 
     # Block 3: fit LinearAR and predict
-    from macroforecast.models import LinearAR  # noqa: PLC0415
+    from macroforecast.layers.l4_models import LinearAR  # noqa: PLC0415
 
     train_end = 80
     y_train, y_test = y.iloc[:train_end], y.iloc[train_end:]
@@ -227,7 +227,7 @@ def test_T5b_tutorial02_runtime(tmp_path: Path) -> None:
     y = pd.Series(y_vals, index=dates, name="gdp_growth")
 
     # Block 2: LinearAR OOS loop
-    from macroforecast.models import LinearAR  # noqa: PLC0415
+    from macroforecast.layers.l4_models import LinearAR  # noqa: PLC0415
     from sklearn.model_selection import TimeSeriesSplit  # noqa: PLC0415
 
     tscv = TimeSeriesSplit(n_splits=5, test_size=20)
@@ -244,7 +244,7 @@ def test_T5b_tutorial02_runtime(tmp_path: Path) -> None:
     assert results["LinearAR"] >= 0
 
     # Block 3: PCR and FAAR
-    from macroforecast.models import FactorAugmentedAR, PrincipalComponentRegression  # noqa: PLC0415
+    from macroforecast.layers.l4_models import FactorAugmentedAR, PrincipalComponentRegression  # noqa: PLC0415
 
     for ModelClass, name, kwargs in [
         (PrincipalComponentRegression, "PCR", {"n_components": 3}),
@@ -376,7 +376,7 @@ def test_T5c_tutorial03_runtime(tmp_path: Path) -> None:
 def test_T7_model_importable(model_name: str) -> None:
     """mf.models.LinearAR, PCR, and FAAR must be importable."""
     sys.path.insert(0, str(REPO_ROOT))
-    import macroforecast.models as m  # noqa: PLC0415
+    import macroforecast.layers.l4_models as m  # noqa: PLC0415
     cls = getattr(m, model_name, None)
     assert cls is not None, f"macroforecast.models.{model_name} is not importable"
 

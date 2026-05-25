@@ -111,7 +111,7 @@ module = [
     "macroforecast.core.layers.l3",
     "macroforecast.core.runtime",
     "macroforecast.scaffold.builder",
-    "macroforecast.tuning.engine",
+    "macroforecast.layers.l4_models.tuning.engine",
 ]
 ignore_errors = true
 

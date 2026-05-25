@@ -39,9 +39,9 @@ from .layers import l8 as l8_layer
 import macroforecast.layers.l1_5_diagnostic.schema as l1_5_layer
 from .layers import l2_5 as l2_5_layer
 from .layers import l3_5 as l3_5_layer
-from .layers import l4_5 as l4_5_layer
+import macroforecast.layers.l4_5_diagnostic.schema as l4_5_layer
 from .layers import l3 as l3_layer
-from .layers import l4 as l4_layer
+import macroforecast.layers.l4_models.schema as l4_layer
 from .layers import l5 as l5_layer
 import macroforecast.layers.l1_data.schema as l1_layer
 from .layers import l2 as l2_layer

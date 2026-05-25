@@ -24,13 +24,13 @@ import pytest
 
 import macroforecast
 from macroforecast.core.ops import get_op
-from macroforecast.core.ops.l4_ops import (
+from macroforecast.layers.l4_models.ops import (
     FUTURE_MODEL_FAMILIES,
     OPERATIONAL_MODEL_FAMILIES,
     get_family_status,
 )
 from macroforecast.core.status import OPERATIONAL
-from macroforecast.recipes.paper_methods import _DATA_TRANSFORM_CELLS_16
+from macroforecast.layers.l4_models.paper_methods import _DATA_TRANSFORM_CELLS_16
 
 
 # ---------------------------------------------------------------------------
@@ -1844,7 +1844,7 @@ def test_perfectly_random_forest_helper_runs(tmp_path):
     """Helper from macroforecast.recipes.paper_methods produces a working
     operational recipe (PRF = extra_trees(max_features=1))."""
 
-    from macroforecast.recipes.paper_methods import perfectly_random_forest
+    from macroforecast.layers.l4_models.paper_methods import perfectly_random_forest
 
     recipe = perfectly_random_forest()
     result = macroforecast.run(recipe, output_directory=tmp_path / "prf")
@@ -2284,7 +2284,7 @@ def test_data_transforms_default_families_include_fm_and_lb():
     boosting). Audit gap-fix promotes ``factor_augmented_ar`` (FM) and
     ``glmboost`` (LB) into the default tuple."""
 
-    from macroforecast.recipes.paper_methods import _DATA_TRANSFORM_FAMILIES_DEFAULT
+    from macroforecast.layers.l4_models.paper_methods import _DATA_TRANSFORM_FAMILIES_DEFAULT
 
     assert "factor_augmented_ar" in _DATA_TRANSFORM_FAMILIES_DEFAULT
     assert "glmboost" in _DATA_TRANSFORM_FAMILIES_DEFAULT
@@ -2298,7 +2298,7 @@ def test_data_transforms_grid_sweeps_horizons_and_target_methods():
     horizons (param declared but unused) and hard-coded direct-only
     target construction."""
 
-    from macroforecast.recipes.paper_methods import (
+    from macroforecast.layers.l4_models.paper_methods import (
         _DATA_TRANSFORM_CELLS_16,
         _DATA_TRANSFORM_FAMILIES_DEFAULT,
         macroeconomic_data_transformations_horse_race,
@@ -2325,7 +2325,7 @@ def test_ml_useful_macro_horse_race_default_horizons_match_paper():
     silently dropping the long-horizon cells where the nonlinearity
     treatment effect is largest."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(cases=("ridge",), cv_schemes=("kfold",))
     horizons_seen = sorted({int(k.split("__h")[1].split("__")[0]) for k in grid})
@@ -2338,7 +2338,7 @@ def test_ml_useful_macro_horse_race_targets_sweep():
     only; user had to wrap-and-call N times to cover paper §4.2's 5
     target variables)."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
         targets=("INDPRO", "UNRATE"),
@@ -2357,7 +2357,7 @@ def test_ml_useful_macro_horse_race_h_minus_routes_to_lag_y_only():
     only, ~14 models). Helper now exposes ``data_richness="H_minus"``
     that builds an L3 graph with no PCA factors of X."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
         cases=("ridge",),
@@ -2377,7 +2377,7 @@ def test_ml_useful_macro_horse_race_h_minus_routes_to_lag_y_only():
 def test_ml_useful_macro_horse_race_h_plus_routes_to_factor_concat():
     """H⁺ axis = data-rich: PCA factors of X concatenated with lagged y."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
         cases=("ridge",),
@@ -2396,7 +2396,7 @@ def test_ml_useful_macro_horse_race_data_richness_validates_value():
     """Invalid ``data_richness`` raises with a helpful message."""
 
     import pytest as _pytest
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     with _pytest.raises(ValueError, match="H_minus"):
         ml_useful_macro_horse_race(data_richness="something_else")
@@ -2510,7 +2510,7 @@ def test_block_cv_in_search_algorithms_enum():
     """Schema enum lists ``block_cv`` so recipes naming it pass the L4
     op validator."""
 
-    from macroforecast.core.ops.l4_ops import SEARCH_ALGORITHMS
+    from macroforecast.layers.l4_models.ops import SEARCH_ALGORITHMS
 
     assert "block_cv" in SEARCH_ALGORITHMS
 
@@ -2525,7 +2525,7 @@ def test_scaled_pca_helper_runs_end_to_end_on_multi_feature_panel(tmp_path):
 
     import numpy as np
     import macroforecast
-    from macroforecast.recipes.paper_methods import scaled_pca
+    from macroforecast.layers.l4_models.paper_methods import scaled_pca
 
     rng = np.random.default_rng(13)
     n = 36
@@ -2555,7 +2555,7 @@ def test_slow_growing_tree_helper_exposes_all_paper_axes():
     η-depth-step, max_depth). Audit gap-fix promotes them to first-
     class helper args + grid builder for the {η, H̄} sweep grid."""
 
-    from macroforecast.recipes.paper_methods import (
+    from macroforecast.layers.l4_models.paper_methods import (
         slow_growing_tree,
         slow_growing_tree_grid,
     )
@@ -2596,7 +2596,7 @@ def test_anatomy_oos_helper_exposes_initial_window_and_n_iterations():
     ``0_meta.leaf_config.anatomy_initial_window`` key. Previously the
     stamp was unread and users always routed to Path B."""
 
-    from macroforecast.recipes.paper_methods import anatomy_oos
+    from macroforecast.layers.l4_models.paper_methods import anatomy_oos
 
     recipe = anatomy_oos(initial_window=60, n_iterations=300)
     nodes = recipe["7_interpretation"]["nodes"]
@@ -2621,7 +2621,7 @@ def test_two_step_ridge_default_vol_model_is_garch11():
     L4 dispatch, and the ``two_step_ridge`` helper."""
 
     from macroforecast.core.runtime import _TwoStageRandomWalkRidge
-    from macroforecast.recipes.paper_methods import two_step_ridge
+    from macroforecast.layers.l4_models.paper_methods import two_step_ridge
 
     assert _TwoStageRandomWalkRidge().vol_model == "garch11"
     recipe = two_step_ridge()
@@ -2638,7 +2638,7 @@ def test_mrf_block_size_default_is_24_and_is_overridable():
     the param via the helper."""
 
     from macroforecast.core.runtime import _MRFExternalWrapper
-    from macroforecast.recipes.paper_methods import macroeconomic_random_forest
+    from macroforecast.layers.l4_models.paper_methods import macroeconomic_random_forest
 
     assert _MRFExternalWrapper().block_size == 24
     assert _MRFExternalWrapper(block_size=8).block_size == 8
@@ -2664,7 +2664,7 @@ def test_ml_useful_macro_attach_eval_blocks_wires_dm_and_mcs():
     user effort required to recover paper §4.4 DM-vs-ARDI-baseline
     + Hansen MCS evaluation."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
         cases=("ridge",),
@@ -2705,7 +2705,7 @@ def test_ml_useful_macro_attach_eval_blocks_default_off_preserves_minimal_recipe
     """Default ``attach_eval_blocks=False`` keeps the L0–L4-only recipe
     shape so existing helpers / tests are unaffected by the new option."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
         cases=("ridge",),
@@ -2725,7 +2725,7 @@ def test_ml_useful_macro_b_grid_emits_three_rotations_per_family():
     """Audit gap-fix #6b: ``ml_useful_macro_b_grid`` builds the §3.2
     B₁/B₂/B₃ regularization rotation grid for {Ridge, Lasso, EN}."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_b_grid
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_b_grid
 
     grid = ml_useful_macro_b_grid()
     assert len(grid) == 9  # 3 rotations × 3 families
@@ -2751,7 +2751,7 @@ def test_ml_useful_macro_b_grid_b2_has_pca_node_b3_has_concat_node():
     the trailing lag node (PCA output IS the L3 X_final per paper
     §3.2)."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_b_grid
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_b_grid
 
     grid = ml_useful_macro_b_grid(families=("ridge",))
     b2_nodes = grid["B2__ridge"]["3_feature_engineering"]["nodes"]
@@ -2784,8 +2784,8 @@ def test_ml_useful_macro_cv_schemes_are_first_class_search_algorithms():
     validator's options enum check. Audit gap-fix: previously the
     strings were missing from SEARCH_ALGORITHMS and silently dropped."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
-    from macroforecast.core.ops.l4_ops import SEARCH_ALGORITHMS
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.ops import SEARCH_ALGORITHMS
 
     grid = ml_useful_macro_horse_race(
         cases=("ridge",),
@@ -2805,7 +2805,7 @@ def test_data_transforms_path_average_routes_to_cumulative_target_mode():
     ``method``, so a previous helper that set ``method`` only would
     silently produce direct (point) forecasts. Audit gap-fix."""
 
-    from macroforecast.recipes.paper_methods import _l3_data_transforms_cell
+    from macroforecast.layers.l4_models.paper_methods import _l3_data_transforms_cell
 
     cell_direct = _l3_data_transforms_cell("F-X", horizon=3, target_method="direct")
     cell_path = _l3_data_transforms_cell("F-X", horizon=3, target_method="path_average")
@@ -2852,7 +2852,7 @@ def test_b2_keeps_all_pca_components_K8(tmp_path):
     columns."""
 
     import macroforecast
-    from macroforecast.recipes.paper_methods import ml_useful_macro_b_grid
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_b_grid
 
     panel = _phase_a3_synthetic_panel(K=8, T=60)
     grid = ml_useful_macro_b_grid(
@@ -2879,7 +2879,7 @@ def test_b3_no_trailing_lag_node():
     """Phase A3c: B₃'s emitted recipe ends at ``pca`` — no trailing
     ``lag`` node. The PCA output IS the L3 X_final per paper §3.2."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_b_grid
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_b_grid
 
     grid = ml_useful_macro_b_grid(rotations=("B3",), families=("ridge",))
     nodes = grid["B3__ridge"]["3_feature_engineering"]["nodes"]
@@ -2913,7 +2913,7 @@ def test_b3_eq_b2_at_n_lag_zero(tmp_path):
 
     import numpy as np
     import macroforecast
-    from macroforecast.recipes.paper_methods import ml_useful_macro_b_grid
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_b_grid
 
     panel = _phase_a3_synthetic_panel(K=4, T=40)
     grid = ml_useful_macro_b_grid(
@@ -2944,7 +2944,7 @@ def test_lag_node_uses_n_lag_param(tmp_path):
     (not × 4)."""
 
     import macroforecast
-    from macroforecast.recipes.paper_methods import (
+    from macroforecast.layers.l4_models.paper_methods import (
         _l3_b_rotation,
         _l3_h_axis,
         ml_useful_macro_b_grid,
@@ -2998,7 +2998,7 @@ def test_paper13_default_variant_is_ranks():
     the paper-headline Albacore_ranks pairing — L3 ``asymmetric_trim``
     step + L4 ``prior=fused_difference``."""
 
-    from macroforecast.recipes.paper_methods import maximally_forward_looking
+    from macroforecast.layers.l4_models.paper_methods import maximally_forward_looking
 
     recipe = maximally_forward_looking()
     l3_nodes = recipe["3_feature_engineering"]["nodes"]
@@ -3032,7 +3032,7 @@ def test_paper13_variant_comps_drops_asymmetric_trim():
 
     import pytest
 
-    from macroforecast.recipes.paper_methods import maximally_forward_looking
+    from macroforecast.layers.l4_models.paper_methods import maximally_forward_looking
 
     # variant='comps' without prior_target now hard-errors (paper Eq. (1)
     # is undefined without w_headline).
@@ -3069,7 +3069,7 @@ def test_paper16_default_benchmark_is_factor_augmented_ar():
     with ``search_algorithm="bic"`` and have ``src_X`` wired into its
     inputs (per paper §4.4 "(ARDI, BIC)" reference)."""
 
-    from macroforecast.recipes.paper_methods import ml_useful_macro_horse_race
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_horse_race
 
     grid = ml_useful_macro_horse_race(
         cases=("ridge",),
@@ -3168,7 +3168,7 @@ def test_a4b_h_plus_axis_includes_lag_F():
     ``weighted_concat``. Now the DAG must contain a ``lag`` node whose
     input is the PCA ``feat_F`` node, feeding into ``weighted_concat``."""
 
-    from macroforecast.recipes.paper_methods import _l3_h_axis
+    from macroforecast.layers.l4_models.paper_methods import _l3_h_axis
 
     block = _l3_h_axis("H_plus", horizon=1, n_factors=4)
     nodes = block["nodes"]
@@ -3216,7 +3216,7 @@ def test_a4c_b_grid_n_lag_zero_b2_eq_b3(tmp_path):
 
     import numpy as np
     import macroforecast
-    from macroforecast.recipes.paper_methods import ml_useful_macro_b_grid
+    from macroforecast.layers.l4_models.paper_methods import ml_useful_macro_b_grid
 
     panel = _phase_a3_synthetic_panel(K=8, T=60)
     grid = ml_useful_macro_b_grid(
@@ -3267,7 +3267,7 @@ def test_a4d_paper13_variant_comps_no_prior_target_raises():
 
     import pytest
 
-    from macroforecast.recipes.paper_methods import maximally_forward_looking
+    from macroforecast.layers.l4_models.paper_methods import maximally_forward_looking
 
     # variant='comps' without prior_target is a hard error.
     with pytest.raises(ValueError, match=r"prior_target"):
@@ -3308,7 +3308,7 @@ def test_maximally_forward_looking_uses_cumulative_average_target_ranks():
     mode to cumulative_average (paper Eq.1 average-path target) not
     point_forecast (single h-step value). Both variants were wrong;
     this test pins the ranks fix."""
-    from macroforecast.recipes.paper_methods import maximally_forward_looking
+    from macroforecast.layers.l4_models.paper_methods import maximally_forward_looking
 
     recipe = maximally_forward_looking(variant="ranks", horizon=12)
     l3 = recipe["3_feature_engineering"]
@@ -3325,7 +3325,7 @@ def test_maximally_forward_looking_uses_cumulative_average_target_comps():
     """Phase D-1 F2 gap-fix: Albacore comps variant must set target
     mode to cumulative_average (paper Eq.1 average-path target)."""
     import numpy as np
-    from macroforecast.recipes.paper_methods import maximally_forward_looking
+    from macroforecast.layers.l4_models.paper_methods import maximally_forward_looking
 
     rng = np.random.default_rng(0)
     K = 5
@@ -3372,7 +3372,7 @@ def test_data_transforms_pca_nodes_carry_temporal_rule():
     """Phase D-1 F7 gap-fix: all pca op nodes in F and MAF branches
     of _l3_data_transforms_cell must carry temporal_rule=
     'expanding_window_per_origin' (hard rule of _factor_op)."""
-    from macroforecast.recipes.paper_methods import (
+    from macroforecast.layers.l4_models.paper_methods import (
         _DATA_TRANSFORM_CELLS_16,
         _l3_data_transforms_cell,
     )
@@ -3394,7 +3394,7 @@ def test_data_transforms_f_branch_emits_lagged_factors():
     """Phase D-1 F7 gap-fix: F-branch must include a lag node
     downstream of PCA before concat, implementing Table 1's
     {L^{i-1} F_t}_{i=1}^{p_f} structure."""
-    from macroforecast.recipes.paper_methods import _l3_data_transforms_cell
+    from macroforecast.layers.l4_models.paper_methods import _l3_data_transforms_cell
 
     for cell in ("F", "F-X", "F-MARX", "F-MAF", "F-Level",
                  "F-X-MARX", "F-X-MAF", "F-X-Level", "F-X-MARX-Level"):
@@ -3448,7 +3448,7 @@ def test_data_transforms_16_cells_all_run_e2e_on_synthetic(cell, tmp_path):
 
     import numpy as np
     import macroforecast
-    from macroforecast.recipes.paper_methods import (
+    from macroforecast.layers.l4_models.paper_methods import (
         macroeconomic_data_transformations_horse_race,
     )
 
@@ -3488,7 +3488,7 @@ def test_d2c_paper16_h_plus_pca_n_components_equals_n_factors():
     would expand the factor set and break paper Eq. (7) semantics
     (B₂ uses 'all'; H_plus / ARDI uses K truncated factors)."""
 
-    from macroforecast.recipes.paper_methods import _l3_h_axis
+    from macroforecast.layers.l4_models.paper_methods import _l3_h_axis
 
     for n_factors in (4, 6):
         block = _l3_h_axis("H_plus", horizon=1, n_factors=n_factors)
