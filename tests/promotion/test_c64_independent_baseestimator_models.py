@@ -35,7 +35,7 @@ _ALL_NEW_CLASSES = _TREE_CLASSES + _NEURAL_CLASSES
 
 def _import(name: str):
     """Import a public model class by name from macroforecast.layers.l4_models."""
-    from macroforecast import models
+    from macroforecast.layers import l4_models as models
     return getattr(models, name)
 
 
