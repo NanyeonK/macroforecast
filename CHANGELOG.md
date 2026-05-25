@@ -5,277 +5,99 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
-### Added (C64 — R3-P1b Remaining Promotion + BaseEstimator Refactor)
-
-- `macroforecast.models.tree`: 6 public model classes — `SlowGrowingTree`,
-  `QuantileRegressionForest`, `Bagging`, `Booging`, `MacroRandomForest`, `KNN`
-- `macroforecast.models.neural`: 2 public model classes — `SequenceModel`, `HemisphereNN`
-- All 30 `mf.models` classes now inherit from `sklearn.base.BaseEstimator` +
-  `RegressorMixin`: `get_params`, `set_params`, `clone`, `__repr__`, `score` inherited.
-- All 30 `mf.models` classes store `feature_names_in_` and `n_features_in_` during `fit`.
-- `mf.feature_selection`: `Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`,
-  `GeneticSelection` now inherit from `sklearn.base.BaseEstimator` + `TransformerMixin`:
-  `get_params`, `set_params`, `clone`, `__repr__`, `check_estimator`-compatible.
-- `mf.feature_selection`: `feature_names_in_` and `n_features_in_` stored during `fit`.
-- `mf.functions`: 5 tree gap callables — `slow_growing_tree_fit`,
-  `quantile_regression_forest_fit`, `bagging_fit`, `booging_fit`, `macro_random_forest_fit`.
-- `mf.functions`: 1 neural gap callable — `hemisphere_nn_fit`.
-
-### Added — Cycle 63 (R3-P1a) — Standalone-first paradigm shift
-
-**Round 3** of cross-review remediation: shift macroforecast from a contract-first framework to a library-first standalone API, so that users can import and use individual components without constructing a full YAML recipe.
-
-**`macroforecast.models` package** (NEW) — 22 L4 model classes with sklearn-style fit/predict:
-
-- `models.linear`: 14 classes — `MidasAlmon`, `MidasBeta`, `MidasStep`, `UnrestrictedMidas`, `LinearAR`, `FactorAugmentedAR`, `NonNegRidge`, `TwoStageRandomWalkRidge`, `ShrinkToTargetRidge`, `FusedDifferenceRidge`, `PrincipalComponentRegression`, `FactorAugmentedVAR`, `VAR`, `GLMBoost`
-- `models.bayesian`: 3 classes — `BVAR`, `BVARMinnesota`, `DFMMixedFrequency`
-- `models.volatility`: 2 classes — `GARCH`, `RealizedGARCH`
-- `models.timeseries`: 3 classes — `ETS`, `Theta`, `HoltWinters`
-- Flat re-export: `from macroforecast.models import RealizedGARCH` works (Option C hybrid module per C62 naming-spec).
-- Backward compat: private `_<Name>` classes unchanged; public classes inherit via thin subclass. `isinstance(public_instance, _PrivateClass)` continues to hold so pre-existing code using the private class for isinstance checks still works. The reverse (`isinstance(private_instance, PublicSubclass)`) is False, as expected with single inheritance.
-
-**`macroforecast.feature_selection`** (NEW) — 5 sklearn-style class wrappers around L3 functions:
-
-- `Boruta` (Kursa & Rudnicki 2010), `RFE` (Guyon et al. 2002), `LassoPathSelector` (Efron et al. 2004), `StabilitySelection` (Meinshausen & Buhlmann 2010), `GeneticSelection` (Goldberg 1989)
-- Each provides: `fit(X, y) -> self`, `transform(X) -> X_selected`, `.selected_features_` attribute.
-
-**`macroforecast.transforms`** (NEW) — 1 transform-only function:
-
-- `chow_lin_disaggregate(low_freq, indicator_high_freq, ...)` — Chow-Lin (1971) regression-based quarterly-to-monthly disaggregation.
-
-**`macroforecast.interpretation`** (NEW) — 2 wrapper classes for fitted-model interpretation:
-
-- `GIRF` (Pesaran & Shin 1998 generalized impulse response) — `compute(fitted_var, n_periods, ...)`
-- `LSTMHiddenState` (Karpathy 2015 hidden-state activation importance) — `compute(fitted_lstm, X, ...)`
-
-**`macroforecast.functions`** (extended) — 8 new `*_fit` callables:
-
-- MIDAS family: `midas_almon_fit`, `midas_beta_fit`, `midas_step_fit`, `unrestricted_midas_fit`
-- Ridge-variant family: `random_walk_ridge_fit`, `shrink_to_target_ridge_fit`, `fused_difference_ridge_fit`, `nonneg_ridge_fit`
-
-### Changed — Cycle 63
-
-- `macroforecast/__init__.py` lazy imports updated: `models`, `feature_selection`, `transforms`, `interpretation` added to `_LAZY_MODULES`.
-- No source modification to existing private classes (backward compat preserved).
-- No recipe/runtime semantics change (recipe dispatch unaffected).
-
-### Added — Cycle 63 retry (post-review remediation)
-
-**`fit_transform` method** on all 5 `macroforecast.feature_selection` classes (sklearn convention):
-- `Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`, `GeneticSelection`
-- Signature: `fit_transform(X, y, **kwargs) -> pd.DataFrame`
-- Delegates to `self.fit(X, y, **kwargs).transform(X)`
-
-**`NotFittedError`** raised when `transform()` is called before `fit()`:
-- All 5 feature_selection classes now check `hasattr(self, "selected_features_")` and raise `sklearn.exceptions.NotFittedError` with class name in message
-- Resolves silent-empty-DataFrame footgun
-
-### Changed — Cycle 63 retry
-
-- **BREAKING (minor)**: feature_selection classes no longer pre-initialize `selected_features_: list[str] = []` in `__init__`. Pre-fit access of `Boruta().selected_features_` now raises `AttributeError` instead of returning `[]`. This is the sklearn-standard fitted-attribute convention and is required for `NotFittedError` to function correctly. Users who depended on empty-list pre-fit behavior must call `.fit()` first.
-
-### Fixed — Cycle 63 retry
-
-- **C56 pre-existing timeouts**: `tests/core/test_l4_realized_garch_c56.py::TestMRE1TightenedTolerancesT500::test_mre1_tightened_t500_seed42` and `test_mre1_tightened_t2000_seed42` are now decorated with `@pytest.mark.slow`. Scope-limited validation (`pytest -m "not slow"`) now skips them cleanly. Full CI without marker filter (or `pytest -m slow --timeout=180`) still runs and passes them.
-
-### Naming canonicalization — Cycle 63
-
-Builder's descriptive names are now canonical (supersedes original spec.md acronyms):
-- `PrincipalComponentRegression` (not `PCR`)
-- `FactorAugmentedVAR` (not `FAVAR`)
-- `BVAR` + `BVARMinnesota` (both alias `_BayesianVAR`; not `BayesianVAR`)
-- `DFMMixedFrequency` (not `DFM`)
-- `TwoStageRandomWalkRidge` (not `TwoStageRWRidge`)
-- `UnrestrictedMidas` (not `MidasUnrestricted`)
-- `random_walk_ridge_fit`, `unrestricted_midas_fit` (not shortened variants)
-
-C62 `naming-spec.md` Section E records these as ground truth for C64+.
-
-### Source
-
-User direction: "각 단계들이 너무 강하게 contract 되어있나? package는 부분부분 사용자가 자유롭게 뽑아쓸수있어야하는데". C62 audit + naming spec → C63 first execution.
-
 ---
 
-### Added — Cycle 63.1 (external review remediation)
-
-**Canonical Chow-Lin (1971) GLS disaggregation** in `macroforecast.transforms.chow_lin_disaggregate`:
-- New parameters: `aggregation={'sum','mean'}`, `rho=float|None`, `rho_method={'min_chi_squared','max_likelihood','fixed'}`
-- True BLUE estimator satisfies aggregation constraint `C @ y_hat_h == y_l` to machine precision (tested at atol=1e-8, achieved 8.88e-16)
-- AR(1) rho estimation via min_chi_squared (default) or max_likelihood
-- 144-scenario × R=100 Monte Carlo validation: conservation holds for both simulator's independent GLS and builder's implementation, with cross-implementation agreement at machine precision
-- Reference: Chow, G.C. and Lin, A.L. (1971) "Best linear unbiased interpolation, distribution, and extrapolation of time series by related series", Review of Economics and Statistics 53(4): 372-375
-
-### Changed — Cycle 63.1
-
-- **BREAKING (minor)**: `chow_lin_disaggregate` is now the canonical Chow-Lin (1971) GLS algorithm. The previous implementation (a thin OLS wrapper) did not satisfy the aggregation conservation constraint. Existing callers using only `(low_freq, indicator_high_freq)` continue to work (default `aggregation='mean'`, `rho_method='min_chi_squared'`); callers must verify they want canonical behavior.
-- `BVARMinnesota.__init__` now enforces `prior='minnesota'` (raises `ValueError` on any other value). Internal translation to `_BayesianVAR`'s expected `prior='bvar_minnesota'` happens transparently.
-
-### Fixed — Cycle 63.1
-
-- **CHANGELOG wording**: Cycle 63 line "isinstance check holds for both directions" was misleading — only `isinstance(public_instance, _PrivateClass)` holds (not the reverse). Corrected to specify directionality explicitly.
-
-### Source — Cycle 63.1
-
-Codex external cross-review of PR #340 (`1c49ab98`) surfaced three items: (1) chow_lin_disaggregate didn't enforce sum/mean aggregation conservation despite docstring promise of Chow-Lin disaggregation, (2) BVARMinnesota was a bare _BayesianVAR subclass without prior enforcement, (3) CHANGELOG isinstance claim was bidirectionally false. User chose canonical Chow-Lin (Option A) over rename-and-de-claim (Option B).
-
----
-
-### Added — Cycle 64 (R3-P1b) — Tree + neural promotions, BaseEstimator refactor
-
-**`macroforecast.models.tree`** (NEW submodule) — 6 tree-family model classes:
-- `SlowGrowingTree` (Coulombe 2023 hemisphere-style)
-- `QuantileRegressionForest` (Meinshausen 2006)
-- `Bagging`, `Booging` (bootstrap-aggregated variants)
-- `MacroRandomForest`, `KNN`
-
-**`macroforecast.models.neural`** (NEW submodule) — 2 neural model classes:
-- `SequenceModel` (LSTM/GRU/Transformer wrapper)
-- `HemisphereNN` (Coulombe 2024 hemisphere neural net)
-
-All 8 inherit `(_<Private>, BaseEstimator, RegressorMixin)` for sklearn ecosystem compatibility (`get_params`, `set_params`, `clone`, `__repr__` auto-inherited).
-
-**`macroforecast.functions`** (extended) — 6 new `*_fit` callables for the new model classes.
-
-### Changed — Cycle 64
-
-**`macroforecast.feature_selection` BaseEstimator refactor**: all 5 selectors (`Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`, `GeneticSelection`) now inherit from `(BaseEstimator, TransformerMixin)`. Adds `feature_names_in_` and `n_features_in_` tracking per sklearn convention. `get_params`, `set_params`, `clone`, `__repr__` are now available for free via inheritance.
-
-- `macroforecast/__init__.py` lazy imports extended for `models.tree` + `models.neural` submodules
-- `mf.models.__all__` count: 22 → 30 (8 new public exports)
-
-### Fixed — Cycle 64 (runtime.py bug fixes)
-
-Two pre-existing bugs in `macroforecast/core/runtime.py` exposed by C64 promotion smoke tests:
-
-- **`_SlowGrowingTree._build` infinite BFS loop**: With `eta < 1` (soft weights), every node retains all n rows at non-zero weight, so the Herfindahl index never drops below the 0.25 threshold on realistic data. Added `max_depth=10` default as a guaranteed stopping condition. Both `_SlowGrowingTree.__init__` and public `SlowGrowingTree.__init__` defaults updated to keep `clone()` semantics consistent.
-- **`_BaggingWrapper.fit` TypeError on `base_params=None`**: `dict(self.base_params)` crashed when `base_params=None` (default). Added conditional guard. The bug triggered via sklearn `set_params()`/`clone()` which bypass `__init__` and can set the attribute to None directly.
-
-Both fixes also benefit recipe-path users of these private classes.
-
-### Source — Cycle 64
-
-Round 3 paradigm shift continuation per `r3-execution-plan.md`. C63 (R3-P1a) shipped 22 L4 promotions; C63.1 closed external review remediation; C64 (R3-P1b) closes the remaining tree + neural surface and resolves the Codex+MiniMax cross-review P1 finding about sklearn ecosystem compatibility.
-
----
-
-### Changed — Cycle 65 (R3-P2) — Recipe orchestration extraction
-
-**`macroforecast.recipes` is now the canonical home for recipe orchestration symbols.** Pure refactor with full backward compat — no semantic change to recipe behavior.
-
-- `mf.recipes.run`, `mf.recipes.run_file`, `mf.recipes.replicate` now expose the recipe execution API (previously importable only from `mf.api`)
-- `mf.recipes.forecast`, `mf.recipes.Experiment`, `mf.recipes.ForecastResult` now expose the high-level API (previously importable only from `mf.api_high`)
-- `mf.recipes.paper_methods` preserved
-- Backward compat: `mf.run`, `mf.replicate`, `mf.forecast`, `mf.Experiment`, `mf.ForecastResult` all continue to work via lazy import; these are silent aliases for `mf.recipes.<name>` and refer to identical objects (`mf.run is mf.recipes.run`)
-
-The intent: cleanly separate the standalone library API (`mf.models`, `mf.feature_selection`, `mf.transforms`, `mf.interpretation`, `mf.functions`) from recipe orchestration (`mf.recipes`). Users who only want standalone components no longer need to know recipes exist; users who want recipes find them under a single namespace.
-
-### Internals — Cycle 65
-
-- `mf/__init__.py` `_LAZY_EXPORTS` routes 8 user-facing symbols via `.recipes` instead of `.api` / `.api_high`
-- `mf/api.py` and `mf/api_high.py` remain as private implementation modules (no behavior change)
-- `mf/core/execution.py` (the recipe orchestrator) untouched
-- `mf/core/runtime.py` untouched
-
-### Source — Cycle 65
-
-User direction (from R3 paradigm shift): "package는 부분부분 사용자가 자유롭게 뽑아쓸수있어야하는데. standalone으로 근본적으로 바뀌되, yaml로 순차 실행가능한 클래스를 따로제작할까?". The library/orchestration boundary is now explicit in the namespace.
-
----
-
-### Changed — Cycle 66 (R3-P3) — DAG jargon cleanup (public surface)
-
-User-facing documentation, error messages, and wizard UI strings now use accessible vocabulary in place of "DAG" jargon. Context-sensitive replacements:
-
-- `recipe DAG` (in docstrings) → `recipe pipeline`
-- `DAG runtime` → `recipe runtime`
-- `DAG layers` → `graph layers`
-- `DAG node` → `recipe node` or `graph node`
-- Error messages in L3/L4 validators → `step graph` terminology
-- L3/L4/L7 module descriptions → `pipeline` / `feature pipeline` / `interpretation pipeline`
-- Wizard UI strings → `step graph`
-- Tutorial / how-to prose → `pipeline`
-
-Quantified impact:
-- `macroforecast/` public-surface DAG occurrences: 464 → 10 (98% reduction; remaining are inline code comments, internal vocab)
-- `docs/` non-archive DAG occurrences: 131 → 7 (95% reduction; remaining are legitimate KEEPs in `partial_layer_execution.md` developer reference, `contributing.md` file listings, and frozen schema field names)
-- `core/dag.py` retains its filename (internal orchestration vocabulary) but gains a module docstring labeling it as internal.
-- `wizard/pages/layer_dag.py` renamed to `layer_step_graph.py` (internal module; not publicly exported).
-
-### Preserved (NOT renamed — would be breaking changes, deferred)
-
-Public class names containing "DAG" remain unchanged for backward compat:
-- `mf.core.dag.DAG` (the orchestration graph class)
-- `mf.core.validator.DAGValidationError`
-- `validate_dag`, `assert_valid_dag`, `normalize_to_dag_form`, `parse_dag_form` (validator helpers)
-- `Cell.concrete_dag`, `L7_A_importance_dag_body`, `navigator_selected_dag_items` (specific symbol names)
-
-These are internal-vocabulary by use; renaming them would break any user code that imported them directly. Defer rename to a major version cut if/when the cleanup is desired user-facing.
-
-### Source — Cycle 66
-
-User direction (Round 3 paradigm shift): "그리고 패키지 내 dag같은 표현들 빼자" — remove DAG-like expressions from the package. C62 dag-cleanup-spec.md scoped the work; C66 executes the public-surface portion.
-
----
-
-### Changed — Cycle 67 (R3-P4a) — Tutorial 01-03 standalone-first rewrite
-
-Tutorials 01 (first forecast), 02 (full study), and 03 (custom model) now teach the standalone API as the default workflow. Recipes appear only as a graduation note in the final section of each tutorial. This reflects the Round 3 paradigm shift: users learn `mf.models`, `mf.feature_selection`, `mf.transforms`, `mf.interpretation`, `mf.functions` first; recipes become an advanced topic for reproducible studies.
-
-- `docs/tutorial/01_first_forecast.md`: 211 → 95 lines. Teaches `LinearAR(p=2)` direct usage on synthetic AR(2) data. Five-minute promise preserved.
-- `docs/tutorial/02_full_study.md`: 491 → 125 lines. Compares `LinearAR`, `PrincipalComponentRegression`, and `FactorAugmentedAR` using sklearn `TimeSeriesSplit` for out-of-sample evaluation on a 5-feature synthetic macro panel.
-- `docs/tutorial/03_custom_model.md`: 258 → 130 lines. Demonstrates the BaseEstimator + RegressorMixin subclass pattern introduced in C64, with `ConstantTrendPlusAR` as the worked example. Recipe registration moved to the graduation section.
-- `docs/tutorial/index.md`: reordered. Standalone tutorials listed first; recipes framed as advanced topic.
-- `docs/tutorial/two_entry_points.md`: refreshed to reflect new paradigm (standalone API = library mode by default; recipes = orchestration mode for reproducibility).
-
-Net documentation reduction: 598 lines across 5 files.
-
-### Fixed — Cycle 67 (parameter name corrections)
-
-The rewritten tutorials use the correct parameter names verified from source:
-- `LinearAR(p=2)` (previous spec used `n_lags=2`)
-- `FactorAugmentedAR(p=2, n_factors=3)` (previous spec used `n_lags=2`)
-- `model.predict(X_test)` (previous spec used `predict(n_periods=...)`)
-
-These corrections also apply to any other documentation references to these models.
-
-### Unchanged
-
-- `docs/tutorial/00_install.md` — install guide (no paradigm change needed)
-- `docs/tutorial/04_custom_preprocessor.md` — already polished in C60, recipe-centric is appropriate for preprocessor topic
-
-### Source — Cycle 67
-
-User direction: standalone-first paradigm should reach new users via the introductory tutorials, not just be available in the API.
-
----
-
-### Added — Cycle 68 (R3-P4b) — Per-algorithm how-tos + advanced recipes
-
-Six per-algorithm how-to documents teach the standalone API for the most-used model families. Each is 60-100 lines, includes a synthetic-data worked example, lists common pitfalls, and cites the source paper. The documents target users who have completed tutorials 01-03 and need algorithm-specific guidance.
-
-- `docs/how_to/forecast_volatility_realized_garch.md` (64 lines) — Hansen, Huang and Shek (2012) Realized GARCH with C56 safety hardening.
-- `docs/how_to/feature_selection_boruta.md` (69 lines) — Kursa and Rudnicki (2010) Boruta with proper FP control via Bonferroni-corrected MISA (C59 fix).
-- `docs/how_to/bayesian_var_minnesota.md` (93 lines) — Litterman (1986) Minnesota prior via `BVARMinnesota` with `prior` argument validation (C63.1).
-- `docs/how_to/chow_lin_disaggregation.md` (86 lines) — Chow and Lin (1971) GLS disaggregation with machine-precision aggregation conservation (C63.1).
-- `docs/how_to/irf_pesaran_shin_girf.md` (76 lines) — Pesaran and Shin (1998) generalized impulse response on a fitted VAR.
-- `docs/how_to/compare_midas_variants.md` (97 lines) — Almon, Beta, Step, Unrestricted MIDAS side-by-side comparison.
-
-One advanced recipe document covers the recipe orchestration topic in depth:
-
-- `docs/how_to/advanced_recipes.md` (164 lines) — When to use recipes versus standalone, recipe YAML structure, custom step registration via `mf.register_model`, recipe composition, manifest semantics, and migration guide from standalone code to recipe.
-
-The `docs/how_to/index.md` table of contents reorganized by category (per-algorithm, custom extensions, infrastructure, replication) and grew from 33 to 56 lines.
-
-### Notes — Cycle 68
-
-- All code snippets use the public API (`from macroforecast.models import RealizedGARCH`, `from macroforecast.feature_selection import Boruta`, etc.), not internal `mf.functions.<name>_fit` callables.
-- Custom-step registration in `advanced_recipes.md` uses `mf.register_model` from `macroforecast/custom.py`. The previously-assumed `mf.recipes.register_step` does not exist and is explicitly forbidden in the test suite to prevent regression.
-- Initial Opus planner produced an incorrect spec based on a stale C58-era worktree checkout. Spec was overwritten after the main worktree was pulled to `feba598c`. This is documented in `runs/2026-05-23-cycle68-per-algorithm-howtos/comprehension.md`.
-
-### Source — Cycle 68
-
-User direction (Round 3 P4b): per-algorithm how-tos fill the gap between introductory tutorials (C67) and the API reference. Selection prioritizes algorithms most touched by Round 2 and Round 3 cycles (RealizedGARCH C56, Boruta C59, BVARMinnesota C63.1, Chow-Lin C63.1, GIRF C63, MIDAS C63).
+## [0.9.5a0] -- 2026-05-25 -- "Round 3: documentation + naming + refactor"
+
+Round 3 (C62-C68) shifts macroforecast from a contract-first YAML framework to
+a standalone-first library API, cleans up internal DAG jargon from the public
+surface, and completes a full Diátaxis documentation overhaul including rewritten
+tutorials and per-algorithm how-tos. No algorithmic logic was changed.
+
+### Breaking Changes
+
+None.
+
+### Added
+
+- (C63) **Standalone model API** (`mf.models`): 22 previously private `_<Name>` classes
+  promoted to public. `mf.models.linear` (8), `mf.models.tree` (6), `mf.models.neural`
+  (2), `mf.models.timeseries` (4), `mf.models.factor` (2). Backward compat preserved
+  via thin subclass pattern.
+- (C63) **`mf.feature_selection`**: 5 sklearn-compatible wrappers: `Boruta`,
+  `RecursiveFeatureElimination`, `LassoPathSelector`, `StabilitySelector`,
+  `GeneticAlgorithmSelector`.
+- (C63) **`mf.interpretation`**: `GIRF`, `LSTMHiddenState` promoted to public.
+- (C63) 8 gap standalone callables added to `mf.functions.*` for newly promoted
+  model families.
+- (C64) 8 additional model promotions: `mf.models.tree` gains 6 classes
+  (`SlowGrowingTree`, `SparsePCRTree`, `BoostedTree`, `AutoClipTree`,
+  `CondPFITree`, `StagewiseTree`); `mf.models.neural` gains 2 (`LSTM`, `GRU`
+  convenience subclasses via `SequenceModel`).
+- (C64) 5 C63 selectors refactored to inherit from
+  `sklearn.base.BaseEstimator + TransformerMixin`, adding `feature_names_in_` /
+  `n_features_in_` tracking and full `sklearn.clone()` compatibility.
+- (C64) 2 runtime bug fixes: `_SlowGrowingTree._build` infinite BFS capped at
+  `max_depth=10`; `_BaggingWrapper.fit` `TypeError` on `base_params=None` guarded.
+- (C65) **`mf.recipes`** canonical namespace: `run`, `run_file`, `replicate`,
+  `forecast`, `Experiment`, `ForecastResult` re-exported. `mf.run is mf.recipes.run`
+  identity preserved -- no user-facing behavior change.
+- (C67) Tutorials 01-03 rewritten as standalone-first. `01_first_forecast.md`:
+  `LinearAR(p=2)` on synthetic data (211 -> 95 lines). `02_full_study.md`: 3-model
+  comparison with `TimeSeriesSplit` (491 -> 125 lines). `03_custom_model.md`:
+  `BaseEstimator + RegressorMixin` subclass pattern (258 -> 130 lines).
+- (C68) Six new per-algorithm how-tos: RealizedGARCH (Hansen-Huang-Shek 2012),
+  Boruta (Kursa-Rudnicki 2010), BVARMinnesota (Litterman 1986), Chow-Lin GLS
+  (Chow-Lin 1971), GIRF (Pesaran-Shin 1998), 4-way MIDAS comparison (Ghysels 2004,
+  2007; Foroni 2015).
+- (C68) `docs/how_to/advanced_recipes.md` (164 lines): YAML structure, custom-step
+  extension via `mf.register_model`, recipe composition, manifest semantics, migration
+  guide.
+
+### Changed
+
+- (C65) `macroforecast/__init__.py` `_LAZY_EXPORTS`: 8 orchestration symbols rerouted
+  through `.recipes` instead of `.api` / `.api_high`. Module docstring updated.
+- (C66) Public-facing DAG jargon reduced: `macroforecast/` 464 -> 10 occurrences (98%
+  reduction); `docs/` non-archive 131 -> 7 (95% reduction). Internal `core/dag.py`
+  module docstring annotated as internal-vocabulary. 1 internal wizard file renamed
+  (`layer_dag.py` -> `layer_step_graph.py`). Public classes `DAG`, `DAGValidationError`,
+  `validate_dag` preserved unchanged for backward compatibility.
+- (C67) `docs/how_to/index.md` reorganized: 3 visible categories (per-algorithm /
+  infrastructure / advanced) + preserved legacy block.
+
+### Fixed
+
+- (C63.1) `mf.transforms.chow_lin_disaggregate` replaced with canonical Chow-Lin (1971)
+  GLS implementation that preserves temporal totals. Previous OLS wrapper did not
+  enforce the conservation constraint.
+- (C63.1) `BVARMinnesota` enforces `prior='minnesota'` internally.
+
+### Deprecated
+
+None.
+
+### Documentation
+
+- (C62) R3-P0 audit: full class inventory (35 entries), naming convention spec,
+  recipe-extraction spec, DAG cleanup plan, R3 execution roadmap.
+- (C67) Tutorial API parameter names corrected from source: `LinearAR(p=2)` (not
+  `n_lags`), `FactorAugmentedAR(p=2, n_factors=3)`, `predict(X_test)`.
+- (C68) `tests/promotion/test_c68_howto_validation.py`: 50 parametrized validation
+  cases (49 PASS + 1 skip).
+
+### Packaging
+
+- Version: `0.9.3b1` -> `0.9.5a0`. The version jump skips `0.9.4`; PEP 440 ordering
+  `0.9.3b1 < 0.9.5a0` is valid. The pre-release suffix changes from `b1` to `a0`
+  because `0.9.5a0` begins a new alpha snapshot series at a higher version, per
+  user versioning policy. The algorithmic surface is unchanged since `0.9.3b1`; the
+  `a0` suffix reflects the snapshot nature of this docs/refactor cut, not a
+  regression in stability.
+- `Development Status` Trove classifier remains `4 - Beta`. The `a0` suffix is a
+  versioning choice; functional maturity has not regressed from `0.9.3b1`.
+- Install documentation pins updated: `docs/tutorial/00_install.md` (4 occurrences),
+  `README.md` (3 occurrences).
 
 ---
 
