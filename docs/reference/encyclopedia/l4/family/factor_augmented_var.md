@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `factor_augmented_var` -- Factor-augmented VAR (Bernanke-Boivin-Eliasz 2005).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -49,7 +50,7 @@ Set ``params.family = "factor_augmented_var"`` in the relevant layer to activate
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: factor_augmented_var
+  model: factor_augmented_var
 ```
 
 ## References

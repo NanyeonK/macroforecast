@@ -1,8 +1,8 @@
-# `predictor_geography_scope`
+# `predictor_geography_policy`
 
 [Back to L1](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``predictor_geography_scope`` on sub-layer ``l1_d`` (layer ``l1``).
+> Axis ``predictor_geography_policy`` on sub-layer ``l1_d`` (layer ``l1``).
 
 ## Sub-layer
 
@@ -25,7 +25,7 @@
 
 Use the same geography scope as the target.
 
-Default; predictor states match the L1.D ``target_geography_scope``. Ensures spatial coherence for state-level forecasts.
+Default; predictor states match the L1.D ``target_geography_policy``. Ensures spatial coherence for state-level forecasts.
 
 **When to use**
 

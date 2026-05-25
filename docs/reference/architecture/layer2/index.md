@@ -15,7 +15,7 @@ rotations / selection) live in **Layer 3**, not Layer 2.
 
 | Sub-layer | Axes |
 |---|---|
-| L2.A — Mixed frequency alignment | `mixed_frequency_representation`, `sd_series_frequency_filter`, `quarterly_to_monthly_rule`, `monthly_to_quarterly_rule` |
+| L2.A — Mixed frequency alignment | `mixed_frequency_representation`, `sd_series_frequency_filter`, `quarterly_to_monthly_policy`, `monthly_to_quarterly_policy` |
 | L2.B — Transform | `transform_policy`, `transform_scope`, `sd_tcode_policy` |
 | L2.C — Outlier handling | `outlier_policy`, `outlier_action`, `outlier_scope` |
 | L2.D — Imputation | `imputation_policy`, `imputation_temporal_rule`, `imputation_scope` |
@@ -67,5 +67,5 @@ For the full per-axis × per-option catalogue (every value with its OptionDoc su
 ## Cycle 50 update (2026-05-22)
 
 Two new operational axis options:
-- `quarterly_to_monthly_rule: chow_lin` -- Chow & Lin (1971) regression-based temporal disaggregation using a monthly indicator series (`leaf_config.chow_lin_indicator`).
+- `quarterly_to_monthly_policy: chow_lin` -- Chow & Lin (1971) regression-based temporal disaggregation using a monthly indicator series (`leaf_config.chow_lin_indicator`).
 - `outlier_action: keep_with_indicator` -- preserves the original outlier value and appends a `{col}__outlier_flag` binary column (1=flagged, 0=clean).

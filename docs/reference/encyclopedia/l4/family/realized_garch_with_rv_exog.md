@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `realized_garch_with_rv_exog` -- GARCH(1,1) with realised-variance series fed as the exogenous regressor (NOT Hansen-Huang-Shek 2012 joint MLE).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -57,7 +58,7 @@ Set ``params.family = "realized_garch_with_rv_exog"`` in the relevant layer to a
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: realized_garch_with_rv_exog
+  model: realized_garch_with_rv_exog
 ```
 
 ## References

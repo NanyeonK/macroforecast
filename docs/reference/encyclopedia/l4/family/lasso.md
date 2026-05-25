@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `lasso` -- Lasso regression (L1-regularised OLS).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -53,7 +54,7 @@ Set ``params.family = "lasso"`` in the relevant layer to activate this op within
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: lasso
+  model: lasso
 ```
 
 ## References

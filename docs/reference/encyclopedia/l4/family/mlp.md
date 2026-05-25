@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `mlp` -- Multi-layer perceptron (sklearn).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -54,7 +55,7 @@ Set ``params.family = "mlp"`` in the relevant layer to activate this op within a
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: mlp
+  model: mlp
 ```
 
 ## References

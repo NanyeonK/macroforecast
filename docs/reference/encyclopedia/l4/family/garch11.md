@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `garch11` -- GARCH(1,1) univariate conditional-variance model (Bollerslev 1986).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -55,7 +56,7 @@ Set ``params.family = "garch11"`` in the relevant layer to activate this op with
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: garch11
+  model: garch11
 ```
 
 ## References

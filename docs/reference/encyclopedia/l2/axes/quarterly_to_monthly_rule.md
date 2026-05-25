@@ -1,8 +1,8 @@
-# `quarterly_to_monthly_rule`
+# `quarterly_to_monthly_policy`
 
 [Back to L2](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``quarterly_to_monthly_rule`` on sub-layer ``l2_a`` (layer ``l2``).
+> Axis ``quarterly_to_monthly_policy`` on sub-layer ``l2_a`` (layer ``l2``).
 
 ## Sub-layer
 
@@ -27,7 +27,7 @@ Linear interpolation between quarterly observations.
 
 Smoother than step_backward but introduces look-ahead unless used per-origin.
 
-Configures the ``quarterly_to_monthly_rule`` axis on ``l2_a`` (layer ``l2``); the ``linear_interpolation`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+Configures the ``quarterly_to_monthly_policy`` axis on ``l2_a`` (layer ``l2``); the ``linear_interpolation`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
 
 **When to use**
 
@@ -45,7 +45,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 Step-function: each month inherits the most-recent published quarterly value.
 
-See [step_backward function page](../quarterly_to_monthly_rule/step_backward.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.freq_align_quarterly_to_monthly_clean``.
+See [step_backward function page](../quarterly_to_monthly_policy/step_backward.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.freq_align_quarterly_to_monthly_clean``.
 
 ### `step_forward`  --  operational
 

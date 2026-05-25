@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `egarch` -- Exponential GARCH with leverage asymmetry (Nelson 1991).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -55,7 +56,7 @@ Set ``params.family = "egarch"`` in the relevant layer to activate this op withi
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: egarch
+  model: egarch
 ```
 
 ## References

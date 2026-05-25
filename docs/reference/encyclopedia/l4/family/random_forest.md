@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `random_forest` -- Random forest (sklearn).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -47,7 +48,7 @@ Set ``params.family = "random_forest"`` in the relevant layer to activate this o
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: random_forest
+  model: random_forest
 ```
 
 ## References

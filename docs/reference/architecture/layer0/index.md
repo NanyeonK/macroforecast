@@ -58,8 +58,8 @@ Layer 0 has four public registry axes plus one registry-internal catalog axis:
 |---|---|---:|---:|---|
 | `study_scope` | derived | no | yes | target cardinality and method-comparison shape |
 | `failure_policy` | `fail_fast` | no | yes | behavior when a cell fails |
-| `reproducibility_mode` | `seeded_reproducible` | no | yes | seed policy |
-| `compute_mode` | `serial` | no | yes | serial or parallel execution |
+| `reproducibility_policy` | `seeded_reproducible` | no | yes | seed policy |
+| `compute_policy` | `serial` | no | yes | serial or parallel execution |
 | `axis_type` | registry catalog | no | no | internal registry taxonomy |
 
 Layer 0 axes are fixed setup choices. Do not sweep them as research treatments.
@@ -98,7 +98,7 @@ Use `fail_fast` while developing a recipe. Use `continue_on_failure` for large
 sweeps where partial completion is useful and failed cells must remain visible
 in manifests.
 
-### `reproducibility_mode`
+### `reproducibility_policy`
 
 | Value | Meaning |
 |---|---|
@@ -109,7 +109,7 @@ Seeded reproducibility is a best-effort runtime policy, not a promise that every
 GPU/library/version combination is bit-identical. Hardware deterministic flags
 are controlled separately by leaf config.
 
-### `compute_mode`
+### `compute_policy`
 
 | Value | Meaning |
 |---|---|
@@ -117,7 +117,7 @@ are controlled separately by leaf config.
 | `parallel` | parallelize over a leaf-config work unit |
 
 Parallel work unit is not encoded as a separate public axis value. Use
-`compute_mode=parallel` and specify the work unit in `leaf_config.parallel_unit`.
+`compute_policy=parallel` and specify the work unit in `leaf_config.parallel_unit`.
 
 ## Leaf Config
 
@@ -129,8 +129,8 @@ axis values.
 | `random_seed` | `seeded_reproducible` | optional int; default `42` |
 | `random_seed` | `exploratory` | forbidden |
 | `gpu_deterministic` | any reproducibility mode | optional bool; default `false` |
-| `parallel_unit` | `compute_mode=parallel` | required; one of `models`, `horizons`, `targets`, `oos_dates` |
-| `n_workers` | `compute_mode=parallel` | required; positive int or `auto` |
+| `parallel_unit` | `compute_policy=parallel` | required; one of `models`, `horizons`, `targets`, `oos_dates` |
+| `n_workers` | `compute_policy=parallel` | required; positive int or `auto` |
 
 `leaf_config` should not be used to smuggle in scientific choices. If a value
 changes what data or model is studied, it belongs in a downstream layer axis or
@@ -145,8 +145,8 @@ Layer 0 records setup fields in runtime provenance.
 | `study_scope` | explicit L0 axis or runtime derivation |
 | `execution_route` | currently `comparison_sweep` |
 | `failure_policy_spec` | L0 `failure_policy` |
-| `reproducibility_spec` | L0 `reproducibility_mode` plus seed details |
-| `compute_mode_spec` | L0 `compute_mode` plus parallel details |
+| `reproducibility_spec` | L0 `reproducibility_policy` plus seed details |
+| `compute_mode_spec` | L0 `compute_policy` plus parallel details |
 
 The manifest is the place to inspect resolved defaults. Recipes can omit many
 Layer 0 fields, but compiled artifacts should record what was actually used.
@@ -163,9 +163,9 @@ This resolves to:
 | Field | Resolved Value |
 |---|---|
 | `failure_policy` | `fail_fast` |
-| `reproducibility_mode` | `seeded_reproducible` |
+| `reproducibility_policy` | `seeded_reproducible` |
 | `random_seed` | `42` |
-| `compute_mode` | `serial` |
+| `compute_policy` | `serial` |
 | `study_scope` | derived from target and sweep shape |
 
 ## Explicit Single-Target YAML
@@ -175,8 +175,8 @@ This resolves to:
   fixed_axes:
     study_scope: one_target_compare_methods
     failure_policy: fail_fast
-    reproducibility_mode: seeded_reproducible
-    compute_mode: serial
+    reproducibility_policy: seeded_reproducible
+    compute_policy: serial
   leaf_config:
     random_seed: 20260101
 ```
@@ -188,8 +188,8 @@ This resolves to:
   fixed_axes:
     study_scope: multiple_targets_compare_methods
     failure_policy: continue_on_failure
-    reproducibility_mode: seeded_reproducible
-    compute_mode: parallel
+    reproducibility_policy: seeded_reproducible
+    compute_policy: parallel
   leaf_config:
     random_seed: 20260101
     parallel_unit: targets
@@ -203,11 +203,11 @@ Do not use retired or compatibility-only values in new recipes:
 
 | Invalid Pattern | Use Instead |
 |---|---|
-| `reproducibility_mode: strict` | `seeded_reproducible` plus `leaf_config.gpu_deterministic` |
-| `compute_mode: parallel_by_model` | `compute_mode: parallel` plus `parallel_unit: models` |
-| `compute_mode: parallel_by_horizon` | `compute_mode: parallel` plus `parallel_unit: horizons` |
-| `compute_mode: parallel_by_target` | `compute_mode: parallel` plus `parallel_unit: targets` |
-| `compute_mode: parallel_by_oos_date` | `compute_mode: parallel` plus `parallel_unit: oos_dates` |
+| `reproducibility_policy: strict` | `seeded_reproducible` plus `leaf_config.gpu_deterministic` |
+| `compute_policy: parallel_by_model` | `compute_policy: parallel` plus `parallel_unit: models` |
+| `compute_policy: parallel_by_horizon` | `compute_policy: parallel` plus `parallel_unit: horizons` |
+| `compute_policy: parallel_by_target` | `compute_policy: parallel` plus `parallel_unit: targets` |
+| `compute_policy: parallel_by_oos_date` | `compute_policy: parallel` plus `parallel_unit: oos_dates` |
 | sweeping `failure_policy` | keep it fixed; compare scientific choices in later layers |
 | setting `axis_type` in a recipe | omit it; it is registry metadata |
 
@@ -218,8 +218,8 @@ Do not use retired or compatibility-only values in new recipes:
 
 study_scope
 failure_policy
-reproducibility_mode
-compute_mode
+reproducibility_policy
+compute_policy
 axis_type
 ```
 

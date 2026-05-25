@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `elastic_net` -- Elastic net (L1 + L2 hybrid).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -56,7 +57,7 @@ Set ``params.family = "elastic_net"`` in the relevant layer to activate this op 
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: elastic_net
+  model: elastic_net
 ```
 
 ## References

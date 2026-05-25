@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `bvar_minnesota` -- Bayesian VAR with Minnesota prior shrinkage.
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -50,7 +51,7 @@ Set ``params.family = "bvar_minnesota"`` in the relevant layer to activate this 
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: bvar_minnesota
+  model: bvar_minnesota
 ```
 
 ## References

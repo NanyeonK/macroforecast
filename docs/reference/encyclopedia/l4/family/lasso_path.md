@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `lasso_path` -- Lasso with CV-selected alpha (LassoCV).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -42,7 +43,7 @@ mf.functions.lasso_path_fit(
 
 ## Behavior
 
-Wraps sklearn's ``LassoCV``. Picks α automatically from a regularisation path via k-fold CV (``params.cv``). Equivalent to setting ``family: lasso, search_algorithm: cv_path``.
+Wraps sklearn's ``LassoCV``. Picks α automatically from a regularisation path via k-fold CV (``params.cv``). Equivalent to setting ``model: lasso, search_algorithm: cv_path``.
 
 **When to use**
 
@@ -55,7 +56,7 @@ Set ``params.family = "lasso_path"`` in the relevant layer to activate this op w
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: lasso_path
+  model: lasso_path
 ```
 
 ## References

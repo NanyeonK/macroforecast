@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `midas_beta` -- MIDAS with Beta distribution kernel lag weights (Ghysels-Sinko-Valkanov 2007).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -72,7 +73,7 @@ Set ``params.family = "midas_beta"`` in the relevant layer to activate this op w
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: midas_beta
+  model: midas_beta
 ```
 
 ## References

@@ -31,9 +31,9 @@ mf.functions.sliced_inverse_regression_transform(
 
 ## Behavior
 
-Supervised dimension reduction extending ``scaled_pca`` to non-linear y → X dependence. Pipeline: (1) standardise X; (2) optional column-wise predictive scaling (``scaling_method`` = ``scaled_pca`` reuses the Huang-Zhou OLS-slope; ``marginal_R2`` uses sign(β_j)·√R²_j; ``none`` skips); (3) sort rows by y and partition into ``n_slices`` H contiguous slices; (4) compute weighted between-slice covariance ``Σ_S = Σ_h (n_h/n) · m̄_h · m̄_h^⊤``; (5) take the top-``n_components`` eigenvectors as factor loadings; (6) project the full panel onto these directions. The sSUFF augmentation (Huang-Zhou-Tong 2022) recovers latent factors with higher correlation than plain SIR in the macro-panel regime where signals are sparse over predictors.
+Supervised dimension reduction extending ``scaled_pca`` to non-linear y → X dependence. Pipeline: (1) standardise X; (2) optional column-wise predictive scaling (``scaling_policy`` = ``scaled_pca`` reuses the Huang-Zhou OLS-slope; ``marginal_R2`` uses sign(β_j)·√R²_j; ``none`` skips); (3) sort rows by y and partition into ``n_slices`` H contiguous slices; (4) compute weighted between-slice covariance ``Σ_S = Σ_h (n_h/n) · m̄_h · m̄_h^⊤``; (5) take the top-``n_components`` eigenvectors as factor loadings; (6) project the full panel onto these directions. The sSUFF augmentation (Huang-Zhou-Tong 2022) recovers latent factors with higher correlation than plain SIR in the macro-panel regime where signals are sparse over predictors.
 
-Defaults: ``n_components = 2``, ``n_slices = 10``, ``scaling_method = 'scaled_pca'``. Requires a ``target_signal`` input port; ``temporal_rule`` is required and rejects ``full_sample_once``.
+Defaults: ``n_components = 2``, ``n_slices = 10``, ``scaling_policy = 'scaled_pca'``. Requires a ``target_signal`` input port; ``temporal_rule`` is required and rejects ``full_sample_once``.
 
 **When to use**
 

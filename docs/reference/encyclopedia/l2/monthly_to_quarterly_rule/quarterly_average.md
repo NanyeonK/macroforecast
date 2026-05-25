@@ -1,8 +1,8 @@
 # `quarterly_average` -- Aggregate to quarterly via mean of the three monthly observations.
 
-[Back to `monthly_to_quarterly_rule` axis](../axes/monthly_to_quarterly_rule.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
+[Back to `monthly_to_quarterly_policy` axis](../axes/monthly_to_quarterly_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
-> Operational op under axis `monthly_to_quarterly_rule`, sub-layer `l2_a`, layer `l2`.
+> Operational op under axis `monthly_to_quarterly_policy`, sub-layer `l2_a`, layer `l2`.
 > Standalone callable: `mf.functions.freq_align_monthly_to_quarterly_clean`.
 
 ## Function signature
@@ -27,7 +27,7 @@ mf.functions.freq_align_monthly_to_quarterly_clean(
 
 Standard NIPA aggregation for stocks / averages.
 
-Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_average`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+Configures the ``monthly_to_quarterly_policy`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_average`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
 
 **When to use**
 
@@ -35,12 +35,12 @@ Default. Stock variables (interest rates, prices, employment levels).
 
 ## In recipe context
 
-Set ``params.monthly_to_quarterly_rule = "quarterly_average"`` in the relevant layer to activate this op within a recipe:
+Set ``params.monthly_to_quarterly_policy = "quarterly_average"`` in the relevant layer to activate this op within a recipe:
 
 ```yaml
 # Layer L2 recipe fragment
 params:
-  monthly_to_quarterly_rule: quarterly_average
+  monthly_to_quarterly_policy: quarterly_average
 ```
 
 ## References

@@ -15,6 +15,42 @@ full per-version honesty-pass history embedded in repo documentation.
 - Stale entries in `defaults.DEFAULT_PREPROCESSING_AXES` that referenced
   L2 axes which no longer exist.
 
+### Changed
+- Applied locked TAXONOMY v1 vocabulary across recipes, source code, tests, and
+  user-facing docs. Recipe axis renames:
+  - `family:` -> `model:` (L4 axis)
+  - `op: fit_model` -> `op: fit`
+  - `custom_source_policy` -> `panel_composition` (L1)
+  - `quarterly_to_monthly_rule` -> `quarterly_to_monthly_policy` (L2)
+  - `monthly_to_quarterly_rule` -> `monthly_to_quarterly_policy` (L2)
+  - `compute_mode` -> `compute_policy` (L0)
+  - `reproducibility_mode` -> `reproducibility_policy` (L0)
+  - `forecast_strategy` -> `forecast_policy` (L4)
+  - `alpha_strategy` -> `alpha_search_policy` (L4)
+  - `correction_method` -> `correction_policy` (L6)
+  - `scaling_method` -> `scaling_policy` (L2/L3)
+  - `target_geography_scope` -> `target_geography_policy` (L1)
+  - `predictor_geography_scope` -> `predictor_geography_policy` (L1)
+- File rename: `macroforecast/core/dag.py` -> `macroforecast/core/pipeline.py`.
+  The internal `DAG` class symbol is retained inside the renamed file. Public
+  uses should switch to `from macroforecast.core.pipeline import DAG`.
+- Removed L2 `*_scope` axes (`outlier_scope`, `transform_scope`,
+  `imputation_scope`, `frame_edge_scope`). The runtime now uses inlined
+  defaults instead of axis-driven scope decisions. Recipes that previously
+  set these axes will no longer apply scope filtering.
+- `DEFAULT_MODEL_FAMILY` constant renamed to `DEFAULT_MODEL` in
+  `macroforecast/defaults.py` and `macroforecast/api_high.py`.
+
+### Breaking changes
+- Recipes using the old axis names will fail validation. Apply the rename
+  table above before upgrading.
+- `from macroforecast.core.dag import DAG` no longer works. Use
+  `from macroforecast.core.pipeline import DAG`.
+- Standalone functions with renamed parameters: `sliced_inverse_regression_transform`
+  uses `scaling_policy=` instead of `scaling_method=`, `ridge_variants` uses
+  `alpha_search_policy=` instead of `alpha_strategy=`, `tests.py` result
+  dataclasses use `correction_policy` instead of `correction_method`.
+
 ---
 
 ## [0.9.5a0] -- 2026-05-25 -- "Round 3: documentation + naming + refactor"

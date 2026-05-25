@@ -1,8 +1,8 @@
-# `reproducibility_mode`
+# `reproducibility_policy`
 
 [Back to L0](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``reproducibility_mode`` on sub-layer ``l0_a`` (layer ``l0``).
+> Axis ``reproducibility_policy`` on sub-layer ``l0_a`` (layer ``l0``).
 
 ## Sub-layer
 
@@ -52,7 +52,7 @@ Stochastic exploration where the explicit goal is to characterise the variabilit
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
 
@@ -95,7 +95,7 @@ Anything you intend to publish or share. The reviewer will not be able to reprod
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: exploratory
+    reproducibility_policy: exploratory
 
 ```
 

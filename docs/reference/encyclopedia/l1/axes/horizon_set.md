@@ -25,7 +25,7 @@
 
 Standard FRED-MD horizons: {1, 3, 6, 9, 12, 18, 24} months.
 
-The canonical multi-horizon set used in the McCracken-Ng / Stock-Watson tradition for monthly forecasting. Models are fit per-horizon (when ``forecast_strategy = direct``) and metrics report per-(model, horizon) rows.
+The canonical multi-horizon set used in the McCracken-Ng / Stock-Watson tradition for monthly forecasting. Models are fit per-horizon (when ``forecast_policy = direct``) and metrics report per-(model, horizon) rows.
 
 **When to use**
 
@@ -105,7 +105,7 @@ Replication of papers with non-standard horizon sets; ablation studies.
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `target_horizons` | `list[int]` | — | Required when horizon_set=custom_list. Non-empty list of positive integers. Duplicate values are silently de-duplicated; order preserved. | Explicit list of forecasting horizons h. One model fit per horizon per cell when forecast_strategy=direct. |
+| `target_horizons` | `list[int]` | — | Required when horizon_set=custom_list. Non-empty list of positive integers. Duplicate values are silently de-duplicated; order preserved. | Explicit list of forecasting horizons h. One model fit per horizon per cell when forecast_policy=direct. |
 
 _Last reviewed 2026-05-04 by macroforecast author._
 

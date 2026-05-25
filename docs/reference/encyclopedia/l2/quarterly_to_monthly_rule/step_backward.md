@@ -1,8 +1,8 @@
 # `step_backward` -- Step-function: each month inherits the most-recent published quarterly value.
 
-[Back to `quarterly_to_monthly_rule` axis](../axes/quarterly_to_monthly_rule.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
+[Back to `quarterly_to_monthly_policy` axis](../axes/quarterly_to_monthly_policy.md) | [Back to L2](../index.md) | [Browse all options](../../browse_by_option.md)
 
-> Operational op under axis `quarterly_to_monthly_rule`, sub-layer `l2_a`, layer `l2`.
+> Operational op under axis `quarterly_to_monthly_policy`, sub-layer `l2_a`, layer `l2`.
 > Standalone callable: `mf.functions.freq_align_quarterly_to_monthly_clean`.
 
 ## Function signature
@@ -33,12 +33,12 @@ Default for FRED-SD mixed-frequency studies.
 
 ## In recipe context
 
-Set ``params.quarterly_to_monthly_rule = "step_backward"`` in the relevant layer to activate this op within a recipe:
+Set ``params.quarterly_to_monthly_policy = "step_backward"`` in the relevant layer to activate this op within a recipe:
 
 ```yaml
 # Layer L2 recipe fragment
 params:
-  quarterly_to_monthly_rule: step_backward
+  quarterly_to_monthly_policy: step_backward
 ```
 
 ## References

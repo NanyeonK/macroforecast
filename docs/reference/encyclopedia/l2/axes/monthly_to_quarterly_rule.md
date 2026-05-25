@@ -1,8 +1,8 @@
-# `monthly_to_quarterly_rule`
+# `monthly_to_quarterly_policy`
 
 [Back to L2](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``monthly_to_quarterly_rule`` on sub-layer ``l2_a`` (layer ``l2``).
+> Axis ``monthly_to_quarterly_policy`` on sub-layer ``l2_a`` (layer ``l2``).
 
 ## Sub-layer
 
@@ -25,7 +25,7 @@
 
 Aggregate to quarterly via mean of the three monthly observations.
 
-See [quarterly_average function page](../monthly_to_quarterly_rule/quarterly_average.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.freq_align_monthly_to_quarterly_clean``.
+See [quarterly_average function page](../monthly_to_quarterly_policy/quarterly_average.md) for full documentation + parameters + standalone usage. Standalone: ``mf.functions.freq_align_monthly_to_quarterly_clean``.
 
 ### `quarterly_endpoint`  --  operational
 
@@ -33,7 +33,7 @@ Aggregate via the end-of-quarter observation.
 
 Use for series that snap to a quarter-end (e.g., balance-sheet data).
 
-Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_endpoint`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+Configures the ``monthly_to_quarterly_policy`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_endpoint`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
 
 **When to use**
 
@@ -53,7 +53,7 @@ Aggregate via the sum of the three monthly observations.
 
 Standard for flow variables (production, sales, payroll growth).
 
-Configures the ``monthly_to_quarterly_rule`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_sum`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
+Configures the ``monthly_to_quarterly_policy`` axis on ``l2_a`` (layer ``l2``); the ``quarterly_sum`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
 
 **When to use**
 

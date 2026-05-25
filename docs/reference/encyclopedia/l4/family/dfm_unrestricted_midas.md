@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `dfm_unrestricted_midas` -- Unrestricted MIDAS (U-MIDAS) -- OLS on all HF lags (Foroni-Marcellino-Schumacher 2015).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -68,7 +69,7 @@ Set ``params.family = "dfm_unrestricted_midas"`` in the relevant layer to activa
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: dfm_unrestricted_midas
+  model: dfm_unrestricted_midas
 ```
 
 ## References

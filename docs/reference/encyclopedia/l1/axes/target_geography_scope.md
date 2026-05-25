@@ -1,8 +1,8 @@
-# `target_geography_scope`
+# `target_geography_policy`
 
 [Back to L1](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``target_geography_scope`` on sub-layer ``l1_d`` (layer ``l1``).
+> Axis ``target_geography_policy`` on sub-layer ``l1_d`` (layer ``l1``).
 
 ## Sub-layer
 
@@ -35,13 +35,13 @@ State-level case studies (e.g., CA / TX / NY-specific forecasts).
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`all_states`](#all-states), [`selected_states`](#selected-states), [`predictor_geography_scope`](#predictor-geography-scope)
+**Related options**: [`all_states`](#all-states), [`selected_states`](#selected-states), [`predictor_geography_policy`](#predictor-geography-scope)
 
 **Parameters**
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `target_state` | `str` | — | required US state code or 'US' when target_geography_scope=single_state | Single target state code (e.g. 'CA', 'TX') or 'US' for national target. Must be a valid two-letter postal code present in FRED-SD. |
+| `target_state` | `str` | — | required US state code or 'US' when target_geography_policy=single_state | Single target state code (e.g. 'CA', 'TX') or 'US' for national target. Must be a valid two-letter postal code present in FRED-SD. |
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -85,6 +85,6 @@ Region-specific studies (Northeast vs. Midwest), Census-division comparisons.
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `target_states` | `list[str]` | — | non-empty list required; each element a valid US state code or DC | Explicit target state list when target_geography_scope=selected_states. |
+| `target_states` | `list[str]` | — | non-empty list required; each element a valid US state code or DC | Explicit target state list when target_geography_policy=selected_states. |
 
 _Last reviewed 2026-05-04 by macroforecast author._

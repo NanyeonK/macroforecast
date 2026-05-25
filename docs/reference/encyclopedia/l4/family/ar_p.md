@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `ar_p` -- Autoregressive AR(p) on the target.
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -48,7 +49,7 @@ Set ``params.family = "ar_p"`` in the relevant layer to activate this op within 
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: ar_p
+  model: ar_p
 ```
 
 ## References

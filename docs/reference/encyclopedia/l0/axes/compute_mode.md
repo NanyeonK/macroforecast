@@ -1,8 +1,8 @@
-# `compute_mode`
+# `compute_policy`
 
 [Back to L0](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``compute_mode`` on sub-layer ``l0_a`` (layer ``l0``).
+> Axis ``compute_policy`` on sub-layer ``l0_a`` (layer ``l0``).
 
 ## Sub-layer
 
@@ -40,7 +40,7 @@ Multi-cell sweeps where each cell takes more than a minute and the machine has m
 
 **References**
 
-* macroforecast design Part 1, L0 §A: 'compute_mode = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.'
+* macroforecast design Part 1, L0 §A: 'compute_policy = serial is the deterministic default; parallel modes are opt-in for wall-clock-sensitive sweeps.'
 
 **Related options**: [`parallel`](#parallel)
 
@@ -51,7 +51,7 @@ Multi-cell sweeps where each cell takes more than a minute and the machine has m
 ```yaml
 0_meta:
   fixed_axes:
-    compute_mode: serial
+    compute_policy: serial
 
 ```
 
@@ -64,7 +64,7 @@ Distribute work over multiple workers; pick the unit via parallel_unit.
 Activates the parallel cell loop. The granularity is controlled by the ``parallel_unit`` conditional leaf_config key:
 
 * ``cells`` -- one process per sweep cell (``ProcessPoolExecutor``).   Cell-level parallelism is the safest path because cells are by   construction independent.
-* ``models`` -- threads over ``fit_model`` nodes inside a single   cell (issue #204). Sklearn-family estimators release the GIL; the   thread pool avoids the pickling overhead of processes.
+* ``models`` -- threads over ``fit`` nodes inside a single   cell (issue #204). Sklearn-family estimators release the GIL; the   thread pool avoids the pickling overhead of processes.
 * ``oos_dates`` -- threads over walk-forward origins inside a fit   node (issue #250). Per-origin RNG state is derived deterministically   from ``base_seed + position`` (issue #279) so thread scheduling   cannot affect the forecasts.
 * ``horizons`` / ``targets`` -- map to the same fan-out when L4   produces single-horizon / single-target output per fit node.
 
@@ -72,7 +72,7 @@ Activates the parallel cell loop. The granularity is controlled by the ``paralle
 
 **When to use**
 
-Long sweeps on multi-core machines. Validate the manifest under ``compute_mode = serial`` first to confirm the recipe is deterministic, then flip to ``parallel`` and verify ``replicate()`` still passes.
+Long sweeps on multi-core machines. Validate the manifest under ``compute_policy = serial`` first to confirm the recipe is deterministic, then flip to ``parallel`` and verify ``replicate()`` still passes.
 
 **When NOT to use**
 
@@ -93,7 +93,7 @@ Recipes that mutate global state (e.g., a custom L3 op that writes to a shared f
 ```yaml
 0_meta:
   fixed_axes:
-    compute_mode: parallel
+    compute_policy: parallel
     parallel_unit: cells
   leaf_config:
     n_workers: 4
@@ -104,7 +104,7 @@ Recipes that mutate global state (e.g., a custom L3 op that writes to a shared f
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `parallel_unit` | `str enum {cells, models, horizons, targets, oos_dates}` | — | required when compute_mode=parallel; validator hard-rejects missing | Parallelization granularity. ``cells`` runs each sweep cell in a ProcessPoolExecutor worker; ``models``/``horizons``/``targets``/``oos_dates`` use sub-cell ThreadPoolExecutor at L4. |
+| `parallel_unit` | `str enum {cells, models, horizons, targets, oos_dates}` | — | required when compute_policy=parallel; validator hard-rejects missing | Parallelization granularity. ``cells`` runs each sweep cell in a ProcessPoolExecutor worker; ``models``/``horizons``/``targets``/``oos_dates`` use sub-cell ThreadPoolExecutor at L4. |
 | `n_workers` | `int | None` | `None` | None -> os.cpu_count() (or smaller per system); positive int caps the pool | Process or thread pool size. Currently consumed by cell-level ProcessPoolExecutor; sub-cell pool uses an internal default. |
 
 _Last reviewed 2026-05-04 by macroforecast author._

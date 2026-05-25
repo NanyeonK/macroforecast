@@ -25,8 +25,8 @@ larger design system.
 |---|---:|---|
 | `study_scope` | yes or runtime-derived | study shape |
 | `failure_policy` | yes | failure behavior |
-| `reproducibility_mode` | yes | seed policy |
-| `compute_mode` | yes | execution scheduling |
+| `reproducibility_policy` | yes | seed policy |
+| `compute_policy` | yes | execution scheduling |
 | `axis_type` | no | registry taxonomy |
 
 ## Invalid YAML

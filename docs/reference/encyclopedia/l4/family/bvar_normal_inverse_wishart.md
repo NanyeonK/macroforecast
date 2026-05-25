@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `bvar_normal_inverse_wishart` -- Bayesian VAR with Normal-Inverse-Wishart prior.
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -47,7 +48,7 @@ Set ``params.family = "bvar_normal_inverse_wishart"`` in the relevant layer to a
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: bvar_normal_inverse_wishart
+  model: bvar_normal_inverse_wishart
 ```
 
 ## References

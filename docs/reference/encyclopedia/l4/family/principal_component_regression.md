@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `principal_component_regression` -- Principal component regression (PCA → OLS).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -46,7 +47,7 @@ Set ``params.family = "principal_component_regression"`` in the relevant layer t
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: principal_component_regression
+  model: principal_component_regression
 ```
 
 ## References

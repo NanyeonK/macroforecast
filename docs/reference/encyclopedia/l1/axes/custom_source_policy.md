@@ -1,8 +1,8 @@
-# `custom_source_policy`
+# `panel_composition`
 
 [Back to L1](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``custom_source_policy`` on sub-layer ``l1_a`` (layer ``l1``).
+> Axis ``panel_composition`` on sub-layer ``l1_a`` (layer ``l1``).
 
 ## Sub-layer
 
@@ -52,7 +52,7 @@ Forecasting on non-FRED panels (firm-level data, country-specific series); needs
 ```yaml
 1_data:
   fixed_axes:
-    custom_source_policy: official_only
+    panel_composition: official_only
     dataset: fred_md
   leaf_config:
     target: CPIAUCSL
@@ -93,7 +93,7 @@ When McCracken-Ng's curation (t-codes, group tags) is part of the study design -
 ```yaml
 1_data:
   fixed_axes:
-    custom_source_policy: custom_panel_only
+    panel_composition: custom_panel_only
   leaf_config:
     target: y
     custom_panel_inline:
@@ -142,7 +142,7 @@ Pure custom panels (use ``custom_panel_only``); pure official panels (use ``offi
 ```yaml
 1_data:
   fixed_axes:
-    custom_source_policy: official_plus_custom
+    panel_composition: official_plus_custom
     dataset: fred_md
   leaf_config:
     target: CPIAUCSL
@@ -155,7 +155,7 @@ Pure custom panels (use ``custom_panel_only``); pure official panels (use ``offi
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `custom_source_path` | `str | Path` | — | Required when custom_source_policy=official_plus_custom. | Filesystem path (CSV or Parquet) to the auxiliary panel to merge onto the official FRED panel. Joined on the date index. |
-| `custom_merge_rule` | `str` | — | Required when custom_source_policy=official_plus_custom. Must be one of: 'left_join', 'inner_join', 'outer_join'. | How to merge the official FRED panel (left) with the custom panel (right) on the date index. 'left_join' keeps all FRED dates; 'inner_join' keeps only dates present in both panels; 'outer_join' keeps all dates from either panel, filling missing values with NaN. |
+| `custom_source_path` | `str | Path` | — | Required when panel_composition=official_plus_custom. | Filesystem path (CSV or Parquet) to the auxiliary panel to merge onto the official FRED panel. Joined on the date index. |
+| `custom_merge_rule` | `str` | — | Required when panel_composition=official_plus_custom. Must be one of: 'left_join', 'inner_join', 'outer_join'. | How to merge the official FRED panel (left) with the custom panel (right) on the date index. 'left_join' keeps all FRED dates; 'inner_join' keeps only dates present in both panels; 'outer_join' keeps all dates from either panel, filling missing values with NaN. |
 
 _Last reviewed 2026-05-04 by macroforecast author._

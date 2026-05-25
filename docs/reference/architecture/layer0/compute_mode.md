@@ -1,9 +1,9 @@
-# Layer 0 Axis: `compute_mode`
+# Layer 0 Axis: `compute_policy`
 
 - Parent: [Layer 0](index.md)
-- Current: `compute_mode`
+- Current: `compute_policy`
 
-`compute_mode` decides whether execution runs serially or in parallel. It is a
+`compute_policy` decides whether execution runs serially or in parallel. It is a
 runtime setup choice, not a scientific treatment.
 
 ## Values
@@ -18,14 +18,14 @@ alternatives.
 
 ## Leaf Config
 
-`compute_mode: parallel` requires:
+`compute_policy: parallel` requires:
 
 | Key | Values | Meaning |
 |---|---|---|
 | `parallel_unit` | `models`, `horizons`, `targets`, `oos_dates` | unit over which workers are split |
 | `n_workers` | positive integer or `auto` | worker count |
 
-`compute_mode: serial` should omit `parallel_unit` and `n_workers` unless a
+`compute_policy: serial` should omit `parallel_unit` and `n_workers` unless a
 wrapper explicitly ignores them.
 
 ## Work Units
@@ -47,7 +47,7 @@ Serial default:
 ```yaml
 0_meta:
   fixed_axes:
-    compute_mode: serial
+    compute_policy: serial
 ```
 
 Parallel over targets:
@@ -55,7 +55,7 @@ Parallel over targets:
 ```yaml
 0_meta:
   fixed_axes:
-    compute_mode: parallel
+    compute_policy: parallel
   leaf_config:
     parallel_unit: targets
     n_workers: 4
@@ -66,7 +66,7 @@ Parallel over out-of-sample origins:
 ```yaml
 0_meta:
   fixed_axes:
-    compute_mode: parallel
+    compute_policy: parallel
   leaf_config:
     parallel_unit: oos_dates
     n_workers: auto
@@ -76,11 +76,11 @@ Parallel over out-of-sample origins:
 
 | Invalid Pattern | Use Instead |
 |---|---|
-| `compute_mode: parallel_by_model` | `compute_mode: parallel`, `parallel_unit: models` |
-| `compute_mode: parallel_by_horizon` | `compute_mode: parallel`, `parallel_unit: horizons` |
-| `compute_mode: parallel_by_target` | `compute_mode: parallel`, `parallel_unit: targets` |
-| `compute_mode: parallel_by_oos_date` | `compute_mode: parallel`, `parallel_unit: oos_dates` |
-| sweeping `compute_mode` | keep fixed; sweep scientific axes only |
+| `compute_policy: parallel_by_model` | `compute_policy: parallel`, `parallel_unit: models` |
+| `compute_policy: parallel_by_horizon` | `compute_policy: parallel`, `parallel_unit: horizons` |
+| `compute_policy: parallel_by_target` | `compute_policy: parallel`, `parallel_unit: targets` |
+| `compute_policy: parallel_by_oos_date` | `compute_policy: parallel`, `parallel_unit: oos_dates` |
+| sweeping `compute_policy` | keep fixed; sweep scientific axes only |
 
 ## Notes
 

@@ -28,7 +28,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`comparison_pair`](l2_5/axes/comparison_pair.md) | L2.5 | `L2_5_A_comparison_axis` | operational | no | 5 |
 | [`comparison_stages`](l3_5/axes/comparison_stages.md) | L3.5 | `L3_5_A_comparison_axis` | operational | no | 3 |
 | [`compression`](l8/axes/compression.md) | L8 | `L8_A_export_format` | operational | no | 3 |
-| [`compute_mode`](l0/axes/compute_mode.md) | L0 | `l0_a` | operational | no | 2 |
+| [`compute_policy`](l0/axes/compute_policy.md) | L0 | `l0_a` | operational | no | 2 |
 | [`contemporaneous_x_rule`](l1/axes/contemporaneous_x_rule.md) | L1 | `l1_c` | operational | no | 2 |
 | [`correlation_method`](l1_5/axes/correlation_method.md) | L1.5 | `L1_5_E_correlation_pre_cleaning` | operational | no | 3 |
 | [`correlation_method`](l2_5/axes/correlation_method.md) | L2.5 | `L2_5_C_correlation_shift` | operational | no | 2 |
@@ -42,7 +42,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`cpa_critical_value_method`](l6/axes/cpa_critical_value_method.md) | L6 | `L6_C_cpa` | operational | no | 0 |
 | [`cpa_test`](l6/axes/cpa_test.md) | L6 | `L6_C_cpa` | operational | no | 3 |
 | [`cpa_window_type`](l6/axes/cpa_window_type.md) | L6 | `L6_C_cpa` | operational | no | 0 |
-| [`custom_source_policy`](l1/axes/custom_source_policy.md) | L1 | `l1_a` | operational | no | 3 |
+| [`panel_composition`](l1/axes/panel_composition.md) | L1 | `l1_a` | operational | no | 3 |
 | [`cw_adjustment`](l6/axes/cw_adjustment.md) | L6 | `L6_B_nested` | operational | no | 0 |
 | [`dataset`](l1/axes/dataset.md) | L1 | `l1_a` | operational | yes | 5 |
 | [`decomposition_order`](l5/axes/decomposition_order.md) | L5 | `L5_D_sample_slicing_decomposition` | operational | no | 0 |
@@ -78,7 +78,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`fit_per_origin`](l4_5/axes/fit_per_origin.md) | L4.5 | `L4_5_A_in_sample_fit` | operational | no | 3 |
 | [`fit_view`](l4_5/axes/fit_view.md) | L4.5 | `L4_5_A_in_sample_fit` | operational | no | 5 |
 | [`forecast_scale_view`](l4_5/axes/forecast_scale_view.md) | L4.5 | `L4_5_B_forecast_scale_view` | operational | no | 3 |
-| [`forecast_strategy`](l4/axes/forecast_strategy.md) | L4 | `L4_B_forecast_strategy` | operational | yes | 3 |
+| [`forecast_policy`](l4/axes/forecast_policy.md) | L4 | `L4_B_forecast_policy` | operational | yes | 3 |
 | [`frame_edge_policy`](l2/axes/frame_edge_policy.md) | L2 | `l2_e` | operational | yes | 4 |
 | [`frame_edge_scope`](l2/axes/frame_edge_scope.md) | L2 | `l2_e` | operational | yes | 4 |
 | [`fred_sd_frequency_policy`](l1/axes/fred_sd_frequency_policy.md) | L1 | `l1_a` | operational | no | 4 |
@@ -110,7 +110,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`mmt_loss_function`](l6/axes/mmt_loss_function.md) | L6 | `L6_D_multiple_model` | operational | no | 0 |
 | [`model_artifacts_format`](l8/axes/model_artifacts_format.md) | L8 | `L8_B_saved_objects` | operational | no | 4 |
 | [`model_pair_strategy`](l6/axes/model_pair_strategy.md) | L6 | `L6_A_equal_predictive` | operational | no | 0 |
-| [`monthly_to_quarterly_rule`](l2/axes/monthly_to_quarterly_rule.md) | L2 | `l2_a` | operational | yes | 3 |
+| [`monthly_to_quarterly_policy`](l2/axes/monthly_to_quarterly_policy.md) | L2 | `l2_a` | operational | yes | 3 |
 | [`multiple_model_test`](l6/axes/multiple_model_test.md) | L6 | `L6_D_multiple_model` | operational | no | 4 |
 | [`naming_convention`](l8/axes/naming_convention.md) | L8 | `L8_D_artifact_granularity` | operational | no | 4 |
 | [`nested_pair_strategy`](l6/axes/nested_pair_strategy.md) | L6 | `L6_B_nested` | operational | no | 0 |
@@ -130,10 +130,10 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`pit_test_horizon_dependence`](l6/axes/pit_test_horizon_dependence.md) | L6 | `L6_E_density_interval` | operational | no | 0 |
 | [`point_metrics`](l5/axes/point_metrics.md) | L5 | `L5_A_metric_specification` | operational | no | 7 |
 | [`precision_digits`](l7/axes/precision_digits.md) | L7 | `L7_B_output_shape_export` | operational | no | 0 |
-| [`predictor_geography_scope`](l1/axes/predictor_geography_scope.md) | L1 | `l1_d` | operational | no | 4 |
+| [`predictor_geography_policy`](l1/axes/predictor_geography_policy.md) | L1 | `l1_d` | operational | no | 4 |
 | [`primary_metric`](l5/axes/primary_metric.md) | L5 | `L5_A_metric_specification` | operational | no | 13 |
 | [`provenance_fields`](l8/axes/provenance_fields.md) | L8 | `L8_C_provenance` | operational | no | 14 |
-| [`quarterly_to_monthly_rule`](l2/axes/quarterly_to_monthly_rule.md) | L2 | `l2_a` | operational | yes | 4 |
+| [`quarterly_to_monthly_policy`](l2/axes/quarterly_to_monthly_policy.md) | L2 | `l2_a` | operational | yes | 4 |
 | [`ranking`](l5/axes/ranking.md) | L5 | `L5_E_ranking_reporting` | operational | no | 0 |
 | [`raw_missing_policy`](l1/axes/raw_missing_policy.md) | L1 | `l1_c` | operational | no | 4 |
 | [`raw_outlier_policy`](l1/axes/raw_outlier_policy.md) | L1 | `l1_c` | operational | no | 6 |
@@ -145,7 +145,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`relative_metrics`](l5/axes/relative_metrics.md) | L5 | `L5_A_metric_specification` | operational | no | 4 |
 | [`release_lag_rule`](l1/axes/release_lag_rule.md) | L1 | `l1_c` | operational | no | 3 |
 | [`report_style`](l5/axes/report_style.md) | L5 | `L5_E_ranking_reporting` | operational | no | 0 |
-| [`reproducibility_mode`](l0/axes/reproducibility_mode.md) | L0 | `l0_a` | operational | no | 2 |
+| [`reproducibility_policy`](l0/axes/reproducibility_policy.md) | L0 | `l0_a` | operational | no | 2 |
 | [`residual_alpha`](l6/axes/residual_alpha.md) | L6 | `L6_G_residual` | operational | no | 0 |
 | [`residual_lag_count`](l6/axes/residual_lag_count.md) | L6 | `L6_G_residual` | operational | no | 0 |
 | [`residual_test`](l6/axes/residual_test.md) | L6 | `L6_G_residual` | operational | no | 0 |
@@ -167,7 +167,7 @@ Every axis across every layer, sorted A-Z by axis name. Same axis name can appea
 | [`summary_metrics`](l1_5/axes/summary_metrics.md) | L1.5 | `L1_5_B_univariate_summary` | operational | no | 8 |
 | [`summary_split`](l1_5/axes/summary_split.md) | L1.5 | `L1_5_B_univariate_summary` | operational | no | 4 |
 | [`t_code_application_log`](l2_5/axes/t_code_application_log.md) | L2.5 | `L2_5_D_cleaning_effect_summary` | operational | no | 3 |
-| [`target_geography_scope`](l1/axes/target_geography_scope.md) | L1 | `l1_d` | operational | no | 3 |
+| [`target_geography_policy`](l1/axes/target_geography_policy.md) | L1 | `l1_d` | operational | no | 3 |
 | [`target_structure`](l1/axes/target_structure.md) | L1 | `l1_b` | operational | no | 2 |
 | [`top_k_features_to_show`](l7/axes/top_k_features_to_show.md) | L7 | `L7_B_output_shape_export` | operational | no | 0 |
 | [`training_start_rule`](l4/axes/training_start_rule.md) | L4 | `L4_C_training_window` | operational | yes | 3 |

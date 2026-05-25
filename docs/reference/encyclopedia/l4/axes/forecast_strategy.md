@@ -1,8 +1,8 @@
-# `forecast_strategy`
+# `forecast_policy`
 
 [Back to L4](../index.md) | [Browse all axes](../../browse_by_axis.md) | [Browse all options](../../browse_by_option.md)
 
-> Axis ``forecast_strategy`` on sub-layer ``L4_B_forecast_strategy`` (layer ``l4``).
+> Axis ``forecast_policy`` on sub-layer ``L4_B_forecast_strategy`` (layer ``l4``).
 
 ## Sub-layer
 

@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `extra_trees` -- Extremely randomized trees (sklearn).
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -50,7 +51,7 @@ Set ``params.family = "extra_trees"`` in the relevant layer to activate this op 
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: extra_trees
+  model: extra_trees
 ```
 
 ## References

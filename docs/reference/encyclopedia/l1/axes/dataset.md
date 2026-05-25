@@ -37,7 +37,7 @@ Monthly inflation, employment, industrial-production, and term-structure forecas
 
 * McCracken & Ng (2016) 'FRED-MD: A Monthly Database for Macroeconomic Research', Journal of Business & Economic Statistics 34(4). (doi:10.1080/07350015.2015.1086655)
 
-**Related options**: [`custom_source_policy`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -57,7 +57,7 @@ GDP, consumption, investment, productivity nowcasting / forecasting.
 
 * McCracken & Ng (2020) 'FRED-QD: A Quarterly Database for Macroeconomic Research', Federal Reserve Bank of St. Louis Review.
 
-**Related options**: [`custom_source_policy`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -65,7 +65,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 FRED-SD: state-level US series with geographic axes.
 
-State-level macro panel covering ~50 states + DC. Activates the L1.D geography axes (target_geography_scope / predictor_geography_scope) and the L7 ``us_state_choropleth`` figure type for spatial interpretation.
+State-level macro panel covering ~50 states + DC. Activates the L1.D geography axes (target_geography_policy / predictor_geography_policy) and the L7 ``us_state_choropleth`` figure type for spatial interpretation.
 
 FRED-SD ships with mixed monthly + quarterly frequencies; the L2.A frequency-alignment rules (issue #202) handle the mixed case.
 
@@ -77,7 +77,7 @@ State-level employment / payroll / housing forecasting; geographic-importance st
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`custom_source_policy`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -95,7 +95,7 @@ Studies where state-level targets need national-aggregate predictors.
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`custom_source_policy`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._
 
@@ -113,6 +113,6 @@ Quarterly state-level studies (rare; use only when the target is quarterly state
 
 * macroforecast design Part 1, L1: 'data definition is the recipe layer that pins source, target, geography, and horizon -- everything downstream branches off these choices.'
 
-**Related options**: [`custom_source_policy`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
+**Related options**: [`panel_composition`](#custom-source-policy), [`frequency`](#frequency), [`horizon_set`](#horizon-set)
 
 _Last reviewed 2026-05-04 by macroforecast author._

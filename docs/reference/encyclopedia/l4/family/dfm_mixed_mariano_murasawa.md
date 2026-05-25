@@ -1,3 +1,4 @@
+<!-- TODO(restructure-phase-1-followup): folder will be renamed from l4/family/ to l4/model/ in a separate doc-pass -->
 # `dfm_mixed_mariano_murasawa` -- Mariano-Murasawa-style mixed-frequency dynamic factor model.
 
 [Back to `family` axis](../axes/family.md) | [Back to L4](../index.md) | [Browse all options](../../browse_by_option.md)
@@ -47,7 +48,7 @@ Set ``params.family = "dfm_mixed_mariano_murasawa"`` in the relevant layer to ac
 ```yaml
 # Layer L4 recipe fragment
 params:
-  family: dfm_mixed_mariano_murasawa
+  model: dfm_mixed_mariano_murasawa
 ```
 
 ## References

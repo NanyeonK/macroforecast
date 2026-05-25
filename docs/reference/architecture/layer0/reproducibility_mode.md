@@ -1,9 +1,9 @@
-# Layer 0 Axis: `reproducibility_mode`
+# Layer 0 Axis: `reproducibility_policy`
 
 - Parent: [Layer 0](index.md)
-- Current: `reproducibility_mode`
+- Current: `reproducibility_policy`
 
-`reproducibility_mode` controls seed policy for the run. It determines whether
+`reproducibility_policy` controls seed policy for the run. It determines whether
 the execution layer resets stochastic state before fitting and forecasting.
 
 ## Values
@@ -46,7 +46,7 @@ Default seeded run:
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
 ```
 
 Seeded run with explicit seed:
@@ -54,7 +54,7 @@ Seeded run with explicit seed:
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 20260101
 ```
@@ -64,7 +64,7 @@ Exploratory run:
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: exploratory
+    reproducibility_policy: exploratory
 ```
 
 GPU deterministic request:
@@ -72,7 +72,7 @@ GPU deterministic request:
 ```yaml
 0_meta:
   fixed_axes:
-    reproducibility_mode: seeded_reproducible
+    reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
     gpu_deterministic: true
@@ -82,8 +82,8 @@ GPU deterministic request:
 
 | Invalid Pattern | Use Instead |
 |---|---|
-| `reproducibility_mode: strict` | `seeded_reproducible` plus deterministic leaf config where supported |
-| `reproducibility_mode: strict_reproducible` in new recipes | `seeded_reproducible` |
+| `reproducibility_policy: strict` | `seeded_reproducible` plus deterministic leaf config where supported |
+| `reproducibility_policy: strict_reproducible` in new recipes | `seeded_reproducible` |
 | `exploratory` with `random_seed` | remove `random_seed` or use `seeded_reproducible` |
 | sweeping seed policy | keep fixed; sweep scientific axes only |
 
