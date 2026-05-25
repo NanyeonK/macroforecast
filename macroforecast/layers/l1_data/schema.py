@@ -6,14 +6,17 @@ import re
 from datetime import date
 from typing import Any, Literal
 
-from ..pipeline import DAG, GatePredicate, Node, NodeRef
-from ..layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
-from ..types import L1DataDefinitionArtifact, L1RegimeMetadataArtifact
-
-
 class L1Data:
     """Layer 1 Data implementation marker."""
 
+
+# Deferred core imports: placed after L1Data so that registry.py can import L1Data
+# without hitting a circular-dependency error (schema.py -> macroforecast.core.pipeline
+# -> core/__init__ -> registry.py -> schema.py).  By the time these lines execute,
+# macroforecast.core.pipeline / layer_specs / types are already in sys.modules.
+from macroforecast.core.pipeline import DAG, GatePredicate, Node, NodeRef  # noqa: E402
+from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec  # noqa: E402
+from macroforecast.core.types import L1DataDefinitionArtifact, L1RegimeMetadataArtifact  # noqa: E402
 
 CustomSourcePolicy = Literal["official_only", "custom_panel_only", "official_plus_custom"]
 Dataset = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]

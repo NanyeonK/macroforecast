@@ -24,7 +24,7 @@ def test_alfred_validator_accepts_with_snapshot_dir():
         target: CPIAUCSL
         alfred_snapshot_dir: /tmp/mock_alfred_dir
     """
-    from macroforecast.core.layers.l1 import parse_layer_yaml, validate_layer
+    from macroforecast.layers.l1_data.schema import parse_layer_yaml, validate_layer
 
     report = validate_layer(parse_layer_yaml(yaml_text))
     assert not report.has_hard_errors, (
@@ -47,7 +47,7 @@ def test_alfred_validator_rejects_without_snapshot_dir():
       leaf_config:
         target: CPIAUCSL
     """
-    from macroforecast.core.layers.l1 import parse_layer_yaml, validate_layer
+    from macroforecast.layers.l1_data.schema import parse_layer_yaml, validate_layer
 
     report = validate_layer(parse_layer_yaml(yaml_text))
     all_messages = (
@@ -72,7 +72,7 @@ def test_alfred_current_vintage_still_accepted():
       leaf_config:
         target: CPIAUCSL
     """
-    from macroforecast.core.layers.l1 import parse_layer_yaml, validate_layer
+    from macroforecast.layers.l1_data.schema import parse_layer_yaml, validate_layer
 
     report = validate_layer(parse_layer_yaml(yaml_text))
     assert not report.has_hard_errors, (
@@ -90,7 +90,7 @@ def test_alfred_option_status_is_operational():
     Note: vintage_policy is in the l1_a (Source selection) sub-layer, not l1_g.
     Options use .value attribute (not .name) per the codebase convention.
     """
-    from macroforecast.core.layers.l1 import L1_LAYER_SPEC
+    from macroforecast.layers.l1_data.schema import L1_LAYER_SPEC
 
     # vintage_policy is in the l1_a (Source selection) sub-layer.
     vintage_axis = L1_LAYER_SPEC.axes["l1_a"]["vintage_policy"]
@@ -115,7 +115,7 @@ def test_load_alfred_vintage_snapshot_synthetic(tmp_path):
 
     Tolerances: atol=1e-6 (exact float per test-spec.md).
     """
-    from macroforecast.raw.alfred_adapter import load_alfred_vintage_snapshot
+    from macroforecast.layers.l1_data.alfred_adapter import load_alfred_vintage_snapshot
 
     snapshot_df = pd.DataFrame({
         "series_id": ["CPIAUCSL", "CPIAUCSL"],
@@ -160,7 +160,7 @@ def test_apply_alfred_vintage_static_mode(tmp_path):
 
     Tolerance: atol=1e-6 per test-spec.md.
     """
-    from macroforecast.raw.alfred_adapter import apply_alfred_vintage_to_panel
+    from macroforecast.layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
 
     snapshot_df = pd.DataFrame({
         "series_id": ["CPIAUCSL"],
@@ -194,7 +194,7 @@ def test_apply_alfred_vintage_static_mode(tmp_path):
 
 def test_apply_alfred_vintage_passthrough_on_current_vintage():
     """Contract: current_vintage policy returns the panel unchanged (identity)."""
-    from macroforecast.raw.alfred_adapter import apply_alfred_vintage_to_panel
+    from macroforecast.layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
 
     panel = pd.DataFrame(
         {"CPIAUCSL": [257.0]},
@@ -216,7 +216,7 @@ def test_apply_alfred_vintage_passthrough_on_current_vintage():
 def test_load_alfred_missing_file_raises(tmp_path):
     """Contract: FileNotFoundError when snapshot directory exists but has no
     alfred_vintages.parquet or alfred_vintages.csv file."""
-    from macroforecast.raw.alfred_adapter import load_alfred_vintage_snapshot
+    from macroforecast.layers.l1_data.alfred_adapter import load_alfred_vintage_snapshot
 
     # tmp_path exists but is empty (no parquet or csv file).
     with pytest.raises(FileNotFoundError):

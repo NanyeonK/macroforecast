@@ -299,7 +299,7 @@ def test_known_leaf_config_keys_extended_with_l1efg_keys():
 
 def test_l1_option_docs_docstring_marks_audit_complete():
     """The option_docs/l1.py module docstring marks L1 audit as complete."""
-    import macroforecast.scaffold.option_docs.l1 as l1_module
+    import macroforecast.layers.l1_data.option_docs as l1_module
     doc = l1_module.__doc__ or ""
     assert "L1 audit complete" in doc or "audit complete" in doc.lower(), (
         "option_docs/l1.py docstring should state 'L1 audit complete'"

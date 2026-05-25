@@ -24,7 +24,7 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.custom`` -- user-defined model / preprocessor / feature registration
 - ``macroforecast.defaults`` -- default profile dict template
 - ``macroforecast.preprocessing`` -- preprocessing contract helpers
-- ``macroforecast.raw`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
+- ``macroforecast.layers.l1_data`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
 - ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
 - ``macroforecast.scaffold`` -- recipe scaffold (RecipeBuilder + OptionDoc)
 - ``macroforecast.tuning`` -- hyperparameter search engines
@@ -93,24 +93,24 @@ _LAZY_EXPORTS = {
     "clear_custom_models": ".custom",
     "clear_custom_extensions": ".custom",
     # raw adapters
-    "normalize_version_request": ".raw",
-    "list_vintages": ".raw",
-    "get_raw_cache_root": ".raw",
-    "get_manifest_path": ".raw",
-    "get_raw_file_path": ".raw",
-    "build_raw_artifact_record": ".raw",
-    "append_raw_manifest_entry": ".raw",
-    "read_raw_manifest": ".raw",
-    "parse_fred_csv": ".raw",
-    "load_custom_csv": ".raw",
-    "load_custom_parquet": ".raw",
-    "load_fred_md": ".raw",
-    "load_fred_qd": ".raw",
-    "load_fred_sd": ".raw",
-    "RawVersionRequest": ".raw",
-    "RawDatasetMetadata": ".raw",
-    "RawArtifactRecord": ".raw",
-    "RawLoadResult": ".raw",
+    "normalize_version_request": ".layers.l1_data",
+    "list_vintages": ".layers.l1_data",
+    "get_raw_cache_root": ".layers.l1_data",
+    "get_manifest_path": ".layers.l1_data",
+    "get_raw_file_path": ".layers.l1_data",
+    "build_raw_artifact_record": ".layers.l1_data",
+    "append_raw_manifest_entry": ".layers.l1_data",
+    "read_raw_manifest": ".layers.l1_data",
+    "parse_fred_csv": ".layers.l1_data",
+    "load_custom_csv": ".layers.l1_data",
+    "load_custom_parquet": ".layers.l1_data",
+    "load_fred_md": ".layers.l1_data",
+    "load_fred_qd": ".layers.l1_data",
+    "load_fred_sd": ".layers.l1_data",
+    "RawVersionRequest": ".layers.l1_data",
+    "RawDatasetMetadata": ".layers.l1_data",
+    "RawArtifactRecord": ".layers.l1_data",
+    "RawLoadResult": ".layers.l1_data",
     # preprocessing
     "build_preprocess_contract": ".preprocessing",
     "check_preprocess_governance": ".preprocessing",

@@ -30,7 +30,7 @@ _FRED_BASE_YAML = """
 
 def test_real_time_alfred_accepted_in_fixed_axes():
     """validate_layer must NOT hard-reject real_time_alfred in fixed_axes (C50 operational)."""
-    from macroforecast.core.layers.l1 import parse_layer_yaml, validate_layer
+    from macroforecast.layers.l1_data.schema import parse_layer_yaml, validate_layer
 
     yaml_text = _FRED_BASE_YAML.format(
         vintage_axis="vintage_policy: real_time_alfred",
@@ -52,7 +52,7 @@ def test_real_time_alfred_accepted_in_fixed_axes():
 
 def test_real_time_alfred_accepted_in_leaf_config():
     """validate_layer must NOT hard-reject real_time_alfred in leaf_config (C50 operational)."""
-    from macroforecast.core.layers.l1 import parse_layer_yaml, validate_layer
+    from macroforecast.layers.l1_data.schema import parse_layer_yaml, validate_layer
 
     yaml_text = _FRED_BASE_YAML.format(
         vintage_axis="",
@@ -73,7 +73,7 @@ def test_real_time_alfred_accepted_in_leaf_config():
 
 def test_current_vintage_still_accepted():
     """Regression guard: current_vintage must still be accepted without any hard errors."""
-    from macroforecast.core.layers.l1 import parse_layer_yaml, validate_layer
+    from macroforecast.layers.l1_data.schema import parse_layer_yaml, validate_layer
 
     yaml_text = _FRED_BASE_YAML.format(
         vintage_axis="vintage_policy: current_vintage",
@@ -88,7 +88,7 @@ def test_current_vintage_still_accepted():
 
 def test_real_time_alfred_option_status_is_operational():
     """Option registry must carry status='operational' for real_time_alfred (C50 promotion)."""
-    from macroforecast.core.layers.l1 import L1_LAYER_SPEC
+    from macroforecast.layers.l1_data.schema import L1_LAYER_SPEC
 
     vintage_axis = L1_LAYER_SPEC.axes["l1_a"]["vintage_policy"]
     opt = next(

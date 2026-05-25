@@ -27,30 +27,30 @@ def _make_fake_artifact():
 
 def _patch_infrastructure(monkeypatch, fake_df, fake_tcodes):
     """Patch all I/O and infrastructure so load_fred_qd() can run without network."""
-    import macroforecast.raw.datasets.fred_qd as fqd
+    import macroforecast.layers.l1_data.sources.fred_qd as fqd
 
     fake_req = _make_fake_request()
     fake_target = MagicMock(spec=Path)
     fake_target.exists.return_value = True  # treat as cache hit
 
     monkeypatch.setattr(
-        "macroforecast.raw.datasets.fred_qd.normalize_version_request",
+        "macroforecast.layers.l1_data.sources.fred_qd.normalize_version_request",
         lambda *a, **kw: fake_req,
     )
     monkeypatch.setattr(
-        "macroforecast.raw.datasets.fred_qd.get_raw_file_path",
+        "macroforecast.layers.l1_data.sources.fred_qd.get_raw_file_path",
         lambda *a, **kw: fake_target,
     )
     monkeypatch.setattr(
-        "macroforecast.raw.datasets.fred_qd.parse_fred_csv",
+        "macroforecast.layers.l1_data.sources.fred_qd.parse_fred_csv",
         lambda *a, **kw: (fake_df, fake_tcodes),
     )
     monkeypatch.setattr(
-        "macroforecast.raw.datasets.fred_qd.build_raw_artifact_record",
+        "macroforecast.layers.l1_data.sources.fred_qd.build_raw_artifact_record",
         lambda *a, **kw: _make_fake_artifact(),
     )
     monkeypatch.setattr(
-        "macroforecast.raw.datasets.fred_qd.append_raw_manifest_entry",
+        "macroforecast.layers.l1_data.sources.fred_qd.append_raw_manifest_entry",
         lambda *a, **kw: None,
     )
 
@@ -63,7 +63,7 @@ def test_nat_safe_data_through_no_nat(monkeypatch):
     )
     _patch_infrastructure(monkeypatch, fake_df, {"A": 1})
 
-    from macroforecast.raw.datasets.fred_qd import load_fred_qd
+    from macroforecast.layers.l1_data.sources.fred_qd import load_fred_qd
     result = load_fred_qd()
     assert result.dataset_metadata.data_through == "2023-07", (
         f"Expected 2023-07, got {result.dataset_metadata.data_through!r}"
@@ -80,7 +80,7 @@ def test_nat_safe_data_through_trailing_nat(monkeypatch):
     )
     _patch_infrastructure(monkeypatch, fake_df, {"A": 1})
 
-    from macroforecast.raw.datasets.fred_qd import load_fred_qd
+    from macroforecast.layers.l1_data.sources.fred_qd import load_fred_qd
     result = load_fred_qd()
     assert result.dataset_metadata.data_through == "2023-04", (
         f"Expected 2023-04, got {result.dataset_metadata.data_through!r}"
@@ -95,7 +95,7 @@ def test_nat_safe_data_through_all_nat(monkeypatch):
     )
     _patch_infrastructure(monkeypatch, fake_df, {"A": 1})
 
-    from macroforecast.raw.datasets.fred_qd import load_fred_qd
+    from macroforecast.layers.l1_data.sources.fred_qd import load_fred_qd
     result = load_fred_qd()
     assert result.dataset_metadata.data_through is None, (
         f"Expected None, got {result.dataset_metadata.data_through!r}"
@@ -107,7 +107,7 @@ def test_nat_safe_data_through_empty_df(monkeypatch):
     fake_df = pd.DataFrame({"A": []}, index=pd.DatetimeIndex([]))
     _patch_infrastructure(monkeypatch, fake_df, {})
 
-    from macroforecast.raw.datasets.fred_qd import load_fred_qd
+    from macroforecast.layers.l1_data.sources.fred_qd import load_fred_qd
     result = load_fred_qd()
     assert result.dataset_metadata.data_through is None, (
         f"Expected None, got {result.dataset_metadata.data_through!r}"

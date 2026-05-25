@@ -130,7 +130,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
     layer_validators = (
         ("0_meta", "macroforecast.core.layers.l0"),
-        ("1_data", "macroforecast.core.layers.l1"),
+        ("1_data", "macroforecast.layers.l1_data.schema"),
         ("2_preprocessing", "macroforecast.core.layers.l2"),
         ("3_feature_engineering", "macroforecast.core.layers.l3"),
         ("4_forecasting_model", "macroforecast.core.layers.l4"),

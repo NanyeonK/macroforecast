@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.core.layers.l1 import _is_iso_date, _normalize_iso_partial
+from macroforecast.layers.l1_data.schema import _is_iso_date, _normalize_iso_partial
 
 
 class TestIsIsoDate:

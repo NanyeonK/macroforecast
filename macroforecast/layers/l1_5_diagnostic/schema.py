@@ -3,9 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from ..pipeline import DAG, Node, NodeRef, SourceSelector
-
-
 @dataclass(frozen=True)
 class SubLayerSpec:
     axes: tuple[str, ...]
@@ -30,6 +27,12 @@ class L1_5DataSummary:
     @classmethod
     def list_sublayers(cls) -> tuple[str, ...]:
         return tuple(cls.sub_layers)
+
+
+# Deferred core imports: placed after L1_5DataSummary so that registry.py can import
+# L1_5DataSummary without hitting a circular-dependency error.  By the time these
+# lines execute, macroforecast.core.pipeline is already in sys.modules.
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
 
 
 class L1_5ResolvedAxes(dict):
@@ -240,7 +243,7 @@ def _issue(path: str, message: str) -> Any:
 # Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
 # ---------------------------------------------------------------------------
 
-from ..layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (  # noqa: E402
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,
