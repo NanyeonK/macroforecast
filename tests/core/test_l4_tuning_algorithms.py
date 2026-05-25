@@ -17,7 +17,7 @@ def _toy_data(n: int = 60, seed: int = 0):
 
 def test_cv_path_picks_alpha_for_ridge():
     X, y = _toy_data()
-    params = {"family": "ridge", "search_algorithm": "cv_path", "alpha": 1.0, "_l4_leaf_config": {}}
+    params = {"model": "ridge", "search_algorithm": "cv_path", "alpha": 1.0, "_l4_leaf_config": {}}
     result = _resolve_l4_tuning(params, X, y)
     assert "alpha" in result
     # Default alphas list: 6 candidates; the chosen one should be one of them
@@ -29,7 +29,7 @@ def test_cv_path_uses_leaf_config_alphas():
     X, y = _toy_data()
     custom_alphas = [0.05, 0.5, 5.0]
     params = {
-        "family": "lasso",
+        "model": "lasso",
         "search_algorithm": "cv_path",
         "alpha": 1.0,
         "_l4_leaf_config": {"cv_path_alphas": custom_alphas},
@@ -41,7 +41,7 @@ def test_cv_path_uses_leaf_config_alphas():
 def test_grid_search_dispatch():
     X, y = _toy_data()
     params = {
-        "family": "ridge",
+        "model": "ridge",
         "search_algorithm": "grid_search",
         "alpha": 1.0,
         "_l4_leaf_config": {"tuning_grid": {"alpha": [0.1, 1.0, 10.0]}},
@@ -53,7 +53,7 @@ def test_grid_search_dispatch():
 def test_random_search_dispatch_with_distributions():
     X, y = _toy_data()
     params = {
-        "family": "ridge",
+        "model": "ridge",
         "search_algorithm": "random_search",
         "alpha": 1.0,
         "random_state": 7,
@@ -74,7 +74,7 @@ def test_bayesian_optimization_falls_back_to_random_when_optuna_missing():
         pytest.skip("optuna installed; this test pins the no-optuna fallback")
     X, y = _toy_data()
     params = {
-        "family": "ridge",
+        "model": "ridge",
         "search_algorithm": "bayesian_optimization",
         "alpha": 1.0,
         "random_state": 0,
@@ -93,7 +93,7 @@ def test_bayesian_optimization_falls_back_to_random_when_optuna_missing():
 def test_short_panel_returns_params_unchanged():
     X = pd.DataFrame({"a": [1.0, 2.0, 3.0]})
     y = pd.Series([0.1, 0.2, 0.3])
-    params = {"family": "ridge", "search_algorithm": "grid_search", "alpha": 1.0}
+    params = {"model": "ridge", "search_algorithm": "grid_search", "alpha": 1.0}
     result = _resolve_l4_tuning(params, X, y)
     assert result["alpha"] == 1.0  # unchanged
 
@@ -114,7 +114,7 @@ def test_kfold_search_picks_alpha_from_grid():
     X, y = _toy_data()
     custom_alphas = [0.01, 0.1, 1.0, 10.0]
     params = {
-        "family": "ridge", "search_algorithm": "kfold", "alpha": 99.0,
+        "model": "ridge", "search_algorithm": "kfold", "alpha": 99.0,
         "random_state": 1, "_l4_leaf_config": {"cv_path_alphas": custom_alphas},
     }
     result = _resolve_l4_tuning(params, X, y)
@@ -130,7 +130,7 @@ def test_poos_search_picks_alpha_via_holdout():
     X, y = _toy_data()
     custom_alphas = [0.01, 0.1, 1.0, 10.0]
     params = {
-        "family": "lasso", "search_algorithm": "poos", "alpha": 99.0,
+        "model": "lasso", "search_algorithm": "poos", "alpha": 99.0,
         "random_state": 1, "_l4_leaf_config": {"cv_path_alphas": custom_alphas},
     }
     result = _resolve_l4_tuning(params, X, y)
@@ -144,7 +144,7 @@ def test_aic_search_picks_alpha_by_information_criterion():
     X, y = _toy_data()
     custom_alphas = [0.01, 0.1, 1.0, 10.0]
     params = {
-        "family": "ridge", "search_algorithm": "aic", "alpha": 99.0,
+        "model": "ridge", "search_algorithm": "aic", "alpha": 99.0,
         "_l4_leaf_config": {"cv_path_alphas": custom_alphas},
     }
     result = _resolve_l4_tuning(params, X, y)
@@ -160,11 +160,11 @@ def test_bic_search_picks_alpha_by_information_criterion():
     custom_alphas = [0.01, 0.1, 1.0, 10.0, 100.0]
     leaf = {"cv_path_alphas": custom_alphas}
     params_aic = {
-        "family": "ridge", "search_algorithm": "aic", "alpha": 99.0,
+        "model": "ridge", "search_algorithm": "aic", "alpha": 99.0,
         "_l4_leaf_config": leaf,
     }
     params_bic = {
-        "family": "ridge", "search_algorithm": "bic", "alpha": 99.0,
+        "model": "ridge", "search_algorithm": "bic", "alpha": 99.0,
         "_l4_leaf_config": leaf,
     }
     res_aic = _resolve_l4_tuning(params_aic, X, y)
@@ -192,7 +192,7 @@ def test_non_alpha_family_passes_through_kfold_unchanged():
 
     X, y = _toy_data()
     params = {
-        "family": "random_forest", "search_algorithm": "kfold",
+        "model": "random_forest", "search_algorithm": "kfold",
         "n_estimators": 50, "max_depth": 4, "random_state": 0,
         "_l4_leaf_config": {},
     }
@@ -209,7 +209,7 @@ def test_kfold_kernel_ridge_uses_alpha_grid():
     X, y = _toy_data()
     custom_alphas = [0.01, 0.1, 1.0]
     params = {
-        "family": "kernel_ridge", "search_algorithm": "kfold", "alpha": 99.0,
+        "model": "kernel_ridge", "search_algorithm": "kfold", "alpha": 99.0,
         "kernel": "rbf", "random_state": 1,
         "_l4_leaf_config": {"cv_path_alphas": custom_alphas},
     }
@@ -223,7 +223,7 @@ def test_kfold_random_forest_picks_max_depth_from_grid():
 
     X, y = _toy_data()
     params = {
-        "family": "random_forest", "search_algorithm": "kfold",
+        "model": "random_forest", "search_algorithm": "kfold",
         "n_estimators": 50, "max_depth": 99, "random_state": 0,
         "_l4_leaf_config": {"rf_max_depth_grid": [2, 4, 8]},
     }
@@ -236,7 +236,7 @@ def test_poos_svr_picks_C_from_grid():
 
     X, y = _toy_data()
     params = {
-        "family": "svr_rbf", "search_algorithm": "poos",
+        "model": "svr_rbf", "search_algorithm": "poos",
         "C": 99.0, "epsilon": 0.1, "random_state": 0,
         "_l4_leaf_config": {"svr_C_grid": [0.5, 5.0, 50.0]},
     }

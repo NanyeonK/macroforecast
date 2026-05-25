@@ -300,7 +300,7 @@ class TestF16MafPerVariablePca:
                         "type": "step",
                         "op": "fit",
                         "params": {
-                            "family": "ridge",
+                            "model": "ridge",
                             "alpha": 1.0,
                             "forecast_policy": "direct",
                             "training_start_rule": "expanding",

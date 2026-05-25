@@ -40,7 +40,7 @@ def test_emit_quantile_intervals_runs_per_quantile_when_X_y_supplied():
     fit_nodes = [
         {
             "op": "fit",
-            "params": {"forecast_object": "quantile", "family": "ridge", "quantile_levels": [0.1, 0.5, 0.9]},
+            "params": {"forecast_object": "quantile", "model": "ridge", "quantile_levels": [0.1, 0.5, 0.9]},
         }
     ]
     intervals = _emit_quantile_intervals(forecasts, fit_nodes, X=X, y=y)
