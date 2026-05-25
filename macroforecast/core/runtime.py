@@ -14216,7 +14216,7 @@ def _l8_render_html_report(
     lines.append("<!DOCTYPE html><html><head><meta charset='utf-8'>")
     lines.append("<title>macroforecast study report</title>")
     lines.append(
-        "<style>body{font-model:system-ui,sans-serif;margin:2rem;max-width:90rem}"
+        "<style>body{font-family:system-ui,sans-serif;margin:2rem;max-width:90rem}"
         "h1,h2{border-bottom:1px solid #ccc;padding-bottom:.3rem}"
         "table{border-collapse:collapse;margin:1rem 0}"
         "td,th{border:1px solid #ddd;padding:.4rem .8rem}"
@@ -14239,7 +14239,7 @@ def _l8_render_html_report(
         if isinstance(node, dict) and node.get("op") == "fit":
             family = (node.get("params") or {}).get("model")
             break
-    if model:
+    if family:
         lines.append(f"<p><b>Model family</b>: <code>{_esc(str(family))}</code></p>")
 
     # Metrics -----------------------------------------------------------
