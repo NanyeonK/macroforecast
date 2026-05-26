@@ -7,6 +7,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **Phase 3g-bis PR #J: recipes/ docstring normalization** (see PR)
+  - Modified: `macroforecast/recipes/__init__.py` — docstring rewrite, -22 lines (64 → 42).
+    Removed redundant boilerplate; tightened module-level description.
+  - No functional change. `paper_methods.py` was already relocated in Phase 3b;
+    this PR contains no source-code edits.
+  - **Behavioral impact**: NONE. Tester PASS (5/5 gates). 0 new failures.
+
 - **Phase 3g-bis PR #I: relocate interpretation/ body to canonical methods.py** (see PR)
   - Modified: `macroforecast/interpretation/__init__.py` (225-line body reduced to
     21-line backward-compat re-export shim; all symbols re-exported from canonical
