@@ -30,6 +30,40 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR8 (HIGH): BVAR Minnesota σ² scaling fix — two-pass OLS pre-estimate added**
+
+  `_fit_multivariate_minnesota` in `macroforecast/core/runtime.py` computed the
+  posterior precision and rhs without dividing by the per-equation error variance
+  σ²_i. The Litterman (1986) Minnesota prior already absorbs σ²_i into V_i (the
+  own-lag diagonal scales as λ₁² · σ²_i / lag^{2λ_decay}), so Vinv ~ 1/σ²_i.
+  The canonical formula (Karlsson 2013, Handbook of Economic Forecasting,
+  Vol. 2B, Eq. 15.8-15.9) requires:
+
+      Precision_i = V_i^{-1} + Z'Z / σ²_i
+      RHS_i       = V_i^{-1} m_i + Z' y_i / σ²_i
+
+  Without the /σ²_i divisor on the likelihood terms, the data were over-weighted
+  relative to the prior by a factor of σ²_i. With macro data where σ²_i >> 1
+  (e.g. INDPRO levels with σ² ~ 50,000), the prior was effectively invisible at
+  any finite λ₁ — the posterior collapsed to the OLS estimate regardless of the
+  prior tightness setting.
+
+  Fix: a two-pass scheme is inserted before the per-equation posterior loop.
+  Pass 1 runs OLS per equation via `np.linalg.lstsq` to obtain σ²_i estimates
+  (plug-in Empirical Bayes). Pass 2 computes the Bayesian posterior using these
+  σ²_i values to divide both ZtZ and Z'y_i. The denominator is clamped to 1e-12
+  to prevent division by zero in degenerate cases.
+
+  Sanity check: with λ₁=500 (loose prior), BVAR posterior converges to OLS.
+  With λ₁=0.01 (tight prior) and b_AR=1.0, all own-lag-1 coefficients are
+  pulled close to 1.0. Both hold after the fix; the bug caused the prior to be
+  invisible at λ₁=1 with high-variance data.
+
+  Tests: `tests/core/test_bvar_sigma2_scaling.py` (10 new tests across 4
+  classes: `TestHighVarianceShrinkage`, `TestOLSConvergence`,
+  `TestPriorDominance`, `TestMonotoneConvergence`,
+  `TestPosteriorCovarianceScaling`).
+
 - **PR5: Berkowitz LR_3 AR(1) component added — df=2 → df=3 (serial-dependence detection)**
 
   `_density_interval_battery` in `macroforecast/core/runtime.py` computed the
