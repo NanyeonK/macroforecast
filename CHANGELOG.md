@@ -11,6 +11,21 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR2 (docs site cleanup): move architecture pages to explanation; encyclopedia is single lookup source**
+
+  Architecture and design-narrative pages lived under `docs/reference/architecture/` but belong in `docs/explanation/` (Diátaxis: reference = look-up, explanation = narrative). Moved all pages; encyclopedia cross-links updated to point to the new location.
+
+  | Action | Files |
+  |--------|-------|
+  | Moved layer pages (L0–L8 + sub-pages) | `docs/reference/architecture/layer{0-8}/*.md` → `docs/explanation/architecture/layer{N}.md` |
+  | Moved top-level pages (7 files) | `foundation`, `philosophy`, `layer_boundary_contract`, `recipe_layers`, `artifacts_and_manifest`, `reproducibility`, `terminology` |
+  | Created | `docs/explanation/architecture/index.md` (toctree for all moved pages) |
+  | Removed | `docs/reference/architecture/` (directory deleted entirely) |
+  | Updated toctrees | `docs/explanation/index.md` (add `architecture/index`), `docs/reference/index.md` (drop architecture entry, keep prose cross-link) |
+  | Updated cross-refs (5 files) | `12_layer_design.md`, `bit_exact_replicate.md`, `honesty_pass.md`, `recipe_to_run.md`, `contributing.md`, `encyclopedia/index.md` |
+
+  Termination conditions: `docs/reference/architecture/` does not exist. `docs/explanation/architecture/` exists. Sphinx build clean (no undefined labels, no broken references).
+
 - **PR1 (docs site cleanup): delete navigator pages and cross-links**
 
   Navigator was removed from the public feature set in Phase 0 (TAXONOMY v1 §12).
