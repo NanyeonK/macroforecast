@@ -74,6 +74,21 @@ full per-version honesty-pass history embedded in repo documentation.
   Termination condition: every remaining `Layer [0-9]+:` / `Layer L[0-9]+` hit
   outside `tutorial/replications/` is a line-1 H1 title. PASS (18 hits, all H1).
 
+- **PR2 (docs precision audit): fix YAML recipe block violations in 4 docs pages**
+
+  Fixed 6 hits across 4 files identified by the check2 audit: deprecated `op: ridge` shorthand
+  and `config:` key (replaced with canonical `op: fit` + `params:`), deprecated `model_family:`
+  param key in L7 example (replaced with `model:`), stale `_rule` axis URL paths in L2 API
+  reference (replaced with `_policy`), and stale `model_family: "ar"` prohibition in defaults
+  reference (updated to current `model: "ar"` concern with `ar_p` guidance).
+
+  | File | Lines | Change |
+  |------|-------|--------|
+  | `docs/explanation/recipe_to_run.md` | 89-91 | `op: ridge` + `config:` → `op: fit` + `params:` |
+  | `docs/explanation/architecture/layer7.md` | 53 | `model_family: xgboost` → `model: xgboost` |
+  | `docs/reference/api/standalone_functions/l2_clean.md` | 86, 100 | `_rule` → `_policy` in encyclopedia links |
+  | `docs/reference/recipe_schema/defaults.md` | 16 | Replace stale `model_family: "ar"` with active `model: "ar"` / `ar_p` guidance |
+
 - **PR2 (docs site cleanup): move architecture pages to explanation; encyclopedia is single lookup source**
 
   Architecture and design-narrative pages lived under `docs/reference/architecture/` but belong in `docs/explanation/` (Diátaxis: reference = look-up, explanation = narrative). Moved all pages; encyclopedia cross-links updated to point to the new location.
