@@ -104,15 +104,15 @@ def _load_layer_modules() -> None:
     from importlib import import_module
 
     for layer_module in (
-        "macroforecast.scaffold.option_docs.l0",
+        "macroforecast.layers.l0_meta.option_docs",
         "macroforecast.layers.l1_data.option_docs",
         "macroforecast.layers.l2_preprocessing.option_docs",
         "macroforecast.layers.l3_features.option_docs",
         "macroforecast.layers.l4_models.option_docs",
-        "macroforecast.scaffold.option_docs.l5",
-        "macroforecast.scaffold.option_docs.l6",
+        "macroforecast.layers.l5_evaluation.option_docs",
+        "macroforecast.layers.l6_tests.option_docs",
         "macroforecast.layers.l7_interpretation.option_docs",
-        "macroforecast.scaffold.option_docs.l8",
+        "macroforecast.layers.l8_output.option_docs",
         "macroforecast.scaffold.option_docs.diagnostics",
     ):
         try:
