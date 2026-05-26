@@ -141,7 +141,7 @@ def _build_default_recipe(
     frequency: str | None,
     start: str | None,
     end: str | None,
-    model_family: str,
+    model: str,
     random_seed: int,
 ) -> RecipeBuilder:
     """Construct the v0.8.0 minimal default recipe via ``RecipeBuilder``.
@@ -183,7 +183,7 @@ def _build_default_recipe(
     # L3 -- minimal lag1 + target construction.
     b.l3.lag_only(n_lag=1)
     # L4 -- single fit node + predict.
-    b.l4.fit(model_family).is_benchmark()
+    b.l4.fit(model).is_benchmark()
     # L5 -- mse primary metric.
     b.l5.standard(primary_metric="mse")
     return b
@@ -202,7 +202,8 @@ def forecast(
     frequency: str | None = None,
     start: str | None = None,
     end: str | None = None,
-    model_family: str = DEFAULT_MODEL,
+    model: str | None = None,
+    model_family: str | None = None,  # deprecated: use model=
     output_directory: str | Path | None = None,
     cache_root: str | Path | None = None,
     random_seed: int = DEFAULT_RANDOM_SEED,
@@ -229,8 +230,10 @@ def forecast(
     start, end
         ISO sample window endpoints (e.g. ``"1985-01"``); written into L1
         ``sample_start_date`` / ``sample_end_date``.
-    model_family
+    model
         L4 ``fit`` family. Defaults to ``"ar_p"`` (see ``macroforecast.defaults.DEFAULT_MODEL``).
+    model_family  # deprecated: use model= instead (will be removed in v0.10.0)
+        Deprecated alias for ``model=``. Will be removed in v0.10.0.
     output_directory
         Directory to write ``manifest.json`` and per-cell artifacts.
     cache_root
@@ -244,6 +247,9 @@ def forecast(
         Wraps the underlying :class:`ManifestExecutionResult`.
     """
 
+    from ._deprecations import resolve_model
+    resolved_model = resolve_model(model, model_family, DEFAULT_MODEL)  # deprecated alias: model_family
+
     builder = _build_default_recipe(
         dataset=dataset,
         target=target,
@@ -251,7 +257,7 @@ def forecast(
         frequency=frequency,
         start=start,
         end=end,
-        model_family=model_family,
+        model=resolved_model,
         random_seed=random_seed,
     )
     # v0.8.6 Gap 2: normalize the lone L4 fit node id for the one-shot
@@ -358,7 +364,7 @@ def _normalize_fit_main_id(recipe: dict[str, Any]) -> None:
     ``fit_<n>_<family>``. That id leaks the family name (and the fit
     counter), which makes chained ``.compare(...)`` follow-ups brittle:
     after ``compare_models([...])`` the auto-name still reflects the
-    *first* family the user passed to ``Experiment(model_family=...)``,
+    *first* family the user passed to ``Experiment(model=...)``,
     so users had to memorise the auto-generated id (``fit_1_ridge`` etc.).
 
     This helper walks the L4 nodes and renames the lone fit node
@@ -449,9 +455,13 @@ class Experiment:
         frequency: str | None = None,
         start: str | None = None,
         end: str | None = None,
-        model_family: str = DEFAULT_MODEL,
+        model: str | None = None,
+        model_family: str | None = None,  # deprecated: use model=
         random_seed: int = DEFAULT_RANDOM_SEED,
     ) -> None:
+        from ._deprecations import resolve_model
+        resolved_model = resolve_model(model, model_family, DEFAULT_MODEL)  # deprecated alias: model_family
+
         self._dataset = dataset
         self._target = target
         self._horizons = [int(h) for h in horizons]
@@ -459,7 +469,7 @@ class Experiment:
         self._start = start
         self._end = end
         self._random_seed = int(random_seed)
-        self._model_family = model_family
+        self._model = resolved_model
 
         # TODO(v0.8.1 / PR 2): track ``.use_*`` hooks here so the recipe
         # builder can apply them just before .run() / .to_yaml().
@@ -471,7 +481,7 @@ class Experiment:
             frequency=frequency,
             start=start,
             end=end,
-            model_family=model_family,
+            model=resolved_model,
             random_seed=self._random_seed,
         )
         # v0.8.6 Gap 2: normalize the lone L4 fit node id to ``fit_main``
@@ -499,7 +509,7 @@ class Experiment:
         if not fit_nodes:
             raise RuntimeError(
                 "compare_models() called before any L4 fit node exists "
-                "(did you instantiate Experiment without a model_family?)"
+                "(did you instantiate Experiment without a model=?)"
             )
         # In PR 1 we always have exactly one fit node. Sweep its family.
         fit_node = fit_nodes[0]
@@ -541,8 +551,8 @@ class Experiment:
         ``sweep_combination.mode`` (default grid).
 
         ``overrides`` may use either dotted ``axis_path=value`` keys or
-        the convenience aliases ``model`` / ``model_family``
-        (mapped to the L4 fit_node family).
+        the convenience alias ``model=`` (mapped to the L4 fit_node family;
+        ``model_family=`` is a deprecated alias, use ``model=`` instead).
 
         Returns ``self`` so calls chain. Calling ``.variant`` twice with
         the same name overwrites the previous record.
@@ -556,8 +566,11 @@ class Experiment:
         variants = recipe.setdefault("variants", {})
         record: dict[str, Any] = {}
         for key, value in overrides.items():
-            if key in {"model", "model_family"}:
-                record["model_family"] = value
+            if key in {"model", "model_family"}:  # deprecated alias: model_family
+                if key == "model_family":  # deprecated: use model=
+                    from ._deprecations import _warn
+                    _warn("model_family", "model")  # deprecated
+                record["model"] = value
             else:
                 record[key] = value
         variants[name] = record

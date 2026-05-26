@@ -33,7 +33,8 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "framework": DEFAULT_TRAINING_START_RULE,
     "benchmark_family": "zero_change",
     "feature_builder": "target_lag_features",
-    "model_family": DEFAULT_MODEL,
+    "model": DEFAULT_MODEL,
+    "model_family": DEFAULT_MODEL,  # deprecated alias, kept for one release
     "primary_metric": "mse",
     "importance_method": "none",
     "reproducibility_policy": "seeded_reproducible",
@@ -59,14 +60,14 @@ def _normalize_horizons(horizons: Iterable[int]) -> tuple[int, ...]:
     return values
 
 
-def _normalize_models(model_families: Iterable[str] | None, model_family: str) -> tuple[str, ...]:
+def _normalize_models(models: Iterable[str] | None, model: str) -> tuple[str, ...]:
     values: tuple[str, ...]
-    if model_families is None:
-        values = (model_family,)
-    elif isinstance(model_families, str):
-        values = (model_families,)
+    if models is None:
+        values = (model,)
+    elif isinstance(models, str):
+        values = (models,)
     else:
-        values = tuple(str(value) for value in model_families)
+        values = tuple(str(value) for value in models)
     if not values:
         raise ValueError("at least one model family is required")
     return values
@@ -237,10 +238,13 @@ def build_default_recipe_dict(
     custom_source_schema: str | None = None,
     custom_source_path: str | None = None,
     framework: str = "expanding",
-    benchmark_family: str = "zero_change",
+    benchmark_model: str | None = None,
+    benchmark_family: str | None = None,  # deprecated: use benchmark_model=
     feature_builder: str = "target_lag_features",
-    model_family: str = DEFAULT_MODEL,
-    model_families: Iterable[str] | None = None,
+    model: str | None = None,
+    model_family: str | None = None,  # deprecated: use model=
+    models: Iterable[str] | None = None,
+    model_families: Iterable[str] | None = None,  # deprecated: use models=
     primary_metric: str = "mse",
     importance_method: str = "none",
     reproducibility_policy: str = "seeded_reproducible",
@@ -255,6 +259,11 @@ def build_default_recipe_dict(
     runtime path, chooses no-op preprocessing, and records the default profile
     in leaf config so manifests can audit how unspecified choices were filled.
     """
+
+    from ._deprecations import resolve_model, resolve_models, resolve_benchmark_model
+    resolved_model = resolve_model(model, model_family, DEFAULT_MODEL)  # deprecated alias: model_family
+    resolved_models = resolve_models(models, model_families)  # deprecated alias: model_families
+    resolved_benchmark = resolve_benchmark_model(benchmark_model, benchmark_family, "zero_change")  # deprecated alias: benchmark_family
 
     if not target:
         raise ValueError("target is required")
@@ -273,7 +282,7 @@ def build_default_recipe_dict(
         custom_source_path=custom_source_path,
     )
     horizon_values = _normalize_horizons(horizons)
-    model_values = _normalize_models(model_families, model_family)
+    model_values = _normalize_models(resolved_models, resolved_model)
     resolved_recipe_id = recipe_id or _default_recipe_id(
         dataset=resolved_dataset,
         target=target,
@@ -287,14 +296,14 @@ def build_default_recipe_dict(
     study_scope = "one_target_compare_methods" if len(model_values) > 1 else "one_target_one_method"
     training_fixed = {
         "framework": framework,
-        "benchmark_family": benchmark_family,
+        "benchmark_model": resolved_benchmark,
         "feature_builder": feature_builder,
     }
     training_block: dict[str, Any] = {"fixed_axes": training_fixed}
     if len(model_values) == 1:
-        training_fixed["model_family"] = model_values[0]
+        training_fixed["model"] = model_values[0]
     else:
-        training_block["sweep_axes"] = {"model_family": list(model_values)}
+        training_block["sweep_axes"] = {"model": list(model_values)}
 
     data_leaf = {
         "target": target,

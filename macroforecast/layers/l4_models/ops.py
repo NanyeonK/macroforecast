@@ -13,7 +13,7 @@ from macroforecast.core.types import (
 
 # Families whose runtime fully matches the published procedure named in
 # the design. Schema-validates and runs end-to-end.
-OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
+OPERATIONAL_MODELS: tuple[str, ...] = (
     "ar_p",
     "ols",
     "ridge",
@@ -142,24 +142,48 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 #   https://github.com/RyanLucas3/MacroRandomForest.
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
-FUTURE_MODEL_FAMILIES: tuple[str, ...] = (
+FUTURE_MODELS: tuple[str, ...] = (
     # C49 honesty pass promoted ``realized_garch`` to OPERATIONAL (above).
-    # FUTURE_MODEL_FAMILIES is now empty. C50 targets: lstm_hidden_state,
+    # FUTURE_MODELS is now empty. C50 targets: lstm_hidden_state,
     # real_time_alfred.
 )
+
+
+import warnings as _warnings
+
+
+def __getattr__(name: str) -> object:
+    """Backward-compat shim for renamed constants (deprecated in v0.9.5a0)."""
+    if name == "OPERATIONAL_MODEL_FAMILIES":
+        _warnings.warn(
+            "OPERATIONAL_MODEL_FAMILIES is deprecated; use OPERATIONAL_MODELS "
+            "(will be removed in v0.10.0)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return OPERATIONAL_MODELS
+    if name == "FUTURE_MODEL_FAMILIES":
+        _warnings.warn(
+            "FUTURE_MODEL_FAMILIES is deprecated; use FUTURE_MODELS "
+            "(will be removed in v0.10.0)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return FUTURE_MODELS
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # Back-compat shim: previous releases exposed ``PLANNED_MODEL_FAMILIES``
 # as the bucket for "operational schema + approximation runtime". The
 # v0.1 honesty pass collapses planned -> future. The empty tuple is kept
 # so external imports do not crash; new code should use
-# ``FUTURE_MODEL_FAMILIES`` and check :func:`get_family_status`.
+# ``FUTURE_MODELS`` and check :func:`get_family_status`.
 PLANNED_MODEL_FAMILIES: tuple[str, ...] = ()
 
 
 MODEL_FAMILY_STATUS: dict[str, ItemStatus] = {
-    **{family: OPERATIONAL for family in OPERATIONAL_MODEL_FAMILIES},
-    **{family: FUTURE for family in FUTURE_MODEL_FAMILIES},
+    **{family: OPERATIONAL for family in OPERATIONAL_MODELS},
+    **{family: FUTURE for family in FUTURE_MODELS},
 }
 
 
@@ -237,7 +261,7 @@ def _valid_strategy(dag, nref) -> bool:
             "type": str,
             "default": "ridge",
             "sweepable": True,
-            "options": OPERATIONAL_MODEL_FAMILIES + FUTURE_MODEL_FAMILIES,
+            "options": OPERATIONAL_MODELS + FUTURE_MODELS,
         },
         "forecast_policy": {
             "type": str,

@@ -103,7 +103,7 @@ def custom_model_contract_metadata() -> dict[str, Any]:
         "x_path_policy",
         "x_source_date",
         "scheduled_known_future_x_columns",
-        "recursive_x_model_family",
+        "recursive_x_model_family",  # context key for AR family used by recursive-X policy; unrelated to model_family rename
         "recursive_x_model_fallback_columns",
         "raw_panel_iterated_runtime_contract",
         "raw_panel_iterated_payload_contract",
@@ -160,7 +160,7 @@ def custom_model_contract_metadata() -> dict[str, Any]:
         },
         "leakage_rule": "consume only Layer 2 train/pred matrices supplied by runtime",
         "routing_notes": (
-            "registered custom model names are accepted as model_family values "
+            "registered custom model names are accepted as model= values "
             "in the current Python process",
             "YAML recipes can select the registered name, but they do not import "
             "or register Python callables by themselves",
@@ -246,7 +246,7 @@ def register_model(
 
     ``X_test`` is currently one row. The return value may be a scalar or a
     one-element sequence/array. Registered names are accepted as
-    ``model_family`` values by the compiler in the current Python process.
+    ``model=`` values by the compiler in the current Python process.
     """
 
     model_name = _validate_name(name, kind="model")

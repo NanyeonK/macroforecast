@@ -224,7 +224,7 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
     / ``refit_policy`` / ``search_algorithm`` here so the wizard + sphinx
     docs can iterate them."""
 
-    from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES
+    from macroforecast.layers.l4_models.ops import FUTURE_MODELS, OPERATIONAL_MODELS
 
     family_options = tuple(
         OptionInfo(
@@ -233,7 +233,7 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
             description="",
             status="operational",
         )
-        for fam in OPERATIONAL_MODEL_FAMILIES
+        for fam in OPERATIONAL_MODELS
     ) + tuple(
         OptionInfo(
             value=fam,
@@ -241,7 +241,7 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
             description="",
             status="future",
         )
-        for fam in FUTURE_MODEL_FAMILIES
+        for fam in FUTURE_MODELS
     )
     return (
         AxisInfo(
@@ -551,7 +551,7 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
     iterate every importance op consistently with L3/L4/L6 layers.
 
     Architectural parity: L3 (37 ops via universal registry), L4 (35
-    families via OPERATIONAL_MODEL_FAMILIES), L6 (test selectors via
+    families via OPERATIONAL_MODELS), L6 (test selectors via
     module constants), L7 (30 ops via universal registry) all use this
     same fallback pattern.
     """

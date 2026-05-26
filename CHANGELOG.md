@@ -9,6 +9,31 @@ full per-version honesty-pass history embedded in repo documentation.
 `core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
 `interpretation/` and `recipes/` converted to backward-compatible shims.
 
+### API (breaking — deprecated, one-release window)
+
+- **PR4 (hotfix): `model_family` → `model` rename with deprecation infrastructure**
+
+  Public API parameters `model_family`, `model_families`, and `benchmark_family` across
+  `macroforecast/api/` are renamed to `model`, `models`, and `benchmark_model` respectively.
+  Old names are kept for one release as deprecated aliases that emit `DeprecationWarning`.
+  All deprecated names will be removed in **v0.10.0**.
+
+  Migration guide:
+
+  | Old (deprecated) | New (canonical) |
+  |-------------------|-----------------|
+  | `mf.forecast(..., model_family="ridge")` | `mf.forecast(..., model="ridge")` |
+  | `mf.Experiment(..., model_family="lasso")` | `mf.Experiment(..., model="lasso")` |
+  | `build_default_recipe_dict(..., model_family=...)` | `build_default_recipe_dict(..., model=...)` |
+  | `build_default_recipe_dict(..., model_families=...)` | `build_default_recipe_dict(..., models=...)` |
+  | `build_default_recipe_dict(..., benchmark_family=...)` | `build_default_recipe_dict(..., benchmark_model=...)` |
+  | `from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES` | `import OPERATIONAL_MODELS` |
+  | `from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES` | `import FUTURE_MODELS` |
+
+  New module: `macroforecast.api._deprecations` centralizes all deprecation-shim logic
+  (`resolve_model`, `resolve_models`, `resolve_benchmark_model`). Module-level `__getattr__`
+  in `l4_models/ops.py` provides backward-compat for the constant renames.
+
 ### Docs
 
 - **PR4 (docs site cleanup): unify layer numbering to compact L0–L8 / L1.5–L4.5 form**
