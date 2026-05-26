@@ -33,7 +33,6 @@ macroforecast/
   scaffold/               # RecipeBuilder + OptionDoc + templates
   defaults.py             # default profile dict template
   tuning/                 # HP search engines (optional, integrated via L4)
-plans/design/             # 4-part canonical design (source of truth)
 tests/                    # test suite (counts vary by extras; see CI badges)
 examples/recipes/         # YAML recipe examples per layer
 ```

@@ -147,6 +147,15 @@ full per-version honesty-pass history embedded in repo documentation.
     and `# noqa: E402` markers; all imports now at standard position.
   - **Behavioral impact**: none. Structural refactor only.
 
+### Maintenance
+
+- Remove internal workflow artifacts from public repository: untrack `CLAUDE.md`,
+  `mailbox.md`, `implementation.md`; add `plans/design/` to `.gitignore`; strip
+  agent identifiers from `ARCHITECTURE.md`; delete stale `docs/_archive/`
+  entries (11 files). Strip `plans/design/` cross-references from source
+  docstrings, README, contributing guide, and test fixtures to maintain
+  repo consistency. **Behavioral impact**: NONE. No source logic changed.
+
 ### Removed
 
 - L1 axis `official_transform_policy` (duplicates L2 `transform_policy`)
@@ -2446,9 +2455,7 @@ code changes; same 1035 tests; bit-exact replicate contract unchanged.
   two new axis pages
   (``docs/encyclopedia/l2/axes/mixed_frequency_representation.md``,
   ``sd_tcode_policy.md``) plus the canonical browse / index updates.
-* **Design Part 2** -- ``plans/design/part2_l2_l3_l4.md`` documents
-  both new axes (renamed L2.A heading + per-axis sub-section + gate
-  table update).
+* **Design Part 2** -- L2-L4 construction layer design documented.
 * **Docs**: ``docs/for_researchers/planned_simple_api/`` ->
   ``docs/for_researchers/simple_api/``. Stripped the
   "API status note (current)" planning banner from each page.

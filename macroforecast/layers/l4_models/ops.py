@@ -12,8 +12,7 @@ from macroforecast.core.types import (
 
 
 # Families whose runtime fully matches the published procedure named in
-# the design (see ``plans/design/part2_l2_l3_l4.md`` § L4 Model family
-# library). Schema-validates and runs end-to-end.
+# the design. Schema-validates and runs end-to-end.
 OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
     "ar_p",
     "ols",
@@ -125,8 +124,7 @@ OPERATIONAL_MODEL_FAMILIES: tuple[str, ...] = (
 # Families whose v0.1 runtime did *not* faithfully implement the design's
 # named procedure (see PR #163 codex review). Validator hard-rejects these
 # so users do not silently receive numbers from the wrong algorithm.
-# Each item has a tracking issue for v0.2 implementation; see
-# ``plans/design/part2_l2_l3_l4.md`` § L4 for the gap description.
+# Each item has a tracking issue for v0.2 implementation.
 #
 # - factor_augmented_var: no runtime wrapper at all (was a silent
 #   ``NotImplementedError`` at fit time).
