@@ -34,7 +34,7 @@ from ..core.execution import (
     execute_recipe,
     replicate_recipe,
 )
-from ..scaffold.builder import RecipeBuilder
+from tools.docgen.builder import RecipeBuilder
 from .defaults import (
     DEFAULT_HORIZONS,
     DEFAULT_MODEL,
