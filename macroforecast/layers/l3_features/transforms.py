@@ -21,7 +21,7 @@ Usage::
         aggregation='mean',
     )
 
-Cycle 63.1 -- Chow-Lin (1971) canonical GLS implementation.
+v0.9.5 -- Chow-Lin (1971) canonical GLS implementation.
 """
 from __future__ import annotations
 

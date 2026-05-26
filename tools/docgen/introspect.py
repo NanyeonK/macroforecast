@@ -509,7 +509,7 @@ def _build_l6_fallback() -> tuple[AxisInfo, ...]:
             ),
             has_gate=False,
         ),
-        # Cycle 29: L6.B nested model tests axis (clark_west / enc_new / enc_t)
+        # L6.B nested model tests axis (clark_west / enc_new / enc_t) (v0.8.x)
         AxisInfo(
             layer="l6",
             sublayer="L6_B_nested",

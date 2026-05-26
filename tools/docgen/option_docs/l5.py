@@ -372,10 +372,10 @@ for option, doc in _ALL.items():
 
 
 # ---------------------------------------------------------------------------
-# Shared data_args tuples for per-op encyclopedia pages (Cycle 27).
+# Shared data_args tuples for per-op encyclopedia pages (v0.8.x).
 # ---------------------------------------------------------------------------
 
-# Data args for theil_u1 function-op (Cycle 26: moved from parameters).
+# Data args for theil_u1 function-op (v0.8.x: moved from parameters).
 _THEIL_U1_DATA_ARGS: tuple[ParameterDoc, ...] = (
     ParameterDoc(
         name="y_true",
@@ -528,7 +528,7 @@ for option, (summary, desc, when, when_not) in POINT.items():
         refs = refs + (_REF_HYNDMAN_KOEHLER_2006,)
     if option in ("theil_u1", "theil_u2"):
         refs = (_REF_DESIGN_L5, _REF_THEIL_1966)
-    # Cycle 27: all point metrics get a per-op encyclopedia page.
+    # all point metrics get a per-op encyclopedia page (v0.8.x).
     _op_page = True
     _op_func_name = option
     _params: tuple[ParameterDoc, ...] = ()
@@ -565,7 +565,7 @@ for option, (summary, desc, when) in DENSITY.items():
     density_refs: tuple[Reference, ...] = (_REF_DESIGN_L5, _REF_GNEITING_RAFTERY_2007, _REF_GNEITING_KATZFUSS_2014)
     if option == "interval_score":
         density_refs = density_refs + (_REF_WINKLER_1972,)
-    # Cycle 27: interval_score and coverage_rate (B1 subset) get per-op pages.
+    # interval_score and coverage_rate (B1 subset) get per-op pages (v0.8.x).
     # log_score and crps are B2 (require density objects) -- deferred.
     if option == "interval_score":
         _d_op_page = True
@@ -603,7 +603,7 @@ for option, (summary, desc, when) in DENSITY.items():
 
 _DIRECTION = []
 for option, (summary, desc, when, when_not) in DIRECTION.items():
-    # Cycle 27: both direction metrics get per-op pages.
+    # both direction metrics get per-op pages (v0.8.x).
     if option == "success_ratio":
         _dir_data_args = _DIRECTION_DATA_ARGS
         _dir_params: tuple[ParameterDoc, ...] = ()

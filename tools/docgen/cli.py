@@ -47,7 +47,7 @@ def _cmd_encyclopedia(args: argparse.Namespace) -> int:
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
-    # Cycle 14 L2-3 fix: print manifest path on success; show clean error for bad YAML/path
+    # print manifest path on success; show clean error for bad YAML/path (v0.8.x)
     import macroforecast
     import yaml
 
@@ -76,7 +76,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         f"({len(result.cells) - len(failed)} ok, {len(failed)} failed)",
         file=sys.stderr,
     )
-    # Print manifest path and forecasts.csv path on success (Cycle 14 L2-3 fix)
+    # Print manifest path and forecasts.csv path on success (v0.8.x)
     manifest_path = output_dir / "manifest.json"
     if manifest_path.exists():
         print(f"\nManifest: {manifest_path}\n", file=sys.stderr)

@@ -6,7 +6,7 @@ detrend / expansion / auxiliary / target / selection / combine
 families. Each op is a step in the pipeline; ops chain via ``inputs`` and
 the cascade-depth gate (``cascade_max_depth``) bounds recursion.
 
-Cycle 30: 10 basic transform ops updated with op_page=True, op_func_name,
+v0.8.0: 10 basic transform ops updated with op_page=True, op_func_name,
 data_args, and return_type to support per-op encyclopedia pages.
 
 This module ships Tier-1 docs for every operational L3 ``op`` choice.
@@ -36,7 +36,7 @@ _REF_STOCK_WATSON_2002 = Reference(
 )
 
 
-# Shared data-argument doc for all L3 panel-transform standalone callables (Cycle 30).
+# Shared data-argument doc for all L3 panel-transform standalone callables (v0.8.0).
 _L3_PANEL_DATA_ARG: tuple[ParameterDoc, ...] = (
     ParameterDoc(
         name="panel",
@@ -49,7 +49,7 @@ _L3_PANEL_DATA_ARG: tuple[ParameterDoc, ...] = (
     ),
 )
 
-# Cycle 32: shared data-argument docs for supervised L3 ops (panel + required target).
+# Shared data-argument docs for supervised L3 ops (panel + required target, v0.8.0).
 _panel_arg = ParameterDoc(
     name="panel",
     type="pd.DataFrame",
@@ -2206,7 +2206,7 @@ _OP_SLICED_INVERSE_REGRESSION = _o(
 )
 
 
-# C57: chow_lin_disaggregation encyclopedia page (L2-scoped op, lives in l3_ops.py).
+# chow_lin_disaggregation encyclopedia page (L2-scoped op, lives in l3_ops.py).
 _OP_CHOW_LIN_DISAGGREGATION = _o(
     "chow_lin_disaggregation",
     "Chow-Lin (1971) regression-based temporal disaggregation from quarterly to monthly frequency.",
@@ -2308,6 +2308,6 @@ register(
     _OP_SLICED_INVERSE_REGRESSION,
     # v0.9.0 phase-f16: per-variable PCA MAF (Coulombe et al. 2021 IJF Eq. 7)
     _OP_MAF_PER_VARIABLE_PCA,
-    # C57: L2-scoped Chow-Lin disaggregation op page
+    # L2-scoped Chow-Lin disaggregation op page
     _OP_CHOW_LIN_DISAGGREGATION,
 )

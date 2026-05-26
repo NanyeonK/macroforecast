@@ -30,7 +30,7 @@ from ..defaults import DEFAULT_RANDOM_SEED
 
 L0_KEY = "0_meta"
 
-# Cycle 14 L1-3 fix: canonical top-level recipe keys; unknown keys emit UserWarning
+# Canonical top-level recipe keys; unknown keys emit UserWarning
 _KNOWN_RECIPE_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
     "0_meta",
     "1_data",
@@ -60,22 +60,22 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "custom_panel_format", "frequency", "data_through",
         # inline / in-memory panel forms
         "custom_panel_inline", "custom_panel_records", "custom_source_path",
-        # official_plus_custom merge rule (Cycle 17 O-2)
+        # official_plus_custom merge rule
         "custom_merge_rule",
         # horizon config
         "target_horizons",
-        # L1.C conditional leaf_config keys (Cycle 19 P-3)
+        # L1.C conditional leaf_config keys
         "variable_universe_columns",
         "fixed_lag_periods",
         "release_lag_per_series",
         "outlier_iqr_threshold",
         "zscore_threshold_value",
         "winsorize_quantiles",
-        # missing_availability conditional keys (C19 follow-up)
+        # missing_availability conditional keys
         "x_imputation",
         "raw_x_imputation",
-        # L1.D Geography conditional leaf_config keys (Cycle 20)
-        "target_state",  # singular, for target_geography_policy=single_state (C20 follow-up)
+        # L1.D Geography conditional leaf_config keys
+        "target_state",  # singular, for target_geography_policy=single_state
         "target_states",
         "predictor_states",
         "sd_states",
@@ -84,9 +84,9 @@ _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
         "sd_state_groups",
         "sd_variable_group_members",
         "sd_variable_groups",
-        # L1.F horizon_set=range_up_to_h conditional key (Cycle 21)
+        # L1.F horizon_set=range_up_to_h conditional key
         "max_horizon",
-        # L1.G regime_definition conditional leaf_config keys (Cycle 21)
+        # L1.G regime_definition conditional leaf_config keys
         "regime_indicator_path",
         "regime_dates_list",
         "n_regimes",
@@ -449,10 +449,10 @@ def _stable_repr(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_stable_repr(item) for item in value]
     if hasattr(value, "__dataclass_fields__"):
-        # Cycle 14 J-3 fix: cache_root path-dependence
+        # cache_root path-dependence fix
         # When hashing leaf_config dicts, strip cache_root so that
         # different output_directory values do not change the sink hash.
-        # cache_root remains recorded in manifest provenance (Cycle 12 F-P1-13).
+        # cache_root remains recorded in manifest provenance.
         _HASH_SKIP_FIELDS = {"fitted_object", "raw_panel", "panel"}
         _LEAF_CONFIG_HASH_EXCLUDE_KEYS = {"cache_root"}
 
@@ -552,7 +552,7 @@ class CellExecutionResult:
     sink_hashes: dict[str, str] = field(default_factory=dict)
     error: str | None = None
     traceback: str | None = None
-    captured_warnings: tuple[dict[str, Any], ...] = field(default_factory=tuple)  # Cycle 14 L1-2 fix:
+    captured_warnings: tuple[dict[str, Any], ...] = field(default_factory=tuple)
 
     @property
     def succeeded(self) -> bool:
@@ -722,7 +722,7 @@ class ManifestExecutionResult:
         )
 
         git_sha, git_branch = _capture_git_state()
-        # Cycle 14 K-3 fix: extract FRED data_through + resolved sample dates from l1 artifact
+        # Extract FRED data_through + resolved sample dates from l1 artifact
         _data_revision_tag = _capture_data_revision_tag(self.recipe_root)
         _sample_start_resolved = None
         _sample_end_resolved = None
@@ -750,7 +750,7 @@ class ManifestExecutionResult:
                     _data_revision_tag = f"fred-md@{_dt}"
                 else:
                     _data_revision_tag = f"current@{_dt}"
-            # Cycle 15 M-1 fix: post-L2 sample window
+            # Post-L2 sample window
             # Prefer l2_clean_panel_v1.panel.data (post-window) over raw_panel
             import pandas as _pd_k3
             _post_window_idx = None
@@ -780,7 +780,7 @@ class ManifestExecutionResult:
             "dependency_lockfile_paths": _dependency_lockfile_paths(),
             "dependency_lockfile_content": _capture_dependency_lockfile_content(),
             "runtime_environment": _json_safe(_capture_full_runtime_environment()),
-            # Cycle 14 K-3 fix: resolved sample start/end dates
+            # Resolved sample start/end dates
             "sample_start_resolved": _sample_start_resolved,
             "sample_end_resolved": _sample_end_resolved,
         }
@@ -798,7 +798,7 @@ class ManifestExecutionResult:
                 "machine": platform.machine(),
             },
             "provenance": provenance,
-            "warnings": [  # Cycle 14 L1-2 fix: all warnings emitted during all cells
+            "warnings": [  # all warnings emitted during all cells
                 w
                 for cell in self.cells
                 for w in cell.captured_warnings
@@ -814,7 +814,7 @@ class ManifestExecutionResult:
                     "error": cell.error,
                     "runtime_duration_per_layer": _per_layer_durations(cell),
                     "cell_resolved_axes": _per_cell_resolved_axes(cell),
-                    "warnings": list(cell.captured_warnings),  # Cycle 14 L1-2 fix:
+                    "warnings": list(cell.captured_warnings),
                 }
                 for cell in self.cells
             ],
@@ -919,14 +919,14 @@ def execute_recipe(
     * ``parallel`` -- dispatch cells to a ``ProcessPoolExecutor`` of size
       ``leaf_config.n_workers`` (default = ``min(8, os.cpu_count() - 1)``).
       Each worker re-applies ``base_seed + cell_index`` so determinism is
-      preserved. ``parallel_unit: cells`` (Cycle 16 N-2) dispatches whole cells in parallel.
+      preserved. ``parallel_unit: cells`` dispatches whole cells in parallel.
       Sub-cell parallelism (models/horizons/targets/oos_dates) is a follow-up milestone.
     """
 
     started_at = datetime.now(timezone.utc).isoformat()
     started_clock = time.perf_counter()
 
-    # Cycle 14 L2-2 fix: raise FileNotFoundError before attempting YAML parse
+    # Raise FileNotFoundError before attempting YAML parse
     if isinstance(recipe, Path) and not recipe.exists():
         raise FileNotFoundError(f"recipe path does not exist: {recipe}")
 
@@ -953,7 +953,7 @@ def execute_recipe(
     # regardless of YAML/JSON authoring order or roundtrip representation.
     recipe_root = _canonicalize_keys(recipe_root)
 
-    # Cycle 14 L1-3 fix: warn on unknown top-level and leaf_config keys
+    # Warn on unknown top-level and leaf_config keys
     _warn_unknown_recipe_keys(recipe_root)
 
     # Resolve the effective raw cache root and inject it into every cell's L1
@@ -962,7 +962,7 @@ def execute_recipe(
     if effective_cache_root is not None:
         _inject_cache_root(recipe_root, effective_cache_root)
 
-    # Cycle 14 L2-4 fix: propagate output_directory kwarg into L8 leaf_config so
+    # Propagate output_directory kwarg into L8 leaf_config so
     # that L8 artifacts (tests_summary.json, forecasts.csv, etc.) are written there
     # when the user passes output_directory= to mf.run() without setting it in YAML.
     if output_directory is not None:
@@ -1034,7 +1034,7 @@ def _run_single_cell(
 
     _apply_seed(seed)
     clock = time.perf_counter()
-    import warnings as _warnings_mod  # Cycle 14 L1-2 fix:
+    import warnings as _warnings_mod
     _captured: list[dict[str, Any]] = []
     with _warnings_mod.catch_warnings(record=True) as _w_list:
         _warnings_mod.simplefilter("always")

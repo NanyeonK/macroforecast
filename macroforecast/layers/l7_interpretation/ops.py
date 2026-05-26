@@ -454,7 +454,7 @@ DEFAULT_FIGURE_MAPPING = {
     # 1998 GIRF). ``generalized_irf`` is now reserved for the order-invariant
     # Pesaran-Shin variant and remains future-gated until v0.9.x.
     "orthogonalised_irf": "irf_with_confidence_band",
-    # C49 promotion: Pesaran-Shin (1998) generalized IRF (order-invariant).
+    # Pesaran-Shin (1998) generalized IRF (order-invariant). Operational since v0.9.3.
     # Does not use Cholesky; result is invariant to variable ordering.
     "generalized_irf": "irf_with_confidence_band",
     "forecast_decomposition": "historical_decomp_stacked_bar",
@@ -482,7 +482,7 @@ DEFAULT_FIGURE_MAPPING = {
     # Path A (faithful per-origin refit) lands in v0.9.0E.
     "oshapley_vi": "bar_global",
     "pbsv": "bar_global",
-    # C50: LSTM hidden-state activation heatmap (Karpathy 2015, arXiv:1506.02078).
+    # LSTM hidden-state activation heatmap (Karpathy 2015, arXiv:1506.02078). Operational since v0.9.3.
     # Rows = hidden units, columns = observations; color = mean |h_t|.
     # Gates on torch availability via try-import in the runtime helper.
     "lstm_hidden_state": "heatmap",
@@ -531,7 +531,7 @@ OPERATIONAL_OPS = tuple(
 )
 FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
     # boruta_selection, recursive_feature_elimination, lasso_path_selection,
-    # stability_selection were removed from FUTURE_OPS in Cycle 47 because
+    # stability_selection were removed from FUTURE_OPS in v0.9.x because
     # they were promoted to status="operational" in L3 (l3_ops.py). They are
     # L3 feature-selection ops and must NOT gain L7 scope. The tail loop
     # below would have extended their layer_scope to include "l7"; removing
@@ -543,10 +543,10 @@ FUTURE_OPS = HONESTY_DEMOTED_L7_OPS + (
     # (``oshapley_vi`` and ``pbsv`` were moved to OPERATIONAL in v0.9.1
     #  dev-stage v0.9.0D Path B -- final-window-fit anatomy adapter; Path
     #  A faithful per-origin refit lands in v0.9.0E.)
-    # generalized_irf promoted to operational in C49 (Pesaran-Shin 1998
+    # generalized_irf promoted to operational in v0.9.3 (Pesaran-Shin 1998
     # order-invariant GIRF). Removed from FUTURE_OPS here; now in
     # DEFAULT_FIGURE_MAPPING (therefore in OPERATIONAL_OPS).
-    # lstm_hidden_state promoted to operational in C50 (Karpathy 2015
+    # lstm_hidden_state promoted to operational in v0.9.3 (Karpathy 2015
     # torch forward-hook implementation). Removed from FUTURE_OPS here.
     # (``attention_weights`` was future in v0.1-v0.9.0; promoted to
     # OPERATIONAL_OPS in Phase B-10 -- Goulet Coulombe 2026 Eq. 3 closed form.)

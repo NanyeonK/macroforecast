@@ -22,7 +22,7 @@ _REVIEWED = "2026-05-05"
 _REVIEWER = "macroforecast author"
 
 # ---------------------------------------------------------------------------
-# Shared data-argument docs for C38 L7 importance standalone callables
+# Shared data-argument docs for v0.9.x L7 importance standalone callables
 # ---------------------------------------------------------------------------
 
 _L7_RESULT_X_DATA_ARGS = (
@@ -770,7 +770,7 @@ _ORTHOGONALISED_IRF = _o(
         "causal scheme imposed."
     ),
     "VAR analysis with a theoretically motivated recursive identification (e.g. monetary policy ordered last; supply ordered first).",
-    when_not_to_use="When the variable ordering is arbitrary -- use ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, operational since C49).",
+    when_not_to_use="When the variable ordering is arbitrary -- use ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, operational since v0.9.3).",
     references=(
         _REF_DESIGN_L7,
         Reference(
@@ -781,10 +781,10 @@ _ORTHOGONALISED_IRF = _o(
 )
 
 # ``generalized_irf`` (Pesaran-Shin 1998) was promoted from *future* to
-# *operational* in Cycle 49 (2026-05-21). The v0.2 #189 version shipped
+# *operational* in v0.9.3 (2026-05-21). The v0.2 #189 version shipped
 # Cholesky orthogonalised IRFs; the v0.8.9 honesty pass renamed that
 # to ``orthogonalised_irf`` and reserved ``generalized_irf`` for the
-# true Pesaran-Shin order-invariant procedure. C49 implements it via
+# true Pesaran-Shin order-invariant procedure. v0.9.3 implements it via
 # ``_var_girf_frame`` using ``var_decomp=np.eye(K)`` to obtain raw
 # reduced-form MA coefficients.
 _GENERALIZED_IRF = _o(
@@ -809,7 +809,7 @@ _GENERALIZED_IRF = _o(
         "**Order invariance**: permuting the VAR column order produces "
         "identical importance values for any given (shock, response) pair. "
         "Verified empirically to atol=1e-8 (actual difference ~1e-19 in "
-        "the C49 test suite). This is the defining property that "
+        "the v0.9.3 test suite). This is the defining property that "
         "distinguishes the Pesaran-Shin GIRF from the Cholesky "
         "``orthogonalised_irf``.\n\n"
         "**Non-VAR fallback**: when the fitted model is not a VAR "
@@ -1109,7 +1109,7 @@ _REF_KARPATHY_2015 = Reference(
     url="https://arxiv.org/abs/1506.02078",
 )
 
-# C50: lstm_hidden_state promoted from future to operational.
+# lstm_hidden_state promoted from future to operational (v0.9.3).
 _LSTM_HIDDEN_STATE = _o(
     "lstm_hidden_state",
     "LSTM hidden-state activation heatmap (Karpathy et al. 2015).",
@@ -1190,6 +1190,6 @@ register(
     _PBSV,
     # v0.9 Phase B-10 paper-10 promotion
     _ATTENTION_WEIGHTS,
-    # C50: LSTM hidden-state activation heatmap
+    # LSTM hidden-state activation heatmap (v0.9.3)
     _LSTM_HIDDEN_STATE,
 )

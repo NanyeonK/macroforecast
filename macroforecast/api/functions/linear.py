@@ -9,10 +9,10 @@ All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
 directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
-Ridge (``ridge_fit``) was implemented as the Cycle 22 POC in ``ridge.py``
+Ridge (``ridge_fit``) was implemented as the v0.8.x proof-of-concept in ``ridge.py``
 and is not duplicated here.
 
-Cycle 28 -- L4 linear family standalone-ization.
+v0.8.x -- L4 linear family standalone-ization.
 """
 from __future__ import annotations
 

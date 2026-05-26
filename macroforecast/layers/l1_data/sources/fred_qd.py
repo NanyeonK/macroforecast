@@ -51,7 +51,7 @@ def load_fred_qd(
         file_format="csv",
         cache_hit=cache_hit,
     )
-    # Cycle 14 J-1 fix: guard against NaT — last index may be NaT when FRED CSV
+    # guard against NaT — last index may be NaT when FRED CSV (v0.8.x)
     # has trailing empty rows. Fall back to the last non-null index entry.
     _valid_idx = df.index[df.index.notna()]
     _data_through = _valid_idx[-1].strftime("%Y-%m") if len(_valid_idx) else None

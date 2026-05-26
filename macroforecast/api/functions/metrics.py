@@ -1,6 +1,6 @@
 """Standalone L5 scalar metric functions.
 
-Cycle 27: promotes the remaining L5 scalar metrics to first-class callables.
+Promotes the L5 scalar metrics to first-class callables (v0.1.0).
 Each function is pure-numeric and returns a float.  Results are bit-exact with
 the recipe-based L5 evaluation path where a recipe-path implementation exists.
 

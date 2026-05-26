@@ -9,7 +9,7 @@ All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
 directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
-Cycle 35 -- L4 tree/ensemble family standalone-ization.
+v0.9.x -- L4 tree/ensemble family standalone-ization.
 """
 from __future__ import annotations
 
@@ -1115,7 +1115,7 @@ __all__ = [
     "lightgbm_fit",
     "CatBoostFitResult",
     "catboost_fit",
-    # C64: gap callables for tree-family private classes
+    # Gap callables for tree-class private implementations (v0.9.5)
     "SlowGrowingTreeFitResult",
     "slow_growing_tree_fit",
     "QuantileRegressionForestFitResult",
@@ -1130,7 +1130,7 @@ __all__ = [
 
 
 # ---------------------------------------------------------------------------
-# C64: Gap callables for tree-family private classes
+# Gap callables for tree-class private implementations (v0.9.5)
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)

@@ -3,7 +3,7 @@
 Each class is a zero-overhead subclass of the corresponding private runtime
 class. No new behaviour is introduced.
 
-Cycle 63 -- L4 volatility class promotion (2 classes: GARCHFamily,
+v0.9.5 -- L4 volatility class promotion (2 classes: GARCHFamily,
 RealizedGARCH).
 """
 from __future__ import annotations

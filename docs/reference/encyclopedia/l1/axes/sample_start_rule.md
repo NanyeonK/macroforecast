@@ -59,7 +59,7 @@ Replication scripts; ablation studies over alternative start dates.
 
 | name | type | default | constraint | description |
 |---|---|---|---|---|
-| `sample_start_date` | `str` | — | Required when sample_start_rule=fixed_date. ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized to first of month per C12 F-P0-1), or YYYY (normalized to Jan 1). | Explicit panel start date. The L1 loader trims the panel to this date verbatim after partial-ISO normalization. |
+| `sample_start_date` | `str` | — | Required when sample_start_rule=fixed_date. ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized to first of month; ISO normalization rule), or YYYY (normalized to Jan 1). | Explicit panel start date. The L1 loader trims the panel to this date verbatim after partial-ISO normalization. |
 
 _Last reviewed 2026-05-04 by macroforecast author._
 

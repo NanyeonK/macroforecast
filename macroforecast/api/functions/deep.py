@@ -4,12 +4,12 @@ Exposes four fit callables -- ``mlp_fit``, ``lstm_fit``, ``gru_fit``,
 ``transformer_fit`` -- each returning a frozen dataclass that conforms
 structurally to :class:`~macroforecast.functions.FitResultBase`.
 
-All callables follow the C28 lazy-import paradigm: ``_build_l4_model``
+All callables follow the lazy-import paradigm: ``_build_l4_model``
 from ``macroforecast.core.runtime`` is imported inside the function body
 to avoid circular imports.  For the sklearn MLP family no extra is needed;
 torch families require ``pip install macroforecast[deep]``.
 
-Cycle 36 -- L4 deep family standalone-ization (4 ops).
+Promoted in v0.8.0: L4 deep-learning standalone callables (4 ops).
 """
 from __future__ import annotations
 
@@ -491,7 +491,7 @@ def mlp_fit(
     ----------
     Goodfellow, Bengio & Courville (2016) 'Deep Learning', MIT Press.
     """
-    from ...core.runtime import _build_l4_model  # lazy import -- C28 paradigm
+    from ...core.runtime import _build_l4_model  # lazy import
 
     if max_iter < 1:
         raise ValueError(f"max_iter must be >= 1, got {max_iter!r}")
@@ -810,14 +810,14 @@ __all__ = [
     "gru_fit",
     "TransformerFitResult",
     "transformer_fit",
-    # C64: HemisphereNN gap callable
+    # HemisphereNN gap callable (v0.9.5)
     "HemisphereNNFitResult",
     "hemisphere_nn_fit",
 ]
 
 
 # ---------------------------------------------------------------------------
-# C64: HemisphereNN gap callable
+# HemisphereNN gap callable (v0.9.5)
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)

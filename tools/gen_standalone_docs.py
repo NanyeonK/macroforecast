@@ -3,7 +3,7 @@
 Produces verified signatures and result attributes for every callable in
 ``macroforecast.functions.__all__``, layered by module.
 
-Used by Cycle 41 v0.9.2b1 docs rewrite — outputs ground truth that
+Used by v0.9.2b1 docs rewrite — outputs ground truth that
 ``docs/standalone_functions/{l2..l7}.md`` MUST verbatim-transcribe.
 """
 from __future__ import annotations
@@ -24,7 +24,7 @@ import pandas as pd
 import macroforecast.functions as f
 
 
-# Module-to-layer mapping (verified by Cycle 41 layer audit)
+# Module-to-layer mapping (verified by v0.9.2b1 layer audit)
 LAYER_MAP = {
     "macroforecast.functions.clean": "L2",
     "macroforecast.functions.transforms": "L3",

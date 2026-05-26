@@ -32,8 +32,8 @@ All 30 classes are importable directly from ``macroforecast.layers.l4_models``::
         SequenceModel, HemisphereNN,
     )
 
-Cycle 63 -- 22 L4 classes promoted via thin subclassing.
-Cycle 64 -- 8 additional classes: tree (6) + neural (2).
+v0.9.5 -- 22 L4 classes promoted via thin subclassing.
+v0.9.5 -- 8 additional classes: tree (6) + neural (2).
 """
 from __future__ import annotations
 
@@ -69,14 +69,14 @@ _SYMBOL_MODULE: dict[str, str] = {
     "ETS": ".timeseries",
     "Theta": ".timeseries",
     "HoltWinters": ".timeseries",
-    # tree.py (6) -- C64
+    # tree.py (6) -- v0.9.5
     "SlowGrowingTree": ".tree",
     "QuantileRegressionForest": ".tree",
     "Bagging": ".tree",
     "Booging": ".tree",
     "MacroRandomForest": ".tree",
     "KNN": ".tree",
-    # neural.py (2) -- C64
+    # neural.py (2) -- v0.9.5
     "SequenceModel": ".neural",
     "HemisphereNN": ".neural",
 }

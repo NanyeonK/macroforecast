@@ -35,7 +35,7 @@ Default for any pseudo-out-of-sample study using revised data.
 
 **When NOT to use**
 
-Real-time forecasting evaluations -- those need ALFRED vintages; use real_time_alfred (operational since Cycle 50).
+Real-time forecasting evaluations -- those need ALFRED vintages; use real_time_alfred (operational since v0.9.3).
 
 **References**
 
@@ -51,7 +51,7 @@ Real-time ALFRED vintage policy: uses historical vintage snapshots at each forec
 
 ALFRED (Archival FRED) is the St. Louis Fed's real-time data archive. It stores historical vintages of every FRED series, allowing researchers to reconstruct the information set that was actually available at any past date -- before subsequent data revisions occurred. Croushore & Stark (2001) established the methodological case for real-time evaluation.
 
-Operational since Cycle 50 (2026-05-22). Two modes are supported:
+Operational since v0.9.3. Two modes are supported:
 
 * ``alfred_mode=local`` (default): loads pre-downloaded vintage snapshots from ``leaf_config.alfred_snapshot_dir``. The directory must contain per-origin Parquet or CSV files named by date (e.g., ``1999-01-01.parquet``). No network access at runtime.
 

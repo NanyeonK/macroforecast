@@ -1,6 +1,6 @@
 """Standalone L2 clean-panel function-op namespace.
 
-Cycle 34: L2 clean panel ops standalone-ization (14 ops).
+L2 clean panel ops standalone-ization (v0.8.0, 14 ops).
 
 Each callable wraps the corresponding runtime primitive from
 ``macroforecast.core.runtime`` to preserve bit-exact results with
@@ -8,7 +8,7 @@ the recipe-path dispatch. The full-sample variant is used (no
 per-origin cutoff_ts); recipe-path OOS safety is handled by the
 runtime's _apply_*_per_origin helpers.
 
-Import pattern follows C28/C29/C30-C33 (lazy runtime imports inside
+Import pattern follows the lazy-runtime-import convention (see linear.py):
 each function body to avoid circular imports).
 
 14 ops across 5 clusters:

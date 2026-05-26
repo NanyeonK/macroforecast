@@ -49,7 +49,7 @@ def _e(sublayer: str, axis: str, option: str, summary: str, description: str, wh
 
 
 # ---------------------------------------------------------------------------
-# Cycle 34: shared data-argument constants for L2 clean panel standalone ops
+# Shared data-argument constants for L2 clean panel standalone ops (v0.8.0)
 # ---------------------------------------------------------------------------
 _L2_PANEL_DATA_ARG: tuple[ParameterDoc, ...] = (
     ParameterDoc(
@@ -234,7 +234,7 @@ _L2C_ACTION_CAP = _e(
     related_options=("flag_as_nan", "replace_with_median"),
 )
 
-# C50: keep_with_indicator is now operational. OptionDoc added below.
+# keep_with_indicator is operational since v0.9.3. OptionDoc below.
 _L2C_ACTION_KEEP_WITH_INDICATOR = _e(
     "l2_c", "outlier_action", "keep_with_indicator",
     "Keep the outlier value but add a binary indicator column.",
@@ -435,7 +435,7 @@ _L2A_QM_FORWARD = _e(
     related_options=("step_backward", "linear_interpolation"),
 )
 
-# C50: chow_lin is now operational. OptionDoc added below.
+# chow_lin is operational since v0.9.3. OptionDoc below.
 _chow_lin_indicator_arg = ParameterDoc(
     name="chow_lin_indicator",
     type="str | None",

@@ -634,7 +634,7 @@ def target_construction(inputs, params):
     layer_scope=("l3",),
     input_types={"default": (Panel, LaggedPanel, Factor)},
     output_type=Panel,
-    # Cycle 14 J-5 fix: add temporal_rule schema matching scale/pca pattern
+    # add temporal_rule schema matching scale/pca pattern
     params_schema={
         "n_features": {"type": object, "default": 0.5, "sweepable": True},
         "temporal_rule": {
@@ -948,7 +948,7 @@ def chow_lin_disaggregation(inputs, params):
     frequency. The monthly residual for each quarter is spread evenly across
     the quarter's months.
 
-    Operational from C51. Runtime function:
+    Operational from v0.9.3. Runtime function:
     :func:`macroforecast.core.runtime._chow_lin_disaggregate`.
 
     Parameters

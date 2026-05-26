@@ -1220,7 +1220,7 @@ _F_REALIZED_GARCH_WITH_RV_EXOG = _f(
 )
 
 # ---------------------------------------------------------------------------
-# C49 — realized_garch honesty pass (2026-05-21).
+# realized_garch honesty pass, v0.9.3 (2026-05-21).
 # Hansen, Huang & Shek (2012, JAE 27(6)) joint-MLE Realized GARCH promoted
 # from future to operational. FUTURE_MODEL_FAMILIES is now empty.
 # Distinct from realized_garch_with_rv_exog (RV-as-exogenous approximation,
@@ -1311,7 +1311,7 @@ _F_REALIZED_GARCH = _f(
             default='"constant"',
             description=(
                 "Mean model for the return equation. Only 'constant' is "
-                "supported in C49 (AR-mean deferred to a future cycle). "
+                "supported in v0.9.3 (AR-mean deferred). "
                 "Raises ValueError for any other value."
             ),
         ),
@@ -1320,7 +1320,7 @@ _F_REALIZED_GARCH = _f(
             type='str enum {"normal"}',
             default='"normal"',
             description=(
-                "Error distribution. Only 'normal' is supported in C49 "
+                "Error distribution. Only 'normal' is supported in v0.9.3 "
                 "(fat-tail extensions deferred). Raises ValueError for any other value."
             ),
         ),
@@ -2042,7 +2042,7 @@ _PI_BAI_NG = OptionDoc(
 
 
 # ---------------------------------------------------------------------------
-# C48 — MIDAS family honesty pass (2026-05-21).
+# MIDAS family honesty pass, v0.9.3 (2026-05-21).
 # Four families promoted from future to operational.
 # References:
 #   Ghysels, Santa-Clara & Valkanov (2004) "The MIDAS Touch"
@@ -2569,11 +2569,11 @@ register(
     # v0.9 Phase C M12 pi_correction (Bai-Ng 2006)
     _PI_NONE,
     _PI_BAI_NG,
-    # C48 MIDAS family honesty pass (2026-05-21)
+    # MIDAS family honesty pass, v0.9.3 (2026-05-21)
     _F_MIDAS_ALMON,
     _F_MIDAS_BETA,
     _F_MIDAS_STEP,
     _F_DFM_UNRESTRICTED_MIDAS,
-    # C49 realized_garch honesty pass (2026-05-21)
+    # realized_garch honesty pass, v0.9.3 (2026-05-21)
     _F_REALIZED_GARCH,
 )

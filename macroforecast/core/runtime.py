@@ -400,7 +400,7 @@ def materialize_l2(
     # _per_origin_callable closure so stats are computed on data up to each
     # origin only (no lookahead leakage).
     _l2_imputation_temporal = resolved.get("imputation_temporal_rule", "expanding_window_per_origin")
-    # F-C45 fix: NaN-dropping frame_edge policies must also be deferred when
+    # v0.9.3: NaN-dropping frame_edge policies must also be deferred when
     # imputation is deferred, because dropping NaNs before per-origin imputation
     # silently discards rows that would be filled later (forward_fill / mean).
     # Non-NaN-dropping policies (keep_unbalanced, zero_fill_leading) are
@@ -1408,7 +1408,7 @@ def materialize_l3_minimal(
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
     dag = l3_layer.normalize_to_dag_form(raw)
     df = l2_artifact.panel.data.copy()
-    # F-C45 fix: preserve the original un-imputed L2 data for use in the
+    # v0.9.3: preserve the original un-imputed L2 data for use in the
     # per-origin closure (which applies imputation per-origin to avoid lookahead).
     df_raw_l2 = df.copy()
     target_name = l1_artifact.target or (
@@ -1417,7 +1417,7 @@ def materialize_l3_minimal(
     if not target_name or target_name not in df.columns:
         raise ValueError("minimal L3 runtime requires target column in L2 clean panel")
 
-    # F-C45 fix: when imputation is deferred to per-origin, the raw L2 df
+    # v0.9.3: when imputation is deferred to per-origin, the raw L2 df
     # contains NaN cells that imputation would have filled. Running the
     # full-sample L3 DAG on un-imputed data produces a near-empty aligned_index
     # (because the post-DAG dropna drops almost every row). Pre-impute df with
@@ -1496,7 +1496,7 @@ def materialize_l3_minimal(
         # Dataset reference for the closure -- use the original un-imputed
         # L2 data (df_raw_l2) so per-origin cleaning starts from raw NaN-laden
         # data and applies imputation only up to each origin (no lookahead).
-        # F-C45: df_raw_l2 is preserved before the full-sample pre-imputation
+        # v0.9.3: df_raw_l2 is preserved before the full-sample pre-imputation
         # step that computes aligned_index above.
         df_for_origin = df_raw_l2.copy()
         target_name_for_closure = target_name
@@ -1538,7 +1538,7 @@ def materialize_l3_minimal(
                 df_origin_input = _apply_imputation_per_origin(
                     df_origin_input, _l3_l2_resolved_ref, origin_ts
                 )
-                # F-C45 fix: apply deferred frame_edge after per-origin imputation
+                # v0.9.3: apply deferred frame_edge after per-origin imputation
                 # so NaN-dropping policies (truncate_to_balanced, drop_unbalanced_series)
                 # operate on imputed data, not raw data with future NaN cells.
                 _fe_policy = (_l3_l2_resolved_ref or {}).get("frame_edge_policy", "keep_unbalanced")
@@ -1826,11 +1826,11 @@ def materialize_l4_minimal(
         if isinstance(node, dict) and node.get("op") == "fit"
     ]
     if not fit_nodes:
-        raise ValueError("[L4/4_forecasting_model.nodes] L4 runtime requires a fit node")  # Cycle 14 L1-1 fix:
+        raise ValueError("[L4/4_forecasting_model.nodes] L4 runtime requires a fit node")  # v0.8.x:
     X = l3_features.X_final.data
     y = l3_features.y_final.metadata.values.get("data")
     if not isinstance(y, pd.Series):
-        raise ValueError("[L4/4_forecasting_model.leaf_config] L4 runtime requires L3 y_final series data")  # Cycle 14 L1-1 fix:
+        raise ValueError("[L4/4_forecasting_model.leaf_config] L4 runtime requires L3 y_final series data")  # v0.8.x:
     target = l3_features.y_final.name
     horizon = int(l3_features.horizon_set[0] if l3_features.horizon_set else 1)
     # Phase B-15 paper-15 F4: ``y_orig`` is the un-averaged source y stashed
@@ -3396,7 +3396,7 @@ def _build_l4_model(
             random_state=seed,
         )
     if family == "realized_garch":
-        # C49: Hansen-Huang-Shek (2012) joint return + measurement MLE.
+        # Hansen-Huang-Shek (2012) joint return + measurement MLE (v0.9.3).
         # Option B: manual scipy joint MLE (arch.RealizedGARCH not available
         # in arch>=6.0). The RV-as-exog approximation lives under the
         # honest name realized_garch_with_rv_exog (unchanged).
@@ -3414,7 +3414,7 @@ def _build_l4_model(
         # in a vanilla GARCH(1,1) -- useful in practice but **NOT** the
         # Hansen-Huang-Shek (2012) joint return + measurement-equation
         # MLE. The proper joint MLE is now operational as ``realized_garch``
-        # (C49). Internal variant renamed from "realized_garch" to "rv_exog"
+        # Internal variant renamed from "realized_garch" to "rv_exog" (v0.9.3)
         # to prevent collision with the new true joint-MLE dispatch above.
         return _GARCHFamily(
             variant="rv_exog",
@@ -3446,7 +3446,7 @@ def _build_l4_model(
             damped_trend=bool(params.get("damped_trend", False)),
         )
     # ---------------------------------------------------------------------------
-    # C48: MIDAS family — Ghysels et al. (2004, 2007), Foroni et al. (2015)
+    # MIDAS family (v0.9.3) — Ghysels et al. (2004, 2007), Foroni et al. (2015)
     # ---------------------------------------------------------------------------
     if family == "midas_almon":
         return _MidasAlmonModel(
@@ -3488,7 +3488,7 @@ def _build_l4_model(
 
 
 # ---------------------------------------------------------------------------
-# C48: MIDAS L4 model classes
+# MIDAS L4 model classes (v0.9.3)
 # Ghysels-Santa-Clara-Valkanov (2004); Ghysels-Sinko-Valkanov (2007);
 # Foroni-Marcellino-Schumacher (2015 JRSS-A 178(1) 57-82).
 # ---------------------------------------------------------------------------
@@ -4570,7 +4570,7 @@ class _CustomModelAdapter:
     ) -> None:
         self.spec = spec
         self.params = dict(params or {})
-        # C57: store target series name and forecast horizon for context contract.
+        # store target series name and forecast horizon for context contract (v0.9.4).
         self._target: str = target
         self._horizon: int = int(horizon)
         self._train_X: pd.DataFrame | None = None
@@ -4595,7 +4595,7 @@ class _CustomModelAdapter:
             "model_name": self.spec.name,
             "feature_names": tuple(self._train_X.columns),
             "params": dict(self.params),
-            # C57: target series name and forecast horizon (Tutorial 03 contract).
+            # target series name and forecast horizon for Tutorial 03 contract (v0.9.4).
             "target": self._target,
             "horizon": self._horizon,
         }
@@ -8483,7 +8483,7 @@ class _GARCHFamily:
             # Approximation: arch_model exogenous + GARCH(1,1). This is the
             # realized_garch_with_rv_exog variant (honest-name approximation).
             # The true Hansen-Huang-Shek (2012) joint MLE is implemented as
-            # ``_RealizedGARCHModel`` (C49); internal variant renamed from
+            # ``_RealizedGARCHModel`` (v0.9.3); internal variant renamed from
             # "realized_garch" to "rv_exog" to prevent name collision.
             rv = None
             if (
@@ -8550,7 +8550,7 @@ class _GARCHFamily:
 
 
 # ---------------------------------------------------------------------------
-# C49: Hansen, Huang & Shek (2012) Realized GARCH — joint return +
+# Hansen, Huang & Shek (2012) Realized GARCH (v0.9.3) — joint return +
 # realized-measurement MLE (Option B: manual scipy joint MLE).
 # Reference: Hansen, P.R., Huang, Z. & Shek, H.H. (2012)
 # "Realized GARCH: a joint model for returns and realized measures of
@@ -8656,12 +8656,12 @@ class _RealizedGARCHModel:
     ) -> None:
         if mean_model != "constant":
             raise ValueError(
-                f"_RealizedGARCHModel: mean_model={mean_model!r} is not supported in C49. "
+                f"_RealizedGARCHModel: mean_model={mean_model!r} is not supported in v0.9.3. "
                 "Only 'constant' mean is implemented. AR-mean is deferred to a future cycle."
             )
         if dist != "normal":
             raise ValueError(
-                f"_RealizedGARCHModel: dist={dist!r} is not supported in C49. "
+                f"_RealizedGARCHModel: dist={dist!r} is not supported in v0.9.3. "
                 "Only 'normal' distribution is implemented. Fat-tail extensions are deferred."
             )
         self.mean_model = mean_model
@@ -10084,7 +10084,7 @@ def _execute_l7_step(
         frame = _gradient_attribution_frame(model, X, kind=op)
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "generalized_irf":
-        # C49: Pesaran-Shin (1998) order-invariant GIRF.
+        # Pesaran-Shin (1998) order-invariant GIRF (v0.9.3).
         # Uses irf_obj.irfs (reduced-form MA, NOT orth_irfs) and sigma_u.
         # Formula: sigma_jj^{-1/2} * A_h * Sigma * e_j.
         model = _first_model_input(inputs)
@@ -10104,7 +10104,7 @@ def _execute_l7_step(
         frame = _mrf_gtvp_coefficient_frame(model, X)
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "lstm_hidden_state":
-        # C50: Karpathy (2015) hidden-state activation importance.
+        # Karpathy (2015) hidden-state activation importance (v0.9.3).
         # Gates on torch + lstm/gru model family; raises NotImplementedError
         # for transformer family and when torch is unavailable.
         model = _first_model_input(inputs)
@@ -10128,7 +10128,7 @@ def _l7_xy(
     return X, y_in if isinstance(y_in, pd.Series) else None
 
 
-_SHAP_SUBSAMPLE_THRESHOLD = 2000  # Cycle 14 L2-5 fix: default subsampling threshold
+_SHAP_SUBSAMPLE_THRESHOLD = 2000  # default subsampling threshold (v0.8.x)
 
 
 def _shap_importance_frame(
@@ -10144,7 +10144,7 @@ def _shap_importance_frame(
             return _linear_importance_frame(model, method=kind)
         return _permutation_importance_frame(model, X, None, method=kind)
 
-    # Cycle 14 L2-5 fix: subsample large panels to avoid slow SHAP computation
+    # subsample large panels to avoid slow SHAP computation (v0.8.x)
     threshold = shap_subsample if shap_subsample is not None else _SHAP_SUBSAMPLE_THRESHOLD
     X_shap = X
     if len(X) > threshold:
@@ -10678,7 +10678,7 @@ def _forecast_decomposition_frame(
 def _var_girf_frame(
     model: ModelArtifact, *, n_periods: int = 12
 ) -> pd.DataFrame:
-    """Pesaran-Shin (1998) generalized impulse response function (C49).
+    """Pesaran-Shin (1998) generalized impulse response function (v0.9.3).
 
     For a fitted statsmodels VAR, computes the order-invariant GIRF:
 
@@ -10869,7 +10869,7 @@ def _lstm_hidden_state_frame(
     model: "ModelArtifact",
     X: pd.DataFrame,
 ) -> pd.DataFrame:
-    """C50 -- LSTM/GRU hidden-state activation importance (Karpathy 2015).
+    """LSTM/GRU hidden-state activation importance (Karpathy 2015; v0.9.3).
 
     Registers a forward hook on the sequence cell (nn.LSTM or nn.GRU) of
     the fitted _TorchSequenceModel to capture the full output tensor h_t
@@ -12413,7 +12413,7 @@ def _l6_pair_list(
 
 
 
-# Cycle 15 M-3 fix: alias deprecation — hides decision_at_5pct from keys()/__iter__/len()
+# alias deprecation (v0.8.x) — hides decision_at_5pct from keys()/__iter__/len()
 class _L6ResultWithDeprecatedAlias(dict):
     """L6 DM/CW result dict that keeps `decision_at_5pct` accessible for backward
     compat but emits DeprecationWarning and hides it from keys()/__iter__/len()."""
@@ -12531,13 +12531,13 @@ def _l6_equal_predictive_results(
                 stat, p_value = _diebold_mariano_test(
                     diff, horizon=int(horizon), hln=apply_hln, kernel=hac_kernel
                 )
-                results[(test_name, model_a, model_b, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
+                results[(test_name, model_a, model_b, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # v0.8.x: alias deprecation
                     "statistic": stat,
                     "p_value": p_value,
-                    "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
+                    "decision": p_value is not None and p_value < 0.05,  # v0.8.x:
                     "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
-                    "alternative": "two_sided",  # Cycle 14 L1-5 fix:
-                    "correction_policy": "hln_nw" if apply_hln else "nw",  # Cycle 14 L1-5 fix:
+                    "alternative": "two_sided",  # v0.8.x:
+                    "correction_policy": "hln_nw" if apply_hln else "nw",  # v0.8.x:
                     "n_obs": int(diff.notna().sum()),
                     "mean_loss_difference": _float_or_none(diff.mean())
                     if not diff.empty
@@ -12600,13 +12600,13 @@ def _l6_harvey_newbold_results(
             )
             out[
                 ("harvey_newbold_encompassing", model_a, model_b, target, int(horizon))
-            ] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
+            ] = _L6ResultWithDeprecatedAlias({  # v0.8.x: alias deprecation
                 "statistic": stat,
                 "p_value": p_value,
-                "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
+                "decision": p_value is not None and p_value < 0.05,  # v0.8.x:
                 "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
-                "alternative": "one_sided",  # Cycle 14 L1-5 fix: HN is one-sided (a encompasses b)
-                "correction_policy": "hln_nw",  # Cycle 14 L1-5 fix: Harvey-Leybourne-Newbold small-sample
+                "alternative": "one_sided",  # v0.8.x: HN is one-sided (a encompasses b)
+                "correction_policy": "hln_nw",  # v0.8.x: Harvey-Leybourne-Newbold small-sample
                 "n_obs": int(np.sum(np.isfinite(e_a) & np.isfinite(e_b))),
                 "encompassing": "a_over_b",
                 "mean_d": float(np.nanmean(e_a * (e_a - e_b))) if e_a.size else None,
@@ -12697,13 +12697,13 @@ def _l6_dmp_multi_horizon(
             from scipy import stats as _stats
 
             p_value = float(2 * (1 - _stats.norm.cdf(abs(stat))))
-            out[("dmp_multi_horizon", model_a, model_b, target)] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
+            out[("dmp_multi_horizon", model_a, model_b, target)] = _L6ResultWithDeprecatedAlias({  # v0.8.x: alias deprecation
                 "statistic": stat,
                 "p_value": p_value,
-                "decision": bool(p_value < 0.05),  # Cycle 14 L1-5 fix:
+                "decision": bool(p_value < 0.05),  # v0.8.x:
                 "decision_at_5pct": bool(p_value < 0.05),  # kept for backward compat
-                "alternative": "two_sided",  # Cycle 14 L1-5 fix:
-                "correction_policy": "nw",  # Cycle 14 L1-5 fix: DMP uses HAC kernel, no HLN
+                "alternative": "two_sided",  # v0.8.x:
+                "correction_policy": "nw",  # v0.8.x: DMP uses HAC kernel, no HLN
                 "n_obs_stacked": n,
                 "mean_loss_difference": mean_diff,
                 "hac_kernel": hac_kernel,
@@ -12757,13 +12757,13 @@ def _l6_nested_results(
                     if (p_value is not None and stat is not None and stat > 0)
                     else p_value
                 )
-                results[(test_name, small_model, large_model, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # Cycle 15 M-3 fix: alias deprecation
+                results[(test_name, small_model, large_model, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # v0.8.x: alias deprecation
                     "statistic": stat,
                     "p_value": p_value,
-                    "decision": p_value is not None and p_value < 0.05,  # Cycle 14 L1-5 fix:
+                    "decision": p_value is not None and p_value < 0.05,  # v0.8.x:
                     "decision_at_5pct": p_value is not None and p_value < 0.05,  # kept for backward compat
-                    "alternative": "one_sided",  # Cycle 14 L1-5 fix: CW is one-sided (large improves on small)
-                    "correction_policy": "nw",  # Cycle 14 L1-5 fix: HAC NW kernel, no HLN for nested
+                    "alternative": "one_sided",  # v0.8.x: CW is one-sided (large improves on small)
+                    "correction_policy": "nw",  # v0.8.x: HAC NW kernel, no HLN for nested
                     "n_obs": int(f_value.notna().sum()),
                     "mean_adjusted_improvement": _float_or_none(f_value.mean())
                     if not f_value.empty
@@ -13735,7 +13735,7 @@ def materialize_l8_runtime(
     runtime_env = _capture_full_runtime_environment()
     lockfile_content = _capture_dependency_lockfile_content()
     data_revision = _capture_data_revision_tag(recipe_root)
-    # Cycle 14 K-3 fix: auto-capture FRED data_through and resolved sample dates
+    # auto-capture FRED data_through and resolved sample dates (v0.8.x)
     _l1_art = upstream_artifacts.get("l1_data_definition_v1") if upstream_artifacts else None
     _fred_data_revision = ""
     if _l1_art is not None:
@@ -13751,7 +13751,7 @@ def materialize_l8_runtime(
                 _fred_data_revision = f"current@{_dt}"
     if _fred_data_revision and not data_revision:
         data_revision = _fred_data_revision
-    # Cycle 15 M-1 fix: post-L2 sample window
+    # post-L2 sample window (v0.8.x)
     # Prefer l2_clean_panel_v1.panel.data (post-window) over raw_panel
     _sample_start_resolved = None
     _sample_end_resolved = None
@@ -13819,7 +13819,7 @@ def materialize_l8_runtime(
         "exported_files": [file.path.as_posix() for file in exported_files],
         # F-P1-13 fix: cache_root provenance (additive, not breaking)
         "cache_root": recipe_root.get("1_data", {}).get("leaf_config", {}).get("cache_root"),
-        # Cycle 14 K-3 fix: resolved sample dates
+        # resolved sample dates (v0.8.x)
         "sample_start_resolved": _sample_start_resolved,
         "sample_end_resolved": _sample_end_resolved,
     }
@@ -14568,7 +14568,7 @@ def _jsonable(value: Any) -> Any:
         return value.to_dict()
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
-    # Cycle 14 L3 fix: handle numpy scalar and array types
+    # handle numpy scalar and array types (v0.8.x)
     if isinstance(value, np.generic):
         return value.item()
     if isinstance(value, np.ndarray):
@@ -14682,7 +14682,7 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
     frame = _normalize_datetime_index(frame, leaf_config)
     frame = _apply_sample_window(frame, resolved, leaf_config)
     _validate_targets_present(frame, leaf_config, resolved)
-    # C50: ALFRED vintage correction -- applies when vintage_policy="real_time_alfred".
+    # ALFRED vintage correction -- applies when vintage_policy="real_time_alfred" (v0.9.3).
     # Replaces panel column values with vintage-correct ALFRED snapshots.
     if resolved.get("vintage_policy") == "real_time_alfred":
         from ..layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
@@ -14874,7 +14874,7 @@ def _validate_targets_present(
     targets = tuple(leaf_config.get("targets", ()) or ((target,) if target else ()))
     missing = [name for name in targets if name not in frame.columns]
     if missing:
-        raise ValueError(f"[L1/1_data.leaf_config.target] target columns missing from custom panel: {missing}")  # Cycle 14 L1-1 fix:
+        raise ValueError(f"[L1/1_data.leaf_config.target] target columns missing from custom panel: {missing}")  # v0.8.x:
     if resolved.get("target_structure") == "single_target" and not target:
         raise ValueError("single_target runtime requires leaf_config.target")
 
@@ -14953,7 +14953,7 @@ def _chow_lin_disaggregate(
 
 
 
-# Cycle 17.5 LOW-A2 fix: enforce fred_sd_frequency_policy at validation time.
+# enforce fred_sd_frequency_policy at validation time (v0.8.x).
 def _enforce_fred_sd_frequency_policy(
     policy: str,
     series_freq_map: dict,
@@ -15053,7 +15053,7 @@ def _apply_fred_sd_frequency_alignment(
     quarterly_cols = [
         c for c in df.columns if str(series_freq_map.get(c, "")).lower() == "quarterly"
     ]
-    # Cycle 17.5 LOW-A2 fix: enforce fred_sd_frequency_policy BEFORE alignment.
+    # enforce fred_sd_frequency_policy BEFORE alignment (v0.8.x).
     _enforce_fred_sd_frequency_policy(
         resolved.get("fred_sd_frequency_policy", "report_only"),
         series_freq_map,
@@ -15243,7 +15243,7 @@ def _try_custom_l2_preprocessor(
     matches a registered entry. Returns ``None`` to indicate fall-through
     to built-in policies.
 
-    Cycle 14 J-4 fix: silent skip bug removed.
+    v0.8.x: silent skip bug removed.
     The previous bare ``except Exception: return None`` swallowed TypeError
     from a wrong function signature, silently skipping the preprocessor and
     preventing manifest provenance from reflecting truth.  Now TypeError
@@ -15261,7 +15261,7 @@ def _try_custom_l2_preprocessor(
     if not _custom_mod.is_custom_preprocessor(str(name)):
         return None
     spec = _custom_mod.get_custom_preprocessor(str(name))
-    # Cycle 15 M-2 fix: signature validation pre-call
+    # signature validation pre-call (v0.8.x)
     # Use inspect.signature to validate arity BEFORE calling spec.function.
     # This ensures a wrong-arity function raises ValueError with a clear hint,
     # while any TypeError raised INSIDE the user's function body propagates
@@ -15367,7 +15367,7 @@ def _apply_outlier_policy_per_origin(
         capped = numeric.clip(lower=lower, upper=upper, axis=1)
         result[numeric.columns] = numeric.where(~mask.fillna(False), capped)
     elif action == "keep_with_indicator":
-        # C50: keep original values; append one binary indicator column per
+        # keep original values; append one binary indicator column per (v0.9.3)
         # source numeric column that has at least one detected outlier.
         # Naming convention: {col}__outlier_flag (double-underscore prefix).
         result[numeric.columns] = numeric
@@ -15468,7 +15468,7 @@ def _apply_outlier_policy(
         capped = numeric.clip(lower=lower, upper=upper, axis=1)
         result[numeric.columns] = numeric.where(~mask.fillna(False), capped)
     elif action == "keep_with_indicator":
-        # C50: keep original values; append one binary indicator column per
+        # keep original values; append one binary indicator column per (v0.9.3)
         # source numeric column that has at least one detected outlier.
         # count = total outlier cells (same as flag_as_nan count -- unchanged).
         # Naming convention: {col}__outlier_flag (double-underscore prefix).
@@ -16150,7 +16150,7 @@ def _bic_select_k(
     import warnings
 
     K_max = max(1, math.ceil(1.5 * freq_ratio))
-    # Cycle 15.6 fix: BIC intractability warning
+    # BIC intractability warning (v0.8.x)
     _BIC_K_MAX_WARNING_THRESHOLD = 30  # empirical threshold above which BIC search becomes slow
     if K_max > _BIC_K_MAX_WARNING_THRESHOLD:
         warnings.warn(
@@ -17390,7 +17390,7 @@ def _boruta_selection(
     No external ``boruta`` package is required — this is the pure NumPy +
     sklearn implementation with the corrected MISA calibration.
 
-    Key corrections vs the naive Algorithm 1 port (C59 audit):
+    Key corrections vs the naive Algorithm 1 port (v0.9.4 audit):
     1. MISA computed over ``n_shadow_copies * N`` shadow importances (default 6)
        to control FP ≤ Bonferroni rate on small-sample DGPs (T/N < 10).
     2. Tentative features after max_iter are REJECTED (not accepted), per the

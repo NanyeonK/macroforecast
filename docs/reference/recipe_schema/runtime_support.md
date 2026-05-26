@@ -12,4 +12,4 @@ This matrix describes current runtime behavior. When option docs and runtime dif
 | L5 | Metrics include `mse`, `rmse`, `mae`, `medae`, `theil_u1`, `theil_u2`, direction, relative, and density metrics. |
 | L6 | Runtime has A-G sublayers. Option docs currently expose only part of that surface. |
 | L7 | Interpretation pipeline with output controls and model gates. |
-| L8 | JSON/CSV/Parquet/LaTeX/Markdown/HTML-report formats, gzip/zip compression, manifests, recipe snapshot, per-cell artifacts. `saved_objects: all` excludes the HTML report (Cycle 11b1 doc-fix). |
+| L8 | JSON/CSV/Parquet/LaTeX/Markdown/HTML-report formats, gzip/zip compression, manifests, recipe snapshot, per-cell artifacts. `saved_objects: all` excludes the HTML report. |

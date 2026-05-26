@@ -3,7 +3,7 @@
 Each class is a zero-overhead subclass of the corresponding private runtime
 class. No new behaviour is introduced.
 
-Cycle 63 -- L4 Bayesian/DFM class promotion (3 classes: BVAR Minnesota,
+v0.9.5 -- L4 Bayesian/DFM class promotion (3 classes: BVAR Minnesota,
 BVAR NIW, DFM Mixed-Frequency).
 """
 from __future__ import annotations

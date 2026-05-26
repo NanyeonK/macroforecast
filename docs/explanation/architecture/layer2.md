@@ -64,7 +64,7 @@ Output:
 
 For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l2/`](../../reference/encyclopedia/l2/index.md).
 
-## Cycle 50 update (2026-05-22)
+## v0.9.3 update
 
 Two new operational axis options:
 - `quarterly_to_monthly_policy: chow_lin` -- Chow & Lin (1971) regression-based temporal disaggregation using a monthly indicator series (`leaf_config.chow_lin_indicator`).

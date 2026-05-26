@@ -96,7 +96,7 @@ OPERATIONAL_MODELS: tuple[str, ...] = (
     "ets",
     "theta_method",
     "holt_winters",
-    # Promoted in v0.9.3 C48 (MIDAS family honesty pass):
+    # Promoted in v0.9.3 (MIDAS honesty pass):
     # - midas_almon: Ghysels-Santa-Clara-Valkanov (2004) Almon polynomial
     #   lag weights, NLS estimation of slope + Q+1 polynomial coefficients.
     # - midas_beta: Ghysels-Sinko-Valkanov (2007) Beta distribution kernel
@@ -112,7 +112,7 @@ OPERATIONAL_MODELS: tuple[str, ...] = (
     "midas_beta",
     "midas_step",
     "dfm_unrestricted_midas",
-    # Promoted in v0.9.3 C49 (realized_garch honesty pass):
+    # Promoted in v0.9.3 (realized_garch honesty pass):
     # - realized_garch: Hansen, Huang & Shek (2012) joint return +
     #   measurement-equation MLE. Implemented via manual scipy.optimize.minimize
     #   on the joint log-likelihood (Option B; arch.RealizedGARCH not
@@ -143,8 +143,8 @@ OPERATIONAL_MODELS: tuple[str, ...] = (
 # - dfm_mixed_mariano_murasawa: ``_DFMMixedFrequency`` is a PCA + AR(1)
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODELS: tuple[str, ...] = (
-    # C49 honesty pass promoted ``realized_garch`` to OPERATIONAL (above).
-    # FUTURE_MODELS is now empty. C50 targets: lstm_hidden_state,
+    # v0.9.3 honesty pass promoted ``realized_garch`` to OPERATIONAL (above).
+    # FUTURE_MODELS is now empty. v0.9.3 targets: lstm_hidden_state,
     # real_time_alfred.
 )
 

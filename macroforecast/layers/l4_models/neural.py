@@ -1,6 +1,6 @@
 """macroforecast.models.neural -- public neural network model classes.
 
-Cycle 64 -- 2 public classes (thin subclasses of private L4 implementations).
+v0.9.5 -- 2 public classes (thin subclasses of private L4 implementations).
 
 Design note on __init__ overrides:
 Both public classes override __init__ and restore self.<param> = <raw_value>

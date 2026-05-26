@@ -132,11 +132,11 @@ the Engle-Manganelli DQ test for density forecast evaluation, and the
 Diebold-Mariano-Pesaran joint multi-horizon test. After v0.3, the schema
 was audited clean.
 
-### v0.9.3 (C49 and C50) — Final Algorithmic Cycle
+### v0.9.3 — Final Algorithmic Cycle
 
 Two schema items remained non-operational through v0.3: `realized_garch`
 in L4 and `generalized_irf` via `lstm_hidden_state` in L7. These were
-promoted in C49 and C50 respectively. After the C50 merge:
+promoted in v0.9.3. After this merge:
 
 ```
 FUTURE_MODEL_FAMILIES = ()
@@ -150,7 +150,7 @@ corresponds to an `operational` runtime implementation.
 
 ## Operational Coverage Today
 
-Following C50, the operational inventory is:
+Following v0.9.3, the operational inventory is:
 
 - 35+ L4 forecasting models: linear models, tree ensembles, boosting,
   SVM, kNN, MLP, deep neural networks (LSTM/GRU/Transformer with

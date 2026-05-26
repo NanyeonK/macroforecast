@@ -1,10 +1,10 @@
 """Standalone L3 panel-transform functions.
 
-Cycle 30: L3 basic panel transforms standalone-ization (10 ops).
+L3 basic panel transforms standalone-ization (v0.8.0, 10 ops).
 
 Each callable wraps the corresponding runtime primitive from
 ``macroforecast.core.runtime`` to preserve bit-exact results with
-the recipe-path dispatch.  Import pattern follows C28/C29 (linear.py,
+the recipe-path dispatch.  Import pattern follows linear.py,
 tests.py): runtime helpers are imported lazily inside each function
 body to avoid circular imports and keep the module self-contained at
 definition time.

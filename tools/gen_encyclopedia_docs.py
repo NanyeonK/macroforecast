@@ -4,7 +4,7 @@ Produces one .md file per registered op (or per virtual op for L5/L6) into
 ``docs/reference/encyclopedia/<layer>/<subdir>/<op_name>.md``, mirroring the
 existing per-op page structure exactly.
 
-Reuses patterns from ``tools/gen_standalone_docs.py`` (Cycle 41): same
+Reuses patterns from ``tools/gen_standalone_docs.py`` (v0.9.2b1): same
 sys.path bootstrap, same ``inspect.signature`` extraction, same forward-ref
 quote stripping.
 

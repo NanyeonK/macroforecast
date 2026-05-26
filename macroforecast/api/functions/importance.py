@@ -10,7 +10,7 @@ build a :class:`~macroforecast.core.types.ModelArtifact` adapter,
 delegating all numeric work to existing runtime helpers in
 ``macroforecast.core.runtime``.
 
-Cycle 38 -- L7 importance standalone callables (8 ops).
+L7 importance standalone callables (v0.8.0, 8 ops).
 """
 from __future__ import annotations
 

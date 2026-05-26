@@ -1,6 +1,6 @@
 """macroforecast.models.tree -- public tree, ensemble, and KNN model classes.
 
-Cycle 64 -- 6 public classes (thin subclasses of private L4 implementations).
+v0.9.5 -- 6 public classes (thin subclasses of private L4 implementations).
 
 Design note on __init__ overrides:
 Each public class overrides __init__ and sets self.<param> = <raw_value> AFTER

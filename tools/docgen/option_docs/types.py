@@ -126,7 +126,7 @@ class OptionDoc:
     # Parameters (for options that accept function-level / leaf_config arguments)
     parameters: tuple[ParameterDoc, ...] = ()
 
-    # Data arguments for per-op page signature (Cycle 26)
+    # Data arguments for per-op page signature (v0.8.x)
     # Positional data inputs (X/y, y_true/y_pred, etc.) that precede the *
     # separator in the rendered function signature.  Each entry is a
     # ParameterDoc with default=REQUIRED (always positional).  Stored
@@ -134,18 +134,18 @@ class OptionDoc:
     # the ``*,`` group.
     data_args: tuple["ParameterDoc", ...] = ()
 
-    # Return type annotation for the per-op page signature (Cycle 26).
+    # Return type annotation for the per-op page signature (v0.8.x).
     # Non-empty string causes ``-> {return_type}`` to appear after the
     # closing ``)`` in the rendered ## Function signature block.
     return_type: str = ""
 
-    # Return-value attribute table for the ## Returns section (Cycle 26).
+    # Return-value attribute table for the ## Returns section (v0.8.x).
     # Each entry is a (attr_name, type_str, description) triple rendered
     # as a markdown table row.  Empty tuple = only the return_type header
     # line is emitted (for scalar returns like ``float``).
     returns_attrs: tuple[tuple[str, str, str], ...] = ()
 
-    # Per-op page (Cycle 22 POC)
+    # Per-op page (v0.8.x)
     # When True, render_encyclopedia.py emits a dedicated page at
     # ``docs/encyclopedia/<layer>/<axis>/<option>.md`` with Function signature
     # + Parameters table + Behavior + In recipe context + References sections.
