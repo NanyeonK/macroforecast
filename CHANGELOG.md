@@ -34,6 +34,23 @@ full per-version honesty-pass history embedded in repo documentation.
   (`resolve_model`, `resolve_models`, `resolve_benchmark_model`). Module-level `__getattr__`
   in `l4_models/ops.py` provides backward-compat for the constant renames.
 
+### Fixes
+
+- **PR2 (deep-audit CLI re-definition): fix broken `python -m macroforecast` entry point**
+
+  `macroforecast/__main__.py` imported `macroforecast.scaffold.cli:main`, a module that
+  does not exist (the `scaffold/` directory contains only `option_docs/`). Running
+  `python -m macroforecast` raised `ModuleNotFoundError: No module named 'macroforecast.scaffold.cli'`.
+
+  Fix: rewrite `__main__.py` to forward to `tools.docgen.cli:main`, the full CLI
+  implementation that is already installed and provides subcommands `run`, `replicate`,
+  `validate`, `scaffold`, and `encyclopedia`. Update `pyproject.toml` `[project.scripts]`
+  entry from `tools.docgen.cli:main` to `macroforecast.__main__:main` so the installed
+  console script resolves within the package namespace.
+
+  New test file: `tests/cli/test_main_entry.py` (6 tests covering help, all four subcommands,
+  and missing-recipe exit code).
+
 ### Docs
 
 - **PR1 (deep-audit Section A cleanup): fix dead scaffold path, stale `model_family=` example, and internal CI comment labels**
