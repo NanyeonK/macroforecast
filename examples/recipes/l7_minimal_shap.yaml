@@ -10,7 +10,7 @@
     - id: shap
       type: step
       op: shap_tree
-      params: {model_family: xgboost, check_additivity: true, approximate: false}
+      params: {model: xgboost, check_additivity: true, approximate: false}
       inputs: [src_xgb, src_X]
   sinks:
     l7_importance_v1:

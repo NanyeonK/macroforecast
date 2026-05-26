@@ -51,14 +51,14 @@ _OLD_LAYER_KEYS = {
 
 
 def _all_recipe_paths() -> list[Path]:
-    """Recipes the smoke test enforces. ``archive_v0/`` is the historical
-    pre-v0.0.0 schema corner -- the README there warns users not to run
-    those files; we skip them here so the smoke gate stays clean."""
+    """Recipes the smoke test enforces. ``replications/`` contains
+    locked-in replication studies that require external data; we skip
+    those here so the smoke gate stays clean."""
 
-    archive = RECIPES_DIR / "archive_v0"
+    replications = RECIPES_DIR / "replications"
     return sorted(
         p for p in RECIPES_DIR.rglob("*.yaml")
-        if archive not in p.parents
+        if replications not in p.parents
     )
 
 

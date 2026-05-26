@@ -32,7 +32,7 @@
       op: fit
       params:
         model: bagging
-        base_family: ridge
+        base_model: ridge
         n_estimators: 25
         max_samples: 0.7
         alpha: 0.1

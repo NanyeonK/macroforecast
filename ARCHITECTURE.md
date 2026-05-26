@@ -865,7 +865,7 @@ Surfaces touched:
   `promotion/`. Includes deletion of two stale `outlier_scope` tests and the
   full `test_l2_transform_scope.py` file (axis no longer exists).
 - Examples: all live recipes in `examples/recipes/` (excluding the frozen
-  `archive_v0/` and `goulet_coulombe_2021_replication.yaml`).
+  `goulet_coulombe_2021_replication.yaml`).
 - Docs: encyclopedia, explanation, how-to, tutorial, and architecture entries
   swept for new vocabulary.
 
