@@ -1,0 +1,924 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The Layer Design &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+
+    <script src="../_static/documentation_options.js?v=dfd5ba7c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'explanation/layer_design';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bit-Exact Replication" href="bit_exact_replicate.html" />
+    <link rel="prev" title="Explanation" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a0" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tutorial/index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../how_to/index.html">
+    How-to guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Explanation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../help.html">
+    Help
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../tutorial/index.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../how_to/index.html">
+    How-to guides
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Explanation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../help.html">
+    Help
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">The Layer Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bit_exact_replicate.html">Bit-Exact Replication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="honesty_pass.html">The Honesty Pass</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipe_to_run.html">From Recipe to Run</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer1.html">Layer L1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer2.html">Layer L2: Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer3.html">Layer L3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer4.html">Layer L4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer5.html">Layer L5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer6.html">Layer L6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer7.html">Layer L7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer8.html">Layer L8: Output / Provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="foundation.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipe_layers.html">Recipe Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Explanation</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The Layer Design</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="the-layer-design">
+<h1>The Layer Design<a class="headerlink" href="#the-layer-design" title="Link to this heading">#</a></h1>
+<p>The number of layers is not arbitrary. Each layer boundary solves a specific
+problem in reproducible forecasting research. This page explains what those
+problems are, why the boundaries are drawn where they are, and what the
+contracts between layers prevent.</p>
+<hr class="docutils" />
+<section id="the-decomposition-problem">
+<h2>The Decomposition Problem<a class="headerlink" href="#the-decomposition-problem" title="Link to this heading">#</a></h2>
+<p>A macroeconomic forecasting study involves a long chain of decisions: which
+data to load, how to clean it, which features to construct, which models to
+fit, how to evaluate performance, and how to interpret results. In a naive
+implementation, these decisions collapse into one another. A model’s built-in
+scaler becomes part of the preprocessing, a benchmark’s feature pipeline
+silently differs from the challenger’s, and interpretation figures draw on a
+different transformation path than the one actually used in forecasting.</p>
+<p>These are not hypothetical failures. They are the normal state of affairs
+in forecasting research that lacks explicit boundaries. The consequence is
+that two studies using “the same model” may not have run the same procedure,
+and there is no way to audit the difference.</p>
+<p>Every layer boundary in macroforecast is a firewall against one specific form
+of this cross-contamination. A boundary is not an abstraction for its own
+sake. It is the answer to the question: “what would go wrong if this were
+merged with the adjacent layer?”</p>
+</section>
+<hr class="docutils" />
+<section id="design-9-main-layers-plus-4-diagnostic-slots-13-slots-total">
+<h2>Design: 9 Main Layers Plus 4 Diagnostic Slots (13 Slots Total)<a class="headerlink" href="#design-9-main-layers-plus-4-diagnostic-slots-13-slots-total" title="Link to this heading">#</a></h2>
+<p>The full canonical flow has 13 named slots: 9 main layers (L0 through L8)
+plus 4 diagnostic half-layers (L1.5, L2.5, L3.5, L4.5). These 13 slots
+are not 13 equally important compartments.
+The diagnostic half-layers are a different kind of thing from the main
+sequence. Separating them from the main flow is itself a design decision,
+explained below.</p>
+<section id="l0-policy-before-science">
+<h3>L0: Policy Before Science<a class="headerlink" href="#l0-policy-before-science" title="Link to this heading">#</a></h3>
+<p>L0 (<code class="docutils literal notranslate"><span class="pre">0_meta</span></code>) is not a scientific layer. It holds study-level metadata:
+the failure policy (halt on first cell error versus continue through all
+cells), the random seed, and the compute mode (serial or parallel). Nothing
+in L0 is a research decision about data, features, or models.</p>
+<p>The reason L0 comes first is not ordering for its own sake. Downstream layers
+read the failure policy and the seed from the compiled manifest before
+execution begins. If those values were not resolved before any layer ran,
+the runtime could not propagate the seed consistently across all cells or
+decide how to handle a cell failure mid-run.</p>
+<p>“Policy before science” is the principle: the execution grammar is declared
+and locked before any scientific computation begins.</p>
+</section>
+<section id="l1-the-data-boundary">
+<h3>L1: The Data Boundary<a class="headerlink" href="#l1-the-data-boundary" title="Link to this heading">#</a></h3>
+<p>L1 (<code class="docutils literal notranslate"><span class="pre">1_data</span></code>) separates <em>what data exists</em> from <em>what was done to it</em>. It
+declares the data source (FRED-MD, FRED-QD, FRED-SD, or a custom panel),
+the target series, the predictor universe, the geographic aggregation level,
+and the regime indicator (if any).</p>
+<p>Without L1 as a distinct boundary, preprocessing silently defines the universe
+of predictors. A model that drops highly correlated series during its internal
+feature selection is effectively changing the data universe. It becomes
+impossible to state whether two models used the same predictors or not, and
+equally impossible to replicate a result by re-specifying the data.</p>
+<p>L1 also owns regime definitions. Regime indicators defined at L1 propagate
+forward to L3 (conditioning feature construction), L4 (model fitting with
+regime interactions), L5 (evaluation aggregation by regime), and L6
+(conditional DM tests). This cross-layer propagation is only clean if regimes
+are defined once, at the data boundary, before any layer reads them.</p>
+</section>
+<section id="l2-the-preprocessing-boundary">
+<h3>L2: The Preprocessing Boundary<a class="headerlink" href="#l2-the-preprocessing-boundary" title="Link to this heading">#</a></h3>
+<p>L2 (<code class="docutils literal notranslate"><span class="pre">2_preprocessing</span></code>) separates <em>cleaning</em> from <em>feature engineering</em>. It
+owns transformations applied to the raw panel: outlier treatment, imputation,
+frequency alignment, and frame-edge handling.</p>
+<p>Without L2 as a distinct boundary, a model’s built-in scaler or
+missing-value imputer is part of the comparison but is not tracked anywhere.
+Two models that appear to use the same features may have received differently
+scaled inputs because their internal preprocessing differed. L2 ensures that
+every cleaning operation is declared in the recipe, is applied uniformly to
+all downstream layers, and is recorded in the manifest.</p>
+</section>
+<section id="l3-the-feature-engineering-boundary">
+<h3>L3: The Feature Engineering Boundary<a class="headerlink" href="#l3-the-feature-engineering-boundary" title="Link to this heading">#</a></h3>
+<p>L3 (<code class="docutils literal notranslate"><span class="pre">3_feature_engineering</span></code>) separates <em>what the model sees</em> from <em>how the
+model uses it</em>. It owns feature construction — lags, moving averages,
+dimensionality reduction, wavelet decomposition, and target construction
+(rolling means, cumulative averages) — expressed as a directed acyclic graph
+(a directed pipeline graph).</p>
+<p>This pipeline graph structure is not incidental. Feature pipelines in real research are not
+linear. A study might apply PCA to a subset of predictors, compute lags from
+both the original series and the PCA-reduced series, and then feed the union
+to a model. That structure is a graph, not a list. Using a step graph at L3 makes
+the structure explicit and verifiable rather than buried in procedural code.</p>
+<p>A critical non-negotiable rule: L3 owns target construction. This rule
+prevents the ambiguity that would arise if feature engineering and forecast
+combination were mixed. Two models that combine differently are being compared
+at the model level, not the feature level, only if they receive identical
+features from L3. If L3 were allowed to produce different targets for different
+models, the resulting comparison would conflate feature decisions with model
+decisions.</p>
+</section>
+<section id="l4-the-forecasting-model-boundary">
+<h3>L4: The Forecasting Model Boundary<a class="headerlink" href="#l4-the-forecasting-model-boundary" title="Link to this heading">#</a></h3>
+<p>L4 (<code class="docutils literal notranslate"><span class="pre">4_forecasting_model</span></code>) separates <em>forecast generation</em> from <em>evaluation</em>.
+It owns model fitting, hyperparameter tuning, out-of-sample forecast
+generation, and forecast combination.</p>
+<p>The key enabler of fair comparison is that multiple L4 model nodes can share
+the same L3 features. If a researcher specifies three forecasting families
+in a single recipe, all three receive identically constructed features from
+L3, evaluated on identically defined targets, at identically defined forecast
+origins. The L3/L4 boundary is what makes the word “fair” meaningful in
+this context.</p>
+<p>L4 also owns forecast combination and ensembling. Combination is a forecast
+operation, not an evaluation operation, because it produces a new forecast
+object that can itself be evaluated.</p>
+</section>
+<section id="l5-the-evaluation-boundary">
+<h3>L5: The Evaluation Boundary<a class="headerlink" href="#l5-the-evaluation-boundary" title="Link to this heading">#</a></h3>
+<p>L5 (<code class="docutils literal notranslate"><span class="pre">5_evaluation</span></code>) separates <em>descriptive metrics</em> from <em>inferential tests</em>.
+It owns point forecast accuracy metrics, benchmark comparisons, ranking, and
+decomposition by regime or subperiod.</p>
+<p>The separation from L6 exists because descriptive statistics and inferential
+tests answer different questions. A relative MSFE comparing two models is
+a description of what happened in the out-of-sample period. A Diebold-Mariano
+test is a claim about whether the difference is statistically significant
+under a null hypothesis. Without a boundary between them, a researcher might
+report a p-value alongside descriptive metrics without noting that the test
+requires sufficient out-of-sample origins to be meaningful, and without
+auditing whether the test was configured correctly.</p>
+</section>
+<section id="l6-statistical-tests-default-off">
+<h3>L6: Statistical Tests (Default Off)<a class="headerlink" href="#l6-statistical-tests-default-off" title="Link to this heading">#</a></h3>
+<p>L6 (<code class="docutils literal notranslate"><span class="pre">6_statistical_tests</span></code>) separates <em>testing whether A beats B</em> from
+<em>measuring how much A beats B</em>. It is default off because inferential tests
+are not always appropriate — they require enough out-of-sample forecast
+origins for the asymptotic theory to hold, and they require a clear research
+question about which null hypothesis to test.</p>
+<p>By separating L6 from L5 and making it default off, the design prevents a
+common failure mode: a researcher enabling every available test on a dataset
+with 20 out-of-sample origins, receiving p-values, and citing them without
+awareness that the test has very low power. The boundary forces an explicit
+choice.</p>
+</section>
+<section id="l7-interpretation-default-off">
+<h3>L7: Interpretation (Default Off)<a class="headerlink" href="#l7-interpretation-default-off" title="Link to this heading">#</a></h3>
+<p>L7 (<code class="docutils literal notranslate"><span class="pre">7_interpretation</span></code>) separates <em>explaining the forecast</em> from <em>making the
+forecast</em>. Like L6, it is default off and uses a step graph.</p>
+<p>Importance is always post-hoc. A SHAP value, a partial dependence plot, or
+a forecast decomposition does not change the forecast; it characterizes it.
+If interpretation were merged with forecasting, it would be unclear whether
+an importance-weighted combination is a model operation or an interpretation
+operation. Keeping L7 distinct from L4 enforces this conceptual separation.
+The step graph form at L7 is used for the same reason as at L3 and L4: importance
+workflows have branching structure (computing SHAP for some models, ALE for
+others, then aggregating across a group).</p>
+</section>
+<section id="l8-the-output-boundary">
+<h3>L8: The Output Boundary<a class="headerlink" href="#l8-the-output-boundary" title="Link to this heading">#</a></h3>
+<p>L8 (<code class="docutils literal notranslate"><span class="pre">8_output</span></code>) is always the last layer to execute, regardless of which
+upstream layers are active. It owns artifact selection, export format
+(CSV, Parquet, LaTeX, Markdown, JSON), manifest finalization, and provenance
+recording.</p>
+<p>Separating output from the preceding layers prevents artifacts from being
+written incrementally throughout the run in ways that are difficult to audit.
+Every completed run produces a manifest that describes exactly what was
+written and when. The manifest is always consistent with the artifacts because
+L8 runs last.</p>
+</section>
+<section id="l1-5-l2-5-l3-5-l4-5-diagnostic-hooks">
+<h3>L1.5 / L2.5 / L3.5 / L4.5: Diagnostic Hooks<a class="headerlink" href="#l1-5-l2-5-l3-5-l4-5-diagnostic-hooks" title="Link to this heading">#</a></h3>
+<p>The four diagnostic half-layers are default off for a specific reason: they
+must not mutate the construction sinks of the main sequence. A diagnostic
+layer that alters the feature panel during its execution would contaminate
+the L3 artifacts used by L4, breaking reproducibility.</p>
+<p>By placing diagnostics in separate “side branches” off the main flow,
+the design guarantees that enabling or disabling a diagnostic does not change
+the forecast. The diagnostic observes the pipeline; it does not participate
+in it.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="the-canonical-flow">
+<h2>The Canonical Flow<a class="headerlink" href="#the-canonical-flow" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>flowchart LR
+    L0([L0: setup]) --&gt; L1
+    L1([L1: data]) --&gt; L2
+    L1 --&gt; L1_5([L1.5 diag])
+    L2([L2: preproc]) --&gt; L3
+    L2 --&gt; L2_5([L2.5 diag])
+    L3([L3: features pipeline]) --&gt; L4
+    L3 --&gt; L3_5([L3.5 diag])
+    L4([L4: model pipeline]) --&gt; L5
+    L4 --&gt; L4_5([L4.5 diag])
+    L5([L5: eval]) --&gt; L6
+    L6([L6: tests]) --&gt; L7
+    L7([L7: interp pipeline]) --&gt; L8([L8: output])
+    style L1_5 stroke-dasharray: 5 5
+    style L2_5 stroke-dasharray: 5 5
+    style L3_5 stroke-dasharray: 5 5
+    style L4_5 stroke-dasharray: 5 5
+    style L6 stroke-dasharray: 5 5
+    style L7 stroke-dasharray: 5 5
+</pre></div>
+</div>
+<p>Solid nodes are always active when the recipe includes the corresponding
+layer key. Dashed nodes are default off and must be enabled explicitly.</p>
+</section>
+<hr class="docutils" />
+<section id="inter-layer-contracts">
+<h2>Inter-Layer Contracts<a class="headerlink" href="#inter-layer-contracts" title="Link to this heading">#</a></h2>
+<p>Each layer publishes a typed sink and may consume only the sinks of layers
+that precede it in the canonical order. The full boundary table is in
+<a class="reference internal" href="layer_boundary_contract.html"><span class="std std-doc">Layer Boundary Contract</span></a>;
+the reasoning behind the non-obvious rules follows.</p>
+<p><strong>Why L3 owns target construction and L4 owns forecast combination.</strong> If
+target construction were allowed in L4, it would be possible for two models
+to define their own rolling-mean targets with different window lengths. The
+resulting comparison would be measuring something between feature decisions
+and model decisions, which is not a meaningful scientific statement. The rule
+that L3 owns targets ensures that the thing being compared across L4 model
+nodes is the model, not the target.</p>
+<p><strong>Why L5 owns descriptive evaluation and L6 owns inferential tests.</strong> If
+inferential tests lived in L5, they would always run whenever evaluation ran.
+A researcher who wants descriptive accuracy metrics for a quick recipe sweep
+does not necessarily want — or have sufficient data for — a full DM test.
+Separating them means the researcher makes an active choice to request
+hypothesis tests.</p>
+<p><strong>Why diagnostics cannot mutate construction sinks.</strong> A diagnostic that
+changes the feature panel in-place during L3.5 would alter the inputs to L4.
+The reproduction contract (same recipe produces same artifacts) would be
+broken because the diagnostic’s side effects would depend on execution order
+and timing. The immutability rule makes diagnostics genuinely non-blocking.</p>
+</section>
+<hr class="docutils" />
+<section id="cross-layer-references">
+<h2>Cross-Layer References<a class="headerlink" href="#cross-layer-references" title="Link to this heading">#</a></h2>
+<p>The layer contracts are not purely downstream: four named cross-layer
+references carry information from an upstream layer to a non-adjacent
+downstream layer.</p>
+<p><strong>is_benchmark (L4 to L5 and L6).</strong> A model node in L4 that sets
+<code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code> is designated as the reference model for DM and CW tests
+in L6 and as the benchmark baseline in L5. This is a recipe-level decision
+because which model serves as the benchmark is part of the research design,
+not an implementation detail. Placing the designation in L4 — where the
+model is defined — makes the choice explicit and auditable.</p>
+<p><strong>mcs_inclusion (L6 to L7).</strong> The Model Confidence Set filter in L6 produces
+a subset of models that survive at a given significance level. L7, when
+enabled, uses this filter to determine which models receive full importance
+analysis by default. Without this reference, interpretation would run for
+all models regardless of whether they are statistically competitive.</p>
+<p><strong>lineage (L3 to L7).</strong> The feature construction pipeline at L3 records a lineage
+metadata artifact mapping each engineered feature back to the original series
+it was derived from. L7 reads this artifact to attribute importance to the
+original data sources rather than to the engineered feature names. Without
+lineage, SHAP values would be reported for features named <code class="docutils literal notranslate"><span class="pre">pca_component_1</span></code>
+rather than for the McCracken-Ng block that contributed most to that component.</p>
+<p><strong>regime (L1.G to L3, L4, L5, L6.C).</strong> Regime indicators defined at L1 —
+whether NBER expansion/contraction cycles, estimated Markov-switching regimes,
+or user-supplied dummies — propagate forward to condition feature construction
+at L3, model fitting at L4 (where regime interactions are available), metric
+aggregation at L5 (where breakdowns by regime period can be requested), and
+conditional DM tests at L6. Defining regimes once at L1 guarantees consistency
+across all the layers that use them.</p>
+</section>
+<hr class="docutils" />
+<section id="custom-extensions-are-first-class">
+<h2>Custom Extensions Are First-Class<a class="headerlink" href="#custom-extensions-are-first-class" title="Link to this heading">#</a></h2>
+<p>The layer contract is a specification, not a closed list of built-in
+implementations. A custom L2 preprocessor registered via
+<code class="docutils literal notranslate"><span class="pre">macroforecast.custom.register_preprocessor</span></code>, or a custom L3 feature
+callable registered via <code class="docutils literal notranslate"><span class="pre">macroforecast.custom.register_op</span></code>, is treated
+identically to a built-in operation. It goes through the same boundary check,
+produces the same typed sink, and its name is recorded in the manifest
+provenance.</p>
+<p>This means that a methods researcher who implements a new data cleaning
+procedure and compares it against the built-in scaler is subject to the same
+boundary rules as anyone else. The custom operation cannot mutate upstream
+sinks it did not produce, and its output becomes an auditable part of the
+reproducibility record.</p>
+</section>
+<hr class="docutils" />
+<section id="further-reading">
+<h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="layer_boundary_contract.html"><span class="std std-doc">Layer Boundary Contract</span></a>
+— the full boundary table with what each layer may consume and must emit.</p></li>
+<li><p><a class="reference internal" href="architecture/index.html"><span class="std std-doc">Architecture Index</span></a> — per-layer pages
+with axis details and operational coverage.</p></li>
+<li><p><a class="reference internal" href="philosophy.html"><span class="std std-doc">Philosophy</span></a> — the design intent
+that these boundaries encode.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Explanation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="bit_exact_replicate.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Bit-Exact Replication</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-decomposition-problem">The Decomposition Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#design-9-main-layers-plus-4-diagnostic-slots-13-slots-total">Design: 9 Main Layers Plus 4 Diagnostic Slots (13 Slots Total)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l0-policy-before-science">L0: Policy Before Science</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l1-the-data-boundary">L1: The Data Boundary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l2-the-preprocessing-boundary">L2: The Preprocessing Boundary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l3-the-feature-engineering-boundary">L3: The Feature Engineering Boundary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l4-the-forecasting-model-boundary">L4: The Forecasting Model Boundary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l5-the-evaluation-boundary">L5: The Evaluation Boundary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l6-statistical-tests-default-off">L6: Statistical Tests (Default Off)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l7-interpretation-default-off">L7: Interpretation (Default Off)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l8-the-output-boundary">L8: The Output Boundary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#l1-5-l2-5-l3-5-l4-5-diagnostic-hooks">L1.5 / L2.5 / L3.5 / L4.5: Diagnostic Hooks</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-canonical-flow">The Canonical Flow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inter-layer-contracts">Inter-Layer Contracts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-layer-references">Cross-Layer References</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-extensions-are-first-class">Custom Extensions Are First-Class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/explanation/layer_design.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/explanation/layer_design.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

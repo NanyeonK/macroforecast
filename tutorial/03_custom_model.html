@@ -581,7 +581,7 @@ argument name.</p>
 <hr class="docutils" />
 <section id="inheriting-macroforecast-machinery-optional">
 <h2>Inheriting macroforecast machinery (optional)<a class="headerlink" href="#inheriting-macroforecast-machinery-optional" title="Link to this heading">#</a></h2>
-<p>If your custom model is a variant of an existing macroforecast model family, you
+<p>If your custom model is a variant of an existing macroforecast model, you
 can subclass both the private implementation class and the sklearn mixins. The 30
 public model classes in <code class="docutils literal notranslate"><span class="pre">mf.layers.l4_models</span></code> follow exactly this pattern. For example,
 <code class="docutils literal notranslate"><span class="pre">LinearAR</span></code> is defined as <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">LinearAR(_LinearARModel):</span> <span class="pre">pass</span></code>. A custom variant

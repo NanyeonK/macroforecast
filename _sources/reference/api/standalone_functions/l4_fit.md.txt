@@ -21,7 +21,7 @@ print(result.summary())
 y_pred = result.predict(X)
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/ols.md)
+[Encyclopedia](../encyclopedia/l4/model/ols.md)
 
 #### `ridge_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, alpha: float = 1.0, prior: "Literal[none, random_walk, shrink_to_target, fused_difference]" = none, coefficient_constraint: "Literal[none, nonneg]" = none, vol_model: "Literal[ewma, garch11] | None" = None, random_state: int | None = None) -> RidgeFitResult`
 
@@ -38,7 +38,7 @@ print(result.summary())
 y_pred = result.predict(X)
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/ridge.md)
+[Encyclopedia](../encyclopedia/l4/model/ridge.md)
 
 #### `lasso_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, alpha: float = 1.0, max_iter: int = 20000) -> LassoFitResult`
 
@@ -54,7 +54,7 @@ result = mf.functions.lasso_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/lasso.md)
+[Encyclopedia](../encyclopedia/l4/model/lasso.md)
 
 #### `lasso_path_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, cv: int = 5, max_iter: int = 20000, random_state: int | None = None) -> LassoPathFitResult`
 
@@ -70,7 +70,7 @@ result = mf.functions.lasso_path_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/lasso_path.md)
+[Encyclopedia](../encyclopedia/l4/model/lasso_path.md)
 
 #### `elastic_net_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, alpha: float = 1.0, l1_ratio: float = 0.5, max_iter: int = 20000) -> ElasticNetFitResult`
 
@@ -86,7 +86,7 @@ result = mf.functions.elastic_net_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/elastic_net.md)
+[Encyclopedia](../encyclopedia/l4/model/elastic_net.md)
 
 #### `bayesian_ridge_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> BayesianRidgeFitResult`
 
@@ -102,7 +102,7 @@ result = mf.functions.bayesian_ridge_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/bayesian_ridge.md)
+[Encyclopedia](../encyclopedia/l4/model/bayesian_ridge.md)
 
 #### `huber_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, epsilon: float = 1.35, max_iter: int = 1000) -> HuberFitResult`
 
@@ -118,7 +118,7 @@ result = mf.functions.huber_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/huber.md)
+[Encyclopedia](../encyclopedia/l4/model/huber.md)
 
 #### `kernel_ridge_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, alpha: float = 1.0, kernel: str = rbf, gamma: float | None = None) -> KernelRidgeFitResult`
 
@@ -134,7 +134,7 @@ result = mf.functions.kernel_ridge_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/kernel_ridge.md)
+[Encyclopedia](../encyclopedia/l4/model/kernel_ridge.md)
 
 ## Regularized linear and kernel (1 op)
 
@@ -152,7 +152,7 @@ result = mf.functions.pcr_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/principal_component_regression.md)
+[Encyclopedia](../encyclopedia/l4/model/principal_component_regression.md)
 
 ## Tree and ensemble models (7 ops)
 
@@ -170,7 +170,7 @@ result = mf.functions.random_forest_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/random_forest.md)
+[Encyclopedia](../encyclopedia/l4/model/random_forest.md)
 
 #### `extra_trees_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_estimators: int = 200, max_depth: int | None = None, min_samples_leaf: int = 1, random_state: int = 0, n_jobs: int = 1) -> ExtraTreesFitResult`
 
@@ -186,7 +186,7 @@ result = mf.functions.extra_trees_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/extra_trees.md)
+[Encyclopedia](../encyclopedia/l4/model/extra_trees.md)
 
 #### `gradient_boosting_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_estimators: int = 200, learning_rate: float = 0.1, max_depth: int = 3, random_state: int = 0) -> GradientBoostingFitResult`
 
@@ -202,7 +202,7 @@ result = mf.functions.gradient_boosting_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/gradient_boosting.md)
+[Encyclopedia](../encyclopedia/l4/model/gradient_boosting.md)
 
 #### `glmboost_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_iter: int = 100, learning_rate: float = 0.1) -> GLMBoostFitResult`
 
@@ -218,7 +218,7 @@ result = mf.functions.glmboost_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/glmboost.md)
+[Encyclopedia](../encyclopedia/l4/model/glmboost.md)
 
 #### `xgboost_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_estimators: int = 300, learning_rate: float = 0.1, max_depth: int = 6, subsample: float = 1.0, random_state: int = 0) -> XGBoostFitResult`
 
@@ -234,7 +234,7 @@ result = mf.functions.xgboost_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/xgboost.md)
+[Encyclopedia](../encyclopedia/l4/model/xgboost.md)
 
 #### `lightgbm_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_estimators: int = 300, learning_rate: float = 0.1, max_depth: int = -1, num_leaves: int = 31, random_state: int = 0) -> LightGBMFitResult`
 
@@ -250,7 +250,7 @@ result = mf.functions.lightgbm_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/lightgbm.md)
+[Encyclopedia](../encyclopedia/l4/model/lightgbm.md)
 
 #### `catboost_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_estimators: int = 300, learning_rate: float = 0.1, max_depth: int = 6, random_state: int = 0) -> CatBoostFitResult`
 
@@ -266,7 +266,7 @@ result = mf.functions.catboost_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/catboost.md)
+[Encyclopedia](../encyclopedia/l4/model/catboost.md)
 
 ## Neural networks (4 ops)
 
@@ -284,7 +284,7 @@ result = mf.functions.mlp_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/mlp.md)
+[Encyclopedia](../encyclopedia/l4/model/mlp.md)
 
 #### `lstm_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, hidden_size: int = 32, n_epochs: int = 50, random_state: int = 0) -> LSTMFitResult`
 
@@ -300,7 +300,7 @@ result = mf.functions.lstm_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/lstm.md)
+[Encyclopedia](../encyclopedia/l4/model/lstm.md)
 
 #### `gru_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, hidden_size: int = 32, n_epochs: int = 50, random_state: int = 0) -> GRUFitResult`
 
@@ -316,7 +316,7 @@ result = mf.functions.gru_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/gru.md)
+[Encyclopedia](../encyclopedia/l4/model/gru.md)
 
 #### `transformer_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, hidden_size: int = 32, n_epochs: int = 50, random_state: int = 0) -> TransformerFitResult`
 
@@ -332,7 +332,7 @@ result = mf.functions.transformer_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/transformer.md)
+[Encyclopedia](../encyclopedia/l4/model/transformer.md)
 
 ## Time-series and factor models (12 ops)
 
@@ -350,7 +350,7 @@ result = mf.functions.ar_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/ar_p.md)
+[Encyclopedia](../encyclopedia/l4/model/ar_p.md)
 
 #### `var_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_lag: int = 1) -> VARFitResult`
 
@@ -366,7 +366,7 @@ result = mf.functions.var_fit(X, y, n_lag=2)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/var.md)
+[Encyclopedia](../encyclopedia/l4/model/var.md)
 
 #### `far_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_factors: int = 3, n_lag: int = 1) -> FARFitResult`
 
@@ -382,7 +382,7 @@ result = mf.functions.far_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/factor_augmented_ar.md)
+[Encyclopedia](../encyclopedia/l4/model/factor_augmented_ar.md)
 
 #### `favar_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_factors: int = 3, n_lag: int = 1) -> FAVARFitResult`
 
@@ -398,7 +398,7 @@ result = mf.functions.favar_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/factor_augmented_var.md)
+[Encyclopedia](../encyclopedia/l4/model/factor_augmented_var.md)
 
 #### `bvar_minnesota_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_lag: int = 1, lambda1: float = 0.2) -> BVARMinnesotaFitResult`
 
@@ -414,7 +414,7 @@ result = mf.functions.bvar_minnesota_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/bvar_minnesota.md)
+[Encyclopedia](../encyclopedia/l4/model/bvar_minnesota.md)
 
 #### `bvar_niw_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_lag: int = 1, lambda1: float = 0.2) -> BVARNIWFitResult`
 
@@ -430,7 +430,7 @@ result = mf.functions.bvar_niw_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/bvar_normal_inverse_wishart.md)
+[Encyclopedia](../encyclopedia/l4/model/bvar_normal_inverse_wishart.md)
 
 #### `ets_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> ETSFitResult`
 
@@ -446,7 +446,7 @@ result = mf.functions.ets_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/ets.md)
+[Encyclopedia](../encyclopedia/l4/model/ets.md)
 
 #### `holt_winters_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> HoltWintersFitResult`
 
@@ -462,7 +462,7 @@ result = mf.functions.holt_winters_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/holt_winters.md)
+[Encyclopedia](../encyclopedia/l4/model/holt_winters.md)
 
 #### `theta_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> ThetaFitResult`
 
@@ -478,7 +478,7 @@ result = mf.functions.theta_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/theta_method.md)
+[Encyclopedia](../encyclopedia/l4/model/theta_method.md)
 
 #### `dfm_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_factors: int = 3) -> DFMFitResult`
 
@@ -494,7 +494,7 @@ result = mf.functions.dfm_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/dfm_mixed_mariano_murasawa.md)
+[Encyclopedia](../encyclopedia/l4/model/dfm_mixed_mariano_murasawa.md)
 
 #### `garch11_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> GARCH11FitResult`
 
@@ -510,7 +510,7 @@ result = mf.functions.garch11_fit(X, y)
 # Requires optional extra (see description above)
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/garch11.md)
+[Encyclopedia](../encyclopedia/l4/model/garch11.md)
 
 #### `egarch_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> EGARCHFitResult`
 
@@ -526,7 +526,7 @@ result = mf.functions.egarch_fit(X, y)
 # Requires optional extra (see description above)
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/egarch.md)
+[Encyclopedia](../encyclopedia/l4/model/egarch.md)
 
 ## Special models (6 ops)
 
@@ -545,7 +545,7 @@ result = mf.functions.realized_garch_fit(X, y, rv)
 # Requires: pip install macroforecast[arch]
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/realized_garch_with_rv_exog.md)
+[Encyclopedia](../encyclopedia/l4/model/realized_garch_with_rv_exog.md)
 
 #### `mars_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series) -> MARSFitResult`
 
@@ -561,7 +561,7 @@ result = mf.functions.mars_fit(X, y)
 # Requires optional extra (see description above)
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/mars.md)
+[Encyclopedia](../encyclopedia/l4/model/mars.md)
 
 #### `knn_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, n_neighbors: int = 5) -> KNNFitResult`
 
@@ -577,7 +577,7 @@ result = mf.functions.knn_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/knn.md)
+[Encyclopedia](../encyclopedia/l4/model/knn.md)
 
 #### `svr_linear_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, C: float = 1.0) -> SVRFitResult`
 
@@ -593,7 +593,7 @@ result = mf.functions.svr_linear_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/svr_linear.md)
+[Encyclopedia](../encyclopedia/l4/model/svr_linear.md)
 
 #### `svr_poly_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, C: float = 1.0, degree: int = 3) -> SVRFitResult`
 
@@ -609,7 +609,7 @@ result = mf.functions.svr_poly_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/svr_poly.md)
+[Encyclopedia](../encyclopedia/l4/model/svr_poly.md)
 
 #### `svr_rbf_fit(X: np.ndarray | pd.DataFrame, y: np.ndarray | pd.Series, *, C: float = 1.0, gamma: str | float = scale) -> SVRFitResult`
 
@@ -625,7 +625,7 @@ result = mf.functions.svr_rbf_fit(X, y)
 print(result.summary())
 ```
 
-[Encyclopedia](../encyclopedia/l4/family/svr_rbf.md)
+[Encyclopedia](../encyclopedia/l4/model/svr_rbf.md)
 
 ## Quick example
 

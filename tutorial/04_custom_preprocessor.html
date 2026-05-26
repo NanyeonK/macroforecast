@@ -464,7 +464,7 @@ matrices instead of one scalar.</p>
 <hr class="docutils" />
 <section id="why-a-custom-preprocessor">
 <h2>Why a custom preprocessor?<a class="headerlink" href="#why-a-custom-preprocessor" title="Link to this heading">#</a></h2>
-<p>Layer 2 (L2) is macroforecast’s cleaning boundary. It applies transforms,
+<p>L2 is macroforecast’s cleaning boundary. It applies transforms,
 outlier treatment, imputation, and frame-edge handling to the raw panel. After
 L2 finishes, every downstream layer receives an identically processed dataset.</p>
 <p>Sometimes the built-in L2 operations are not enough. You might want to:</p>
@@ -848,10 +848,10 @@ registered before running:</p>
 <section id="what-to-do-next">
 <h2>What to do next<a class="headerlink" href="#what-to-do-next" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>See <a class="reference internal" href="../how_to/use_custom_hooks.html"><span class="doc">How to use custom hooks</span></a> for all five extension points:
+<li><p>See <a class="reference internal" href="../how_to/use_extension_points.html"><span class="doc">How to use extension points</span></a> for all five extension points:
 custom feature blocks, combiners, preprocessors, target transformers,
 and models.</p></li>
-<li><p>See <a class="reference internal" href="../explanation/12_layer_design.html"><span class="doc">Why 12 Layers?</span></a> for the full rationale behind
+<li><p>See <a class="reference internal" href="../explanation/layer_design.html"><span class="doc">The Layer Design</span></a> for the full rationale behind
 why the L2 boundary exists and what it prevents.</p></li>
 <li><p>See <a class="reference internal" href="03_custom_model.html"><span class="doc">Build your own model</span></a> to compare the preprocessor contract with the
 model contract.</p></li>

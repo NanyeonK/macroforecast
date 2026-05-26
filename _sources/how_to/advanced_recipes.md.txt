@@ -2,7 +2,7 @@
 
 The goal is to explain recipe orchestration in depth for users who have
 graduated from the standalone tutorial track. A recipe is a single YAML
-file that fully specifies a 12-layer pipeline (L0 through L8) and the
+file that fully specifies an L0–L8 layered pipeline and the
 sweep markers needed to expand into independent cells. Recipes provide
 bit-exact replication via the manifest, custom-step extension via
 `mf.register_model`, and composition via sweep markers. Standalone code
@@ -17,15 +17,15 @@ configurations. The study will be shared as a unit, for example as a
 paper replication package or a CI artifact. The study depends on
 cross-layer references such as L4 `is_benchmark`, L6.D `mcs_inclusion`,
 or L3 `lineage`. We recommend standalone code (`mf.models.*`,
-`mf.feature_selection.*`, and the other public submodules) when the
+`macroforecast.layers.l3_features.selection.*`, and the other public submodules) when the
 study is exploratory, when the user is iterating on a single estimator,
 or when the input data does not match the FRED-MD, QD, or SD adapter
 contracts.
 
 ## Basic recipe structure
 
-A minimal L4 recipe selects a model family and runs it on a default
-dataset. The structure follows the canonical 12-layer order. The recipe
+A minimal L4 recipe selects a model and runs it on a default
+dataset. The structure follows the canonical layer order (L0–L8). The recipe
 gallery in `examples/recipes/` ships runnable templates including
 `l4_minimal_ridge.yaml` and `l7_minimal_shap.yaml`.
 
@@ -128,7 +128,7 @@ estimator.
 
 ```python
 import macroforecast as mf
-from macroforecast.feature_selection import Boruta
+from macroforecast.layers.l3_features.selection import Boruta
 
 X, y = load_my_data()
 sel = Boruta(random_state=0).fit(X, y)
@@ -137,7 +137,7 @@ X_sel = sel.transform(X)
 ```
 
 The equivalent recipe nominates `boruta_selection` as an L3 op and
-`ridge` as the L4 family. The relevant lines are as follows.
+`ridge` as the L4 model. The relevant lines are as follows.
 
 ```yaml
 3_feature_engineering_dag:

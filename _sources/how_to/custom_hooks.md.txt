@@ -3,4 +3,4 @@ orphan: true
 ---
 # Redirect notice
 
-This page has moved. See [How to use custom hooks](use_custom_hooks.md).
+This page has moved. See [How to use extension points](use_extension_points.md).

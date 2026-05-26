@@ -33,7 +33,7 @@ The high-level defaults are:
 - **Forecast strategy**: `direct` — fits a separate model for each horizon (`y_{t+h} ~ f(x_t)`)
 - **Training window**: `expanding` — every refit uses all data from the sample start through the current origin
 - **Refit policy**: `every_origin` — refits the model at every walk-forward origin
-- **Benchmark minimum train size**: 5 observations (only affects the `zero_change` benchmark family)
+- **Benchmark minimum train size**: 5 observations (only affects the `zero_change` benchmark model)
 
 All defaults live in `macroforecast.defaults`. To inspect or override them programmatically:
 

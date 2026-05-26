@@ -8,7 +8,7 @@ macroforecast exposes two ways to run forecasting models:
 | | Standalone models | Recipe pipeline |
 |---|---|---|
 | Interface | `from macroforecast.layers.l4_models import X` | YAML file |
-| Scope | Single model, direct Python call | Full 12-layer pipeline |
+| Scope | Single model, direct Python call | Full L0–L8 pipeline |
 | Bit-exact replay | Re-run the script | `mf.recipes.run(manifest.json)` |
 | Output | Python return value | Artifact directory + manifest |
 | Best for | Notebooks, scripting, quick comparisons | Reproducible papers, sweep studies |

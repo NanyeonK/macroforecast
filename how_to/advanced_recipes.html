@@ -391,7 +391,7 @@
 <li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">How to add a custom model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tune_hyperparameters.html">How to tune hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sweep_over_models.html">How to sweep over models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use_custom_hooks.html">How to use custom hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_extension_points.html">How to use extension points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_layer_execution.html">Partial Layer Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="replicate_a_study.html">How to replicate a study</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validate_against_r.html">Validate Against R Reference Implementations</a></li>
@@ -477,7 +477,7 @@
 <h1>Advanced recipe orchestration<a class="headerlink" href="#advanced-recipe-orchestration" title="Link to this heading">#</a></h1>
 <p>The goal is to explain recipe orchestration in depth for users who have
 graduated from the standalone tutorial track. A recipe is a single YAML
-file that fully specifies a 12-layer pipeline (L0 through L8) and the
+file that fully specifies an L0–L8 layered pipeline and the
 sweep markers needed to expand into independent cells. Recipes provide
 bit-exact replication via the manifest, custom-step extension via
 <code class="docutils literal notranslate"><span class="pre">mf.register_model</span></code>, and composition via sweep markers. Standalone code
@@ -491,15 +491,15 @@ configurations. The study will be shared as a unit, for example as a
 paper replication package or a CI artifact. The study depends on
 cross-layer references such as L4 <code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code>, L6.D <code class="docutils literal notranslate"><span class="pre">mcs_inclusion</span></code>,
 or L3 <code class="docutils literal notranslate"><span class="pre">lineage</span></code>. We recommend standalone code (<code class="docutils literal notranslate"><span class="pre">mf.models.*</span></code>,
-<code class="docutils literal notranslate"><span class="pre">mf.feature_selection.*</span></code>, and the other public submodules) when the
+<code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l3_features.selection.*</span></code>, and the other public submodules) when the
 study is exploratory, when the user is iterating on a single estimator,
 or when the input data does not match the FRED-MD, QD, or SD adapter
 contracts.</p>
 </section>
 <section id="basic-recipe-structure">
 <h2>Basic recipe structure<a class="headerlink" href="#basic-recipe-structure" title="Link to this heading">#</a></h2>
-<p>A minimal L4 recipe selects a model family and runs it on a default
-dataset. The structure follows the canonical 12-layer order. The recipe
+<p>A minimal L4 recipe selects a model and runs it on a default
+dataset. The structure follows the canonical layer order (L0–L8). The recipe
 gallery in <code class="docutils literal notranslate"><span class="pre">examples/recipes/</span></code> ships runnable templates including
 <code class="docutils literal notranslate"><span class="pre">l4_minimal_ridge.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">l7_minimal_shap.yaml</span></code>.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">study_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minimal_ridge</span>
@@ -591,7 +591,7 @@ guarantee is what underwrites paper replication packages.</p>
 <p>Consider a standalone study that fits a Boruta selector and a Ridge
 estimator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l3_features.selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
 
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_my_data</span><span class="p">()</span>
 <span class="n">sel</span> <span class="o">=</span> <span class="n">Boruta</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -600,7 +600,7 @@ estimator.</p>
 </pre></div>
 </div>
 <p>The equivalent recipe nominates <code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code> as an L3 op and
-<code class="docutils literal notranslate"><span class="pre">ridge</span></code> as the L4 family. The relevant lines are as follows.</p>
+<code class="docutils literal notranslate"><span class="pre">ridge</span></code> as the L4 model. The relevant lines are as follows.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">3_feature_engineering_dag</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">nodes</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boruta</span>

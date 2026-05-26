@@ -15,7 +15,7 @@ matrices instead of one scalar.
 
 ## Why a custom preprocessor?
 
-Layer 2 (L2) is macroforecast's cleaning boundary. It applies transforms,
+L2 is macroforecast's cleaning boundary. It applies transforms,
 outlier treatment, imputation, and frame-edge handling to the raw panel. After
 L2 finishes, every downstream layer receives an identically processed dataset.
 
@@ -404,10 +404,10 @@ print(mf.list_custom_preprocessors())   # ()
 
 ## What to do next
 
-- See {doc}`../how_to/use_custom_hooks` for all five extension points:
+- See {doc}`../how_to/use_extension_points` for all five extension points:
   custom feature blocks, combiners, preprocessors, target transformers,
   and models.
-- See {doc}`../explanation/12_layer_design` for the full rationale behind
+- See {doc}`../explanation/layer_design` for the full rationale behind
   why the L2 boundary exists and what it prevents.
 - See {doc}`03_custom_model` to compare the preprocessor contract with the
   model contract.

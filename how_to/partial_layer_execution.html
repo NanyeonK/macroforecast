@@ -52,7 +52,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="How to replicate a study" href="replicate_a_study.html" />
-    <link rel="prev" title="How to use custom hooks" href="use_custom_hooks.html" />
+    <link rel="prev" title="How to use extension points" href="use_extension_points.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5a0" />
@@ -391,7 +391,7 @@
 <li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">How to add a custom model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tune_hyperparameters.html">How to tune hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sweep_over_models.html">How to sweep over models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use_custom_hooks.html">How to use custom hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_extension_points.html">How to use extension points</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Partial Layer Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="replicate_a_study.html">How to replicate a study</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validate_against_r.html">Validate Against R Reference Implementations</a></li>
@@ -486,9 +486,9 @@ upstream artifacts, and returns the same artifact dataclasses that the full
 pipeline would have produced – so you can inspect intermediate sinks
 without invoking L4 / L5 / L6 / L7 / L8.</p>
 <blockquote>
-<div><p>See also: <a class="reference internal" href="use_custom_hooks.html"><span class="doc">How to use custom hooks</span></a> – developing a custom hook
+<div><p>See also: <a class="reference internal" href="use_extension_points.html"><span class="doc">How to use extension points</span></a> – developing a custom extension point
 almost always involves L1+L2 once and then iterating on the layer the
-hook is registered against.</p>
+extension point is registered against.</p>
 </div></blockquote>
 <section id="why-this-exists">
 <h2>Why this exists<a class="headerlink" href="#why-this-exists" title="Link to this heading">#</a></h2>
@@ -741,7 +741,7 @@ manages the cell loop).</p>
 </table>
 </div>
 <p>There is no separate <code class="docutils literal notranslate"><span class="pre">target_series</span></code> field; the target column lives inside
-<code class="docutils literal notranslate"><span class="pre">raw_panel.data[target]</span></code> until the L3 stage splits it out.</p>
+<code class="docutils literal notranslate"><span class="pre">raw_panel.data[target]</span></code> until the L3 step splits it out.</p>
 </section>
 <section id="l1regimemetadataartifact">
 <h3><code class="docutils literal notranslate"><span class="pre">L1RegimeMetadataArtifact</span></code><a class="headerlink" href="#l1regimemetadataartifact" title="Link to this heading">#</a></h3>
@@ -806,7 +806,7 @@ manages the cell loop).</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cleaning_log</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;runtime&quot;:</span> <span class="pre">&quot;core_l1_l2_materialization&quot;,</span> <span class="pre">&quot;steps&quot;:</span> <span class="pre">[...]}</span></code>. Each step entry is a dict produced by the relevant stage (<code class="docutils literal notranslate"><span class="pre">transform</span></code>, <code class="docutils literal notranslate"><span class="pre">outlier</span></code>, <code class="docutils literal notranslate"><span class="pre">imputation</span></code>, <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code>, plus any <code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code> / <code class="docutils literal notranslate"><span class="pre">custom_postprocessor</span></code> entries).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;runtime&quot;:</span> <span class="pre">&quot;core_l1_l2_materialization&quot;,</span> <span class="pre">&quot;steps&quot;:</span> <span class="pre">[...]}</span></code>. Each step entry is a dict produced by the relevant step (<code class="docutils literal notranslate"><span class="pre">transform</span></code>, <code class="docutils literal notranslate"><span class="pre">outlier</span></code>, <code class="docutils literal notranslate"><span class="pre">imputation</span></code>, <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code>, plus any <code class="docutils literal notranslate"><span class="pre">custom_preprocessor</span></code> / <code class="docutils literal notranslate"><span class="pre">custom_postprocessor</span></code> entries).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_imputed_cells</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
@@ -826,7 +826,7 @@ manages the cell loop).</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cleaning_temporal_rules</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
-<td><p>Records the per-stage temporal rule (<code class="docutils literal notranslate"><span class="pre">imputation</span></code>, <code class="docutils literal notranslate"><span class="pre">outlier</span></code>, <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code>).</p></td>
+<td><p>Records the per-step temporal rule (<code class="docutils literal notranslate"><span class="pre">imputation</span></code>, <code class="docutils literal notranslate"><span class="pre">outlier</span></code>, <code class="docutils literal notranslate"><span class="pre">frame_edge</span></code>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">upstream_hashes</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">str]</span></code></p></td>
@@ -1060,7 +1060,7 @@ manages the cell loop).</p>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; -&quot;</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">cleaning_log['steps']</span></code> entry for the outlier stage tells you exactly
+<p>The <code class="docutils literal notranslate"><span class="pre">cleaning_log['steps']</span></code> entry for the outlier step tells you exactly
 which policy ran, what action it took, and how many cells it flagged.</p>
 </section>
 <section id="use-case-2-iterating-on-l3-only">
@@ -1087,14 +1087,14 @@ which policy ran, what action it took, and how many cells it flagged.</p>
 <p>Each L3 iteration reuses the same <code class="docutils literal notranslate"><span class="pre">l1_artifact</span></code> and <code class="docutils literal notranslate"><span class="pre">l2_artifact</span></code>, so
 the experiment is bounded by L3 cost rather than full L1 → L8 cost.</p>
 <p>When developing a custom L3 <code class="docutils literal notranslate"><span class="pre">feature_block</span></code> or <code class="docutils literal notranslate"><span class="pre">feature_combiner</span></code>
-(<a class="reference internal" href="use_custom_hooks.html"><span class="doc">How to use custom hooks</span></a>), this loop is the canonical inner cycle:
+(<a class="reference internal" href="use_extension_points.html"><span class="doc">How to use extension points</span></a>), this loop is the canonical inner cycle:
 register the callable once, then call <code class="docutils literal notranslate"><span class="pre">materialize_l3_minimal</span></code> repeatedly
 with different parameter values.</p>
 </section>
 <section id="execute-node-the-cache-aware-primitive">
 <h2><code class="docutils literal notranslate"><span class="pre">execute_node</span></code> – the cache-aware primitive<a class="headerlink" href="#execute-node-the-cache-aware-primitive" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">execute_node(node,</span> <span class="pre">dag,</span> <span class="pre">runtime_context,</span> <span class="pre">cache_dir)</span></code> is the foundation
-primitive that <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> calls per DAG node. It hashes the node +
+primitive that <code class="docutils literal notranslate"><span class="pre">execute_recipe</span></code> calls per step graph node. It hashes the node +
 its inputs, checks the on-disk cache at
 <code class="docutils literal notranslate"><span class="pre">cache_dir/nodes/&lt;node_hash&gt;/result.pickle</span></code>, returns the cached value if
 present, and otherwise computes and caches the result. Most recipe authors
@@ -1115,12 +1115,12 @@ runtime layer (rare).</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="use_custom_hooks.html"
+       href="use_extension_points.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">How to use custom hooks</p>
+        <p class="prev-next-title">How to use extension points</p>
       </div>
     </a>
     <a class="right-next"

@@ -391,7 +391,7 @@
 <li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">How to add a custom model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tune_hyperparameters.html">How to tune hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sweep_over_models.html">How to sweep over models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use_custom_hooks.html">How to use custom hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_extension_points.html">How to use extension points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_layer_execution.html">Partial Layer Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="replicate_a_study.html">How to replicate a study</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validate_against_r.html">Validate Against R Reference Implementations</a></li>
@@ -477,7 +477,7 @@
 <h1>How to select features with Boruta<a class="headerlink" href="#how-to-select-features-with-boruta" title="Link to this heading">#</a></h1>
 <p>The goal is to select a subset of features under proper false-positive
 control using the Kursa-Rudnicki (2010) Boruta algorithm. We use the
-public class <code class="docutils literal notranslate"><span class="pre">Boruta</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_selection</span></code>, which
+public class <code class="docutils literal notranslate"><span class="pre">Boruta</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l3_features.selection</span></code>, which
 follows the sklearn <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">transform</span></code> interface and inherits from
 <code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> and <code class="docutils literal notranslate"><span class="pre">TransformerMixin</span></code> since C64. The implementation is
 pure numpy and sklearn, so no external <code class="docutils literal notranslate"><span class="pre">boruta</span></code> package is required.</p>
@@ -485,7 +485,7 @@ pure numpy and sklearn, so no external <code class="docutils literal notranslate
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l3_features.selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">20</span>

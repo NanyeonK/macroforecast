@@ -24,6 +24,6 @@ Recommended first recipes:
 | `l4_minimal_ridge.yaml` | Small end-to-end custom-panel recipe. |
 | `l6_standard.yaml` | AR-p benchmark versus ridge with DM-HLN and MCS blocks. |
 | `l6_full_replication.yaml` | Broader L6 statistical-test coverage. |
-| `goulet_coulombe_2021_replication.yaml` | Paper-style replication scaffold. |
+| `goulet_coulombe_2021_replication.yaml` | Paper-style replication template. |
 
-Do not describe optional extras unless the recipe actually imports that family. Keep this page generated or smoke-test-backed.
+Do not describe optional extras unless the recipe actually uses that model. Keep this page generated or smoke-test-backed.

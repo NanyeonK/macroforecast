@@ -464,7 +464,7 @@
 <li><p><strong>Forecast strategy</strong>: <code class="docutils literal notranslate"><span class="pre">direct</span></code> — fits a separate model for each horizon (<code class="docutils literal notranslate"><span class="pre">y_{t+h}</span> <span class="pre">~</span> <span class="pre">f(x_t)</span></code>)</p></li>
 <li><p><strong>Training window</strong>: <code class="docutils literal notranslate"><span class="pre">expanding</span></code> — every refit uses all data from the sample start through the current origin</p></li>
 <li><p><strong>Refit policy</strong>: <code class="docutils literal notranslate"><span class="pre">every_origin</span></code> — refits the model at every walk-forward origin</p></li>
-<li><p><strong>Benchmark minimum train size</strong>: 5 observations (only affects the <code class="docutils literal notranslate"><span class="pre">zero_change</span></code> benchmark family)</p></li>
+<li><p><strong>Benchmark minimum train size</strong>: 5 observations (only affects the <code class="docutils literal notranslate"><span class="pre">zero_change</span></code> benchmark model)</p></li>
 </ul>
 <p>All defaults live in <code class="docutils literal notranslate"><span class="pre">macroforecast.defaults</span></code>. To inspect or override them programmatically:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.defaults</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>

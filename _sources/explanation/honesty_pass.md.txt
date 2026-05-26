@@ -83,7 +83,7 @@ follow the implementation progress.
 
 ### v0.1 — First Design Pass
 
-The package was released with the full 12-layer schema. The codex review
+The package was released with the full layered schema. The codex review
 on PR #163 flagged 19 families and ops whose v0.1 runtime did not match the
 published procedure named in the design. They were demoted from `operational`
 to `future`. The affected items spanned three areas: regime estimation in L1.G
@@ -152,7 +152,7 @@ corresponds to an `operational` runtime implementation.
 
 Following C50, the operational inventory is:
 
-- 35+ L4 forecasting families: linear models, tree ensembles, boosting,
+- 35+ L4 forecasting models: linear models, tree ensembles, boosting,
   SVM, kNN, MLP, deep neural networks (LSTM/GRU/Transformer with
   `[deep]` extra), AR(p), BVAR Minnesota and Normal-Inverse-Wishart,
   FAVAR, Macroeconomic Random Forest (GTVP), Mariano-Murasawa DFM,
@@ -165,7 +165,7 @@ Following C50, the operational inventory is:
 - 6 L1.G regime estimators: none, NBER, user-supplied, Hamilton
   Markov-switching, Tong SETAR, and Bai-Perron structural breaks.
 
-See the [Architecture Index](../reference/architecture/index.md) for
+See the [Architecture Index](architecture/index.md) for
 per-layer operational coverage detail.
 
 ---
@@ -186,7 +186,7 @@ visible at the entry point, not buried in a log file.
 
 ## Further Reading
 
-- [Foundation Core](../reference/architecture/foundation.md) — where the core
+- [Foundation Core](foundation.md) — where the core
   vocabulary (`OPERATIONAL`, `FUTURE`, `ItemStatus`, `normalize_status`,
   `is_runnable`) is defined.
 - `macroforecast.core.status` — the Python module that is the single source

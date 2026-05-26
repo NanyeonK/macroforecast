@@ -379,10 +379,53 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="12_layer_design.html">Why 12 Layers?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_design.html">The Layer Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bit_exact_replicate.html">Bit-Exact Replication</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">The Honesty Pass</a></li>
 <li class="toctree-l1"><a class="reference internal" href="recipe_to_run.html">From Recipe to Run</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer1.html">Layer L1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer2.html">Layer L2: Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer3.html">Layer L3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer4.html">Layer L4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer5.html">Layer L5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer6.html">Layer L6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer7.html">Layer L7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer8.html">Layer L8: Output / Provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="foundation.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipe_layers.html">Recipe Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
 </ul>
 </div>
 </nav></div>
@@ -514,7 +557,7 @@ follow the implementation progress.</p>
 <h2>Version History: The Four Passes<a class="headerlink" href="#version-history-the-four-passes" title="Link to this heading">#</a></h2>
 <section id="v0-1-first-design-pass">
 <h3>v0.1 — First Design Pass<a class="headerlink" href="#v0-1-first-design-pass" title="Link to this heading">#</a></h3>
-<p>The package was released with the full 12-layer schema. The codex review
+<p>The package was released with the full layered schema. The codex review
 on PR #163 flagged 19 families and ops whose v0.1 runtime did not match the
 published procedure named in the design. They were demoted from <code class="docutils literal notranslate"><span class="pre">operational</span></code>
 to <code class="docutils literal notranslate"><span class="pre">future</span></code>. The affected items spanned three areas: regime estimation in L1.G
@@ -577,7 +620,7 @@ corresponds to an <code class="docutils literal notranslate"><span class="pre">o
 <h2>Operational Coverage Today<a class="headerlink" href="#operational-coverage-today" title="Link to this heading">#</a></h2>
 <p>Following C50, the operational inventory is:</p>
 <ul class="simple">
-<li><p>35+ L4 forecasting families: linear models, tree ensembles, boosting,
+<li><p>35+ L4 forecasting models: linear models, tree ensembles, boosting,
 SVM, kNN, MLP, deep neural networks (LSTM/GRU/Transformer with
 <code class="docutils literal notranslate"><span class="pre">[deep]</span></code> extra), AR(p), BVAR Minnesota and Normal-Inverse-Wishart,
 FAVAR, Macroeconomic Random Forest (GTVP), Mariano-Murasawa DFM,
@@ -590,7 +633,7 @@ attribution, transformation attribution, MRF GTVP importance.</p></li>
 <li><p>6 L1.G regime estimators: none, NBER, user-supplied, Hamilton
 Markov-switching, Tong SETAR, and Bai-Perron structural breaks.</p></li>
 </ul>
-<p>See the <a class="reference internal" href="../reference/architecture/index.html"><span class="std std-doc">Architecture Index</span></a> for
+<p>See the <a class="reference internal" href="architecture/index.html"><span class="std std-doc">Architecture Index</span></a> for
 per-layer operational coverage detail.</p>
 </section>
 <hr class="docutils" />
@@ -609,7 +652,7 @@ visible at the entry point, not buried in a log file.</p>
 <section id="further-reading">
 <h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../reference/architecture/foundation.html"><span class="std std-doc">Foundation Core</span></a> — where the core
+<li><p><a class="reference internal" href="foundation.html"><span class="std std-doc">Foundation Core</span></a> — where the core
 vocabulary (<code class="docutils literal notranslate"><span class="pre">OPERATIONAL</span></code>, <code class="docutils literal notranslate"><span class="pre">FUTURE</span></code>, <code class="docutils literal notranslate"><span class="pre">ItemStatus</span></code>, <code class="docutils literal notranslate"><span class="pre">normalize_status</span></code>,
 <code class="docutils literal notranslate"><span class="pre">is_runnable</span></code>) is defined.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">macroforecast.core.status</span></code> — the Python module that is the single source

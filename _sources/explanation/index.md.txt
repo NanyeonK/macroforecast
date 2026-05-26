@@ -8,8 +8,16 @@ with complex recipes or extending the package.
 ```{toctree}
 :maxdepth: 1
 
-12_layer_design
+layer_design
 bit_exact_replicate
 honesty_pass
 recipe_to_run
+architecture/index
+foundation
+philosophy
+layer_boundary_contract
+recipe_layers
+artifacts_and_manifest
+reproducibility
+terminology
 ```

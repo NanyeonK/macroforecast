@@ -436,7 +436,7 @@
 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/ols.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/ols.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="ridge-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-prior-literal-none-random-walk-shrink-to-target-fused-difference-none-coefficient-constraint-literal-none-nonneg-none-vol-model-literal-ewma-garch11-none-none-random-state-int-none-none-ridgefitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">ridge_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">alpha:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">prior:</span> <span class="pre">&quot;Literal[none,</span> <span class="pre">random_walk,</span> <span class="pre">shrink_to_target,</span> <span class="pre">fused_difference]&quot;</span> <span class="pre">=</span> <span class="pre">none,</span> <span class="pre">coefficient_constraint:</span> <span class="pre">&quot;Literal[none,</span> <span class="pre">nonneg]&quot;</span> <span class="pre">=</span> <span class="pre">none,</span> <span class="pre">vol_model:</span> <span class="pre">&quot;Literal[ewma,</span> <span class="pre">garch11]</span> <span class="pre">|</span> <span class="pre">None&quot;</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None)</span> <span class="pre">-&gt;</span> <span class="pre">RidgeFitResult</span></code><a class="headerlink" href="#ridge-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-prior-literal-none-random-walk-shrink-to-target-fused-difference-none-coefficient-constraint-literal-none-nonneg-none-vol-model-literal-ewma-garch11-none-none-random-state-int-none-none-ridgefitresult" title="Link to this heading">#</a></h3>
@@ -450,7 +450,7 @@
 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/ridge.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/ridge.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="lasso-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-max-iter-int-20000-lassofitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">lasso_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">alpha:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">max_iter:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">20000)</span> <span class="pre">-&gt;</span> <span class="pre">LassoFitResult</span></code><a class="headerlink" href="#lasso-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-max-iter-int-20000-lassofitresult" title="Link to this heading">#</a></h3>
@@ -463,7 +463,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/lasso.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/lasso.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="lasso-path-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-cv-int-5-max-iter-int-20000-random-state-int-none-none-lassopathfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">lasso_path_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">cv:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5,</span> <span class="pre">max_iter:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">20000,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None)</span> <span class="pre">-&gt;</span> <span class="pre">LassoPathFitResult</span></code><a class="headerlink" href="#lasso-path-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-cv-int-5-max-iter-int-20000-random-state-int-none-none-lassopathfitresult" title="Link to this heading">#</a></h3>
@@ -476,7 +476,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/lasso_path.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/lasso_path.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="elastic-net-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-l1-ratio-float-0-5-max-iter-int-20000-elasticnetfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">elastic_net_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">alpha:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">l1_ratio:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.5,</span> <span class="pre">max_iter:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">20000)</span> <span class="pre">-&gt;</span> <span class="pre">ElasticNetFitResult</span></code><a class="headerlink" href="#elastic-net-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-l1-ratio-float-0-5-max-iter-int-20000-elasticnetfitresult" title="Link to this heading">#</a></h3>
@@ -489,7 +489,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/elastic_net.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/elastic_net.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="bayesian-ridge-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-bayesianridgefitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">bayesian_ridge_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">BayesianRidgeFitResult</span></code><a class="headerlink" href="#bayesian-ridge-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-bayesianridgefitresult" title="Link to this heading">#</a></h3>
@@ -502,7 +502,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/bayesian_ridge.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/bayesian_ridge.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="huber-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-epsilon-float-1-35-max-iter-int-1000-huberfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">huber_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">epsilon:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.35,</span> <span class="pre">max_iter:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1000)</span> <span class="pre">-&gt;</span> <span class="pre">HuberFitResult</span></code><a class="headerlink" href="#huber-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-epsilon-float-1-35-max-iter-int-1000-huberfitresult" title="Link to this heading">#</a></h3>
@@ -515,7 +515,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/huber.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/huber.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="kernel-ridge-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-kernel-str-rbf-gamma-float-none-none-kernelridgefitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">kernel_ridge_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">alpha:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">kernel:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">rbf,</span> <span class="pre">gamma:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None)</span> <span class="pre">-&gt;</span> <span class="pre">KernelRidgeFitResult</span></code><a class="headerlink" href="#kernel-ridge-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-alpha-float-1-0-kernel-str-rbf-gamma-float-none-none-kernelridgefitresult" title="Link to this heading">#</a></h3>
@@ -528,7 +528,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/kernel_ridge.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/kernel_ridge.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 </section>
 <section id="regularized-linear-and-kernel-1-op">
@@ -544,7 +544,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/principal_component_regression.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/principal_component_regression.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 </section>
 <section id="tree-and-ensemble-models-7-ops">
@@ -560,7 +560,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/random_forest.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/random_forest.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="extra-trees-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-200-max-depth-int-none-none-min-samples-leaf-int-1-random-state-int-0-n-jobs-int-1-extratreesfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">extra_trees_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_estimators:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">200,</span> <span class="pre">max_depth:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">min_samples_leaf:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">n_jobs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1)</span> <span class="pre">-&gt;</span> <span class="pre">ExtraTreesFitResult</span></code><a class="headerlink" href="#extra-trees-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-200-max-depth-int-none-none-min-samples-leaf-int-1-random-state-int-0-n-jobs-int-1-extratreesfitresult" title="Link to this heading">#</a></h3>
@@ -573,7 +573,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/extra_trees.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/extra_trees.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="gradient-boosting-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-200-learning-rate-float-0-1-max-depth-int-3-random-state-int-0-gradientboostingfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">gradient_boosting_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_estimators:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">200,</span> <span class="pre">learning_rate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1,</span> <span class="pre">max_depth:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">GradientBoostingFitResult</span></code><a class="headerlink" href="#gradient-boosting-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-200-learning-rate-float-0-1-max-depth-int-3-random-state-int-0-gradientboostingfitresult" title="Link to this heading">#</a></h3>
@@ -586,7 +586,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/gradient_boosting.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/gradient_boosting.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="glmboost-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-iter-int-100-learning-rate-float-0-1-glmboostfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">glmboost_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_iter:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">100,</span> <span class="pre">learning_rate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1)</span> <span class="pre">-&gt;</span> <span class="pre">GLMBoostFitResult</span></code><a class="headerlink" href="#glmboost-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-iter-int-100-learning-rate-float-0-1-glmboostfitresult" title="Link to this heading">#</a></h3>
@@ -599,7 +599,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/glmboost.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/glmboost.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="xgboost-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-300-learning-rate-float-0-1-max-depth-int-6-subsample-float-1-0-random-state-int-0-xgboostfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">xgboost_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_estimators:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">300,</span> <span class="pre">learning_rate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1,</span> <span class="pre">max_depth:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">subsample:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">XGBoostFitResult</span></code><a class="headerlink" href="#xgboost-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-300-learning-rate-float-0-1-max-depth-int-6-subsample-float-1-0-random-state-int-0-xgboostfitresult" title="Link to this heading">#</a></h3>
@@ -612,7 +612,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/xgboost.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/xgboost.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="lightgbm-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-300-learning-rate-float-0-1-max-depth-int-1-num-leaves-int-31-random-state-int-0-lightgbmfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">lightgbm_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_estimators:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">300,</span> <span class="pre">learning_rate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1,</span> <span class="pre">max_depth:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">-1,</span> <span class="pre">num_leaves:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">31,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">LightGBMFitResult</span></code><a class="headerlink" href="#lightgbm-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-300-learning-rate-float-0-1-max-depth-int-1-num-leaves-int-31-random-state-int-0-lightgbmfitresult" title="Link to this heading">#</a></h3>
@@ -625,7 +625,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/lightgbm.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/lightgbm.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="catboost-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-300-learning-rate-float-0-1-max-depth-int-6-random-state-int-0-catboostfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">catboost_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_estimators:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">300,</span> <span class="pre">learning_rate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1,</span> <span class="pre">max_depth:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">CatBoostFitResult</span></code><a class="headerlink" href="#catboost-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-estimators-int-300-learning-rate-float-0-1-max-depth-int-6-random-state-int-0-catboostfitresult" title="Link to this heading">#</a></h3>
@@ -638,7 +638,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/catboost.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/catboost.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 </section>
 <section id="neural-networks-4-ops">
@@ -654,7 +654,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/mlp.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/mlp.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="lstm-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-hidden-size-int-32-n-epochs-int-50-random-state-int-0-lstmfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">lstm_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">hidden_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">n_epochs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">50,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">LSTMFitResult</span></code><a class="headerlink" href="#lstm-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-hidden-size-int-32-n-epochs-int-50-random-state-int-0-lstmfitresult" title="Link to this heading">#</a></h3>
@@ -667,7 +667,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/lstm.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/lstm.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="gru-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-hidden-size-int-32-n-epochs-int-50-random-state-int-0-grufitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">gru_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">hidden_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">n_epochs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">50,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">GRUFitResult</span></code><a class="headerlink" href="#gru-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-hidden-size-int-32-n-epochs-int-50-random-state-int-0-grufitresult" title="Link to this heading">#</a></h3>
@@ -680,7 +680,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/gru.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/gru.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="transformer-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-hidden-size-int-32-n-epochs-int-50-random-state-int-0-transformerfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">transformer_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">hidden_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">32,</span> <span class="pre">n_epochs:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">50,</span> <span class="pre">random_state:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">0)</span> <span class="pre">-&gt;</span> <span class="pre">TransformerFitResult</span></code><a class="headerlink" href="#transformer-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-hidden-size-int-32-n-epochs-int-50-random-state-int-0-transformerfitresult" title="Link to this heading">#</a></h3>
@@ -693,7 +693,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/transformer.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/transformer.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 </section>
 <section id="time-series-and-factor-models-12-ops">
@@ -709,7 +709,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/ar_p.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/ar_p.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="var-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-lag-int-1-varfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">var_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_lag:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1)</span> <span class="pre">-&gt;</span> <span class="pre">VARFitResult</span></code><a class="headerlink" href="#var-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-lag-int-1-varfitresult" title="Link to this heading">#</a></h3>
@@ -722,7 +722,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/var.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/var.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="far-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-factors-int-3-n-lag-int-1-farfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">far_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_factors:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">n_lag:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1)</span> <span class="pre">-&gt;</span> <span class="pre">FARFitResult</span></code><a class="headerlink" href="#far-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-factors-int-3-n-lag-int-1-farfitresult" title="Link to this heading">#</a></h3>
@@ -735,7 +735,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/factor_augmented_ar.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/factor_augmented_ar.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="favar-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-factors-int-3-n-lag-int-1-favarfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">favar_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_factors:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">n_lag:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1)</span> <span class="pre">-&gt;</span> <span class="pre">FAVARFitResult</span></code><a class="headerlink" href="#favar-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-factors-int-3-n-lag-int-1-favarfitresult" title="Link to this heading">#</a></h3>
@@ -748,7 +748,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/factor_augmented_var.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/factor_augmented_var.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="bvar-minnesota-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-lag-int-1-lambda1-float-0-2-bvarminnesotafitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">bvar_minnesota_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_lag:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">lambda1:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.2)</span> <span class="pre">-&gt;</span> <span class="pre">BVARMinnesotaFitResult</span></code><a class="headerlink" href="#bvar-minnesota-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-lag-int-1-lambda1-float-0-2-bvarminnesotafitresult" title="Link to this heading">#</a></h3>
@@ -761,7 +761,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/bvar_minnesota.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/bvar_minnesota.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="bvar-niw-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-lag-int-1-lambda1-float-0-2-bvarniwfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">bvar_niw_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_lag:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">lambda1:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.2)</span> <span class="pre">-&gt;</span> <span class="pre">BVARNIWFitResult</span></code><a class="headerlink" href="#bvar-niw-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-lag-int-1-lambda1-float-0-2-bvarniwfitresult" title="Link to this heading">#</a></h3>
@@ -774,7 +774,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/bvar_normal_inverse_wishart.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/bvar_normal_inverse_wishart.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="ets-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-etsfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">ets_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">ETSFitResult</span></code><a class="headerlink" href="#ets-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-etsfitresult" title="Link to this heading">#</a></h3>
@@ -787,7 +787,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/ets.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/ets.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="holt-winters-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-holtwintersfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">holt_winters_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">HoltWintersFitResult</span></code><a class="headerlink" href="#holt-winters-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-holtwintersfitresult" title="Link to this heading">#</a></h3>
@@ -800,7 +800,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/holt_winters.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/holt_winters.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="theta-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-thetafitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">theta_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">ThetaFitResult</span></code><a class="headerlink" href="#theta-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-thetafitresult" title="Link to this heading">#</a></h3>
@@ -813,7 +813,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/theta_method.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/theta_method.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="dfm-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-factors-int-3-dfmfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">dfm_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_factors:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3)</span> <span class="pre">-&gt;</span> <span class="pre">DFMFitResult</span></code><a class="headerlink" href="#dfm-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-factors-int-3-dfmfitresult" title="Link to this heading">#</a></h3>
@@ -826,7 +826,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/dfm_mixed_mariano_murasawa.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/dfm_mixed_mariano_murasawa.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="garch11-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-garch11fitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">garch11_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">GARCH11FitResult</span></code><a class="headerlink" href="#garch11-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-garch11fitresult" title="Link to this heading">#</a></h3>
@@ -839,7 +839,7 @@
 <span class="c1"># Requires optional extra (see description above)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/garch11.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/garch11.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="egarch-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-egarchfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">egarch_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">EGARCHFitResult</span></code><a class="headerlink" href="#egarch-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-egarchfitresult" title="Link to this heading">#</a></h3>
@@ -852,7 +852,7 @@
 <span class="c1"># Requires optional extra (see description above)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/egarch.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/egarch.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 </section>
 <section id="special-models-6-ops">
@@ -869,7 +869,7 @@
 <span class="c1"># Requires: pip install macroforecast[arch]</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/realized_garch_with_rv_exog.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/realized_garch_with_rv_exog.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="mars-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-marsfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">mars_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series)</span> <span class="pre">-&gt;</span> <span class="pre">MARSFitResult</span></code><a class="headerlink" href="#mars-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-marsfitresult" title="Link to this heading">#</a></h3>
@@ -882,7 +882,7 @@
 <span class="c1"># Requires optional extra (see description above)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/mars.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/mars.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="knn-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-neighbors-int-5-knnfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">knn_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">n_neighbors:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">5)</span> <span class="pre">-&gt;</span> <span class="pre">KNNFitResult</span></code><a class="headerlink" href="#knn-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-n-neighbors-int-5-knnfitresult" title="Link to this heading">#</a></h3>
@@ -895,7 +895,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/knn.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/knn.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="svr-linear-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-c-float-1-0-svrfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">svr_linear_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">C:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0)</span> <span class="pre">-&gt;</span> <span class="pre">SVRFitResult</span></code><a class="headerlink" href="#svr-linear-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-c-float-1-0-svrfitresult" title="Link to this heading">#</a></h3>
@@ -908,7 +908,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/svr_linear.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/svr_linear.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="svr-poly-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-c-float-1-0-degree-int-3-svrfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">svr_poly_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">C:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">degree:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3)</span> <span class="pre">-&gt;</span> <span class="pre">SVRFitResult</span></code><a class="headerlink" href="#svr-poly-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-c-float-1-0-degree-int-3-svrfitresult" title="Link to this heading">#</a></h3>
@@ -921,7 +921,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/svr_poly.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/svr_poly.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 <section id="svr-rbf-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-c-float-1-0-gamma-str-float-scale-svrfitresult">
 <h3><code class="docutils literal notranslate"><span class="pre">svr_rbf_fit(X:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.DataFrame,</span> <span class="pre">y:</span> <span class="pre">np.ndarray</span> <span class="pre">|</span> <span class="pre">pd.Series,</span> <span class="pre">*,</span> <span class="pre">C:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0,</span> <span class="pre">gamma:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">scale)</span> <span class="pre">-&gt;</span> <span class="pre">SVRFitResult</span></code><a class="headerlink" href="#svr-rbf-fit-x-np-ndarray-pd-dataframe-y-np-ndarray-pd-series-c-float-1-0-gamma-str-float-scale-svrfitresult" title="Link to this heading">#</a></h3>
@@ -934,7 +934,7 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#../encyclopedia/l4/family/svr_rbf.md"><span class="xref myst">Encyclopedia</span></a></p>
+<p><a class="reference internal" href="#../encyclopedia/l4/model/svr_rbf.md"><span class="xref myst">Encyclopedia</span></a></p>
 </section>
 </section>
 <section id="quick-example">

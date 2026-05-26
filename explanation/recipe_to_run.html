@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Help" href="../help.html" />
+    <link rel="next" title="Architecture" href="architecture/index.html" />
     <link rel="prev" title="The Honesty Pass" href="honesty_pass.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -379,10 +379,53 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="12_layer_design.html">Why 12 Layers?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_design.html">The Layer Design</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bit_exact_replicate.html">Bit-Exact Replication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="honesty_pass.html">The Honesty Pass</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">From Recipe to Run</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer1.html">Layer L1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer2.html">Layer L2: Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer3.html">Layer L3: Feature Engineering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer4.html">Layer L4: Forecasting Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer5.html">Layer L5: Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer6.html">Layer L6: Statistical Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer7.html">Layer L7: Interpretation / Importance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer8.html">Layer L8: Output / Provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_source_frame.html">Data Source Mode / Frequency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer1_target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="foundation.html">Foundation Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="philosophy.html">Philosophy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_boundary_contract.html">Layer Boundary Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="recipe_layers.html">Recipe Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
 </ul>
 </div>
 </nav></div>
@@ -446,13 +489,13 @@
   <section id="from-recipe-to-run">
 <h1>From Recipe to Run<a class="headerlink" href="#from-recipe-to-run" title="Link to this heading">#</a></h1>
 <p>A YAML recipe is a static document. A study run is a sequence of computations
-that may span hundreds of forecast origins, multiple model families, and
+that may span hundreds of forecast origins, multiple model options, and
 several output formats. This page traces the pipeline that connects them —
 from the moment <code class="docutils literal notranslate"><span class="pre">mf.run(&quot;recipe.yaml&quot;)</span></code> is called to the moment artifacts
 appear on disk.</p>
 <hr class="docutils" />
-<section id="the-five-stages">
-<h2>The Five Stages<a class="headerlink" href="#the-five-stages" title="Link to this heading">#</a></h2>
+<section id="the-five-steps">
+<h2>The Five Steps<a class="headerlink" href="#the-five-steps" title="Link to this heading">#</a></h2>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>flowchart TD
     YAML[YAML recipe text] --&gt; PARSE[1. Parse and validate]
     PARSE --&gt; COMPILE[2. Compile pipeline per layer]
@@ -461,14 +504,14 @@ appear on disk.</p>
     CELL --&gt; HASH[5. Hash sinks, write manifest]
 </pre></div>
 </div>
-<p>Each stage serves a distinct purpose, and the ordering is not incidental.
+<p>Each step serves a distinct purpose, and the ordering is not incidental.
 Validation is first so the user gets a fast error instead of a slow failure
 mid-run. The manifest is last so it is always consistent with the artifacts
 that were actually written.</p>
 </section>
 <hr class="docutils" />
-<section id="stage-1-parse-and-validate">
-<h2>Stage 1: Parse and Validate<a class="headerlink" href="#stage-1-parse-and-validate" title="Link to this heading">#</a></h2>
+<section id="step-1-parse-and-validate">
+<h2>Step 1: Parse and Validate<a class="headerlink" href="#step-1-parse-and-validate" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">mf.run()</span></code> passes the recipe string or file path to
 <code class="docutils literal notranslate"><span class="pre">macroforecast.core.yaml</span></code>, which parses the YAML and constructs a typed
 recipe object. The validator then checks that:</p>
@@ -482,23 +525,23 @@ before any output is written),</p></li>
 must exist before L6 can reference it, and regime indicators used in L6.C
 conditional tests must have been defined at L1.</p></li>
 </ul>
-<p>Errors at Stage 1 are raised immediately. The output directory is not created.
+<p>Errors at this step are raised immediately. The output directory is not created.
 No artifacts are written. This is the design intent: a typo in an axis name,
-a misspelled model family, or a reference to a future item should cost the
+a misspelled model option, or a reference to a future item should cost the
 user a fraction of a second, not the duration of a full study run.</p>
 </section>
 <hr class="docutils" />
-<section id="stage-2-compile-pipeline-per-layer">
-<h2>Stage 2: Compile Pipeline per Layer<a class="headerlink" href="#stage-2-compile-pipeline-per-layer" title="Link to this heading">#</a></h2>
+<section id="step-2-compile-pipeline-per-layer">
+<h2>Step 2: Compile Pipeline per Layer<a class="headerlink" href="#step-2-compile-pipeline-per-layer" title="Link to this heading">#</a></h2>
 <p>Three layers (L3, L4, and L7) use directed acyclic graphs rather than flat
-lists of axis values. At this stage, the recipe’s <code class="docutils literal notranslate"><span class="pre">nodes</span></code> declarations are
+lists of axis values. At this step, the recipe’s <code class="docutils literal notranslate"><span class="pre">nodes</span></code> declarations are
 compiled into actual graph objects and topologically sorted.</p>
 <p>Five node types exist:</p>
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">source</span></code></strong>: reads a named upstream sink from a previously executed layer.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">axis</span></code></strong>: declares a parameter that can be swept across values.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">step</span></code></strong>: executes a registered operation (a feature transform, a model
-family, an importance method) with specified configuration.</p></li>
+option, an importance method) with specified configuration.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">combine</span></code></strong>: merges the outputs of multiple upstream nodes into a single
 artifact (used for forecast combination and feature concatenation).</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">sink</span></code></strong>: names an output artifact that downstream layers may consume.</p></li>
@@ -514,8 +557,8 @@ applied where the user has not specified a value, and the result is a
 typed layer configuration object.</p>
 </section>
 <hr class="docutils" />
-<section id="stage-3-expand-sweep-markers">
-<h2>Stage 3: Expand Sweep Markers<a class="headerlink" href="#stage-3-expand-sweep-markers" title="Link to this heading">#</a></h2>
+<section id="step-3-expand-sweep-markers">
+<h2>Step 3: Expand Sweep Markers<a class="headerlink" href="#step-3-expand-sweep-markers" title="Link to this heading">#</a></h2>
 <p>A sweep marker is a place in the recipe where a single value is replaced by
 a list:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">4_forecasting_model</span><span class="p">:</span>
@@ -531,21 +574,21 @@ product of all marked axes. A recipe with two sweep markers — one with 3
 values and one with 2 values — expands into 6 cells. A cell is one complete
 execution of the recipe with one specific combination of sweep values.</p>
 <p>Cell IDs are constructed to encode the sweep values, making artifact
-directories human-readable (for example, <code class="docutils literal notranslate"><span class="pre">cell_n_lag=1_family=ridge/</span></code>).</p>
+directories human-readable (for example, <code class="docutils literal notranslate"><span class="pre">cell_n_lag=1_model=ridge/</span></code>).</p>
 <p>Expansion happens before execution. The full cell grid is determined at
 compile time. This means the total number of cells is always known before
 any cell runs, which enables accurate progress reporting and deterministic
 seed assignment.</p>
 </section>
 <hr class="docutils" />
-<section id="stage-4-the-cell-loop">
-<h2>Stage 4: The Cell Loop<a class="headerlink" href="#stage-4-the-cell-loop" title="Link to this heading">#</a></h2>
+<section id="step-4-the-cell-loop">
+<h2>Step 4: The Cell Loop<a class="headerlink" href="#step-4-the-cell-loop" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">macroforecast.core.execution</span></code> iterates over the cell grid. For each cell,
 the runtime materializes the active layers in canonical order: L0, then L1,
 then L2, then L3, then L4, then L5, then L6 (if enabled), then L7 (if
 enabled), then L8. Each layer’s output is passed to the next layer as a
 typed sink.</p>
-<p>The per-cell seed is derived at this stage. If the recipe sets
+<p>The per-cell seed is derived at this step. If the recipe sets
 <code class="docutils literal notranslate"><span class="pre">reproducibility_policy:</span> <span class="pre">seeded_reproducible</span></code>, the runtime computes
 <code class="docutils literal notranslate"><span class="pre">cell_seed</span> <span class="pre">=</span> <span class="pre">base_seed</span> <span class="pre">+</span> <span class="pre">cell_position</span></code> and injects it into every layer
 that uses randomness. The position is the cell’s index in the expanded grid,
@@ -564,8 +607,8 @@ sweep where cell 17 fails can still produce 29 complete results, rather than
 requiring the entire study to be re-run.</p>
 </section>
 <hr class="docutils" />
-<section id="stage-5-hash-sinks-and-write-manifest">
-<h2>Stage 5: Hash Sinks and Write Manifest<a class="headerlink" href="#stage-5-hash-sinks-and-write-manifest" title="Link to this heading">#</a></h2>
+<section id="step-5-hash-sinks-and-write-manifest">
+<h2>Step 5: Hash Sinks and Write Manifest<a class="headerlink" href="#step-5-hash-sinks-and-write-manifest" title="Link to this heading">#</a></h2>
 <p>After each cell completes, L8 writes all requested artifacts to disk. After
 all cells complete (or after a <code class="docutils literal notranslate"><span class="pre">fail_fast</span></code> termination), the runtime computes
 SHA-256 hashes of every written artifact.</p>
@@ -576,15 +619,15 @@ provenance (macroforecast version, Python version, custom model names).</p>
 <p>The manifest is always consistent with the artifacts because it is written
 after all artifacts. A manifest that exists is a record of a run that
 completed its output phase. A missing or truncated manifest signals that
-the run did not reach Stage 5, which is useful for diagnosing interrupted runs.</p>
+the run did not reach Step 5, which is useful for diagnosing interrupted runs.</p>
 </section>
 <hr class="docutils" />
 <section id="why-this-design">
 <h2>Why This Design<a class="headerlink" href="#why-this-design" title="Link to this heading">#</a></h2>
-<p>Each stage separation encodes a specific design choice.</p>
+<p>Each step separation encodes a specific design choice.</p>
 <p>Validation first ensures that a misconfigured recipe fails fast — in under
 a second — rather than after an hour of computation. A researcher who
-misspells a model family name discovers the mistake before any data is loaded.</p>
+misspells a model name discovers the mistake before any data is loaded.</p>
 <p>Pipeline compilation before expansion means the pipeline graph structure is validated once
 against the recipe’s axis set, not once per cell. This is a performance
 decision: with 100 cells in a sweep, re-compiling and re-validating the pipeline graph
@@ -602,12 +645,12 @@ audit.</p>
 <section id="further-reading">
 <h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="../reference/architecture/recipe_layers.html"><span class="std std-doc">Recipe Layers</span></a> — YAML key
+<li><p><a class="reference internal" href="recipe_layers.html"><span class="std std-doc">Recipe Layers</span></a> — YAML key
 reference, shape rules for list versus graph layers, and the minimal recipe
 skeleton.</p></li>
-<li><p><a class="reference internal" href="../reference/architecture/foundation.html"><span class="std std-doc">Foundation Core</span></a> — the five graph
+<li><p><a class="reference internal" href="foundation.html"><span class="std std-doc">Foundation Core</span></a> — the five graph
 node types and the core contract for <code class="docutils literal notranslate"><span class="pre">macroforecast.core</span></code>.</p></li>
-<li><p><a class="reference internal" href="../reference/architecture/reproducibility.html"><span class="std std-doc">Reproducibility</span></a> — how
+<li><p><a class="reference internal" href="reproducibility.html"><span class="std std-doc">Reproducibility</span></a> — how
 the manifest produced in Stage 5 is used by <code class="docutils literal notranslate"><span class="pre">mf.replicate</span></code> to verify
 bit-exact reproduction.</p></li>
 </ul>
@@ -634,11 +677,11 @@ bit-exact reproduction.</p></li>
       </div>
     </a>
     <a class="right-next"
-       href="../help.html"
+       href="architecture/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Help</p>
+        <p class="prev-next-title">Architecture</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -661,12 +704,12 @@ bit-exact reproduction.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-five-stages">The Five Stages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-1-parse-and-validate">Stage 1: Parse and Validate</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-2-compile-pipeline-per-layer">Stage 2: Compile Pipeline per Layer</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-3-expand-sweep-markers">Stage 3: Expand Sweep Markers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-4-the-cell-loop">Stage 4: The Cell Loop</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-5-hash-sinks-and-write-manifest">Stage 5: Hash Sinks and Write Manifest</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-five-steps">The Five Steps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-parse-and-validate">Step 1: Parse and Validate</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-compile-pipeline-per-layer">Step 2: Compile Pipeline per Layer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-expand-sweep-markers">Step 3: Expand Sweep Markers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-the-cell-loop">Step 4: The Cell Loop</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-hash-sinks-and-write-manifest">Step 5: Hash Sinks and Write Manifest</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-this-design">Why This Design</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
 </ul>

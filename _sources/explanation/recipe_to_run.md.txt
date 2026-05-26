@@ -1,14 +1,14 @@
 # From Recipe to Run
 
 A YAML recipe is a static document. A study run is a sequence of computations
-that may span hundreds of forecast origins, multiple model families, and
+that may span hundreds of forecast origins, multiple model options, and
 several output formats. This page traces the pipeline that connects them —
 from the moment `mf.run("recipe.yaml")` is called to the moment artifacts
 appear on disk.
 
 ---
 
-## The Five Stages
+## The Five Steps
 
 ```text
 flowchart TD
@@ -19,14 +19,14 @@ flowchart TD
     CELL --> HASH[5. Hash sinks, write manifest]
 ```
 
-Each stage serves a distinct purpose, and the ordering is not incidental.
+Each step serves a distinct purpose, and the ordering is not incidental.
 Validation is first so the user gets a fast error instead of a slow failure
 mid-run. The manifest is last so it is always consistent with the artifacts
 that were actually written.
 
 ---
 
-## Stage 1: Parse and Validate
+## Step 1: Parse and Validate
 
 `mf.run()` passes the recipe string or file path to
 `macroforecast.core.yaml`, which parses the YAML and constructs a typed
@@ -41,17 +41,17 @@ recipe object. The validator then checks that:
   must exist before L6 can reference it, and regime indicators used in L6.C
   conditional tests must have been defined at L1.
 
-Errors at Stage 1 are raised immediately. The output directory is not created.
+Errors at this step are raised immediately. The output directory is not created.
 No artifacts are written. This is the design intent: a typo in an axis name,
-a misspelled model family, or a reference to a future item should cost the
+a misspelled model option, or a reference to a future item should cost the
 user a fraction of a second, not the duration of a full study run.
 
 ---
 
-## Stage 2: Compile Pipeline per Layer
+## Step 2: Compile Pipeline per Layer
 
 Three layers (L3, L4, and L7) use directed acyclic graphs rather than flat
-lists of axis values. At this stage, the recipe's `nodes` declarations are
+lists of axis values. At this step, the recipe's `nodes` declarations are
 compiled into actual graph objects and topologically sorted.
 
 Five node types exist:
@@ -59,7 +59,7 @@ Five node types exist:
 - **`source`**: reads a named upstream sink from a previously executed layer.
 - **`axis`**: declares a parameter that can be swept across values.
 - **`step`**: executes a registered operation (a feature transform, a model
-  family, an importance method) with specified configuration.
+  option, an importance method) with specified configuration.
 - **`combine`**: merges the outputs of multiple upstream nodes into a single
   artifact (used for forecast combination and feature concatenation).
 - **`sink`**: names an output artifact that downstream layers may consume.
@@ -77,7 +77,7 @@ typed layer configuration object.
 
 ---
 
-## Stage 3: Expand Sweep Markers
+## Step 3: Expand Sweep Markers
 
 A sweep marker is a place in the recipe where a single value is replaced by
 a list:
@@ -97,7 +97,7 @@ values and one with 2 values — expands into 6 cells. A cell is one complete
 execution of the recipe with one specific combination of sweep values.
 
 Cell IDs are constructed to encode the sweep values, making artifact
-directories human-readable (for example, `cell_n_lag=1_family=ridge/`).
+directories human-readable (for example, `cell_n_lag=1_model=ridge/`).
 
 Expansion happens before execution. The full cell grid is determined at
 compile time. This means the total number of cells is always known before
@@ -106,7 +106,7 @@ seed assignment.
 
 ---
 
-## Stage 4: The Cell Loop
+## Step 4: The Cell Loop
 
 `macroforecast.core.execution` iterates over the cell grid. For each cell,
 the runtime materializes the active layers in canonical order: L0, then L1,
@@ -114,7 +114,7 @@ then L2, then L3, then L4, then L5, then L6 (if enabled), then L7 (if
 enabled), then L8. Each layer's output is passed to the next layer as a
 typed sink.
 
-The per-cell seed is derived at this stage. If the recipe sets
+The per-cell seed is derived at this step. If the recipe sets
 `reproducibility_policy: seeded_reproducible`, the runtime computes
 `cell_seed = base_seed + cell_position` and injects it into every layer
 that uses randomness. The position is the cell's index in the expanded grid,
@@ -135,7 +135,7 @@ requiring the entire study to be re-run.
 
 ---
 
-## Stage 5: Hash Sinks and Write Manifest
+## Step 5: Hash Sinks and Write Manifest
 
 After each cell completes, L8 writes all requested artifacts to disk. After
 all cells complete (or after a `fail_fast` termination), the runtime computes
@@ -149,17 +149,17 @@ provenance (macroforecast version, Python version, custom model names).
 The manifest is always consistent with the artifacts because it is written
 after all artifacts. A manifest that exists is a record of a run that
 completed its output phase. A missing or truncated manifest signals that
-the run did not reach Stage 5, which is useful for diagnosing interrupted runs.
+the run did not reach Step 5, which is useful for diagnosing interrupted runs.
 
 ---
 
 ## Why This Design
 
-Each stage separation encodes a specific design choice.
+Each step separation encodes a specific design choice.
 
 Validation first ensures that a misconfigured recipe fails fast — in under
 a second — rather than after an hour of computation. A researcher who
-misspells a model family name discovers the mistake before any data is loaded.
+misspells a model name discovers the mistake before any data is loaded.
 
 Pipeline compilation before expansion means the pipeline graph structure is validated once
 against the recipe's axis set, not once per cell. This is a performance
@@ -180,11 +180,11 @@ audit.
 
 ## Further Reading
 
-- [Recipe Layers](../reference/architecture/recipe_layers.md) — YAML key
+- [Recipe Layers](recipe_layers.md) — YAML key
   reference, shape rules for list versus graph layers, and the minimal recipe
   skeleton.
-- [Foundation Core](../reference/architecture/foundation.md) — the five graph
+- [Foundation Core](foundation.md) — the five graph
   node types and the core contract for `macroforecast.core`.
-- [Reproducibility](../reference/architecture/reproducibility.md) — how
+- [Reproducibility](reproducibility.md) — how
   the manifest produced in Stage 5 is used by `mf.replicate` to verify
   bit-exact reproduction.

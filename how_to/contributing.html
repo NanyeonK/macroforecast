@@ -391,7 +391,7 @@
 <li class="toctree-l1"><a class="reference internal" href="add_custom_model.html">How to add a custom model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tune_hyperparameters.html">How to tune hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sweep_over_models.html">How to sweep over models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use_custom_hooks.html">How to use custom hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use_extension_points.html">How to use extension points</a></li>
 <li class="toctree-l1"><a class="reference internal" href="partial_layer_execution.html">Partial Layer Execution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="replicate_a_study.html">How to replicate a study</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validate_against_r.html">Validate Against R Reference Implementations</a></li>
@@ -489,11 +489,11 @@ ship a release. Start here.</p>
 <tr class="row-even"><td><p>Understand the bit-exact replicate contract every change must preserve</p></td>
 <td><p><a class="reference internal" href="reproducibility_policy.html"><span class="std std-doc">Reproducibility policy</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Read the canonical 12-layer design before touching <code class="docutils literal notranslate"><span class="pre">core/</span></code></p></td>
-<td><p><a class="reference internal" href="#../architecture/index.md"><span class="xref myst">Architecture index</span></a></p></td>
+<tr class="row-odd"><td><p>Read the canonical layer design before touching <code class="docutils literal notranslate"><span class="pre">core/</span></code></p></td>
+<td><p><a class="reference internal" href="../explanation/architecture/index.html"><span class="std std-doc">Architecture index</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Read the per-layer contract before touching one layer</p></td>
-<td><p><a class="reference internal" href="#../architecture/index.md"><span class="xref myst">Architecture: layer pages</span></a></p></td>
+<td><p><a class="reference internal" href="../explanation/architecture/index.html"><span class="std std-doc">Architecture: layer pages</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Run the test suite locally</p></td>
 <td><p>see <a class="reference internal" href="#../../CLAUDE.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code></span></a> at the repo root</p></td>
@@ -523,7 +523,7 @@ ship a release. Start here.</p>
   <span class="n">raw</span><span class="o">/</span>                    <span class="c1"># FRED-MD/QD/SD adapters + vintage manager</span>
   <span class="n">preprocessing</span><span class="o">/</span>          <span class="c1"># contract helpers (legacy support)</span>
   <span class="n">custom</span><span class="o">.</span><span class="n">py</span>               <span class="c1"># register_model / register_preprocessor / ...</span>
-  <span class="n">scaffold</span><span class="o">/</span>               <span class="c1"># RecipeBuilder + OptionDoc + templates</span>
+  <span class="n">tools</span><span class="o">/</span><span class="n">docgen</span><span class="o">/</span>           <span class="c1"># RecipeBuilder + OptionDoc + templates</span>
   <span class="n">defaults</span><span class="o">.</span><span class="n">py</span>             <span class="c1"># default profile dict template</span>
   <span class="n">tuning</span><span class="o">/</span>                 <span class="c1"># HP search engines (optional, integrated via L4)</span>
 <span class="n">tests</span><span class="o">/</span>                    <span class="c1"># test suite (counts vary by extras; see CI badges)</span>

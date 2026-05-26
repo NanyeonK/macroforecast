@@ -140,7 +140,7 @@ argument name.
 
 ## Inheriting macroforecast machinery (optional)
 
-If your custom model is a variant of an existing macroforecast model family, you
+If your custom model is a variant of an existing macroforecast model, you
 can subclass both the private implementation class and the sklearn mixins. The 30
 public model classes in `mf.layers.l4_models` follow exactly this pattern. For example,
 `LinearAR` is defined as `class LinearAR(_LinearARModel): pass`. A custom variant

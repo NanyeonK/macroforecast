@@ -379,39 +379,6 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../architecture/layer0/index.html">Layer 0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer0/study_scope.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer0/failure_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer0/reproducibility_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer0/compute_policy.html">Layer 0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer0/axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../architecture/layer1/index.html">Layer 1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/source_frame.html">Data Source Mode / Frequency</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/availability_timing.html">Forecast-Time Information</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/target_universe.html">Target (y) And Predictor (x) Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../architecture/layer1/frame_availability.html">Frame Availability</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer2/index.html">Layer 2: Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer3/index.html">Layer 3: Feature Engineering</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer4/index.html">Layer 4: Forecasting Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer5/index.html">Layer 5: Evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer6/index.html">Layer 6: Statistical Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer7/index.html">Layer 7: Interpretation / Importance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer8/index.html">Layer 8: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/foundation.html">Foundation Core</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/philosophy.html">Philosophy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/layer_boundary_contract.html">Layer Boundary Contract</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/recipe_layers.html">Recipe Layers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/artifacts_and_manifest.html">Artifacts And Manifest</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/reproducibility.html">Reproducibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../architecture/terminology.html">Terminology</a></li>
-</ul>
-</details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/standalone_functions/index.html">Standalone functions - namespace overview</a></li>
 </ul>
@@ -689,9 +656,9 @@
                   
   <section id="encyclopedia">
 <h1>Encyclopedia<a class="headerlink" href="#encyclopedia" title="Link to this heading">#</a></h1>
-<p>Encyclopedia-style browse for every macroforecast schema choice. Each layer, sub-layer, axis, and option value has its own page or anchor; the tree below is generated from the live <code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code> registry plus the <code class="docutils literal notranslate"><span class="pre">OPTION_DOCS</span></code> documentation registry under <code class="docutils literal notranslate"><span class="pre">macroforecast/scaffold/option_docs/</span></code>.</p>
+<p>Encyclopedia-style browse for every macroforecast schema choice. Each layer, sub-layer, axis, and option value has its own page or anchor; the tree below is generated from the live <code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code> registry plus the <code class="docutils literal notranslate"><span class="pre">OPTION_DOCS</span></code> documentation registry under <code class="docutils literal notranslate"><span class="pre">tools/docgen/option_docs/</span></code>.</p>
 <blockquote>
-<div><p><strong>Looking for the design narrative instead?</strong> Use <a class="reference internal" href="../architecture/index.html"><span class="std std-doc">Architecture</span></a> – that’s where the prose “why is L2 separated from L3” / “how does L7 read L4 sinks” / cross-layer reference explanations live. Encyclopedia pages here are <strong>auto-generated lookup</strong> for individual option values (description, when to use, when NOT, references, related options); Architecture pages there are <strong>hand-written narrative</strong> for the design contracts. Both are sourced from the same <code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code> registry – encyclopedia is the machine-locked option dictionary, architecture is the human-edited design guide.</p>
+<div><p><strong>Looking for the design narrative instead?</strong> Use <a class="reference internal" href="../../explanation/architecture/index.html"><span class="std std-doc">Architecture</span></a> – that’s where the prose “why is L2 separated from L3” / “how does L7 read L4 sinks” / cross-layer reference explanations live. Encyclopedia pages here are <strong>auto-generated lookup</strong> for individual option values (description, when to use, when NOT, references, related options); Architecture pages there are <strong>hand-written narrative</strong> for the design contracts. Both are sourced from the same <code class="docutils literal notranslate"><span class="pre">LayerImplementationSpec</span></code> registry – encyclopedia is the machine-locked option dictionary, architecture is the human-edited design guide.</p>
 </div></blockquote>
 <section id="counts">
 <h2>Counts<a class="headerlink" href="#counts" title="Link to this heading">#</a></h2>
