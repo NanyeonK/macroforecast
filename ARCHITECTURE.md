@@ -1,7 +1,8 @@
 # Architecture — macroforecast
 
-> **Run:** 2026-05-26-docs-precision-audit / PR5 (sidebar orphan fix)
-> **Branch:** `docs-fix/pr5-sidebar-orphan`
+> **Run:** 2026-05-27-deep-audit / PR4 (l2_fred_sd_alignment rename)
+> **Branch:** `deep-audit/pr4-l2-fred-sd-rename`
+> **Commit:** `ecb2a27d`
 > **Version:** v0.9.5a0 (post Phase 3g-bis restructure)
 
 ---
@@ -127,10 +128,9 @@ graph TD
 | `layers/l4_models/` | 35+ estimator families; `op: fit` dispatch | `core/`, `sklearn`, `statsmodels` | No (source unchanged) |
 | `layers/l7_interpretation/` | 30 importance ops: SHAP, PFI, ALE, IRF, lineage | `core/`, `shap`, `statsmodels` | No (source unchanged) |
 | `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `layers/l7_interpretation` | No |
-| `docs/explanation/recipe_to_run.md` | Sweep marker tutorial | -- | **YAML block: op: fit + params:** |
-| `docs/explanation/architecture/layer7.md` | L7 architecture narrative + example | -- | **YAML param: model: xgboost** |
-| `docs/reference/api/.../l2_clean.md` | L2 standalone function API reference | -- | **Links: _rule → _policy (×2)** |
-| `docs/reference/recipe_schema/defaults.md` | Schema defaults reference | -- | **Prose: model_family → model + ar_p** |
+| `examples/recipes/l2_preprocessing_minimal.yaml` | **RENAMED** from `l2_fred_sd_alignment.yaml`; L2 axes demo on inline panel | -- | **YES (PR4: git mv + metadata update)** |
+| `examples/recipes/README.md` | Recipe gallery index | -- | **YES (PR4: entry updated)** |
+| `CHANGELOG.md` | Release notes | -- | **YES (PR4: entry added + PR7b table corrected)** |
 
 ---
 
@@ -228,21 +228,21 @@ graph TD
 
 ---
 
-## Documentation Surface (PR2 — this run)
+## File Change Surface (PR4 — this run)
 
-The following docs files were the direct subject of PR2. All are user-facing reference or explanation pages.
+PR4 is a documentation/recipe housekeeping change. No source code was modified.
 
-| Doc file | Subject | What changed |
-|----------|---------|-------------|
-| `docs/explanation/recipe_to_run.md` | Sweep marker tutorial | `op: ridge` + `config:` → `op: fit` + `params: {model: ridge, ...}` |
-| `docs/explanation/architecture/layer7.md` | L7 architecture narrative | `model_family: xgboost` → `model: xgboost` in example YAML fragment |
-| `docs/reference/api/standalone_functions/l2_clean.md` | L2 standalone function API reference | `monthly_to_quarterly_rule` → `monthly_to_quarterly_policy`, `quarterly_to_monthly_rule` → `quarterly_to_monthly_policy` |
-| `docs/reference/recipe_schema/defaults.md` | Schema defaults reference | Replaced stale `model_family: "ar"` with `model: "ar"` (deprecated; use `model: "ar_p"`) |
-| `CHANGELOG.md` | Release notes | PR2 entry added under `[Unreleased] ### Docs` |
+| File | Action | What changed |
+|------|--------|-------------|
+| `examples/recipes/l2_fred_sd_alignment.yaml` | Deleted (via git mv) | Old misleading filename removed |
+| `examples/recipes/l2_preprocessing_minimal.yaml` | Created (via git mv) | Renamed file; header comment + metadata.name + metadata.description updated to accurately describe L2 preprocessing axes (not FRED-SD alignment) |
+| `examples/recipes/README.md` | Modified | In-progress entry updated from old to new filename |
+| `CHANGELOG.md` | Modified | PR4 housekeeping entry added; PR7b table entry corrected; TODO note for PR8+ FRED-SD demo added |
 
-**Sphinx build:** `build succeeded` — 0 new errors or warnings introduced by this PR.
+**Smoke test:** `mf.run('examples/recipes/l2_preprocessing_minimal.yaml')` → PASS, cells=1
 
-**Termination greps (all PASS — empty output):**
-- Old `op:` shorthand in docs/examples: none found
-- `config:` key in docs/examples: none found
-- `monthly_to_quarterly_rule`, `quarterly_to_monthly_rule`, `model_family:` in docs: none found
+**Termination greps (all PASS):**
+- `ls examples/recipes/l2_fred_sd_alignment.yaml` → file not found
+- `ls examples/recipes/l2_preprocessing_minimal.yaml` → file exists
+- `metadata.name` = `l2_preprocessing_minimal`
+- Remaining old-filename references: only `CHANGELOG.md` (intentional historical record) and `docs/_audit/` snapshots (not CI-active)
