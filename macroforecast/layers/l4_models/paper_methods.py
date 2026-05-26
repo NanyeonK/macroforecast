@@ -180,7 +180,8 @@ def _l4_with_benchmark(
     family: str,
     fit_params: dict[str, Any],
     *,
-    benchmark_family: str = "factor_augmented_ar",
+    benchmark_model: str | None = None,
+    benchmark_family: str | None = None,  # deprecated: use benchmark_model=
     benchmark_params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """L4 block with two fit nodes: the cell's family plus a
@@ -192,7 +193,7 @@ def _l4_with_benchmark(
     (Coulombe-Surprenant-Leroux-Stevanovic 2022 §4.4 reports DM vs the
     ``(ARDI, BIC)`` reference).
 
-    Phase A3 fix: the pre-A3 default was ``benchmark_family="ar_p"``
+    Phase A3 fix: the pre-A3 default was ``benchmark_model="ar_p"``
     with ``n_lag=4``, contradicting paper §4.4 ("DM procedure is used to
     test the predictive accuracy of each model against the reference
     (ARDI,BIC)"). New default = ``factor_augmented_ar`` with
@@ -201,8 +202,11 @@ def _l4_with_benchmark(
     ``src_y`` rather than ``src_y`` alone.
     """
 
+    from macroforecast.api._deprecations import resolve_benchmark_model
+    benchmark_model = resolve_benchmark_model(benchmark_model, benchmark_family, "factor_augmented_ar")
+
     bench_params = {
-        "model": benchmark_family,
+        "model": benchmark_model,
         "forecast_policy": "direct",
         "training_start_rule": "expanding",
         "refit_policy": "every_origin",
@@ -2324,7 +2328,8 @@ def macroeconomic_data_transformations_horse_race(
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
     attach_eval_blocks: bool = False,
-    benchmark_family: str = "factor_augmented_ar",
+    benchmark_model: str | None = None,
+    benchmark_family: str | None = None,  # deprecated: use benchmark_model=
     benchmark_params: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Coulombe / Leroux / Stevanovic / Surprenant (2021)
@@ -2360,6 +2365,9 @@ def macroeconomic_data_transformations_horse_race(
     arXiv:2008.01714.
     """
 
+    from macroforecast.api._deprecations import resolve_benchmark_model
+    benchmark_model = resolve_benchmark_model(benchmark_model, benchmark_family, "factor_augmented_ar")
+
     grid: dict[str, dict[str, Any]] = {}
     horizons_iter = tuple(horizons) if horizons else (horizon,)
     eval_l5, eval_l6 = _l5_l6_paper16_eval_blocks() if attach_eval_blocks else ({}, {})
@@ -2371,7 +2379,7 @@ def macroeconomic_data_transformations_horse_race(
                         l4 = _l4_with_benchmark(
                             family,
                             {},
-                            benchmark_family=benchmark_family,
+                            benchmark_model=benchmark_model,
                             benchmark_params=benchmark_params,
                         )
                     else:
@@ -2462,7 +2470,8 @@ def ml_useful_macro_horse_race(
     panel: dict[str, list[Any]] | None = None,
     seed: int = 42,
     attach_eval_blocks: bool = False,
-    benchmark_family: str = "factor_augmented_ar",
+    benchmark_model: str | None = None,
+    benchmark_family: str | None = None,  # deprecated: use benchmark_model=
     benchmark_params: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Coulombe / Surprenant / Leroux / Stevanovic (2022 JAE)
@@ -2495,6 +2504,9 @@ def ml_useful_macro_horse_race(
     doi:10.1002/jae.2910.
     """
 
+    from macroforecast.api._deprecations import resolve_benchmark_model
+    benchmark_model = resolve_benchmark_model(benchmark_model, benchmark_family, "factor_augmented_ar")
+
     if data_richness not in {"H_minus", "H_plus"}:
         raise ValueError(
             f"data_richness must be 'H_minus' or 'H_plus'; got {data_richness!r}. "
@@ -2519,7 +2531,7 @@ def ml_useful_macro_horse_race(
                         l4 = _l4_with_benchmark(
                             family,
                             cell_fit_params,
-                            benchmark_family=benchmark_family,
+                            benchmark_model=benchmark_model,
                             benchmark_params=benchmark_params,
                         )
                     else:

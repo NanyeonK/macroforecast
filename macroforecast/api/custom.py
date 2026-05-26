@@ -160,7 +160,7 @@ def custom_model_contract_metadata() -> dict[str, Any]:
         },
         "leakage_rule": "consume only Layer 2 train/pred matrices supplied by runtime",
         "routing_notes": (
-            "registered custom model names are accepted as model_family values "
+            "registered custom model names are accepted as model= values "
             "in the current Python process",
             "YAML recipes can select the registered name, but they do not import "
             "or register Python callables by themselves",
@@ -246,7 +246,7 @@ def register_model(
 
     ``X_test`` is currently one row. The return value may be a scalar or a
     one-element sequence/array. Registered names are accepted as
-    ``model_family`` values by the compiler in the current Python process.
+    ``model=`` values by the compiler in the current Python process.
     """
 
     model_name = _validate_name(name, kind="model")
