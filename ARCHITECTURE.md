@@ -1,7 +1,7 @@
 # Architecture — macroforecast
 
-> **Run:** 2026-05-26-docs-precision-audit / PR3 (cycle code purge)
-> **Branch:** `docs-fix/pr3-cycle-codes`
+> **Run:** 2026-05-26-docs-precision-audit / PR5 (sidebar orphan fix)
+> **Branch:** `docs-fix/pr5-sidebar-orphan`
 > **Version:** v0.9.5a0 (post Phase 3g-bis restructure)
 
 ---

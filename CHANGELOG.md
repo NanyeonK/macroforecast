@@ -192,6 +192,18 @@ full per-version honesty-pass history embedded in repo documentation.
 
   Termination condition 1: `docs/reference/api/navigator/` is empty. PASS.
 
+- **PR5 (docs precision audit): remove redirect-only pages from hidden toctree in how_to/index.md**
+
+  Five redirect-only pages (`add_dataset.md`, `custom_model.md`, `partial_execution.md`,
+  `custom_hooks.md`, `user_data_workflow.md`) already carry `orphan: true` front-matter,
+  but were listed in a `:hidden:` toctree block in `docs/how_to/index.md` (lines 48-56).
+  A hidden toctree suppresses the block from the visible page body while still including
+  the listed pages in the global sidebar navigation tree. Listing an orphan page in any
+  toctree overrides the `orphan` directive, causing the redirect stubs to appear in the nav.
+  Removed the entire hidden toctree block; the canonical destination pages
+  (`add_custom_dataset`, `add_custom_model`, `partial_layer_execution`, `use_extension_points`)
+  remain properly listed in the active Infrastructure guides toctree. (check6b audit)
+
 ### Internal
 
 - **PR7 (hotfix FINAL): docs-code drift verification gate + tool import-path fixes**
