@@ -30,6 +30,46 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR4a (documentation): MCS docstring updated to accurately describe single-step max-test**
+
+  `_mcs_from_per_origin_panel` in `macroforecast/core/runtime.py` previously
+  claimed in its docstring to implement the Hansen-Lunde-Nason (2011) MCS
+  iterative elimination procedure.  The actual implementation applies the
+  T_max statistic once across all models and retains those below the bootstrap
+  critical value — this is the single-step max-test, not full iterative MCS.
+
+  The docstring now explicitly states: "NOT the full iterative
+  Hansen-Lunde-Nason 2011 MCS elimination procedure."  An inline comment is
+  also placed at the `mcs_set` computation for clarity.  The `stepm_rejected`
+  output, which does use iterative Romano-Wolf StepM elimination, is
+  unaffected.  Full iterative MCS is scheduled for Batch 2 PR13.
+
+- **PR4b (critical): SPA benchmark guard — `spa_p_values` and `reality_check_p_values` return NaN with UserWarning when no benchmark specified**
+
+  Hansen (2005) SPA requires a pre-specified null benchmark model.  The
+  previous code used `argmin(means)` (the best-performing model in the sample)
+  as an implicit benchmark, making the test circular and data-dependent.
+
+  Fix: when `spa_benchmark_model` is absent from the sub-layer config dict,
+  `_mcs_from_per_origin_panel` now emits:
+
+      UserWarning: "SPA benchmark model not specified (spa_benchmark_model
+      missing from sub_layers config). spa_p_values and reality_check_p_values
+      will be NaN. Specify spa_benchmark_model (e.g. the AR benchmark model_id)
+      for valid SPA / Reality Check p-values."
+
+  and returns `float('nan')` for all `spa_p_values` and
+  `reality_check_p_values` entries.
+
+  When `spa_benchmark_model` is explicitly provided, the specified model index
+  is used as the benchmark and a valid p-value in `[0, 1]` is returned.
+
+  Note: `reality_check_p_values` continues to mirror `spa_p_values`; the
+  White (2000) studentization that distinguishes Reality Check from SPA is a
+  Batch 2 item (PR13), noted by a TODO comment at the assignment.
+
+  Tests: `tests/core/test_mcs_spa.py` (4 new tests).
+
 - **PR3 (critical): Clark-West one-sided p-value corrected for negative test statistic — 3 locations**
 
   The Clark-West (2006/2007) test is one-sided: H_a states that the large
