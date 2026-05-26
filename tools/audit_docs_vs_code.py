@@ -90,8 +90,8 @@ RE_VERSION_STRING = re.compile(
 RE_YAML_RECIPE_KEY = re.compile(
     r'^\s{0,4}(op|family|point_metrics|density_metrics|direction_metrics'
     r'|relative_metrics|transform_policy|outlier_policy|imputation_policy'
-    r'|frame_edge_policy|stationarity_test|failure_policy|reproducibility_mode'
-    r'|compute_mode|export_format|compression):\s+["\']?([A-Za-z_][A-Za-z0-9_]*)["\']?'
+    r'|frame_edge_policy|stationarity_test|failure_policy|reproducibility_policy'
+    r'|compute_policy|export_format|compression):\s+["\']?([A-Za-z_][A-Za-z0-9_]*)["\']?'
 )
 
 # 4e. dotted_import_path: `macroforecast.X.Y` or `mf.X.Y` (2+ segments after root)
@@ -128,8 +128,8 @@ YAML_KEY_TO_LAYER: dict[str, str | None] = {
     # Other keys: hard to validate without richer schema; mark UNRESOLVABLE
     "stationarity_test": None,
     "failure_policy": None,
-    "reproducibility_mode": None,
-    "compute_mode": None,
+    "reproducibility_policy": None,
+    "compute_policy": None,
     "export_format": None,
     "compression": None,
 }
