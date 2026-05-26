@@ -30,6 +30,40 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR7 (HIGH): L2 temporal dispatch audit — rolling_window_per_origin leak path closed**
+
+  `_validate_imputation` in `macroforecast/layers/l2_preprocessing/schema.py`
+  did not reject the combination `imputation_temporal_rule: rolling_window_per_origin`
+  with `imputation_policy: linear_interpolation`. The option name implies per-origin
+  safety but the runtime has no per-origin rolling-window implementation: the
+  else-branch in `materialize_l2` (runtime.py ~line 420) calls full-sample
+  `_apply_imputation`, which applies `interpolate(method="linear")` over the
+  full panel. Even with the PR6 `limit_direction=forward` safeguard, the full
+  panel is used as the data source — a silent lookahead leak.
+
+  Fix: hard validator rejection added for `rolling_window_per_origin +
+  linear_interpolation`. The error message points to the two safe alternatives:
+  `forward_fill` (inherently causal) and `expanding_window_per_origin` with
+  `linear_interpolation` (fully per-origin).
+
+  Additionally, a SOFT warning (not hard error) is now emitted by `validate_layer`
+  when the user explicitly sets a stateful imputation or outlier policy alongside
+  `block_recompute`. `block_recompute` is a legitimate full-sample-at-block-boundary
+  approach but its statistics may span post-origin observations. Only explicitly-set
+  stateful policies trigger the warning; causal-safe defaults and combos like
+  `forward_fill + block_recompute` do not.
+
+  Full per-origin rolling-window dispatch is deferred to v0.4. The `rolling_window_per_origin`
+  schema option is retained with implementation behaviour equivalent to `block_recompute`
+  (full-sample) for all non-rejected combinations.
+
+  Dispatch matrix audit: `docs/_audit/l2-dispatch-audit-2026-05-27.md`.
+
+  Tests: `tests/layers/test_l2_temporal_dispatch_audit.py` (20 new tests across 5
+  classes: `TestRollingWindowLinearInterpolationHardReject`,
+  `TestRollingWindowSafeCombosPasses`, `TestBlockRecomputeSoftWarning`,
+  `TestExpandingWindowPerOriginUnaffected`, `TestFullSampleOnceRegressionGuard`).
+
 - **PR8 (HIGH): BVAR Minnesota σ² scaling fix — two-pass OLS pre-estimate added**
 
   `_fit_multivariate_minnesota` in `macroforecast/core/runtime.py` computed the
