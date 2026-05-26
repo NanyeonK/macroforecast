@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macroforecast.transforms import chow_lin_disaggregate
+from macroforecast.layers.l3_features.transforms import chow_lin_disaggregate
 
 
 # ---------------------------------------------------------------------------

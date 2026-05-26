@@ -15,7 +15,7 @@ import pytest
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
 
-from macroforecast.feature_selection import (
+from macroforecast.layers.l3_features.selection import (
     Boruta,
     RFE,
     LassoPathSelector,
