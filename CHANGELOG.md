@@ -53,6 +53,31 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Housekeeping
 
+- **PR5 (deep-audit encyclopedia option drift): audit + drift gate test**
+
+  Encyclopedia option drift audit (problem 8). Method: Python import of `AxisSpec` options
+  from each `L{N}_LAYER_SPEC`, registry-based extraction of L3/L7 ops, `OPERATIONAL_MODELS |
+  FUTURE_MODELS` for L4; compared against per-option sub-page directories under
+  `docs/reference/encyclopedia/`.
+
+  Findings:
+  - **43 CODE_ONLY** items (valid code options without a dedicated encyclopedia sub-page),
+    concentrated in L2 (10 options across 6 axes), L7 (26 ops), L4 (4 models), L3 (1 op),
+    L5 (2 density metrics).
+  - **7 DOCS_ONLY** items (L6 `equal_predictive_test` and `nested_test` sub-pages) — these
+    are NOT true drift; L6 uses `options=()` in AxisSpec by design and validates accepted
+    values at runtime. The docs pages are correct.
+  - No deprecated axis names (`custom_source_policy`, `reproducibility_mode`, `fit_model`)
+    found in any encyclopedia file.
+
+  Deliverables:
+  - `docs/_audit/encyclopedia-option-sync-2026-05-27.md` — full drift table.
+  - `tests/tools/docgen/test_option_drift_gate.py` — drift gate test (10 parametrized cases,
+    all pass). Asserts that drift does not grow beyond the 2026-05-27 baseline; any new
+    undocumented options added to code will fail this test.
+
+  All CODE_ONLY and DOCS_ONLY items are DEFERRED (follow-up PR).
+
 - **PR4 (deep-audit problem 7): rename `l2_fred_sd_alignment.yaml` → `l2_preprocessing_minimal.yaml`**
 
   The recipe file `examples/recipes/l2_fred_sd_alignment.yaml` used a `panel_composition: custom_panel_only`
