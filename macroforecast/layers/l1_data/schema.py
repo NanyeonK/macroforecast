@@ -347,7 +347,7 @@ def validate_layer(layer: Any | dict[str, Any] | str) -> Any:
     if resolved.get("panel_composition") == "custom_panel_only":
         issues.append(
             Issue(
-                "l1_custom_source_policy",
+                "l1_panel_composition_advisory",
                 Severity.SOFT,
                 "layer",
                 "l1.panel_composition",

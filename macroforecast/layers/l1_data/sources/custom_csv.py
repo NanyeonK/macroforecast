@@ -1,10 +1,10 @@
 """Custom CSV loader — load a user-supplied CSV conforming to a FRED-family schema.
 
 The caller provides the CSV path via ``leaf_config.custom_source_path``.
-Recipes should choose an official ``dataset`` and select
-``custom_source_policy``. The compiler infers the parser from the ``.csv``
-extension and infers the internal loader schema from the selected
-``dataset``/``frequency`` route.
+Recipes should choose an official ``dataset`` and set ``panel_composition``
+to ``"official_plus_custom"`` or ``"custom_panel_only"``. The compiler
+infers the parser from the ``.csv`` extension and infers the internal
+loader schema from the selected ``dataset``/``frequency`` route.
 
 Schema requirements:
 

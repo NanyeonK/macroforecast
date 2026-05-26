@@ -1,8 +1,9 @@
 """Custom Parquet loader — load a user-supplied Parquet file conforming to a FRED-family schema.
 
 Parquet-counterpart to :mod:`macroforecast.raw.datasets.custom_csv`. Same
-contract: recipes choose an official ``dataset``, select
-``custom_source_policy``, and provide ``leaf_config.custom_source_path``.
+contract: recipes choose an official ``dataset``, set ``panel_composition``
+to ``"official_plus_custom"`` or ``"custom_panel_only"``, and provide
+``leaf_config.custom_source_path``.
 The compiler infers the parser from ``.parquet``/``.pq`` and infers the
 internal loader schema from the selected ``dataset``/``frequency`` route.
 
