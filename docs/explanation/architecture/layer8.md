@@ -1,7 +1,7 @@
 # Layer 8: Output / Provenance
 
-- Parent: [Detail: Layer Contracts](../index.md)
-- Previous: [Layer 7](../layer7/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 7](layer7.md)
 - Current: Layer 8
 
 Layer 8 is the external boundary. It collects active layer sinks, writes artifacts, and emits a reproducible manifest.
@@ -76,4 +76,4 @@ When `saved_objects` is omitted, L8 derives it from the active recipe:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l8/`](../../encyclopedia/l8/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l8/`](../../reference/encyclopedia/l8/index.md).

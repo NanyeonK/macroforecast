@@ -1,9 +1,9 @@
 # Layer 2: Preprocessing
 
-- Parent: [Architecture](../index.md)
-- Previous: [Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 1: Data Source, Target y, Predictor x](layer1.md)
 - Current: Layer 2
-- Next: [Layer 3: Feature Engineering](../layer3/index.md)
+- Next: [Layer 3: Feature Engineering](layer3.md)
 
 Layer 2 owns the canonical McCracken-Ng preprocessing pipeline plus
 mixed-frequency alignment for combined panels. Five sub-layers run in
@@ -32,7 +32,7 @@ For per-axis options + when-to-use guidance see the
 pages such as
 [`mixed_frequency_representation`](../../encyclopedia/l2/axes/mixed_frequency_representation.md)
 and
-[`sd_tcode_policy`](../../encyclopedia/l2/axes/sd_tcode_policy.md).
+[`sd_tcode_policy`](../../reference/encyclopedia/l2/axes/sd_tcode_policy.md).
 
 ## Custom hook
 
@@ -62,7 +62,7 @@ Output:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l2/`](../../encyclopedia/l2/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l2/`](../../reference/encyclopedia/l2/index.md).
 
 ## Cycle 50 update (2026-05-22)
 

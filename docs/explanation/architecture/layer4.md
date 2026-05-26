@@ -1,9 +1,9 @@
 # Layer 4: Forecasting Model
 
-- Parent: [Detail: Layer Contracts](../index.md)
-- Previous: [Layer 3](../layer3/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 3](layer3.md)
 - Current: Layer 4
-- Next: [Layer 5](../layer5/index.md)
+- Next: [Layer 5](layer5.md)
 
 Layer 4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer. As of Cycle 49 (2026-05-21), Layer 4 has **47 operational families** (`realized_garch` promoted in C49; 4 MIDAS families promoted in C48). `FUTURE_MODEL_FAMILIES` is now empty.
 
@@ -70,4 +70,4 @@ Forecast combination belongs in L4 and consumes forecast artifacts:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l4/`](../../encyclopedia/l4/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l4/`](../../reference/encyclopedia/l4/index.md).

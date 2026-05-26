@@ -1,9 +1,9 @@
 # Layer 5: Evaluation
 
-- Parent: [Detail: Layer Contracts](../index.md)
-- Previous: [Layer 4](../layer4/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 4](layer4.md)
 - Current: Layer 5
-- Next: [Layer 6](../layer6/index.md)
+- Next: [Layer 6](layer6.md)
 
 Layer 5 computes forecast accuracy, benchmark-relative metrics, aggregation, slicing, decomposition, ranking, and reporting artifacts. It is descriptive evaluation; inference belongs to Layer 6.
 
@@ -65,4 +65,4 @@ Output:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l5/`](../../encyclopedia/l5/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l5/`](../../reference/encyclopedia/l5/index.md).

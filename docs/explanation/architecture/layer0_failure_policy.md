@@ -1,6 +1,6 @@
 # Layer 0 Axis: `failure_policy`
 
-- Parent: [Layer 0](index.md)
+- Parent: [Layer 0](layer0.md)
 - Current: `failure_policy`
 
 `failure_policy` decides how execution handles failed cells. It is a runtime

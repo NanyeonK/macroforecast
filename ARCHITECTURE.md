@@ -19,6 +19,12 @@ bit_exact_replicate, honesty_pass, recipe_to_run), reference index cleanup
 finalization, and tutorial CI smoke test. The Diátaxis docs overhaul is now
 complete as of C54.
 
+PR1 (docs cleanup) deleted the Navigator API pages (navigator was removed from
+the public feature set in Phase 0). PR2 (docs cleanup) moves all architecture
+and design-narrative pages from `docs/reference/architecture/` to
+`docs/explanation/architecture/`. Reference is now purely look-up (encyclopedia,
+API, recipe schema); Explanation owns all narrative and design-rationale content.
+
 ---
 
 ## Module Structure
@@ -176,8 +182,10 @@ graph TD
 
 ## Docs Structure
 
-The C52 migration established the 4-tier skeleton. C53 fills in the tutorial
-and how-to tiers with real user-facing content.
+The C52 migration established the 4-tier skeleton. C53–C54 filled tutorial and
+how-to tiers. PR1 (docs cleanup) deleted Navigator API pages. PR2 (docs cleanup)
+moves all architecture pages from `reference/` to `explanation/`; reference is
+now purely look-up.
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
@@ -189,66 +197,65 @@ graph TD
     IDX --> EXP["explanation/"]
 
     TUT --> T0["00_install.md"]
-    TUT --> T1["01_first_forecast.md (new)"]
-    TUT --> T2["02_full_study.md (new)"]
-    TUT --> T3["03_custom_model.md (new)"]
-    TUT --> T4["two_entry_points.md (polished)"]
-    TUT --> REPL["replications/ (C54)"]
+    TUT --> T1["01_first_forecast.md"]
+    TUT --> T2["02_full_study.md"]
+    TUT --> T3["03_custom_model.md"]
+    TUT --> T4["two_entry_points.md"]
+    TUT --> REPL["replications/"]
 
-    HOW --> H1["add_custom_dataset.md (new)"]
-    HOW --> H2["tune_hyperparameters.md (new)"]
-    HOW --> H3["sweep_over_models.md (new)"]
-    HOW --> H4["add_custom_model.md (refactor)"]
-    HOW --> H5["use_custom_hooks.md (refactor)"]
-    HOW --> H6["replicate_a_study.md (new)"]
-    HOW --> H7["partial_layer_execution.md (rename)"]
+    HOW --> H1["add_custom_dataset.md"]
+    HOW --> H2["tune_hyperparameters.md"]
+    HOW --> H3["sweep_over_models.md"]
+    HOW --> H4["add_custom_model.md"]
+    HOW --> H5["use_custom_hooks.md"]
+    HOW --> H6["replicate_a_study.md"]
+    HOW --> H7["partial_layer_execution.md"]
     HOW --> H8["target_transformer.md"]
-    HOW --> H9["troubleshooting.md (polish)"]
+    HOW --> H9["troubleshooting.md"]
     HOW --> H10["reproducibility_policy.md"]
     HOW --> H11["contributing.md"]
     HOW --> H12["conventions.md"]
 
-    REF --> RA["reference/architecture/ (29 files)"]
-    REF --> RE["reference/encyclopedia/ (319 files, hidden)"]
+    REF --> RE["reference/encyclopedia/ (auto-generated look-up)"]
     REF --> RAPI["reference/api/"]
-    REF --> RSS["reference/recipe_schema/ (9 files)"]
+    REF --> RSS["reference/recipe_schema/"]
 
-    style TUT fill:#1e90ff,stroke:#1565c0,color:#fff
-    style HOW fill:#1e90ff,stroke:#1565c0,color:#fff
-    style T1 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style T2 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style T3 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style T4 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H1 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H2 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H3 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H4 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H5 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H6 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H7 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style H9 fill:#1e90ff,stroke:#1565c0,color:#fff
+    EXP --> EBASE["12_layer_design.md"]
+    EXP --> EBIT["bit_exact_replicate.md"]
+    EXP --> EHON["honesty_pass.md"]
+    EXP --> EREC["recipe_to_run.md"]
+    EXP --> EARCH["architecture/ (MOVED from reference/)"]
+    EXP --> EFOUND["foundation.md, philosophy.md, ..."]
+
+    EARCH --> EAI["architecture/index.md (NEW)"]
+    EARCH --> EAL["architecture/layer{0-8}.md"]
+    EARCH --> EASUB["architecture/layer0_* / layer1_* sub-pages"]
+
+    style EARCH fill:#1e90ff,stroke:#1565c0,color:#fff
+    style EAI fill:#1e90ff,stroke:#1565c0,color:#fff
+    style EAL fill:#1e90ff,stroke:#1565c0,color:#fff
+    style EASUB fill:#1e90ff,stroke:#1565c0,color:#fff
+    style EFOUND fill:#1e90ff,stroke:#1565c0,color:#fff
 ```
 
-### Docs Change Reference
+### Docs Change Reference (PR2 — Reference Structure Restructure)
 
-| File | Change Type | Before C53 | After C53 |
-| --- | --- | --- | --- |
-| `docs/tutorial/index.md` | UPDATE | 4-stub toctree | 5-entry toctree (03_custom_model + two_entry_points) |
-| `docs/tutorial/00_install.md` | POLISH | broken link to `for_researchers/quickstart.md` | valid `{doc}` xref to 01_first_forecast |
-| `docs/tutorial/01_first_forecast.md` | NEW CONTENT | empty stub (from C52 mv) | 5-min AR recipe narrative |
-| `docs/tutorial/02_full_study.md` | NEW CONTENT | empty stub (from C52 mv) | Full study: sweep, DM test, L7 |
-| `docs/tutorial/03_custom_model.md` | NEW FILE | did not exist | register_model narrative |
-| `docs/tutorial/two_entry_points.md` | RENAME + POLISH | `03_two_entry_points.md` | renamed + broken links fixed |
-| `docs/how_to/index.md` | UPDATE | 8-entry toctree (old names) | 12-entry primary + 5-entry hidden (stubs) |
-| `docs/how_to/add_custom_dataset.md` | NEW FILE | did not exist | CSV/inline panel how-to |
-| `docs/how_to/tune_hyperparameters.md` | NEW FILE | did not exist | grid/random/BIC HP search |
-| `docs/how_to/sweep_over_models.md` | NEW FILE | did not exist | model sweep + pandas summary |
-| `docs/how_to/add_custom_model.md` | REFACTOR | did not exist (was custom_model.md) | terse register_model task recipe |
-| `docs/how_to/use_custom_hooks.md` | REFACTOR | did not exist (was custom_hooks.md) | all 5 extension points |
-| `docs/how_to/replicate_a_study.md` | NEW FILE | did not exist | mf.replicate() how-to |
-| `docs/how_to/partial_layer_execution.md` | RENAME | was `partial_execution.md` | renamed + link fixes |
-| `docs/how_to/troubleshooting.md` | POLISH | 3 broken links | links replaced with valid {doc} xrefs |
-| Redirect stubs (5) | NEW FILES | did not exist | orphan stubs pointing to new names |
+| File | Action | Notes |
+| --- | --- | --- |
+| `docs/explanation/architecture/index.md` | CREATED | toctree for all moved layer pages |
+| `docs/explanation/architecture/layer{0-8}.md` | MOVED (renamed) | from `reference/architecture/layer{N}/index.md` |
+| `docs/explanation/architecture/layer0_*.md` | MOVED | 5 L0 sub-pages |
+| `docs/explanation/architecture/layer1_*.md` | MOVED | 5 L1 sub-pages |
+| `docs/explanation/{foundation,philosophy,...}.md` | MOVED | 7 top-level architecture pages |
+| `docs/reference/architecture/` | DELETED | entire directory removed |
+| `docs/reference/index.md` | UPDATED | drop architecture toctree; keep prose cross-link |
+| `docs/explanation/index.md` | UPDATED | add `architecture/index` to toctree |
+| `docs/reference/encyclopedia/index.md` | UPDATED | cross-link points to `explanation/architecture` |
+| `docs/how_to/contributing.md` | UPDATED | cross-link points to `explanation/architecture` |
+| `docs/explanation/12_layer_design.md` | UPDATED | cross-ref update |
+| `docs/explanation/bit_exact_replicate.md` | UPDATED | cross-ref update |
+| `docs/explanation/honesty_pass.md` | UPDATED | cross-ref update |
+| `docs/explanation/recipe_to_run.md` | UPDATED | cross-ref update |
 
 ---
 

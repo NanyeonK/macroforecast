@@ -1,9 +1,9 @@
 # Layer 6: Statistical Tests
 
-- Parent: [Detail: Layer Contracts](../index.md)
-- Previous: [Layer 5](../layer5/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 5](layer5.md)
 - Current: Layer 6
-- Next: [Layer 7](../layer7/index.md)
+- Next: [Layer 7](layer7.md)
 
 Layer 6 runs inferential tests on forecasts and evaluation artifacts. It is default off and requires `enabled: true`. Individual sub-layers also require their own `enabled: true`.
 
@@ -70,4 +70,4 @@ Output:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l6/`](../../encyclopedia/l6/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l6/`](../../reference/encyclopedia/l6/index.md).
