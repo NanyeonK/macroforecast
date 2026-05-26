@@ -1,37 +1,15 @@
-"""Recipe orchestration tier for macroforecast.
+"""macroforecast.recipes -- recipe-orchestration namespace.
 
-The ``recipes`` module provides YAML-driven orchestration for end-to-end
-forecasting studies. It is the appropriate entry point for replication
-research and systematic benchmarking where every decision must be recorded
-in a YAML recipe for reproducibility. For exploratory analysis, custom model
-development, or one-off forecasts, the standalone API
-(``macroforecast.layers.l4_models``, ``macroforecast.functions``) is simpler
-and does not require YAML.
+Canonical entry point for YAML-driven forecasting studies. Re-exports the
+public API from macroforecast.api.recipe and macroforecast.api.quick.
 
-**Canonical API (new in v0.9.5a)**
+Paper-method recipe builders live at macroforecast.layers.l4_models.paper_methods
+(relocated from this module in Phase 3b).
 
-- ``macroforecast.recipes.run(recipe, ...)`` -- execute a recipe end-to-end.
-- ``macroforecast.recipes.run_file(path, ...)`` -- execute by file path.
-- ``macroforecast.recipes.replicate(manifest_path, ...)`` -- bit-exact replay.
-- ``macroforecast.recipes.forecast(dataset, target, ...)`` -- one-shot helper.
-- ``macroforecast.recipes.Experiment(...)`` -- builder-pattern study object.
-- ``macroforecast.recipes.ForecastResult`` -- result facade.
-- ``macroforecast.recipes.ManifestExecutionResult`` -- full execution result.
-- ``macroforecast.recipes.ReplicationResult`` -- replication result.
-
-**Top-level aliases (retained for backward compatibility, no deprecation)**
-
-``macroforecast.run``, ``macroforecast.run_file``, ``macroforecast.replicate``,
-``macroforecast.forecast``, ``macroforecast.Experiment``,
-``macroforecast.ForecastResult``, ``macroforecast.ManifestExecutionResult``,
-``macroforecast.ReplicationResult`` are silent aliases for the canonical names
-above and will continue to work through v0.9.5a without deprecation warnings.
-
-**Paper-method recipe builders**
-
-``macroforecast.layers.l4_models.paper_methods`` contains per-paper recipe
-constructor functions (v0.9 Phase 2 paper-coverage pass). Each helper returns
-a recipe dict ready for ``run()``.
+Public API:
+- run, run_file, replicate -- recipe execution
+- Experiment, ForecastResult, forecast -- high-level facade
+- ManifestExecutionResult, ReplicationResult -- result types
 """
 from __future__ import annotations
 
