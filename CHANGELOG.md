@@ -9,6 +9,26 @@ full per-version honesty-pass history embedded in repo documentation.
 `core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
 `interpretation/` and `recipes/` converted to backward-compatible shims.
 
+### Docs
+
+- **PR1 (docs site cleanup): delete navigator pages and cross-links**
+
+  Navigator was removed from the public feature set in Phase 0 (TAXONOMY v1 §12).
+  Deleted all 6 `docs/reference/api/navigator/` pages and removed all cross-references:
+
+  | File | Action |
+  |------|--------|
+  | `docs/reference/api/navigator/index.md` | Deleted |
+  | `docs/reference/api/navigator/tree_navigator.md` | Deleted |
+  | `docs/reference/api/navigator/path_resolver.md` | Deleted |
+  | `docs/reference/api/navigator/compatibility_engine.md` | Deleted |
+  | `docs/reference/api/navigator/replication_library.md` | Deleted |
+  | `docs/reference/api/navigator/yaml_execution.md` | Deleted |
+  | `docs/reference/api/index.md` | Removed Navigator section and toctree entry |
+  | `docs/reference/architecture/philosophy.md` | Replaced "Navigation before execution" with "Option reference"; removed Navigator link from Next section; updated "Contracts are enforced" |
+
+  Termination condition 1: `docs/reference/api/navigator/` is empty. PASS.
+
 ### Internal
 
 - **Phase 3g-bis FINAL: cascade complete (TC1–TC7 verified)** (see PR #K)
