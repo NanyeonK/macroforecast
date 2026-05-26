@@ -23,7 +23,7 @@ where ``A_h = irf_obj.irfs[h]`` are the **raw reduced-form MA coefficients** (NO
 
 **Order invariance**: permuting the VAR column order produces identical importance values for any given (shock, response) pair. Verified empirically to atol=1e-8 (actual difference ~1e-19 in the v0.9.3 test suite). This is the defining property that distinguishes the Pesaran-Shin GIRF from the Cholesky ``orthogonalised_irf``.
 
-**Non-VAR fallback**: when the fitted model is not a VAR family (e.g., ridge), falls back to ``_tree_importance_frame`` with ``status='fallback_non_var'``.
+**Non-VAR fallback**: when the fitted model is not a VAR model (e.g., ridge), falls back to ``_tree_importance_frame`` with ``status='fallback_non_var'``.
 
 **Numerical guard**: when ``sigma_jj <= 0`` (degenerate diagonal), scale defaults to 1.0. When ``irf()`` fails (singular or non-PD data), the fallback is triggered automatically.
 

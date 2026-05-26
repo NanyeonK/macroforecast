@@ -240,9 +240,9 @@ Goulet Coulombe (2024) MRF: random walk regularised forest with per-leaf local l
 
 Macroeconomic Random Forest. Each leaf fits a local linear regression of y on the state vector S; coefficient series are smoothed via random-walk regularisation (``rw_regul`` parameter); forecast ensembles use the Block Bayesian Bootstrap (Taddy 2015 extension). Surfaces Generalised Time-Varying Parameters (GTVPs) via the L7 ``mrf_gtvp`` op.
 
-Backed by Ryan Lucas's reference implementation, vendored under ``macroforecast/_vendor/macro_random_forest/`` with surgical numpy 2.x / pandas 2.x compatibility patches (no algorithmic changes). Upstream: https://github.com/RyanLucas3/MacroRandomForest. No extra required -- the family works out of the box.
+Backed by Ryan Lucas's reference implementation, vendored under ``macroforecast/_vendor/macro_random_forest/`` with surgical numpy 2.x / pandas 2.x compatibility patches (no algorithmic changes). Upstream: https://github.com/RyanLucas3/MacroRandomForest. No extra required -- the model works out of the box.
 
-**Citation requirement**: research using this family must cite Goulet Coulombe (2024) 'The Macroeconomy as a Random Forest', Journal of Applied Econometrics (arXiv:2006.12724) and acknowledge the upstream implementation by Ryan Lucas (https://github.com/RyanLucas3/MacroRandomForest).
+**Citation requirement**: research using this model must cite Goulet Coulombe (2024) 'The Macroeconomy as a Random Forest', Journal of Applied Econometrics (arXiv:2006.12724) and acknowledge the upstream implementation by Ryan Lucas (https://github.com/RyanLucas3/MacroRandomForest).
 
 Tunable params: ``B`` (bootstrap iterations, default 50), ``ridge_lambda`` (default 0.1), ``rw_regul`` (RW penalty 0..1, default 0.75), ``mtry_frac`` (default 1/3), ``trend_push`` (default 1), ``quantile_rate`` (default 0.3), ``fast_rw`` (default True), ``parallelise`` (default False), ``n_cores`` (default 1).
 
@@ -287,7 +287,7 @@ _Last reviewed 2026-05-04 by macroforecast author._
 
 ### `bagging`  --  operational
 
-Bootstrap-aggregating wrapper around any base family; supports Booging.
+Bootstrap-aggregating wrapper around any base model; supports Booging.
 
 ``params.base_family`` selects the base estimator; ``params.n_estimators`` (default 50) bootstrap resamples are fit; predict averages. ``predict_quantiles`` surfaces empirical bag-quantiles.
 

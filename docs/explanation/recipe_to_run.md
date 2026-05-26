@@ -50,7 +50,7 @@ user a fraction of a second, not the duration of a full study run.
 
 ## Step 2: Compile Pipeline per Layer
 
-Three layers (L3, L4, and L7) use directed acyclic graphs rather than flat
+Three layers (L3, L4, and L7) use step graphs rather than flat
 lists of axis values. At this step, the recipe's `nodes` declarations are
 compiled into actual graph objects and topologically sorted.
 

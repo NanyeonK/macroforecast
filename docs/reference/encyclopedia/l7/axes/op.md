@@ -33,11 +33,11 @@ OLS-as-attention closed-form attention matrix (Goulet Coulombe 2026).
 
 Goulet Coulombe (2026) 'OLS as an Attention Mechanism' Eq. 3 closed form: ``Ω = X_test · (X'_train · X_train)⁻¹ · X'_train``. The ``(n_test, n_train)`` matrix encodes how strongly each test point attends to each training point under an OLS / ridge fit, identical to the representer expansion of the dual ridge solution. Output table carries one row per training observation (per-test-point weight aggregates) plus the full attention matrix and representer-identity diagnostics inline via ``frame.attrs``.
 
-Promoted from ``future`` to ``operational`` in Phase B-10 (paper-10 replication). Compatible with linear-family L4 models (``ols`` / ``ridge`` / ``lasso`` / ``elastic_net`` / ``bayesian_ridge`` / ``huber``).
+Promoted from ``future`` to ``operational`` in Phase B-10 (paper-10 replication). Compatible with linear L4 models (``ols`` / ``ridge`` / ``lasso`` / ``elastic_net`` / ``bayesian_ridge`` / ``huber``).
 
 **When to use**
 
-Linear-family attribution as a kernel-attention map; pedagogical / replication of paper-10 Coulombe (2026).
+Linear-model attribution as a kernel-attention map; pedagogical / replication of paper-10 Coulombe (2026).
 
 **When NOT to use**
 
@@ -203,7 +203,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 Decompose a single forecast into per-feature contributions.
 
-For a single (cell, target, horizon) forecast, returns a table ``(feature → contribution)`` summing to ``forecast - benchmark``. Linear models: ``β_j x_j``. Trees: Tree SHAP. NN: gradient SHAP. Universal entry point unified across families -- delegates to the appropriate family-specific op.
+For a single (cell, target, horizon) forecast, returns a table ``(feature → contribution)`` summing to ``forecast - benchmark``. Linear models: ``β_j x_j``. Trees: Tree SHAP. NN: gradient SHAP. Universal entry point unified across model classes -- delegates to the appropriate model-specific op.
 
 **When to use**
 
@@ -390,7 +390,7 @@ Leave-one-feature-out (LOFO) refit importance.
 
 For each predictor ``j``, refits the L4 estimator on the panel with column ``j`` removed and reports the OOS-loss delta. More expensive than permutation importance (one extra fit per feature) but free from the permutation-and-correlation interaction.
 
-Compatible with every L4 family; runtime scales as ``n_features × cost_per_fit``.
+Compatible with every L4 model; runtime scales as ``n_features × cost_per_fit``.
 
 **When to use**
 
@@ -431,7 +431,7 @@ See [model_native_tree_importance function page](../op/model_native_tree_importa
 
 Macroeconomic Random Forest GTVP -- per-leaf time-varying coefficients (Coulombe 2024).
 
-Compatible only with the ``macroeconomic_random_forest`` L4 family. For each leaf ``ℓ`` and predictor ``j``, returns the leaf-local linear coefficient ``β̂_{j, ℓ}``; the full output is an ``(n_leaves × n_features)`` GTVP (Generalised Time-Varying Parameter) panel.
+Compatible only with the ``macroeconomic_random_forest`` L4 model. For each leaf ``ℓ`` and predictor ``j``, returns the leaf-local linear coefficient ``β̂_{j, ℓ}``; the full output is an ``(n_leaves × n_features)`` GTVP (Generalised Time-Varying Parameter) panel.
 
 **When to use**
 

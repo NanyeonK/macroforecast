@@ -34,7 +34,7 @@ mf.functions.model_native_tree_importance(
 
 ## Behavior
 
-Returns sklearn's ``feature_importances_`` for the fitted estimator -- the average reduction in node impurity attributable to each feature, weighted by node sample count. Available for every tree-family L4 model (``decision_tree`` / ``random_forest`` / ``extra_trees`` / ``gradient_boosting`` / ``xgboost`` / ``lightgbm`` / ``catboost``).
+Returns sklearn's ``feature_importances_`` for the fitted estimator -- the average reduction in node impurity attributable to each feature, weighted by node sample count. Available for every tree-based L4 model (``decision_tree`` / ``random_forest`` / ``extra_trees`` / ``gradient_boosting`` / ``xgboost`` / ``lightgbm`` / ``catboost``).
 
 Cheap and built-in; biases toward high-cardinality features. For unbiased tree importance, prefer ``permutation_importance`` or ``permutation_importance_strobl``.
 

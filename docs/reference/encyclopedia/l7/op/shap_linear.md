@@ -35,7 +35,7 @@ mf.functions.shap_linear_importance(
 
 ## Behavior
 
-For a fitted linear model ``f(x) = β'x + b``, the SHAP value for feature ``j`` reduces to ``β_j (x_j - E[x_j])``. Uses the training-sample mean as the reference. Available for every linear L4 family.
+For a fitted linear model ``f(x) = β'x + b``, the SHAP value for feature ``j`` reduces to ``β_j (x_j - E[x_j])``. Uses the training-sample mean as the reference. Available for every linear L4 model.
 
 **When to use**
 

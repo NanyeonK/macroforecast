@@ -27,7 +27,7 @@ Stop the entire study on the first cell that errors.
 
 When the cell-loop catches an exception in any sweep cell, ``fail_fast`` raises immediately and the manifest is **not** written. The remaining cells are skipped.
 
-This is the default because the typical authoring failure mode is a schema or data error that affects every cell -- catching it after the first cell saves wall-clock and surfaces the problem with a single traceback rather than a wall of identical errors. For sweeps where cells *can* fail independently (e.g., one model family throws on a particular target while others succeed), use ``continue_on_failure`` instead so partial results survive.
+This is the default because the typical authoring failure mode is a schema or data error that affects every cell -- catching it after the first cell saves wall-clock and surfaces the problem with a single traceback rather than a wall of identical errors. For sweeps where cells *can* fail independently (e.g., one model throws on a particular target while others succeed), use ``continue_on_failure`` instead so partial results survive.
 
 **When to use**
 
@@ -66,7 +66,7 @@ Replication still runs end-to-end on a manifest with failed cells: ``replicate()
 
 **When to use**
 
-Production horse-race sweeps where partial coverage is more useful than no coverage. Common examples: a 50-cell model-family sweep where one optional family (xgboost without the extra) fails to import, or a long bootstrap where a single iteration trips a numerical edge case.
+Production horse-race sweeps where partial coverage is more useful than no coverage. Common examples: a 50-cell model sweep where one optional model (xgboost without the extra) fails to import, or a long bootstrap where a single iteration trips a numerical edge case.
 
 **When NOT to use**
 

@@ -22,7 +22,7 @@ Implementation details:
 * Output: a DataFrame of shape ``(n_hidden_units, T)`` where ``T`` is the sequence length. Column names are observation dates when the input panel carries a DatetimeIndex; otherwise integer positions.
 * The ``l7_importance_v1`` sink carries the heatmap frame under the key ``hidden_state_activations``.
 
-Only compatible with the ``lstm`` model family in L4. The ``transformer`` family raises ``NotImplementedError`` because it has no recurrent hidden state; use ``attention_weights`` for transformer attribution.
+Only compatible with the ``lstm`` model in L4. The ``transformer`` model raises ``NotImplementedError`` because it has no recurrent hidden state; use ``attention_weights`` for transformer attribution.
 
 **When to use**
 

@@ -105,6 +105,45 @@ full per-version honesty-pass history embedded in repo documentation.
   Termination condition: every remaining `Layer [0-9]+:` / `Layer L[0-9]+` hit
   outside `tutorial/replications/` is a line-1 H1 title. PASS (18 hits, all H1).
 
+- **PR4 (docs precision audit): replace TAXONOMY-deprecated 'family' L4 model references**
+
+  Replaced ~20 occurrences of TAXONOMY-deprecated vocabulary across 13 encyclopedia and
+  explanation files. The TAXONOMY bans `family` as an identifier for L4 model classes
+  (e.g., "tree-family L4 model") but preserves legitimate statistics English uses
+  (SHAP family, ETS family, design-doc quoted string "pick family, tune, repeat.").
+
+  Rewrite map applied:
+
+  | Deprecated pattern | Replacement |
+  |--------------------|-------------|
+  | `linear-family L4 model(s)` | `linear L4 model(s)` |
+  | `linear L4 family` | `linear L4 model` |
+  | `Linear-family attribution` | `Linear-model attribution` |
+  | `lstm model family` | `lstm model` |
+  | `transformer family` | `transformer model` |
+  | `VAR family` | `VAR model` |
+  | `every L4 family` | `every L4 model` |
+  | `unified across families` | `unified across model classes` |
+  | `family-specific op` | `model-specific op` |
+  | `macroeconomic_random_forest L4 family` | `macroeconomic_random_forest L4 model` |
+  | `base family` | `base model` |
+  | `first-class L4 family` | `first-class L4 model` |
+  | `tree-family L4 model` | `tree-based L4 model` |
+  | `tree-family models` | `tree-based models` |
+  | `Sklearn-family estimators` | `Sklearn estimators` |
+  | `model-family sweep` | `model sweep` |
+  | `ONNX … supported by the family` | `supported by the model` |
+  | `PMML-compatible families only` | `PMML-compatible models only` |
+  | `directed acyclic graph` (L3 topology) | `step graph` |
+
+  Preserved unchanged: all design-doc quoted strings containing "pick family, tune,
+  repeat."; SHAP family; SHAP-family ops; ETS family; pytorch families (framework
+  enumeration); base_family YAML key; dependence-plot family; wavelet family name;
+  family-wise (statistics); Albacore-family (model branding).
+
+  Termination: `grep -rnE "(tree|linear|sklearn|VAR|lstm)[\- ]family" docs/` → 0 hits.
+  `grep -rnE "directed acyclic graph" docs/` → 0 hits. (check4 audit, strict-30 cleanup)
+
 - **PR2 (docs precision audit): fix YAML recipe block violations in 4 docs pages**
 
   Fixed 6 hits across 4 files identified by the check2 audit: deprecated `op: ridge` shorthand

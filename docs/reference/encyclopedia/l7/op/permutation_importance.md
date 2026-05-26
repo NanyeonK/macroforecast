@@ -37,7 +37,7 @@ mf.functions.permutation_importance(
 
 ## Behavior
 
-For each predictor ``j``, computes the increase in OOS loss when ``x_j`` is randomly permuted. The score is ``L(y, f(X_perm_j)) - L(y, f(X))`` averaged over ``n_repeats`` (default 10). Model-agnostic: works for every L4 family.
+For each predictor ``j``, computes the increase in OOS loss when ``x_j`` is randomly permuted. The score is ``L(y, f(X_perm_j)) - L(y, f(X))`` averaged over ``n_repeats`` (default 10). Model-agnostic: works for every L4 model.
 
 Bias-free alternative to ``model_native_tree_importance``; the gold-standard fallback for any model that does not expose a native importance attribute.
 

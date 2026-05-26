@@ -64,7 +64,7 @@ Distribute work over multiple workers; pick the unit via parallel_unit.
 Activates the parallel cell loop. The granularity is controlled by the ``parallel_unit`` conditional leaf_config key:
 
 * ``cells`` -- one process per sweep cell (``ProcessPoolExecutor``).   Cell-level parallelism is the safest path because cells are by   construction independent.
-* ``models`` -- threads over ``fit`` nodes inside a single   cell (issue #204). Sklearn-family estimators release the GIL; the   thread pool avoids the pickling overhead of processes.
+* ``models`` -- threads over ``fit`` nodes inside a single   cell (issue #204). Sklearn estimators release the GIL; the   thread pool avoids the pickling overhead of processes.
 * ``oos_dates`` -- threads over walk-forward origins inside a fit   node (issue #250). Per-origin RNG state is derived deterministically   from ``base_seed + position`` (issue #279) so thread scheduling   cannot affect the forecasts.
 * ``horizons`` / ``targets`` -- map to the same fan-out when L4   produces single-horizon / single-target output per fit node.
 
