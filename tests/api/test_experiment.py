@@ -123,7 +123,7 @@ def test_experiment_variant_records_overrides():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
     exp.variant("alt", model="ols")
     recipe = exp.to_recipe_dict()
-    assert recipe["variants"] == {"alt": {"model_family": "ols"}}
+    assert recipe["variants"] == {"alt": {"model": "ols"}}
 
 
 def test_experiment_variant_rejects_invalid_name():

@@ -25,7 +25,7 @@ def test_forecast_default_recipe_layer0_seed_and_axes():
         frequency=None,
         start="1980-01",
         end="2019-12",
-        model_family="ar_p",
+        model="ar_p",
         random_seed=42,
     )
     recipe = b.build()
@@ -44,7 +44,7 @@ def test_forecast_default_recipe_layer1_target_horizons_and_window():
         frequency=None,
         start="1980-01",
         end="2019-12",
-        model_family="ar_p",
+        model="ar_p",
         random_seed=0,
     )
     recipe = b.build()
@@ -68,7 +68,7 @@ def test_forecast_fred_qd_sets_quarterly_frequency():
         frequency=None,
         start=None,
         end=None,
-        model_family="ar_p",
+        model="ar_p",
         random_seed=0,
     )
     recipe = b.build()
@@ -84,7 +84,7 @@ def test_forecast_fred_sd_alone_requires_explicit_frequency():
             frequency=None,
             start=None,
             end=None,
-            model_family="ar_p",
+            model="ar_p",
             random_seed=0,
         )
 
@@ -98,7 +98,7 @@ def test_forecast_fred_md_rejects_conflicting_frequency():
             frequency="quarterly",
             start=None,
             end=None,
-            model_family="ar_p",
+            model="ar_p",
             random_seed=0,
         )
 
@@ -111,7 +111,7 @@ def test_forecast_default_layer4_has_single_fit_model_with_chosen_family():
         frequency=None,
         start=None,
         end=None,
-        model_family="ridge",
+        model="ridge",
         random_seed=0,
     )
     recipe = b.build()
@@ -129,7 +129,7 @@ def test_forecast_default_layer5_primary_metric_mse():
         frequency=None,
         start=None,
         end=None,
-        model_family="ar_p",
+        model="ar_p",
         random_seed=0,
     )
     recipe = b.build()
@@ -145,6 +145,6 @@ def test_forecast_rejects_empty_horizons():
             frequency=None,
             start=None,
             end=None,
-            model_family="ar_p",
+            model="ar_p",
             random_seed=0,
         )

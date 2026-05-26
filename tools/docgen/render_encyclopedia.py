@@ -290,7 +290,7 @@ def _render_option_body(option: OptionInfo, doc: OptionDoc | None, *, layer_id: 
             "> TBD: option doc not yet authored for this value."
             " The encyclopedia falls back to the bare schema description"
             " above. PRs adding a full ``OptionDoc`` entry under"
-            f" ``macroforecast/scaffold/option_docs/{layer_id}.py`` are"
+            f" ``tools/docgen/option_docs/{layer_id}.py`` are"
             " welcome."
         )
         lines.append("")
@@ -568,12 +568,12 @@ def _render_top_index(stats: dict[str, int]) -> str:
         "Each layer, sub-layer, axis, and option value has its own page or "
         "anchor; the tree below is generated from the live "
         "`LayerImplementationSpec` registry plus the `OPTION_DOCS` "
-        "documentation registry under `macroforecast/scaffold/option_docs/`."
+        "documentation registry under `tools/docgen/option_docs/`."
     )
     parts.append("")
     parts.append(
         "> **Looking for the design narrative instead?** Use "
-        "[Architecture](../architecture/index.md) -- that's where the "
+        "[Architecture](../../explanation/architecture/index.md) -- that's where the "
         "prose \"why is L2 separated from L3\" / \"how does L7 read L4 "
         "sinks\" / cross-layer reference explanations live. Encyclopedia "
         "pages here are **auto-generated lookup** for individual option "
@@ -762,7 +762,7 @@ def _render_public_api() -> str:
         "\n"
         "| Module | Purpose |\n"
         "|--------|---------|\n"
-        "| `macroforecast.core` | 12-layer recipe runtime (foundation, layers, ops, runtime, execution, figures) |\n"
+        "| `macroforecast.core` | layered recipe runtime (foundation, layers, ops, runtime, execution, figures) |\n"
         "| `macroforecast.layers.l1_data` | FRED-MD/QD/SD adapters, vintage manager, manifest |\n"
         "| `macroforecast.preprocessing` | Preprocessing contract helpers |\n"
         "| `macroforecast.layers.l4_models.tuning` | Hyperparameter search engines |\n"

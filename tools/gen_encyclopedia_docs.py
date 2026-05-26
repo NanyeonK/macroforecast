@@ -54,10 +54,10 @@ def _bootstrap_ops() -> None:
     """Import all ops modules so the registry is fully populated."""
     import macroforecast.layers.l3_features.ops  # noqa: F401
     import macroforecast.layers.l4_models.ops  # noqa: F401
-    import macroforecast.core.ops.l5_ops  # noqa: F401
-    import macroforecast.core.ops.l6_ops  # noqa: F401
+    import macroforecast.layers.l5_evaluation.ops  # noqa: F401
+    import macroforecast.layers.l6_tests.ops  # noqa: F401
     import macroforecast.layers.l7_interpretation.ops  # noqa: F401
-    import macroforecast.core.ops.l8_ops  # noqa: F401
+    import macroforecast.layers.l8_output.ops  # noqa: F401
     import macroforecast.core.ops.diagnostic_ops  # noqa: F401
     import macroforecast.core.ops.universal  # noqa: F401
 
