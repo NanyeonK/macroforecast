@@ -21,4 +21,5 @@ artifacts_and_manifest
 reproducibility
 terminology
 deprecation_timeline
+migration_guide
 ```

@@ -12,6 +12,11 @@
 >
 > **Renamed from `macrocast` -> `macroforecast`** in v0.6.0 (PyPI
 > namespace ownership). See ``CHANGELOG.md`` for the migration diff.
+>
+> **Upgrading from v0.8.x or v0.1?** See the
+> [Migration Guide](docs/explanation/migration_guide.md) for axis renames,
+> module path changes, CLI entry point change, and the v0.10.0 deprecation
+> removal schedule.
 
 ## Install
 
