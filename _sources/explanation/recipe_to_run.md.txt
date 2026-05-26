@@ -86,8 +86,9 @@ a list:
 4_forecasting_model:
   nodes:
     - type: step
-      op: ridge
-      config:
+      op: fit
+      params:
+        model: ridge
         n_lag: {sweep: [1, 2, 3]}
 ```
 

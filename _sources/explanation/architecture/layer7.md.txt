@@ -50,7 +50,7 @@ Outputs:
     - {id: src_model, type: source, selector: {layer_ref: l4, sink_name: l4_model_artifacts_v1, subset: {model_id: xgb_full}}}
     - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
     - {id: src_l3_meta, type: source, selector: {layer_ref: l3, sink_name: l3_metadata_v1}}
-    - {id: shap, type: step, op: shap_tree, params: {model_family: xgboost}, inputs: [src_model, src_X]}
+    - {id: shap, type: step, op: shap_tree, params: {model: xgboost}, inputs: [src_model, src_X]}
     - {id: lineage, type: step, op: lineage_attribution, params: {level: pipeline_name}, inputs: [shap, src_l3_meta]}
   sinks:
     l7_importance_v1: {global: shap, lineage: lineage}
