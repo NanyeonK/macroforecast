@@ -1,6 +1,6 @@
 # Layer 0 Axis: `study_scope`
 
-- Parent: [Layer 0](index.md)
+- Parent: [Layer 0](layer0.md)
 - Current: `study_scope`
 
 `study_scope` describes the broad shape of the study: how many targets are

@@ -1,9 +1,9 @@
 # Layer 3: Feature Engineering
 
-- Parent: [Detail: Layer Contracts](../index.md)
-- Previous: [Layer 2](../layer2/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 2](layer2.md)
 - Current: Layer 3
-- Next: [Layer 4](../layer4/index.md)
+- Next: [Layer 4](layer4.md)
 
 Layer 3 turns cleaned data into the feature and target artifacts consumed by forecasting models. It is a graph layer: recipes must use explicit `nodes` and `sinks`.
 
@@ -75,4 +75,4 @@ Compatibility aliases remain available where older recipes used them: `varimax_r
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l3/`](../../encyclopedia/l3/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l3/`](../../reference/encyclopedia/l3/index.md).

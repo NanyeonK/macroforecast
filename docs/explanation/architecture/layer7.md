@@ -1,9 +1,9 @@
 # Layer 7: Interpretation / Importance
 
-- Parent: [Detail: Layer Contracts](../index.md)
-- Previous: [Layer 6](../layer6/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 6](layer6.md)
 - Current: Layer 7
-- Next: [Layer 8](../layer8/index.md)
+- Next: [Layer 8](layer8.md)
 
 Layer 7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML. As of Cycle 49 (2026-05-21), `generalized_irf` (Pesaran-Shin 1998) is operational; `FUTURE_OPS` contains only `lstm_hidden_state`.
 
@@ -60,7 +60,7 @@ Outputs:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l7/`](../../encyclopedia/l7/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l7/`](../../reference/encyclopedia/l7/index.md).
 
 ## Cycle 50 update (2026-05-22)
 

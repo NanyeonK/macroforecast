@@ -1,9 +1,9 @@
 # Layer 1: Data Source, Target y, Predictor x
 
-- Parent: [Architecture](../index.md)
-- Previous: [Layer 0: Study Scope](../layer0/index.md)
+- Parent: [Architecture](index.md)
+- Previous: [Layer 0: Study Scope](layer0.md)
 - Current: Layer 1
-- Next: [Layer 2: Representation / Research Preprocessing](../layer2/index.md)
+- Next: [Layer 2: Representation / Research Preprocessing](layer2.md)
 
 Layer 1 owns the source-frame contract for a macro forecasting study. It decides
 which source data define the panel, the analysis frequency, what information is
@@ -89,22 +89,22 @@ Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order
 
 ## Related reference
 
-- [Data layer (source, target, horizon, geography)](../../recipe_api/data.md)
-- [Data policies](../../recipe_api/data_policies.md)
+- [Data layer (source, target, horizon, geography)](../../reference/recipe_schema/data.md)
+- [Data policies](../../reference/recipe_schema/data_policies.md)
 
 ```{toctree}
 :maxdepth: 1
 
-source_frame
-availability_timing
-target_universe
-fred_sd_source_selection
-frame_availability
+layer1_source_frame
+layer1_availability_timing
+layer1_target_universe
+layer1_fred_sd_source_selection
+layer1_frame_availability
 ```
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l1/`](../../encyclopedia/l1/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l1/`](../../reference/encyclopedia/l1/index.md).
 
 ## Cycle 50 update (2026-05-22)
 

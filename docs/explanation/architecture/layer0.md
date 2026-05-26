@@ -1,8 +1,8 @@
 # Layer 0: Study Setup
 
-- Parent: [Architecture](../index.md)
+- Parent: [Architecture](index.md)
 - Current: Layer 0
-- Next: [Layer 1: Data Source, Target y, Predictor x](../layer1/index.md)
+- Next: [Layer 1: Data Source, Target y, Predictor x](layer1.md)
 
 Layer 0 defines the study-level contract before data, transformations,
 features, models, evaluation, or export are chosen. It answers four setup
@@ -32,7 +32,6 @@ Downstream layers use Layer 0 through manifest/runtime context:
 | Runtime | default derivation, compatibility checks, manifest metadata |
 | Sweep planner | parent study shape and failure/compute behavior |
 | Execution runner | seed application, continuation policy, parallel routing |
-| Navigator | setup defaults and target-cardinality guidance |
 | Output layer | provenance fields saved with result artifacts |
 
 Layer 0 should stay small. Dataset choice belongs in Layer 1, representation
@@ -216,13 +215,13 @@ Do not use retired or compatibility-only values in new recipes:
 ```{toctree}
 :maxdepth: 1
 
-study_scope
-failure_policy
-reproducibility_policy
-compute_policy
-axis_type
+layer0_study_scope
+layer0_failure_policy
+layer0_reproducibility_policy
+layer0_compute_policy
+layer0_axis_type
 ```
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l0/`](../../encyclopedia/l0/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l0/`](../../reference/encyclopedia/l0/index.md).

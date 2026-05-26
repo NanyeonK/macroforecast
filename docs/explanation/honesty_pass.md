@@ -165,7 +165,7 @@ Following C50, the operational inventory is:
 - 6 L1.G regime estimators: none, NBER, user-supplied, Hamilton
   Markov-switching, Tong SETAR, and Bai-Perron structural breaks.
 
-See the [Architecture Index](../reference/architecture/index.md) for
+See the [Architecture Index](architecture/index.md) for
 per-layer operational coverage detail.
 
 ---
@@ -186,7 +186,7 @@ visible at the entry point, not buried in a log file.
 
 ## Further Reading
 
-- [Foundation Core](../reference/architecture/foundation.md) — where the core
+- [Foundation Core](foundation.md) — where the core
   vocabulary (`OPERATIONAL`, `FUTURE`, `ItemStatus`, `normalize_status`,
   `is_runnable`) is defined.
 - `macroforecast.core.status` — the Python module that is the single source

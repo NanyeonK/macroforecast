@@ -180,11 +180,11 @@ audit.
 
 ## Further Reading
 
-- [Recipe Layers](../reference/architecture/recipe_layers.md) — YAML key
+- [Recipe Layers](recipe_layers.md) — YAML key
   reference, shape rules for list versus graph layers, and the minimal recipe
   skeleton.
-- [Foundation Core](../reference/architecture/foundation.md) — the five graph
+- [Foundation Core](foundation.md) — the five graph
   node types and the core contract for `macroforecast.core`.
-- [Reproducibility](../reference/architecture/reproducibility.md) — how
+- [Reproducibility](reproducibility.md) — how
   the manifest produced in Stage 5 is used by `mf.replicate` to verify
   bit-exact reproduction.
