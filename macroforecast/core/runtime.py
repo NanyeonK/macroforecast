@@ -12785,11 +12785,15 @@ def _l6_nested_results(
                     f_value, horizon=int(horizon), hln=False, kernel=hac_kernel
                 )
                 # CW is a one-sided test (H_a: large model improves on small)
-                p_value = (
-                    (p_value / 2.0)
-                    if (p_value is not None and stat is not None and stat > 0)
-                    else p_value
-                )
+                # p_one = p_two / 2        when stat > 0
+                # p_one = 1 - p_two / 2   when stat <= 0
+                # Reference: Clark & West (2006/2007) — p_one = 1 - Phi(t_CW)
+                if p_value is None or stat is None:
+                    pass  # p_value stays None
+                elif stat > 0:
+                    p_value = p_value / 2.0
+                else:
+                    p_value = 1.0 - p_value / 2.0
                 results[(test_name, small_model, large_model, target, int(horizon))] = _L6ResultWithDeprecatedAlias({  # v0.8.x: alias deprecation
                     "statistic": stat,
                     "p_value": p_value,
