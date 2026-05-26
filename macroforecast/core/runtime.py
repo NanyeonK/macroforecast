@@ -6694,8 +6694,16 @@ class _BayesianVAR:
         zero elsewhere; ``V_i`` is diagonal with own-lag scale
         ``λ₁² / lag^{2λ_decay} · σ²_i`` and cross-lag scale further
         shrunk by ``λ_cross²`` and rescaled by the variance ratio
-        ``σ²_i / σ²_j``. Closed-form posterior mean per equation:
-        ``β̂_i = (V_i⁻¹ + Z'Z)⁻¹ (V_i⁻¹ m_i + Z' y_i)``.
+        ``σ²_i / σ²_j``. Closed-form posterior mean per equation
+        (Karlsson 2013, Handbook of Economic Forecasting, Vol. 2B,
+        Eq. 15.8-15.9):
+
+            β̂_i = (V_i⁻¹ + Z'Z/σ²_i)⁻¹ (V_i⁻¹ m_i + Z' y_i/σ²_i)
+
+        where σ²_i is the OLS residual variance (plug-in Empirical
+        Bayes, Pass 1 of a two-pass estimation). Pass 1 runs OLS per
+        equation to obtain σ²_i; Pass 2 computes the Bayesian posterior
+        using the σ²-scaled precision and rhs.
 
         Returns ``_MultiEquationBVARResults`` or ``None`` if the panel
         cannot support a VAR(p) fit.
@@ -6719,10 +6727,29 @@ class _BayesianVAR:
         # Stack of posterior means + per-equation posterior covariance.
         n_coef = 1 + K * p
         B = np.zeros((K, n_coef), dtype=float)
-        # posterior_cov_per_eq[i] = (V_i⁻¹ + Z'Z)⁻¹ · σ²_i (Minnesota
-        # conjugate posterior with plug-in σ²_i Empirical Bayes).
+        # posterior_cov_per_eq[i] = (V_i⁻¹ + Z'Z/σ²_i)⁻¹ · σ²_i (Minnesota
+        # conjugate posterior with plug-in σ²_i Empirical Bayes;
+        # Karlsson 2013, Eq. 15.8-15.9).
         posterior_cov_per_eq = np.zeros((K, n_coef, n_coef), dtype=float)
         sigma2_resid_per_var = np.zeros(K, dtype=float)
+
+        # Pass 1: OLS per equation for plug-in sigma2 estimates.
+        # The prior V_i has sigma2_i absorbed (own-lag diagonal scales as
+        # lambda1^2 * sigma2_i), so the likelihood precision must also be
+        # divided by sigma2_i to preserve the intended prior-to-data ratio.
+        # Using OLS residual variance as the plug-in (Empirical Bayes).
+        sigma2_ols = np.zeros(K, dtype=float)
+        for i_ols in range(K):
+            try:
+                beta_ols = np.linalg.lstsq(Z, Y_eff[:, i_ols], rcond=None)[0]
+                resid_ols = Y_eff[:, i_ols] - Z @ beta_ols
+            except np.linalg.LinAlgError:
+                resid_ols = Y_eff[:, i_ols] - Y_eff[:, i_ols].mean()
+            denom_ols = max(T_eff - n_coef, 1)
+            sigma2_ols[i_ols] = max(float((resid_ols**2).sum() / denom_ols), 1e-12)
+
+        # Pass 2: Bayesian posterior per equation using sigma2_ols[i] for
+        # sigma2 scaling per Karlsson (2013) Eq. 15.8-15.9.
         for i in range(K):
             m_i = np.zeros(n_coef, dtype=float)
             # Phase B-4 F4: own-lag-1 prior mean uses ``b_AR`` (paper
@@ -6747,8 +6774,13 @@ class _BayesianVAR:
                         v_i[idx] = ratio * base_scale * (self.lambda_cross**2)
             v_i = np.maximum(v_i, 1e-8)
             Vinv = np.diag(1.0 / v_i)
-            precision = Vinv + ZtZ
-            rhs = Vinv @ m_i + Z.T @ Y_eff[:, i]
+            # Karlsson (2013) Eq. 15.8-15.9: divide ZtZ and Z'y_i by sigma2_i
+            # so the prior-to-data weighting scales correctly with lambda1.
+            # V_i already has sigma2_i absorbed, so without this division the
+            # likelihood over-weights the data by a factor of sigma2_i.
+            sig2_i = sigma2_ols[i]
+            precision = Vinv + ZtZ / sig2_i
+            rhs = Vinv @ m_i + Z.T @ Y_eff[:, i] / sig2_i
             try:
                 beta_i = np.linalg.solve(precision, rhs)
                 precision_inv = np.linalg.inv(precision)
