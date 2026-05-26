@@ -3,8 +3,8 @@
 ## Overview
 
 macroforecast is a Python package for reproducible macro-forecasting benchmarking
-studies on FRED-MD / FRED-QD / FRED-SD data (or custom data sources). The 12-layer
-canonical design (L0–L8 plus diagnostic half-layers L1.5–L4.5) converts a YAML
+studies on FRED-MD / FRED-QD / FRED-SD data (or custom data sources). The canonical
+layer design (L0–L8 plus diagnostic half-layers L1.5–L4.5) converts a YAML
 recipe into a sweep of independent study cells, each producing bit-exact replicable
 artifacts. Layer operations are also available as standalone Python callables via
 `mf.functions.*`.
@@ -405,7 +405,7 @@ and `tests/docs/`.
 
 | Category | Change |
 | --- | --- |
-| Explanation pages (4 new) | `12_layer_design.md`, `bit_exact_replicate.md`, `honesty_pass.md`, `recipe_to_run.md` — conceptual rationale for the 12-layer design, bit-exact replication, honesty vocabulary, and execution pipeline |
+| Explanation pages (4 new) | `12_layer_design.md`, `bit_exact_replicate.md`, `honesty_pass.md`, `recipe_to_run.md` — conceptual rationale for the layer design, bit-exact replication, honesty vocabulary, and execution pipeline |
 | Explanation index | `docs/explanation/index.md` — replaced stub with 4-page toctree |
 | Reference API index (new) | `docs/reference/api/index.md` — umbrella for standalone_functions/ + navigator/ |
 | Reference index | `docs/reference/index.md` — encyclopedia moved to visible toctree; API links to new umbrella |
@@ -831,7 +831,7 @@ docs/
     custom_hooks.md       # redirect stub (C53)
     partial_execution.md  # redirect stub (C53)
   reference/              # complete reference (C52 migration; unchanged in C53)
-    architecture/         # 12-layer design narrative (29 files)
+    architecture/         # layer design narrative (29 files)
     encyclopedia/         # auto-gen option lookup (319 files, sidebar-hidden)
     api/
       standalone_functions/  # 7 files

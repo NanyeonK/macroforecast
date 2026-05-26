@@ -161,7 +161,7 @@ pip install "macroforecast[xgboost,lightgbm,catboost,shap]"
 ## Sphinx encyclopedia drift CI fails on PR
 
 ```
-docs/encyclopedia/ is out of sync. Run: python -m macroforecast.scaffold encyclopedia docs/encyclopedia/
+docs/reference/encyclopedia/ is out of sync. Run: python -m tools.docgen encyclopedia docs/reference/encyclopedia/
 ```
 
 You edited a `LayerImplementationSpec` axis or an `OPTION_DOCS` entry,
@@ -171,8 +171,8 @@ generator output.
 **Fix**:
 
 ```bash
-python -m macroforecast.scaffold encyclopedia docs/encyclopedia/
-git add docs/encyclopedia/
+python -m tools.docgen encyclopedia docs/reference/encyclopedia/
+git add docs/reference/encyclopedia/
 git commit -m "docs(encyclopedia): regen after axis/OptionDoc edit"
 ```
 

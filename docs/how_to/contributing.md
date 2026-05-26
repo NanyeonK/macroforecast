@@ -30,7 +30,7 @@ macroforecast/
   raw/                    # FRED-MD/QD/SD adapters + vintage manager
   preprocessing/          # contract helpers (legacy support)
   custom.py               # register_model / register_preprocessor / ...
-  scaffold/               # RecipeBuilder + OptionDoc + templates
+  tools/docgen/           # RecipeBuilder + OptionDoc + templates
   defaults.py             # default profile dict template
   tuning/                 # HP search engines (optional, integrated via L4)
 tests/                    # test suite (counts vary by extras; see CI badges)
