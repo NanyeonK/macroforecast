@@ -229,7 +229,7 @@ layer key. Dashed nodes are default off and must be enabled explicitly.
 
 Each layer publishes a typed sink and may consume only the sinks of layers
 that precede it in the canonical order. The full boundary table is in
-[Layer Boundary Contract](../reference/architecture/layer_boundary_contract.md);
+[Layer Boundary Contract](layer_boundary_contract.md);
 the reasoning behind the non-obvious rules follows.
 
 **Why L3 owns target construction and L4 owns forecast combination.** If
@@ -311,9 +311,9 @@ reproducibility record.
 
 ## Further Reading
 
-- [Layer Boundary Contract](../reference/architecture/layer_boundary_contract.md)
+- [Layer Boundary Contract](layer_boundary_contract.md)
   — the full boundary table with what each layer may consume and must emit.
-- [Architecture Index](../reference/architecture/index.md) — per-layer pages
+- [Architecture Index](architecture/index.md) — per-layer pages
   with axis details and operational coverage.
-- [Philosophy](../reference/architecture/philosophy.md) — the design intent
+- [Philosophy](philosophy.md) — the design intent
   that these boundaries encode.

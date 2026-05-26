@@ -5,10 +5,8 @@ These pages are for look-up, not for learning.
 
 ## Architecture
 
-The 12-layer design narrative — why each layer exists, its boundary
-contracts, and cross-layer references.
-
-[Architecture](architecture/index.md)
+Architecture and design-rationale pages have moved to the
+[Explanation section](../explanation/architecture/index.md).
 
 ## API
 
@@ -34,7 +32,6 @@ per option: definition, when to use, when not to use, references.
 ```{toctree}
 :maxdepth: 2
 
-architecture/index
 api/index
 recipe_schema/index
 encyclopedia/index

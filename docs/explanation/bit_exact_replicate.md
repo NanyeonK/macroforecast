@@ -192,7 +192,7 @@ and `custom_model_names` fields between the original and replicate runs.
 
 ## Further Reading
 
-- [Reproducibility](../reference/architecture/reproducibility.md) — the full
+- [Reproducibility](reproducibility.md) — the full
   API contract for `mf.run` and `mf.replicate`, including field-level details.
-- [Artifacts and Manifest](../reference/architecture/artifacts_and_manifest.md)
+- [Artifacts and Manifest](artifacts_and_manifest.md)
   — the complete manifest field list and artifact directory layout.

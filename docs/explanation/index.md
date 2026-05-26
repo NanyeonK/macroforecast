@@ -12,4 +12,12 @@ with complex recipes or extending the package.
 bit_exact_replicate
 honesty_pass
 recipe_to_run
+architecture/index
+foundation
+philosophy
+layer_boundary_contract
+recipe_layers
+artifacts_and_manifest
+reproducibility
+terminology
 ```
