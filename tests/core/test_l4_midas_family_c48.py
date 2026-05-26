@@ -29,8 +29,8 @@ import pytest
 
 from macroforecast.core.runtime import _build_l4_model
 from macroforecast.layers.l4_models.ops import (
-    OPERATIONAL_MODEL_FAMILIES,
-    FUTURE_MODEL_FAMILIES,
+    OPERATIONAL_MODELS,
+    FUTURE_MODELS,
     get_family_status,
 )
 
@@ -76,11 +76,11 @@ class TestRegistration:
 
         Verifies test-spec.md behavioral contract #1:
         midas_almon, midas_beta, midas_step, dfm_unrestricted_midas
-        are in OPERATIONAL_MODEL_FAMILIES and NOT in FUTURE_MODEL_FAMILIES.
+        are in OPERATIONAL_MODELS and NOT in FUTURE_MODELS.
         """
         for fam in ("midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas"):
-            assert fam in OPERATIONAL_MODEL_FAMILIES, f"{fam} not in OPERATIONAL"
-            assert fam not in FUTURE_MODEL_FAMILIES, f"{fam} still in FUTURE"
+            assert fam in OPERATIONAL_MODELS, f"{fam} not in OPERATIONAL"
+            assert fam not in FUTURE_MODELS, f"{fam} still in FUTURE"
             assert get_family_status(fam) == "operational", (
                 f"get_family_status('{fam}') != 'operational'"
             )
@@ -89,10 +89,10 @@ class TestRegistration:
         """R-2: realized_garch was FUTURE at C48; promoted to OPERATIONAL in C49.
 
         Updated in C49 to reflect Hansen-Huang-Shek (2012) joint-MLE promotion.
-        Original C48 assertion was: assert 'realized_garch' in FUTURE_MODEL_FAMILIES.
+        Original C48 assertion was: assert 'realized_garch' in FUTURE_MODELS.
         """
-        assert "realized_garch" in OPERATIONAL_MODEL_FAMILIES
-        assert "realized_garch" not in FUTURE_MODEL_FAMILIES
+        assert "realized_garch" in OPERATIONAL_MODELS
+        assert "realized_garch" not in FUTURE_MODELS
         assert get_family_status("realized_garch") == "operational"
 
     def test_c48_operational_count_increased(self):
@@ -100,8 +100,8 @@ class TestRegistration:
 
         test-spec.md §2.2 R-3 specifies >= 39. Actual is 46 (builder confirms).
         """
-        assert len(OPERATIONAL_MODEL_FAMILIES) >= 39, (
-            f"Expected >= 39 operational families, got {len(OPERATIONAL_MODEL_FAMILIES)}"
+        assert len(OPERATIONAL_MODELS) >= 39, (
+            f"Expected >= 39 operational families, got {len(OPERATIONAL_MODELS)}"
         )
 
 

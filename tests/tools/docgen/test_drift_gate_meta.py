@@ -31,7 +31,7 @@ def _run_gate_check(layer: str, name: str, page_path: Path) -> None:
     behavior to the parametrized gate tests.
     """
     if not page_path.exists():
-        repo_root = Path(__file__).parents[2]
+        repo_root = Path(__file__).parents[3]
         try:
             relative = page_path.relative_to(repo_root)
         except ValueError:
@@ -60,7 +60,7 @@ def test_informative_failure_message_on_missing_page() -> None:
     """
     fake_op_name = "__fake_test_op_xyz__"
     # Build the path the gate would expect (does not exist on disk).
-    enc_root = Path(__file__).parents[2] / "docs" / "reference" / "encyclopedia"
+    enc_root = Path(__file__).parents[3] / "docs" / "reference" / "encyclopedia"
     fake_page_path = enc_root / "l7" / "op" / f"{fake_op_name}.md"
 
     # Confirm the page truly does NOT exist (pre-condition for a valid test).

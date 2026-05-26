@@ -25,8 +25,8 @@ import pytest
 import macroforecast
 from macroforecast.core.ops import get_op
 from macroforecast.layers.l4_models.ops import (
-    FUTURE_MODEL_FAMILIES,
-    OPERATIONAL_MODEL_FAMILIES,
+    FUTURE_MODELS,
+    OPERATIONAL_MODELS,
     get_family_status,
 )
 from macroforecast.core.status import OPERATIONAL
@@ -43,8 +43,8 @@ def test_mars_registered_operational_with_pyearth_optional():
     raises NotImplementedError with install hint when pyearth missing
     (mirrors xgboost / lightgbm / catboost pattern)."""
 
-    assert "mars" in OPERATIONAL_MODEL_FAMILIES
-    assert "mars" not in FUTURE_MODEL_FAMILIES
+    assert "mars" in OPERATIONAL_MODELS
+    assert "mars" not in FUTURE_MODELS
     assert get_family_status("mars") == OPERATIONAL
 
 
@@ -65,8 +65,8 @@ def test_decomposable_paper_methods_are_not_l4_families(decomposable_family):
     primitives + sub-axes; they must NOT appear as standalone L4
     families."""
 
-    assert decomposable_family not in OPERATIONAL_MODEL_FAMILIES
-    assert decomposable_family not in FUTURE_MODEL_FAMILIES
+    assert decomposable_family not in OPERATIONAL_MODELS
+    assert decomposable_family not in FUTURE_MODELS
 
 
 # ---------------------------------------------------------------------------

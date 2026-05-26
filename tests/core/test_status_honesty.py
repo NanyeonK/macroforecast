@@ -21,8 +21,8 @@ from macroforecast.layers.l4_models.schema import parse_layer_yaml as l4_parse, 
 from macroforecast.layers.l7_interpretation.schema import parse_layer_yaml as l7_parse, validate_layer as l7_validate
 from macroforecast.core.ops import list_ops
 from macroforecast.layers.l4_models.ops import (
-    FUTURE_MODEL_FAMILIES,
-    OPERATIONAL_MODEL_FAMILIES,
+    FUTURE_MODELS,
+    OPERATIONAL_MODELS,
     PLANNED_MODEL_FAMILIES,
     get_family_status,
 )
@@ -71,8 +71,8 @@ def test_planned_l4_bucket_is_empty():
 
 @pytest.mark.parametrize("family", _DEMOTED_L4_FAMILIES)
 def test_demoted_l4_family_is_in_future_bucket(family):
-    assert family in FUTURE_MODEL_FAMILIES
-    assert family not in OPERATIONAL_MODEL_FAMILIES
+    assert family in FUTURE_MODELS
+    assert family not in OPERATIONAL_MODELS
     assert get_family_status(family) == FUTURE
     assert is_future(family is None or get_family_status(family))
 
@@ -196,3 +196,22 @@ def test_count_of_demotions_matches_documentation():
     assert len(_DEMOTED_L1_REGIMES) == 0
     assert len(HONESTY_DEMOTED_L7_OPS) == 0
     assert len(_DEMOTED_L4_FAMILIES) + len(HONESTY_DEMOTED_L7_OPS) + len(_DEMOTED_L1_REGIMES) == 0
+
+
+# ---------------------------------------------------------------------------
+# Backward-compat: old constant names emit DeprecationWarning
+# ---------------------------------------------------------------------------
+
+def test_old_constant_names_emit_deprecation() -> None:
+    """OPERATIONAL_MODEL_FAMILIES and FUTURE_MODEL_FAMILIES must emit DeprecationWarning."""
+    import warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES  # noqa: F401
+        assert any(issubclass(warning.category, DeprecationWarning) for warning in w), \
+            "OPERATIONAL_MODEL_FAMILIES must emit DeprecationWarning"
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES  # noqa: F401
+        assert any(issubclass(warning.category, DeprecationWarning) for warning in w), \
+            "FUTURE_MODEL_FAMILIES must emit DeprecationWarning"

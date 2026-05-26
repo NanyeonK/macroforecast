@@ -6,15 +6,15 @@ import pandas as pd
 
 from macroforecast.core.runtime import _FactorAugmentedVAR
 from macroforecast.layers.l4_models.ops import (
-    OPERATIONAL_MODEL_FAMILIES,
-    FUTURE_MODEL_FAMILIES,
+    OPERATIONAL_MODELS,
+    FUTURE_MODELS,
     get_family_status,
 )
 
 
 def test_factor_augmented_var_is_operational():
-    assert "factor_augmented_var" in OPERATIONAL_MODEL_FAMILIES
-    assert "factor_augmented_var" not in FUTURE_MODEL_FAMILIES
+    assert "factor_augmented_var" in OPERATIONAL_MODELS
+    assert "factor_augmented_var" not in FUTURE_MODELS
     assert get_family_status("factor_augmented_var") == "operational"
 
 

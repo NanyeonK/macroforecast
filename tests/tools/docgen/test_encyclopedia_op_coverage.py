@@ -9,12 +9,12 @@ one whose ``OptionDoc`` entry has ``op_page=True``.
 Sources
 -------
 - **L3**: ``macroforecast.core.ops.registry._OPS`` — runtime registry
-  populated by ``register_op()`` calls in ``l3_ops.py``. Filter:
+  populated by ``register_op()`` calls in layer ops modules. Filter:
   ``status == 'operational'`` AND ``'l3' in layer_scope``.
-- **L4**: ``macroforecast.core.ops.l4_ops.OPERATIONAL_MODEL_FAMILIES`` —
-  explicit tuple of operational model-family names.
-- **L7**: ``macroforecast.core.ops.l7_ops.OPERATIONAL_OPS`` — derived
-  tuple of operational importance ops.
+- **L4**: ``macroforecast.layers.l4_models.ops.OPERATIONAL_MODELS`` —
+  explicit tuple of operational model names.
+- **L7**: ``macroforecast.layers.l7_interpretation.ops.OPERATIONAL_OPS`` —
+  derived tuple of operational importance ops.
 
 Skip contract
 -------------
@@ -56,17 +56,17 @@ from pathlib import Path
 
 import pytest
 
-from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES
+from macroforecast.layers.l4_models.ops import OPERATIONAL_MODELS
 from macroforecast.layers.l7_interpretation.ops import OPERATIONAL_OPS
 from macroforecast.core.ops.registry import _OPS
 from tools.docgen.option_docs import OPTION_DOCS
 
 # ---------------------------------------------------------------------------
 # ENC_ROOT: path to the checked-in encyclopedia tree.
-# From tests/scaffold/ we go up two levels to reach the repo root, then
+# From tests/tools/docgen/ we go up three levels to reach the repo root, then
 # descend into docs/reference/encyclopedia/.
 # ---------------------------------------------------------------------------
-ENC_ROOT: Path = Path(__file__).parents[2] / "docs" / "reference" / "encyclopedia"
+ENC_ROOT: Path = Path(__file__).parents[3] / "docs" / "reference" / "encyclopedia"
 
 
 # ---------------------------------------------------------------------------
@@ -121,10 +121,10 @@ _L3_CASES: list[tuple[str, Path]] = [
     if _should_check("l3", "L3_A_step_op", "op", name)
 ]
 
-# L4: 47 OPERATIONAL_MODEL_FAMILIES, 4 have op_page=False -> 43 checked.
+# L4: 47 OPERATIONAL_MODELS, 4 have op_page=False -> 43 checked.
 _L4_CASES: list[tuple[str, Path]] = [
     (name, ENC_ROOT / "l4" / "model" / f"{name}.md")
-    for name in sorted(OPERATIONAL_MODEL_FAMILIES)
+    for name in sorted(OPERATIONAL_MODELS)
     if _should_check("l4", "L4_A_model_selection", "model", name)
 ]
 
@@ -148,7 +148,7 @@ def test_l3_op_has_encyclopedia_page(name: str, page_path: Path) -> None:
     """Assert the L3 op's encyclopedia page exists on disk."""
     if not page_path.exists():
         # Compute the relative path from the repo root for the error message.
-        repo_root = Path(__file__).parents[2]
+        repo_root = Path(__file__).parents[3]
         try:
             relative = page_path.relative_to(repo_root)
         except ValueError:
@@ -164,7 +164,7 @@ def test_l3_op_has_encyclopedia_page(name: str, page_path: Path) -> None:
 def test_l4_family_has_encyclopedia_page(name: str, page_path: Path) -> None:
     """Assert the L4 model family's encyclopedia page exists on disk."""
     if not page_path.exists():
-        repo_root = Path(__file__).parents[2]
+        repo_root = Path(__file__).parents[3]
         try:
             relative = page_path.relative_to(repo_root)
         except ValueError:
@@ -180,7 +180,7 @@ def test_l4_family_has_encyclopedia_page(name: str, page_path: Path) -> None:
 def test_l7_op_has_encyclopedia_page(name: str, page_path: Path) -> None:
     """Assert the L7 importance op's encyclopedia page exists on disk."""
     if not page_path.exists():
-        repo_root = Path(__file__).parents[2]
+        repo_root = Path(__file__).parents[3]
         try:
             relative = page_path.relative_to(repo_root)
         except ValueError:
