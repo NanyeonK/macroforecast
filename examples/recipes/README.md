@@ -31,7 +31,7 @@ be migrated to the nodes/sinks DAG pattern in PR7b.
 - `l1_estimated_markov_switching.yaml`
 - `l1_minimal.yaml`
 - `l1_with_regime.yaml`
-- `l2_fred_sd_alignment.yaml`
+- `l2_preprocessing_minimal.yaml`
 - `l2_minimal.yaml`
 - `goulet_coulombe_2021_replication.yaml` (stale axis name `custom_source_policy`)
 

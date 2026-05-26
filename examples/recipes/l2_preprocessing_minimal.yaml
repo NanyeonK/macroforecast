@@ -1,11 +1,17 @@
-# Layer 2 FRED-SD frequency alignment — end-to-end runnable example.
-# Demonstrates 2_preprocessing with sd_series_frequency_filter, quarterly_to_monthly_policy,
-# transform, outlier, imputation, and frame_edge policies.
-# Uses custom inline panel to remain self-contained (no live FRED-SD fetch required).
-# L3+L4 are minimal lag-1 ridge baseline so the recipe is self-contained.
+# Layer 2 preprocessing axes — end-to-end runnable example.
+# Demonstrates 2_preprocessing with no_transform, no-outlier, none_propagate imputation,
+# and keep_unbalanced frame_edge policy using a self-contained inline panel.
+# L3+L4 are minimal lag-1 ridge baseline so the recipe is fully self-contained.
+# NOTE: For FRED-SD frequency alignment axes (sd_series_frequency_filter,
+# quarterly_to_monthly_policy), see the FRED-SD documentation (deferred to PR8+).
 metadata:
-  name: l2_fred_sd_alignment
-  description: Layer 2 FRED-SD frequency alignment schema example.
+  name: l2_preprocessing_minimal
+  description: >
+    Layer 2 preprocessing axes with a self-contained inline panel.
+    Demonstrates no-transform, no-outlier, none-propagate imputation,
+    and keep-unbalanced frame edge policy. For FRED-SD frequency alignment
+    (sd_series_frequency_filter, quarterly_to_monthly_policy), see the
+    FRED-SD documentation.
 
 0_meta:
   fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
