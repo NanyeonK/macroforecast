@@ -36,6 +36,21 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR7a (recipe cleanup): move 26 partial-layer recipes from `examples/recipes/` to `docs/recipe-snippets/`**
+
+  Per PR6 audit (`docs/_audit/recipe-sweep-2026-05-26.md`): 26 recipes fail `mf.run()` with
+  `single_target requires leaf_config.target string` because they are illustrative partial-layer
+  snippets, not end-to-end runnable recipes. They are now in `docs/recipe-snippets/` (Diátaxis
+  how-to / reference quadrant), identified as syntax demos rather than executable examples.
+
+  `examples/recipes/` now holds only the 6 PASS recipes (directly runnable) and 5 Pattern-2
+  recipes (stale `fixed_axes` L3 syntax — PR7b scope).
+
+  `docs/recipe-snippets/README.md` added. `examples/recipes/README.md` updated to clarify
+  the runnable-only boundary and cross-link to `docs/recipe-snippets/`. Docs cross-references
+  in `docs/how_to/partial_layer_execution.md` and `docs/tutorial/replications/goulet_coulombe_2021.md`
+  updated to new paths.
+
 - **PR6 (docs precision audit): committed full example-recipe sweep audit table (38 recipes, 4-category classification) to `docs/_audit/recipe-sweep-2026-05-26.md`; no recipe edits (check8 audit — PR7+ scope for repairs)**
 
   Sweep result: 6 PASS, 32 FAIL_SCHEMA, 0 FAIL_RUNTIME, 0 NEGATIVE_EXAMPLE.
