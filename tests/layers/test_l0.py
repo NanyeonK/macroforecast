@@ -1,4 +1,4 @@
-from macroforecast.core.layers.l0 import (
+from macroforecast.layers.l0_meta.schema import (
     build_minimal_recipe,
     build_recipe_with_l0_only,
     execute_recipe,
@@ -135,7 +135,7 @@ def test_l0_manifest_records_all_resolved():
 
 
 def test_l0_registered_with_spec_correct_class():
-    from macroforecast.core.layers.l0 import L0StudySetup
+    from macroforecast.layers.l0_meta.schema import L0StudySetup
     from macroforecast.core.layers.registry import get_layer
 
     spec = get_layer("l0")

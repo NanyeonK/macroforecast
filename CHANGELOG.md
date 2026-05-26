@@ -7,6 +7,15 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **Phase 3g-bis PR #C: delete legacy L0 schema body** (see PR)
+  - Deleted: `macroforecast/core/layers/l0.py` (373 lines) — legacy duplicate
+    body superseded by the Phase 3f collocated-layer restructure.
+  - Canonical location (unchanged): `macroforecast/layers/l0_meta/schema.py`.
+  - Test import paths updated in 2 files: `tests/layers/test_l0.py` and
+    `tests/core/test_parallel_unit_cells.py` (legacy `core.layers.l0` path
+    replaced with `macroforecast.layers.l0_meta.schema`).
+  - **Behavioral impact**: none. Dead-file removal only.
+
 - **Phase 3g-bis: eliminate registry.py circular-import workaround** (see PR)
   - New file: `macroforecast/core/layers/_bootstrap.py` — holds all 13
     `register_layer()` calls, loaded as a side-effect import after registry
