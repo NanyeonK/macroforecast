@@ -1,25 +1,17 @@
 from __future__ import annotations
 
-# NOTE: L0StudySetup must be defined BEFORE the deferred core imports below
-# to avoid a circular-dependency at registry.py import time:
-#   registry.py -> schema.py -> macroforecast.core.pipeline -> core/__init__
-#   -> registry.py (already being imported) -> fails.
-# The same workaround is used in l1_data, l3_features, l4_models, l7_interpretation schemas.
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Literal
 
 
 class L0StudySetup:
     """Layer 0 Study Setup implementation marker."""
 
 
-# Deferred core imports: placed after L0StudySetup so registry.py can
-# import L0StudySetup without triggering a circular-dependency.
-from macroforecast.core.pipeline import DAG, Node, NodeRef  # noqa: E402
-from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec  # noqa: E402
-from macroforecast.core.types import L0MetaArtifact  # noqa: E402
-
-from dataclasses import dataclass, field  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
-from typing import Any, Literal  # noqa: E402
+from macroforecast.core.pipeline import DAG, Node, NodeRef
+from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Option, SubLayerSpec
+from macroforecast.core.types import L0MetaArtifact
 
 
 FailurePolicy = Literal["fail_fast", "continue_on_failure"]

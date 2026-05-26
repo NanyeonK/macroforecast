@@ -5,6 +5,19 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+### Internal
+
+- **Phase 3g-bis: eliminate registry.py circular-import workaround** (see PR)
+  - New file: `macroforecast/core/layers/_bootstrap.py` — holds all 13
+    `register_layer()` calls, loaded as a side-effect import after registry
+    machinery is fully initialized.
+  - Modified: `macroforecast/core/layers/__init__.py` (side-effect import of
+    `_bootstrap`), `macroforecast/core/layers/registry.py` (13 schema imports
+    and 13 `register_layer()` calls removed).
+  - Modified: 9 schema files — removed "Deferred core imports" comment blocks
+    and `# noqa: E402` markers; all imports now at standard position.
+  - **Behavioral impact**: none. Structural refactor only.
+
 ### Removed
 
 - L1 axis `official_transform_policy` (duplicates L2 `transform_policy`)

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-# NOTE: L5Evaluation must be defined BEFORE the deferred core imports below
-# to avoid a circular-dependency at registry.py import time.
-# The same workaround is used in l1_data, l3_features, l4_models, l7_interpretation schemas.
+from dataclasses import dataclass
+from typing import Any, Literal
 
 
 class L5Evaluation:
@@ -17,12 +16,7 @@ class L5Evaluation:
         return ("L5.A", "L5.B", "L5.C", "L5.D", "L5.E")
 
 
-# Deferred core imports: placed after L5Evaluation so registry.py can
-# import L5Evaluation without triggering a circular-dependency.
-from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
-
-from dataclasses import dataclass  # noqa: E402
-from typing import Any, Literal  # noqa: E402
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 L5_AXIS_NAMES: tuple[str, ...] = (
@@ -357,7 +351,7 @@ def _issue(location: str, message: str) -> Any:
 # Canonical LAYER_SPEC (LayerImplementationSpec) -- unified API per design
 # ---------------------------------------------------------------------------
 
-from macroforecast.core.layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,

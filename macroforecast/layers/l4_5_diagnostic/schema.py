@@ -30,12 +30,7 @@ class L4_5GeneratorDiagnostics:
         return tuple(cls.sub_layers)
 
 
-# Deferred core imports: placed after L4_5GeneratorDiagnostics so that registry.py
-# can import L4_5GeneratorDiagnostics without hitting a circular-dependency error
-# (schema.py -> macroforecast.core.pipeline -> core/__init__ -> registry.py ->
-# schema.py). By the time these lines execute, macroforecast.core.pipeline is
-# already in sys.modules.
-from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 class L4_5ResolvedAxes(dict):
@@ -298,7 +293,7 @@ def _issue(path: str, message: str) -> Any:
 # Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
 # ---------------------------------------------------------------------------
 
-from macroforecast.core.layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,
