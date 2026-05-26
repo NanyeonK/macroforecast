@@ -53,6 +53,29 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Housekeeping
 
+- **PR4 (deep-audit problem 7): rename `l2_fred_sd_alignment.yaml` → `l2_preprocessing_minimal.yaml`**
+
+  The recipe file `examples/recipes/l2_fred_sd_alignment.yaml` used a `panel_composition: custom_panel_only`
+  with a 12-row inline synthetic panel and demonstrated generic L2 preprocessing axes
+  (`no_transform`, `none` outlier, `none_propagate` imputation, `keep_unbalanced` frame edge).
+  It contained neither `sd_series_frequency_filter` nor `quarterly_to_monthly_policy`, so its
+  filename and metadata description were misleading.
+
+  Changes:
+  - File renamed via `git mv` (history preserved).
+  - File-level comment block updated to accurately describe the recipe contents.
+  - `metadata.name`: `l2_fred_sd_alignment` → `l2_preprocessing_minimal`.
+  - `metadata.description`: updated to describe generic L2 preprocessing axes; notes that
+    FRED-SD alignment axes (`sd_series_frequency_filter`, `quarterly_to_monthly_policy`) are
+    deferred to PR8+ (tracking: a dedicated FRED-SD demo recipe with real alignment axes is
+    needed; see `docs/_audit/` for the outstanding gap).
+  - `examples/recipes/README.md`: entry in the "In-progress" list updated to new filename.
+
+  **TODO (PR8+):** Add a real `l2_fred_sd_alignment.yaml` demonstrating
+  `sd_series_frequency_filter` and `quarterly_to_monthly_policy` with a synthetic
+  mixed-frequency panel (monthly + quarterly series). The current recipe does not cover
+  these axes; the filename previously implied it did.
+
 - **PR3 (deep-audit tools/scripts audit): fix stale YAML keys in `audit_docs_vs_code.py`, stale
   module paths in `gen_standalone_docs.py`, archive `tools/research/`, delete obsolete
   `scripts/v01_smoke_check.py`**
@@ -131,7 +154,7 @@ full per-version honesty-pass history embedded in repo documentation.
   | `l1_with_regime.yaml` | `regime_definition: external_nber` |
   | `l1_estimated_markov_switching.yaml` | `regime_definition: estimated_markov_switching` + `expanding_window_per_origin` |
   | `l2_minimal.yaml` | minimal `2_preprocessing` with explicit safe defaults |
-  | `l2_fred_sd_alignment.yaml` | `sd_series_frequency_filter`, `quarterly_to_monthly_policy`, full preprocessing policy set |
+  | `l2_preprocessing_minimal.yaml` (renamed from `l2_fred_sd_alignment.yaml` in PR4-deep-audit) | generic `2_preprocessing` axes: `no_transform`, `none` outlier, `none_propagate` imputation, `keep_unbalanced` frame edge |
 
   Post-migration sweep: 11 PASS / 0 FAIL across all active `examples/recipes/` recipes.
   Sweep audit committed to `docs/_audit/recipe-sweep-2026-05-27-post-pr7.md`.
