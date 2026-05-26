@@ -35,7 +35,7 @@ mf.functions.kernel_ridge_fit(
 
 ## Behavior
 
-Ridge regression with a non-linear kernel: ``ŷ(x) = Σ_i α_i K(x, x_i) + b`` where the dual coefficients ``α = (K + λ I)⁻¹ y`` are recovered in closed form. Operational v0.9.1 dev-stage v0.9.0F (audit-fix). Surfaces as a first-class L4 family because Coulombe / Surprenant / Leroux / Stevanovic (2022 JAE) 'How is Machine Learning Useful for Macroeconomic Forecasting?' Eq. 16 / §3.1.1 uses KRR as the headline non-linearity feature in the macro horse race.
+Ridge regression with a non-linear kernel: ``ŷ(x) = Σ_i α_i K(x, x_i) + b`` where the dual coefficients ``α = (K + λ I)⁻¹ y`` are recovered in closed form. Operational v0.9.1 dev-stage v0.9.0F (audit-fix). Surfaces as a first-class L4 model because Coulombe / Surprenant / Leroux / Stevanovic (2022 JAE) 'How is Machine Learning Useful for Macroeconomic Forecasting?' Eq. 16 / §3.1.1 uses KRR as the headline non-linearity feature in the macro horse race.
 
 **Tunable params**: ``alpha`` (= ridge penalty λ; default 1.0); ``kernel`` ('rbf' default / 'linear' / 'poly' / 'sigmoid' / 'laplacian' / 'chi2' -- any sklearn-supported kernel); ``gamma`` (RBF bandwidth, default sklearn auto = 1/n_features); ``degree`` (poly kernel only, default 3); ``coef0`` (poly / sigmoid, default 1.0).
 

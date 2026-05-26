@@ -34,7 +34,7 @@ mf.functions.model_native_linear_coef_importance(
 
 ## Behavior
 
-Returns ``β̂_j`` for each predictor as the importance score; with ``standardize=True`` (default) the predictors are pre-scaled so coefficients are directly comparable. Compatible with every linear-family L4 model (``ols / ridge / lasso / elastic_net / lasso_path / bayesian_ridge / huber / glmboost``).
+Returns ``β̂_j`` for each predictor as the importance score; with ``standardize=True`` (default) the predictors are pre-scaled so coefficients are directly comparable. Compatible with every linear L4 model (``ols / ridge / lasso / elastic_net / lasso_path / bayesian_ridge / huber / glmboost``).
 
 Cheapest meaningful importance score; the natural sanity-check to run before the more expensive permutation / SHAP families.
 

@@ -41,9 +41,9 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `onnx`  --  operational
 
-ONNX export (where supported by the family).
+ONNX export (where supported by the model).
 
-Open Neural Network Exchange format. Cross-language deployment (C++ / C# / Java / JS runtimes) and faster inference than the native sklearn pickle. Supported for sklearn / xgboost / lightgbm / pytorch families; raises if the active L4 family lacks an ONNX exporter.
+Open Neural Network Exchange format. Cross-language deployment (C++ / C# / Java / JS runtimes) and faster inference than the native sklearn pickle. Supported for sklearn / xgboost / lightgbm / pytorch; raises if the active L4 model lacks an ONNX exporter.
 
 **When to use**
 
@@ -82,9 +82,9 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `pmml`  --  operational
 
-PMML export (PMML-compatible families only).
+PMML export (PMML-compatible models only).
 
-Predictive Model Markup Language; XML-based exchange format primarily used in enterprise / Java deployments. Supported for linear / tree-family models via ``sklearn2pmml``.
+Predictive Model Markup Language; XML-based exchange format primarily used in enterprise / Java deployments. Supported for linear / tree-based models via ``sklearn2pmml``.
 
 **When to use**
 
