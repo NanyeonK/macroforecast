@@ -77,10 +77,10 @@ ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,p
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
-macroforecast = "macroforecast.scaffold.cli:main"
+macroforecast = "tools.docgen.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["macroforecast*"]
+include = ["macroforecast*", "tools*"]
 
 [tool.setuptools.package-data]
 macroforecast = ["py.typed"]
@@ -88,6 +88,8 @@ macroforecast = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--import-mode=importlib"]
 markers = [
     "deep: tests that require torch (skipped unless [deep] extra is installed)",
     "slow: realistic-shape integration tests (gated; opt in with `pytest -m slow`)",
@@ -113,7 +115,7 @@ module = [
     "macroforecast.layers.l3_features.schema",
     "macroforecast.layers.l3_5_diagnostic.schema",
     "macroforecast.core.runtime",
-    "macroforecast.scaffold.builder",
+    "tools.docgen.builder",
     "macroforecast.layers.l4_models.tuning.engine",
     "macroforecast.layers.l2_preprocessing.schema",
     "macroforecast.layers.l2_5_diagnostic.schema",

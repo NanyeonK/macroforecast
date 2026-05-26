@@ -25,8 +25,8 @@ ParameterDoc populated for conditional leaf_config keys.
 """
 from __future__ import annotations
 
-from macroforecast.scaffold.option_docs import register
-from macroforecast.scaffold.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
+from tools.docgen.option_docs import register
+from tools.docgen.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
 
 _REVIEWED = "2026-05-04"
 _REVIEWER = "macroforecast author"

@@ -147,7 +147,7 @@ class TestL23CLIUx:
 
     def test_missing_recipe_returns_2(self, tmp_path: Path) -> None:
         """CLI returns 2 for a nonexistent recipe file."""
-        from macroforecast.scaffold.cli import _cmd_run
+        from tools.docgen.cli import _cmd_run
         args = self._make_cli_args(
             str(tmp_path / "nonexistent.yaml"), str(tmp_path / "out")
         )
@@ -156,7 +156,7 @@ class TestL23CLIUx:
 
     def test_clean_error_on_invalid_yaml(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
         """CLI catches YAML errors and prints a clean 1-3 line message."""
-        from macroforecast.scaffold.cli import _cmd_run
+        from tools.docgen.cli import _cmd_run
 
         bad_yaml = tmp_path / "bad.yaml"
         bad_yaml.write_text("key: {bad: yaml: :\n", encoding="utf-8")

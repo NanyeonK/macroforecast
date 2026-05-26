@@ -10,7 +10,7 @@ import textwrap
 
 import pytest
 
-from macroforecast.scaffold import RecipeBuilder
+from tools.docgen import RecipeBuilder
 
 
 # ---------------------------------------------------------------------------

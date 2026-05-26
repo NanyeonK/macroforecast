@@ -378,7 +378,7 @@ class RecipeBuilder:
         """Build + run. Forwards to ``macroforecast.run``; returns the
         ``ManifestExecutionResult``."""
 
-        from .. import api
+        import macroforecast.api as api
 
         recipe = self.build()
         return api.run(recipe, output_directory=output_directory, **kwargs)

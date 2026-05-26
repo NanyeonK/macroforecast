@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
-from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.render_encyclopedia import _render_option_body
-from macroforecast.scaffold.introspect import OptionInfo
+from tools.docgen.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
+from tools.docgen.option_docs import OPTION_DOCS
+from tools.docgen.render_encyclopedia import _render_option_body
+from tools.docgen.introspect import OptionInfo
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +155,7 @@ def test_l0_failure_policy_options_have_no_parameters():
 
 def _make_option_info(value: str) -> OptionInfo:
     """Create a minimal OptionInfo for rendering tests."""
-    from macroforecast.scaffold.introspect import OptionInfo
+    from tools.docgen.introspect import OptionInfo
     return OptionInfo(value=value, label=value, status="operational", description="")
 
 
@@ -247,8 +247,8 @@ def test_render_option_body_none_default_renders_dash():
 
 def test_encyclopedia_l0_pages_contain_parameters_table():
     """Full encyclopedia render for L0 axis pages contains Parameters table."""
-    from macroforecast.scaffold.render_encyclopedia import _render_axis_page
-    from macroforecast.scaffold.introspect import axes
+    from tools.docgen.render_encyclopedia import _render_axis_page
+    from tools.docgen.introspect import axes
 
     l0_axes = {ax.name: ax for ax in axes("l0")}
 

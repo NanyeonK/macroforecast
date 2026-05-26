@@ -113,7 +113,7 @@ def _load_layer_modules() -> None:
         "macroforecast.layers.l6_tests.option_docs",
         "macroforecast.layers.l7_interpretation.option_docs",
         "macroforecast.layers.l8_output.option_docs",
-        "macroforecast.scaffold.option_docs.diagnostics",
+        "tools.docgen.option_docs.diagnostics",
     ):
         try:
             import_module(layer_module)

@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
+from tools.docgen.option_docs import OPTION_DOCS
+from tools.docgen.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -137,8 +137,8 @@ def test_known_leaf_config_keys_extended():
 
 def test_l1c_encyclopedia_page_contains_parameters_tables():
     """Encyclopedia pages for L1.C release_lag_rule render Parameters tables."""
-    from macroforecast.scaffold.render_encyclopedia import _render_axis_page
-    from macroforecast.scaffold.introspect import axes
+    from tools.docgen.render_encyclopedia import _render_axis_page
+    from tools.docgen.introspect import axes
 
     l1_axes = {ax.name: ax for ax in axes("l1")}
 

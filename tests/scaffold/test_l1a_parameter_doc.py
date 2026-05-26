@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
+from tools.docgen.option_docs import OPTION_DOCS
+from tools.docgen.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------
@@ -104,8 +104,8 @@ def test_l1a_official_only_has_no_parameters():
 
 def test_l1a_custom_source_policy_page_contains_parameters_table():
     """Encyclopedia page for panel_composition renders **Parameters** table."""
-    from macroforecast.scaffold.render_encyclopedia import _render_axis_page
-    from macroforecast.scaffold.introspect import axes
+    from tools.docgen.render_encyclopedia import _render_axis_page
+    from tools.docgen.introspect import axes
 
     l1_axes = {ax.name: ax for ax in axes("l1")}
     page = _render_axis_page("l1", l1_axes["panel_composition"])
@@ -118,8 +118,8 @@ def test_l1a_custom_source_policy_page_contains_parameters_table():
 
 def test_l1a_official_only_section_no_parameters_table():
     """official_only section in the rendered page has no Parameters table immediately after it."""
-    from macroforecast.scaffold.render_encyclopedia import _render_axis_page
-    from macroforecast.scaffold.introspect import axes
+    from tools.docgen.render_encyclopedia import _render_axis_page
+    from tools.docgen.introspect import axes
 
     l1_axes = {ax.name: ax for ax in axes("l1")}
     page = _render_axis_page("l1", l1_axes["panel_composition"])

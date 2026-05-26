@@ -59,7 +59,7 @@ import pytest
 from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES
 from macroforecast.core.ops.l7_ops import OPERATIONAL_OPS
 from macroforecast.core.ops.registry import _OPS
-from macroforecast.scaffold.option_docs import OPTION_DOCS
+from tools.docgen.option_docs import OPTION_DOCS
 
 # ---------------------------------------------------------------------------
 # ENC_ROOT: path to the checked-in encyclopedia tree.

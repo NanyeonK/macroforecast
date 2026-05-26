@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold import RecipeBuilder, from_template, list_templates
+from tools.docgen import RecipeBuilder, from_template, list_templates
 
 
 def test_list_templates_returns_five():
