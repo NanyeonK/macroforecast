@@ -561,7 +561,7 @@ def random_forest_fit(
     ----------
     Breiman (2001) 'Random Forests', Machine Learning 45(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_estimators < 1:
         raise ValueError(f"n_estimators must be >= 1, got {n_estimators!r}")
@@ -664,7 +664,7 @@ def extra_trees_fit(
     Geurts, Ernst & Wehenkel (2006) 'Extremely randomized trees',
     Machine Learning 63(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_estimators < 1:
         raise ValueError(f"n_estimators must be >= 1, got {n_estimators!r}")
@@ -761,7 +761,7 @@ def gradient_boosting_fit(
     Friedman (2001) 'Greedy function approximation: A gradient boosting
     machine', Annals of Statistics 29(5).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_estimators < 1:
         raise ValueError(f"n_estimators must be >= 1, got {n_estimators!r}")
@@ -857,7 +857,7 @@ def xgboost_fit(
     ----------
     Chen & Guestrin (2016) 'XGBoost: A Scalable Tree Boosting System', KDD.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_estimators < 1:
         raise ValueError(f"n_estimators must be >= 1, got {n_estimators!r}")
@@ -963,7 +963,7 @@ def lightgbm_fit(
     Ke et al. (2017) 'LightGBM: A Highly Efficient Gradient Boosting
     Decision Tree', NeurIPS.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_estimators < 1:
         raise ValueError(f"n_estimators must be >= 1, got {n_estimators!r}")
@@ -1070,7 +1070,7 @@ def catboost_fit(
     Prokhorenkova et al. (2018) 'CatBoost: unbiased boosting with
     categorical features', NeurIPS.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_estimators < 1:
         raise ValueError(f"n_estimators must be >= 1, got {n_estimators!r}")
@@ -1443,7 +1443,7 @@ def slow_growing_tree_fit(
     ----------
     Goulet Coulombe (2024), "The Slow-Growing Tree."
     """
-    from ..core.runtime import _SlowGrowingTree
+    from ...core.runtime import _SlowGrowingTree
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
@@ -1487,7 +1487,7 @@ def quantile_regression_forest_fit(
     Meinshausen (2006), "Quantile Regression Forests",
     Journal of Machine Learning Research 7, pp. 983-999.
     """
-    from ..core.runtime import _QuantileRegressionForest
+    from ...core.runtime import _QuantileRegressionForest
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
@@ -1531,7 +1531,7 @@ def bagging_fit(
     Breiman (1996), "Bagging Predictors",
     Machine Learning 24(2), pp. 123-140.
     """
-    from ..core.runtime import _BaggingWrapper
+    from ...core.runtime import _BaggingWrapper
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
@@ -1575,7 +1575,7 @@ def booging_fit(
     Goulet Coulombe (2024), "To Bag is to Prune",
     Journal of Applied Econometrics (forthcoming).
     """
-    from ..core.runtime import _BoogingWrapper
+    from ...core.runtime import _BoogingWrapper
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
@@ -1622,7 +1622,7 @@ def macro_random_forest_fit(
     Coulombe (2024), "The Macroeconomy as a Random Forest",
     Journal of Applied Econometrics 39(4).
     """
-    from ..core.runtime import _MRFExternalWrapper
+    from ...core.runtime import _MRFExternalWrapper
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])

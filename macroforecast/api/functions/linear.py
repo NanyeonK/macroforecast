@@ -632,7 +632,7 @@ def ols_fit(
     ----------
     Greene (2018) *Econometric Analysis*, 8th ed., Pearson.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
@@ -703,7 +703,7 @@ def lasso_fit(
     Tibshirani (1996) 'Regression Shrinkage and Selection via the Lasso',
     JRSS-B 58(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if alpha < 0:
         raise ValueError(f"alpha must be >= 0, got {alpha!r}")
@@ -789,7 +789,7 @@ def elastic_net_fit(
     Zou & Hastie (2005) 'Regularization and variable selection via the
     elastic net', JRSS-B 67(2).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if alpha < 0:
         raise ValueError(f"alpha must be >= 0, got {alpha!r}")
@@ -883,7 +883,7 @@ def lasso_path_fit(
     Tibshirani (1996) 'Regression Shrinkage and Selection via the Lasso',
     JRSS-B 58(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if cv < 2:
         raise ValueError(f"cv must be >= 2, got {cv!r}")
@@ -963,7 +963,7 @@ def bayesian_ridge_fit(
     ----------
     MacKay (1992) 'Bayesian Interpolation', Neural Computation 4(3).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])
@@ -1044,7 +1044,7 @@ def huber_fit(
     Huber (1964) 'Robust Estimation of a Location Parameter',
     Annals of Mathematical Statistics 35(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if epsilon <= 1.0:
         raise ValueError(
@@ -1139,7 +1139,7 @@ def glmboost_fit(
     Buhlmann & Hothorn (2007) 'Boosting algorithms: Regularization,
     prediction and model fitting', Statistical Science 22(4).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_iter < 1:
         raise ValueError(f"n_iter must be >= 1, got {n_iter!r}")
