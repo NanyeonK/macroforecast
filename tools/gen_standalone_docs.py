@@ -24,20 +24,22 @@ import pandas as pd
 import macroforecast.functions as f
 
 
-# Module-to-layer mapping (verified by v0.9.2b1 layer audit)
+# Module-to-layer mapping (updated for macroforecast.api.functions.* layout)
 LAYER_MAP = {
-    "macroforecast.functions.clean": "L2",
-    "macroforecast.functions.transforms": "L3",
-    "macroforecast.functions.linear": "L4",
-    "macroforecast.functions.ridge": "L4",
-    "macroforecast.functions.tree": "L4",
-    "macroforecast.functions.deep": "L4",
-    "macroforecast.functions.timeseries": "L4",
-    "macroforecast.functions.misc": "L4",
-    "macroforecast.functions.metrics": "L5",
-    "macroforecast.functions.theil_u": "L5",
-    "macroforecast.functions.tests": "L6",
-    "macroforecast.functions.importance": "L7",
+    "macroforecast.api.functions.clean": "L2",
+    "macroforecast.api.functions.transforms": "L3",
+    "macroforecast.api.functions.linear": "L4",
+    "macroforecast.api.functions.ridge": "L4",
+    "macroforecast.api.functions.ridge_variants": "L4",
+    "macroforecast.api.functions.tree": "L4",
+    "macroforecast.api.functions.deep": "L4",
+    "macroforecast.api.functions.timeseries": "L4",
+    "macroforecast.api.functions.midas": "L4",
+    "macroforecast.api.functions.misc": "L4",
+    "macroforecast.api.functions.metrics": "L5",
+    "macroforecast.api.functions.theil_u": "L5",
+    "macroforecast.api.functions.tests": "L6",
+    "macroforecast.api.functions.importance": "L7",
 }
 
 

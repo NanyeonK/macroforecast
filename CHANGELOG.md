@@ -51,6 +51,40 @@ full per-version honesty-pass history embedded in repo documentation.
   New test file: `tests/cli/test_main_entry.py` (6 tests covering help, all four subcommands,
   and missing-recipe exit code).
 
+### Housekeeping
+
+- **PR3 (deep-audit tools/scripts audit): fix stale YAML keys in `audit_docs_vs_code.py`, stale
+  module paths in `gen_standalone_docs.py`, archive `tools/research/`, delete obsolete
+  `scripts/v01_smoke_check.py`**
+
+  Problem 5 (tools/ scripts audit):
+
+  - `tools/audit_docs_vs_code.py`: updated `RE_YAML_RECIPE_KEY` regex and `YAML_KEY_TO_LAYER`
+    dict to use current L0 axis names `reproducibility_policy` (was `reproducibility_mode`) and
+    `compute_policy` (was `compute_mode`). The scanner now correctly detects these keys in docs.
+
+  - `tools/gen_standalone_docs.py`: updated `LAYER_MAP` module paths from
+    `macroforecast.functions.*` to `macroforecast.api.functions.*` to match the current package
+    layout. Previously all 132 callables emitted `WARN: unmapped module` because the old paths
+    did not resolve. Added entries for `ridge_variants` and `midas` modules introduced since the
+    original audit.
+
+  - `tools/gen_encyclopedia_docs.py`: no changes needed. `fit_model` references are intentional
+    (exclusion list comment; description of internal dispatch op).
+
+  - `tools/generate_fred_dataset_docs.py`: no changes needed. No stale imports found.
+
+  - `tools/research/README.md` (new): archive annotation per Decision C. Marks the directory
+    as a research-phase audit trail, not part of build/CI/installed package.
+
+  Problem 6 (`scripts/v01_smoke_check.py`): **deleted**.
+
+  The script used four stale recipe keys (`custom_source_policy`, `reproducibility_mode`,
+  `op: fit_model`, `params: {model_family: ridge}`) that fail schema validation under the
+  current API. The choropleth render also produces a PDF file — not safe for CI. The 1345-test
+  suite fully covers end-to-end execution; the v0.1 smoke check is obsolete. The `scripts/`
+  directory is removed (it was the only file). No CI workflow referenced the script.
+
 ### Docs
 
 - **PR1 (deep-audit Section A cleanup): fix dead scaffold path, stale `model_family=` example, and internal CI comment labels**
