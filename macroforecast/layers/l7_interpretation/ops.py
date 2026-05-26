@@ -493,7 +493,7 @@ DEFAULT_FIGURE_MAPPING = {
 # OpSpec status causes the L7 layer validator (and the universal op-status
 # rule in :func:`macroforecast.core.validator`) to hard-reject these at recipe
 # validation time. Real implementations land per-op via the v0.2 issue
-# tracker; see ``plans/design/part3_l5_l6_l7_l8.md`` for the gap.
+# tracker.
 #
 # - fevd / historical_decomposition / generalized_irf: returned a flat
 #   coefficient mean (for VAR fits) or fell back to ``tree_importance``

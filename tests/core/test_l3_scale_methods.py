@@ -1,6 +1,6 @@
 """Tests for the three L3 scale methods (PR-E of the v0.1 honesty pass).
 
-The design-time L3 step library (``plans/design/part2_l2_l3_l4.md``)
+The design-time L3 step library
 listed ``scale (zscore/robust/minmax)`` as a single operational op. v0.1
 only implemented ``zscore`` and raised ``NotImplementedError`` for the
 other two; PR-E delivers the missing methods. Each test cross-checks

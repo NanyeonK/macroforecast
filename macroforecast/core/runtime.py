@@ -18106,8 +18106,7 @@ def _as_series(value: Any, *, name: str) -> pd.Series:
 def _scale_frame(frame: pd.DataFrame, *, method: str) -> pd.DataFrame:
     """Standardise a Panel using one of the design-listed scale methods.
 
-    Three operational methods (matches the L3 design table in
-    ``plans/design/part2_l2_l3_l4.md`` § L3 Step library / ``scale``):
+    Three operational methods (matches the L3 design table):
 
     * ``zscore`` / ``standard`` / ``standardize`` -- ``(x - mean) / std``
       (population std, ddof=0; matches sklearn ``StandardScaler``).
