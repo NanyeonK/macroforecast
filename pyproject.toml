@@ -77,7 +77,7 @@ ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,p
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
-macroforecast = "tools.docgen.cli:main"
+macroforecast = "macroforecast.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["macroforecast*", "tools*"]
