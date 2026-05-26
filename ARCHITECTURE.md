@@ -64,8 +64,8 @@ graph TD
     end
 
     subgraph Scaffold["Scaffold & Docs Tools"]
-        S1["scaffold/cli.py — CLI entry"]
-        S2["scaffold/encyclopedia — renderer"]
+        S1["tools/docgen/cli.py — CLI entry"]
+        S2["tools/docgen/render_encyclopedia.py"]
         S3["tools/gen_encyclopedia_docs.py"]
         S4["tools/audit_docs_vs_code.py"]
     end
@@ -488,7 +488,7 @@ publish to PyPI without a human confirmation step. Under the new configuration
 the operator must open the GitHub Actions UI and manually trigger the workflow,
 providing the version string; tag creation alone has no effect on PyPI.
 
-Second, a two-file drift CI gate is added to `tests/scaffold/`. The primary gate
+Second, a two-file drift CI gate is added to `tests/tools/docgen/`. The primary gate
 (`test_encyclopedia_op_coverage.py`) enumerates all operational ops for L3, L4,
 and L7 from the authoritative runtime sources, filters to those with `op_page=True`
 in their OptionDoc, and asserts that a checked-in encyclopedia page exists on disk
@@ -502,8 +502,8 @@ surface were modified.
 | Category | Change |
 | --- | --- |
 | CI workflow | `.github/workflows/release.yml`: trigger changed from `push.tags` to `workflow_dispatch` + required `version` input |
-| Drift gate | `tests/scaffold/test_encyclopedia_op_coverage.py`: 95 parametrized items checking L3/L4/L7 op pages |
-| Meta test | `tests/scaffold/test_drift_gate_meta.py`: negative control confirming gate fires on missing page |
+| Drift gate | `tests/tools/docgen/test_encyclopedia_op_coverage.py`: 95 parametrized items checking L3/L4/L7 op pages |
+| Meta test | `tests/tools/docgen/test_drift_gate_meta.py`: negative control confirming gate fires on missing page |
 | Source | External cross-review P0 (release governance) |
 
 ---
@@ -925,3 +925,47 @@ Doc changes:
   `2_preprocessing.transform_policy=apply_official_tcode`.
 
 Phase 3 (layer collocation) is the next step.
+
+---
+
+## Changes: PR6 — Tests Vocab + Scaffold → tools/docgen Move
+
+PR6 is a test-only cleanup with no source-code changes.
+
+**Test vocab update (10 files)**: Tests imported `OPERATIONAL_MODEL_FAMILIES` and
+`FUTURE_MODEL_FAMILIES` under their pre-PR4 names. All 10 affected files in
+`tests/core/` are updated to use the canonical names (`OPERATIONAL_MODELS`,
+`FUTURE_MODELS`) introduced in PR4. The old names remain available as deprecated
+aliases in `macroforecast.layers.l4_models.ops` and will be removed in v0.10.0.
+A companion `DeprecationWarning` assertion was added to `test_status_honesty.py`.
+
+**Directory rename (15 files)**: `tests/scaffold/` (the test suite for the
+scaffold / docs-generation tooling) was renamed to `tests/tools/docgen/` to
+mirror the Phase 5 source rename `macroforecast/scaffold/ → tools/docgen/`.
+
+**Namespace guard**: Moving the tests into `tests/tools/docgen/` created a pytest
+importlib-mode namespace collision: pytest adds `tests/` to `sys.path` when it
+detects `tests/tools/__init__.py`, which makes `tests/tools/` shadow the top-level
+`tools/` package. Two conftest files were added to prevent the shadow:
+
+- `conftest.py` (repo root): forcibly moves the project root to `sys.path[0]`.
+- `tests/tools/docgen/conftest.py`: clears stale `tools.*` entries from
+  `sys.modules` and pre-imports the real `tools.docgen` namespace before any
+  test module in that directory is collected.
+
+| File | Action |
+|------|--------|
+| `conftest.py` | CREATED — sys.path guard |
+| `tests/tools/docgen/conftest.py` | CREATED — namespace pre-load guard |
+| `tests/scaffold/` (15 files) | RENAMED → `tests/tools/docgen/` |
+| `tests/core/test_bvar_minnesota.py` | UPDATED — constant names |
+| `tests/core/test_dfm_mariano_murasawa.py` | UPDATED — constant names |
+| `tests/core/test_factor_augmented_var.py` | UPDATED — constant names |
+| `tests/core/test_l3_chow_lin_disaggregation_c51.py` | UPDATED — import paths |
+| `tests/core/test_l4_midas_family_c48.py` | UPDATED — constant names |
+| `tests/core/test_l4_realized_garch_c49.py` | UPDATED — constant names |
+| `tests/core/test_mrf_gtvp.py` | UPDATED — constant names |
+| `tests/core/test_phase_c_top6.py` | UPDATED — l3_ops → l3_features.ops |
+| `tests/core/test_status_honesty.py` | UPDATED — constant names + DeprecationWarning test |
+| `tests/core/test_v09_paper_coverage.py` | UPDATED — constant names |
+| `CHANGELOG.md` | UPDATED — PR6 Internal entry |

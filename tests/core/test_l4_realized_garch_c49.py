@@ -35,8 +35,8 @@ import pytest
 
 from macroforecast.core.runtime import _build_l4_model
 from macroforecast.layers.l4_models.ops import (
-    OPERATIONAL_MODEL_FAMILIES,
-    FUTURE_MODEL_FAMILIES,
+    OPERATIONAL_MODELS,
+    FUTURE_MODELS,
     get_family_status,
 )
 
@@ -149,20 +149,20 @@ class TestRegistration:
     """BC-RG-1 to BC-RG-3: family registration and basic construction."""
 
     def test_c49_realized_garch_in_operational(self) -> None:
-        """R-1: realized_garch must be in OPERATIONAL_MODEL_FAMILIES after C49."""
-        assert "realized_garch" in OPERATIONAL_MODEL_FAMILIES, (
+        """R-1: realized_garch must be in OPERATIONAL_MODELS after C49."""
+        assert "realized_garch" in OPERATIONAL_MODELS, (
             "realized_garch must be OPERATIONAL after C49 promotion"
         )
 
     def test_c49_realized_garch_not_in_future(self) -> None:
-        """R-2: realized_garch must NOT be in FUTURE_MODEL_FAMILIES after C49.
-        After C49 FUTURE_MODEL_FAMILIES is empty.
+        """R-2: realized_garch must NOT be in FUTURE_MODELS after C49.
+        After C49 FUTURE_MODELS is empty.
         """
-        assert "realized_garch" not in FUTURE_MODEL_FAMILIES, (
+        assert "realized_garch" not in FUTURE_MODELS, (
             "realized_garch must NOT be FUTURE after C49 promotion"
         )
-        assert len(FUTURE_MODEL_FAMILIES) == 0, (
-            f"FUTURE_MODEL_FAMILIES should be empty after C49; got {FUTURE_MODEL_FAMILIES}"
+        assert len(FUTURE_MODELS) == 0, (
+            f"FUTURE_MODELS should be empty after C49; got {FUTURE_MODELS}"
         )
 
     def test_c49_get_family_status_returns_operational(self) -> None:

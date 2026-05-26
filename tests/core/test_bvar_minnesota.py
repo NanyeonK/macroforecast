@@ -24,21 +24,21 @@ import pandas as pd
 
 from macroforecast.core.runtime import _BayesianVAR
 from macroforecast.layers.l4_models.ops import (
-    OPERATIONAL_MODEL_FAMILIES,
-    FUTURE_MODEL_FAMILIES,
+    OPERATIONAL_MODELS,
+    FUTURE_MODELS,
     get_family_status,
 )
 
 
 def test_bvar_minnesota_is_operational():
-    assert "bvar_minnesota" in OPERATIONAL_MODEL_FAMILIES
-    assert "bvar_minnesota" not in FUTURE_MODEL_FAMILIES
+    assert "bvar_minnesota" in OPERATIONAL_MODELS
+    assert "bvar_minnesota" not in FUTURE_MODELS
     assert get_family_status("bvar_minnesota") == "operational"
 
 
 def test_bvar_normal_inverse_wishart_is_operational():
-    assert "bvar_normal_inverse_wishart" in OPERATIONAL_MODEL_FAMILIES
-    assert "bvar_normal_inverse_wishart" not in FUTURE_MODEL_FAMILIES
+    assert "bvar_normal_inverse_wishart" in OPERATIONAL_MODELS
+    assert "bvar_normal_inverse_wishart" not in FUTURE_MODELS
     assert get_family_status("bvar_normal_inverse_wishart") == "operational"
 
 

@@ -6,15 +6,15 @@ import pandas as pd
 
 from macroforecast.core.runtime import _DFMMixedFrequency
 from macroforecast.layers.l4_models.ops import (
-    OPERATIONAL_MODEL_FAMILIES,
-    FUTURE_MODEL_FAMILIES,
+    OPERATIONAL_MODELS,
+    FUTURE_MODELS,
     get_family_status,
 )
 
 
 def test_dfm_mariano_murasawa_is_operational():
-    assert "dfm_mixed_mariano_murasawa" in OPERATIONAL_MODEL_FAMILIES
-    assert "dfm_mixed_mariano_murasawa" not in FUTURE_MODEL_FAMILIES
+    assert "dfm_mixed_mariano_murasawa" in OPERATIONAL_MODELS
+    assert "dfm_mixed_mariano_murasawa" not in FUTURE_MODELS
     assert get_family_status("dfm_mixed_mariano_murasawa") == "operational"
 
 

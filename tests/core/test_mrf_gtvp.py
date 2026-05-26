@@ -16,15 +16,15 @@ import pandas as pd
 
 from macroforecast.core.runtime import _MRFExternalWrapper
 from macroforecast.layers.l4_models.ops import (
-    OPERATIONAL_MODEL_FAMILIES,
-    FUTURE_MODEL_FAMILIES,
+    OPERATIONAL_MODELS,
+    FUTURE_MODELS,
     get_family_status,
 )
 
 
 def test_macroeconomic_random_forest_is_operational():
-    assert "macroeconomic_random_forest" in OPERATIONAL_MODEL_FAMILIES
-    assert "macroeconomic_random_forest" not in FUTURE_MODEL_FAMILIES
+    assert "macroeconomic_random_forest" in OPERATIONAL_MODELS
+    assert "macroeconomic_random_forest" not in FUTURE_MODELS
     assert get_family_status("macroeconomic_random_forest") == "operational"
 
 
