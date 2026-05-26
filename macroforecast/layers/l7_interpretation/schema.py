@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-# NOTE: L7Interpretation must be defined BEFORE the deferred core imports below
-# to avoid a circular-dependency at registry.py import time:
-#   registry.py -> schema.py -> macroforecast.core.pipeline -> core/__init__
-#   -> registry.py (already being imported) -> fails.
-# The same workaround is used in l1_data, l3_features, l4_models schemas.
+from typing import TYPE_CHECKING, Any, Literal, cast
+from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    pass
 
 
 class L7Interpretation:
@@ -21,15 +21,7 @@ class L7Interpretation:
         return ("enabled",) + L7_OUTPUT_AXES
 
 
-# Deferred core imports: placed after L7Interpretation so registry.py can
-# import L7Interpretation without triggering a circular-dependency.
-from macroforecast.core.pipeline import DAG, LayerId, Node, NodeRef, NodeType, SourceSelector  # noqa: E402
-
-from typing import TYPE_CHECKING, Any, Literal, cast  # noqa: E402
-from dataclasses import dataclass  # noqa: E402
-
-if TYPE_CHECKING:
-    pass
+from macroforecast.core.pipeline import DAG, LayerId, Node, NodeRef, NodeType, SourceSelector
 
 
 class L7ResolvedAxes(dict):
@@ -380,7 +372,7 @@ def _issue(location: str, message: str):
 # Canonical LAYER_SPEC (LayerImplementationSpec) -- unified API per design
 # ---------------------------------------------------------------------------
 
-from macroforecast.core.layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-# NOTE: L8Output must be defined BEFORE the deferred core imports below
-# to avoid a circular-dependency at registry.py import time.
-# The same workaround is used in l1_data, l3_features, l4_models, l7_interpretation schemas.
+from dataclasses import dataclass
+from string import Formatter
+from typing import Any, Literal
 
 
 class _SubLayerSpecLocal:
-    """Local sub-layer axes container (defined before core imports)."""
+    """Local sub-layer axes container."""
     def __init__(self, axes: tuple[str, ...]) -> None:
         self.axes = axes
 
@@ -30,13 +30,7 @@ class L8Output:
         return tuple(cls.sub_layers)
 
 
-# Deferred core imports: placed after L8Output so registry.py can
-# import L8Output without triggering a circular-dependency.
-from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
-
-from dataclasses import dataclass  # noqa: E402
-from string import Formatter  # noqa: E402
-from typing import Any, Literal  # noqa: E402
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 class L8ResolvedAxes(dict):
@@ -362,7 +356,7 @@ def _issue(location: str, message: str) -> Any:
 # Canonical LAYER_SPEC (LayerImplementationSpec) -- unified API per design
 # ---------------------------------------------------------------------------
 
-from macroforecast.core.layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (
     AxisSpec as _AxisSpec,
     LayerImplementationSpec as _LayerImplSpec,
     Option as _Option,

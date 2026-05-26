@@ -14,16 +14,7 @@ class L4ForecastingModel:
         return ("L4.A", "L4.B", "L4.C", "L4.D")
 
 
-# Deferred core imports: placed after L4ForecastingModel so that registry.py can
-# import L4ForecastingModel without hitting a circular-dependency error
-# (schema.py -> macroforecast.core.pipeline -> core/__init__ -> registry.py ->
-# schema.py). By the time these lines execute, macroforecast.core.pipeline is
-# already in sys.modules.
-# MODEL_FAMILY_STATUS from macroforecast.layers.l4_models.ops is also deferred:
-# ops.py imports macroforecast.core.ops.registry which triggers core/__init__ ->
-# registry.py -> this file again. It is imported lazily inside _validate_fit_nodes()
-# instead of here at module level.
-from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector  # noqa: E402
+from macroforecast.core.pipeline import DAG, Node, NodeRef, SourceSelector
 
 
 class L4ResolvedAxes(dict):
@@ -620,7 +611,7 @@ def _issue(location: str, message: str) -> Issue:
 # Canonical LAYER_SPEC (LayerImplementationSpec) — unified API per design
 # ---------------------------------------------------------------------------
 
-from macroforecast.core.layer_specs import (  # noqa: E402
+from macroforecast.core.layer_specs import (
     LayerImplementationSpec as _LayerImplSpec,
     SubLayerSpec as _CanonicalSubLayerSpec,
 )
