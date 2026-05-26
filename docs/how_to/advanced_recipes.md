@@ -2,7 +2,7 @@
 
 The goal is to explain recipe orchestration in depth for users who have
 graduated from the standalone tutorial track. A recipe is a single YAML
-file that fully specifies a 12-layer pipeline (L0 through L8) and the
+file that fully specifies an L0–L8 layered pipeline and the
 sweep markers needed to expand into independent cells. Recipes provide
 bit-exact replication via the manifest, custom-step extension via
 `mf.register_model`, and composition via sweep markers. Standalone code
@@ -25,7 +25,7 @@ contracts.
 ## Basic recipe structure
 
 A minimal L4 recipe selects a model and runs it on a default
-dataset. The structure follows the canonical 12-layer order. The recipe
+dataset. The structure follows the canonical layer order (L0–L8). The recipe
 gallery in `examples/recipes/` ships runnable templates including
 `l4_minimal_ridge.yaml` and `l7_minimal_shap.yaml`.
 

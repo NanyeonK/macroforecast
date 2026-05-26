@@ -2,7 +2,7 @@
 
 `macroforecast` ships two complementary usage paradigms:
 
-1. **Recipe DSL** - a YAML-driven 12-layer recipe pipeline that runs an end-to-end
+1. **Recipe DSL** - a YAML-driven layered recipe pipeline that runs an end-to-end
    reproducible study. Every sweep cell is bit-exact replicable via
    `mf.replicate(manifest_path)`.
 2. **Standalone callables** - `mf.functions.<name>(...)` gives you a single
