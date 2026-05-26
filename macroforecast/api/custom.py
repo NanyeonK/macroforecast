@@ -103,7 +103,7 @@ def custom_model_contract_metadata() -> dict[str, Any]:
         "x_path_policy",
         "x_source_date",
         "scheduled_known_future_x_columns",
-        "recursive_x_model_family",
+        "recursive_x_model_family",  # context key for AR family used by recursive-X policy; unrelated to model_family rename
         "recursive_x_model_fallback_columns",
         "raw_panel_iterated_runtime_contract",
         "raw_panel_iterated_payload_contract",
