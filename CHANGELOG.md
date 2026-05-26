@@ -7,6 +7,20 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **Phase 3g-bis PR #G: collocate L8 schema and ops** (see PR)
+  - Deleted: `macroforecast/core/layers/l8.py` (-429 lines) — legacy schema
+    body superseded by the Phase 3f collocated-layer restructure.
+  - Deleted: `macroforecast/core/ops/l8_ops.py` (-19 lines) — legacy ops
+    body; full implementation relocated to canonical location.
+  - Canonical location (unchanged): `macroforecast/layers/l8_output/ops.py`
+    (shim replaced with full body).
+  - Modified: `macroforecast/core/runtime.py` (1 line: l8 layer source updated
+    via side-effect import).
+  - Test import paths updated in 1 file: `tests/layers/test_l8.py`.
+  - **Behavioral impact**: none. Dead-file removal + shim-to-body promotion only.
+    **Completes layer body cleanup**: after this PR, all `core/layers/lN.py` and
+    `core/ops/lN_ops.py` legacy files are removed from the codebase.
+
 - **Phase 3g-bis PR #F: collocate L7 schema and ops (biggest)** (see PR)
   - Deleted: `macroforecast/core/layers/l7.py` (-428 lines) — legacy schema
     body superseded by the Phase 3f collocated-layer restructure.

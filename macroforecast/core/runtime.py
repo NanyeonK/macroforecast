@@ -35,7 +35,7 @@ from sklearn.tree import DecisionTreeRegressor
 
 import macroforecast.layers.l6_tests.schema as l6_layer
 import macroforecast.layers.l7_interpretation.schema as l7_layer
-from .layers import l8 as l8_layer
+import macroforecast.layers.l8_output.schema as l8_layer
 import macroforecast.layers.l1_5_diagnostic.schema as l1_5_layer
 import macroforecast.layers.l2_5_diagnostic.schema as l2_5_layer
 import macroforecast.layers.l3_5_diagnostic.schema as l3_5_layer

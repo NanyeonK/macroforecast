@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macroforecast.core.layers.l8 import (
+from macroforecast.layers.l8_output.schema import (
     make_recipe_with_glmboost,
     make_recipe_with_l6_l7_active,
     make_recipe_without_ensemble,
@@ -203,7 +203,7 @@ def test_l8_output_directory_default():
 
 def test_l8_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.core.layers.l8 import L8Output
+    from macroforecast.layers.l8_output.schema import L8Output
 
     spec = get_layer("l8")
     assert spec.cls is L8Output
