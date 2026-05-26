@@ -108,9 +108,9 @@ def test_tree_importance_top_feature_is_x1():
 def test_permutation_importance_signs_match_sklearn():
     """sklearn.inspection.permutation_importance computes mean drop in score
     when a column is shuffled. macroforecast's `_permutation_importance_frame`
-    uses a single-shuffle approximation (``permuted = reversed``) which
-    isn't byte-equal to sklearn's repeated-shuffle estimate but should agree
-    on which features are *more* important than others (sign / ranking).
+    uses a proper random permutation (np.random.default_rng) which may not
+    be byte-equal to sklearn's estimate but should agree on which features
+    are *more* important than others (sign / ranking).
     """
 
     skl = pytest.importorskip("sklearn.inspection")

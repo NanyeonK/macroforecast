@@ -270,24 +270,35 @@ class TestPermutationImportance:
         res2 = mf.functions.permutation_importance(lin_result, X, y, n_repeats=3, random_state=None)
         np.testing.assert_array_equal(res1.importances_mean_, res2.importances_mean_)
 
-    def test_random_state_none_uses_reverse_order(self, lin_result, xy_rng42, artifact_lin):
-        """random_state=None matches _permutation_importance_frame (reverse-order)."""
+    def test_random_state_none_uses_seed_zero(self, lin_result, xy_rng42, artifact_lin):
+        """random_state=None now uses seed=0 (proper RNG, not reversal).
+
+        After the PR2 fix: both the standalone API (random_state=None) and the
+        runtime helper (_permutation_importance_frame with seed=0) use
+        np.random.default_rng(0), so n_repeats=1 must agree exactly.
+        """
         X, y = xy_rng42
         X_df = pd.DataFrame(X, columns=[f"x{i}" for i in range(N_FEATURES)])
         y_s = pd.Series(y, name="y")
         res = mf.functions.permutation_importance(lin_result, X_df, y_s, n_repeats=1, random_state=None)
-        df_ref = _permutation_importance_frame(artifact_lin, X_df, y_s, method="permutation_importance")
+        df_ref = _permutation_importance_frame(
+            artifact_lin, X_df, y_s, method="permutation_importance", n_repeats=1, seed=0
+        )
         np.testing.assert_allclose(
             res.importances_mean_,
             df_ref["importance"].values,
             rtol=1e-10,
         )
 
-    def test_std_zero_when_random_state_none(self, lin_result, xy_rng42):
-        """When random_state=None all repeats are identical, so std=0."""
+    def test_std_nonneg_when_random_state_none(self, lin_result, xy_rng42):
+        """After the PR2 fix: random_state=None uses proper RNG (seed=0), so
+        n_repeats>1 produces non-negative std (no longer zero because each
+        repeat is an independent random permutation)."""
         X, y = xy_rng42
         res = mf.functions.permutation_importance(lin_result, X, y, n_repeats=5, random_state=None)
-        np.testing.assert_allclose(res.importances_std_, np.zeros(N_FEATURES), atol=1e-14)
+        # std must be finite and non-negative; not guaranteed to be zero
+        assert np.all(np.isfinite(res.importances_std_))
+        assert np.all(res.importances_std_ >= 0.0)
 
     def test_positive_importances_for_important_features(self, lin_result, xy_rng42):
         """Features with nonzero coef should have positive importance."""

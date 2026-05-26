@@ -30,6 +30,47 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR2 (critical): Permutation importance deterministic reversal replaced with proper RNG — bit-exact replication restored**
+
+  The L7 recipe-path helper `_permutation_importance_frame` used a deterministic
+  reversal as its "permutation":
+
+  ```python
+  permuted[column] = list(reversed(permuted[column].tolist()))  # WRONG
+  ```
+
+  This made the `n_repeats` and `seed` / `random_state` parameters completely
+  meaningless (every call returned the same result regardless of seed), and
+  introduced systematic bias for time-ordered data (reversal is anti-correlated
+  with the original ordering, not a random permutation).  The standard definition
+  (Breiman 2001; Fisher, Rudin, Dominici 2019) requires an independent uniform
+  random permutation per repeat, seeded by `random_state` for reproducibility.
+
+  The buggy reversal also violated the bit-exact replication promise: the recipe
+  path and the standalone `mf.functions.permutation_importance` API (which used a
+  proper RNG when `random_state` was set) produced structurally different results
+  for the same data and seed.
+
+  Fix:
+  - `_permutation_importance_frame` signature extended with `n_repeats: int = 1`
+    and `seed: int = 0`.  The inner loop now calls
+    `np.random.default_rng(seed).permutation(len(X_eval))` on each repeat.
+    The returned DataFrame includes an `importances_` column with per-repeat
+    values for variance estimation.
+  - `_execute_l7_step` passes `n_repeats` and `seed` from the op `params` dict.
+  - `mf.functions.permutation_importance` updated: `random_state=None` now uses
+    `seed=0` (proper RNG, deterministic) instead of reversal, aligning the
+    standalone API with the recipe path and restoring the replication promise.
+  - `PermutationImportanceResult` gains an `importances_` field of shape
+    `(n_features, n_repeats)` following the sklearn convention.
+
+  **Impact**: any recipe or API call that used permutation importance will now
+  receive statistically correct importance estimates.  Old numeric values are
+  NOT preserved (they were wrong).  Seeds are now meaningful.
+
+  Fix: `macroforecast/core/runtime.py` (~25 lines), `macroforecast/api/functions/importance.py` (~30 lines).
+  Tests: `tests/core/test_permutation_importance.py` (9 new tests).
+
 - **PR1 (critical): Kupiec (1995) POF likelihood-ratio formula corrected**
 
   The L6 density battery function `_density_interval_battery` computed the
