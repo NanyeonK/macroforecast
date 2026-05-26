@@ -32,15 +32,15 @@ from ..types import (
     TrainingMetadata,
     ImportanceResultSet,
 )
-from .l0 import L0StudySetup
+from macroforecast.layers.l0_meta.schema import L0StudySetup
 from macroforecast.layers.l1_data.schema import L1Data
 from macroforecast.layers.l2_preprocessing.schema import L2Preprocessing
 from macroforecast.layers.l3_features.schema import L3FeatureEngineering
 from macroforecast.layers.l4_models.schema import L4ForecastingModel
-from .l5 import L5Evaluation
-from .l6 import L6StatisticalTests
+from macroforecast.layers.l5_evaluation.schema import L5Evaluation
+from macroforecast.layers.l6_tests.schema import L6StatisticalTests
 from macroforecast.layers.l7_interpretation.schema import L7Interpretation
-from .l8 import L8Output
+from macroforecast.layers.l8_output.schema import L8Output
 from macroforecast.layers.l1_5_diagnostic.schema import L1_5DataSummary
 from macroforecast.layers.l2_5_diagnostic.schema import L2_5PrePostPreprocessing
 from macroforecast.layers.l3_5_diagnostic.schema import L3_5FeatureDiagnostics

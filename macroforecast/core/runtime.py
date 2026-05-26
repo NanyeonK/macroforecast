@@ -45,6 +45,11 @@ import macroforecast.layers.l4_models.schema as l4_layer
 from .layers import l5 as l5_layer
 import macroforecast.layers.l1_data.schema as l1_layer
 import macroforecast.layers.l2_preprocessing.schema as l2_layer
+# Load collocated ops for side-effect registration (l5/l6/l8 ops no longer
+# in core/ops/__init__.py after Phase 3f restructure).
+import macroforecast.layers.l5_evaluation.ops  # noqa: F401
+import macroforecast.layers.l6_tests.ops  # noqa: F401
+import macroforecast.layers.l8_output.ops  # noqa: F401
 from ..layers.l1_data import load_fred_md, load_fred_qd, load_fred_sd
 from ..layers.l1_data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
