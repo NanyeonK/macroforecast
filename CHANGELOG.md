@@ -9,7 +9,26 @@ full per-version honesty-pass history embedded in repo documentation.
 `core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
 `interpretation/` and `recipes/` converted to backward-compatible shims.
 
-### API (breaking — deprecated, one-release window)
+### Deprecations scheduled for removal in v0.10.0
+
+The following deprecated aliases emit `DeprecationWarning` in all v0.9.x releases
+and will raise `TypeError` in v0.10.0.
+
+- `Experiment(model_family=)` keyword argument -- use `model=` instead
+- `Experiment(model_families=)` keyword argument -- use `models=` instead
+- `mf.forecast(model_family=)` keyword argument -- use `model=` instead
+- `build_default_recipe_dict(model_family=, model_families=, benchmark_family=)` -- use `model=, models=, benchmark_model=`
+- `macroforecast.layers.l4_models.ops.OPERATIONAL_MODEL_FAMILIES` -- use `OPERATIONAL_MODELS`
+- `macroforecast.layers.l4_models.ops.FUTURE_MODEL_FAMILIES` -- use `FUTURE_MODELS`
+- L6 result dict key `decision_at_5pct` -- use `decision`
+
+Note: axis renames (`custom_source_policy` -> `panel_composition`, `forecast_strategy` ->
+`forecast_policy`, `quarterly_to_monthly_rule` -> `quarterly_to_monthly_policy`,
+`monthly_to_quarterly_rule` -> `monthly_to_quarterly_policy`) are HARD CHANGES with
+no alias support at the recipe level. Users must update recipe YAML files manually.
+See `docs/explanation/deprecation_timeline.md` for the full deprecation reference.
+
+### API (breaking -- deprecated, one-release window)
 
 - **PR4 (hotfix): `model_family` → `model` rename with deprecation infrastructure**
 
@@ -77,6 +96,30 @@ full per-version honesty-pass history embedded in repo documentation.
     undocumented options added to code will fail this test.
 
   All CODE_ONLY and DOCS_ONLY items are DEFERRED (follow-up PR).
+
+- **PR6 (deep-audit problem 9): deprecation warning test coverage + timeline + axis alias check**
+
+  Problem 9 (deprecation test coverage). Added test coverage for all three
+  `macroforecast.api._deprecations` shims, the `OPERATIONAL/FUTURE_MODEL_FAMILIES`
+  constant shims in `l4_models/ops.py`, and documented the deprecation timeline.
+
+  Changes:
+  - New test file: `tests/api/test_deprecations.py` (15 tests covering all deprecated
+    parameter shims: `resolve_model`, `resolve_models`, `resolve_benchmark_model`,
+    `OPERATIONAL_MODEL_FAMILIES`, `FUTURE_MODEL_FAMILIES` constant shims).
+  - Migrated `tests/api/test_experiment.py`: replaced all `model_family=` fixtures with
+    `model=` so the test suite is clean when run with `-W error::DeprecationWarning`.
+  - Migrated `tests/integration/test_combined_dataset_smoke.py` line 92:
+    `model_family="ridge"` -> `model="ridge"`.
+  - New doc: `docs/explanation/deprecation_timeline.md` -- removal timeline for all v0.10.0
+    removals plus hard-change axis renames.
+  - Updated `docs/explanation/index.md` toctree to include `deprecation_timeline`.
+  - Added "Deprecations scheduled for removal in v0.10.0" section to `[Unreleased]`.
+
+  Axis alias finding: `custom_source_policy`, `forecast_strategy`,
+  `quarterly_to_monthly_rule`, `monthly_to_quarterly_policy` are HARD CHANGES at the
+  recipe YAML level. No alias helpers exist. Users receive an explicit `unknown axis`
+  error at parse time. This is intentional -- documented in `deprecation_timeline.md`.
 
 - **PR4 (deep-audit problem 7): rename `l2_fred_sd_alignment.yaml` → `l2_preprocessing_minimal.yaml`**
 

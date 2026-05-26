@@ -21,7 +21,7 @@ def test_experiment_run_returns_forecast_result(tmp_path):
         target="y",
         horizons=[1],
         random_seed=0,
-        model_family="ridge",
+        model="ridge",
     )
     install_custom_panel(exp)
     result = exp.run(output_directory=tmp_path)
@@ -42,7 +42,7 @@ def test_experiment_compare_models_expands_to_two_cells(tmp_path):
         target="y",
         horizons=[1],
         random_seed=0,
-        model_family="ridge",
+        model="ridge",
     )
     install_custom_panel(exp)
     exp.compare_models(["ridge", "ols"])
@@ -72,11 +72,11 @@ def test_experiment_compare_generic_axis(tmp_path):
         target="y",
         horizons=[1],
         random_seed=0,
-        model_family="ridge",
+        model="ridge",
     )
     install_custom_panel(exp)
     # v0.8.6: the L4 fit node is normalized to the stable id "fit_main"
-    # by Experiment.__init__ regardless of the original ``model_family=``.
+    # by Experiment.__init__ regardless of the original ``model=``.
     exp.compare(
         "4_forecasting_model.nodes.fit_main.params.alpha",
         [0.1, 1.0],
@@ -87,15 +87,15 @@ def test_experiment_compare_generic_axis(tmp_path):
 
 
 def test_experiment_sweep_is_alias_for_compare():
-    exp1 = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
-    exp2 = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp1 = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
+    exp2 = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     exp1.compare("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
     exp2.sweep("4_forecasting_model.nodes.fit_main.params.alpha", [0.1, 1.0])
     assert exp1.to_recipe_dict() == exp2.to_recipe_dict()
 
 
 def test_experiment_compare_rejects_empty_values():
-    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     with pytest.raises(ValueError, match="at least one"):
         exp.compare("4_forecasting_model.nodes.fit_main.params.alpha", [])
 
@@ -107,7 +107,7 @@ def test_experiment_compare_rejects_empty_path():
 
 
 def test_experiment_compare_rejects_unknown_list_id():
-    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     with pytest.raises(ValueError, match="no list entry with id"):
         exp.compare(
             "4_forecasting_model.nodes.does_not_exist.params.alpha",
@@ -149,7 +149,7 @@ def test_experiment_to_yaml_round_trips_through_execute_recipe(tmp_path):
         target="y",
         horizons=[1],
         random_seed=0,
-        model_family="ridge",
+        model="ridge",
     )
     install_custom_panel(exp)
     yaml_text = exp.to_yaml()
@@ -159,7 +159,7 @@ def test_experiment_to_yaml_round_trips_through_execute_recipe(tmp_path):
 
 
 def test_experiment_to_recipe_dict_returns_deep_copy():
-    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     snapshot = exp.to_recipe_dict()
     snapshot["0_meta"]["leaf_config"]["random_seed"] = 9999
     again = exp.to_recipe_dict()
@@ -176,7 +176,7 @@ def test_experiment_replicate_matches_sink_hashes(tmp_path):
         target="y",
         horizons=[1],
         random_seed=0,
-        model_family="ridge",
+        model="ridge",
     )
     install_custom_panel(exp)
     result = exp.run(output_directory=tmp_path)
@@ -196,7 +196,7 @@ def test_experiment_validate_passes_for_well_formed_offline_recipe():
         target="y",
         horizons=[1],
         random_seed=0,
-        model_family="ridge",
+        model="ridge",
     )
     install_custom_panel(exp)
     # Should not raise.
@@ -238,7 +238,7 @@ def test_set_at_rejects_traversal_into_scalar():
 # ---------------------------------------------------------------------------
 
 def test_experiment_init_normalizes_lone_fit_node_to_fit_main():
-    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
     fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     assert len(fit_nodes) == 1
@@ -252,7 +252,7 @@ def test_experiment_init_normalizes_lone_fit_node_to_fit_main():
 
 
 def test_experiment_compare_models_emits_fit_main_id():
-    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model_family="ridge")
+    exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     exp.compare_models(["ridge", "lasso", "ols"])
     nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
     fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
@@ -263,7 +263,7 @@ def test_experiment_compare_models_emits_fit_main_id():
 
 def test_experiment_compare_models_then_compare_alpha_chains_via_fit_main(tmp_path):
     exp = mf.Experiment(
-        dataset="fred_md", target="y", horizons=[1], model_family="ridge",
+        dataset="fred_md", target="y", horizons=[1], model="ridge",
     )
     install_custom_panel(exp)
     # End-to-end chain: compare_models followed by compare on fit_main.
@@ -277,7 +277,7 @@ def test_experiment_compare_models_then_compare_alpha_chains_via_fit_main(tmp_pa
 
 def test_experiment_init_with_ar_p_also_normalizes_to_fit_main():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
-    # Default model_family="ar_p" -- still normalize.
+    # Default model="ar_p" -- still normalize.
     nodes = exp.to_recipe_dict()["4_forecasting_model"]["nodes"]
     fit_nodes = [n for n in nodes if isinstance(n, dict) and n.get("op") == "fit"]
     assert fit_nodes[0]["id"] == "fit_main"

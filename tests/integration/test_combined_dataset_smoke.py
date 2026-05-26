@@ -89,7 +89,7 @@ def test_fred_md_plus_fred_sd_l1_sink_carries_both_panels(tmp_path):
         target="INDPRO",
         horizons=[1],
         frequency="monthly",
-        model_family="ridge",
+        model="ridge",
     )
     # Force the cache_root so the loader reads our fixtures.
     exp._builder.l1.set_leaf(cache_root=str(cache_root))
