@@ -14,7 +14,7 @@ returns a frozen ``RidgeFitResult`` (same class as ``ridge_fit``, imported from
 ``alpha``, and a ``.predict(X)`` method. Bit-exact with recipe-based ridge
 when using the same parameter values.
 
-Cycle 63 -- L4 ridge-variant family standalone-ization (4 ops).
+Promoted in v0.9.5: L4 ridge-variant standalone callables (4 ops).
 """
 from __future__ import annotations
 

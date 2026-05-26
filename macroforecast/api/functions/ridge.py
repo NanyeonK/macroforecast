@@ -7,7 +7,7 @@ Bit-exact compatible with recipe-based ridge: the same estimator classes
 (``sklearn.linear_model.Ridge``, ``_NonNegRidge``, ``_TwoStageRandomWalkRidge``,
 ``_ShrinkToTargetRidge``, ``_FusedDifferenceRidge``) are used under the hood.
 
-Cycle 22 POC -- pattern validates for L4/L3/L5/L6/L7 expansion.
+Proof-of-concept standalone callable (v0.1.0) — pattern validates for L4/L3/L5/L6/L7 expansion.
 """
 from __future__ import annotations
 

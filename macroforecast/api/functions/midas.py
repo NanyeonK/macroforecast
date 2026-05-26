@@ -11,7 +11,7 @@ returns a frozen FitResult exposing ``coef_``, ``intercept_``, and a
 ``.predict(X)`` method. The result is bit-exact with recipe-based MIDAS
 when using the same parameter values.
 
-Cycle 63 -- L4 MIDAS family standalone-ization (4 ops).
+v0.9.5 -- L4 MIDAS family standalone-ization (4 ops).
 """
 from __future__ import annotations
 

@@ -12,7 +12,7 @@ populated as tier-1 entries by their schema axes but presently expose
 no ``operational`` test_id options separate from the four sub-layers
 listed above.
 
-Cycle 29: L6.A and L6.B ops updated with op_page=True, op_func_name,
+v0.8.x: L6.A and L6.B ops updated with op_page=True, op_func_name,
 data_args, return_type, returns_attrs.
 """
 
@@ -29,7 +29,7 @@ _REF_DESIGN_L6 = Reference(
 )
 
 
-# Shared data_args tuples for per-op encyclopedia pages (Cycle 29).
+# Shared data_args tuples for per-op encyclopedia pages (v0.8.x).
 
 _L6_LOSS_PAIR_DATA_ARGS: tuple[ParameterDoc, ...] = (
     ParameterDoc(

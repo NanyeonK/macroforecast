@@ -13,7 +13,7 @@ All callables call ``_build_l4_model`` from ``macroforecast.core.runtime``
 directly, producing bit-exact numeric output identical to the recipe pipeline
 with the same parameter values.
 
-Cycle 37 -- L4 timeseries family standalone-ization (14 ops).
+v0.9.x -- L4 timeseries family standalone-ization (14 ops).
 """
 from __future__ import annotations
 

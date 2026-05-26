@@ -37,7 +37,7 @@ Benchmark and methods studies where vintage realism is not the primary focus; re
 
 **When NOT to use**
 
-Real-time evaluation papers where data revisions materially affect conclusions -- use ``real_time_alfred`` (operational as of v0.9.3, Cycle 50).
+Real-time evaluation papers where data revisions materially affect conclusions -- use ``real_time_alfred`` (operational as of v0.9.3).
 
 **References**
 

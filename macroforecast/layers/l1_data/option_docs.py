@@ -7,18 +7,18 @@ axes that have been through a reviewer-stamped review pass.
 
 Tier-1-complete sub-layers (all axes Tier-1 unless noted):
 * L1.A -- all 6 axes (panel_composition, dataset, vintage_policy,
-  frequency, information_set_type, fred_sd_frequency_policy) -- Cycle 17
-* L1.B -- target_structure (1 axis) -- Cycle 18
+  frequency, information_set_type, fred_sd_frequency_policy) -- v0.8.x
+* L1.B -- target_structure (1 axis) -- v0.8.x
 * L1.C -- all 4 axes (variable_universe, missing_availability,
-  release_lag_rule, contemporaneous_x_rule) -- Cycle 19
+  release_lag_rule, contemporaneous_x_rule) -- v0.8.x
   (4 axes removed in Phase 2 restructure: raw source policy axes
   now live exclusively in L2)
 * L1.D -- all 6 axes (target_geography_policy, predictor_geography_policy,
   fred_sd_state_group, fred_sd_variable_group, state_selection,
-  sd_variable_selection) -- Cycle 20
-* L1.E -- sample_start_rule / sample_end_rule (Cycle 21)
-* L1.F -- horizon_set (Cycle 21)
-* L1.G -- regime_definition / regime_estimation_temporal_rule (Cycle 21)
+  sd_variable_selection) -- v0.8.x
+* L1.E -- sample_start_rule / sample_end_rule (v0.8.x)
+* L1.F -- horizon_set (v0.8.x)
+* L1.G -- regime_definition / regime_estimation_temporal_rule (v0.8.x)
 
 L1 audit complete: all 7 sub-layers (L1.A-L1.G) are Tier-1 with
 ParameterDoc populated for conditional leaf_config keys.
@@ -479,7 +479,7 @@ _L1A_VINTAGE_CURRENT = _entry(
         "#XXX."
     ),
     when_to_use="Default for any pseudo-out-of-sample study using revised data.",
-    when_not_to_use="Real-time forecasting evaluations -- those need ALFRED vintages; use real_time_alfred (operational since Cycle 50).",
+    when_not_to_use="Real-time forecasting evaluations -- those need ALFRED vintages; use real_time_alfred (operational since v0.9.3).",
     related_options=("real_time_alfred", "information_set_type"),
     last_reviewed="2026-05-16",
     reviewer="macroforecast author",
@@ -495,7 +495,7 @@ _L1A_VINTAGE_REAL_TIME_ALFRED = _entry(
         "actually available at any past date -- before subsequent data "
         "revisions occurred. Croushore & Stark (2001) established the "
         "methodological case for real-time evaluation.\n\n"
-        "Operational since Cycle 50 (2026-05-22). Two modes are supported:\n\n"
+        "Operational since v0.9.3 (2026-05-22). Two modes are supported:\n\n"
         "* ``alfred_mode=local`` (default): loads pre-downloaded vintage "
         "snapshots from ``leaf_config.alfred_snapshot_dir``. The directory "
         "must contain per-origin Parquet or CSV files named by date "
@@ -522,7 +522,7 @@ _L1A_VINTAGE_REAL_TIME_ALFRED = _entry(
     reviewer="macroforecast author",
 )
 
-# C50: ParameterDoc for real_time_alfred leaf_config keys (alfred_mode + alfred_snapshot_dir).
+# ParameterDoc for real_time_alfred leaf_config keys (alfred_mode + alfred_snapshot_dir; v0.9.3).
 _L1A_VINTAGE_REAL_TIME_ALFRED = _L1A_VINTAGE_REAL_TIME_ALFRED.__class__(
     **{**_L1A_VINTAGE_REAL_TIME_ALFRED.__dict__,
        "parameters": (
@@ -599,7 +599,7 @@ _L1A_INFOSET_FINAL = _entry(
     when_not_to_use=(
         "Real-time evaluation papers where data revisions materially "
         "affect conclusions -- use ``real_time_alfred`` (operational as "
-        "of v0.9.3, Cycle 50)."
+        "of v0.9.3)."
     ),
     references=(_REF_STARK_CROUSHORE_2002, _REF_FAUST_WRIGHT_2009, _REF_MCCRACKEN_NG_2016),
     related_options=("pseudo_oos_on_revised_data", "vintage_policy"),
@@ -820,7 +820,7 @@ _L1D_GEO_SINGLE = _entry(
     related_options=("all_states", "selected_states", "predictor_geography_policy"),
 )
 
-# C20 follow-up: ParameterDoc for target_state (singular, single_state option).
+# ParameterDoc for target_state (singular, single_state option; v0.8.x).
 _L1D_GEO_SINGLE = _L1D_GEO_SINGLE.__class__(
     **{**_L1D_GEO_SINGLE.__dict__,
        "parameters": (
@@ -866,7 +866,7 @@ _L1D_GEO_SELECTED = _entry(
     references=(_REF_DESIGN_L1,),
     related_options=("all_states", "fred_sd_state_group"),
 )
-# Cycle 20 L1.D fix: ParameterDoc for target_states
+# ParameterDoc for target_states (v0.8.x)
 _L1D_GEO_SELECTED = _L1D_GEO_SELECTED.__class__(
     **{**_L1D_GEO_SELECTED.__dict__,
        "parameters": (
@@ -953,7 +953,7 @@ _L1E_END_FIXED = _entry(
     related_options=("latest_available",),
 )
 
-# C21-E: ParameterDoc for sample_start_rule=fixed_date
+# ParameterDoc for sample_start_rule=fixed_date (v0.8.x)
 _L1E_START_FIXED = _L1E_START_FIXED.__class__(
     **dict(_L1E_START_FIXED.__dict__,
            parameters=(
@@ -964,7 +964,7 @@ _L1E_START_FIXED = _L1E_START_FIXED.__class__(
                    constraint=(
                        "Required when sample_start_rule=fixed_date. "
                        "ISO date string: full YYYY-MM-DD, partial YYYY-MM (normalized "
-                       "to first of month per C12 F-P0-1), or YYYY (normalized to Jan 1)."
+                       "to first of month), or YYYY (normalized to Jan 1)."
                    ),
                    description=(
                        "Explicit panel start date. The L1 loader trims the panel "
@@ -974,7 +974,7 @@ _L1E_START_FIXED = _L1E_START_FIXED.__class__(
            ))
 )
 
-# C21-E: ParameterDoc for sample_end_rule=fixed_date
+# ParameterDoc for sample_end_rule=fixed_date (v0.8.x)
 _L1E_END_FIXED = _L1E_END_FIXED.__class__(
     **dict(_L1E_END_FIXED.__dict__,
            parameters=(
@@ -1064,7 +1064,7 @@ _L1F_HORIZON_RANGE = _entry(
     related_options=("custom_list", "standard_md"),
 )
 
-# C21-F: ParameterDoc for horizon_set=single
+# ParameterDoc for horizon_set=single (v0.8.x)
 _L1F_HORIZON_SINGLE = _L1F_HORIZON_SINGLE.__class__(
     **dict(_L1F_HORIZON_SINGLE.__dict__,
            parameters=(
@@ -1085,7 +1085,7 @@ _L1F_HORIZON_SINGLE = _L1F_HORIZON_SINGLE.__class__(
            ))
 )
 
-# C21-F: ParameterDoc for horizon_set=custom_list
+# ParameterDoc for horizon_set=custom_list (v0.8.x)
 _L1F_HORIZON_CUSTOM = _L1F_HORIZON_CUSTOM.__class__(
     **dict(_L1F_HORIZON_CUSTOM.__dict__,
            parameters=(
@@ -1106,7 +1106,7 @@ _L1F_HORIZON_CUSTOM = _L1F_HORIZON_CUSTOM.__class__(
            ))
 )
 
-# C21-F: ParameterDoc for horizon_set=range_up_to_h
+# ParameterDoc for horizon_set=range_up_to_h (v0.8.x)
 _L1F_HORIZON_RANGE = _L1F_HORIZON_RANGE.__class__(
     **dict(_L1F_HORIZON_RANGE.__dict__,
            parameters=(
@@ -1236,7 +1236,7 @@ _L1G_REGIME_BREAK = _entry(
     related_options=("estimated_markov_switching", "estimated_threshold", "max_breaks"),
 )
 
-# C21-G: ParameterDoc for regime_definition=external_user_provided
+# ParameterDoc for regime_definition=external_user_provided (v0.8.x)
 _L1G_REGIME_USER = _L1G_REGIME_USER.__class__(
     **dict(_L1G_REGIME_USER.__dict__,
            parameters=(
@@ -1283,7 +1283,7 @@ _L1G_REGIME_USER = _L1G_REGIME_USER.__class__(
            ))
 )
 
-# C21-G: ParameterDoc for regime_definition=estimated_markov_switching
+# ParameterDoc for regime_definition=estimated_markov_switching (v0.8.x)
 _L1G_REGIME_MS = _L1G_REGIME_MS.__class__(
     **dict(_L1G_REGIME_MS.__dict__,
            parameters=(
@@ -1304,7 +1304,7 @@ _L1G_REGIME_MS = _L1G_REGIME_MS.__class__(
            ))
 )
 
-# C21-G: ParameterDoc for regime_definition=estimated_threshold (SETAR)
+# ParameterDoc for regime_definition=estimated_threshold/SETAR (v0.8.x)
 _L1G_REGIME_THRESH = _L1G_REGIME_THRESH.__class__(
     **dict(_L1G_REGIME_THRESH.__dict__,
            parameters=(
@@ -1339,7 +1339,7 @@ _L1G_REGIME_THRESH = _L1G_REGIME_THRESH.__class__(
            ))
 )
 
-# C21-G: ParameterDoc for regime_definition=estimated_structural_break (Bai-Perron)
+# ParameterDoc for regime_definition=estimated_structural_break/Bai-Perron (v0.8.x)
 _L1G_REGIME_BREAK = _L1G_REGIME_BREAK.__class__(
     **dict(_L1G_REGIME_BREAK.__dict__,
            parameters=(
@@ -1697,7 +1697,7 @@ _L1D_PRED_GEO: tuple[OptionDoc, ...] = (
         when_not_to_use="State-level forecasts where regional predictors carry signal.",
         related=("all_states", "match_target")),
 )
-# Cycle 20 L1.D fix: ParameterDoc for predictor_states
+# ParameterDoc for predictor_states (v0.8.x)
 _L1D_PRED_GEO_SELECTED = next(
     d for d in _L1D_PRED_GEO
     if d.axis == "predictor_geography_policy" and d.option == "selected_states"
@@ -1892,7 +1892,7 @@ _L1D_STATE_GROUP = tuple(
         references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2020, _REF_CENSUS_REGIONS))
     for option, (summary, desc, when) in _STATE_GROUP_DOCS.items()
 )
-# Cycle 20 L1.D fix: ParameterDoc for custom_state_group (OR: sd_state_group_members / sd_state_groups)
+# ParameterDoc for custom_state_group / sd_state_group_members (v0.8.x)
 _L1D_STATE_GROUP_CUSTOM = next(
     d for d in _L1D_STATE_GROUP
     if d.axis == "fred_sd_state_group" and d.option == "custom_state_group"
@@ -2054,7 +2054,7 @@ _L1D_VAR_GROUP = tuple(
         references=(_REF_DESIGN_L1, _REF_MCCRACKEN_NG_2020))
     for option, (summary, desc, when) in _VAR_GROUP_DOCS.items()
 )
-# Cycle 20 L1.D fix: ParameterDoc for custom_sd_variable_group (OR: sd_variable_group_members / sd_variable_groups)
+# ParameterDoc for custom_sd_variable_group / sd_variable_group_members (v0.8.x)
 _L1D_VAR_GROUP_CUSTOM = next(
     d for d in _L1D_VAR_GROUP
     if d.axis == "fred_sd_variable_group" and d.option == "custom_sd_variable_group"
@@ -2097,7 +2097,7 @@ _L1D_STATE_SEL: tuple[OptionDoc, ...] = (
         "Custom regional studies that need a non-standard state subset.",
         related=("all_states",)),
 )
-# Cycle 20 L1.D fix: ParameterDoc for sd_states
+# ParameterDoc for sd_states (v0.8.x)
 _L1D_STATE_SEL_SELECTED = next(
     d for d in _L1D_STATE_SEL
     if d.axis == "state_selection" and d.option == "selected_states"
@@ -2131,7 +2131,7 @@ _L1D_VAR_SEL: tuple[OptionDoc, ...] = (
         "Targeted studies that focus on specific FRED-SD series.",
         related=("all_sd_variables",)),
 )
-# Cycle 20 L1.D fix: ParameterDoc for sd_variables
+# ParameterDoc for sd_variables (v0.8.x)
 _L1D_VAR_SEL_SELECTED = next(
     d for d in _L1D_VAR_SEL
     if d.axis == "sd_variable_selection" and d.option == "selected_sd_variables"

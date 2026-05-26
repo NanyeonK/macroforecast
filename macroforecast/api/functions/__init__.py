@@ -4,18 +4,18 @@ Each export is a thin sklearn-style or pure-numeric wrapper around an
 internal adapter, allowing partial use of macroforecast operations
 without constructing a full recipe.
 
-Cycle 22 POC: ``ridge_fit`` + ``theil_u1`` + ``theil_u2``.
-Cycle 26: ``FitResultBase`` Protocol added.
-Cycle 27: L5 metrics bulk standalone-ization (13 new ops).
-Cycle 28: L4 linear family standalone-ization (7 ops).
-Cycle 29: L6 statistical tests standalone-ization (7 ops).
-Cycle 30: L3 basic panel transforms standalone-ization (10 ops).
-Cycle 31: L3 advanced panel transforms standalone-ization (12 ops).
-Cycle 32: L3 supervised/mixed transforms standalone-ization (6 ops).
-Cycle 33: L3 final B1 transforms standalone-ization (8 ops).
-Cycle 34: L2 clean panel ops standalone-ization (14 ops).
-Cycle 35: L4 tree/ensemble family standalone-ization (6 ops).
-Cycle 38: L7 importance standalone callables (8 ops).
+v0.1.0: ``ridge_fit`` + ``theil_u1`` + ``theil_u2``.
+v0.1.0: ``FitResultBase`` Protocol added.
+L5 metrics bulk standalone-ization (v0.1.0, 13 ops).
+L4 linear family standalone-ization (v0.1.0, 7 ops).
+L6 statistical tests standalone-ization (v0.1.0, 7 ops).
+L3 basic panel transforms standalone-ization (v0.8.0, 10 ops).
+L3 advanced panel transforms standalone-ization (v0.8.0, 12 ops).
+L3 supervised/mixed transforms standalone-ization (v0.8.0, 6 ops).
+L3 final B1 transforms standalone-ization (v0.8.0, 8 ops).
+L2 clean panel ops standalone-ization (v0.8.0, 14 ops).
+L4 tree/ensemble family standalone-ization (v0.8.0, 6 ops).
+L7 importance standalone callables (v0.8.0, 8 ops).
 
 Example usage::
 
@@ -96,7 +96,7 @@ from .transforms import (
     seasonal_lag_matrix,
     ma_increasing_order_transform,
     scale_transform,
-    # Cycle 31: L3 advanced transforms
+    # L3 advanced transforms (v0.8.0)
     hp_filter_transform,
     hamilton_filter_transform,
     savitzky_golay_transform,
@@ -109,14 +109,14 @@ from .transforms import (
     fourier_transform,
     asymmetric_trim_transform,
     season_dummy_transform,
-    # Cycle 32: L3 supervised/mixed transforms
+    # L3 supervised/mixed transforms (v0.8.0)
     scaled_pca_transform,
     supervised_pca_transform,
     partial_least_squares_transform,
     sliced_inverse_regression_transform,
     dfm_transform,
     feature_selection_transform,
-    # Cycle 33: L3 final B1 transforms
+    # L3 final B1 transforms (v0.8.0)
     sparse_pca_transform,
     sparse_pca_chen_rohe_transform,
     varimax_transform,
@@ -127,7 +127,7 @@ from .transforms import (
     holiday_transform,
 )
 
-# Cycle 34: L2 clean panel ops
+# L2 clean panel ops (v0.8.0)
 from .clean import (
     iqr_outlier_clean,
     zscore_outlier_clean,
@@ -145,7 +145,7 @@ from .clean import (
     freq_align_monthly_to_quarterly_clean,
 )
 
-# Cycle 35: L4 tree/ensemble family
+# L4 tree/ensemble family (v0.8.0)
 from .tree import (
     RandomForestFitResult, random_forest_fit,
     ExtraTreesFitResult, extra_trees_fit,
@@ -153,7 +153,7 @@ from .tree import (
     XGBoostFitResult, xgboost_fit,
     LightGBMFitResult, lightgbm_fit,
     CatBoostFitResult, catboost_fit,
-    # C64: tree/ensemble gap callables
+    # tree/ensemble gap callables (v0.9.5)
     SlowGrowingTreeFitResult, slow_growing_tree_fit,
     QuantileRegressionForestFitResult, quantile_regression_forest_fit,
     BaggingFitResult, bagging_fit,
@@ -161,17 +161,17 @@ from .tree import (
     MacroRandomForestFitResult, macro_random_forest_fit,
 )
 
-# Cycle 36: L4 deep family
+# L4 deep family (v0.8.0)
 from .deep import (
     MLPFitResult, mlp_fit,
     LSTMFitResult, lstm_fit,
     GRUFitResult, gru_fit,
     TransformerFitResult, transformer_fit,
-    # C64: neural gap callable
+    # neural gap callable (v0.9.5)
     HemisphereNNFitResult, hemisphere_nn_fit,
 )
 
-# Cycle 37: L4 timeseries family
+# L4 timeseries family (v0.8.0)
 from .timeseries import (
     GARCHFitResult,
     VARFitResult, var_fit,
@@ -190,7 +190,7 @@ from .timeseries import (
     DFMFitResult, dfm_fit,
 )
 
-# Cycle 37: L4 misc family
+# L4 misc family (v0.8.0)
 from .misc import (
     SVRFitResult,
     SVRLinearFitResult, svr_linear_fit,
@@ -201,7 +201,7 @@ from .misc import (
     MARSFitResult, mars_fit,
 )
 
-# Cycle 63: L4 MIDAS family standalone callables (4 ops)
+# L4 MIDAS family standalone callables (v0.9.5, 4 ops)
 from .midas import (
     MidasFitResult,
     midas_almon_fit,
@@ -210,7 +210,7 @@ from .midas import (
     unrestricted_midas_fit,
 )
 
-# Cycle 63: L4 ridge-variant family standalone callables (4 ops)
+# L4 ridge-variant family standalone callables (v0.9.5, 4 ops)
 from .ridge_variants import (
     nonneg_ridge_fit,
     random_walk_ridge_fit,
@@ -218,7 +218,7 @@ from .ridge_variants import (
     fused_difference_ridge_fit,
 )
 
-# Cycle 38: L7 importance standalone callables
+# L7 importance standalone callables (v0.8.0)
 from .importance import (
     NativeImportanceResult,
     PermutationImportanceResult,
@@ -283,7 +283,7 @@ __all__ = [
     "enc_new_test",
     "EncTTestResult",
     "enc_t_test",
-    # Cycle 30: L3 basic panel transforms
+    # L3 basic panel transforms (v0.8.0)
     "diff_transform",
     "log_transform",
     "log_diff_transform",
@@ -294,7 +294,7 @@ __all__ = [
     "seasonal_lag_matrix",
     "ma_increasing_order_transform",
     "scale_transform",
-    # Cycle 31: L3 advanced panel transforms
+    # L3 advanced panel transforms (v0.8.0)
     "hp_filter_transform",
     "hamilton_filter_transform",
     "savitzky_golay_transform",
@@ -307,14 +307,14 @@ __all__ = [
     "fourier_transform",
     "asymmetric_trim_transform",
     "season_dummy_transform",
-    # Cycle 32: L3 supervised/mixed transforms
+    # L3 supervised/mixed transforms (v0.8.0)
     "scaled_pca_transform",
     "supervised_pca_transform",
     "partial_least_squares_transform",
     "sliced_inverse_regression_transform",
     "dfm_transform",
     "feature_selection_transform",
-    # Cycle 33: L3 final B1 transforms
+    # L3 final B1 transforms (v0.8.0)
     "sparse_pca_transform",
     "sparse_pca_chen_rohe_transform",
     "varimax_transform",
@@ -323,7 +323,7 @@ __all__ = [
     "nystroem_transform",
     "time_trend_transform",
     "holiday_transform",
-    # Cycle 34: L2 clean panel ops
+    # L2 clean panel ops (v0.8.0)
     "iqr_outlier_clean",
     "zscore_outlier_clean",
     "winsorize_clean",
@@ -338,7 +338,7 @@ __all__ = [
     "apply_tcode_transform",
     "freq_align_quarterly_to_monthly_clean",
     "freq_align_monthly_to_quarterly_clean",
-    # Cycle 35: L4 tree/ensemble family
+    # L4 tree/ensemble family (v0.8.0)
     "RandomForestFitResult",
     "random_forest_fit",
     "ExtraTreesFitResult",
@@ -351,7 +351,7 @@ __all__ = [
     "lightgbm_fit",
     "CatBoostFitResult",
     "catboost_fit",
-    # Cycle 36: L4 deep family
+    # L4 deep family (v0.8.0)
     "MLPFitResult",
     "mlp_fit",
     "LSTMFitResult",
@@ -360,7 +360,7 @@ __all__ = [
     "gru_fit",
     "TransformerFitResult",
     "transformer_fit",
-    # C64: tree/ensemble gap callables
+    # tree/ensemble gap callables (v0.9.5)
     "SlowGrowingTreeFitResult",
     "slow_growing_tree_fit",
     "QuantileRegressionForestFitResult",
@@ -371,10 +371,10 @@ __all__ = [
     "booging_fit",
     "MacroRandomForestFitResult",
     "macro_random_forest_fit",
-    # C64: neural gap callable
+    # neural gap callable (v0.9.5)
     "HemisphereNNFitResult",
     "hemisphere_nn_fit",
-    # Cycle 37: L4 timeseries family
+    # L4 timeseries family (v0.8.0)
     "GARCHFitResult",
     "VARFitResult",
     "var_fit",
@@ -404,7 +404,7 @@ __all__ = [
     "holt_winters_fit",
     "DFMFitResult",
     "dfm_fit",
-    # Cycle 37: L4 misc family
+    # L4 misc family (v0.8.0)
     "SVRFitResult",
     "SVRLinearFitResult",
     "svr_linear_fit",
@@ -418,7 +418,7 @@ __all__ = [
     "kernel_ridge_fit",
     "MARSFitResult",
     "mars_fit",
-    # Cycle 38: L7 importance standalone callables
+    # L7 importance standalone callables (v0.8.0)
     "NativeImportanceResult",
     "PermutationImportanceResult",
     "CondPermutationImportanceResult",
@@ -433,13 +433,13 @@ __all__ = [
     "ale_importance",
     "shap_tree_importance",
     "shap_linear_importance",
-    # Cycle 63: L4 MIDAS family
+    # L4 MIDAS family (v0.9.5)
     "MidasFitResult",
     "midas_almon_fit",
     "midas_beta_fit",
     "midas_step_fit",
     "unrestricted_midas_fit",
-    # Cycle 63: L4 ridge-variant family
+    # L4 ridge-variant family (v0.9.5)
     "nonneg_ridge_fit",
     "random_walk_ridge_fit",
     "shrink_to_target_ridge_fit",

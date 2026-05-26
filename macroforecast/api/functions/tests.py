@@ -1,11 +1,11 @@
 """Standalone L6 statistical test functions.
 
-Cycle 29: L6 tests standalone-ization.
+L6 tests standalone callables (v0.1.0).
 Each callable wraps the corresponding runtime primitive from
 ``macroforecast.core.runtime`` to preserve bit-exact results with
 the recipe-path dispatch.
 
-Import pattern follows C28 (linear.py): runtime helpers are imported
+Import pattern follows linear.py: runtime helpers are imported
 lazily inside each function body to avoid circular imports and keep
 the module self-contained at definition time.
 

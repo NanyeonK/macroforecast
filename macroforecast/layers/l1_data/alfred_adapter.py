@@ -1,6 +1,6 @@
 """ALFRED (ArchivaL Federal Reserve Economic Data) vintage adapter.
 
-C50 promotion: ``vintage_policy="real_time_alfred"`` is now operational.
+``vintage_policy="real_time_alfred"`` is operational since v0.9.3.
 
 Default mode is local snapshot (no network dependency). API mode is
 optional, gated behind the ``[alfred]`` extra (``requests>=2.28``).

@@ -13,7 +13,7 @@ internal ``_Private`` naming convention.
     model = MidasAlmon(freq_ratio=3)
     assert isinstance(model, _MidasAlmonModel)  # True via subclass
 
-Cycle 63 -- L4 linear family class promotion (14 classes).
+v0.9.5 -- L4 linear family class promotion (14 classes).
 """
 from __future__ import annotations
 

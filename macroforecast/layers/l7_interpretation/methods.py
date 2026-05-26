@@ -22,7 +22,7 @@ Usage::
     lstm_interp = LSTMHiddenState()
     importance_df = lstm_interp.compute(fitted_lstm, X)
 
-Cycle 63 -- L7 interpretation class wrappers (GIRF + LSTMHiddenState).
+v0.9.5 -- L7 interpretation class wrappers (GIRF + LSTMHiddenState).
 Phase 3g-bis -- collocated body moved to layers/l7_interpretation/methods.py.
 """
 from __future__ import annotations

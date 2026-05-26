@@ -28,7 +28,7 @@ Usage::
     X_sel = sel.transform(X)
     print(sel.selected_features_)   # list of column names
 
-Cycle 63 -- L3 sklearn-style class wrappers (5 classes).
+v0.9.5 -- L3 sklearn-style class wrappers (5 classes).
 """
 from __future__ import annotations
 
@@ -141,7 +141,7 @@ class Boruta(BaseEstimator, TransformerMixin):
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
-        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        # --- sklearn feature tracking (BaseEstimator refactor, v0.9.5) ---
         self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
         self.n_features_in_ = len(self.feature_names_in_)
         # --- existing selection logic ---
@@ -294,7 +294,7 @@ class RFE(BaseEstimator, TransformerMixin):
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
-        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        # --- sklearn feature tracking (BaseEstimator refactor, v0.9.5) ---
         self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
         self.n_features_in_ = len(self.feature_names_in_)
         # --- existing selection logic ---
@@ -437,7 +437,7 @@ class LassoPathSelector(BaseEstimator, TransformerMixin):
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
-        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        # --- sklearn feature tracking (BaseEstimator refactor, v0.9.5) ---
         self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
         self.n_features_in_ = len(self.feature_names_in_)
         # --- existing selection logic ---
@@ -584,7 +584,7 @@ class StabilitySelection(BaseEstimator, TransformerMixin):
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
-        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        # --- sklearn feature tracking (BaseEstimator refactor, v0.9.5) ---
         self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
         self.n_features_in_ = len(self.feature_names_in_)
         # --- existing selection logic ---
@@ -736,7 +736,7 @@ class GeneticSelection(BaseEstimator, TransformerMixin):
 
         X_df = _to_frame(X)
         y_s = _to_series(y)
-        # --- sklearn feature tracking (C64 BaseEstimator refactor) ---
+        # --- sklearn feature tracking (BaseEstimator refactor, v0.9.5) ---
         self.feature_names_in_ = np.array(X_df.columns.tolist(), dtype=object)
         self.n_features_in_ = len(self.feature_names_in_)
         # --- existing selection logic ---

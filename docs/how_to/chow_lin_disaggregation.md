@@ -4,7 +4,7 @@ The goal is to disaggregate a quarterly series to monthly frequency
 using the Chow and Lin (1971) canonical GLS method with an AR(1) error
 structure and a related high-frequency indicator. We use the public
 function `chow_lin_disaggregate` from `macroforecast.layers.l3_features.transforms`. The
-C63.1 promotion implements the full canonical algorithm directly (BLUE
+The v0.9.5 promotion implements the full canonical algorithm directly (BLUE
 correction with AR(1) covariance), in contrast to the simpler OLS
 fallback used in older internal helpers.
 

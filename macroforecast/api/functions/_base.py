@@ -10,7 +10,7 @@ Protocol requirements:
 
 For scalar result objects (L5 metrics returning ``float``) and test-result
 objects (L6 returning a dataclass with ``.statistic`` / ``.pvalue``), a
-separate protocol hierarchy will be defined in Cycle 28.
+separate protocol hierarchy will be defined in a future release.
 """
 from __future__ import annotations
 

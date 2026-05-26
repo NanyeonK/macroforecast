@@ -138,16 +138,16 @@ _LAZY_EXPORTS = {
 _LAZY_MODULES: tuple[str, ...] = (
     "recipes",
     "api",
-    # Cycle 63: promoted public namespaces
+    # Promoted in v0.9.5: public namespaces
     "feature_selection",
     "transforms",
     "interpretation",
 )
 """Submodules exposed as ``macroforecast.<name>`` via lazy import.
 
-Cycle 22: ``functions`` added for the per-op standalone callable namespace
+v0.1.0: ``functions`` added for the per-op standalone callable namespace
 (``mf.functions.ridge_fit``, ``mf.functions.theil_u1``, etc.).
-Cycle 63: ``models``, ``feature_selection``, ``transforms``,
+v0.9.5: ``models``, ``feature_selection``, ``transforms``,
 ``interpretation`` added for promoted public class/function namespaces.
 """
 

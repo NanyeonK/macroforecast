@@ -3,7 +3,7 @@
 Each class is a zero-overhead subclass of the corresponding private runtime
 class. No new behaviour is introduced.
 
-Cycle 63 -- L4 time-series class promotion (3 classes: ETSWrapper,
+v0.9.5 -- L4 time-series class promotion (3 classes: ETSWrapper,
 ThetaWrapper, HoltWintersWrapper).
 """
 from __future__ import annotations

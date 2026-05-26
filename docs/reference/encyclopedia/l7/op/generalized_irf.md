@@ -21,7 +21,7 @@ where ``A_h = irf_obj.irfs[h]`` are the **raw reduced-form MA coefficients** (NO
 
 **Importance metric**: ``importance[j] = sum_{h=0}^{H} |GIRF_h(j)[target_index]|`` -- the L1 norm of the target variable's response to shock j across all horizons 0..H.
 
-**Order invariance**: permuting the VAR column order produces identical importance values for any given (shock, response) pair. Verified empirically to atol=1e-8 (actual difference ~1e-19 in the C49 test suite). This is the defining property that distinguishes the Pesaran-Shin GIRF from the Cholesky ``orthogonalised_irf``.
+**Order invariance**: permuting the VAR column order produces identical importance values for any given (shock, response) pair. Verified empirically to atol=1e-8 (actual difference ~1e-19 in the v0.9.3 test suite). This is the defining property that distinguishes the Pesaran-Shin GIRF from the Cholesky ``orthogonalised_irf``.
 
 **Non-VAR fallback**: when the fitted model is not a VAR family (e.g., ridge), falls back to ``_tree_importance_frame`` with ``status='fallback_non_var'``.
 

@@ -611,7 +611,7 @@ def _validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str
         issues.append(_issue("l1.frequency", "frequency must be quarterly for FRED-QD datasets"))
     if (dataset == "fred_sd" or custom_policy == "custom_panel_only") and frequency is None:
         issues.append(_issue("l1.frequency", "frequency must be explicitly set for fred_sd standalone or custom-only data"))
-    # C50: real_time_alfred is operational. Soft validation checks that the
+    # real_time_alfred is operational since v0.9.3. Soft validation checks that the
     # required leaf_config keys are present for the selected mode.
     if resolved.get("vintage_policy") == "real_time_alfred":
         alfred_mode = leaf_config.get("alfred_mode", "local")

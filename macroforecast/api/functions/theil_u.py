@@ -5,7 +5,7 @@ called without constructing a recipe.  The formulas are extracted from
 ``_add_l5_extended_metrics`` in ``macroforecast.core.runtime`` and produce
 bit-exact identical results to recipe-based L5 evaluation.
 
-Cycle 22 POC -- pattern validates for L5 metric expansion.
+Proof-of-concept standalone callable (v0.1.0) — pattern validates for L5 metric expansion.
 
 References
 ----------

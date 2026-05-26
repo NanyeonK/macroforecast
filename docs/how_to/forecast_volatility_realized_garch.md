@@ -39,7 +39,7 @@ ten_step_variance = model.predict_variance(h_steps=10)
 The `realized_variance` argument names the column in `X` that carries
 the realized-variance side channel. The constructor defaults to
 `n_starts=8` multi-starts and `random_state=0`. If every start returns a
-non-finite objective the model raises `RuntimeError`, the C56 safety
+non-finite objective the model raises `RuntimeError`, a safety
 guard against silent convergence to a degenerate parameter vector.
 
 ## Output

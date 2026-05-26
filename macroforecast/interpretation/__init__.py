@@ -5,7 +5,7 @@ macroforecast.layers.l7_interpretation.methods.
 This module re-exports both classes for existing code that imports from
 macroforecast.interpretation.
 
-Cycle 63 -- original location.
+Original public namespace location (v0.9.5).
 Phase 3g-bis -- body moved to layers/l7_interpretation/methods.py.
 """
 from __future__ import annotations

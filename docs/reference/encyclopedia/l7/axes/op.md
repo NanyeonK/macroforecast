@@ -462,7 +462,7 @@ VAR analysis with a theoretically motivated recursive identification (e.g. monet
 
 **When NOT to use**
 
-When the variable ordering is arbitrary -- use ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, operational since C49).
+When the variable ordering is arbitrary -- use ``generalized_irf`` (Pesaran-Shin 1998 order-invariant variant, operational since v0.9.3).
 
 **References**
 

@@ -22,7 +22,7 @@ ParallelUnit = Literal["cells", "models", "horizons", "targets", "oos_dates"]
 FAILURE_POLICY_OPTIONS: tuple[FailurePolicy, ...] = ("fail_fast", "continue_on_failure")
 REPRODUCIBILITY_MODE_OPTIONS: tuple[ReproducibilityMode, ...] = ("seeded_reproducible", "exploratory")
 COMPUTE_MODE_OPTIONS: tuple[ComputeMode, ...] = ("serial", "parallel")
-PARALLEL_UNIT_OPTIONS: tuple[ParallelUnit, ...] = ("cells", "models", "horizons", "targets", "oos_dates")  # Cycle 16 N-2 fix: parallel_unit=cells operational
+PARALLEL_UNIT_OPTIONS: tuple[ParallelUnit, ...] = ("cells", "models", "horizons", "targets", "oos_dates")  # parallel_unit=cells operational since v0.8.x
 L0_AXIS_NAMES: tuple[str, ...] = ("failure_policy", "reproducibility_policy", "compute_policy")
 
 DEFAULT_FIXED_AXES: dict[str, str] = {

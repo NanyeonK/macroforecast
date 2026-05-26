@@ -1,6 +1,6 @@
 # Recipe Defaults
 
-Cycle 10 source of truth for user-facing defaults is `macroforecast.defaults`.
+The source of truth for user-facing defaults is `macroforecast.defaults`.
 
 Public defaults:
 
@@ -15,4 +15,4 @@ Public defaults:
 
 Docs should not teach `random_seed: 0`, `model: "ar"` (deprecated shorthand; use `model: "ar_p"`), or legacy default-profile grammar.
 
-`build_default_recipe_dict()` (Cycle 11b1 fix) emits a recipe using the current top-level layer keys and the constants above.
+`build_default_recipe_dict()` emits a recipe using the current top-level layer keys and the constants above.

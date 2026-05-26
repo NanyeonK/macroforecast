@@ -69,7 +69,7 @@ def _status_badge(status: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Per-op page helpers (Cycle 22 POC)
+# Per-op page helpers (v0.8.x)
 # ---------------------------------------------------------------------------
 
 
@@ -877,7 +877,7 @@ def write_all(out_dir: str | Path) -> list[Path]:
             axis_path.write_text(_render_axis_page(layer_id, ax), encoding="utf-8")
             written.append(axis_path)
 
-            # Cycle 22 POC: emit per-op page for options with op_page=True.
+            # emit per-op page for options with op_page=True (v0.8.x).
             for option in ax.options:
                 doc = OPTION_DOCS.get(
                     (layer_id, ax.sublayer, ax.name, option.value)

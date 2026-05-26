@@ -361,7 +361,7 @@ def _validate_l2a_gates(fixed_axes: dict[str, Any], resolved: L2ResolvedAxes, l1
         issues.append(_issue("l2.monthly_to_quarterly_policy", "monthly_to_quarterly_policy is inactive for this L1 frequency/filter"))
     if q_to_m_active and m_to_q_active:
         issues.append(_issue("l2.frequency_alignment", "quarterly_to_monthly_policy and monthly_to_quarterly_policy cannot both be active"))
-    # C50: chow_lin is now operational. The runtime branch at runtime.py:14925
+    # chow_lin is operational (v0.9.3). The runtime branch at runtime.py:14925
     # was already wired; removing the hard-reject here activates it.
     return issues
 
@@ -423,7 +423,7 @@ def _validate_outlier(leaf_config: dict[str, Any], resolved: L2ResolvedAxes) -> 
         issues.append(_issue("l2.zscore_threshold_value", "zscore_threshold_value must be positive"))
     if action == "replace_with_cap_value" and policy != "winsorize":
         issues.append(_issue("l2.outlier_action", "replace_with_cap_value requires outlier_policy=winsorize"))
-    # C50: keep_with_indicator is now operational. Runtime branch added in
+    # keep_with_indicator is operational (v0.9.3). Runtime branch added in
     # _apply_outlier_policy and _apply_outlier_policy_per_origin.
     return issues
 

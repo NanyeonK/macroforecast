@@ -36,6 +36,37 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR3 (docs precision audit): purge internal cycle codes from user-facing docs and module docstrings**
+
+  120+ occurrences of internal development cycle codes (`Cycle N`, `C<N>`) were removed
+  from all user-facing surfaces: module docstrings (visible via `help()`), encyclopedia
+  pages, how-to guides, reference tables, and `tools/` build scripts. Each reference was
+  replaced with its public version equivalent (`v0.8.x`, `v0.9.3`, or `v0.9.5`) so that
+  the `help()` surface and rendered docs present stable, meaningful version anchors rather
+  than internal sprint identifiers.
+
+  Mapping applied:
+
+  | Cycle range | Version label |
+  |-------------|---------------|
+  | C12–C22 | `v0.8.x` |
+  | C26–C29 | `v0.8.x` |
+  | C35, C37–C38 | `v0.9.x` |
+  | C41 | `v0.9.2b1` |
+  | C45, C47–C50 | `v0.9.3` |
+  | C57, C59 | `v0.9.4` |
+  | C63–C64 | `v0.9.5` |
+
+  Affected files (70 total): `macroforecast/core/runtime.py`,
+  `macroforecast/layers/l1_data/option_docs.py`,
+  `macroforecast/layers/l4_models/option_docs.py`,
+  `tools/docgen/option_docs/{l5,l6,l7_a,types}.py`,
+  `tools/docgen/{render_encyclopedia,introspect,cli}.py`,
+  `tools/{gen_standalone_docs,gen_encyclopedia_docs}.py`,
+  and 56 additional source and documentation files.
+
+  Test scope (`tests/`) was not modified (separate maintenance track).
+
 - **PR1 (docs precision audit): fix broken imports in three how-to guides**
 
   Three how-to pages referenced submodule paths that no longer exist following the

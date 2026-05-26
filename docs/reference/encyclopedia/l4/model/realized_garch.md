@@ -28,8 +28,8 @@ mf.functions.realized_garch(
 | `X` | `np.ndarray | pd.DataFrame` | — | — | Feature matrix. Shape (n_samples, n_features). Accepts numpy arrays or DataFrames. |
 | `y` | `np.ndarray | pd.Series` | — | — | Target vector. Shape (n_samples,). Accepts numpy arrays or Series. |
 | `realized_variance` | `str | None` | `None` | — | Column name in X containing the realized-variance series (e.g. 5-minute RV or bipower variation). If None or if the column is missing / all-NaN, falls back to r^2 as a realized-variance proxy (degrades estimation quality relative to a true RV measure). |
-| `mean_model` | `str enum {"constant"}` | `'"constant"'` | — | Mean model for the return equation. Only 'constant' is supported in C49 (AR-mean deferred to a future cycle). Raises ValueError for any other value. |
-| `dist` | `str enum {"normal"}` | `'"normal"'` | — | Error distribution. Only 'normal' is supported in C49 (fat-tail extensions deferred). Raises ValueError for any other value. |
+| `mean_model` | `str enum {"constant"}` | `'"constant"'` | — | Mean model for the return equation. Only 'constant' is supported in v0.9.3 (AR-mean deferred to a future release). Raises ValueError for any other value. |
+| `dist` | `str enum {"normal"}` | `'"normal"'` | — | Error distribution. Only 'normal' is supported in v0.9.3 (fat-tail extensions deferred). Raises ValueError for any other value. |
 | `max_iter` | `int` | `2000` | >=1 | Maximum L-BFGS-B iterations per optimization start. |
 | `n_starts` | `int` | `3` | >=1 | Number of multi-start optimization restarts. Start 0 uses canonical initialization; subsequent starts perturb the parameter vector by N(0, 0.05). Best objective is selected. |
 | `random_state` | `int` | `0` | — | RNG seed for multi-start perturbations. Propagated from L0 via the per-origin RNG contract (#279): random_state = base_seed + origin_position. |
