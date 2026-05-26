@@ -56,7 +56,7 @@ def _bootstrap_ops() -> None:
     import macroforecast.layers.l4_models.ops  # noqa: F401
     import macroforecast.core.ops.l5_ops  # noqa: F401
     import macroforecast.core.ops.l6_ops  # noqa: F401
-    import macroforecast.core.ops.l7_ops  # noqa: F401
+    import macroforecast.layers.l7_interpretation.ops  # noqa: F401
     import macroforecast.core.ops.l8_ops  # noqa: F401
     import macroforecast.core.ops.diagnostic_ops  # noqa: F401
     import macroforecast.core.ops.universal  # noqa: F401

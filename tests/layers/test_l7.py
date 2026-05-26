@@ -395,7 +395,7 @@ def test_l7_7_pre_defined_blocks():
 
 def test_l7_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.core.layers.l7 import L7Interpretation
+    from macroforecast.layers.l7_interpretation.schema import L7Interpretation
 
     spec = get_layer("l7")
     assert spec.cls is L7Interpretation

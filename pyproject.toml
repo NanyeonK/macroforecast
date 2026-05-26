@@ -116,6 +116,7 @@ module = [
     "macroforecast.layers.l4_models.tuning.engine",
     "macroforecast.layers.l2_preprocessing.schema",
     "macroforecast.layers.l2_5_diagnostic.schema",
+    "macroforecast.layers.l7_interpretation.schema",
 ]
 ignore_errors = true
 
