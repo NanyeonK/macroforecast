@@ -1,14 +1,14 @@
 # Layer 1: Data Source, Target y, Predictor x
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 0: Study Scope](layer0.md)
-- Current: Layer 1
-- Next: [Layer 2: Representation / Research Preprocessing](layer2.md)
+- Previous: [L0 — Study Setup](layer0.md)
+- Current: L1
+- Next: [L2 — Preprocessing](layer2.md)
 
-Layer 1 owns the source-frame contract for a macro forecasting study. It decides
+L1 owns the source-frame contract for a macro forecasting study. It decides
 which source data define the panel, the analysis frequency, what information is
 available at each forecast origin, what target y is being forecast, and which
-predictor x columns are eligible before Layer 2 builds research representations.
+predictor x columns are eligible before L2 builds research representations.
 
 ## Simple vs Full
 
@@ -17,9 +17,9 @@ frequency when needed, target y, sample dates, and horizons. FRED-only studies
 choose a FRED source panel; custom-only studies provide a custom file path and
 frequency without choosing a FRED panel. Optional Simple helpers expose
 FRED-SD state/variable selection and FRED-SD frequency evidence policies, but
-the ordinary path keeps Layer 1 mostly defaulted.
+the ordinary path keeps L1 mostly defaulted.
 
-Full exposes the complete Layer 1 source-frame contract. The live registry
+Full exposes the complete L1 source-frame contract. The live registry
 keeps hidden compatibility axes for older custom-source recipes, but the
 Navigator primary tree shows only user-facing decisions. Those axes are not all
 the same depth: some are primary decisions, some are derived/required
@@ -30,20 +30,20 @@ resolution.
 
 ## Hierarchy
 
-Layer 1 should be read as a hierarchy, not a flat checklist.
+L1 should be read as a hierarchy, not a flat checklist.
 
 | Level | Group | Axes | Rule |
 |---|---|---|---|
 | Primary decision | Data Source Mode / Frequency | `panel_composition`, `dataset`, `frequency` | First choose FRED-only, custom-only, or FRED-plus-custom data. Then close the analysis frequency. `dataset` is a FRED source-panel choice, not a custom-only choice. |
 | Primary policy | Forecast-Time Information | `information_set_type`, `release_lag_rule`, `contemporaneous_x_rule` | Defines the data revision/vintage regime, publication lag, and same-period x availability at each forecast origin. For custom-only data, only same-period x availability is exposed by default. |
-| Contract-derived | Target (y) Definition | `target_structure` | Constrained by Layer 0 `study_scope`; y IDs, horizons, and dates live in `leaf_config`. |
-| Secondary policy | Predictor (x) Definition | `variable_universe` | Limits eligible FRED-MD/QD x columns before Layer 2 builds representations. Custom-only x columns are defined by the custom file; standalone FRED-SD x columns are defined by state and series scope. |
+| Contract-derived | Target (y) Definition | `target_structure` | Constrained by L0 `study_scope`; y IDs, horizons, and dates live in `leaf_config`. |
+| Secondary policy | Predictor (x) Definition | `variable_universe` | Limits eligible FRED-MD/QD x columns before L2 builds representations. Custom-only x columns are defined by the custom file; standalone FRED-SD x columns are defined by state and series scope. |
 | Conditional subgroup | FRED-SD Predictor Scope | `fred_sd_frequency_policy`, `fred_sd_state_group`, `state_selection`, `fred_sd_variable_group`, `sd_variable_selection` | Active only when the FRED source panel includes FRED-SD. |
-| Secondary policy | Frame availability | `missing_availability` | Closes source-frame availability gaps before Layer 2 begins. |
+| Secondary policy | Frame availability | `missing_availability` | Closes source-frame availability gaps before L2 begins. |
 
 ## Decision order
 
-Read Layer 1 in runtime order. The table below is ordered, but the hierarchy above explains which rows are parent decisions and which are subordinate controls.
+Read L1 in runtime order. The table below is ordered, but the hierarchy above explains which rows are parent decisions and which are subordinate controls.
 
 | Step | Group | Axes |
 |---|---|---|
@@ -71,7 +71,7 @@ Read Layer 1 in runtime order. The table below is ordered, but the hierarchy abo
 | `sd_variable_selection` | `all_sd_variables` | conditional FRED-SD Series List selector; `selected_sd_variables` requires `leaf_config.sd_variables` |
 | `target_structure` | `single_target` | write `single_target` with `leaf_config.target` or `multi_target` with `leaf_config.targets`; docs call these Single Target and Multiple Targets |
 | `variable_universe` | `all_variables` | FRED-MD/QD predictor metadata axis; hidden by default when no FRED-MD/QD source is selected |
-| `missing_availability` | `zero_fill_leading_predictor_gaps` | defaulted after the Layer 1 source frame exists |
+| `missing_availability` | `zero_fill_leading_predictor_gaps` | defaulted after the L1 source frame exists |
 
 ## Layer contract
 
@@ -79,13 +79,13 @@ Input:
 - source request, custom-source request when relevant, target y request, and candidate predictor x request.
 
 Output:
-- `l1_data_definition_v1`, the Layer 1 source-frame handoff artifact;
+- `l1_data_definition_v1`, the L1 source-frame handoff artifact;
 - source availability contract;
 - data reports for availability, release lag, missing policy, and FRED-SD source metadata when relevant.
 
 ## Canonical names
 
-Layer 1 is canonical-only. Recipes should use the axis IDs in the decision-order table and the values documented on each axis page. Removed aliases for source dispatch, information-set regime, and target shape are rejected during registry validation, so generated YAML, docs, and manifests stay on one vocabulary.
+L1 is canonical-only. Recipes should use the axis IDs in the decision-order table and the values documented on each axis page. Removed aliases for source dispatch, information-set regime, and target shape are rejected during registry validation, so generated YAML, docs, and manifests stay on one vocabulary.
 
 ## Related reference
 

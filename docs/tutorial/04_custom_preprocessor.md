@@ -15,7 +15,7 @@ matrices instead of one scalar.
 
 ## Why a custom preprocessor?
 
-Layer 2 (L2) is macroforecast's cleaning boundary. It applies transforms,
+L2 is macroforecast's cleaning boundary. It applies transforms,
 outlier treatment, imputation, and frame-edge handling to the raw panel. After
 L2 finishes, every downstream layer receives an identically processed dataset.
 

@@ -1,14 +1,14 @@
 # Target (y) And Predictor (x) Definitions
 
-- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [L1 — Data Source, Target y, Predictor x](index.md)
 - Current group: Target (y) and predictor (x) definitions
 
 This group names the forecasting target y and, for FRED-backed routes, the
-eligible raw predictor x columns. Layer 1 does not decide how y is transformed,
+eligible raw predictor x columns. L1 does not decide how y is transformed,
 how horizon targets are built, how x is lagged, or which representation reaches
-a model. Those decisions start in Layer 2.
+a model. Those decisions start in L2.
 
-FRED column dictionaries are not maintained in this Layer 1 page. Use
+FRED column dictionaries are not maintained in this L1 page. Use
 [5. FRED-Dataset](../../recipe_api/fred_datasets.md) for the current FRED-MD,
 FRED-QD, and FRED-SD column definitions before writing explicit y/x lists.
 
@@ -30,7 +30,7 @@ Target payload:
 - `horizons`: required forecast horizons.
 - `sample_start_date` / `sample_end_date`: optional sample-period bounds.
 
-Layer 2 boundary:
+L2 boundary:
 
 - `horizon_target_construction` decides whether y is level, difference,
   log-difference, direct average, path-average growth, or another supported
@@ -42,7 +42,7 @@ Layer 2 boundary:
 ## FRED-MD/QD Predictor (x) Universe
 
 `variable_universe` is a FRED-MD/QD metadata axis. It filters FRED-MD/FRED-QD
-source columns that are eligible as candidate predictors x before Layer 2
+source columns that are eligible as candidate predictors x before L2
 builds lags, factors, feature blocks, rotations, or custom representations.
 The current all-column dictionaries live in
 [5.1 FRED-MD](../../recipe_api/fred_datasets.md) and

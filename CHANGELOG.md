@@ -11,6 +11,26 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR4 (docs site cleanup): unify layer numbering to compact L0–L8 / L1.5–L4.5 form**
+
+  Body text and cross-reference navigation links throughout the docs site used
+  the verbose "Layer N: ..." form inconsistently alongside the compact "LN" form.
+  All body text and nav links now use the compact LN label. Page H1 titles
+  (`# Layer N: ...` in explanation pages) and encyclopedia headings
+  (`# Layer LN -- ...`) are intentionally kept in their canonical verbose forms.
+
+  | Scope | Files changed |
+  |-------|--------------|
+  | Explanation architecture pages (nav links, body refs) | `layer0.md`–`layer8.md`, five `layer1_*.md` sub-pages, `index.md` |
+  | 12-layer design overview | `12_layer_design.md` |
+  | Philosophy page | `philosophy.md` |
+  | How-to conventions | `how_to/conventions.md` |
+  | Recipe schema references | `reference/recipe_schema/data.md`, `data_policies.md`, `output.md` |
+  | Tutorial | `tutorial/04_custom_preprocessor.md` |
+
+  Termination condition: every remaining `Layer [0-9]+:` / `Layer L[0-9]+` hit
+  outside `tutorial/replications/` is a line-1 H1 title. PASS (18 hits, all H1).
+
 - **PR2 (docs site cleanup): move architecture pages to explanation; encyclopedia is single lookup source**
 
   Architecture and design-narrative pages lived under `docs/reference/architecture/` but belong in `docs/explanation/` (Diátaxis: reference = look-up, explanation = narrative). Moved all pages; encyclopedia cross-links updated to point to the new location.

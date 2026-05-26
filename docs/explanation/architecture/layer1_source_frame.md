@@ -1,9 +1,9 @@
 # Data Source Mode / Frequency
 
-- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [L1 — Data Source, Target y, Predictor x](index.md)
 - Current group: Data Source Mode / Frequency
 
-This group starts the Layer 1 hierarchy. Choose the data source mode first:
+This group starts the L1 hierarchy. Choose the data source mode first:
 FRED data only, custom data only, or FRED data plus custom data. Then close the
 analysis frequency. A FRED source-panel choice is shown only when the selected
 mode uses FRED data.
@@ -13,13 +13,13 @@ Custom files are not FRED panels. If the study uses a custom file, provide
 extension. The schema is inferred from the file frequency and source mode; the
 user should not have to choose a fake FRED-MD/FRED-QD route for custom-only data.
 
-`frequency` is the final calendar frequency of the Layer 1 source frame. It is
+`frequency` is the final calendar frequency of the L1 source frame. It is
 derived for FRED-MD, FRED-QD, and composite FRED panels. It is required for
 standalone FRED-SD and custom-only data.
 
 For the current FRED-MD, FRED-QD, and FRED-SD dataset reference, see
 [FRED Datasets in Recipes](../../recipe_api/fred_datasets.md). This page only defines which
-source route Layer 1 loads.
+source route L1 loads.
 
 | Axis | Choices | Default / rule |
 |---|---|---|
@@ -54,7 +54,7 @@ Contracts:
   - appended custom columns may use new names, but duplicate names are renamed
     with a `__custom` suffix at runtime.
 - In practical terms, a custom file is acceptable if its date index, column
-  shape, and row frequency already match the selected Layer 1 frequency.
+  shape, and row frequency already match the selected L1 frequency.
   Monthly routes expect monthly rows. Quarterly routes expect quarterly rows.
 - Data revision/vintage status is selected later by
   [4.1.2 Forecast-Time Information](availability_timing.md), not by the source
@@ -67,8 +67,8 @@ Contracts:
   that axis is a FRED-MD/QD metadata control. FRED-SD uses the dedicated state
   and series scope controls in
   [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md).
-- Official FRED-MD/QD transform codes are applied by Layer 2 `transform_policy`.
-  Layer 1 no longer exposes transform decisions; they belong to Layer 2
+- Official FRED-MD/QD transform codes are applied by L2 `transform_policy`.
+  L1 no longer exposes transform decisions; they belong to L2
   representation and research preprocessing.
 
 > **Warning:** Custom files are user-supplied source data. The Navigator can
@@ -76,7 +76,7 @@ Contracts:
 > frequency, column naming, vintage discipline, or T-code handling is correct.
 > Check this page before running custom-source recipes.
 
-Custom file shape by selected Layer 1 frequency:
+Custom file shape by selected L1 frequency:
 
 | Selected `frequency` | Expected file shape | Internal loader label |
 |---|---|---|

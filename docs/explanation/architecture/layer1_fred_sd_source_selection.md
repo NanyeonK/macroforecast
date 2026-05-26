@@ -1,12 +1,12 @@
 # FRED-SD Predictor Scope
 
-- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [L1 — Data Source, Target y, Predictor x](index.md)
 - Current group: FRED-SD predictor scope
 
 This conditional group is shown only when the selected FRED source panel
 includes FRED-SD. It restricts which state-level source columns can become
 candidate predictors x and records the native-frequency evidence needed by
-Layer 2.
+L2.
 
 These axes do not choose a mixed-frequency model. They close the source
 selection contract: which states, which FRED-SD workbook series, and how
@@ -42,19 +42,19 @@ Series Scope vs Series List:
   custom series groups and recipe imports can say whether
   `leaf_config.sd_variables` must be read.
 
-Layer 1 output:
+L1 output:
 
 - selected states;
 - selected workbook series;
 - source sheets and series metadata;
 - native-frequency report for selected FRED-SD series.
 
-Layer 2 boundary:
+L2 boundary:
 
 - `fred_sd_mixed_frequency_representation` chooses calendar alignment,
   dropping policies, native-frequency block payloads, or mixed-frequency model
-  adapters after Layer 1 has loaded and reported the source columns.
-- MIDAS or other model-side mixed-frequency behavior is Layer 3 training logic.
+  adapters after L1 has loaded and reported the source columns.
+- MIDAS or other model-side mixed-frequency behavior is L3 training logic.
 
 Selector YAML:
 

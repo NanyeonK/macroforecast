@@ -1,15 +1,15 @@
 # Layer 2: Preprocessing
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 1: Data Source, Target y, Predictor x](layer1.md)
-- Current: Layer 2
-- Next: [Layer 3: Feature Engineering](layer3.md)
+- Previous: [L1 — Data Source, Target y, Predictor x](layer1.md)
+- Current: L2
+- Next: [L3 — Feature Engineering](layer3.md)
 
-Layer 2 owns the canonical McCracken-Ng preprocessing pipeline plus
+L2 owns the canonical McCracken-Ng preprocessing pipeline plus
 mixed-frequency alignment for combined panels. Five sub-layers run in
 order: mixed-frequency alignment → transform → outlier handling →
 imputation → frame edge. Feature-engineering choices (lags / factors /
-rotations / selection) live in **Layer 3**, not Layer 2.
+rotations / selection) live in **L3**, not L2.
 
 ## Decision order (5 sub-layers, 11 axes)
 
@@ -51,11 +51,11 @@ for the callable signature + I/O contract.
 ## Layer contract
 
 Input:
-- Layer 1 source frame, target y, and candidate predictor x contract.
+- L1 source frame, target y, and candidate predictor x contract.
 
 Output:
 - `l2_clean_panel_v1`;
-- feature matrices and representation metadata consumed by Layer 3;
+- feature matrices and representation metadata consumed by L3;
 - auxiliary payloads for narrow advanced routes.
 
 ## Related reference

@@ -2,10 +2,10 @@
 
 - Parent: [Architecture](index.md)
 - Previous: [Layer 2](layer2.md)
-- Current: Layer 3
+- Current: L3
 - Next: [Layer 4](layer4.md)
 
-Layer 3 turns cleaned data into the feature and target artifacts consumed by forecasting models. It is a graph layer: recipes must use explicit `nodes` and `sinks`.
+L3 turns cleaned data into the feature and target artifacts consumed by forecasting models. It is a graph layer: recipes must use explicit `nodes` and `sinks`.
 
 ## Contract
 

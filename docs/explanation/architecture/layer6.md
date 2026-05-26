@@ -2,10 +2,10 @@
 
 - Parent: [Architecture](index.md)
 - Previous: [Layer 5](layer5.md)
-- Current: Layer 6
+- Current: L6
 - Next: [Layer 7](layer7.md)
 
-Layer 6 runs inferential tests on forecasts and evaluation artifacts. It is default off and requires `enabled: true`. Individual sub-layers also require their own `enabled: true`.
+L6 runs inferential tests on forecasts and evaluation artifacts. It is default off and requires `enabled: true`. Individual sub-layers also require their own `enabled: true`.
 
 ## Contract
 

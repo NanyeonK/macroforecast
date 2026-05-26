@@ -66,7 +66,7 @@ When writing docs you may find code that is complex or inconsistent (long dispat
 
 ## R5 — Completed-phase-only surface
 
-Docs only expose phases whose per-axis walk is finished. Phases in progress live in plan files under `plans/` and in source comments, not in user-facing docs. Layer 0 (Design) and Layer 1 (Data) are complete as of v0.9.0. Layer 2+ axes are documented only via the in-progress plan files, not in `for_researchers/` or `for_recipe_authors/`.
+Docs only expose phases whose per-axis walk is finished. Phases in progress live in plan files under `plans/` and in source comments, not in user-facing docs. L0 (design) and L1 (data) are complete as of v0.9.0. L2+ axes are documented only via the in-progress plan files, not in `for_researchers/` or `for_recipe_authors/`.
 
 If a completed axis has values scheduled for a future runtime, mark them `registry_only` with a one-line v1.x commitment — never operational until the runtime lands.
 

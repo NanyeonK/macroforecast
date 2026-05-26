@@ -1,6 +1,6 @@
 # Data Layer
 
-Layer 1 defines the forecasting dataset: source, target, predictor universe, geography, sample window, horizons, and regimes.
+L1 defines the forecasting dataset: source, target, predictor universe, geography, sample window, horizons, and regimes.
 
 Core source axes:
 

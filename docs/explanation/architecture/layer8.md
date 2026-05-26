@@ -2,9 +2,9 @@
 
 - Parent: [Architecture](index.md)
 - Previous: [Layer 7](layer7.md)
-- Current: Layer 8
+- Current: L8
 
-Layer 8 is the external boundary. It collects active layer sinks, writes artifacts, and emits a reproducible manifest.
+L8 is the external boundary. It collects active layer sinks, writes artifacts, and emits a reproducible manifest.
 
 ## Contract
 

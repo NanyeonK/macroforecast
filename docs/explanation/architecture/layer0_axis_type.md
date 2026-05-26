@@ -3,7 +3,7 @@
 - Parent: [Layer 0](layer0.md)
 - Current: `axis_type`
 
-`axis_type` is registry metadata. It is not a user-facing Layer 0 recipe axis
+`axis_type` is registry metadata. It is not a user-facing L0 recipe axis
 and should not be set in new recipes.
 
 The catalog exists so registry entries can describe how an axis behaves in the
@@ -19,7 +19,7 @@ larger design system.
 | `conditional` | axis is activated only after another choice |
 | `derived` | axis is derived from other recipe state |
 
-## How This Differs From Layer 0 User Axes
+## How This Differs From L0 User Axes
 
 | Concept | User Sets It In Recipe? | Purpose |
 |---|---:|---|

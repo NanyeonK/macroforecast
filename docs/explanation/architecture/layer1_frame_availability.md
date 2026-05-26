@@ -1,20 +1,20 @@
 # Frame Availability
 
-- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [L1 — Data Source, Target y, Predictor x](index.md)
 - Current group: Frame availability
 
-`missing_availability` decides how Layer 1 closes availability gaps after the
+`missing_availability` decides how L1 closes availability gaps after the
 source frame exists. It is a source-frame policy, not a forecast-time
 information policy and not raw-source repair.
 
 Runtime order:
 
 1. Load FRED data, custom data, or FRED-plus-custom data.
-2. Apply `missing_availability` to the resulting Layer 1 source frame.
-3. Hand the source frame to Layer 2 representation and research preprocessing.
+2. Apply `missing_availability` to the resulting L1 source frame.
+3. Hand the source frame to L2 representation and research preprocessing.
 
-Layer 2 `transform_policy` applies official FRED transform codes. Raw-source
-cleaning (missing/outlier handling before transforms) is now also a Layer 2
+L2 `transform_policy` applies official FRED transform codes. Raw-source
+cleaning (missing/outlier handling before transforms) is now also an L2
 decision via `imputation_policy` and `outlier_policy`.
 
 | Axis | Choices | Default / rule |
@@ -33,11 +33,11 @@ decision via `imputation_policy` and `outlier_policy`.
 Boundary rule:
 
 - Raw missing values already present in loaded source files are handled by
-  Layer 2 `imputation_policy` and `outlier_policy`.
+  L2 `imputation_policy` and `outlier_policy`.
 - Publication timing belongs to
   [4.1.2 Forecast-Time Information](availability_timing.md).
 - Researcher-chosen missing-data strategies after representation construction
-  belong to Layer 2.
+  belong to L2.
 - Target y imputation is not done by this axis. Missing target values remain a
   supervised-learning contract issue.
 
