@@ -7,7 +7,7 @@
     - id: rolling_shap
       type: step
       op: rolling_recompute
-      params: {model_family: xgboost, recompute_step: shap_tree, window: expanding, step_size: 12, recompute_step_params: {check_additivity: true}}
+      params: {model: xgboost, recompute_step: shap_tree, window: expanding, step_size: 12, recompute_step_params: {check_additivity: true}}
       inputs: [src_xgb, src_X, src_y]
   sinks:
     l7_importance_v1:
