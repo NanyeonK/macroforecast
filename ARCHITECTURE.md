@@ -1,9 +1,8 @@
 # Architecture — macroforecast
 
-> **Run:** 2026-05-27-deep-audit / PR4 (l2_fred_sd_alignment rename)
-> **Branch:** `deep-audit/pr4-l2-fred-sd-rename`
-> **Commit:** `ecb2a27d`
-> **Version:** v0.9.5a0 (post Phase 3g-bis restructure)
+> **Run:** 2026-05-27-deep-audit / PR8 (migration guide)
+> **Branch:** `deep-audit/pr8-migration-guide`
+> **Version:** v0.9.5a0 (post Phase 3g-bis restructure, deep-audit cascade complete)
 
 ---
 
@@ -61,11 +60,11 @@ graph TD
         L3SCH["layers/l3_features/schema.py<br/>L3 schema definition"]
     end
 
-    subgraph DOCS2["Docs (PR2 touch surface)"]
-        DR1["explanation/recipe_to_run.md<br/>sweep marker tutorial"]
-        DR2["explanation/architecture/layer7.md<br/>L7 architecture narrative"]
-        DR3["reference/api/.../l2_clean.md<br/>L2 standalone function ref"]
-        DR4["reference/recipe_schema/defaults.md<br/>schema defaults ref"]
+    subgraph DOCS8["Docs (PR8 touch surface)"]
+        DR1["explanation/migration_guide.md<br/>comprehensive migration ref"]
+        DR2["explanation/index.md<br/>toctree updated"]
+        DR3["README.md<br/>upgrading notice"]
+        DR4["CHANGELOG.md<br/>PR8 entry"]
     end
 
     subgraph SHIMS["Backward-compat Shims"]
@@ -105,10 +104,10 @@ graph TD
     FUNCS -.->|shim| APIF
     L4 --> MRF
 
-    DR1 -.->|illustrates op: fit sweep| L4
-    DR2 -.->|illustrates shap_tree op| L7
-    DR3 -.->|API ref + encyclopedia link| L2
-    DR4 -.->|schema defaults| L0
+    DR1 -.->|migration guide| CORE
+    DR2 -.->|links to migration_guide| DR1
+    DR3 -.->|upgrade notice| A1
+    DR4 -.->|PR8 entry| DR1
 
     style DR1 fill:#1e90ff,stroke:#1565c0,color:#fff
     style DR2 fill:#1e90ff,stroke:#1565c0,color:#fff
@@ -128,9 +127,10 @@ graph TD
 | `layers/l4_models/` | 35+ estimator families; `op: fit` dispatch | `core/`, `sklearn`, `statsmodels` | No (source unchanged) |
 | `layers/l7_interpretation/` | 30 importance ops: SHAP, PFI, ALE, IRF, lineage | `core/`, `shap`, `statsmodels` | No (source unchanged) |
 | `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `layers/l7_interpretation` | No |
-| `examples/recipes/l2_preprocessing_minimal.yaml` | **RENAMED** from `l2_fred_sd_alignment.yaml`; L2 axes demo on inline panel | -- | **YES (PR4: git mv + metadata update)** |
-| `examples/recipes/README.md` | Recipe gallery index | -- | **YES (PR4: entry updated)** |
-| `CHANGELOG.md` | Release notes | -- | **YES (PR4: entry added + PR7b table corrected)** |
+| `docs/explanation/migration_guide.md` | Comprehensive migration guide: axis renames, module paths, CLI change, deprecations | `docs/explanation/deprecation_timeline.md` | **YES (PR8: CREATED)** |
+| `docs/explanation/index.md` | Explanation section toctree | -- | **YES (PR8: migration_guide added)** |
+| `README.md` | Project README with install + quickstart | -- | **YES (PR8: upgrading notice added)** |
+| `CHANGELOG.md` | Release notes | -- | **YES (PR8: entry added)** |
 
 ---
 
@@ -228,21 +228,19 @@ graph TD
 
 ---
 
-## File Change Surface (PR4 — this run)
+## File Change Surface (PR8 — this run)
 
-PR4 is a documentation/recipe housekeeping change. No source code was modified.
+PR8 is a documentation-only change. No source code was modified.
 
 | File | Action | What changed |
 |------|--------|-------------|
-| `examples/recipes/l2_fred_sd_alignment.yaml` | Deleted (via git mv) | Old misleading filename removed |
-| `examples/recipes/l2_preprocessing_minimal.yaml` | Created (via git mv) | Renamed file; header comment + metadata.name + metadata.description updated to accurately describe L2 preprocessing axes (not FRED-SD alignment) |
-| `examples/recipes/README.md` | Modified | In-progress entry updated from old to new filename |
-| `CHANGELOG.md` | Modified | PR4 housekeeping entry added; PR7b table entry corrected; TODO note for PR8+ FRED-SD demo added |
+| `docs/explanation/migration_guide.md` | **CREATED** | Comprehensive migration guide for v0.8.x / v0.9.0 upgraders: axis renames, module path migrations, removed features, CLI entry change, deprecation timeline, recipe YAML checklist |
+| `docs/explanation/index.md` | Modified | `migration_guide` added to toctree |
+| `README.md` | Modified | "Upgrading?" notice added near version badge block, linking to migration guide |
+| `CHANGELOG.md` | Modified | PR8 entry added to `[Unreleased]` Docs section |
 
-**Smoke test:** `mf.run('examples/recipes/l2_preprocessing_minimal.yaml')` → PASS, cells=1
-
-**Termination greps (all PASS):**
-- `ls examples/recipes/l2_fred_sd_alignment.yaml` → file not found
-- `ls examples/recipes/l2_preprocessing_minimal.yaml` → file exists
-- `metadata.name` = `l2_preprocessing_minimal`
-- Remaining old-filename references: only `CHANGELOG.md` (intentional historical record) and `docs/_audit/` snapshots (not CI-active)
+**Smoke tests (all PASS):**
+- `ls docs/explanation/migration_guide.md` → file exists
+- `grep -E "migration.guide" README.md` → link found
+- `sphinx-build -W -b html docs docs/_build/html_verify` → exit 0, 0 warnings
+- Pre-existing test failure in `test_l3_feature_selection_c47.py` (boruta_selection ModuleNotFoundError) is unchanged from baseline — not introduced by this PR.

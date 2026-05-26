@@ -72,6 +72,33 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Docs
 
+- **PR8 (deep-audit migration guide): comprehensive migration reference for v0.8.x / v0.9.0 upgraders**
+
+  Created `docs/explanation/migration_guide.md` — the first dedicated migration guide in the
+  repository. Covers all breaking changes introduced across the deep-audit PR series and prior
+  version transitions.
+
+  Contents:
+  - v0.9.x → v0.10.0 upcoming removals (with before/after code snippets): `model_family=` →
+    `model=`, `model_families=` → `models=`, `benchmark_family=` → `benchmark_model=`,
+    `OPERATIONAL/FUTURE_MODEL_FAMILIES` → `OPERATIONAL/FUTURE_MODELS`, `decision_at_5pct` →
+    `decision`.
+  - v0.1 / v0.8.x → v0.9.x axis renames (hard changes, no alias): `custom_source_policy` →
+    `panel_composition`, `forecast_strategy` → `forecast_policy`, `quarterly_to_monthly_rule` →
+    `quarterly_to_monthly_policy`, `monthly_to_quarterly_rule` → `monthly_to_quarterly_policy`,
+    `reproducibility_mode` → `reproducibility_policy`.
+  - Module path migrations: `macroforecast.scaffold` → `tools.docgen`, `DEFAULT_FORECAST_POLICY`
+    → `DEFAULT_FORECAST_STRATEGY`; shim-backed paths (`interpretation`, `recipes`).
+  - Removed features table: wizard, navigator pages, audience-tree doc paths,
+    `scripts/v01_smoke_check.py`, `l2_fred_sd_alignment.yaml`.
+  - CLI entry point change: `macroforecast.__main__:main` now routes to `tools.docgen.cli:main`.
+  - Recipe YAML migration checklist.
+  - Links to `docs/explanation/deprecation_timeline.md` (PR6) for the full removal schedule.
+
+  Navigation:
+  - `docs/explanation/index.md` toctree updated to include `migration_guide`.
+  - `README.md` "Upgrading?" notice added near version badge block, linking to migration guide.
+
 - **PR7 (deep-audit sphinx + how_to executability): Sphinx -W zero warnings + how_to import audit**
 
   Problem 10 (Sphinx strict build) and Problem 11 (how_to import executability).
