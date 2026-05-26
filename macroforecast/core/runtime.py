@@ -13261,11 +13261,21 @@ def _mcs_from_summary_metrics(
 def _mcs_from_per_origin_panel(
     panel: pd.DataFrame, sub: dict[str, Any]
 ) -> dict[str, Any]:
-    """Hansen (2005) MCS via Politis-Romano (1994) stationary block bootstrap
-    on per-origin loss differentials.
+    """Single-step max-test for model confidence set approximation, using
+    Politis-Romano (1994) stationary block bootstrap on per-origin loss
+    differentials.
 
-    For each (target, horizon) slice we form an (origin x model) loss matrix
-    L. The Hansen MCS test statistic is
+    NOTE: ``mcs_inclusion`` uses the single-step T_max statistic applied once
+    (NOT the full iterative Hansen-Lunde-Nason 2011 MCS elimination procedure).
+    The current implementation computes the T_max statistic over all models
+    simultaneously and retains those below the bootstrap critical value in a
+    single pass. Full iterative MCS elimination (where the worst model is
+    removed and the procedure repeats on the remaining set) is deferred to
+    Batch 2. The ``stepm_rejected`` output uses the Romano-Wolf StepM iterative
+    step-down, which IS iterative.
+
+    For each (target, horizon) slice we form an (origin x model) loss matrix L.
+    The single-step T_max statistic is:
 
         T_max = max_i  (L_bar_i - L_bar_mean) / sqrt(Var(L_bar_i))
 
@@ -13273,8 +13283,14 @@ def _mcs_from_per_origin_panel(
     estimated from the bootstrap pool. Models whose deviation from the
     cross-model mean lands inside the (1 - alpha) bootstrap quantile of the
     null distribution (built by stationary block bootstrap on demeaned
-    per-origin losses) are retained in the MCS. SPA / Reality Check / StepM
-    reuse the bootstrap pool with their own studentization / step-down rule.
+    per-origin losses) are retained in the approximate MCS. SPA / Reality Check
+    / StepM reuse the bootstrap pool with their own step-down rule.
+
+    SPA p-value (Hansen 2005) requires a user-specified ``spa_benchmark_model``
+    key in ``sub``. If not provided, ``spa_p_values`` and
+    ``reality_check_p_values`` are returned as NaN with a UserWarning.
+    Specify the benchmark model_id explicitly (e.g. the AR benchmark) for
+    valid SPA / Reality Check p-values.
     """
 
     metric_col = (
@@ -13338,17 +13354,41 @@ def _mcs_from_per_origin_panel(
         boot_t = boot_dev / np.sqrt(boot_var)
         boot_t_max = boot_t.max(axis=1)
         critical = float(np.quantile(boot_t_max, 1 - alpha))
+        # Single-step max-test: retain all models below the bootstrap critical.
+        # This is NOT the iterative Hansen-Lunde-Nason (2011) elimination;
+        # full iterative MCS is deferred to Batch 2 PR13.
         mcs_set = {
             str(model) for model, t in zip(wide.columns, observed_t) if t <= critical
         }
         if not mcs_set:
             mcs_set = {str(wide.columns[int(np.argmin(observed_t))])}
 
-        # SPA / Reality Check p-value via the same bootstrap pool: best-model
-        # vs benchmark relative loss (using the cross-model best as the proxy).
-        relative = boot_means - boot_means[:, [int(np.argmin(means))]]
-        spa_stat = float((relative.max(axis=1) >= np.max(means - means.min())).mean())
-        spa_p = float(spa_stat)
+        # SPA: Hansen (2005) requires a user-specified benchmark model.
+        # Using the best-performing model as benchmark is data-dependent and
+        # makes the p-value depend on model set composition, violating the
+        # pre-specification requirement of the SPA test.
+        spa_benchmark = sub.get("spa_benchmark_model", None)
+        if spa_benchmark is None or spa_benchmark not in wide.columns:
+            import warnings as _warnings
+            _warnings.warn(
+                "SPA benchmark model not specified (spa_benchmark_model missing "
+                "from sub_layers config). spa_p_values and reality_check_p_values "
+                "will be NaN. Specify spa_benchmark_model (e.g. the AR benchmark "
+                "model_id) for valid SPA / Reality Check p-values.",
+                UserWarning,
+                stacklevel=2,
+            )
+            spa_p = float("nan")
+        else:
+            bm_idx = list(wide.columns).index(spa_benchmark)
+            # Relative performance vs specified benchmark across bootstrap replications.
+            relative = boot_means - boot_means[:, [bm_idx]]
+            obs_relative = means - means[bm_idx]
+            # SPA p-value: fraction of bootstrap samples where the max relative
+            # loss differential (vs benchmark) exceeds the observed maximum.
+            spa_p = float(
+                (relative.max(axis=1) >= float(obs_relative.max())).mean()
+            )
 
         # StepM (Romano-Wolf) iteratively trims models whose t exceeds the
         # bootstrap critical at each step.
@@ -13380,6 +13420,9 @@ def _mcs_from_per_origin_panel(
         key = (target, int(horizon), alpha)
         mcs[key] = mcs_set
         spa[(target, int(horizon))] = spa_p
+        # TODO Batch 2 (PR13): reality_check uses White (2000) studentization,
+        # which differs from SPA's consistent version (Hansen 2005). For now
+        # reality_check mirrors spa_p; both return NaN when benchmark unspecified.
         reality[(target, int(horizon))] = spa_p
         stepm[key] = stepm_rejected
 
