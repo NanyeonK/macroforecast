@@ -1,4 +1,4 @@
-from macroforecast.core.layers.l5 import (
+from macroforecast.layers.l5_evaluation.schema import (
     make_l5_yaml,
     make_recipe_with_benchmark,
     make_recipe_with_l3_metadata,
@@ -146,7 +146,7 @@ def test_l5_economic_metrics_does_not_exist():
 
 def test_l5_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.core.layers.l5 import L5Evaluation
+    from macroforecast.layers.l5_evaluation.schema import L5Evaluation
 
     spec = get_layer("l5")
     assert spec.cls is L5Evaluation
