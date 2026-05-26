@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macroforecast.core.layers.l3 import (
+from macroforecast.layers.l3_features.schema import (
     build_cascade_chain,
     build_metadata_artifact,
     expand_sweeps,
@@ -287,7 +287,7 @@ def test_l3_two_sinks_in_layer_sinks():
 
 def test_l3_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.core.layers.l3 import L3FeatureEngineering
+    from macroforecast.layers.l3_features.schema import L3FeatureEngineering
 
     spec = get_layer("l3")
     assert spec.cls is L3FeatureEngineering
