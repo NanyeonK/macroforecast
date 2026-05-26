@@ -1,4 +1,4 @@
-# Why 12 Layers?
+# The Layer Design
 
 The number of layers is not arbitrary. Each layer boundary solves a specific
 problem in reproducible forecasting research. This page explains what those
@@ -29,10 +29,9 @@ merged with the adjacent layer?"
 
 ---
 
-## Why the Count Is 9 Main Layers Plus 4 Diagnostic Halves (13 Slots Total)
+## Design: 9 Main Layers Plus 4 Diagnostic Slots (13 Slots Total)
 
-The name "12 Layers" refers to the brand and the canonical ordering label;
-the full canonical flow has 13 named slots: 9 main layers (L0 through L8)
+The full canonical flow has 13 named slots: 9 main layers (L0 through L8)
 plus 4 diagnostic half-layers (L1.5, L2.5, L3.5, L4.5). These 13 slots
 are not 13 equally important compartments.
 The diagnostic half-layers are a different kind of thing from the main

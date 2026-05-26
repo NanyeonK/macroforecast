@@ -8,7 +8,7 @@ with complex recipes or extending the package.
 ```{toctree}
 :maxdepth: 1
 
-12_layer_design
+layer_design
 bit_exact_replicate
 honesty_pass
 recipe_to_run

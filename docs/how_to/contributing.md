@@ -8,7 +8,7 @@ ship a release. Start here.
 | Goal | Page |
 |---|---|
 | Understand the bit-exact replicate contract every change must preserve | [Reproducibility policy](reproducibility_policy.md) |
-| Read the canonical 12-layer design before touching `core/` | [Architecture index](../explanation/architecture/index.md) |
+| Read the canonical layer design before touching `core/` | [Architecture index](../explanation/architecture/index.md) |
 | Read the per-layer contract before touching one layer | [Architecture: layer pages](../explanation/architecture/index.md) |
 | Run the test suite locally | see [`CLAUDE.md`](../../CLAUDE.md) at the repo root |
 | Cut a release | [`.github/RELEASE_CHECKLIST.md`](https://github.com/NanyeonK/macroforecast/blob/main/.github/RELEASE_CHECKLIST.md) |

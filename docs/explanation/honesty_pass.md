@@ -83,7 +83,7 @@ follow the implementation progress.
 
 ### v0.1 — First Design Pass
 
-The package was released with the full 12-layer schema. The codex review
+The package was released with the full layered schema. The codex review
 on PR #163 flagged 19 families and ops whose v0.1 runtime did not match the
 published procedure named in the design. They were demoted from `operational`
 to `future`. The affected items spanned three areas: regime estimation in L1.G
