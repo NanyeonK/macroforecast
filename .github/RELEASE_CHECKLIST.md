@@ -21,8 +21,8 @@ Run before tagging a new release. The version-consistency CI step in
       ``LayerImplementationSpec`` (axes / options / sub-layers),
       regenerate the encyclopedia and stage the diff:
       ```bash
-      python -m macroforecast.scaffold encyclopedia docs/encyclopedia/
-      git add docs/encyclopedia/
+      python -m tools.docgen encyclopedia docs/reference/encyclopedia/
+      git add docs/reference/encyclopedia/
       ```
       The ``ci-docs`` Encyclopedia drift check fails the build if this
       step is skipped.

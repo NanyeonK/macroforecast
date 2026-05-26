@@ -65,7 +65,7 @@ def build_experiment() -> mf.Experiment:
             horizons=[1],
             frequency="monthly",
             feature_builder="raw_feature_panel",
-            model_family="my_fred_sd_mixed_frequency_model",
+            model="my_fred_sd_mixed_frequency_model",
             benchmark_config={"minimum_train_size": 5},
         )
         .use_fred_sd_selection(states=["CA", "TX"], variables=["UR", "NQGSP"])
