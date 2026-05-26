@@ -91,6 +91,41 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **PR7 (hotfix FINAL): docs-code drift verification gate + tool import-path fixes**
+
+  Final PR in the comprehensive hotfix cascade. Verification gate confirms all 15 TCs pass.
+  Additionally resolved 21 pre-existing test failures discovered during verification:
+
+  | Change | Files |
+  |--------|-------|
+  | `tools/docgen/builder.py`: `api.run` → `api.recipe.run` (post-restructure drift) | `builder.py` |
+  | `tools/audit_docs_vs_code.py`: `_bootstrap_ops` old `core.ops.l5/l6/l8_ops` → `layers.*.ops` | `audit_docs_vs_code.py` |
+  | `tools/gen_encyclopedia_docs.py`: same `_bootstrap_ops` import-path fix | `gen_encyclopedia_docs.py` |
+  | `tests/api/`: `model_family=` → `model=` in 7 test call sites (post-PR4 drift) | `test_forecast.py`, `test_experiment.py` |
+  | `tests/core/test_l3_5_selection_view_none.py`: fix import to `macroforecast.layers.l3_5_diagnostic.schema` | `test_l3_5_selection_view_none.py` |
+
+  **Verification results:**
+
+  | TC | Condition | Verdict |
+  |----|-----------|---------|
+  | TC1 | README/ARCHITECTURE no "12-layer" / "12 layers" | PASS |
+  | TC2 | CHANGELOG no cycle codes | PASS |
+  | TC3 | No `macroforecast.scaffold` in docs/macroforecast (excluding _build) | PASS |
+  | TC4 | `explanation/architecture/` no `# Layer N:` headings | PASS |
+  | TC5 | No `custom_source_policy` in macroforecast/ | PASS |
+  | TC6 | `model_family` in api/ only in deprecation context | PASS |
+  | TC7 | Deprecated constants only in `__getattr__` shim | PASS |
+  | TC8 | No `model_family:` / `base_family:` in examples/recipes/ | PASS |
+  | TC9 | `examples/recipes/archive_v0/` deleted | PASS |
+  | TC10 | `tests/scaffold/` removed | PASS |
+  | TC11 | No old `core.ops.l3/l4/l7_ops` imports in tests/ | PASS |
+  | TC12 | Focused pytest (api + tools): 21 new passes, 0 regressions | PASS |
+  | TC13 | `test_encyclopedia_op_coverage.py` — 95 passed | PASS |
+  | TC14 | Encyclopedia regen: 313 pages, zero diff vs checked-in | PASS |
+  | TC15 | L1-L8 axis counts: all match; L6 -4 meta axes (intentional); L3/L4/L7 op gaps expected | PASS |
+
+  **Behavioral impact**: NONE to runtime. Tool import paths corrected. Test assertions fixed to match current API.
+
 - **PR6 (hotfix): tests API vocab update + tests/scaffold/ → tests/tools/docgen/ move**
 
   Follow-up cleanup to PR4 and Phase 5 tooling rename:

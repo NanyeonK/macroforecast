@@ -378,10 +378,10 @@ class RecipeBuilder:
         """Build + run. Forwards to ``macroforecast.run``; returns the
         ``ManifestExecutionResult``."""
 
-        import macroforecast.api as api
+        from macroforecast.api.recipe import run as _run
 
         recipe = self.build()
-        return api.run(recipe, output_directory=output_directory, **kwargs)
+        return _run(recipe, output_directory=output_directory, **kwargs)
 
     def validate(self) -> list[str]:
         """Run each layer's ``validate_layer`` on the partial recipe and
@@ -395,15 +395,15 @@ class RecipeBuilder:
 
         errors: list[str] = []
         layer_validators = (
-            ("0_meta", "macroforecast.core.layers.l0"),
+            ("0_meta", "macroforecast.layers.l0_meta.schema"),
             ("1_data", "macroforecast.layers.l1_data.schema"),
             ("2_preprocessing", "macroforecast.layers.l2_preprocessing.schema"),
             ("3_feature_engineering", "macroforecast.layers.l3_features.schema"),
             ("4_forecasting_model", "macroforecast.layers.l4_models.schema"),
-            ("5_evaluation", "macroforecast.core.layers.l5"),
-            ("6_statistical_tests", "macroforecast.core.layers.l6"),
-            ("7_interpretation", "macroforecast.core.layers.l7"),
-            ("8_output", "macroforecast.core.layers.l8"),
+            ("5_evaluation", "macroforecast.layers.l5_evaluation.schema"),
+            ("6_statistical_tests", "macroforecast.layers.l6_tests.schema"),
+            ("7_interpretation", "macroforecast.layers.l7_interpretation.schema"),
+            ("8_output", "macroforecast.layers.l8_output.schema"),
         )
         for key, module_name in layer_validators:
             block = self._recipe.get(key)
