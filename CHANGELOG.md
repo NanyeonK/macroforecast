@@ -51,6 +51,30 @@ full per-version honesty-pass history embedded in repo documentation.
   in `docs/how_to/partial_layer_execution.md` and `docs/tutorial/replications/goulet_coulombe_2021.md`
   updated to new paths.
 
+- **PR7b (recipe cleanup): migrate 5 L1/L2 recipes from stale `fixed_axes` L3 syntax to nodes/sinks DSL**
+
+  Per PR6 audit (Pattern 2): five recipes in `examples/recipes/` contained a
+  `3_feature_engineering:` block using the legacy `fixed_axes` sugar, which the current L3
+  schema rejects (`L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported`).
+
+  Each recipe was updated to include a complete, end-to-end runnable recipe skeleton:
+  a `0_meta` block with deterministic seed, a `1_data` block with a 12-row
+  `custom_panel_inline` synthetic dataset (preserving all original L1 axes such as
+  `regime_definition` and `regime_estimation_temporal_rule`), a safe `2_preprocessing`
+  block compatible with `custom_panel_only`, and minimal lag-1 ridge L3+L4 blocks using
+  the current nodes/sinks DAG pattern.
+
+  | Recipe | L1 axis of interest |
+  |--------|---------------------|
+  | `l1_minimal.yaml` | `panel_composition: custom_panel_only` baseline |
+  | `l1_with_regime.yaml` | `regime_definition: external_nber` |
+  | `l1_estimated_markov_switching.yaml` | `regime_definition: estimated_markov_switching` + `expanding_window_per_origin` |
+  | `l2_minimal.yaml` | minimal `2_preprocessing` with explicit safe defaults |
+  | `l2_fred_sd_alignment.yaml` | `sd_series_frequency_filter`, `quarterly_to_monthly_policy`, full preprocessing policy set |
+
+  Post-migration sweep: 11 PASS / 0 FAIL across all active `examples/recipes/` recipes.
+  Sweep audit committed to `docs/_audit/recipe-sweep-2026-05-27-post-pr7.md`.
+
 - **PR6 (docs precision audit): committed full example-recipe sweep audit table (38 recipes, 4-category classification) to `docs/_audit/recipe-sweep-2026-05-26.md`; no recipe edits (check8 audit — PR7+ scope for repairs)**
 
   Sweep result: 6 PASS, 32 FAIL_SCHEMA, 0 FAIL_RUNTIME, 0 NEGATIVE_EXAMPLE.
