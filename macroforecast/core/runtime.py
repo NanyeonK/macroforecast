@@ -12930,9 +12930,13 @@ def _density_interval_battery(
     hits = (pit < alpha).astype(int)
     p_hat = float(hits.mean()) if hits.size else 0.0
     if 0 < p_hat < 1:
-        ll_ratio = -2.0 * (
-            hits.size * (alpha * np.log(alpha) + (1 - alpha) * np.log(1 - alpha))
-            - hits.size * (p_hat * np.log(p_hat) + (1 - p_hat) * np.log(1 - p_hat))
+        # Kupiec (1995) LR_uc = 2[x log(p_hat/alpha) + (n-x) log((1-p_hat)/(1-alpha))]
+        # This is twice the log-LR of unrestricted (p=p_hat) vs restricted (p=alpha)
+        # binomial model. Always >= 0; asymptotically chi^2(1) under H0: p_hat=alpha.
+        x_hits = float(hits.sum())
+        ll_ratio = 2.0 * (
+            x_hits * np.log(p_hat / alpha)
+            + (hits.size - x_hits) * np.log((1.0 - p_hat) / (1.0 - alpha))
         )
         kupiec_p = float(1.0 - _stats.chi2.cdf(ll_ratio, df=1))
     else:
