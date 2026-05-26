@@ -30,6 +30,40 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR3 (critical): Clark-West one-sided p-value corrected for negative test statistic — 3 locations**
+
+  The Clark-West (2006/2007) test is one-sided: H_a states that the large
+  (unrestricted) model improves on the small (restricted) model.  The
+  correct one-sided p-value is
+
+      p_one = 1 - Phi(t_CW)
+
+  which equals `p_two / 2` when `t_CW > 0` and `1 - p_two / 2` when
+  `t_CW <= 0`.
+
+  All three code paths that compute the CW one-sided p-value contained the
+  same bug: when `stat <= 0` the code returned the two-sided `p_two`
+  unchanged instead of `1 - p_two / 2`.  For a strongly negative stat
+  (e.g. `t_CW = -10`), `p_two` is near zero, so the buggy code incorrectly
+  rejected H_0 with near-certainty — exactly the opposite of the correct
+  conclusion (strong evidence against H_a, fail to reject H_0).
+
+  Example: `stat = -10.30`, `p_two = 7.3e-25`.
+  - Pre-fix `pvalue = 7.3e-25` (false rejection of H_0).
+  - Post-fix `pvalue = 1.0 - 3.6e-25 ≈ 1.000` (correct fail-to-reject).
+
+  Fix applied at:
+  1. `macroforecast/api/functions/tests.py` — `cw_test()` (~line 894).
+  2. `macroforecast/api/functions/tests.py` — `enc_new_test()` (~line 991).
+  3. `macroforecast/core/runtime.py` — recipe-engine CW path (~line 12788).
+
+  The `enc_new_test` fix also covers Clark-McCracken (2001) encompassing
+  test, which uses the same one-sided normal reference distribution.
+
+  Tests: `tests/core/test_cw_one_sided.py` (6 new tests covering negative
+  stat, strongly-negative stat near-1 assertion, enc_new symmetry property,
+  positive stat regression, and None-input edge case).
+
 - **PR2 (critical): Permutation importance deterministic reversal replaced with proper RNG — bit-exact replication restored**
 
   The L7 recipe-path helper `_permutation_importance_frame` used a deterministic
