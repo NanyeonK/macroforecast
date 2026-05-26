@@ -42,7 +42,7 @@ import macroforecast.layers.l3_5_diagnostic.schema as l3_5_layer
 import macroforecast.layers.l4_5_diagnostic.schema as l4_5_layer
 import macroforecast.layers.l3_features.schema as l3_layer
 import macroforecast.layers.l4_models.schema as l4_layer
-from .layers import l5 as l5_layer
+import macroforecast.layers.l5_evaluation.schema as l5_layer
 import macroforecast.layers.l1_data.schema as l1_layer
 import macroforecast.layers.l2_preprocessing.schema as l2_layer
 # Load collocated ops for side-effect registration (l5/l6/l8 ops no longer

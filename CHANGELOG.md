@@ -7,6 +7,19 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **Phase 3g-bis PR #D: collocate L5 schema and ops** (see PR)
+  - Deleted: `macroforecast/core/layers/l5.py` (-417 lines) — legacy schema
+    body superseded by the Phase 3f collocated-layer restructure.
+  - Deleted: `macroforecast/core/ops/l5_ops.py` (-86 lines) — legacy ops
+    body; full 87-line implementation moved to canonical location.
+  - Canonical location (unchanged): `macroforecast/layers/l5_evaluation/ops.py`
+    (shim replaced with full body).
+  - Modified: `macroforecast/core/runtime.py` (1 line: l5 layer source updated).
+  - Test import paths updated in 1 file: `tests/layers/test_l5.py` (lines 1
+    and 149; legacy `macroforecast.core.layers.l5` replaced with
+    `macroforecast.layers.l5_evaluation.schema`).
+  - **Behavioral impact**: none. Dead-file removal + shim-to-body promotion only.
+
 - **Phase 3g-bis PR #C: delete legacy L0 schema body** (see PR)
   - Deleted: `macroforecast/core/layers/l0.py` (373 lines) — legacy duplicate
     body superseded by the Phase 3f collocated-layer restructure.
