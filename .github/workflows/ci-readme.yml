@@ -1,0 +1,26 @@
+name: ci-readme-doctest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "README.md"
+      - "macroforecast/**"
+  pull_request:
+    paths:
+      - "README.md"
+      - "macroforecast/**"
+
+jobs:
+  readme-recipe:
+    name: README minimal recipe execution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install macroforecast
+        run: pip install -e ".[dev]"
+      - name: Extract and run README minimal recipe
+        run: python3 tools/run_readme_recipe.py
