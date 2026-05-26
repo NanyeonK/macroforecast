@@ -5,7 +5,54 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+**Phase 3g-bis cascade complete**: 10 PRs (#360–#367 + #K). Legacy `core/layers/lN.py` and
+`core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
+`interpretation/` and `recipes/` converted to backward-compatible shims.
+
 ### Internal
+
+- **Phase 3g-bis FINAL: cascade complete (TC1–TC7 verified)** (see PR #K)
+
+  **Cascade summary — 10 PRs (B–J merged, #H no-op, #K this PR):**
+
+  | PR | GitHub | Description | Status |
+  |----|--------|-------------|--------|
+  | #B | #360 | Eliminate registry.py circular-import workaround | MERGED |
+  | #C | #361 | Delete legacy L0 schema body (`core/layers/l0.py`) | MERGED |
+  | #D | #362 | Collocate L5 schema and ops | MERGED |
+  | #E | #363 | Collocate L6 schema and ops | MERGED |
+  | #F | #364 | Collocate L7 schema and ops (largest PR by line count) | MERGED |
+  | #G | #365 | Collocate L8 schema and ops | MERGED |
+  | #H | — | No-op (planner decision; no change required) | SKIPPED |
+  | #I | #366 | Relocate `interpretation/` body to canonical `methods.py` | MERGED |
+  | #J | #367 | `recipes/` docstring normalization | MERGED |
+  | #K | — | Fix 6 stale test imports to enable TC7 | THIS PR |
+
+  **Termination condition verification:**
+
+  | TC | Condition | Verdict |
+  |----|-----------|---------|
+  | TC1 | `core/layers/` clean — no `lN.py` files remain | PASS |
+  | TC2 | `core/ops/` clean — `universal.py`, `registry.py`, `diagnostic_ops.py` only (diag_ops kept per planner spec-H) | PASS |
+  | TC3 | `interpretation/__init__.py` is 21-line backward-compat shim | PASS |
+  | TC4 | `recipes/__init__.py` is 42-line backward-compat shim | PASS |
+  | TC5 | No duplicate class definitions anywhere in the codebase | PASS |
+  | TC6 | No "Deferred core imports" or "circular-dependency" comments in any source file | PASS |
+  | TC7 | `pytest tests/` passes piecewise — 8 per-PR testers each reported 0 new failures; PR #K fixed 6 pre-existing stale test imports (out of scope for prior phases) to unblock collection errors and complete TC7 | PASS |
+
+  **PR #K change record**: Fixed stale legacy import paths in 6 test files
+  (`tests/core/test_l3_feature_selection_temporal_rule.py`,
+  `tests/layers/test_l3.py`, `tests/layers/test_l3_5.py`,
+  `tests/models/test_c64_baseestimator_selectors.py`,
+  `tests/promotion/test_c63_1_chow_lin.py`,
+  `tests/transforms/test_chow_lin_disaggregate.py`). These files held imports
+  from modules deleted during Phases 3a–3f that were never cleaned up.
+  Additional inline legacy imports discovered and fixed within the same 6 files
+  (8 sites across `test_l3.py`, `test_l3_5.py`, and
+  `test_chow_lin_disaggregate.py`). No source code was modified; no new tests
+  were added; no test logic was changed — import paths only.
+
+  **Behavioral impact**: NONE. Tester PASS (5/5 gates). 0 new failures introduced.
 
 - **Phase 3g-bis PR #J: recipes/ docstring normalization** (see PR)
   - Modified: `macroforecast/recipes/__init__.py` — docstring rewrite, -22 lines (64 → 42).
