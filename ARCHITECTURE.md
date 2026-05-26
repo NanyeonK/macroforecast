@@ -1,7 +1,7 @@
 # Architecture — macroforecast
 
-> **Run:** 2026-05-26-docs-precision-audit / PR1 (broken imports fix)
-> **Branch:** `docs-fix/pr1-broken-imports`
+> **Run:** 2026-05-26-docs-precision-audit / PR2 (YAML recipe block fixes)
+> **Branch:** `docs-fix/pr2-yaml-recipes`
 > **Version:** v0.9.5a0 (post Phase 3g-bis restructure)
 
 ---
@@ -53,11 +53,18 @@ graph TD
         L8["layers/l8_output<br/>json/csv/parquet/latex"]
     end
 
-    subgraph L3SUB["L3 Sub-modules (docs fixed in this run)"]
+    subgraph L3SUB["L3 Sub-modules"]
         L3SEL["layers/l3_features/selection.py<br/>Boruta class"]
         L3TRF["layers/l3_features/transforms.py<br/>chow_lin_disaggregate"]
         L3OPS["layers/l3_features/ops.py<br/>37 DAG ops registry"]
         L3SCH["layers/l3_features/schema.py<br/>L3 schema definition"]
+    end
+
+    subgraph DOCS2["Docs (PR2 touch surface)"]
+        DR1["explanation/recipe_to_run.md<br/>sweep marker tutorial"]
+        DR2["explanation/architecture/layer7.md<br/>L7 architecture narrative"]
+        DR3["reference/api/.../l2_clean.md<br/>L2 standalone function ref"]
+        DR4["reference/recipe_schema/defaults.md<br/>schema defaults ref"]
     end
 
     subgraph SHIMS["Backward-compat Shims"]
@@ -97,8 +104,15 @@ graph TD
     FUNCS -.->|shim| APIF
     L4 --> MRF
 
-    style L3SEL fill:#1e90ff,stroke:#1565c0,color:#fff
-    style L3TRF fill:#1e90ff,stroke:#1565c0,color:#fff
+    DR1 -.->|illustrates op: fit sweep| L4
+    DR2 -.->|illustrates shap_tree op| L7
+    DR3 -.->|API ref + encyclopedia link| L2
+    DR4 -.->|schema defaults| L0
+
+    style DR1 fill:#1e90ff,stroke:#1565c0,color:#fff
+    style DR2 fill:#1e90ff,stroke:#1565c0,color:#fff
+    style DR3 fill:#1e90ff,stroke:#1565c0,color:#fff
+    style DR4 fill:#1e90ff,stroke:#1565c0,color:#fff
 ```
 
 | Module/Package | Purpose | Key Dependencies | Changed in This Run |
@@ -109,13 +123,14 @@ graph TD
 | `core/execution.py` | Cell loop, seed propagation, bit-exact replicate | `core/runtime.py`, `core/manifest.py` | No |
 | `core/runtime.py` | Per-layer `materialize_lN` helpers | all `layers/` | No |
 | `core/status.py` | `OPERATIONAL` / `FUTURE` two-value vocabulary | -- | No |
-| `layers/l3_features/` | L3 feature engineering DAG: 37 ops, Boruta, Chow-Lin | `core/`, `sklearn` | No (source unchanged) |
-| `layers/l3_features/selection.py` | `Boruta` class -- Kursa-Rudnicki (2010) feature selector | `sklearn`, `numpy` | **Docs fixed** |
-| `layers/l3_features/transforms.py` | `chow_lin_disaggregate` -- Chow-Lin (1971) GLS disaggregation | `numpy`, `scipy` | **Docs fixed** |
-| `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `layers/l7_interpretation` | No (shim operational) |
-| `docs/how_to/feature_selection_boruta.md` | User guide for Boruta selector | -- | **Import + prose fixed** |
-| `docs/how_to/advanced_recipes.md` | User guide for recipe orchestration | -- | **Import + prose fixed** |
-| `docs/how_to/chow_lin_disaggregation.md` | User guide for Chow-Lin disaggregation | -- | **Import + prose fixed** |
+| `layers/l2_preprocessing/` | Transform, outlier, imputation; `freq_align_*_clean` callables | `core/`, `pandas` | No (source unchanged) |
+| `layers/l4_models/` | 35+ estimator families; `op: fit` dispatch | `core/`, `sklearn`, `statsmodels` | No (source unchanged) |
+| `layers/l7_interpretation/` | 30 importance ops: SHAP, PFI, ALE, IRF, lineage | `core/`, `shap`, `statsmodels` | No (source unchanged) |
+| `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `layers/l7_interpretation` | No |
+| `docs/explanation/recipe_to_run.md` | Sweep marker tutorial | -- | **YAML block: op: fit + params:** |
+| `docs/explanation/architecture/layer7.md` | L7 architecture narrative + example | -- | **YAML param: model: xgboost** |
+| `docs/reference/api/.../l2_clean.md` | L2 standalone function API reference | -- | **Links: _rule → _policy (×2)** |
+| `docs/reference/recipe_schema/defaults.md` | Schema defaults reference | -- | **Prose: model_family → model + ar_p** |
 
 ---
 
@@ -213,15 +228,21 @@ graph TD
 
 ---
 
-## Documentation Surface (this run)
+## Documentation Surface (PR2 — this run)
 
-The following docs files were the direct subject of this PR. They are user-facing how-to guides under `docs/how_to/`:
+The following docs files were the direct subject of PR2. All are user-facing reference or explanation pages.
 
 | Doc file | Subject | What changed |
 |----------|---------|-------------|
-| `docs/how_to/feature_selection_boruta.md` | Boruta feature selector how-to | Import path corrected from `macroforecast.feature_selection` to `macroforecast.layers.l3_features.selection`; prose reference updated |
-| `docs/how_to/advanced_recipes.md` | Recipe orchestration how-to | Import path corrected; prose reference to `mf.feature_selection.*` corrected to `macroforecast.layers.l3_features.selection.*` |
-| `docs/how_to/chow_lin_disaggregation.md` | Chow-Lin disaggregation how-to | Import path corrected from `macroforecast.transforms` to `macroforecast.layers.l3_features.transforms`; prose reference updated |
-| `CHANGELOG.md` | Release notes | PR1 entry added under `[Unreleased] ### Docs` |
+| `docs/explanation/recipe_to_run.md` | Sweep marker tutorial | `op: ridge` + `config:` → `op: fit` + `params: {model: ridge, ...}` |
+| `docs/explanation/architecture/layer7.md` | L7 architecture narrative | `model_family: xgboost` → `model: xgboost` in example YAML fragment |
+| `docs/reference/api/standalone_functions/l2_clean.md` | L2 standalone function API reference | `monthly_to_quarterly_rule` → `monthly_to_quarterly_policy`, `quarterly_to_monthly_rule` → `quarterly_to_monthly_policy` |
+| `docs/reference/recipe_schema/defaults.md` | Schema defaults reference | Replaced stale `model_family: "ar"` with `model: "ar"` (deprecated; use `model: "ar_p"`) |
+| `CHANGELOG.md` | Release notes | PR2 entry added under `[Unreleased] ### Docs` |
 
-**Left unchanged:** `docs/how_to/irf_pesaran_shin_girf.md` -- `from macroforecast.interpretation import GIRF` works via operational shim.
+**Sphinx build:** `build succeeded` — 0 new errors or warnings introduced by this PR.
+
+**Termination greps (all PASS — empty output):**
+- Old `op:` shorthand in docs/examples: none found
+- `config:` key in docs/examples: none found
+- `monthly_to_quarterly_rule`, `quarterly_to_monthly_rule`, `model_family:` in docs: none found
