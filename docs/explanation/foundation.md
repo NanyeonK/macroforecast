@@ -9,7 +9,7 @@ The public runtime stack is:
 
 - `macroforecast.api` — public entry points (`mf.run`, `mf.forecast`, `mf.Experiment`).
 - `macroforecast.core` — recipe schema, pipeline graph, layer contracts, and execution runtime that backs every public entry.
-- `macroforecast.scaffold` — option-doc registry and encyclopedia generator that drives `docs/reference/encyclopedia/`.
+- `tools.docgen` — option-doc registry and encyclopedia generator that drives `docs/reference/encyclopedia/`.
 
 There is no separate `macroforecast.compiler` or `macroforecast.execution` module in v0.9.0; recipe parsing, validation, and execution are unified under `macroforecast.core`.
 

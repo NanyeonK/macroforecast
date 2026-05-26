@@ -127,7 +127,7 @@ To register a custom forecasting model, preprocessor, or target transformer:
 
 - [Custom function quickstart](docs/for_recipe_authors/custom_function_quickstart.md) -- decorator APIs, YAML integration, common pitfalls
 
-## Architecture (12 layers)
+## Architecture
 
 ```
 L0 study setup → L1 data → L2 preprocess → L3 features (pipeline, 37 ops)
@@ -139,7 +139,7 @@ L0 study setup → L1 data → L2 preprocess → L3 features (pipeline, 37 ops)
                                                   L7 interpretation → L8 output
 ```
 
-The 12-layer canonical design is documented in the architecture reference.
+The canonical layer design is documented in the architecture reference.
 
 ## Operational coverage
 

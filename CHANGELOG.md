@@ -268,7 +268,7 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [0.9.5a0] -- 2026-05-25 -- "Round 3: documentation + naming + refactor"
 
-Round 3 (C62-C68) shifts macroforecast from a contract-first YAML framework to
+Round 3 shifts macroforecast from a contract-first YAML framework to
 a standalone-first library API, cleans up internal DAG jargon from the public
 surface, and completes a full Diátaxis documentation overhaul including rewritten
 tutorials and per-algorithm how-tos. No algorithmic logic was changed.
@@ -281,62 +281,62 @@ None.
 
 #### Added — Cycle 63 (standalone-first promotion, L4/L3/L7)
 
-- (C63) **Standalone model API** (`mf.models`): 22 previously private `_<Name>` classes
+- **Standalone model API** (`mf.models`): 22 previously private `_<Name>` classes
   promoted to public. `mf.models.linear` (8), `mf.models.tree` (6), `mf.models.neural`
   (2), `mf.models.timeseries` (4), `mf.models.factor` (2). Backward compat preserved
   via thin subclass pattern.
-- (C63) **`mf.feature_selection`**: 5 sklearn-compatible wrappers: `Boruta`,
+- **`mf.feature_selection`**: 5 sklearn-compatible wrappers: `Boruta`,
   `RecursiveFeatureElimination`, `LassoPathSelector`, `StabilitySelector`,
   `GeneticAlgorithmSelector`.
-- (C63) **`mf.interpretation`**: `GIRF`, `LSTMHiddenState` promoted to public.
-- (C63) 8 gap standalone callables added to `mf.functions.*` for newly promoted
+- **`mf.interpretation`**: `GIRF`, `LSTMHiddenState` promoted to public.
+- 8 gap standalone callables added to `mf.functions.*` for newly promoted
   model families.
-- (C64) 8 additional model promotions: `mf.models.tree` gains 6 classes
+- 8 additional model promotions: `mf.models.tree` gains 6 classes
   (`SlowGrowingTree`, `SparsePCRTree`, `BoostedTree`, `AutoClipTree`,
   `CondPFITree`, `StagewiseTree`); `mf.models.neural` gains 2 (`LSTM`, `GRU`
   convenience subclasses via `SequenceModel`).
-- (C64) 5 C63 selectors refactored to inherit from
+- 5 C63 selectors refactored to inherit from
   `sklearn.base.BaseEstimator + TransformerMixin`, adding `feature_names_in_` /
   `n_features_in_` tracking and full `sklearn.clone()` compatibility.
-- (C64) 2 runtime bug fixes: `_SlowGrowingTree._build` infinite BFS capped at
+- 2 runtime bug fixes: `_SlowGrowingTree._build` infinite BFS capped at
   `max_depth=10`; `_BaggingWrapper.fit` `TypeError` on `base_params=None` guarded.
-- (C65) **`mf.recipes`** canonical namespace: `run`, `run_file`, `replicate`,
+- **`mf.recipes`** canonical namespace: `run`, `run_file`, `replicate`,
   `forecast`, `Experiment`, `ForecastResult` re-exported. `mf.run is mf.recipes.run`
   identity preserved -- no user-facing behavior change.
-- (C67) Tutorials 01-03 rewritten as standalone-first. `01_first_forecast.md`:
+- Tutorials 01-03 rewritten as standalone-first. `01_first_forecast.md`:
   `LinearAR(p=2)` on synthetic data (211 -> 95 lines). `02_full_study.md`: 3-model
   comparison with `TimeSeriesSplit` (491 -> 125 lines). `03_custom_model.md`:
   `BaseEstimator + RegressorMixin` subclass pattern (258 -> 130 lines).
-- (C68) Six new per-algorithm how-tos: RealizedGARCH (Hansen-Huang-Shek 2012),
+- Six new per-algorithm how-tos: RealizedGARCH (Hansen-Huang-Shek 2012),
   Boruta (Kursa-Rudnicki 2010), BVARMinnesota (Litterman 1986), Chow-Lin GLS
   (Chow-Lin 1971), GIRF (Pesaran-Shin 1998), 4-way MIDAS comparison (Ghysels 2004,
   2007; Foroni 2015).
-- (C68) `docs/how_to/advanced_recipes.md` (164 lines): YAML structure, custom-step
+- `docs/how_to/advanced_recipes.md` (164 lines): YAML structure, custom-step
   extension via `mf.register_model`, recipe composition, manifest semantics, migration
   guide.
 
 ### Changed
 
-- (C65) `macroforecast/__init__.py` `_LAZY_EXPORTS`: 8 orchestration symbols rerouted
+- `macroforecast/__init__.py` `_LAZY_EXPORTS`: 8 orchestration symbols rerouted
   through `.recipes` instead of `.api` / `.api_high`. Module docstring updated.
-- (C66) Public-facing DAG jargon reduced: `macroforecast/` 464 -> 10 occurrences (98%
+- Public-facing DAG jargon reduced: `macroforecast/` 464 -> 10 occurrences (98%
   reduction); `docs/` non-archive 131 -> 7 (95% reduction). Internal `core/dag.py`
   module docstring annotated as internal-vocabulary. 1 internal wizard file renamed
   (`layer_dag.py` -> `layer_step_graph.py`). Public classes `DAG`, `DAGValidationError`,
   `validate_dag` preserved unchanged for backward compatibility.
-- (C67) `docs/how_to/index.md` reorganized: 3 visible categories (per-algorithm /
+- `docs/how_to/index.md` reorganized: 3 visible categories (per-algorithm /
   infrastructure / advanced) + preserved legacy block.
 
 ### Fixed
 
-- (C63.1) Documentation restatement of `BaseEstimator` inheritance semantics:
+- Documentation restatement of `BaseEstimator` inheritance semantics:
   `isinstance(public_instance, _PrivateClass)` continues to hold in the forward
   direction; the reverse check (private inherits from public) is False, as
   expected with single inheritance.
-- (C63.1) `mf.transforms.chow_lin_disaggregate` replaced with canonical Chow-Lin (1971)
+- `mf.transforms.chow_lin_disaggregate` replaced with canonical Chow-Lin (1971)
   GLS implementation that preserves temporal totals. Previous OLS wrapper did not
   enforce the conservation constraint.
-- (C63.1) `BVARMinnesota` enforces `prior='minnesota'` internally.
+- `BVARMinnesota` enforces `prior='minnesota'` internally.
 
 ### Deprecated
 
@@ -344,11 +344,11 @@ None.
 
 ### Documentation
 
-- (C62) R3-P0 audit: full class inventory (35 entries), naming convention spec,
+- R3-P0 audit: full class inventory (35 entries), naming convention spec,
   recipe-extraction spec, DAG cleanup plan, R3 execution roadmap.
-- (C67) Tutorial API parameter names corrected from source: `LinearAR(p=2)` (not
+- Tutorial API parameter names corrected from source: `LinearAR(p=2)` (not
   `n_lags`), `FactorAugmentedAR(p=2, n_factors=3)`, `predict(X_test)`.
-- (C68) `tests/promotion/test_c68_howto_validation.py`: 50 parametrized validation
+- `tests/promotion/test_c68_howto_validation.py`: 50 parametrized validation
   cases (49 PASS + 1 skip).
 
 ### Packaging
@@ -372,45 +372,45 @@ Codex + MiniMax external cross-review identified P0/P1/P2 statistical and govern
 
 ### Breaking Changes
 
-- (HHS realized_garch) `_RealizedGARCHModel.fit()` no longer silently returns init params on convergence failure. Raises `RuntimeError` instead. Users relying on silent fallback must catch the exception. (C56)
-- (Boruta) `_boruta_selection` no longer returns argmax(hit_count) when no feature is formally accepted. Returns empty DataFrame on null DGP. Fixes 100% false-positive rate. (C59)
+- (HHS realized_garch) `_RealizedGARCHModel.fit()` no longer silently returns init params on convergence failure. Raises `RuntimeError` instead. Users relying on silent fallback must catch the exception.
+- (Boruta) `_boruta_selection` no longer returns argmax(hit_count) when no feature is formally accepted. Returns empty DataFrame on null DGP. Fixes 100% false-positive rate.
 
 ### Fixed
 
-- (Boruta P0/P1) **Critical**: false-positive rate on null data corrected from **100% to 3.3%**. Two-bug fix: argmax fallback removed + multi-shadow MISA calibration (`n_shadow_copies=6`). (C59)
-- (HHS P0) Multi-start L-BFGS-B `bounds` enforcement, consistent `log_sigma_u` clip in objective and storage, convergence metadata exposed. (C56)
-- (Custom model contract) `_CustomModelAdapter._invoke` context now includes `target` and `horizon` keys per Tutorial 03 docs (was: KeyError). (C57)
-- (Encyclopedia drift) 2 missing pages added: `lstm_hidden_state` (L7), `chow_lin_disaggregation` (L3). (C57)
-- (Tutorial 04) YAML key correction `preprocessor_name` (invalid) to `leaf_config.custom_preprocessor` (correct). (C60)
+- (Boruta P0/P1) **Critical**: false-positive rate on null data corrected from **100% to 3.3%**. Two-bug fix: argmax fallback removed + multi-shadow MISA calibration (`n_shadow_copies=6`).
+- (HHS P0) Multi-start L-BFGS-B `bounds` enforcement, consistent `log_sigma_u` clip in objective and storage, convergence metadata exposed.
+- (Custom model contract) `_CustomModelAdapter._invoke` context now includes `target` and `horizon` keys per Tutorial 03 docs (was: KeyError).
+- (Encyclopedia drift) 2 missing pages added: `lstm_hidden_state` (L7), `chow_lin_disaggregation` (L3).
+- (Tutorial 04) YAML key correction `preprocessor_name` (invalid) to `leaf_config.custom_preprocessor` (correct).
 
 ### Added
 
-- (CI governance P0) `release.yml` trigger changed from `push.tags` (auto-publish on tag) to `workflow_dispatch` (manual). PyPI publish requires explicit user action via GitHub UI. (C58)
-- (CI drift gate) `tests/scaffold/test_encyclopedia_op_coverage.py` — 95-item gate fails when operational op lacks reference page. (C58)
+- (CI governance P0) `release.yml` trigger changed from `push.tags` (auto-publish on tag) to `workflow_dispatch` (manual). PyPI publish requires explicit user action via GitHub UI.
+- (CI drift gate) `tests/scaffold/test_encyclopedia_op_coverage.py` — 95-item gate fails when operational op lacks reference page.
 - (HHS recovery depth P1) 5-seed multi-seed recovery test with tightened tolerances (mu atol 0.05 to 0.02, omega 0.50 to 0.15, etc); T bumped 500 to 2000 for asymptotic SE compliance. (C56+C59)
-- (R cross-reference P1) Real rpy2 bridge for Boruta/midasr/rugarch validation, gated via `pytest.importorskip`. New `[validation]` optional extra. (C59)
-- (Tutorial 04 custom_preprocessor) Full narrative tutorial covering `register_preprocessor` API with synthetic data, debugging section. (C60)
-- (How-to validate_against_r) Documentation for R cross-reference setup. (C59)
-- (MIDAS encyclopedia clarity) Optimization method labels (NLS vs OLS) on Almon/Beta/Step/U-MIDAS pages. (C60)
-- (Documentation polish) `12_layer_design.md` terminology unified (12 brand + 9+4=13 slot count reconciled). `bit_exact_replicate.md` forward-reference to caveats. (C60)
+- (R cross-reference P1) Real rpy2 bridge for Boruta/midasr/rugarch validation, gated via `pytest.importorskip`. New `[validation]` optional extra.
+- (Tutorial 04 custom_preprocessor) Full narrative tutorial covering `register_preprocessor` API with synthetic data, debugging section.
+- (How-to validate_against_r) Documentation for R cross-reference setup.
+- (MIDAS encyclopedia clarity) Optimization method labels (NLS vs OLS) on Almon/Beta/Step/U-MIDAS pages.
+- (Documentation polish) `12_layer_design.md` terminology unified (12 brand + 9+4=13 slot count reconciled). `bit_exact_replicate.md` forward-reference to caveats.
 
 ### Deferred
 
-- (`register_metric` tutorial) API does not exist in `macroforecast.custom`; tutorial deferred to a future cycle pending API design. (C60)
+- (`register_metric` tutorial) API does not exist in `macroforecast.custom`; tutorial deferred to a future cycle pending API design.
 - (Monte Carlo finite-sample suite) Bias/RMSE/coverage assessment for HHS/MIDAS/GIRF; deferred beyond Round 2.
 
 ### Packaging
 
 - v0.9.3b1 fresh semantic version (0.9.3 > 0.9.2 final on PyPI). Pre-release suffix `b1` requires `pip install macroforecast --pre` to install via PyPI default.
-- `pyproject.toml` metadata polish: Trove classifiers (Beta, Python 3.10/3.11/3.12, MIT, Topic, Audience), `authors`, `keywords`. (C61)
-- `LICENSE` file added (MIT body). (C61)
-- `macroforecast/py.typed` marker added (PEP 561 type-hint exposure). (C61)
+- `pyproject.toml` metadata polish: Trove classifiers (Beta, Python 3.10/3.11/3.12, MIT, Topic, Audience), `authors`, `keywords`.
+- `LICENSE` file added (MIT body).
+- `macroforecast/py.typed` marker added (PEP 561 type-hint exposure).
 
 ---
 
 ## [0.9.2b2] -- 2026-05-22 -- "v0.9.3 algorithmic completion + Diátaxis docs overhaul"
 
-v0.9.3 algorithmic honesty pass is complete: all four cycles (C47-C50) promoted
+v0.9.3 algorithmic honesty pass is complete: all four cycles promoted
 paper-faithful implementations, leaving `FUTURE_MODEL_FAMILIES = ()` and
 `FUTURE_OPS = ()`. Fourteen items promoted across four layers (L3 feature
 selection, L4 MIDAS families, L4 Realized GARCH, L7 GIRF, L1/L2 real-time
@@ -496,14 +496,14 @@ serving 319 auto-generated encyclopedia pages.
 - **C52-C54 — Diátaxis Documentation Overhaul**
   - `docs/tutorial/01_first_forecast.md`, `02_full_study.md`,
     `03_custom_model.md`: three new narrative tutorials replacing empty stubs
-    (C53); `two_entry_points.md` renamed and polished (C53).
+   ; `two_entry_points.md` renamed and polished.
   - `docs/how_to/add_custom_dataset.md`, `tune_hyperparameters.md`,
     `sweep_over_models.md`, `replicate_a_study.md`: four new how-to task
-    recipes (C53); two refactors, one rename (C53).
+    recipes; two refactors, one rename.
   - `docs/explanation/12_layer_design.md`, `bit_exact_replicate.md`,
     `honesty_pass.md`, `recipe_to_run.md`: four new conceptual explanation pages
-    (C54).
-  - `docs/reference/api/index.md`: new umbrella index for API sub-tier (C54).
+   .
+  - `docs/reference/api/index.md`: new umbrella index for API sub-tier.
   - `tests/docs/test_tutorial_smoke.py`: CI smoke test extracting Python blocks
     from tutorials 01-03 and executing them in subprocess (C54; closes C53
     reviewer note 1).
