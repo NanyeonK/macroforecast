@@ -42,6 +42,11 @@ Thumbs.db
 .claude/session-*.md
 CLAUDE.md
 
+# Internal workflow artifacts (agent comms + design specs)
+mailbox.md
+implementation.md
+plans/design/
+
 # mkdocs build output
 site/
 
