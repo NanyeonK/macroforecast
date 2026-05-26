@@ -12952,15 +12952,52 @@ def _density_interval_battery(
     z = _stats.norm.ppf(pit)
     z_mean = z.mean()
     z_std = z.std(ddof=1) if z.size > 1 else 1.0
-    berkowitz = {"mean": float(z_mean), "std": float(z_std)}
-    # Likelihood ratio for H0: mu=0, sigma=1.
-    if z_std > 0:
+    berkowitz: dict[str, Any] = {"mean": float(z_mean), "std": float(z_std)}
+    # Berkowitz (2001) eq. (6): LR_3 test with AR(1) alternative, df=3.
+    # H0: z_t ~ iid N(0, 1).
+    # H1: z_t = mu + rho * z_{t-1} + eps,  eps ~ N(0, sigma^2).
+    # LR_3 = -2 [log L(H0) - log L(H1)], chi^2(3) under H0.
+    if z.size >= 4 and z_std > 0:
+        # OLS AR(1) MLE: regress z[1:] on z[:-1]
+        z_lag = z[:-1]
+        z_lead = z[1:]
+        denom = float(np.dot(z_lag - z_lag.mean(), z_lag - z_lag.mean()))
+        if denom > 0:
+            rho_hat = float(
+                np.dot(z_lag - z_lag.mean(), z_lead - z_lead.mean()) / denom
+            )
+        else:
+            rho_hat = 0.0
+        mu_hat = float(z_lead.mean() - rho_hat * z_lag.mean())
+        resid = z_lead - mu_hat - rho_hat * z_lag
+        sigma2_hat = max(float(np.mean(resid ** 2)), 1e-10)
+        sigma_hat = float(np.sqrt(sigma2_hat))
+        # Restricted log-likelihood (H0: mu=0, sigma=1, rho=0) over all T obs.
+        ll_h0 = float(_stats.norm.logpdf(z, loc=0.0, scale=1.0).sum())
+        # Unrestricted log-likelihood: condition on z[0], AR(1) for z[1:].
+        ll_full = float(_stats.norm.logpdf(z[0], loc=0.0, scale=1.0)) + float(
+            _stats.norm.logpdf(
+                z_lead, loc=mu_hat + rho_hat * z_lag, scale=sigma_hat
+            ).sum()
+        )
+        lr = max(-2.0 * (ll_h0 - ll_full), 0.0)  # LR >= 0 by construction
+        berkowitz["lr_statistic"] = float(lr)
+        berkowitz["p_value"] = float(1.0 - _stats.chi2.cdf(lr, df=3))
+        berkowitz["reject"] = bool(berkowitz["p_value"] < alpha)
+        berkowitz["rho"] = rho_hat
+        berkowitz["mu"] = mu_hat
+        berkowitz["sigma"] = sigma_hat
+        berkowitz["df"] = 3
+    elif z.size >= 2 and z_std > 0:
+        # Fallback for very small samples (n < 4): LR_2 (mu, sigma only), df=2.
         ll_h1 = float(_stats.norm.logpdf(z, loc=z_mean, scale=z_std).sum())
         ll_h0 = float(_stats.norm.logpdf(z, loc=0.0, scale=1.0).sum())
-        lr = -2.0 * (ll_h0 - ll_h1)
+        lr = max(-2.0 * (ll_h0 - ll_h1), 0.0)
         berkowitz["lr_statistic"] = float(lr)
         berkowitz["p_value"] = float(1.0 - _stats.chi2.cdf(lr, df=2))
         berkowitz["reject"] = bool(berkowitz["p_value"] < alpha)
+        berkowitz["df"] = 2
+        berkowitz["rho"] = None
     # Kolmogorov-Smirnov against uniform.
     ks_stat, ks_pvalue = _stats.kstest(pit, "uniform")
     # Kupiec POF (proportion of failures) for VaR coverage at alpha.
