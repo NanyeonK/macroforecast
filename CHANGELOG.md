@@ -91,6 +91,33 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **PR6 (hotfix): tests API vocab update + tests/scaffold/ → tests/tools/docgen/ move**
+
+  Follow-up cleanup to PR4 and Phase 5 tooling rename:
+
+  | Change | Files |
+  |--------|-------|
+  | `OPERATIONAL_MODEL_FAMILIES` → `OPERATIONAL_MODELS` | `test_bvar_minnesota.py`, `test_dfm_mariano_murasawa.py`, `test_factor_augmented_var.py`, `test_mrf_gtvp.py`, `test_status_honesty.py`, `test_v09_paper_coverage.py`, `test_l4_midas_family_c48.py`, `test_l4_realized_garch_c49.py` |
+  | `FUTURE_MODEL_FAMILIES` → `FUTURE_MODELS` | same set |
+  | `macroforecast.core.ops.l3_ops` → `macroforecast.layers.l3_features.ops` | `test_phase_c_top6.py` |
+  | `macroforecast.core.ops.l4_ops.OPERATIONAL_MODEL_FAMILIES` → `macroforecast.layers.l4_models.ops.OPERATIONAL_MODELS` | `test_encyclopedia_op_coverage.py` docstring |
+  | `tests/scaffold/` → `tests/tools/docgen/` (git mv) | 15 test files + `__init__.py` |
+  | `ENC_ROOT = Path(__file__).parents[3]` (was `parents[2]` before move) | `test_encyclopedia_op_coverage.py` |
+  | Add `conftest.py` at repo root: pinches project root to `sys.path[0]` | `conftest.py` (new) |
+  | Add `tests/tools/docgen/conftest.py`: guards `tools.docgen` namespace against pytest importlib shadow | `tests/tools/docgen/conftest.py` (new) |
+  | Add backward-compat `DeprecationWarning` test for old constant names | `test_status_honesty.py` |
+
+  **Termination conditions:**
+
+  | TC | Condition | Verdict |
+  |----|-----------|---------|
+  | TC10 | `tests/scaffold/` does not exist; `tests/tools/docgen/` exists | PASS |
+  | TC11 | No stale `macroforecast.core.ops.l4_ops` / `l7_ops` imports in `tests/` | PASS |
+  | Drift gate | `tests/tools/docgen/test_drift_gate_meta.py` — 1 passed | PASS |
+  | Encyclopedia | `tests/tools/docgen/test_encyclopedia_op_coverage.py` — 95 passed | PASS |
+
+  **Behavioral impact**: NONE. No source code modified. No test logic changed — vocab and import paths only.
+
 - **Phase 3g-bis FINAL: cascade complete (TC1–TC7 verified)** (see PR #K)
 
   **Cascade summary — 10 PRs (B–J merged, #H no-op, #K this PR):**
@@ -411,7 +438,7 @@ Codex + MiniMax external cross-review identified P0/P1/P2 statistical and govern
 ### Added
 
 - (CI governance P0) `release.yml` trigger changed from `push.tags` (auto-publish on tag) to `workflow_dispatch` (manual). PyPI publish requires explicit user action via GitHub UI.
-- (CI drift gate) `tests/scaffold/test_encyclopedia_op_coverage.py` — 95-item gate fails when operational op lacks reference page.
+- (CI drift gate) `tests/tools/docgen/test_encyclopedia_op_coverage.py` — 95-item gate fails when operational op lacks reference page.
 - (HHS recovery depth P1) 5-seed multi-seed recovery test with tightened tolerances (mu atol 0.05 to 0.02, omega 0.50 to 0.15, etc); T bumped 500 to 2000 for asymptotic SE compliance. (C56+C59)
 - (R cross-reference P1) Real rpy2 bridge for Boruta/midasr/rugarch validation, gated via `pytest.importorskip`. New `[validation]` optional extra.
 - (Tutorial 04 custom_preprocessor) Full narrative tutorial covering `register_preprocessor` API with synthetic data, debugging section.
@@ -1174,7 +1201,7 @@ description in earlier docs. The doc-string flags this explicitly.
 - macroforecast/functions/ module: ridge_fit (RidgeFitResult, sklearn-style) + theil_u1 + theil_u2 standalone wrappers.
 - l4/family/ridge.md + l5/point_metrics/theil_u1.md per-op pages with Function signature + Parameters sections.
 - mf.functions exposed via _LAZY_MODULES (Cycle 16 K-1 lazy-namespace pattern).
-- 17 new unit tests in tests/functions/ + tests/scaffold/test_op_page_render.py.
+- 17 new unit tests in tests/functions/ + tests/tools/docgen/test_op_page_render.py.
 - Pattern validates for L3/L4/L5/L6/L7 migration in subsequent cycles.
 - **v0.10.0 candidate**
 - **C22 known limitations** (deferred to C23 pre-expansion fixup):
@@ -1189,7 +1216,7 @@ description in earlier docs. The doc-string flags this explicitly.
 - **C21-F** L1.F horizon_set: `single` -> `target_horizons` ParameterDoc (optional, defaults to [1]); `custom_list` -> `target_horizons` ParameterDoc (required, non-empty list); `range_up_to_h` -> `max_horizon` ParameterDoc (required positive int; expands to [1..max_horizon]). `max_horizon` added to `_KNOWN_LEAF_CONFIG_KEYS["1_data"]`.
 - **C21-G** L1.G regime_definition: `external_user_provided` -> 3 ParameterDocs (regime_indicator_path XOR regime_dates_list, plus n_regimes); `estimated_markov_switching` -> n_regimes ParameterDoc; `estimated_threshold` -> threshold_variable (required) + n_thresholds ParameterDocs; `estimated_structural_break` -> max_breaks + break_ic_criterion ParameterDocs. 10 new keys added to `_KNOWN_LEAF_CONFIG_KEYS["1_data"]` (regime_indicator_path, regime_dates_list, n_regimes, threshold_variable, n_thresholds, max_breaks, break_ic_criterion, regime_rolling_window_size, block_recompute_interval, max_horizon).
 - **L1 audit complete**: all 7 sub-layers (L1.A-L1.G) are Tier-1 with ParameterDoc populated for conditional leaf_config keys. Module docstring updated to reflect completion.
-- 22 new unit tests in `tests/scaffold/test_l1efg_parameter_doc.py`.
+- 22 new unit tests in `tests/tools/docgen/test_l1efg_parameter_doc.py`.
 
 ### Cycle 20 — L1.D Geography encyclopedia complete
 
@@ -2623,7 +2650,7 @@ code changes; same 1035 tests; bit-exact replicate contract unchanged.
   a `python -m macroforecast.scaffold encyclopedia <out>` entry point.
 * `macroforecast scaffold encyclopedia <out>` CLI subcommand on the
   top-level `macroforecast` console script.
-* `tests/scaffold/test_render_encyclopedia.py` -- 11 tests covering
+* `tests/tools/docgen/test_render_encyclopedia.py` -- 11 tests covering
   page-count floor, per-layer index + axis pages, browse-by-option
   >= 30 model families, missing-OptionDoc TBD fallback, both CLI
   smoke routes.
