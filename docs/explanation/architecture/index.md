@@ -65,7 +65,7 @@ layer8
 ```{toctree}
 :hidden:
 :maxdepth: 1
-:caption: Layer 0 sub-pages
+:caption: L0 sub-pages
 
 layer0_study_scope
 layer0_failure_policy
@@ -77,7 +77,7 @@ layer0_axis_type
 ```{toctree}
 :hidden:
 :maxdepth: 1
-:caption: Layer 1 sub-pages
+:caption: L1 sub-pages
 
 layer1_availability_timing
 layer1_frame_availability

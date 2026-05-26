@@ -1,6 +1,6 @@
 # Understanding Recipe Output
 
-Layer 8 writes the run directory. The default L8 output directory is `./macrocast_output/default_recipe/timestamp/` unless `8_output.leaf_config.output_directory` overrides it.
+L8 writes the run directory. The default L8 output directory is `./macrocast_output/default_recipe/timestamp/` unless `8_output.leaf_config.output_directory` overrides it.
 
 Common files:
 

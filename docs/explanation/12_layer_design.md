@@ -294,8 +294,8 @@ across all the layers that use them.
 ## Custom Extensions Are First-Class
 
 The layer contract is a specification, not a closed list of built-in
-implementations. A custom Layer 2 preprocessor registered via
-`macroforecast.custom.register_preprocessor`, or a custom Layer 3 feature
+implementations. A custom L2 preprocessor registered via
+`macroforecast.custom.register_preprocessor`, or a custom L3 feature
 callable registered via `macroforecast.custom.register_op`, is treated
 identically to a built-in operation. It goes through the same boundary check,
 produces the same typed sink, and its name is recorded in the manifest

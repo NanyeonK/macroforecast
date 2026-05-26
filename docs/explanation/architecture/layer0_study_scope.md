@@ -5,7 +5,7 @@
 
 `study_scope` describes the broad shape of the study: how many targets are
 being forecast and whether the recipe compares multiple method alternatives.
-It is a Layer 0 setup axis because it affects routing, sweep interpretation,
+It is an L0 setup axis because it affects routing, sweep interpretation,
 Navigator flow, and manifest metadata before any data or model details are
 chosen.
 
@@ -47,7 +47,7 @@ This derivation should be treated as a defaulting rule. If the recipe sets
 | `multiple_targets_*` with `target_structure=multi_target` | valid |
 | method-comparison scope with no swept method axis | valid but semantically broad |
 
-Layer 1 owns the actual target list and target structure. Layer 0 only records
+L1 owns the actual target list and target structure. L0 only records
 the intended study shape.
 
 ## YAML
@@ -94,7 +94,7 @@ Multi-target method comparison:
 ## Notes
 
 - `study_scope` is not a model choice.
-- `study_scope` is not a target selector; Layer 1 stores target names.
+- `study_scope` is not a target selector; L1 stores target names.
 - `study_scope` is not sweepable.
 - The public values above are the registry values. Do not use aliases such as
   `multi_output_joint_model` in new recipes.

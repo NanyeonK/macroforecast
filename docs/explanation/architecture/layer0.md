@@ -1,10 +1,10 @@
 # Layer 0: Study Setup
 
 - Parent: [Architecture](index.md)
-- Current: Layer 0
-- Next: [Layer 1: Data Source, Target y, Predictor x](layer1.md)
+- Current: L0
+- Next: [L1 — Data Source, Target y, Predictor x](layer1.md)
 
-Layer 0 defines the study-level contract before data, transformations,
+L0 defines the study-level contract before data, transformations,
 features, models, evaluation, or export are chosen. It answers four setup
 questions:
 
@@ -13,34 +13,34 @@ questions:
 3. Should stochastic code use a fixed seed?
 4. Should work run serially or in parallel?
 
-Layer 0 is not a scientific modeling layer. It does not create a data panel,
+L0 is not a scientific modeling layer. It does not create a data panel,
 target series, feature matrix, forecast, metric, or artifact selection. It
 produces setup metadata that every downstream layer can read from the compiled
 manifest.
 
 ## Layer Role
 
-Layer 0 receives no upstream sinks and produces `l0_meta_v1`. The artifact is
+L0 receives no upstream sinks and produces `l0_meta_v1`. The artifact is
 metadata, not a dataset. It is recorded in the compiled manifest and copied into
 runtime provenance so that every result cell can be traced to the same setup
 policy.
 
-Downstream layers use Layer 0 through manifest/runtime context:
+Downstream layers use L0 through manifest/runtime context:
 
-| Consumer | Reads Layer 0 For |
+| Consumer | Reads L0 For |
 |---|---|
 | Runtime | default derivation, compatibility checks, manifest metadata |
 | Sweep planner | parent study shape and failure/compute behavior |
 | Execution runner | seed application, continuation policy, parallel routing |
 | Output layer | provenance fields saved with result artifacts |
 
-Layer 0 should stay small. Dataset choice belongs in Layer 1, representation
-choice belongs in Layer 2, feature graph construction belongs in Layer 3, model
-choice belongs in Layer 4, and evaluation/export choices belong later.
+L0 should stay small. Dataset choice belongs in L1, representation
+choice belongs in L2, feature graph construction belongs in L3, model
+choice belongs in L4, and evaluation/export choices belong later.
 
 ## Sub-Layer
 
-Layer 0 has one active sub-layer:
+L0 has one active sub-layer:
 
 | Slot | Name | Gate |
 |---|---|---|
@@ -51,7 +51,7 @@ interpretation, or output files, it belongs in another layer.
 
 ## Axes
 
-Layer 0 has four public registry axes plus one registry-internal catalog axis:
+L0 has four public registry axes plus one registry-internal catalog axis:
 
 | Axis | Default | Sweepable | User-Facing | Purpose |
 |---|---|---:|---:|---|
@@ -61,7 +61,7 @@ Layer 0 has four public registry axes plus one registry-internal catalog axis:
 | `compute_policy` | `serial` | no | yes | serial or parallel execution |
 | `axis_type` | registry catalog | no | no | internal registry taxonomy |
 
-Layer 0 axes are fixed setup choices. Do not sweep them as research treatments.
+L0 axes are fixed setup choices. Do not sweep them as research treatments.
 If a study needs to compare models, horizons, feature blocks, metrics, or output
 sets, express those comparisons in the owning downstream layer.
 
@@ -120,7 +120,7 @@ Parallel work unit is not encoded as a separate public axis value. Use
 
 ## Leaf Config
 
-Layer 0 accepts leaf config for runtime details that are too specific to be
+L0 accepts leaf config for runtime details that are too specific to be
 axis values.
 
 | Key | Applies When | Rule |
@@ -137,7 +137,7 @@ recipe node.
 
 ## Derived Manifest Fields
 
-Layer 0 records setup fields in runtime provenance.
+L0 records setup fields in runtime provenance.
 
 | Field | Source |
 |---|---|
@@ -148,7 +148,7 @@ Layer 0 records setup fields in runtime provenance.
 | `compute_mode_spec` | L0 `compute_policy` plus parallel details |
 
 The manifest is the place to inspect resolved defaults. Recipes can omit many
-Layer 0 fields, but compiled artifacts should record what was actually used.
+L0 fields, but compiled artifacts should record what was actually used.
 
 ## Minimal YAML
 

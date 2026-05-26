@@ -2,10 +2,10 @@
 
 - Parent: [Architecture](index.md)
 - Previous: [Layer 3](layer3.md)
-- Current: Layer 4
+- Current: L4
 - Next: [Layer 5](layer5.md)
 
-Layer 4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer. As of Cycle 49 (2026-05-21), Layer 4 has **47 operational families** (`realized_garch` promoted in C49; 4 MIDAS families promoted in C48). `FUTURE_MODEL_FAMILIES` is now empty.
+L4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer. As of Cycle 49 (2026-05-21), L4 has **47 operational families** (`realized_garch` promoted in C49; 4 MIDAS families promoted in C48). `FUTURE_MODEL_FAMILIES` is now empty.
 
 ## Contract
 

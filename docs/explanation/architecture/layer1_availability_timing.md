@@ -1,6 +1,6 @@
 # Forecast-Time Information
 
-- Parent: [Layer 1: Data Source, Target y, Predictor x](index.md)
+- Parent: [L1 — Data Source, Target y, Predictor x](index.md)
 - Current group: Forecast-Time Information
 
 These policies define what information is available when a forecast is made.
@@ -10,7 +10,7 @@ They separate three concepts that are often mixed in macro forecasting code:
 - publication lag: when each predictor x observation becomes usable;
 - same-period predictor access: whether x at the target date is allowed.
 
-Frame availability is separate. `missing_availability` runs after the Layer 1
+Frame availability is separate. `missing_availability` runs after the L1
 source frame exists and is documented in [4.1.7 Frame Availability](frame_availability.md).
 
 | Axis | Choices | Default / rule |

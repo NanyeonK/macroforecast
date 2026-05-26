@@ -32,7 +32,7 @@ Some choices are free. Some are derived. Some are disabled because another selec
 
 ## Custom methods are first-class
 
-Method researchers should be able to add a custom Layer 2 representation or Layer 3 generator and compare it against built-ins without editing package internals.
+Method researchers should be able to add a custom L2 representation or L3 generator and compare it against built-ins without editing package internals.
 
 ## Artifacts are part of the API
 

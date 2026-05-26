@@ -2,10 +2,10 @@
 
 - Parent: [Architecture](index.md)
 - Previous: [Layer 4](layer4.md)
-- Current: Layer 5
+- Current: L5
 - Next: [Layer 6](layer6.md)
 
-Layer 5 computes forecast accuracy, benchmark-relative metrics, aggregation, slicing, decomposition, ranking, and reporting artifacts. It is descriptive evaluation; inference belongs to Layer 6.
+L5 computes forecast accuracy, benchmark-relative metrics, aggregation, slicing, decomposition, ranking, and reporting artifacts. It is descriptive evaluation; inference belongs to L6.
 
 ## Contract
 
