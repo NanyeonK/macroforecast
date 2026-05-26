@@ -49,6 +49,7 @@ import macroforecast.layers.l2_preprocessing.schema as l2_layer
 # in core/ops/__init__.py after Phase 3f restructure).
 import macroforecast.layers.l5_evaluation.ops  # noqa: F401
 import macroforecast.layers.l6_tests.ops  # noqa: F401
+import macroforecast.layers.l7_interpretation.ops  # noqa: F401
 import macroforecast.layers.l8_output.ops  # noqa: F401
 from ..layers.l1_data import load_fred_md, load_fred_qd, load_fred_sd
 from ..layers.l1_data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
