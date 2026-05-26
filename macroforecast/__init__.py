@@ -51,49 +51,49 @@ _LAZY_EXPORTS = {
     "forecast": ".recipes",
     "Experiment": ".recipes",
     "ForecastResult": ".recipes",
-    # defaults
-    "DEFAULT_PROFILE": ".defaults",
-    "DEFAULT_PROFILE_NAME": ".defaults",
-    "build_default_recipe_dict": ".defaults",
-    # custom
-    "custom_feature_block": ".custom",
-    "custom_feature_combiner": ".custom",
-    "custom_method_extension_contracts": ".custom",
-    "custom_model_contract_metadata": ".custom",
-    "custom_preprocessor": ".custom",
-    "custom_preprocessor_contract_metadata": ".custom",
-    "target_transformer": ".custom",
-    "target_transformer_contract_metadata": ".custom",
-    "CUSTOM_MODEL_CONTRACT_VERSION": ".custom",
-    "CUSTOM_PREPROCESSOR_CONTRACT_VERSION": ".custom",
-    "TARGET_TRANSFORMER_CONTRACT_VERSION": ".custom",
-    "custom_model": ".custom",
-    "register_feature_block": ".custom",
-    "register_feature_combiner": ".custom",
-    "register_preprocessor": ".custom",
-    "register_target_transformer": ".custom",
-    "register_model": ".custom",
-    "get_custom_feature_block": ".custom",
-    "get_custom_feature_combiner": ".custom",
-    "get_custom_preprocessor": ".custom",
-    "get_custom_target_transformer": ".custom",
-    "get_custom_model": ".custom",
-    "is_custom_feature_block": ".custom",
-    "is_custom_feature_combiner": ".custom",
-    "is_custom_preprocessor": ".custom",
-    "is_custom_target_transformer": ".custom",
-    "is_custom_model": ".custom",
-    "list_custom_feature_blocks": ".custom",
-    "list_custom_feature_combiners": ".custom",
-    "list_custom_preprocessors": ".custom",
-    "list_custom_target_transformers": ".custom",
-    "list_custom_models": ".custom",
-    "clear_custom_feature_blocks": ".custom",
-    "clear_custom_feature_combiners": ".custom",
-    "clear_custom_preprocessors": ".custom",
-    "clear_custom_target_transformers": ".custom",
-    "clear_custom_models": ".custom",
-    "clear_custom_extensions": ".custom",
+    # defaults (now at macroforecast.api.defaults)
+    "DEFAULT_PROFILE": ".api.defaults",
+    "DEFAULT_PROFILE_NAME": ".api.defaults",
+    "build_default_recipe_dict": ".api.defaults",
+    # custom (now at macroforecast.api.custom)
+    "custom_feature_block": ".api.custom",
+    "custom_feature_combiner": ".api.custom",
+    "custom_method_extension_contracts": ".api.custom",
+    "custom_model_contract_metadata": ".api.custom",
+    "custom_preprocessor": ".api.custom",
+    "custom_preprocessor_contract_metadata": ".api.custom",
+    "target_transformer": ".api.custom",
+    "target_transformer_contract_metadata": ".api.custom",
+    "CUSTOM_MODEL_CONTRACT_VERSION": ".api.custom",
+    "CUSTOM_PREPROCESSOR_CONTRACT_VERSION": ".api.custom",
+    "TARGET_TRANSFORMER_CONTRACT_VERSION": ".api.custom",
+    "custom_model": ".api.custom",
+    "register_feature_block": ".api.custom",
+    "register_feature_combiner": ".api.custom",
+    "register_preprocessor": ".api.custom",
+    "register_target_transformer": ".api.custom",
+    "register_model": ".api.custom",
+    "get_custom_feature_block": ".api.custom",
+    "get_custom_feature_combiner": ".api.custom",
+    "get_custom_preprocessor": ".api.custom",
+    "get_custom_target_transformer": ".api.custom",
+    "get_custom_model": ".api.custom",
+    "is_custom_feature_block": ".api.custom",
+    "is_custom_feature_combiner": ".api.custom",
+    "is_custom_preprocessor": ".api.custom",
+    "is_custom_target_transformer": ".api.custom",
+    "is_custom_model": ".api.custom",
+    "list_custom_feature_blocks": ".api.custom",
+    "list_custom_feature_combiners": ".api.custom",
+    "list_custom_preprocessors": ".api.custom",
+    "list_custom_target_transformers": ".api.custom",
+    "list_custom_models": ".api.custom",
+    "clear_custom_feature_blocks": ".api.custom",
+    "clear_custom_feature_combiners": ".api.custom",
+    "clear_custom_preprocessors": ".api.custom",
+    "clear_custom_target_transformers": ".api.custom",
+    "clear_custom_models": ".api.custom",
+    "clear_custom_extensions": ".api.custom",
     # raw adapters
     "normalize_version_request": ".layers.l1_data",
     "list_vintages": ".layers.l1_data",
@@ -137,10 +137,9 @@ _LAZY_EXPORTS = {
 }
 
 _LAZY_MODULES: tuple[str, ...] = (
-    "defaults",
     "scaffold",
     "recipes",
-    "functions",
+    "api",
     # Cycle 63: promoted public namespaces
     "feature_selection",
     "transforms",
@@ -157,9 +156,23 @@ Cycle 63: ``models``, ``feature_selection``, ``transforms``,
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
 
 
+# Backward-compat aliases: top-level names that moved into macroforecast.api/
+_SUBMODULE_ALIASES: dict[str, str] = {
+    "functions": ".api.functions",
+    "custom": ".api.custom",
+    "defaults": ".api.defaults",
+}
+
+
 def __getattr__(name: str) -> Any:
     if name in _LAZY_MODULES:
         module = import_module(f".{name}", __name__)
+        globals()[name] = module
+        return module
+    # backward-compat: old top-level submodule names now live under api/
+    alias_path = _SUBMODULE_ALIASES.get(name)
+    if alias_path is not None:
+        module = import_module(alias_path, __name__)
         globals()[name] = module
         return module
     module_name = _LAZY_EXPORTS.get(name)
@@ -172,4 +185,4 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
-    return sorted(set(globals()) | set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
+    return sorted(set(globals()) | set(_LAZY_EXPORTS) | set(_LAZY_MODULES) | set(_SUBMODULE_ALIASES))

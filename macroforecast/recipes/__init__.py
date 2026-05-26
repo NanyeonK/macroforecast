@@ -36,8 +36,8 @@ a recipe dict ready for ``run()``.
 from __future__ import annotations
 
 # Recipe-running API -- imported from implementation modules.
-# api.py is the thin re-export over core.execution.
-from ..api import (
+# api/recipe.py is the thin re-export over core.execution (Phase 4 restructure).
+from ..api.recipe import (
     ManifestExecutionResult,
     ReplicationResult,
     run,
@@ -45,8 +45,8 @@ from ..api import (
     replicate,
 )
 
-# api_high.py is the high-level facade (Experiment, ForecastResult, forecast).
-from ..api_high import (
+# api/quick.py is the high-level facade (Experiment, ForecastResult, forecast).
+from ..api.quick import (
     Experiment,
     ForecastResult,
     forecast,

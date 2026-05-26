@@ -529,7 +529,7 @@ def svr_linear_fit(
     Drucker, Burges, Kaufman, Smola & Vapnik (1997) 'Support Vector
     Regression Machines', NeurIPS.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if C <= 0:
         raise ValueError(f"C must be > 0, got {C!r}")
@@ -598,7 +598,7 @@ def svr_rbf_fit(
     >>> result.C
     1.0
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if C <= 0:
         raise ValueError(f"C must be > 0, got {C!r}")
@@ -665,7 +665,7 @@ def svr_poly_fit(
     >>> result.degree
     3
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if C <= 0:
         raise ValueError(f"C must be > 0, got {C!r}")
@@ -738,7 +738,7 @@ def knn_fit(
     Cover & Hart (1967) 'Nearest neighbor pattern classification', IEEE
     Trans. on Information Theory 13(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_neighbors < 1:
         raise ValueError(f"n_neighbors must be >= 1, got {n_neighbors!r}")
@@ -822,7 +822,7 @@ def kernel_ridge_fit(
     Learning Useful for Macroeconomic Forecasting?', Journal of Applied
     Econometrics 37(5): 920-964.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if alpha <= 0:
         raise ValueError(f"alpha must be > 0, got {alpha!r}")
@@ -889,7 +889,7 @@ def mars_fit(
     Friedman (1991) 'Multivariate Adaptive Regression Splines', Annals of
     Statistics 19(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)

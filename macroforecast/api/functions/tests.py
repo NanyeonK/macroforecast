@@ -505,7 +505,7 @@ def dm_test(
     >>> result = dm_test(loss_a, loss_b)
     >>> result.stat  # doctest: +SKIP
     """
-    from ..core.runtime import _diebold_mariano_test  # lazy import -- avoids circular
+    from ...core.runtime import _diebold_mariano_test  # lazy import -- avoids circular
 
     loss_a = np.asarray(loss_a, dtype=float)
     loss_b = np.asarray(loss_b, dtype=float)
@@ -589,7 +589,7 @@ def gw_test(
     >>> result = gw_test(loss_a, loss_b)
     >>> result.stat  # doctest: +SKIP
     """
-    from ..core.runtime import _diebold_mariano_test  # lazy import -- avoids circular
+    from ...core.runtime import _diebold_mariano_test  # lazy import -- avoids circular
 
     loss_a = np.asarray(loss_a, dtype=float)
     loss_b = np.asarray(loss_b, dtype=float)
@@ -658,7 +658,7 @@ def dmp_test(
     >>> result.stat  # doctest: +SKIP
     """
     from scipy import stats as _scipy_stats
-    from ..core.runtime import _long_run_variance  # lazy import
+    from ...core.runtime import _long_run_variance  # lazy import
 
     # Stack input
     if isinstance(loss_differentials, list):
@@ -760,7 +760,7 @@ def hn_test(
     >>> result = hn_test(e_a, e_b)
     >>> result.stat  # doctest: +SKIP
     """
-    from ..core.runtime import _harvey_newbold_test  # lazy import
+    from ...core.runtime import _harvey_newbold_test  # lazy import
 
     e_a = np.asarray(e_a, dtype=float)
     e_b = np.asarray(e_b, dtype=float)
@@ -854,7 +854,7 @@ def cw_test(
     >>> result = cw_test(loss_s, loss_l, f_s, f_l)
     >>> result.stat  # doctest: +SKIP
     """
-    from ..core.runtime import _diebold_mariano_test  # lazy import
+    from ...core.runtime import _diebold_mariano_test  # lazy import
 
     loss_small = np.asarray(loss_small, dtype=float)
     loss_large = np.asarray(loss_large, dtype=float)
@@ -960,7 +960,7 @@ def enc_new_test(
     >>> result = enc_new_test(loss_s, loss_l)
     >>> result.stat  # doctest: +SKIP
     """
-    from ..core.runtime import _diebold_mariano_test  # lazy import
+    from ...core.runtime import _diebold_mariano_test  # lazy import
 
     loss_small = np.asarray(loss_small, dtype=float)
     loss_large = np.asarray(loss_large, dtype=float)
@@ -1059,7 +1059,7 @@ def enc_t_test(
     >>> result = enc_t_test(loss_s, loss_l)
     >>> result.stat  # doctest: +SKIP
     """
-    from ..core.runtime import _diebold_mariano_test  # lazy import
+    from ...core.runtime import _diebold_mariano_test  # lazy import
 
     loss_small = np.asarray(loss_small, dtype=float)
     loss_large = np.asarray(loss_large, dtype=float)

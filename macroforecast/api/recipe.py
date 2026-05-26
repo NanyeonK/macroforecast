@@ -6,7 +6,7 @@ reaching into ``macroforecast.core``.
 """
 from __future__ import annotations
 
-from .core.execution import (
+from ..core.execution import (
     ManifestExecutionResult,
     ReplicationResult,
     execute_recipe as run,

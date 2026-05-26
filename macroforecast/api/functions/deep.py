@@ -491,7 +491,7 @@ def mlp_fit(
     ----------
     Goodfellow, Bengio & Courville (2016) 'Deep Learning', MIT Press.
     """
-    from ..core.runtime import _build_l4_model  # lazy import -- C28 paradigm
+    from ...core.runtime import _build_l4_model  # lazy import -- C28 paradigm
 
     if max_iter < 1:
         raise ValueError(f"max_iter must be >= 1, got {max_iter!r}")
@@ -912,7 +912,7 @@ def hemisphere_nn_fit(
     "Hemisphere Neural Networks for Density Forecasting",
     Journal of Applied Econometrics.
     """
-    from ..core.runtime import _HemisphereNN
+    from ...core.runtime import _HemisphereNN
 
     if isinstance(X, np.ndarray):
         X = pd.DataFrame(X, columns=[f"x{i}" for i in range(X.shape[1])])

@@ -972,7 +972,7 @@ def var_fit(
     ----------
     Sims (1980) 'Macroeconomics and Reality', Econometrica 48(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_lag < 1:
         raise ValueError(f"n_lag must be >= 1, got {n_lag!r}")
@@ -1042,7 +1042,7 @@ def bvar_minnesota_fit(
     Litterman (1986) 'Forecasting With Bayesian Vector Autoregressions --
     Five Years of Experience', JBES 4(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_lag < 1:
         raise ValueError(f"n_lag must be >= 1, got {n_lag!r}")
@@ -1115,7 +1115,7 @@ def bvar_niw_fit(
     Kadiyala & Karlsson (1997) 'Numerical Methods for Estimation and
     Inference in Bayesian VAR-models', Journal of Applied Econometrics 12(2).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_lag < 1:
         raise ValueError(f"n_lag must be >= 1, got {n_lag!r}")
@@ -1186,7 +1186,7 @@ def ar_fit(
     Stock & Watson (2007) 'Why Has US Inflation Become Harder to Forecast?',
     JMCB 39.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_lag < 1:
         raise ValueError(f"n_lag must be >= 1, got {n_lag!r}")
@@ -1261,7 +1261,7 @@ def far_fit(
     Stock & Watson (2002) 'Forecasting Using Principal Components from a
     Large Number of Predictors', JASA 97(460).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_factors < 1:
         raise ValueError(f"n_factors must be >= 1, got {n_factors!r}")
@@ -1335,7 +1335,7 @@ def pcr_fit(
     >>> result.n_components
     3
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_components < 1:
         raise ValueError(f"n_components must be >= 1, got {n_components!r}")
@@ -1410,7 +1410,7 @@ def favar_fit(
     Bernanke, Boivin & Eliasz (2005) 'Measuring the Effects of Monetary
     Policy: A Factor-Augmented Vector Autoregressive Approach', QJE 120(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_factors < 1:
         raise ValueError(f"n_factors must be >= 1, got {n_factors!r}")
@@ -1479,7 +1479,7 @@ def garch11_fit(
     Bollerslev (1986) 'Generalized Autoregressive Conditional
     Heteroskedasticity', Journal of Econometrics 31(3): 307-327.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1538,7 +1538,7 @@ def egarch_fit(
     Nelson (1991) 'Conditional Heteroskedasticity in Asset Returns:
     A New Approach', Econometrica 59(2): 347-370.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1607,7 +1607,7 @@ def realized_garch_fit(
     Returns and Realized Measures of Volatility', Journal of Applied
     Econometrics 27(6): 877-906.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1675,7 +1675,7 @@ def ets_fit(
     Hyndman, Koehler, Ord & Snyder (2008) 'Forecasting with Exponential
     Smoothing: The State Space Approach', Springer.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1732,7 +1732,7 @@ def theta_fit(
     approach to forecasting', International Journal of Forecasting 16(4):
     521-530.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1789,7 +1789,7 @@ def holt_winters_fit(
     Hyndman & Athanasopoulos (2018) 'Forecasting: Principles and Practice',
     2nd ed., OTexts, Chapter 7.
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1856,7 +1856,7 @@ def dfm_fit(
     Mariano & Murasawa (2010) 'A coincident index, common factors, and
     monthly real GDP', Oxford Bulletin of Economics and Statistics 72(1).
     """
-    from ..core.runtime import _build_l4_model  # lazy import to avoid circular
+    from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
     if n_factors < 1:
         raise ValueError(f"n_factors must be >= 1, got {n_factors!r}")
