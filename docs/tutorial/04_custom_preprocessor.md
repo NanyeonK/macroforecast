@@ -404,7 +404,7 @@ print(mf.list_custom_preprocessors())   # ()
 
 ## What to do next
 
-- See {doc}`../how_to/use_custom_hooks` for all five extension points:
+- See {doc}`../how_to/use_extension_points` for all five extension points:
   custom feature blocks, combiners, preprocessors, target transformers,
   and models.
 - See {doc}`../explanation/12_layer_design` for the full rationale behind

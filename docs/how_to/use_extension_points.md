@@ -1,4 +1,4 @@
-# How to use custom hooks
+# How to use extension points
 
 macroforecast provides five runtime extension points. All are decorator APIs
 re-exported from `macroforecast.custom` at the top-level `mf` namespace.
@@ -7,7 +7,7 @@ re-exported from `macroforecast.custom` at the top-level `mf` namespace.
 
 ## Extension map
 
-| Hook | What it changes | Decorator | Signature summary |
+| Extension point | What it changes | Decorator | Signature summary |
 |---|---|---|---|
 | `custom_model` | The forecasting estimator | `@mf.register_model(name)` | `fn(X_train, y_train, X_test, context) -> float` |
 | `custom_preprocessor` | The feature matrix after L2 construction | `@mf.custom_preprocessor(name)` | `fn(X_train, y_train, X_test, context) -> (X_train, X_test)` |
@@ -17,7 +17,7 @@ re-exported from `macroforecast.custom` at the top-level `mf` namespace.
 
 ---
 
-## One snippet per hook
+## One snippet per extension point
 
 ### custom_model
 
@@ -93,7 +93,7 @@ Reference in L3 node: `op: concat_blocks`
 
 ## Fair-comparison checklist
 
-Before comparing a custom hook against built-in baselines:
+Before comparing a custom extension point against built-in baselines:
 
 - Keep L0 task axes (failure_policy, seed) identical across variants.
 - Keep L1 raw-data treatment (same panel, same horizons) identical.
@@ -106,6 +106,6 @@ Before comparing a custom hook against built-in baselines:
 
 ## See also
 
-- {doc}`add_custom_model` for the custom_model hook in detail
+- {doc}`add_custom_model` for the custom_model extension point in detail
 - {doc}`target_transformer` for the target transformer contract and runtime gate
 - {doc}`../tutorial/03_custom_model` for the narrative tutorial

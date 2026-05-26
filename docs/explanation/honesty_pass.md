@@ -152,7 +152,7 @@ corresponds to an `operational` runtime implementation.
 
 Following C50, the operational inventory is:
 
-- 35+ L4 forecasting families: linear models, tree ensembles, boosting,
+- 35+ L4 forecasting models: linear models, tree ensembles, boosting,
   SVM, kNN, MLP, deep neural networks (LSTM/GRU/Transformer with
   `[deep]` extra), AR(p), BVAR Minnesota and Normal-Inverse-Wishart,
   FAVAR, Macroeconomic Random Forest (GTVP), Mariano-Murasawa DFM,

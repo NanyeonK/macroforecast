@@ -24,7 +24,7 @@ contracts.
 
 ## Basic recipe structure
 
-A minimal L4 recipe selects a model family and runs it on a default
+A minimal L4 recipe selects a model and runs it on a default
 dataset. The structure follows the canonical 12-layer order. The recipe
 gallery in `examples/recipes/` ships runnable templates including
 `l4_minimal_ridge.yaml` and `l7_minimal_shap.yaml`.
@@ -137,7 +137,7 @@ X_sel = sel.transform(X)
 ```
 
 The equivalent recipe nominates `boruta_selection` as an L3 op and
-`ridge` as the L4 family. The relevant lines are as follows.
+`ridge` as the L4 model. The relevant lines are as follows.
 
 ```yaml
 3_feature_engineering_dag:

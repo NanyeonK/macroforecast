@@ -120,7 +120,7 @@ exp.run()
 
 For batch / CI runs, ensure the recipe runner imports your method
 module before calling `mf.run("recipe.yaml")`. See
-{doc}`use_custom_hooks`
+{doc}`use_extension_points`
 for the full registration contract.
 
 ---

@@ -26,7 +26,7 @@ add_custom_dataset
 add_custom_model
 tune_hyperparameters
 sweep_over_models
-use_custom_hooks
+use_extension_points
 partial_layer_execution
 replicate_a_study
 validate_against_r

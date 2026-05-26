@@ -28,15 +28,15 @@ Outputs:
 
 | Slot | Purpose |
 |---|---|
-| L7.A | importance DAG body |
+| L7.A | importance step graph body |
 | L7.B | output shape and export axes |
 
 ## Compatibility Rules
 
-- Tree SHAP and tree-native importance require tree model families.
-- Linear SHAP, coefficient importance, and forecast decomposition require linear model families.
-- Deep attribution ops require neural-network model families.
-- VAR-specific ops require VAR or BVAR families.
+- Tree SHAP and tree-native importance require tree models.
+- Linear SHAP, coefficient importance, and forecast decomposition require linear models.
+- Deep attribution ops require neural-network models.
+- VAR-specific ops require VAR or BVAR models.
 - `mrf_gtvp` requires `macroeconomic_random_forest`.
 - MCS-filtered sources require active L6 MCS.
 - L7 output axes are not sweepable.

@@ -34,7 +34,7 @@ pages such as
 and
 [`sd_tcode_policy`](../../reference/encyclopedia/l2/axes/sd_tcode_policy.md).
 
-## Custom hook
+## Custom extension point
 
 L2 supports a user-supplied callable in two positions:
 
@@ -45,7 +45,7 @@ L2 supports a user-supplied callable in two positions:
 
 The simple-API method is `Experiment.use_preprocessor("name",
 applied_at="l2"|"l3")`. See
-[`docs/for_recipe_authors/custom_hooks.md`](../../for_recipe_authors/custom_hooks.md)
+[`docs/how_to/use_extension_points.md`](../../how_to/use_extension_points.md)
 for the callable signature + I/O contract.
 
 ## Layer contract
