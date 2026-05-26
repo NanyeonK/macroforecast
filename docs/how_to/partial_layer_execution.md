@@ -12,9 +12,9 @@ upstream artifacts, and returns the same artifact dataclasses that the full
 pipeline would have produced -- so you can inspect intermediate sinks
 without invoking L4 / L5 / L6 / L7 / L8.
 
-> See also: {doc}`use_custom_hooks` -- developing a custom hook
+> See also: {doc}`use_extension_points` -- developing a custom extension point
 > almost always involves L1+L2 once and then iterating on the layer the
-> hook is registered against.
+> extension point is registered against.
 
 ## Why this exists
 
@@ -178,7 +178,7 @@ The artifacts are frozen dataclasses defined in ``macroforecast/core/types.py``.
 | ``leaf_config`` | ``dict[str, Any]`` | Echo of L1.leaf_config; useful for reading ``custom_panel_inline``, ``target_transformer``, etc. |
 
 There is no separate ``target_series`` field; the target column lives inside
-``raw_panel.data[target]`` until the L3 stage splits it out.
+``raw_panel.data[target]`` until the L3 step splits it out.
 
 ### ``L1RegimeMetadataArtifact``
 
@@ -200,12 +200,12 @@ Inherits from ``Panel``; therefore exposes ``data``, ``shape``, ``column_names``
 |---|---|---|
 | ``panel`` | ``Panel`` | The cleaned panel. ``panel.data`` is the post-pipeline DataFrame (``DatetimeIndex``, ``float64`` + ``pd.NA``). |
 | ``column_metadata`` | ``dict[str, Any]`` | Per-column dtype string and other column-level audit info. |
-| ``cleaning_log`` | ``dict[str, Any]`` | ``{"runtime": "core_l1_l2_materialization", "steps": [...]}``. Each step entry is a dict produced by the relevant stage (``transform``, ``outlier``, ``imputation``, ``frame_edge``, plus any ``custom_preprocessor`` / ``custom_postprocessor`` entries). |
+| ``cleaning_log`` | ``dict[str, Any]`` | ``{"runtime": "core_l1_l2_materialization", "steps": [...]}``. Each step entry is a dict produced by the relevant step (``transform``, ``outlier``, ``imputation``, ``frame_edge``, plus any ``custom_preprocessor`` / ``custom_postprocessor`` entries). |
 | ``n_imputed_cells`` | ``int`` | Total cells the imputer filled. |
 | ``n_outliers_flagged`` | ``int`` | Total cells the outlier policy touched. |
 | ``n_truncated_obs`` | ``int`` | Rows the frame-edge policy dropped. |
 | ``transform_map_applied`` | ``dict[str, int]`` | ``column -> applied tcode``. |
-| ``cleaning_temporal_rules`` | ``dict[str, str]`` | Records the per-stage temporal rule (``imputation``, ``outlier``, ``frame_edge``). |
+| ``cleaning_temporal_rules`` | ``dict[str, str]`` | Records the per-step temporal rule (``imputation``, ``outlier``, ``frame_edge``). |
 | ``upstream_hashes`` | ``dict[str, str]`` | Populated by the cell loop only -- empty in raw materialize calls. |
 
 ### ``L3FeaturesArtifact``
@@ -303,7 +303,7 @@ for step in l2_artifact.cleaning_log["steps"]:
     print(" -", step)
 ```
 
-The ``cleaning_log['steps']`` entry for the outlier stage tells you exactly
+The ``cleaning_log['steps']`` entry for the outlier step tells you exactly
 which policy ran, what action it took, and how many cells it flagged.
 
 ## Use case 2: Iterating on L3 only
@@ -332,14 +332,14 @@ Each L3 iteration reuses the same ``l1_artifact`` and ``l2_artifact``, so
 the experiment is bounded by L3 cost rather than full L1 → L8 cost.
 
 When developing a custom L3 ``feature_block`` or ``feature_combiner``
-({doc}`use_custom_hooks`), this loop is the canonical inner cycle:
+({doc}`use_extension_points`), this loop is the canonical inner cycle:
 register the callable once, then call ``materialize_l3_minimal`` repeatedly
 with different parameter values.
 
 ## ``execute_node`` -- the cache-aware primitive
 
 ``execute_node(node, dag, runtime_context, cache_dir)`` is the foundation
-primitive that ``execute_recipe`` calls per DAG node. It hashes the node +
+primitive that ``execute_recipe`` calls per step graph node. It hashes the node +
 its inputs, checks the on-disk cache at
 ``cache_dir/nodes/<node_hash>/result.pickle``, returns the cached value if
 present, and otherwise computes and caches the result. Most recipe authors

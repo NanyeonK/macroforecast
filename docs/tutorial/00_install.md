@@ -59,10 +59,10 @@ macroforecast has several optional dependencies for specific features. Install o
 | `optuna` | Bayesian optimization tuning | `pip install optuna` |
 | `shap` | TreeSHAP, KernelSHAP, LinearSHAP importance | `pip install shap` |
 | `lime` | LIME local surrogate importance | `pip install lime` |
-| `xgboost` | XGBoost model family | `pip install xgboost` |
-| `lightgbm` | LightGBM model family | `pip install lightgbm` |
-| `catboost` | CatBoost model family | `pip install catboost` |
-| `deep` extra (`torch`) | LSTM / GRU / TCN model families | see `[deep]` section below |
+| `xgboost` | XGBoost model | `pip install xgboost` |
+| `lightgbm` | LightGBM model | `pip install lightgbm` |
+| `catboost` | CatBoost model | `pip install catboost` |
+| `deep` extra (`torch`) | LSTM / GRU / TCN models | see `[deep]` section below |
 
 (``openpyxl`` is now a core dependency in v0.6.3+ since FRED-SD Excel workbook
 loading is a baseline FRED-SD code path.)

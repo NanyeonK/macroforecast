@@ -1,6 +1,6 @@
 # How to add a custom model
 
-Register a Python callable as a model family and use it in a recipe.
+Register a Python callable as a model and use it in a recipe.
 
 ---
 
@@ -85,7 +85,7 @@ YAML does not import Python modules.
 
 ## See also
 
-- {doc}`use_custom_hooks` for all five extension points (models, preprocessors,
+- {doc}`use_extension_points` for all five extension points (models, preprocessors,
   target transformers, feature blocks, combiners)
 - {doc}`../tutorial/03_custom_model` for the narrative tutorial with step-by-step
   explanation

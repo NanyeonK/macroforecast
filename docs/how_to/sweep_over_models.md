@@ -117,10 +117,10 @@ for cell in result.cells:
     print(cell.cell_id, m[["model_id", "mse"]].to_string(index=False))
 ```
 
-When sweeping across families that have different input requirements, provide the
-union of inputs and let each family select what it needs. AR(p) uses only `src_y`;
+When sweeping across models that have different input requirements, provide the
+union of inputs and let each model select what it needs. AR(p) uses only `src_y`;
 ridge and random_forest also use `src_X`. By passing only `[src_y]` here, all three
-families use the same target-only input path.
+models use the same target-only input path.
 
 ---
 
