@@ -1,6 +1,6 @@
-# Layer 0 Axis: `reproducibility_policy`
+# Layer L0 Axis: `reproducibility_policy`
 
-- Parent: [Layer 0](layer0.md)
+- Parent: [Layer L0](layer0.md)
 - Current: `reproducibility_policy`
 
 `reproducibility_policy` controls seed policy for the run. It determines whether

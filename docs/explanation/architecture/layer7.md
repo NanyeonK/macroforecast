@@ -1,9 +1,9 @@
-# Layer 7: Interpretation / Importance
+# Layer L7: Interpretation / Importance
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 6](layer6.md)
+- Previous: [Layer L6](layer6.md)
 - Current: L7
-- Next: [Layer 8](layer8.md)
+- Next: [Layer L8](layer8.md)
 
 L7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML. As of Cycle 49 (2026-05-21), `generalized_irf` (Pesaran-Shin 1998) is operational; `FUTURE_OPS` contains only `lstm_hidden_state`.
 

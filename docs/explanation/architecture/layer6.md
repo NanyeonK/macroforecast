@@ -1,9 +1,9 @@
-# Layer 6: Statistical Tests
+# Layer L6: Statistical Tests
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 5](layer5.md)
+- Previous: [Layer L5](layer5.md)
 - Current: L6
-- Next: [Layer 7](layer7.md)
+- Next: [Layer L7](layer7.md)
 
 L6 runs inferential tests on forecasts and evaluation artifacts. It is default off and requires `enabled: true`. Individual sub-layers also require their own `enabled: true`.
 

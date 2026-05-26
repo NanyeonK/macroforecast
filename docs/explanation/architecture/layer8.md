@@ -1,7 +1,7 @@
-# Layer 8: Output / Provenance
+# Layer L8: Output / Provenance
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 7](layer7.md)
+- Previous: [Layer L7](layer7.md)
 - Current: L8
 
 L8 is the external boundary. It collects active layer sinks, writes artifacts, and emits a reproducible manifest.

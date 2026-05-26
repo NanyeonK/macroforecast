@@ -1,4 +1,4 @@
-# Layer 0: Study Setup
+# Layer L0: Study Setup
 
 - Parent: [Architecture](index.md)
 - Current: L0

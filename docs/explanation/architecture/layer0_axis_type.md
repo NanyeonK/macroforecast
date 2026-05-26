@@ -1,6 +1,6 @@
 # Registry Catalog: `axis_type`
 
-- Parent: [Layer 0](layer0.md)
+- Parent: [Layer L0](layer0.md)
 - Current: `axis_type`
 
 `axis_type` is registry metadata. It is not a user-facing L0 recipe axis
