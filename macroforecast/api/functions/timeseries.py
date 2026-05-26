@@ -111,7 +111,16 @@ class BVARMinnesotaFitResult:
     n_lag :
         Lag order p used.
     lambda1 :
-        Minnesota tightness hyperparameter.
+        Minnesota overall prior tightness (λ₁).
+    lambda_cross :
+        Cross-equation shrinkage (λ₂).  Range [0, 1]: 0 = no cross-lag
+        information, 1 = cross lags same scale as own lags.
+    lambda_decay :
+        Lag decay exponent (λ₃).  Prior variance for lag l scales as
+        (λ₁ / l^{lambda_decay})².  Default 1.0 = harmonic decay.
+    b_AR :
+        Prior mean for the first own lag.  1.0 = random-walk prior (standard
+        Litterman I(1) default).  0.9 = slightly stationary (VARCTIC calibration).
     n_obs :
         Number of observations used.
     _model :
@@ -121,6 +130,9 @@ class BVARMinnesotaFitResult:
 
     n_lag: int
     lambda1: float
+    lambda_cross: float
+    lambda_decay: float
+    b_AR: float
     n_obs: int
     _model: Any
 
@@ -140,8 +152,8 @@ class BVARMinnesotaFitResult:
         Returns
         -------
         str
-            Statsmodels-style table showing lag order, tightness, and
-            observation count.
+            Statsmodels-style table showing lag order, all four Litterman
+            hyperparameters, and observation count.
         """
         sep = "=" * 78
         lines = [
@@ -150,6 +162,9 @@ class BVARMinnesotaFitResult:
             sep,
             f"{'n_lag:':35s} {self.n_lag:>20d}",
             f"{'lambda1:':35s} {self.lambda1:>20.4f}",
+            f"{'lambda_cross:':35s} {self.lambda_cross:>20.4f}",
+            f"{'lambda_decay:':35s} {self.lambda_decay:>20.4f}",
+            f"{'b_AR:':35s} {self.b_AR:>20.4f}",
             f"{'n_obs:':35s} {self.n_obs:>20d}",
             sep,
         ]
@@ -998,6 +1013,9 @@ def bvar_minnesota_fit(
     *,
     n_lag: int = 1,
     lambda1: float = 0.2,
+    lambda_cross: float = 0.5,
+    lambda_decay: float = 1.0,
+    b_AR: float = 1.0,
 ) -> BVARMinnesotaFitResult:
     """Standalone Bayesian VAR with Minnesota prior.
 
@@ -1013,18 +1031,36 @@ def bvar_minnesota_fit(
     n_lag :
         VAR lag order p.  Must be >= 1.  Default 1.
     lambda1 :
-        Minnesota prior tightness.  Must be > 0.  Default 0.2.
+        Minnesota overall prior tightness (λ₁).  Must be > 0.  Default 0.2.
+        Smaller values tighten the prior; the published Litterman (1986)
+        default range for macro applications is 0.1--0.3.
+    lambda_cross :
+        Cross-equation shrinkage (λ₂).  Must be >= 0.  Default 0.5 (Litterman
+        1986).  Range [0, 1]: ``lambda_cross=0`` sets cross-variable lag
+        coefficients to zero (Litterman's slab); ``lambda_cross=1.0`` gives
+        cross lags the same scale as own lags.
+    lambda_decay :
+        Lag decay exponent (λ₃).  Must be > 0.  Default 1.0 = harmonic decay
+        (Litterman 1986).  Prior variance for lag l scales as
+        (λ₁ / l^{lambda_decay})².  Use 2.0 for quadratic decay.
+    b_AR :
+        Prior mean for the first own lag.  Must be in [0, 2].  Default 1.0 =
+        random-walk prior (standard Litterman I(1) anchor).  Set to 0.0 for a
+        white-noise prior; the recipe-path default is 0.9 (Coulombe & Göbel
+        2021 VARCTIC calibration for stationary series).
 
     Returns
     -------
     BVARMinnesotaFitResult
-        Fitted result exposing ``n_lag``, ``lambda1``, ``n_obs``,
-        ``.predict(X)``, ``.summary()``.
+        Fitted result exposing ``n_lag``, ``lambda1``, ``lambda_cross``,
+        ``lambda_decay``, ``b_AR``, ``n_obs``, ``.predict(X)``,
+        ``.summary()``.
 
     Raises
     ------
     ValueError
-        If ``n_lag < 1`` or ``lambda1 <= 0``.
+        If ``n_lag < 1``, ``lambda1 <= 0``, ``lambda_cross < 0``,
+        ``lambda_decay <= 0``, or ``b_AR`` is outside [0, 2].
 
     Examples
     --------
@@ -1041,6 +1077,8 @@ def bvar_minnesota_fit(
     ----------
     Litterman (1986) 'Forecasting With Bayesian Vector Autoregressions --
     Five Years of Experience', JBES 4(1).
+    Karlsson (2013) 'Forecasting with Bayesian Vector Autoregression',
+    Handbook of Economic Forecasting Vol. 2B, Ch. 15, pp. 791--897.
     """
     from ...core.runtime import _build_l4_model  # lazy import to avoid circular
 
@@ -1048,6 +1086,12 @@ def bvar_minnesota_fit(
         raise ValueError(f"n_lag must be >= 1, got {n_lag!r}")
     if lambda1 <= 0:
         raise ValueError(f"lambda1 must be > 0, got {lambda1!r}")
+    if lambda_cross < 0:
+        raise ValueError(f"lambda_cross must be >= 0, got {lambda_cross!r}")
+    if lambda_decay <= 0:
+        raise ValueError(f"lambda_decay must be > 0, got {lambda_decay!r}")
+    if not (0.0 <= b_AR <= 2.0):
+        raise ValueError(f"b_AR must be in [0, 2], got {b_AR!r}")
 
     X_df = _to_frame(X)
     y_s = _to_series(y)
@@ -1055,6 +1099,9 @@ def bvar_minnesota_fit(
     params: dict[str, Any] = {
         "n_lag": int(n_lag),
         "lambda_1": float(lambda1),
+        "lambda_cross": float(lambda_cross),
+        "lambda_decay": float(lambda_decay),
+        "b_AR": float(b_AR),
     }
     model = _build_l4_model("bvar_minnesota", params)
     model.fit(X_df, y_s)
@@ -1062,6 +1109,9 @@ def bvar_minnesota_fit(
     return BVARMinnesotaFitResult(
         n_lag=int(n_lag),
         lambda1=float(lambda1),
+        lambda_cross=float(lambda_cross),
+        lambda_decay=float(lambda_decay),
+        b_AR=float(b_AR),
         n_obs=len(y_s),
         _model=model,
     )
