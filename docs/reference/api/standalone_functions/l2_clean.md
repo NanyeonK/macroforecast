@@ -83,7 +83,7 @@ panel = pd.DataFrame({'gdp': range(24)}, index=monthly_idx)
 out = mf.functions.freq_align_monthly_to_quarterly_clean(panel, ['gdp'])
 ```
 
-[Encyclopedia](../encyclopedia/l2/monthly_to_quarterly_rule/quarterly_average.md)
+[Encyclopedia](../encyclopedia/l2/monthly_to_quarterly_policy/quarterly_average.md)
 
 #### `freq_align_quarterly_to_monthly_clean(panel: pd.DataFrame, quarterly_columns: list[str], *, rule: str = step_backward) -> pd.DataFrame`
 
@@ -97,7 +97,7 @@ panel = pd.DataFrame({'cpi': range(8)}, index=q_idx)
 out = mf.functions.freq_align_quarterly_to_monthly_clean(panel, ['cpi'])
 ```
 
-[Encyclopedia](../encyclopedia/l2/quarterly_to_monthly_rule/step_backward.md)
+[Encyclopedia](../encyclopedia/l2/quarterly_to_monthly_policy/step_backward.md)
 
 #### `iqr_outlier_clean(panel: pd.DataFrame, *, threshold: float = 10.0, action: str = flag_as_nan) -> pd.DataFrame`
 
