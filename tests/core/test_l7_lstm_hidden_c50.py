@@ -20,7 +20,7 @@ import pytest
 
 def test_lstm_hidden_state_not_in_future_ops():
     """Regression guard: lstm_hidden_state must be absent from FUTURE_OPS after C50."""
-    from macroforecast.core.ops.l7_ops import FUTURE_OPS
+    from macroforecast.layers.l7_interpretation.ops import FUTURE_OPS
 
     assert "lstm_hidden_state" not in FUTURE_OPS, (
         f"lstm_hidden_state must be operational after C50; "
@@ -42,7 +42,7 @@ def test_l7_future_ops_drops_lstm_hidden_state_after_c50():
     The C50-specific guarantee is: "lstm_hidden_state not in FUTURE_OPS".
     The final empty-state () is a cross-cycle property, not a C50-only guarantee.
     """
-    from macroforecast.core.ops.l7_ops import FUTURE_OPS
+    from macroforecast.layers.l7_interpretation.ops import FUTURE_OPS
 
     # C50 specifically removes lstm_hidden_state. generalized_irf is C49 scope —
     # in this worktree's view (branched from main c92c55a9, pre-C49-merge),
@@ -62,7 +62,7 @@ def test_l7_future_ops_drops_lstm_hidden_state_after_c50():
 def test_lstm_hidden_state_in_default_figure_mapping():
     """Contract: lstm_hidden_state is registered in DEFAULT_FIGURE_MAPPING
     with figure type 'heatmap'."""
-    from macroforecast.core.ops.l7_ops import DEFAULT_FIGURE_MAPPING
+    from macroforecast.layers.l7_interpretation.ops import DEFAULT_FIGURE_MAPPING
 
     assert "lstm_hidden_state" in DEFAULT_FIGURE_MAPPING, (
         "lstm_hidden_state must be in DEFAULT_FIGURE_MAPPING"
@@ -78,7 +78,7 @@ def test_lstm_hidden_state_in_default_figure_mapping():
 
 def test_l7_lstm_hidden_state_now_accepted():
     """Contract: the L7 validator no longer rejects lstm_hidden_state as future."""
-    from macroforecast.core.layers.l7 import parse_layer_yaml, validate_layer, make_l7_yaml
+    from macroforecast.layers.l7_interpretation.schema import parse_layer_yaml, validate_layer, make_l7_yaml
 
     layer = parse_layer_yaml(
         make_l7_yaml(op="lstm_hidden_state", model_family="lstm"), "l7"

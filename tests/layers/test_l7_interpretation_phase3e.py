@@ -57,8 +57,8 @@ def test_l7_registry_uses_collocated_class() -> None:
 
 
 def test_backward_compat_core_ops_l7_ops() -> None:
-    # The old import path must still work for existing test code.
-    from macroforecast.core.ops.l7_ops import (
+    # Legacy path deleted in PR-F; canonical path is now the source.
+    from macroforecast.layers.l7_interpretation.ops import (
         OPERATIONAL_OPS,
         PRE_DEFINED_BLOCKS,
         HONESTY_DEMOTED_L7_OPS,

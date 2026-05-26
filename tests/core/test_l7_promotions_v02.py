@@ -24,7 +24,7 @@ from macroforecast.core.runtime import (
     _var_impulse_frame,
 )
 from macroforecast.core.types import ModelArtifact
-from macroforecast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
+from macroforecast.layers.l7_interpretation.ops import HONESTY_DEMOTED_L7_OPS
 
 
 # ---------------------------------------------------------------------------

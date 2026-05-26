@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-from macroforecast.core.layers.l7 import (
+from macroforecast.layers.l7_interpretation.schema import (
     make_l7_yaml,
     make_l7_yaml_with_lineage_attribution,
     normalize_to_dag_form,
@@ -13,7 +13,7 @@ from macroforecast.core.layers.l7 import (
     validate_recipe,
 )
 from macroforecast.core.ops import get_op, list_ops
-from macroforecast.core.ops.l7_ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
+from macroforecast.layers.l7_interpretation.ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
 from macroforecast.core.validator import validate_dag
 
 ROOT = Path(__file__).resolve().parents[2]
