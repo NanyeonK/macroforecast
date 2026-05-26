@@ -30,6 +30,23 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR10: README minimal recipe — observation count extended; CI doctest added**
+
+  The minimal recipe in `README.md` defined only 6 observations (Jan-Jun 2018).
+  After the `lag` operation in L3 (`n_lag=1`) the aligned dataset had 5 rows.
+  With `min_train_size: 4` the walk-forward loop requires strictly more than 5
+  observations, so `mf.run()` raised
+  `RuntimeError: minimal L4 runtime requires min_train_size < aligned observation count`.
+
+  Fix: extended `date`, `y`, and `x1` arrays to 12 monthly entries (Jan-Dec 2018).
+  After lag, 11 aligned observations remain, giving 7 OOS forecast origins with
+  `min_train_size: 4`.
+
+  To prevent future drift, a CI workflow (`.github/workflows/ci-readme.yml`) and
+  helper script (`tools/run_readme_recipe.py`) were added. The workflow triggers
+  on any push or pull request that touches `README.md` or `macroforecast/`, extracts
+  the minimal recipe block, runs `mf.run()`, and fails the build if the recipe errors.
+
 - **PR11: goulet_coulombe_2021_replication.yaml — 6 obsolete axis/op names updated**
 
   `examples/recipes/goulet_coulombe_2021_replication.yaml` used six names that
