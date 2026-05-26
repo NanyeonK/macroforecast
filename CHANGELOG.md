@@ -70,6 +70,34 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   New test file: `tests/cli/test_main_entry.py` (6 tests covering help, all four subcommands,
   and missing-recipe exit code).
 
+### Docs
+
+- **PR7 (deep-audit sphinx + how_to executability): Sphinx -W zero warnings + how_to import audit**
+
+  Problem 10 (Sphinx strict build) and Problem 11 (how_to import executability).
+
+  Findings:
+  - **41 imports audited** across `docs/how_to/`, `docs/tutorial/`, and `docs/getting_started.md`.
+    40 PASS, 1 FAIL (fixed).
+  - **Broken import fixed**: `DEFAULT_FORECAST_POLICY` → `DEFAULT_FORECAST_STRATEGY` in
+    `docs/how_to/simple_api/quickstart.md`. `DEFAULT_FORECAST_POLICY` was never exported from
+    `macroforecast.defaults`; the correct constant is `DEFAULT_FORECAST_STRATEGY`.
+  - **Sphinx `-W` build**: already clean (0 warnings before and after fix). Exit code 0.
+    CI gate at `.github/workflows/ci-docs.yml:58-60` already enforces `sphinx-build -W`
+    on every PR — no new CI step needed.
+  - **`docs-strict` Makefile target** added to `docs/Makefile` for local parity with the CI gate:
+    `cd docs && make docs-strict` runs `sphinx-build -W -b html`.
+
+  Deliverables:
+  - `docs/how_to/simple_api/quickstart.md`: import corrected.
+  - `docs/Makefile`: `docs-strict` target added.
+  - `docs/_audit/howto-import-audit-2026-05-27.md` — full import scan table (41 entries).
+  - `docs/_audit/sphinx-warning-audit-2026-05-27.md` — sphinx warning audit (0 warnings).
+
+  Termination criteria:
+  - TC11 (sphinx -W): PASS exit 0.
+  - TC13 (all how_to imports executable): PASS (1 broken → 0 broken).
+
 ### Housekeeping
 
 - **PR5 (deep-audit encyclopedia option drift): audit + drift gate test**

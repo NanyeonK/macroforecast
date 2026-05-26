@@ -5,7 +5,7 @@ SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 
-.PHONY: help html clean cleanhtml
+.PHONY: help html clean cleanhtml docs-strict
 
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -25,3 +25,8 @@ clean:
 cleanhtml:
 	rm -rf "$(BUILDDIR)/html"
 	$(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS) $(O)
+
+# docs-strict: mirrors the CI gate (ci-docs.yml, step "Build Sphinx HTML (fail on warning)").
+# Any Sphinx warning is treated as a build error.  Run before opening a PR that touches docs/.
+docs-strict:
+	$(SPHINXBUILD) -W -b html "$(SOURCEDIR)" "$(BUILDDIR)/html_strict" $(SPHINXOPTS) $(O)
