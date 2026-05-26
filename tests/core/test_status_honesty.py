@@ -18,7 +18,7 @@ import pytest
 from macroforecast.core import FUTURE, OPERATIONAL, ItemStatus, is_future, is_runnable
 from macroforecast.layers.l1_data.schema import parse_layer_yaml as l1_parse, validate_layer as l1_validate
 from macroforecast.layers.l4_models.schema import parse_layer_yaml as l4_parse, validate_layer as l4_validate
-from macroforecast.core.layers.l7 import parse_layer_yaml as l7_parse, validate_layer as l7_validate
+from macroforecast.layers.l7_interpretation.schema import parse_layer_yaml as l7_parse, validate_layer as l7_validate
 from macroforecast.core.ops import list_ops
 from macroforecast.layers.l4_models.ops import (
     FUTURE_MODEL_FAMILIES,
@@ -26,7 +26,7 @@ from macroforecast.layers.l4_models.ops import (
     PLANNED_MODEL_FAMILIES,
     get_family_status,
 )
-from macroforecast.core.ops.l7_ops import HONESTY_DEMOTED_L7_OPS
+from macroforecast.layers.l7_interpretation.ops import HONESTY_DEMOTED_L7_OPS
 
 
 # Items demoted from operational/planned to future during the v0.1

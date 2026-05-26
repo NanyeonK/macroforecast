@@ -1637,7 +1637,7 @@ def test_v090d_anatomy_ops_registered_operational():
     """Both ``oshapley_vi`` and ``pbsv`` moved from FUTURE_OPS to
     OPERATIONAL_OPS in v0.9.0D."""
 
-    from macroforecast.core.ops.l7_ops import OPERATIONAL_OPS, FUTURE_OPS
+    from macroforecast.layers.l7_interpretation.ops import OPERATIONAL_OPS, FUTURE_OPS
 
     assert "oshapley_vi" in OPERATIONAL_OPS
     assert "pbsv" in OPERATIONAL_OPS
@@ -2044,7 +2044,7 @@ def test_v23_generalized_irf_operational_in_c49():
 
     import numpy as np
 
-    from macroforecast.core.ops.l7_ops import FUTURE_OPS, OPERATIONAL_OPS
+    from macroforecast.layers.l7_interpretation.ops import FUTURE_OPS, OPERATIONAL_OPS
     from macroforecast.core.runtime import _var_girf_frame, _var_impulse_frame
 
     # Schema registration: ``generalized_irf`` operational, not future.

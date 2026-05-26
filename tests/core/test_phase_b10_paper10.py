@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 
 import macroforecast
-from macroforecast.core.ops.l7_ops import FUTURE_OPS, OPERATIONAL_OPS
+from macroforecast.layers.l7_interpretation.ops import FUTURE_OPS, OPERATIONAL_OPS
 from macroforecast.layers.l4_models.paper_methods import ols_attention_demo
 
 

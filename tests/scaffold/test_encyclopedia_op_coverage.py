@@ -57,7 +57,7 @@ from pathlib import Path
 import pytest
 
 from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES
-from macroforecast.core.ops.l7_ops import OPERATIONAL_OPS
+from macroforecast.layers.l7_interpretation.ops import OPERATIONAL_OPS
 from macroforecast.core.ops.registry import _OPS
 from tools.docgen.option_docs import OPTION_DOCS
 

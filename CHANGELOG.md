@@ -7,6 +7,20 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **Phase 3g-bis PR #F: collocate L7 schema and ops (biggest)** (see PR)
+  - Deleted: `macroforecast/core/layers/l7.py` (-428 lines) — legacy schema
+    body superseded by the Phase 3f collocated-layer restructure.
+  - Deleted: `macroforecast/core/ops/l7_ops.py` (-711 lines) — legacy ops
+    body; 717-line full implementation relocated to canonical location.
+  - Canonical location (unchanged): `macroforecast/layers/l7_interpretation/ops.py`
+    (shim replaced with full body; +717 LOC).
+  - Modified: `macroforecast/core/runtime.py` (1 line: l7 layer source updated
+    via side-effect import).
+  - Test import paths updated in 11 files: all affected L7 test files updated
+    to canonical `macroforecast.layers.l7_interpretation` paths.
+  - **Behavioral impact**: none. Dead-file removal + shim-to-body promotion only.
+    This is the largest single PR in the Phase 3g-bis cascade by line count.
+
 - **Phase 3g-bis PR #E: collocate L6 schema and ops** (see PR)
   - Deleted: `macroforecast/core/layers/l6.py` (-499 lines) — legacy schema
     body superseded by the Phase 3f collocated-layer restructure.

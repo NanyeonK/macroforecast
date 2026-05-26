@@ -248,7 +248,7 @@ def test_oshapley_vi_op_schema_exposes_initial_window():
     inspecting the registry. After the fix both keys must be present
     with sensible defaults (anatomy paper p.16 fn 16: M=500)."""
 
-    from macroforecast.core.ops.l7_ops import _schema
+    from macroforecast.layers.l7_interpretation.ops import _schema
     from macroforecast.core.ops.registry import get_op
 
     for op_name in ("oshapley_vi", "pbsv"):
