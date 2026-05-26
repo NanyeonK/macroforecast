@@ -36,6 +36,16 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR1 (deep-audit Section A cleanup): fix dead scaffold path, stale `model_family=` example, and internal CI comment labels**
+
+  Three fixes bundled from the Section A deep-audit pass:
+
+  1. `.github/RELEASE_CHECKLIST.md` — replaced the dead `python -m macroforecast.scaffold encyclopedia docs/encyclopedia/` command (module does not exist) with the current `python -m tools.docgen encyclopedia docs/reference/encyclopedia/` command and updated the `git add` path to match.
+
+  2. `examples/custom_fred_sd_mixed_frequency_model.py` — replaced deprecated `model_family=` keyword argument with canonical `model=` in the `mf.Experiment(...)` call. Eliminates `DeprecationWarning` for users running the example.
+
+  3. `.github/workflows/ci-core.yml` — rewrote the four-line comment block explaining the `api/` exclusion in the stale-audience-tree check to remove the internal cycle label `C52` and the retired `navigator pages` term. The technical meaning of the comment is preserved.
+
 - **PR7a (recipe cleanup): move 26 partial-layer recipes from `examples/recipes/` to `docs/recipe-snippets/`**
 
   Per PR6 audit (`docs/_audit/recipe-sweep-2026-05-26.md`): 26 recipes fail `mf.run()` with
