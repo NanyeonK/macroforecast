@@ -28,6 +28,42 @@ Note: axis renames (`custom_source_policy` -> `panel_composition`, `forecast_str
 no alias support at the recipe level. Users must update recipe YAML files manually.
 See `docs/explanation/deprecation_timeline.md` for the full deprecation reference.
 
+### Bug fixes
+
+- **PR1 (critical): Kupiec (1995) POF likelihood-ratio formula corrected**
+
+  The L6 density battery function `_density_interval_battery` computed the
+  Kupiec proportion-of-failures (POF) likelihood-ratio statistic using a binary
+  entropy difference formula instead of the correct log-likelihood ratio. The
+  buggy expression was:
+
+  ```
+  LR = -2n [H(alpha) - H(p_hat)]   # WRONG: entropy difference
+  ```
+
+  which yields negative values whenever `p_hat > alpha` (violation rate exceeds
+  nominal level), making the statistic structurally impossible as a chi-squared
+  variate. The correct Kupiec (1995) formula is:
+
+  ```
+  LR_uc = 2 [x log(p_hat/alpha) + (n-x) log((1-p_hat)/(1-alpha))]  # CORRECT
+  ```
+
+  This is twice the log-LR of the unrestricted (p=p_hat) vs restricted (p=alpha)
+  binomial model, guaranteed to be >= 0.
+
+  **Impact**: `kupiec_pof.lr_statistic` was returning values like -27.15 (impossible)
+  and `kupiec_pof.p_value` was returning 1.0 (from `chi2.cdf` of a negative argument),
+  silently masking all VaR coverage violations. The fix produces the correct
+  LR ~ 2.30, p ~ 0.13 for the canonical test case (n=200, x=15, alpha=0.05).
+
+  Fix: `macroforecast/core/runtime.py`, lines 12933-12939 (4-line formula replacement).
+  Tests: `tests/core/test_density_battery.py` (3 new tests: non-negativity, known-value
+  numerical accuracy, and strong-rejection).
+
+  Reference: Kupiec, P. (1995). "Techniques for Verifying the Accuracy of Risk
+  Measurement Models." *Journal of Derivatives*, 3(2), 73-84.
+
 ### API (breaking -- deprecated, one-release window)
 
 - **PR4 (hotfix): `model_family` → `model` rename with deprecation infrastructure**
