@@ -30,6 +30,55 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR6 (CRITICAL): linear_interpolation silent lookahead leak fixed — 3 locations in runtime.py**
+
+  `pandas.DataFrame.interpolate(method="linear")` defaults to
+  `limit_direction="both"` for numeric-index frames, meaning NaN cells at any
+  position are filled using both past AND future non-NaN values. Three
+  independent code paths in `macroforecast/core/runtime.py` used this
+  interpolation without restricting the direction, silently leaking future
+  observations into pre-cutoff imputed values in every study that used
+  `imputation_policy: linear_interpolation`.
+
+  **Location 1 — FRED-SD quarterly-to-monthly alignment**
+  (`_apply_fred_sd_frequency_alignment`, ~line 15194):
+  `series.interpolate(method="linear", limit_direction="both")` ran on the
+  FULL panel before any per-origin split. A quarterly NaN for month 2 of a
+  quarter was filled using the Q+1 value — a future observation unavailable
+  at decision time. Fix: raise `ValueError` at runtime when
+  `quarterly_to_monthly_policy="linear_interpolation"` is requested, directing
+  the user to `step_forward` (causal) or `chow_lin` (regression-based)
+  instead. The cleaning log records a `rejected_lookahead` step for the audit
+  trail.
+
+  **Location 2 — per-origin imputation** (`_apply_imputation_per_origin`,
+  ~line 15494): `frame.interpolate(method="linear")` was called on the full
+  frame including dates beyond `cutoff_ts`, causing NaN cells before the
+  cutoff to be filled using post-cutoff values (e.g. a NaN at `t=2` with
+  `cutoff_ts=3` would be interpolated using `t=4..N` values if the values
+  inside the window were insufficient). Fix: interpolation is now restricted
+  to `frame.loc[:cutoff_ts]` with `limit_direction="forward"`, so no
+  pre-cutoff cell is ever filled by a post-cutoff value. When `cutoff_ts`
+  is `None`, forward-only interpolation is applied to the full frame.
+
+  **Location 3 — full-sample imputation** (`_apply_imputation`, ~line
+  15593): same unconstrained `frame.interpolate(method="linear")` call.
+  Fix: change to `limit_direction="forward"` and emit `UserWarning` so
+  callers are aware that full-panel imputation is non-causal by design and
+  that `imputation_temporal_rule=expanding_window_per_origin` is the
+  preferred leak-free path.
+
+  Leak evidence (pre-fix):
+  ```
+  # Per-origin: NaN at t=2, cutoff=3, post-cutoff values = [100, 200, 300, ...]
+  # Pre-fix result at t=2: influenced by t>3 values (leak confirmed).
+  # Post-fix result at t=2: == 2.0 (interpolated from t=1=1.0 and t=3=3.0 only).
+  ```
+
+  Tests: `tests/core/test_linear_interp_leak.py` (12 new tests across 3
+  test classes: `TestPerOriginCutoffRespect`, `TestFredSdLinearInterpolationReject`,
+  `TestFullSampleImputationWarning`).
+
 - **PR4a (documentation): MCS docstring updated to accurately describe single-step max-test**
 
   `_mcs_from_per_origin_panel` in `macroforecast/core/runtime.py` previously

@@ -15191,7 +15191,26 @@ def _apply_fred_sd_frequency_alignment(
         for col in quarterly_cols:
             series = df[col]
             if qm_rule == "linear_interpolation":
-                df[col] = series.interpolate(method="linear", limit_direction="both")
+                # PR6 fix: bidirectional interpolation on the full panel (before
+                # any per-origin split) leaks future quarterly values into earlier
+                # NaN months. Hard-reject at runtime so the user is forced to pick
+                # a causal alternative. The cleaning_log records the rejection for
+                # the audit trail.
+                cleaning_log.setdefault("steps", []).append(
+                    {
+                        "step": "fred_sd_frequency_alignment",
+                        "applied": False,
+                        "reason": "rejected_lookahead",
+                        "policy": "linear_interpolation",
+                    }
+                )
+                raise ValueError(
+                    "quarterly_to_monthly_policy='linear_interpolation' uses "
+                    "bidirectional interpolation on the full panel and leaks "
+                    "future data into pre-cutoff observations. "
+                    "Use 'step_forward' (causal) or 'chow_lin' (regression-based) "
+                    "instead."
+                )
             elif qm_rule == "step_forward":
                 df[col] = series.ffill()
             elif qm_rule == "chow_lin":
@@ -15492,7 +15511,19 @@ def _apply_imputation_per_origin(
     elif policy == "forward_fill":
         return frame.ffill()
     elif policy == "linear_interpolation":
-        return frame.interpolate(method="linear")
+        # PR6 fix: restrict interpolation to the expanding window available at
+        # this origin so that no cell at t <= cutoff_ts is filled using values
+        # at t > cutoff_ts (lookahead leak prevention).
+        result = frame.copy()
+        if cutoff_ts is not None:
+            pre = result.loc[:cutoff_ts].interpolate(
+                method="linear", limit_direction="forward"
+            )
+            result.loc[:cutoff_ts] = pre
+        else:
+            # No cutoff supplied — use forward-only to preserve leading NaNs.
+            result = result.interpolate(method="linear", limit_direction="forward")
+        return result
     else:
         return frame
 
@@ -15591,7 +15622,21 @@ def _apply_imputation(
         result = frame.ffill()
         method = "forward_fill"
     elif policy == "linear_interpolation":
-        result = frame.interpolate(method="linear")
+        # PR6 fix: use forward-only interpolation so no trailing NaN is filled
+        # by backward-looking values (bidirectional pandas default leaks future
+        # data in full-panel imputation). Emit a UserWarning so the caller is
+        # aware that full-sample imputation is non-causal by design; the
+        # preferred causal path is imputation_temporal_rule=expanding_window_per_origin.
+        import warnings as _warnings
+        _warnings.warn(
+            "linear_interpolation in full-sample imputation mode applies "
+            "interpolation to the full panel. Ensure this is intentional. "
+            "For per-origin leak-free imputation, use "
+            "imputation_temporal_rule=expanding_window_per_origin.",
+            UserWarning,
+            stacklevel=4,
+        )
+        result = frame.interpolate(method="linear", limit_direction="forward")
         method = "linear_interpolation"
     else:
         raise NotImplementedError(
