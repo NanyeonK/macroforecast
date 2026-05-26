@@ -1,4 +1,4 @@
-# Layer 2: Preprocessing
+# Layer L2: Preprocessing
 
 - Parent: [Architecture](index.md)
 - Previous: [L1 — Data Source, Target y, Predictor x](layer1.md)

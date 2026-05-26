@@ -1,9 +1,9 @@
-# Layer 3: Feature Engineering
+# Layer L3: Feature Engineering
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 2](layer2.md)
+- Previous: [Layer L2](layer2.md)
 - Current: L3
-- Next: [Layer 4](layer4.md)
+- Next: [Layer L4](layer4.md)
 
 L3 turns cleaned data into the feature and target artifacts consumed by forecasting models. It is a graph layer: recipes must use explicit `nodes` and `sinks`.
 

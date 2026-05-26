@@ -1,6 +1,6 @@
-# Layer 0 Axis: `compute_policy`
+# Layer L0 Axis: `compute_policy`
 
-- Parent: [Layer 0](layer0.md)
+- Parent: [Layer L0](layer0.md)
 - Current: `compute_policy`
 
 `compute_policy` decides whether execution runs serially or in parallel. It is a

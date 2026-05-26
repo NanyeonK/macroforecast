@@ -1,9 +1,9 @@
-# Layer 4: Forecasting Model
+# Layer L4: Forecasting Model
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 3](layer3.md)
+- Previous: [Layer L3](layer3.md)
 - Current: L4
-- Next: [Layer 5](layer5.md)
+- Next: [Layer L5](layer5.md)
 
 L4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer. As of Cycle 49 (2026-05-21), L4 has **47 operational families** (`realized_garch` promoted in C49; 4 MIDAS families promoted in C48). `FUTURE_MODEL_FAMILIES` is now empty.
 

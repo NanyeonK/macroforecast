@@ -1,4 +1,4 @@
-# Layer 1: Data Source, Target y, Predictor x
+# Layer L1: Data Source, Target y, Predictor x
 
 - Parent: [Architecture](index.md)
 - Previous: [L0 — Study Setup](layer0.md)

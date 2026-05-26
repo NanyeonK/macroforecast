@@ -1,9 +1,9 @@
-# Layer 5: Evaluation
+# Layer L5: Evaluation
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer 4](layer4.md)
+- Previous: [Layer L4](layer4.md)
 - Current: L5
-- Next: [Layer 6](layer6.md)
+- Next: [Layer L6](layer6.md)
 
 L5 computes forecast accuracy, benchmark-relative metrics, aggregation, slicing, decomposition, ranking, and reporting artifacts. It is descriptive evaluation; inference belongs to L6.
 
