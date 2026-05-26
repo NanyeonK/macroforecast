@@ -2,9 +2,9 @@
 
 macroforecast is designed for research workflows where the difficult part is not calling a model function. The difficult part is choosing a valid forecasting path, keeping comparisons fair, and making every deviation auditable.
 
-## Navigation before execution
+## Option reference
 
-The package has many possible choices across data, representation, model, evaluation, output, statistical tests, and interpretation. API docs alone cannot explain which combinations are valid. The Navigator is therefore a first-class documentation surface, not a demo.
+The package has many choices across data, representation, model, evaluation, output, statistical tests, and interpretation. Every option is documented in the [Encyclopedia](../encyclopedia/index.md), which lists every axis and option value with description, when-to-use, when-NOT-to-use, and references.
 
 ## Defaults are explicit
 
@@ -28,7 +28,7 @@ Layer boundaries matter because they prevent silent leakage, hidden preprocessin
 
 ## Contracts are enforced
 
-Some choices are free. Some are derived. Some are disabled because another selection makes them invalid. The docs and Navigator should show the same constraint system.
+Some choices are free. Some are derived. Some are disabled because another selection makes them invalid. The Encyclopedia and recipe validator enforce the same constraint system.
 
 ## Custom methods are first-class
 
@@ -40,7 +40,6 @@ Predictions, metrics, manifests, sidecar reports, and provenance files are not i
 
 ## Next
 
-- [Navigator](../navigator/index.md)
 - [Researchers](../for_researchers/index.md)
 - [Recipe authors](../for_recipe_authors/index.md)
 - [Architecture index](index.md)
