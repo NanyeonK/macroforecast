@@ -30,6 +30,38 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR9 (MEDIUM): `bvar_minnesota_fit` — three missing Litterman hyperparameters exposed**
+
+  `bvar_minnesota_fit` in `macroforecast/api/functions/timeseries.py` only
+  accepted `n_lag` and `lambda1`, omitting three of the four standard Litterman
+  (1986) hyperparameters. Users could not reproduce published BVAR results
+  without access to `lambda_cross`, `lambda_decay`, and `b_AR`.
+
+  The `_BayesianVAR` backend and the recipe path (`_build_l4_model`) already
+  accepted all four hyperparameters; only the standalone API was missing them.
+
+  Fix: expanded `bvar_minnesota_fit` signature with three new keyword-only
+  parameters and their corresponding defaults (matching `_BayesianVAR`
+  defaults for backward compatibility):
+
+  | Parameter | Default | Description |
+  |-----------|---------|-------------|
+  | `lambda_cross` | `0.5` | Cross-equation shrinkage (λ₂). `0` = no cross-lag information; `1` = cross lags same scale as own lags. |
+  | `lambda_decay` | `1.0` | Lag decay exponent (λ₃). Prior variance for lag l scales as (λ₁ / l^{λ_decay})². |
+  | `b_AR` | `1.0` | Prior mean for first own lag. `1.0` = random-walk (Litterman I(1) default); `0.9` = VARCTIC calibration (recipe default). |
+
+  `BVARMinnesotaFitResult` was extended with matching fields (`lambda_cross`,
+  `lambda_decay`, `b_AR`), and `summary()` now displays all four
+  hyperparameters. Input validation raises `ValueError` for `lambda_cross < 0`,
+  `lambda_decay <= 0`, and `b_AR` outside [0, 2].
+
+  Backward compatibility: all existing calls remain valid and produce
+  identical output. The new parameters carry defaults that reproduce the
+  prior behaviour exactly.
+
+  References: Litterman (1986) JBES 4(1); Karlsson (2013) Handbook of
+  Economic Forecasting Vol. 2B, Ch. 15.
+
 - **PR10: README minimal recipe — observation count extended; CI doctest added**
 
   The minimal recipe in `README.md` defined only 6 observations (Jan-Jun 2018).
