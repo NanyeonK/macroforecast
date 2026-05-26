@@ -145,6 +145,9 @@ class PermutationImportanceResult:
         permuting each feature).
     importances_std_ :
         Standard deviation of importance over repeats.
+    importances_ :
+        Per-repeat importance matrix of shape ``(n_features, n_repeats)``.
+        Each column is one repeat; each row is one feature.
     feature_names_ :
         List of feature names.
     n_repeats :
@@ -153,6 +156,7 @@ class PermutationImportanceResult:
 
     importances_mean_: np.ndarray
     importances_std_: np.ndarray
+    importances_: np.ndarray
     feature_names_: list[str]
     n_repeats: int
 
@@ -524,12 +528,16 @@ def permutation_importance(
 ) -> PermutationImportanceResult:
     """Compute Breiman-Fisher-Rudin (2019) permutation importance.
 
-    For each feature ``j`` and each repeat, permutes ``X[:, j]`` and
-    measures the increase in MSE.  When ``random_state=None``, uses the
-    deterministic reverse-order permutation (identical to the
-    ``_permutation_importance_frame`` runtime helper).  When
-    ``random_state`` is an integer, draws ``n_repeats`` independent
-    random permutations using ``np.random.default_rng(random_state)``.
+    For each feature ``j`` and each repeat, draws a random permutation of
+    ``X[:, j]`` using ``np.random.default_rng(seed)`` and measures the
+    increase in MSE relative to the unpermuted baseline.  The reported
+    ``importances_mean_`` is the mean over ``n_repeats`` independent random
+    permutations.
+
+    When ``random_state=None`` a fixed seed of 0 is used, which guarantees
+    reproducibility across calls while still using a proper random permutation
+    (matching the behaviour of the recipe-path helper
+    ``_permutation_importance_frame``).
 
     Parameters
     ----------
@@ -540,18 +548,17 @@ def permutation_importance(
     y :
         Target vector, shape (n_samples,).
     n_repeats :
-        Number of permutation repeats.  Default 10.  When
-        ``random_state=None`` the reverse-order trick is applied once
-        and the result is replicated across repeats (all repeats are
-        identical in that case).
+        Number of permutation repeats.  Default 10.
     random_state :
-        Integer seed for random permutations.  ``None`` (default) uses
-        the deterministic reverse-order permutation.
+        Integer seed for the random permutation RNG.  ``None`` (default)
+        uses seed 0, which is deterministic but uses a proper random
+        permutation (not reversal).
 
     Returns
     -------
     PermutationImportanceResult
-        ``importances_mean_`` and ``importances_std_`` over ``n_repeats``.
+        ``importances_mean_``, ``importances_std_``, and ``importances_``
+        (shape ``(n_features, n_repeats)``) over ``n_repeats``.
     """
     if not hasattr(result, "_model"):
         raise ValueError(
@@ -584,40 +591,32 @@ def permutation_importance(
     except Exception:
         baseline = 0.0
 
-    # Collect per-repeat importance
-    repeat_scores: list[np.ndarray] = []
+    # Use seed=0 when random_state is None for deterministic reproducibility.
+    seed = 0 if random_state is None else int(random_state)
+    rng = np.random.default_rng(seed)
 
-    if random_state is None:
-        # Deterministic reverse-order permutation (spec decision)
+    # Collect per-repeat importance: shape (n_repeats, n_features)
+    repeat_scores: list[np.ndarray] = []
+    for _ in range(n_repeats):
         scores = np.zeros(len(feature_names))
         for j, column in enumerate(feature_names):
             permuted = X_eval.copy()
-            permuted[column] = list(reversed(permuted[column].tolist()))
+            perm_idx = rng.permutation(len(X_eval))
+            permuted[column] = X_eval[column].values[perm_idx]
             try:
                 loss = float(((y_eval - fitted.predict(permuted)) ** 2).mean())
             except Exception:
                 loss = 0.0
             scores[j] = loss - baseline
-        # Replicate across n_repeats (all repeats identical)
-        repeat_scores = [scores.copy() for _ in range(n_repeats)]
-    else:
-        rng = np.random.default_rng(int(random_state))
-        for _ in range(n_repeats):
-            scores = np.zeros(len(feature_names))
-            for j, column in enumerate(feature_names):
-                permuted = X_eval.copy()
-                permuted[column] = rng.permutation(permuted[column].values)
-                try:
-                    loss = float(((y_eval - fitted.predict(permuted)) ** 2).mean())
-                except Exception:
-                    loss = 0.0
-                scores[j] = loss - baseline
-            repeat_scores.append(scores)
+        repeat_scores.append(scores)
 
     matrix = np.stack(repeat_scores, axis=0)  # (n_repeats, n_features)
+    # importances_ has shape (n_features, n_repeats) per sklearn convention
+    importances_matrix = matrix.T
     return PermutationImportanceResult(
         importances_mean_=matrix.mean(axis=0),
         importances_std_=matrix.std(axis=0, ddof=0),
+        importances_=importances_matrix,
         feature_names_=feature_names,
         n_repeats=n_repeats,
     )

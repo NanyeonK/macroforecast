@@ -9955,7 +9955,14 @@ def _execute_l7_step(
     if op in {"permutation_importance", "lofo"}:
         model = _first_model_input(inputs)
         X, y = _l7_xy(inputs, l3_features)
-        frame = _permutation_importance_frame(model, X, y, method=op)
+        frame = _permutation_importance_frame(
+            model,
+            X,
+            y,
+            method=op,
+            n_repeats=int(params.get("n_repeats", 1)),
+            seed=int(params.get("seed", 0)),
+        )
         return _attach_l7_attrs(frame, model, op, l3_features)
     if op == "permutation_importance_strobl":
         # Issue #281 -- conditional permutation per Strobl (2008): permute
@@ -12071,23 +12078,49 @@ def _l7_anatomy_op(
 
 
 def _permutation_importance_frame(
-    model: ModelArtifact, X: pd.DataFrame, y: pd.Series | None, *, method: str
+    model: ModelArtifact,
+    X: pd.DataFrame,
+    y: pd.Series | None,
+    *,
+    method: str,
+    n_repeats: int = 1,
+    seed: int = 0,
 ) -> pd.DataFrame:
+    """Compute permutation importance using proper random permutations.
+
+    Each feature column is permuted ``n_repeats`` times using a seeded RNG
+    (``np.random.default_rng(seed)``).  The reported importance is the mean
+    increase in MSE across repeats.  Using a random permutation (rather than
+    the deterministic reversal used in pre-v0.9.5 code) is required by the
+    Breiman (2001) / Fisher-Rudin-Dominici (2019) definition and ensures that
+    the ``n_repeats`` and ``seed`` parameters have a meaningful effect on the
+    output.  This fix also restores bit-exact replication: two calls with the
+    same seed now produce identical results.
+    """
     if y is None or not hasattr(model.fitted_object, "predict"):
         return _linear_importance_frame(model, method=method)
     aligned = pd.concat([X, y.rename("__target__")], axis=1).dropna()
     X_eval = aligned[X.columns]
     y_eval = aligned["__target__"]
-    baseline = ((y_eval - model.fitted_object.predict(X_eval)) ** 2).mean()
+    baseline = float(((y_eval - model.fitted_object.predict(X_eval)) ** 2).mean())
+    rng = np.random.default_rng(int(seed))
+    # Collect per-repeat loss-increase for each feature
+    importance_per_repeat: dict[str, list[float]] = {col: [] for col in X_eval.columns}
+    for _rep in range(max(1, int(n_repeats))):
+        for column in X_eval.columns:
+            permuted = X_eval.copy()
+            perm_idx = rng.permutation(len(X_eval))
+            permuted[column] = X_eval[column].values[perm_idx]
+            loss = float(((y_eval - model.fitted_object.predict(permuted)) ** 2).mean())
+            importance_per_repeat[column].append(loss - baseline)
     rows = []
     for column in X_eval.columns:
-        permuted = X_eval.copy()
-        permuted[column] = list(reversed(permuted[column].tolist()))
-        loss = ((y_eval - model.fitted_object.predict(permuted)) ** 2).mean()
+        vals = importance_per_repeat[column]
         rows.append(
             {
                 "feature": column,
-                "importance": float(loss - baseline),
+                "importance": float(np.mean(vals)),
+                "importances_": list(vals),
                 "coefficient": None,
             }
         )
