@@ -26,7 +26,7 @@ are paper-faithful.
 - **Source**: Working paper / JAE 2024
 - **Recipe ports the ridge baseline** of the paper's FRED-MD INDPRO
   forecasting horse race. The full MRF / GTVP route lives at
-  [`examples/recipes/l4_mrf_placeholder.yaml`](https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/l4_mrf_placeholder.yaml).
+  [`docs/recipe-snippets/l4_mrf_placeholder.yaml`](https://github.com/NanyeonK/macroforecast/blob/main/docs/recipe-snippets/l4_mrf_placeholder.yaml).
 
 ## Recipe shape
 

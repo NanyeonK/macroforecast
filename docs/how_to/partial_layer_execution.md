@@ -312,7 +312,7 @@ which policy ran, what action it took, and how many cells it flagged.
 import macroforecast as mf
 from macroforecast.core import materialize_l1, materialize_l2, materialize_l3_minimal
 
-recipe = mf.core.parse_recipe_yaml(open("examples/recipes/l3_minimal_lag_only.yaml").read())
+recipe = mf.core.parse_recipe_yaml(open("docs/recipe-snippets/l3_minimal_lag_only.yaml").read())
 
 # Run L1 + L2 once; cache the artifacts.
 l1_artifact, _, _ = materialize_l1(recipe)
