@@ -30,6 +30,26 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR5: Berkowitz LR_3 AR(1) component added — df=2 → df=3 (serial-dependence detection)**
+
+  `_density_interval_battery` in `macroforecast/core/runtime.py` computed the
+  Berkowitz (2001) likelihood-ratio statistic using only the mean and variance
+  of the transformed series (df=2). The docstring stated "AR(1) on the
+  transformed series under H0 of i.i.d. N(0,1)" but the AR(1) serial-dependence
+  component (rho) was entirely absent. A density forecast with autocorrelated
+  PIT values — e.g. from a misspecified GARCH — would pass the old df=2 test
+  while exhibiting precisely the serial dependence Berkowitz (2001) was designed
+  to detect.
+
+  Fix: replaced the Berkowitz block with the full LR_3 test from Berkowitz
+  (2001, eq. 6). Under the AR(1) alternative z_t = mu + rho*z_{t-1} + eps_t,
+  eps_t ~ N(0, sigma^2), the OLS MLE estimates (rho_hat, mu_hat, sigma^2_hat)
+  are computed, the unrestricted log-likelihood conditions on the first
+  observation, and LR_3 = -2[log L(H0) - log L(H1)] is evaluated against
+  chi^2(3) (df=3). The result dict now includes `rho`, `mu`, `sigma`, and
+  `df=3`. A fallback to LR_2 (df=2, rho=None) is retained for very small
+  samples (n < 4).
+
 - **PR6 (CRITICAL): linear_interpolation silent lookahead leak fixed — 3 locations in runtime.py**
 
   `pandas.DataFrame.interpolate(method="linear")` defaults to
