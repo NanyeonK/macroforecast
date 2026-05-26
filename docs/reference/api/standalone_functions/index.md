@@ -37,12 +37,13 @@ u2     = mf.functions.theil_u2(y_true, y_pred, y_prev)
 |---|---|---|---|
 | [L2 clean](l2_clean.md) | Transform, outlier, imputation, frame edge, tcode | 14 | Clean a panel before features |
 | [L3 transforms](l3_transforms.md) | Lags, dimension reduction, filters, supervised transforms | 36 | Build predictor matrices |
-| [L4 fit](l4_fit.md) | Forecasting model families | 38 | Fit and predict |
+| [L4 fit](l4_fit.md) | Forecasting model families | 52 | Fit and predict |
 | [L5 metrics](l5_metrics.md) | Point, relative, density, direction, Theil | 15 | Evaluate accuracy |
 | [L6 tests](l6_tests.md) | Equal-predictive-ability + nested-model tests | 7 | Significance testing |
 | [L7 importance](l7_importance.md) | Native, permutation, ALE, PDP, SHAP | 8 | Interpret models |
 
-Total: 118 standalone callables.
+Total: 132 standalone function callables + 61 result dataclasses.
+See `tools/count_callables.py` for the auto-generated inventory (run `python3 tools/count_callables.py` after any API change).
 
 ## End-to-end example
 
