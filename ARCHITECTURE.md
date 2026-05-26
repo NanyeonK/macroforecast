@@ -1,971 +1,227 @@
-# macroforecast — Architecture
+# Architecture — macroforecast
 
-## Overview
-
-macroforecast is a Python package for reproducible macro-forecasting benchmarking
-studies on FRED-MD / FRED-QD / FRED-SD data (or custom data sources). The canonical
-layer design (L0–L8 plus diagnostic half-layers L1.5–L4.5) converts a YAML
-recipe into a sweep of independent study cells, each producing bit-exact replicable
-artifacts. Layer operations are also available as standalone Python callables via
-`mf.functions.*`.
-
-C52 reorganized `docs/` from 11 parallel directories into the Diátaxis 4-tier
-structure (tutorial / how-to / reference / explanation). C53 wrote the actual
-user-facing tutorial and how-to content: three narrative tutorials, six how-to
-task recipes, two refactors, five redirect stubs, and broken-link fixes. C54
-completes the overhaul: four new explanation-tier pages (12_layer_design,
-bit_exact_replicate, honesty_pass, recipe_to_run), reference index cleanup
-(api/index.md umbrella, encyclopedia visibility, card layout), landing page
-finalization, and tutorial CI smoke test. The Diátaxis docs overhaul is now
-complete as of C54.
-
-PR1 (docs cleanup) deleted the Navigator API pages (navigator was removed from
-the public feature set in Phase 0). PR2 (docs cleanup) moves all architecture
-and design-narrative pages from `docs/reference/architecture/` to
-`docs/explanation/architecture/`. Reference is now purely look-up (encyclopedia,
-API, recipe schema); Explanation owns all narrative and design-rationale content.
+> **Run:** 2026-05-26-docs-precision-audit / PR1 (broken imports fix)
+> **Branch:** `docs-fix/pr1-broken-imports`
+> **Version:** v0.9.5a0 (post Phase 3g-bis restructure)
 
 ---
 
-## Module Structure
+## System Architecture
+
+### Module Structure
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 graph TD
-    subgraph API["API Layer"]
-        A0["macroforecast.recipes — canonical orchestration"]
-        A1["macroforecast.api — run/replicate (impl)"]
-        A2["macroforecast.api_high — Experiment (impl)"]
-        A3["macroforecast.functions — 132 callables"]
-        A4["macroforecast.custom — register_model"]
-        A5["macroforecast.models — 30 L4 classes"]
-        A5T["models.tree — 6 classes"]
-        A5N["models.neural — 2 classes"]
-        A6["macroforecast.feature_selection — 5 classes"]
-        A7["macroforecast.transforms — chow_lin"]
-        A8["macroforecast.interpretation — GIRF/LSTM"]
+    subgraph API["Public API Layer"]
+        INIT["macroforecast/__init__.py<br/>lazy-export surface"]
+        APIH["api_high.py<br/>high-level API"]
+        APIR["api/recipe.py<br/>mf.run / mf.replicate"]
+        APIQ["api/quick.py<br/>quick API"]
+        APIF["api/functions/<br/>standalone callables"]
+        APID["api/_deprecations.py<br/>model_family shims"]
+        CUSTOM["custom.py / api/custom.py<br/>register_model etc."]
     end
 
-    subgraph Core["Core Runtime"]
-        C1["core/execution.py — cell loop"]
-        C2["core/runtime.py — layer helpers"]
-        C3["core/layers/ — L0-L8 + half-layers"]
-        C4["core/ops/ — op registries L3-L8"]
-        C5["core/dag.py — DAG schema"]
-        C6["core/sweep.py — sweep expansion"]
-        C7["core/cache.py — artifact cache"]
-        C8["core/manifest.py — manifest R/W"]
+    subgraph CORE["Core Runtime Layer"]
+        EXEC["core/execution.py<br/>execute_recipe cell loop"]
+        RUNTIME["core/runtime.py<br/>per-layer materialize helpers"]
+        PIPELINE["core/pipeline.py<br/>pipeline context"]
+        MANIFEST["core/manifest.py<br/>manifest schema + write"]
+        CACHE["core/cache.py<br/>hash + sink cache"]
+        SWEEP["core/sweep.py<br/>sweep expansion"]
+        YAML_["core/yaml.py<br/>recipe parser"]
+        VALIDATOR["core/validator.py<br/>schema validation"]
+        TYPES["core/types.py<br/>RuntimeResult etc."]
+        STATUS["core/status.py<br/>OPERATIONAL / FUTURE"]
+        LSPECS["core/layer_specs.py<br/>LayerImplementationSpec"]
     end
 
-    subgraph Data["Data Layer"]
-        D1["raw/ — FRED-MD/QD/SD adapters"]
-        D2["raw/alfred_adapter.py — ALFRED RT"]
-        D3["preprocessing/ — contract helpers"]
+    subgraph LAYERS["Layer Implementation (L0-L8)"]
+        L0["layers/l0_meta<br/>study setup, seed, compute_mode"]
+        L1["layers/l1_data<br/>FRED-MD/QD/SD, target, regime"]
+        L1D["layers/l1_5_diagnostic"]
+        L2["layers/l2_preprocessing<br/>transform, outlier, imputation"]
+        L2D["layers/l2_5_diagnostic"]
+        L3["layers/l3_features<br/>feature engineering DAG"]
+        L3D["layers/l3_5_diagnostic"]
+        L4["layers/l4_models<br/>30+ estimator families"]
+        L4D["layers/l4_5_diagnostic"]
+        L5["layers/l5_evaluation<br/>metrics, decomposition"]
+        L6["layers/l6_tests<br/>DM/CW/MCS/GR/DMP"]
+        L7["layers/l7_interpretation<br/>SHAP, PFI, ALE, IRF"]
+        L8["layers/l8_output<br/>json/csv/parquet/latex"]
     end
 
-    subgraph Scaffold["Scaffold & Docs Tools"]
-        S1["tools/docgen/cli.py — CLI entry"]
-        S2["tools/docgen/render_encyclopedia.py"]
-        S3["tools/gen_encyclopedia_docs.py"]
-        S4["tools/audit_docs_vs_code.py"]
+    subgraph L3SUB["L3 Sub-modules (docs fixed in this run)"]
+        L3SEL["layers/l3_features/selection.py<br/>Boruta class"]
+        L3TRF["layers/l3_features/transforms.py<br/>chow_lin_disaggregate"]
+        L3OPS["layers/l3_features/ops.py<br/>37 DAG ops registry"]
+        L3SCH["layers/l3_features/schema.py<br/>L3 schema definition"]
     end
 
-    subgraph Docs["docs/ — Diataxis 4-Tier"]
-        DOC1["tutorial/ — 5 narrative files"]
-        DOC2["how_to/ — 12 task recipes"]
-        DOC3["reference/ — encyclopedia+API+arch"]
-        DOC4["explanation/ — 4 pages (C54)"]
+    subgraph SHIMS["Backward-compat Shims"]
+        INTERP["interpretation/__init__.py<br/>GIRF shim to l7_interpretation"]
+        RECIPES["recipes/__init__.py<br/>shim to layers"]
+        FUNCS["functions/<br/>shim to api/functions"]
     end
 
-    A0 --> A1
-    A0 --> A2
-    A1 --> C1
-    A2 --> C1
-    A3 --> C3
-    A4 --> C4
-    A5 --> C2
-    A5T --> C2
-    A5N --> C2
-    A5 --> A5T
-    A5 --> A5N
-    A6 --> C2
-    A7 --> C2
-    A8 --> C2
-    C1 --> C2
-    C1 --> C6
-    C1 --> C7
-    C1 --> C8
-    C2 --> C3
-    C2 --> C4
-    C3 --> C5
-    C4 --> D3
-    D1 --> C3
-    S1 --> S2
-    S3 --> S2
-    S4 --> Docs
-    S2 --> DOC3
+    subgraph VENDOR["Vendor"]
+        MRF["_vendor/macro_random_forest/<br/>MRF / GTVP implementation"]
+    end
 
-    style A0 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A1 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A5 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A5T fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A5N fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A6 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A7 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A8 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style DOC1 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style DOC2 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style DOC4 fill:#1e90ff,stroke:#1565c0,color:#fff
-    style A4 fill:#1e90ff,stroke:#1565c0,color:#fff
+    INIT --> APIH
+    INIT --> APIR
+    APIR --> EXEC
+    EXEC --> RUNTIME
+    RUNTIME --> L0
+    RUNTIME --> L1
+    RUNTIME --> L2
+    RUNTIME --> L3
+    RUNTIME --> L4
+    RUNTIME --> L5
+    RUNTIME --> L6
+    RUNTIME --> L7
+    RUNTIME --> L8
+    EXEC --> MANIFEST
+    EXEC --> CACHE
+    EXEC --> SWEEP
+    APIR --> YAML_
+    YAML_ --> VALIDATOR
+    L3 --> L3SEL
+    L3 --> L3TRF
+    L3 --> L3OPS
+    L3 --> L3SCH
+    INTERP -.->|shim| L7
+    RECIPES -.->|shim| L3
+    FUNCS -.->|shim| APIF
+    L4 --> MRF
+
+    style L3SEL fill:#1e90ff,stroke:#1565c0,color:#fff
+    style L3TRF fill:#1e90ff,stroke:#1565c0,color:#fff
 ```
 
-### Module Reference
-
-| Module / File | Layer | Purpose | Key Exports |
-| --- | --- | --- | --- |
-| `macroforecast/recipes/__init__.py` | API | **Canonical recipe orchestration namespace** — re-exports 8 symbols from api/api_high; `paper_methods` preserved | `run`, `run_file`, `replicate`, `ManifestExecutionResult`, `ReplicationResult`, `forecast`, `Experiment`, `ForecastResult`, `paper_methods` |
-| `macroforecast/api.py` | API | Private implementation — `run`, `run_file`, `replicate`, `ManifestExecutionResult`, `ReplicationResult` (now re-exported via `recipes`) | `run`, `replicate` |
-| `macroforecast/api_high.py` | API | Private implementation — `Experiment`, `ForecastResult`, `forecast` (now re-exported via `recipes`) | `Experiment` |
-| `macroforecast/custom.py` | API | Custom model/preprocessor registry | `register_model`, `list_custom_models`, `clear_custom_models` |
-| `macroforecast/functions/` | API | 132 standalone callables by layer (L2–L7) | layer-grouped callables |
-| `macroforecast/functions/midas.py` | API | 4 MIDAS standalone fit callables | `midas_almon_fit`, `midas_beta_fit`, `midas_step_fit`, `unrestricted_midas_fit` |
-| `macroforecast/functions/ridge_variants.py` | API | 4 ridge-variant standalone fit callables | `nonneg_ridge_fit`, `random_walk_ridge_fit`, `shrink_to_target_ridge_fit`, `fused_difference_ridge_fit` |
-| `macroforecast/functions/tree.py` | API | 5 tree-family standalone fit callables | `slow_growing_tree_fit`, `quantile_regression_forest_fit`, `bagging_fit`, `booging_fit`, `macro_random_forest_fit` |
-| `macroforecast/functions/deep.py` | API | 1 neural standalone fit callable | `hemisphere_nn_fit` |
-| `macroforecast/models/` | API | 30 promoted L4 model classes | `MidasAlmon`, `RealizedGARCH`, `BVAR`, `SlowGrowingTree`, `HemisphereNN`, etc. |
-| `macroforecast/models/linear.py` | API | 14 linear/MIDAS/ridge-variant model classes | `MidasAlmon`, `MidasBeta`, `MidasStep`, `UnrestrictedMidas`, `LinearAR`, `FactorAugmentedAR`, `NonNegRidge`, `TwoStageRandomWalkRidge`, `ShrinkToTargetRidge`, `FusedDifferenceRidge`, `PrincipalComponentRegression`, `FactorAugmentedVAR`, `VAR`, `GLMBoost` |
-| `macroforecast/models/bayesian.py` | API | 3 Bayesian/DFM model classes | `BVAR`, `BVARMinnesota`, `DFMMixedFrequency` |
-| `macroforecast/models/volatility.py` | API | 2 volatility model classes | `GARCH`, `RealizedGARCH` |
-| `macroforecast/models/timeseries.py` | API | 3 time-series model classes | `ETS`, `Theta`, `HoltWinters` |
-| `macroforecast/models/tree.py` | API | 6 tree-family model classes (BaseEstimator) | `SlowGrowingTree`, `QuantileRegressionForest`, `Bagging`, `Booging`, `MacroRandomForest`, `KNN` |
-| `macroforecast/models/neural.py` | API | 2 neural model classes (BaseEstimator) | `SequenceModel`, `HemisphereNN` |
-| `macroforecast/feature_selection/` | API | 5 sklearn-style feature selection class wrappers (BaseEstimator + TransformerMixin) | `Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`, `GeneticSelection` |
-| `macroforecast/transforms/` | API | Transform-only function wrappers | `chow_lin_disaggregate` |
-| `macroforecast/interpretation/` | API | L7 interpretation class wrappers | `GIRF`, `LSTMHiddenState` |
-| `macroforecast/__init__.py` | API | Package init, version declaration, lazy imports | `__version__` = `"0.9.3b1"`; `_LAZY_EXPORTS` routes 8 symbols via `.recipes` |
-| `macroforecast/py.typed` | API | PEP 561 typed-package marker (empty sentinel) | — |
-| `macroforecast/core/execution.py` | Core | Cell loop, seed propagation, `replicate_recipe` | `execute_recipe`, `ManifestExecutionResult` |
-| `macroforecast/core/runtime.py` | Core | Per-layer `materialize_l*` artifact helpers; `_boruta_selection`; `_SlowGrowingTree`; `_BaggingWrapper` | `materialize_l2` .. `materialize_l8` |
-| `macroforecast/core/dag.py` | Core | Internal recipe graph (DAG) implementation | `DAG`, `DAGNode`, node types |
-| `macroforecast/core/layers/l3.py` | Core | L3 schema: feature pipeline step graph | layer axis / gate / validator |
-| `macroforecast/core/layers/l4.py` | Core | L4 schema: model step graph | layer axis / gate / validator |
-| `macroforecast/core/validator.py` | Core | Recipe graph validation, cycle detection | `validate_dag`, `assert_valid_dag`, `DAGValidationError` |
-| `macroforecast/core/layers/` | Core | L0–L8 + L1.5–L4.5 schema definitions | layer axis / gate / default dicts |
-| `macroforecast/core/ops/` | Core | Op registries: L3 (41 ops), L4 (47 families), L5–L8 | per-op factory callables |
-| `macroforecast/scaffold/` (8 files) | Scaffold | Encyclopedia generator + option doc sources | renders 321 pages |
-| `macroforecast/recipes/paper_methods.py` | API | Paper method factory | `paper_methods` |
-| `README.md` | Docs | Project README | — |
-| `macroforecast/core/sweep.py` | Core | Sweep expansion: `{sweep: [...]}` markers | `expand_sweep` |
-| `macroforecast/core/cache.py` | Core | Content-addressed artifact cache, SHA-256 | `sink_hash` |
-| `macroforecast/core/manifest.py` | Core | Manifest read/write, provenance record | `Manifest`, `ManifestRecord` |
-| `macroforecast/raw/` | Data | FRED-MD / QD / SD adapters, vintage manager | `load_fred_md`, `load_alfred` |
-| `pyproject.toml` | Packaging | Project metadata, dependencies, build config | version, classifiers, authors, keywords |
-| `LICENSE` | Packaging | MIT license body | — |
-| `docs/tutorial/index.md` | Docs | Toctree: standalone tutorials first; recipes as advanced topic | navigation |
-| `docs/tutorial/01_first_forecast.md` | Docs | 5-min standalone: LinearAR(p=2) on synthetic AR(2) data | full tutorial |
-| `docs/tutorial/02_full_study.md` | Docs | 3-model comparison: LinearAR/PCR/FAAR + TimeSeriesSplit OOS | full tutorial |
-| `docs/tutorial/03_custom_model.md` | Docs | BaseEstimator + RegressorMixin subclass pattern (ConstantTrendPlusAR) | full tutorial |
-| `docs/tutorial/two_entry_points.md` | Docs | Standalone API = library mode (default); recipes = orchestration mode | full tutorial |
-| `docs/how_to/index.md` | Docs | Toctree: 12 task recipes + hidden redirect stubs | navigation |
-| `docs/how_to/add_custom_dataset.md` | Docs | Custom CSV / inline panel how-to | task recipe |
-| `docs/how_to/tune_hyperparameters.md` | Docs | HP search (grid/random/BIC) how-to | task recipe |
-| `docs/how_to/sweep_over_models.md` | Docs | Model sweep + pandas summary how-to | task recipe |
-| `docs/how_to/add_custom_model.md` | Docs | register_model terse recipe (refactored) | task recipe |
-| `docs/how_to/use_custom_hooks.md` | Docs | All 5 extension points (refactored) | task recipe |
-| `docs/how_to/replicate_a_study.md` | Docs | mf.replicate() + mismatch debug | task recipe |
-| `docs/how_to/partial_layer_execution.md` | Docs | Renamed from partial_execution + link fixes | task recipe |
-| `docs/how_to/validate_against_r.md` | Docs | R cross-ref: install rpy2, run test suite, interpret tolerances | task recipe |
-| `docs/how_to/troubleshooting.md` | Docs | FAQ — 3 broken links fixed | polish |
-| Redirect stubs (5) | Docs | add_dataset, user_data_workflow, custom_model, custom_hooks, partial_execution | orphan stubs |
+| Module/Package | Purpose | Key Dependencies | Changed in This Run |
+|----------------|---------|-----------------|---------------------|
+| `macroforecast/__init__.py` | Lazy-export top-level surface; `__getattr__` dispatches attribute access | all submodules | No |
+| `api/recipe.py` | `mf.run`, `mf.replicate` public entry points | `core/execution.py` | No |
+| `api/_deprecations.py` | `model_family` to `model` deprecation shims | `api/functions/` | No |
+| `core/execution.py` | Cell loop, seed propagation, bit-exact replicate | `core/runtime.py`, `core/manifest.py` | No |
+| `core/runtime.py` | Per-layer `materialize_lN` helpers | all `layers/` | No |
+| `core/status.py` | `OPERATIONAL` / `FUTURE` two-value vocabulary | -- | No |
+| `layers/l3_features/` | L3 feature engineering DAG: 37 ops, Boruta, Chow-Lin | `core/`, `sklearn` | No (source unchanged) |
+| `layers/l3_features/selection.py` | `Boruta` class -- Kursa-Rudnicki (2010) feature selector | `sklearn`, `numpy` | **Docs fixed** |
+| `layers/l3_features/transforms.py` | `chow_lin_disaggregate` -- Chow-Lin (1971) GLS disaggregation | `numpy`, `scipy` | **Docs fixed** |
+| `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `layers/l7_interpretation` | No (shim operational) |
+| `docs/how_to/feature_selection_boruta.md` | User guide for Boruta selector | -- | **Import + prose fixed** |
+| `docs/how_to/advanced_recipes.md` | User guide for recipe orchestration | -- | **Import + prose fixed** |
+| `docs/how_to/chow_lin_disaggregation.md` | User guide for Chow-Lin disaggregation | -- | **Import + prose fixed** |
 
 ---
 
-## Docs Structure
-
-The C52 migration established the 4-tier skeleton. C53–C54 filled tutorial and
-how-to tiers. PR1 (docs cleanup) deleted Navigator API pages. PR2 (docs cleanup)
-moves all architecture pages from `reference/` to `explanation/`; reference is
-now purely look-up.
+### Function Call Graph
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 graph TD
-    IDX["docs/index.md (4-card landing)"]
-    IDX --> TUT["tutorial/"]
-    IDX --> HOW["how_to/"]
-    IDX --> REF["reference/"]
-    IDX --> EXP["explanation/"]
+    RUN["mf.run(recipe_path)"]
+    EXECR["execute_recipe(recipe, output_dir)"]
+    SWPEXP["sweep.expand_cells(recipe)"]
+    CELLLOOP["cell loop: for cell in cells"]
+    MAT_L3["runtime.materialize_l3(cell)"]
+    BORUTA["l3_features/selection.Boruta.fit"]
+    BFIT["_fit_shadow_forest(X_aug, y)"]
+    BTEST["_bonferroni_test(hits, iters, alpha)"]
+    CHOWLIN["l3_features/transforms.chow_lin_disaggregate"]
+    CLGLS["_gls_estimate(C, Sigma_rho)"]
+    CLRHO["_estimate_rho_min_chi_squared(resid, grid)"]
+    MANIFEST_W["manifest.write(result, output_dir)"]
 
-    TUT --> T0["00_install.md"]
-    TUT --> T1["01_first_forecast.md"]
-    TUT --> T2["02_full_study.md"]
-    TUT --> T3["03_custom_model.md"]
-    TUT --> T4["two_entry_points.md"]
-    TUT --> REPL["replications/"]
+    RUN --> EXECR
+    EXECR --> SWPEXP
+    EXECR --> CELLLOOP
+    CELLLOOP --> MAT_L3
+    MAT_L3 --> BORUTA
+    BORUTA --> BFIT
+    BORUTA --> BTEST
+    MAT_L3 --> CHOWLIN
+    CHOWLIN --> CLGLS
+    CHOWLIN --> CLRHO
+    EXECR --> MANIFEST_W
 
-    HOW --> H1["add_custom_dataset.md"]
-    HOW --> H2["tune_hyperparameters.md"]
-    HOW --> H3["sweep_over_models.md"]
-    HOW --> H4["add_custom_model.md"]
-    HOW --> H5["use_custom_hooks.md"]
-    HOW --> H6["replicate_a_study.md"]
-    HOW --> H7["partial_layer_execution.md"]
-    HOW --> H8["target_transformer.md"]
-    HOW --> H9["troubleshooting.md"]
-    HOW --> H10["reproducibility_policy.md"]
-    HOW --> H11["contributing.md"]
-    HOW --> H12["conventions.md"]
-
-    REF --> RE["reference/encyclopedia/ (auto-generated look-up)"]
-    REF --> RAPI["reference/api/"]
-    REF --> RSS["reference/recipe_schema/"]
-
-    EXP --> EBASE["12_layer_design.md"]
-    EXP --> EBIT["bit_exact_replicate.md"]
-    EXP --> EHON["honesty_pass.md"]
-    EXP --> EREC["recipe_to_run.md"]
-    EXP --> EARCH["architecture/ (MOVED from reference/)"]
-    EXP --> EFOUND["foundation.md, philosophy.md, ..."]
-
-    EARCH --> EAI["architecture/index.md (NEW)"]
-    EARCH --> EAL["architecture/layer{0-8}.md"]
-    EARCH --> EASUB["architecture/layer0_* / layer1_* sub-pages"]
-
-    style EARCH fill:#1e90ff,stroke:#1565c0,color:#fff
-    style EAI fill:#1e90ff,stroke:#1565c0,color:#fff
-    style EAL fill:#1e90ff,stroke:#1565c0,color:#fff
-    style EASUB fill:#1e90ff,stroke:#1565c0,color:#fff
-    style EFOUND fill:#1e90ff,stroke:#1565c0,color:#fff
+    style BORUTA fill:#1e90ff,stroke:#1565c0,color:#fff
+    style CHOWLIN fill:#1e90ff,stroke:#1565c0,color:#fff
 ```
 
-### Docs Change Reference (PR2 — Reference Structure Restructure)
-
-| File | Action | Notes |
-| --- | --- | --- |
-| `docs/explanation/architecture/index.md` | CREATED | toctree for all moved layer pages |
-| `docs/explanation/architecture/layer{0-8}.md` | MOVED (renamed) | from `reference/architecture/layer{N}/index.md` |
-| `docs/explanation/architecture/layer0_*.md` | MOVED | 5 L0 sub-pages |
-| `docs/explanation/architecture/layer1_*.md` | MOVED | 5 L1 sub-pages |
-| `docs/explanation/{foundation,philosophy,...}.md` | MOVED | 7 top-level architecture pages |
-| `docs/reference/architecture/` | DELETED | entire directory removed |
-| `docs/reference/index.md` | UPDATED | drop architecture toctree; keep prose cross-link |
-| `docs/explanation/index.md` | UPDATED | add `architecture/index` to toctree |
-| `docs/reference/encyclopedia/index.md` | UPDATED | cross-link points to `explanation/architecture` |
-| `docs/how_to/contributing.md` | UPDATED | cross-link points to `explanation/architecture` |
-| `docs/explanation/12_layer_design.md` | UPDATED | cross-ref update |
-| `docs/explanation/bit_exact_replicate.md` | UPDATED | cross-ref update |
-| `docs/explanation/honesty_pass.md` | UPDATED | cross-ref update |
-| `docs/explanation/recipe_to_run.md` | UPDATED | cross-ref update |
+| Function | Purpose | Key Dependencies | Changed in This Run |
+|----------|---------|-----------------|---------------------|
+| `mf.run` | Public entry point | `api/recipe.py` | No |
+| `execute_recipe` | Cell loop, seed prop, manifest write | `core/runtime.py` | No |
+| `sweep.expand_cells` | Expands `{sweep: [...]}` markers to cell list | `core/sweep.py` | No |
+| `runtime.materialize_l3` | Instantiates L3 DAG nodes, dispatches ops | `layers/l3_features/ops.py` | No |
+| `Boruta.fit` | Runs Boruta iterative shadow-feature test | `numpy`, `sklearn.ensemble` | No (source); **docs fixed** |
+| `_fit_shadow_forest` | Fits RF on X augmented with shadow copies | `sklearn.ensemble.RandomForestClassifier` | No |
+| `_bonferroni_test` | Bonferroni significance test on hit counts | `scipy.stats.binom` | No |
+| `chow_lin_disaggregate` | Chow-Lin (1971) GLS temporal disaggregation | `numpy`, `scipy` | No (source); **docs fixed** |
+| `_gls_estimate` | BLUE GLS with AR(1) covariance matrix | `numpy.linalg` | No |
+| `_estimate_rho_min_chi_squared` | Grid search for AR(1) parameter rho | `numpy` | No |
+| `manifest.write` | Writes manifest.json with provenance fields | `core/manifest.py` | No |
 
 ---
 
-## Data Flow
+### Data Flow
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 graph TD
-    U["User: YAML recipe or mf.functions call"]
-    U --> EP{"Entry point?"}
-    EP -->|recipe| RUN["mf.run() — api.py"]
-    EP -->|callable| FUNC["mf.functions.* — functions/"]
-    RUN --> EXEC["execute_recipe() — execution.py"]
-    EXEC --> SWEEP["sweep expansion — sweep.py"]
-    SWEEP --> CELL["cell loop — per sweep cell"]
-    CELL --> L0["L0 setup"]
-    L0 --> L1["L1 data load — raw/"]
-    L1 --> L2["L2 preprocessing"]
-    L2 --> L3["L3 feature DAG"]
-    L3 --> L4["L4 model fit + tune"]
-    L4 --> CUSTOM{"custom model?"}
-    CUSTOM -->|yes| REG["custom.py registry lookup"]
-    CUSTOM -->|no| BUILTIN["built-in ops/ family"]
-    REG --> L5["L5 evaluation"]
-    BUILTIN --> L5
-    L5 --> L6{"L6 tests enabled?"}
-    L6 -->|yes| TESTS["L6 statistical tests"]
-    L6 -->|no| L7CHECK{"L7 importance enabled?"}
-    TESTS --> L7CHECK
-    L7CHECK -->|yes| INTERP["L7 interpretation"]
-    L7CHECK -->|no| L8["L8 output + manifest"]
-    INTERP --> L8
-    L8 --> HASH["sink hash — cache.py"]
-    HASH --> MAN["manifest.json (output_directory=)"]
-    MAN --> REP["mf.replicate() — bit-exact verify"]
-    FUNC --> LEAF["layer op callable — ops/*.py"]
-    LEAF --> RES["typed result dataclass"]
+    YAML_IN["YAML Recipe file"]
+    PARSE["yaml.parse + validator.validate"]
+    SWEEP_EXP{"{sweep} markers?"}
+    SINGLE["Single cell"]
+    MULTI["Multiple cells"]
+    L0_MAT["L0: resolve seed, compute_mode"]
+    L1_MAT["L1: load FRED-MD/QD/SD data"]
+    L2_MAT["L2: transform, outlier, impute"]
+    L3_MAT["L3: feature DAG\nops, Boruta, Chow-Lin"]
+    L4_MAT["L4: fit model, tune HP"]
+    L5_MAT["L5: evaluate metrics, OOS"]
+    L6_MAT["L6: statistical tests"]
+    L7_MAT["L7: interpretation, figures"]
+    L8_MAT["L8: export artifacts"]
+    HASH["cache.hash(artifacts)"]
+    MANIFEST_OUT["manifest.json + per-cell artifacts"]
 
-    style REG fill:#1e90ff,stroke:#1565c0,color:#fff
-    style MAN fill:#1e90ff,stroke:#1565c0,color:#fff
-    style REP fill:#1e90ff,stroke:#1565c0,color:#fff
+    YAML_IN --> PARSE
+    PARSE --> SWEEP_EXP
+    SWEEP_EXP -->|No| SINGLE
+    SWEEP_EXP -->|Yes| MULTI
+    SINGLE --> L0_MAT
+    MULTI --> L0_MAT
+    L0_MAT --> L1_MAT
+    L1_MAT --> L2_MAT
+    L2_MAT --> L3_MAT
+    L3_MAT --> L4_MAT
+    L4_MAT --> L5_MAT
+    L5_MAT --> L6_MAT
+    L6_MAT --> L7_MAT
+    L7_MAT --> L8_MAT
+    L8_MAT --> HASH
+    HASH --> MANIFEST_OUT
+
+    style L3_MAT fill:#1e90ff,stroke:#1565c0,color:#fff
 ```
 
 ---
 
-## Function Call Graph (Custom Model and Replication Paths)
+## Documentation Surface (this run)
 
-```mermaid
-%%{init: {'theme': 'neutral'}}%%
-graph TD
-    REG_DEC["@mf.register_model(name)"]
-    REG_DIRECT["mf.register_model(name, fn)"]
-    REG_DEC --> CUSTOM_DICT["_CUSTOM_MODELS dict — custom.py"]
-    REG_DIRECT --> CUSTOM_DICT
+The following docs files were the direct subject of this PR. They are user-facing how-to guides under `docs/how_to/`:
 
-    RUN["mf.run(recipe, output_directory=)"]
-    RUN --> EXEC["execute_recipe() — execution.py"]
-    EXEC --> SWEEP2["expand_sweep() — sweep.py"]
-    SWEEP2 --> CELL_LOOP["cell loop"]
-    CELL_LOOP --> L4_DISPATCH["L4 family dispatch — l4_ops.py"]
-    L4_DISPATCH --> LOOKUP{"family in CUSTOM_MODELS?"}
-    LOOKUP -->|yes| CALL_CUSTOM["call registered callable"]
-    LOOKUP -->|no| BUILTIN_FAMILY["built-in sklearn/statsmodels"]
-    CALL_CUSTOM --> PRED["scalar prediction → L5"]
-    BUILTIN_FAMILY --> PRED
-    CELL_LOOP --> SINK_HASH["sink_hash() — cache.py"]
-    SINK_HASH --> WRITE_MAN["write manifest.json"]
+| Doc file | Subject | What changed |
+|----------|---------|-------------|
+| `docs/how_to/feature_selection_boruta.md` | Boruta feature selector how-to | Import path corrected from `macroforecast.feature_selection` to `macroforecast.layers.l3_features.selection`; prose reference updated |
+| `docs/how_to/advanced_recipes.md` | Recipe orchestration how-to | Import path corrected; prose reference to `mf.feature_selection.*` corrected to `macroforecast.layers.l3_features.selection.*` |
+| `docs/how_to/chow_lin_disaggregation.md` | Chow-Lin disaggregation how-to | Import path corrected from `macroforecast.transforms` to `macroforecast.layers.l3_features.transforms`; prose reference updated |
+| `CHANGELOG.md` | Release notes | PR1 entry added under `[Unreleased] ### Docs` |
 
-    REPLICATE["mf.replicate(manifest_path)"]
-    REPLICATE --> READ_MAN["read manifest.json"]
-    READ_MAN --> RE_EXEC["execute_recipe() — same recipe"]
-    RE_EXEC --> CMP["per-cell hash comparison"]
-    CMP --> RESULT["ReplicationResult.sink_hashes_match"]
-
-    style REG_DEC fill:#1e90ff,stroke:#1565c0,color:#fff
-    style REG_DIRECT fill:#1e90ff,stroke:#1565c0,color:#fff
-    style CUSTOM_DICT fill:#1e90ff,stroke:#1565c0,color:#fff
-    style REPLICATE fill:#1e90ff,stroke:#1565c0,color:#fff
-    style CMP fill:#1e90ff,stroke:#1565c0,color:#fff
-    style RESULT fill:#1e90ff,stroke:#1565c0,color:#fff
-```
-
-### Function Reference
-
-| Function / Path | Defined In | Calls | Changed in C53 | Purpose |
-| --- | --- | --- | --- | --- |
-| `mf.run(recipe, output_directory=)` | `api.py` | `execute_recipe` | no (documented) | YAML recipe entry; writes manifest when output_directory given |
-| `mf.replicate(manifest_path)` | `api.py` | `replicate_recipe` | no (documented) | Bit-exact replication via per-cell sink hash comparison |
-| `mf.register_model(name)` | `custom.py` | `_CUSTOM_MODELS` dict | no (documented) | Decorator or direct-call; registers Python callable as family |
-| `mf.list_custom_models()` | `custom.py` | `_CUSTOM_MODELS` keys | no (documented) | Returns tuple of registered names |
-| `mf.clear_custom_models()` | `custom.py` | clears `_CUSTOM_MODELS` | no (documented) | Test teardown / notebook re-run safety |
-| `execute_recipe()` | `core/execution.py` | layer helpers, sweep, cache | no | Cell loop; seed propagation; `ManifestExecutionResult` |
-| `expand_sweep()` | `core/sweep.py` | recipe walker | no | Expands `{sweep: [...]}` markers into independent cells |
-| `sink_hash()` | `core/cache.py` | SHA-256 | no | Content-addressed artifact fingerprint |
-| `materialize_l1()` | `core/runtime.py` | `raw/` adapters | no | Loads panel from FRED or custom_panel_inline |
-| `materialize_l2()` | `core/runtime.py` | preprocessing ops | no | McCracken-Ng transforms, outlier, imputation |
-| `materialize_l3_minimal()` | `core/runtime.py` | L3 DAG ops | no | Feature engineering DAG; returns X_final, y_final |
-
----
-
-## Changes: DAG Jargon Cleanup
-
-Public-facing surface (docstrings, error messages, tutorials, README) replaces "DAG" jargon with accessible vocabulary (`recipe pipeline`, `step graph`, `recipe node`). Quantitative impact: macroforecast/ DAG count 464 → 10 (98% reduction in public surface); docs/ non-archive 131 → 7. Internal orchestration vocabulary preserved in `mf.core.dag` (with new module docstring marking it as internal). Public classes (`DAG`, `DAGValidationError`, etc.) not renamed — breaking changes deferred.
-
-| File | Change |
-| --- | --- |
-| `macroforecast/core/dag.py` | Module docstring added: marks as internal orchestration vocabulary |
-| `macroforecast/__init__.py` | `DAG runtime` → `recipe runtime` in module docstring |
-| `macroforecast/core/layers/l3.py` | 2 error messages: `L3 supports DAG form only` → `L3 uses a step graph` |
-| `macroforecast/core/layers/l4.py` | 1 error message: `L4 supports DAG form only` → `L4 uses a step graph` |
-| `macroforecast/core/validator.py` | 2 messages: `DAG contains a cycle` → `Recipe graph contains a cycle` |
-| `macroforecast/functions/` (7 files) | 28 docstring replacements: `recipe DAG` → `recipe pipeline` |
-| `macroforecast/recipes/paper_methods.py` | 1 docstring: `no-lag DAG` → `no-lag pipeline` |
-| `macroforecast/scaffold/` (6 files) | 14 edits propagated to 321 encyclopedia pages |
-| `README.md` | `L3 features (DAG, 37 ops)` → `L3 features (pipeline, 37 ops)` |
-| `docs/tutorial/` (3 files) | 4 edits: `feature engineering DAG` → `feature engineering steps`/`pipeline` |
-| `docs/how_to/` (2 files) | 3 edits: `L3 DAG step node` → `L3 pipeline step`, etc. |
-| `docs/explanation/` (2 files) | 19 edits across `12_layer_design.md` and `recipe_to_run.md` |
-| `docs/reference/` (15 files) | ~35 edits across api/, architecture/, encyclopedia/, recipe_schema/ |
-
----
-
-## Changes: Tutorial Standalone-First Rewrite
-
-Introductory tutorials (01 first forecast, 02 full study, 03 custom model) now teach the standalone API as default. Recipes appear only in the graduation section at the end of each tutorial. Net documentation reduction: 598 lines. Tutorial 00 (install) and 04 (custom preprocessor) unchanged. Parameter names corrected: `LinearAR(p=2)` not `n_lags=2`, `FactorAugmentedAR(p=2, n_factors=3)` not `n_lags=2`, `predict(X)` not `predict(n_periods=...)`.
-
----
-
-## Changes: Recipe Orchestration Extraction
-
-`macroforecast.recipes` becomes the canonical home for recipe orchestration symbols (`run`, `run_file`, `replicate`, `forecast`, `Experiment`, `ForecastResult`). Top-level `mf.<name>` continues to work as silent alias (lazy import routes through `mf.recipes`). Pure refactor — no files moved, no semantic change. Recipe internals (`mf/core/execution.py`, `mf/api.py`, `mf/api_high.py`) untouched.
-
-The library API namespace (`mf.models`, `mf.feature_selection`, `mf.transforms`, `mf.interpretation`, `mf.functions`) and the recipe orchestration namespace (`mf.recipes`) are now cleanly separated. Standalone users don't need to know recipes exist; recipe users find everything under one namespace.
-
-| File | Change |
-| --- | --- |
-| `macroforecast/recipes/__init__.py` | Expanded 14 → 60 lines: module docstring, re-exports of 8 orchestration symbols from `api.py` + `api_high.py`, `__all__` set to 9 symbols |
-| `macroforecast/__init__.py` | 8 `_LAZY_EXPORTS` string values changed from `.api`/`.api_high` to `.recipes`; docstring cross-reference added |
-
----
-
-## Changes: Explanation and Reference Tiers
-
-This cycle is documentation content only. No source code algorithms were
-added or modified. All changes are within `docs/explanation/`, `docs/reference/`,
-and `tests/docs/`.
-
-| Category | Change |
-| --- | --- |
-| Explanation pages (4 new) | `12_layer_design.md`, `bit_exact_replicate.md`, `honesty_pass.md`, `recipe_to_run.md` — conceptual rationale for the layer design, bit-exact replication, honesty vocabulary, and execution pipeline |
-| Explanation index | `docs/explanation/index.md` — replaced stub with 4-page toctree |
-| Reference API index (new) | `docs/reference/api/index.md` — umbrella for standalone_functions/ + navigator/ |
-| Reference index | `docs/reference/index.md` — encyclopedia moved to visible toctree; API links to new umbrella |
-| Encyclopedia index | `docs/reference/encyclopedia/index.md` — auto-gen clarity sentence added |
-| Landing page | `docs/index.md` — removed "Expanding in C54" placeholder |
-| Tutorial smoke test | `tests/docs/test_tutorial_smoke.py` — new CI test extracting Python blocks from tutorials 01-03 and executing them in subprocess |
-| CHANGELOG | C54 entry added |
-| Docs overhaul status | **Complete** — all four Diátaxis tiers have substantive content (C52 structure, C53 tutorial/how-to, C54 explanation/reference) |
-
----
-
-## Changes: Tutorial and How-To Content
-
-This cycle is documentation content only. No source code algorithms were
-added or modified. All changes are within `docs/tutorial/` and `docs/how_to/`.
-
-| Category | Change |
-| --- | --- |
-| Tutorial narratives (3 new) | `01_first_forecast.md`, `02_full_study.md`, `03_custom_model.md` — new user-facing narrative with tested code blocks |
-| Tutorial polish (2) | `two_entry_points.md` (renamed from 03_), `00_install.md` (link fix) |
-| Tutorial index | Updated toctree to reflect 5-entry order |
-| How-to new files (4) | `add_custom_dataset.md`, `tune_hyperparameters.md`, `sweep_over_models.md`, `replicate_a_study.md` |
-| How-to refactors (2) | `add_custom_model.md` (from custom_model.md), `use_custom_hooks.md` (from custom_hooks.md) |
-| How-to rename | `partial_layer_execution.md` (git mv from partial_execution.md) + broken link fix |
-| How-to polish (1) | `troubleshooting.md` — 3 broken links → valid {doc} xrefs |
-| Redirect stubs (5) | `add_dataset.md`, `user_data_workflow.md`, `custom_model.md`, `custom_hooks.md`, `partial_execution.md` — orphan stubs pointing to renamed files |
-| How-to index | Updated toctree: 12-entry primary + 5-entry hidden (stubs) |
-| CHANGELOG | C53 entry added |
-
----
-
-## Changes: Statistical Credibility Hardening
-
-This release addresses findings from an external cross-review.
-The cycle addresses statistical correctness of the Boruta
-feature selection implementation and hardens parameter recovery tests for the
-Hansen-Huang-Shek (2012) Realized GARCH estimator.
-
-The central finding (from the P1 Boruta audit) was that `_boruta_selection` in
-`macroforecast/core/runtime.py` maintained an argmax fallback that guaranteed at
-least one feature would always be selected, even on a shuffled-label null DGP
-where the correct output is the empty set. This fallback produced a 100%
-false-positive rate on the null baseline; the Kursa & Rudnicki (2010) algorithm
-should guarantee FP rate <= alpha = 0.05. Removing the fallback and raising the
-`n_shadow_copies` default from 1 to 6 (multi-shadow MISA for better calibration
-at small T/N) reduces the empirical FP rate to 3.3% across 30 seeds. The
-empty-DataFrame return is now the correct contract for null DGPs.
-
-An independent R cross-reference suite (`tests/core/test_r_crossref_c59.py`)
-gates three estimators against R packages Boruta, midasr, and rugarch via rpy2.
-The entire module skips cleanly in environments without rpy2. A new
-`[validation]` pyproject extra provides the rpy2 dependency on an opt-in basis.
-
-No module structure changes were made. All changes are confined to
-`macroforecast/core/runtime.py` (Boruta implementation), `pyproject.toml`
-(`[validation]` extra), new test files in `tests/core/`, and a new how-to page
-in `docs/how_to/`.
-
-| Category | Change |
-| --- | --- |
-| BREAKING (stat. correctness) | `_boruta_selection` returns empty DataFrame on null DGP; argmax fallback removed |
-| Improved | `n_shadow_copies` default 1 → 6; multi-shadow MISA for small-T/N calibration |
-| Added | `tests/core/test_l3_boruta_null_c59.py` — null baseline + signal-calibrated |
-| Added | `tests/core/test_r_crossref_c59.py` — rpy2-gated R cross-reference (3 estimators) |
-| Added | `docs/how_to/validate_against_r.md` — install + run guide for R cross-ref suite |
-| Added | `[validation]` pyproject extra: `rpy2>=3.5` |
-| Changed | `tests/core/test_l4_realized_garch_c56.py` tolerances tightened; T bumped 500 → 2000 |
-| Source | Codex + MiniMax external cross-review P1 (Boruta null + HHS tolerances + R cross-ref) |
-
----
-
-## Changes: Release Pipeline Governance
-
-This release continues cross-review remediation. Two
-infrastructure items are addressed. First, the release workflow
-`.github/workflows/release.yml` is converted from a `push.tags` trigger to a
-`workflow_dispatch` trigger with a required `version` string input. This closes
-the release-governance P0 finding: previously any tag push would automatically
-publish to PyPI without a human confirmation step. Under the new configuration
-the operator must open the GitHub Actions UI and manually trigger the workflow,
-providing the version string; tag creation alone has no effect on PyPI.
-
-Second, a two-file drift CI gate is added to `tests/tools/docgen/`. The primary gate
-(`test_encyclopedia_op_coverage.py`) enumerates all operational ops for L3, L4,
-and L7 from the authoritative runtime sources, filters to those with `op_page=True`
-in their OptionDoc, and asserts that a checked-in encyclopedia page exists on disk
-for each. On HEAD post-C57 this yields 95 parametrized test items (42 L3, 43 L4,
-10 L7). The companion negative test (`test_drift_gate_meta.py`) verifies the
-detection logic fires correctly by injecting a guaranteed-absent fake op and
-asserting `pytest.fail` is raised with the required message components (op name,
-"encyclopedia page", path reference). No source code algorithms or public API
-surface were modified.
-
-| Category | Change |
-| --- | --- |
-| CI workflow | `.github/workflows/release.yml`: trigger changed from `push.tags` to `workflow_dispatch` + required `version` input |
-| Drift gate | `tests/tools/docgen/test_encyclopedia_op_coverage.py`: 95 parametrized items checking L3/L4/L7 op pages |
-| Meta test | `tests/tools/docgen/test_drift_gate_meta.py`: negative control confirming gate fires on missing page |
-| Source | External cross-review P0 (release governance) |
-
----
-
-## Changes: Runtime-Tutorial Contract Sync
-
-This release continues cross-review remediation. The
-Codex external review (run `2026-05-22-external-cross-review`) flagged two P0
-findings: (1) a runtime-documentation contract drift where `_CustomModelAdapter.predict()`
-did not include `target` and `horizon` in the context dict despite Tutorial 03
-documenting them, causing `KeyError` for any user following the tutorial; and (2)
-two missing encyclopedia pages (`lstm_hidden_state` L7 op, `chow_lin_disaggregation`
-L3 op) for ops that were operational but had no reference pages.
-
-C57 closes both findings. The runtime fix adds `target` (str, target series name)
-and `horizon` (int, forecast horizon) to the context dict passed to user-registered
-custom model functions, maintaining full backward compatibility with the four
-existing keys (`contract_version`, `model_name`, `feature_names`, `params`). The
-scope expansion of `chow_lin_disaggregation` in `l3_ops.py` to
-`layer_scope=("l2", "l3")` enables encyclopedia introspection; the new
-`_OP_CHOW_LIN_DISAGGREGATION` OptionDoc (with Chow-Lin 1971 reference) and
-`op_page=True` addition to `_LSTM_HIDDEN_STATE` trigger page generation on
-encyclopedia regen. Post-regen encyclopedia count: 321 pages (was 319). All 97
-tests pass; mypy clean on 4 modified source files.
-
-| Category | Change |
-| --- | --- |
-| Runtime fix | `_CustomModelAdapter.predict()` context dict: added `"target"` (str) and `"horizon"` (int) |
-| Runtime threading | `_CustomModelAdapter.__init__` + `_build_l4_model` extended with `target`/`horizon` keyword-only params |
-| L3 scope | `chow_lin_disaggregation` `layer_scope` updated from `("l2",)` to `("l2", "l3")` in `l3_ops.py` |
-| OptionDoc L7 | `op_page=True` added to `_LSTM_HIDDEN_STATE` in `l7_a.py` |
-| OptionDoc L3 | `_OP_CHOW_LIN_DISAGGREGATION` added to `l3.py` with Chow-Lin (1971) reference |
-| Encyclopedia | 2 new pages: `l7/op/lstm_hidden_state.md`, `l3/op/chow_lin_disaggregation.md`; total 321 pages |
-| Tests | `tests/core/test_l4_custom_model_c57.py` — 6 tests (4 functional + 2 encyclopedia smoke), all PASS |
-| CHANGELOG | C57 entry added to `[Unreleased]` |
-| Source | Codex external cross-review P0 findings |
-
----
-
-## Changes: HHS Safety Hardening
-
-This is a cross-review remediation release. The external review identified
-a P0 safety defect in `_RealizedGARCHModel.fit()`: on convergence failure the
-method previously returned the un-optimised initial parameter vector silently,
-which downstream callers could not distinguish from a successful fit. C56
-hardens the HHS (Hansen-Huang-Shek) Realized GARCH estimator on four fronts.
-First, `fit()` now raises `RuntimeError` on total convergence failure (all
-multi-starts produce non-finite objectives or optimizer errors), making failures
-explicit and auditable. Second, four post-fit diagnostic attributes
-(`_converged`, `_n_starts_succeeded`, `_best_neg_log_lik`, `_initial_neg_log_lik`)
-are added to `_RealizedGARCHModel` to support inspection and testing without
-requiring access to internal scipy objects. Third, explicit L-BFGS-B bounds are
-applied to all 11 parameters: `phi` receives an upper bound of 1.0 enforcing
-the economic constraint that the measurement-equation scaling coefficient does
-not exceed unity, and `log_sigma_u` is now clipped consistently to `[-30, 5]`
-in both the objective function and post-fit storage, closing a clip/storage
-mismatch. Fourth, the multi-start schedule is upgraded from `n_starts=3` to
-`n_starts=8` with an escalating perturbation ladder `[0.1, 0.1, 0.2, 0.2, 0.3,
-0.3, 0.4]` for starts 1–7 (start 0 is unperturbed), broadening coverage of the
-parameter landscape. No changes to the core module structure or public API
-surface were made. The recovery test suite was expanded from single-seed
-mu/beta/phi/omega verification to 5-seed all-11-parameter verification.
-
-| Category | Change |
-| --- | --- |
-| BREAKING | `_RealizedGARCHModel.fit()` raises `RuntimeError` on convergence failure (was: silent return of init params) |
-| Added attrs | `_converged`, `_n_starts_succeeded`, `_best_neg_log_lik`, `_initial_neg_log_lik` on `_RealizedGARCHModel` |
-| Bounds | Explicit L-BFGS-B bounds for all 11 params; `phi in (0, 1]`; `log_sigma_u in [-30, 5]` consistent clip |
-| Multi-start | `n_starts` default 3 → 8; perturbation ladder `[0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4]` for starts 1–7 |
-| Source | Codex external cross-review P0 finding |
-| Tests | 5-seed all-11-param recovery; retry 1 needed (seed=1 phi unboundedness); final result PASS 64/67 |
-
----
-
-## Changes: Tree and Neural Promotions, BaseEstimator Refactor
-
-This release is Phase 1b of the standalone-first refactor series. The prior
-release shipped 22 L4 promotions across the linear, Bayesian, volatility, and timeseries
-families; this release closes the remaining tree and neural surface and resolves the
-external cross-review P1 finding about sklearn ecosystem compatibility.
-
-**8 new public model classes** are promoted via `macroforecast.models.tree` and
-`macroforecast.models.neural`. Unlike the C63 classes (which used a pure `pass`
-thin-subclass pattern), every C64 class overrides `__init__` explicitly. This was
-required because the private runtime classes apply type coercions in `__init__`
-that break sklearn's `clone()` identity check. Each public `__init__` calls
-`super().__init__()` then restores raw parameter values so `get_params()` returns
-the original objects. All 8 inherit from `(Private, BaseEstimator, RegressorMixin)`.
-
-**`HemisphereNN` parameter aliasing**: `_HemisphereNN.__init__` stores the network
-narrowing coefficient as `self.nu_target`, not `self.nu`. The public class catches
-this by setting `self.nu = nu` after the super call, making `get_params()['nu']`
-work correctly. `nu_target` does not appear in `get_params()`.
-
-**5 feature selector BaseEstimator refactor**: all 5 `macroforecast.feature_selection`
-classes (`Boruta`, `RFE`, `LassoPathSelector`, `StabilitySelection`, `GeneticSelection`)
-gain `get_params()`, `set_params()`, `clone()`, and `__repr__()` via multiple
-inheritance from `(BaseEstimator, TransformerMixin)`. `feature_names_in_` and
-`n_features_in_` are stored during `fit()`. Public API (fit / transform / fit_transform /
-NotFittedError) is unchanged; backward compatibility is preserved.
-
-**2 runtime bug fixes** in `macroforecast/core/runtime.py`:
-- `_SlowGrowingTree._build()`: BFS had no depth bound; with soft weights (eta < 1)
-  the Herfindahl index never converges, causing infinite queuing. Fixed by adding
-  `max_depth=10` default in both private and public `__init__`.
-- `_BaggingWrapper.fit()`: `dict(self.base_params)` raised `TypeError` when
-  `base_params=None` (set by sklearn's `set_params()`/`clone()`). Fixed with
-  a `None` guard.
-
-| Category | Change |
-| --- | --- |
-| New module | `macroforecast/models/tree.py` — 6 tree-family classes (BaseEstimator + RegressorMixin) |
-| New module | `macroforecast/models/neural.py` — 2 neural classes (BaseEstimator + RegressorMixin) |
-| New callables | `macroforecast/functions/tree.py` — 5 tree `*_fit` gap callables |
-| New callables | `macroforecast/functions/deep.py` — `hemisphere_nn_fit` |
-| Refactored | `macroforecast/feature_selection/__init__.py` — 5 selectors now BaseEstimator + TransformerMixin |
-| Bug fix | `macroforecast/core/runtime.py` — `_SlowGrowingTree` max_depth=10 + `_BaggingWrapper.fit` None guard |
-| Updated | `macroforecast/models/__init__.py` — `__all__` count 22 → 30 |
-| Tests | `tests/promotion/test_c64_independent_promotion.py` (65), `test_c64_independent_baseestimator_models.py` (55), `test_c64_independent_baseestimator_selectors.py` (60) — 157 in fast CI scope |
-| Test retry | Builder retry: `tests/promotion/test_c63_promotion.py` __all__ count updated 22 → 30 |
-| Source | Codex+MiniMax cross-review P1 (sklearn ecosystem compatibility); R3-P1b continuation |
-
----
-
-## Changes: Standalone-First Paradigm Shift
-
-This release begins the standalone-first refactor series. The motivating
-user observation was that macroforecast was too heavily contract-oriented, requiring
-users to write full YAML recipes even for simple single-operation tasks. C63
-introduces four new public namespaces that expose the existing algorithmic
-infrastructure as importable Python objects with sklearn-style interfaces.
-
-**22 L4 model classes** are promoted via thin subclassing in `macroforecast.models`.
-Each class is a zero-overhead subclass of the corresponding `_Private` runtime class;
-no algorithm changes are introduced. `isinstance` checks pass for both the public
-and private name, ensuring backward compatibility with code that holds references
-to private classes.
-
-**5 feature selection class wrappers** are introduced in `macroforecast.feature_selection`,
-providing `fit(X, y) -> self` / `transform(X) -> X_selected` / `.selected_features_`
-over the Boruta, RFE, LassoPath, StabilitySelection, and GeneticSelection operations
-that were previously only accessible via recipe DAG nodes.
-
-**1 transform function** (`chow_lin_disaggregate`) is exposed in `macroforecast.transforms`,
-providing frequency-agnostic access to the Chow-Lin (1971) temporal disaggregation
-that was previously a recipe-only L3 operation.
-
-**2 interpretation class wrappers** (`GIRF`, `LSTMHiddenState`) are exposed in
-`macroforecast.interpretation`, wrapping the L7 runtime functions so that users can
-run impulse response or hidden-state analysis on fitted objects without a full
-recipe execution.
-
-**8 new `*_fit` callables** fill gaps in `macroforecast.functions`: the four MIDAS
-variants (Almon, Beta, Step, U-MIDAS) and four ridge variants (NonNeg, RandomWalk,
-ShrinkToTarget, FusedDifference) that existed as recipe-only L4 families.
-
-All 59 new tests pass (198/201 total in the scope-limited test audit; 3 skip;
-2 pre-existing C56 timeouts unrelated to C63).
-
-| Category | Change |
-| --- | --- |
-| New package | `macroforecast/models/` — 22 L4 model classes via thin subclass |
-| New package | `macroforecast/feature_selection/` — 5 sklearn-style class wrappers |
-| New package | `macroforecast/transforms/` — `chow_lin_disaggregate` function |
-| New package | `macroforecast/interpretation/` — `GIRF`, `LSTMHiddenState` classes |
-| Extended | `macroforecast/functions/` — 8 new `*_fit` callables (4 MIDAS + 4 ridge) |
-| Changed | `macroforecast/__init__.py` — 4 new packages wired into `_LAZY_MODULES` |
-| Tests | 59 new tests in `tests/functions/test_c63_standalone_promotions.py`; 198/201 PASS |
-| Known issue | 2 pre-existing C56 timeout tests in `test_l4_realized_garch_c56.py`; recommend `@pytest.mark.slow` in C64+ |
-| Source | User: standalone-first UX; C62 naming-spec → C63 execution |
-
----
-
-## Changes: External Review Remediation
-
-This is external review remediation. Cross-review of PR #340 (`1c49ab98`) surfaced three correctness gaps introduced or inherited in C63: the canonical Chow-Lin GLS disaggregation property was not enforced, BVARMinnesota accepted arbitrary priors silently, and a CHANGELOG wording error misstated isinstance inheritance directionality.
-
-**Canonical Chow-Lin GLS replaces thin OLS wrapper.** `macroforecast/transforms/__init__.py` is replaced with a self-contained 295-line implementation of Chow & Lin (1971) equations (4)-(7). The BLUE correction term `V_h C' Omega_l^{-1} u_l` enforces `C @ y_hat_h == y_l` to machine precision (8.88e-16). A 144-scenario Monte Carlo (R=100) independently verified conservation across all combinations of n_l, rho_true, rho_x, aggregation, and rho_method.
-
-**BVARMinnesota enforces prior.** `__init__` override now unconditionally rejects any `prior` value other than `'minnesota'`, raising `ValueError`. The internal translation `'minnesota'` → `'bvar_minnesota'` passes through to `_BayesianVAR` transparently.
-
-**CHANGELOG wording corrected.** The C63 `[Unreleased]` entry previously claimed isinstance holds "for both directions"; corrected to state only `isinstance(public_instance, _PrivateClass)` holds, with the reverse explicitly identified as `False`.
-
-No module structure changes. Tree-family optional dependency failures (xgboost/lightgbm/catboost not installed) are pre-existing and out of scope for C63.1.
-
-| Category | Change |
-| --- | --- |
-| Modified | `macroforecast/transforms/__init__.py` — canonical Chow-Lin (1971) GLS (295 lines); aggregation, rho, rho_method params added |
-| Modified | `macroforecast/models/bayesian.py` — `BVARMinnesota.__init__` override: enforces prior='minnesota', translates to 'bvar_minnesota' |
-| Modified | `CHANGELOG.md` — isinstance wording corrected (C63 `[Unreleased]` entry, line 17) |
-| Tests | 36 tests in `tests/promotion/test_c63_1_*.py`; all PASS |
-| Simulation | 144 scenarios × 100 replications; conservation 100% PASS at atol=1e-7 |
-| Source | Codex external cross-review of PR #340 (1c49ab98) |
-
----
-
-## Version: v0.9.5a0
-
-Round 3 (C62-C68) delivers the standalone-first paradigm shift, DAG jargon
-cleanup, and complete tutorial + how-to overhaul planned in the R3 execution
-roadmap (C62 audit). No algorithmic logic changed. The `mf.models` public API
-grows from 22 to 30 classes; `mf.feature_selection`, `mf.interpretation`, and
-`mf.recipes` namespaces are formalized.
-
-| Release component | Description |
-| --- | --- |
-| Audit | R3 execution plan: class inventory (35 entries), naming spec, recipe extraction spec, DAG cleanup plan |
-| Promotion | `mf.models` 0 -> 22 public classes; `mf.feature_selection` (5); `mf.interpretation` (2); 8 gap callables |
-| Fix | Canonical Chow-Lin GLS; `BVARMinnesota` prior enforcement |
-| Promotion | `mf.models` 22 -> 30; `BaseEstimator` refactor on 5 selectors; 2 runtime bug fixes |
-| Refactor | `mf.recipes` canonical home; backward-compat lazy-import identity |
-| Cleanup | DAG jargon: `macroforecast/` 98% reduction, `docs/` 95% reduction |
-| Docs | Tutorials 01-03 standalone-first rewrite (598 lines removed) |
-| Docs | 6 per-algorithm how-tos + advanced recipes orchestration guide |
-
----
-
-## Version: v0.9.3b1
-
-Round 2 of the Codex + MiniMax external cross-review remediation series is complete
-with this release. Five cycles (C56-C60) addressed P0/P1/P2 findings spanning five
-distinct change types: HHS Realized GARCH safety hardening (C56), runtime-tutorial
-contract synchronisation (C57), CI governance hardening (C58), Boruta statistical
-credibility and R cross-reference validation (C59), and documentation depth and
-polish (C60). The release version v0.9.3b1 consolidates all five cycles and caps off
-the algorithmic and documentation work for the current beta line. The packaging
-cycle (C61) adds formal MIT licensing, PEP 561 typed-package marker, and PyPI
-metadata fields (Trove classifiers, authors, keywords) required for public
-distribution. No source logic was changed in C61; all substantive source changes
-were completed in C56-C59 and tested in their respective test audits.
-
-| Release component | Description |
-| --- | --- |
-| HHS GARCH safety | P0: silent convergence failure; bounds consistency; `n_starts` 3 to 8 |
-| Contract sync | P0: `target`/`horizon` KeyError in custom model context; 2 missing encyclopedia pages |
-| CI governance | P0: auto-publish on tag push; encyclopedia drift detection (95-item gate) |
-| Statistical credibility | P1: Boruta FP rate 100% to 3.3%; HHS tolerance tightening; R cross-reference suite |
-| Docs depth | P2: Tutorial 04 `custom_preprocessor`; MIDAS NLS/OLS labels; layer design clarity |
-| Packaging | Release: version 0.9.3b1; LICENSE; py.typed; classifiers + authors + keywords |
-
----
-
-## Version: v0.9.2b2
-
-## Changes: v0.9.2b2 Beta
-
-This cycle is a release engineering cycle. No source code algorithms were
-added or modified. All changes are administrative.
-
-| Category | Change |
-| --- | --- |
-| Version bump | `pyproject.toml` + `macroforecast/__init__.py`: `0.9.2b1` → `0.9.2b2` |
-| CHANGELOG synthesis | 8 unreleased cycle entries (C47-C54) consolidated into `[0.9.2b2]` section |
-| Install docs | `docs/tutorial/00_install.md`: 4 occurrences of `@v0.9.2b1` → `@v0.9.2b2` |
-| Build artifacts | `python3 -m build` produces `dist/macroforecast-0.9.2b2-py3-none-any.whl` + `.tar.gz` |
-| Git tag | `v0.9.2b2` annotated tag applied to merge commit after PR merge |
-| PyPI publish | HELD pending explicit user authorization |
-
-
-## Module layout
-
-```
-macroforecast/
-  __init__.py             # lazy-export top-level surface
-  api.py                  # macroforecast.run / macroforecast.replicate
-  api_high.py             # Experiment class, ForecastResult
-  custom.py               # register_model / list_custom_models / clear_custom_models
-  models/                 # 30 promoted L4 model classes
-    __init__.py           # flat re-export of all 30 classes
-    linear.py             # 14 classes: MIDAS family + ridge variants + PCR/FAVAR/VAR/GLMBoost
-    bayesian.py           # 3 classes: BVAR, BVARMinnesota, DFMMixedFrequency
-    volatility.py         # 2 classes: GARCH, RealizedGARCH
-    timeseries.py         # 3 classes: ETS, Theta, HoltWinters
-    tree.py               # 6 classes: SlowGrowingTree, QuantileRegressionForest, Bagging, Booging, MacroRandomForest, KNN
-    neural.py             # 2 classes: SequenceModel, HemisphereNN
-  feature_selection/      # 5 sklearn fit/transform class wrappers
-    __init__.py           # Boruta, RFE, LassoPathSelector, StabilitySelection, GeneticSelection
-  transforms/             # transform-only function wrappers
-    __init__.py           # chow_lin_disaggregate
-  interpretation/         # L7 interpretation class wrappers
-    __init__.py           # GIRF, LSTMHiddenState
-  core/
-    execution.py          # execute_recipe (cell loop) + replicate_recipe
-    runtime.py            # per-layer materialize_l{1..8} helpers
-    figures.py            # matplotlib backend + US state choropleth
-    cache.py, dag.py, sweep.py, manifest.py, validator.py, yaml.py, types.py
-    layer_specs.py, recipe.py, selectors.py
-    layers/               # l0..l8 + l1_5/l2_5/l3_5/l4_5 schema definitions
-    ops/                  # universal/l3/l4/l5/l6/l7/l8/diagnostic op registry
-  raw/                    # FRED-MD/QD/SD adapters, vintage manager, manifest
-  preprocessing/          # preprocessing contract helpers (legacy support)
-  defaults.py             # default profile dict template
-  tuning/                 # HP search engines (optional, integrated via L4)
-  scaffold/               # encyclopedia renderer + CLI
-    cli.py                # argparse entry: scaffold, encyclopedia subcommands
-    encyclopedia/         # per-op .md page renderer
-docs/
-  index.md                # 4-card landing (C52 rewrite; unchanged in C53)
-  tutorial/               # guided walkthroughs — C53: full content
-    index.md              # updated toctree (C53)
-    00_install.md         # polished (C53)
-    01_first_forecast.md  # new narrative (C53)
-    02_full_study.md      # new narrative (C53)
-    03_custom_model.md    # new narrative (C53)
-    two_entry_points.md   # renamed + polished (C53)
-    replications/         # C54 scope
-  how_to/                 # task-specific recipes — C53: full content
-    index.md              # updated toctree (C53)
-    add_custom_dataset.md # new (C53)
-    tune_hyperparameters.md # new (C53)
-    sweep_over_models.md  # new (C53)
-    add_custom_model.md   # refactored (C53)
-    use_custom_hooks.md   # refactored (C53)
-    replicate_a_study.md  # new (C53)
-    partial_layer_execution.md  # renamed (C53)
-    troubleshooting.md    # polished (C53)
-    target_transformer.md # unchanged
-    reproducibility_policy.md # unchanged
-    contributing.md       # unchanged
-    conventions.md        # unchanged
-    simple_api/           # unchanged
-    add_dataset.md        # redirect stub (C53)
-    user_data_workflow.md # redirect stub (C53)
-    custom_model.md       # redirect stub (C53)
-    custom_hooks.md       # redirect stub (C53)
-    partial_execution.md  # redirect stub (C53)
-  reference/              # complete reference (C52 migration; unchanged in C53)
-    architecture/         # layer design narrative (29 files)
-    encyclopedia/         # auto-gen option lookup (319 files, sidebar-hidden)
-    api/
-      standalone_functions/  # 7 files
-      navigator/             # 6 files
-    recipe_schema/         # 9 files
-  explanation/             # placeholder for C54
-  help.md                  # convenience page
-  conf.py                  # Sphinx config
-tools/
-  gen_encyclopedia_docs.py # encyclopedia generator
-  audit_docs_vs_code.py    # drift detector
-tests/                    # 1345+ tests (core, layers, integration)
-examples/recipes/         # YAML recipe examples per layer
-```
-
-## Changes: Per-Algorithm How-Tos and Advanced Recipes
-
-Six new per-algorithm how-tos (RealizedGARCH, Boruta, BVARMinnesota, Chow-Lin, GIRF, MIDAS variants) plus one advanced recipes doc and a reorganized how-to index. All snippets use public API class imports verified against `feba598c`. Custom-step registration uses `mf.register_model` from `macroforecast/custom.py`. Net documentation growth: 705 lines across 8 files.
-
-## Phase 1 (v0.10 restructure)
-
-Phase 1 of the v0.10 restructure plan. Applies the locked vocabulary in
-`TAXONOMY.md` v1 across the entire codebase via mechanical renames plus one
-file rename. Builds on Phase 0 (dead code removal).
-
-Surfaces touched:
-- Source: 12 files across `core/`, `functions/`, `interpretation/`, `models/`,
-  `scaffold/`. The most disruptive change is `core/dag.py` -> `core/pipeline.py`
-  with 26 import-site rewrites.
-- Tests: 60+ files across `core/`, `functions/`, `layers/`, `scaffold/`, `api/`,
-  `promotion/`. Includes deletion of two stale `outlier_scope` tests and the
-  full `test_l2_transform_scope.py` file (axis no longer exists).
-- Examples: all live recipes in `examples/recipes/` (excluding the frozen
-  `goulet_coulombe_2021_replication.yaml`).
-- Docs: encyclopedia, explanation, how-to, tutorial, and architecture entries
-  swept for new vocabulary.
-
-Phase 1 deliberately keeps internal frozen names (`DAG` class symbol,
-`validate_dag`, `DAGValidationError`, `Cell.concrete_dag`,
-`OPERATIONAL_MODEL_FAMILIES`, `FUTURE_MODEL_FAMILIES`,
-`_ALLOWED_SCALING_METHODS`). Python parameter names like `family: str`
-are also unchanged. Only public-facing axis vocabulary moves.
-
-The full canonical map lives in the StatsClaw audit trail at
-`~/.claude/plugins/data/statsclaw-statsclaw/.repos/workspace/macroforecast/runs/2026-05-25-restructure-phase-1/inputs/TAXONOMY.md`.
-
-Phases 2-5 are tracked separately:
-- Phase 2: L1 axis deduplication (drop axes that duplicate L2 decisions).
-- Phase 3: Layer collocation (build `layers/lN_*/` folders).
-- Phase 4: API surface consolidation (move user entry points into `macroforecast/api/`).
-- Phase 5: Doc generator relocation (`macroforecast/scaffold/` -> `tools/docgen/`).
-
----
-
-## Phase 2 (v0.10 restructure)
-
-Phase 2 of the v0.10 restructure plan. Removes the four L1 axes
-(`official_transform_policy`, `official_transform_scope`,
-`raw_missing_policy`, `raw_outlier_policy`) that duplicated L2
-decisions, plus the preprocessing parameter
-`tcode_application_scope` which has been absorbed by L2 `transform_policy`.
-
-Result: L1 has 22 axes (down from 26). Single decision point for
-transform / imputation / outlier handling now lives at L2.
-
-Source changes:
-- `macroforecast/core/layers/l1.py`: 4 axis definitions removed.
-- `macroforecast/core/execution.py`: references to removed axes removed.
-- `macroforecast/defaults.py`: stale DEFAULT_PREPROCESSING_AXES entries removed.
-- `macroforecast/preprocessing/__init__.py`, `build.py`, `types.py`:
-  `tcode_application_scope` parameter removed throughout.
-- `macroforecast/scaffold/option_docs/l1.py`: OptionDocs for removed axes deleted.
-- `macroforecast/scaffold/option_docs/l2.py`: L2 `outlier_policy` description
-  updated to reflect that it now also handles raw-source outliers.
-- Encyclopedia: 4 pages deleted (`l1/axes/official_transform_policy.md`,
-  `l1/axes/official_transform_scope.md`, `l1/axes/raw_missing_policy.md`,
-  `l1/axes/raw_outlier_policy.md`).
-
-Doc changes:
-- `docs/reference/architecture/layer1/raw_source_cleaning.md`: deleted (described removed axes).
-- `docs/reference/architecture/layer1/official_transforms.md`: deleted (described removed axes).
-- `docs/reference/architecture/layer1/index.md`: hierarchy and decision-order
-  tables updated; removed axis rows deleted; toctree trimmed.
-- `docs/reference/architecture/layer1/source_frame.md`: removed references to
-  `official_transform_policy` and `official_transform_scope`.
-- `docs/reference/architecture/layer1/frame_availability.md`: runtime order
-  updated to reflect that transform and raw-source cleaning are now L2 decisions.
-- `docs/reference/recipe_schema/data_policies.md`: removed 4 rows for deleted axes.
-- `docs/reference/api/navigator/replication_library.md`: Goulet-Coulombe path
-  updated from `1_data.official_transform_policy=apply_official_tcode` to
-  `2_preprocessing.transform_policy=apply_official_tcode`.
-
-Phase 3 (layer collocation) is the next step.
-
----
-
-## Changes: PR6 — Tests Vocab + Scaffold → tools/docgen Move
-
-PR6 is a test-only cleanup with no source-code changes.
-
-**Test vocab update (10 files)**: Tests imported `OPERATIONAL_MODEL_FAMILIES` and
-`FUTURE_MODEL_FAMILIES` under their pre-PR4 names. All 10 affected files in
-`tests/core/` are updated to use the canonical names (`OPERATIONAL_MODELS`,
-`FUTURE_MODELS`) introduced in PR4. The old names remain available as deprecated
-aliases in `macroforecast.layers.l4_models.ops` and will be removed in v0.10.0.
-A companion `DeprecationWarning` assertion was added to `test_status_honesty.py`.
-
-**Directory rename (15 files)**: `tests/scaffold/` (the test suite for the
-scaffold / docs-generation tooling) was renamed to `tests/tools/docgen/` to
-mirror the Phase 5 source rename `macroforecast/scaffold/ → tools/docgen/`.
-
-**Namespace guard**: Moving the tests into `tests/tools/docgen/` created a pytest
-importlib-mode namespace collision: pytest adds `tests/` to `sys.path` when it
-detects `tests/tools/__init__.py`, which makes `tests/tools/` shadow the top-level
-`tools/` package. Two conftest files were added to prevent the shadow:
-
-- `conftest.py` (repo root): forcibly moves the project root to `sys.path[0]`.
-- `tests/tools/docgen/conftest.py`: clears stale `tools.*` entries from
-  `sys.modules` and pre-imports the real `tools.docgen` namespace before any
-  test module in that directory is collected.
-
-| File | Action |
-|------|--------|
-| `conftest.py` | CREATED — sys.path guard |
-| `tests/tools/docgen/conftest.py` | CREATED — namespace pre-load guard |
-| `tests/scaffold/` (15 files) | RENAMED → `tests/tools/docgen/` |
-| `tests/core/test_bvar_minnesota.py` | UPDATED — constant names |
-| `tests/core/test_dfm_mariano_murasawa.py` | UPDATED — constant names |
-| `tests/core/test_factor_augmented_var.py` | UPDATED — constant names |
-| `tests/core/test_l3_chow_lin_disaggregation_c51.py` | UPDATED — import paths |
-| `tests/core/test_l4_midas_family_c48.py` | UPDATED — constant names |
-| `tests/core/test_l4_realized_garch_c49.py` | UPDATED — constant names |
-| `tests/core/test_mrf_gtvp.py` | UPDATED — constant names |
-| `tests/core/test_phase_c_top6.py` | UPDATED — l3_ops → l3_features.ops |
-| `tests/core/test_status_honesty.py` | UPDATED — constant names + DeprecationWarning test |
-| `tests/core/test_v09_paper_coverage.py` | UPDATED — constant names |
-| `CHANGELOG.md` | UPDATED — PR6 Internal entry |
+**Left unchanged:** `docs/how_to/irf_pesaran_shin_girf.md` -- `from macroforecast.interpretation import GIRF` works via operational shim.

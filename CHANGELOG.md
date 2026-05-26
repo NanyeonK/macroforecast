@@ -36,6 +36,24 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR1 (docs precision audit): fix broken imports in three how-to guides**
+
+  Three how-to pages referenced submodule paths that no longer exist following the
+  Phase 3g-bis restructure. Copy-pasting the code blocks produced `ModuleNotFoundError`
+  for any user.
+
+  | File | Old import | New import |
+  |------|-----------|-----------|
+  | `docs/how_to/feature_selection_boruta.md` | `macroforecast.feature_selection` | `macroforecast.layers.l3_features.selection` |
+  | `docs/how_to/advanced_recipes.md` | `macroforecast.feature_selection` | `macroforecast.layers.l3_features.selection` |
+  | `docs/how_to/chow_lin_disaggregation.md` | `macroforecast.transforms` | `macroforecast.layers.l3_features.transforms` |
+
+  Prose module references in the same pages updated to match. The
+  `macroforecast.interpretation.GIRF` shim in `irf_pesaran_shin_girf.md`
+  is operational and left unchanged.
+
+  Smoke-tested: all three fixed imports import cleanly under the current package layout.
+
 - **PR4 (docs site cleanup): unify layer numbering to compact L0–L8 / L1.5–L4.5 form**
 
   Body text and cross-reference navigation links throughout the docs site used
