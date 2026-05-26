@@ -7,6 +7,18 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Internal
 
+- **Phase 3g-bis PR #I: relocate interpretation/ body to canonical methods.py** (see PR)
+  - Modified: `macroforecast/interpretation/__init__.py` (225-line body reduced to
+    21-line backward-compat re-export shim; all symbols re-exported from canonical
+    location so `from macroforecast.interpretation import ...` continues to work).
+  - Modified: `macroforecast/layers/l7_interpretation/methods.py` (39-line shim
+    promoted to 226-line canonical body carrying GIRF, LSTMHiddenState, and helper
+    implementations).
+  - **Backward compatibility**: preserved. No import path changes required in
+    downstream code or tests.
+  - **Test edits**: none. 0 new test failures. Tester PASS (5/5 gates).
+  - **Behavioral impact**: NONE. Body relocation only.
+
 - **Phase 3g-bis PR #G: collocate L8 schema and ops** (see PR)
   - Deleted: `macroforecast/core/layers/l8.py` (-429 lines) — legacy schema
     body superseded by the Phase 3f collocated-layer restructure.
