@@ -414,14 +414,6 @@
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../api/standalone_functions/index.html">Standalone functions - namespace overview</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../api/navigator/index.html">Navigator Docs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="../api/navigator/tree_navigator.html">Tree Navigator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/navigator/path_resolver.html">Path Resolver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/navigator/compatibility_engine.html">Compatibility Engine</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/navigator/replication_library.html">Replication Library</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/navigator/yaml_execution.html">YAML And Execution</a></li>
-</ul>
-</details></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="../recipe_schema/index.html">Recipe API</a></li>
@@ -701,9 +693,9 @@
   <section id="philosophy">
 <h1>Philosophy<a class="headerlink" href="#philosophy" title="Link to this heading">#</a></h1>
 <p>macroforecast is designed for research workflows where the difficult part is not calling a model function. The difficult part is choosing a valid forecasting path, keeping comparisons fair, and making every deviation auditable.</p>
-<section id="navigation-before-execution">
-<h2>Navigation before execution<a class="headerlink" href="#navigation-before-execution" title="Link to this heading">#</a></h2>
-<p>The package has many possible choices across data, representation, model, evaluation, output, statistical tests, and interpretation. API docs alone cannot explain which combinations are valid. The Navigator is therefore a first-class documentation surface, not a demo.</p>
+<section id="option-reference">
+<h2>Option reference<a class="headerlink" href="#option-reference" title="Link to this heading">#</a></h2>
+<p>The package has many choices across data, representation, model, evaluation, output, statistical tests, and interpretation. Every option is documented in the <a class="reference internal" href="../encyclopedia/index.html"><span class="std std-doc">Encyclopedia</span></a>, which lists every axis and option value with description, when-to-use, when-NOT-to-use, and references.</p>
 </section>
 <section id="defaults-are-explicit">
 <h2>Defaults are explicit<a class="headerlink" href="#defaults-are-explicit" title="Link to this heading">#</a></h2>
@@ -727,7 +719,7 @@
 </section>
 <section id="contracts-are-enforced">
 <h2>Contracts are enforced<a class="headerlink" href="#contracts-are-enforced" title="Link to this heading">#</a></h2>
-<p>Some choices are free. Some are derived. Some are disabled because another selection makes them invalid. The docs and Navigator should show the same constraint system.</p>
+<p>Some choices are free. Some are derived. Some are disabled because another selection makes them invalid. The Encyclopedia and recipe validator enforce the same constraint system.</p>
 </section>
 <section id="custom-methods-are-first-class">
 <h2>Custom methods are first-class<a class="headerlink" href="#custom-methods-are-first-class" title="Link to this heading">#</a></h2>
@@ -740,7 +732,6 @@
 <section id="next">
 <h2>Next<a class="headerlink" href="#next" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="#../navigator/index.md"><span class="xref myst">Navigator</span></a></p></li>
 <li><p><a class="reference internal" href="#../for_researchers/index.md"><span class="xref myst">Researchers</span></a></p></li>
 <li><p><a class="reference internal" href="#../for_recipe_authors/index.md"><span class="xref myst">Recipe authors</span></a></p></li>
 <li><p><a class="reference internal" href="index.html"><span class="std std-doc">Architecture index</span></a></p></li>
@@ -795,7 +786,7 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#navigation-before-execution">Navigation before execution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#option-reference">Option reference</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defaults-are-explicit">Defaults are explicit</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#layers-own-decisions">Layers own decisions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contracts-are-enforced">Contracts are enforced</a></li>
