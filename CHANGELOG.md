@@ -36,6 +36,20 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ### Docs
 
+- **PR6 (docs precision audit): committed full example-recipe sweep audit table (38 recipes, 4-category classification) to `docs/_audit/recipe-sweep-2026-05-26.md`; no recipe edits (check8 audit — PR7+ scope for repairs)**
+
+  Sweep result: 6 PASS, 32 FAIL_SCHEMA, 0 FAIL_RUNTIME, 0 NEGATIVE_EXAMPLE.
+
+  Three systematic failure patterns identified:
+
+  | Pattern | Count | Root cause |
+  |---------|-------|-----------|
+  | `single_target requires leaf_config.target string` | 26 | Partial-layer docs recipes lack a runnable `1_data` + `target` block |
+  | `L3 uses step graph; fixed_axes sugar is not supported` | 5 | Stale `fixed_axes` syntax on L3 sections that migrated to nodes/sinks DAG |
+  | `unknown L1 axis 'custom_source_policy'` | 1 | Renamed axis: `custom_source_policy` → `panel_composition` |
+
+  Recipe repairs are PR7+ scope.
+
 - **PR3 (docs precision audit): purge internal cycle codes from user-facing docs and module docstrings**
 
   120+ occurrences of internal development cycle codes (`Cycle N`, `C<N>`) were removed
