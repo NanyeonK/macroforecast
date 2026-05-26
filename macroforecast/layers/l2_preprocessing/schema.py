@@ -248,6 +248,40 @@ def validate_layer(layer: Any | dict[str, Any] | str, l1_context: dict[str, Any]
                 "zero-fill can be learned as signal by ML models; truncate_to_balanced is recommended",
             )
         )
+    # PR7 Gap 3: block_recompute + stateful outlier/imputation policies emit a
+    # SOFT warning because block_recompute applies cleaning statistics over the
+    # full block (which may include observations beyond any given forecast
+    # origin). This is a documented user opt-in: the option name does not imply
+    # per-origin safety, so only a warning — not a hard error — is appropriate.
+    # Causal-safe policies (forward_fill, none_propagate, outlier_policy=none)
+    # are excluded from this warning.
+    # Only warn when the user explicitly set a stateful policy alongside
+    # block_recompute. Default package values (e.g. outlier_policy=mccracken_ng_iqr)
+    # are not warned on unless explicitly requested, so that causal-safe combos
+    # like forward_fill+block_recompute don't produce spurious noise.
+    _block_recompute_temporal = resolved.get("imputation_temporal_rule") == "block_recompute"
+    if _block_recompute_temporal:
+        _stateful_imputation = {"mean", "em_factor", "em_multivariate"}
+        _stateful_outlier = {"mccracken_ng_iqr", "zscore_threshold", "winsorize"}
+        _imp_policy = resolved.get("imputation_policy", "")
+        _out_policy = resolved.get("outlier_policy", "")
+        _imp_explicit = resolved.source.get("imputation_policy", "package_default") == "explicit"
+        _out_explicit = resolved.source.get("outlier_policy", "package_default") == "explicit"
+        _stateful_imp_explicit = _imp_explicit and _imp_policy in _stateful_imputation
+        _stateful_out_explicit = _out_explicit and _out_policy in _stateful_outlier
+        if _stateful_imp_explicit or _stateful_out_explicit:
+            issues.append(
+                Issue(
+                    "l2_block_recompute_stateful_warning",
+                    Severity.SOFT,
+                    "layer",
+                    "l2.imputation_temporal_rule",
+                    "block_recompute applies imputation/outlier statistics over the "
+                    "full block, which may include observations beyond the forecast "
+                    "origin (potential lookahead). For strictly causal evaluation "
+                    "use expanding_window_per_origin.",
+                )
+            )
     return ValidationReport(tuple(issues))
 
 
@@ -434,6 +468,22 @@ def _validate_imputation(leaf_config: dict[str, Any], resolved: L2ResolvedAxes, 
     temporal_rule = resolved.get("imputation_temporal_rule")
     if temporal_rule == "full_sample_once":
         issues.append(_issue("l2.imputation_temporal_rule", "full_sample_once is rejected because it leaks future data"))
+    # PR7 Gap 1/2: rolling_window_per_origin + linear_interpolation is a hard
+    # error. The option name implies per-origin safety but the runtime has no
+    # per-origin rolling-window implementation and falls into the full-sample
+    # branch (_apply_imputation), which applies bidirectional linear
+    # interpolation over the full panel — a critical lookahead leak.
+    # The safe alternatives are: forward_fill (inherently causal) or
+    # expanding_window_per_origin with linear_interpolation (fully per-origin).
+    if temporal_rule == "rolling_window_per_origin" and policy == "linear_interpolation":
+        issues.append(_issue(
+            "l2.imputation_policy",
+            "linear_interpolation with rolling_window_per_origin leaks future data: "
+            "rolling_window_per_origin is not yet implemented per-origin and falls "
+            "into full-sample imputation, where linear_interpolation is bidirectional "
+            "by default. Use forward_fill (causal) or "
+            "expanding_window_per_origin with linear_interpolation instead.",
+        ))
     if policy == "em_factor":
         if not isinstance(leaf_config.get("em_n_factors", 8), int) or leaf_config.get("em_n_factors", 8) <= 0:
             issues.append(_issue("l2.em_n_factors", "em_n_factors must be a positive integer"))
