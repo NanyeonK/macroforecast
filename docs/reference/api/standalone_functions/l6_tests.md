@@ -1,6 +1,6 @@
 # Standalone functions: L6 forecast evaluation tests (7 ops)
 
-L6 test callables take arrays of forecast losses or errors and return a frozen result dataclass. Every L6 result type exposes `.stat` (float), `.pvalue` (float), `.decision` (str: `'reject'` or `'fail to reject'`), and `.summary()` (formatted string).
+L6 test callables take arrays of forecast losses or errors and return a frozen result dataclass. Every L6 result type exposes `.stat` (float), `.pvalue` (float), `.decision` (bool: `True` = reject H0 at 5%, `False` = fail to reject), and `.summary()` (formatted string summarizing the result).
 
 ## Equal predictive ability tests (4 ops)
 
@@ -121,7 +121,7 @@ print(result.stat, result.pvalue, result.decision)
 
 ## Return type reference
 
-All test result dataclasses expose `.stat` (float), `.pvalue` (float), `.decision` (str), and `.summary()`.
+All test result dataclasses expose `.stat` (float), `.pvalue` (float), `.decision` (bool), and `.summary()`.
 
 ## Quick example
 

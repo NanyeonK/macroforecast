@@ -104,6 +104,29 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   Smoke: `mf.run('examples/recipes/goulet_coulombe_2021_replication.yaml')`
   completes with `cells = 1`.
 
+- **PR12: docs sync — standalone callable count corrected + L6 .decision type fixed**
+
+  Two documentation errors corrected in `docs/reference/api/standalone_functions/`.
+
+  **Sub-fix A (callable count):** `index.md` reported "Total: 118 standalone
+  callables." The actual count from `dir(macroforecast.functions)` (v0.9.5a0)
+  is 132 pure function callables plus 61 result dataclasses. The drift arose
+  from v0.2-v0.3 honesty-pass promotions adding ~14 functions (MRF GTVP,
+  ridge variants, MIDAS families, conditional PFI, bagging, DMP, etc.).
+  The per-layer table was also corrected: L4 fit 38 → 52 (deep NN, MIDAS,
+  ridge variants, misc, ridge families all counted now). L2/L3/L5/L6/L7
+  counts were accurate and unchanged.
+
+  A new script `tools/count_callables.py` introspects `macroforecast.functions`
+  and writes a full inventory to `docs/_audit/standalone-callable-inventory-<date>.md`.
+  Run `python3 tools/count_callables.py` from the repo root after any API change.
+
+  **Sub-fix B (.decision type):** `l6_tests.md` documented `.decision` as
+  `str: 'reject' or 'fail to reject'` (lines 3 and 124). The actual return
+  type is `bool` (`True` = reject H0 at 5%, `False` = fail to reject). The
+  `.summary()` method formats this as the human-readable string. No code
+  changed; docs only.
+
 - **PR7 (HIGH): L2 temporal dispatch audit — rolling_window_per_origin leak path closed**
 
   `_validate_imputation` in `macroforecast/layers/l2_preprocessing/schema.py`
