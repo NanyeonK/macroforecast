@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold.option_docs import OPTION_DOCS
-from macroforecast.scaffold.option_docs.types import ParameterDoc, REQUIRED
+from tools.docgen.option_docs import OPTION_DOCS
+from tools.docgen.option_docs.types import ParameterDoc, REQUIRED
 
 
 # ---------------------------------------------------------------------------

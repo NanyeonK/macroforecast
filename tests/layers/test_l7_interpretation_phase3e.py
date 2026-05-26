@@ -43,7 +43,7 @@ def test_collocated_methods_import() -> None:
 def test_collocated_option_docs_import() -> None:
     import macroforecast.layers.l7_interpretation.option_docs  # noqa: F401
     # option_docs triggers registration; verify the docs are present
-    from macroforecast.scaffold.option_docs import OPTION_DOCS
+    from tools.docgen.option_docs import OPTION_DOCS
     l7_keys = [k for k in OPTION_DOCS if k[0] == "l7"]
     assert len(l7_keys) > 0
 

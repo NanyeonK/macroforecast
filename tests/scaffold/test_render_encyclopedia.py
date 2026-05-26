@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from macroforecast.scaffold import introspect, render_encyclopedia
+from tools.docgen import introspect, render_encyclopedia
 
 
 def test_write_all_produces_at_least_150_files(tmp_path: Path) -> None:
@@ -74,7 +74,7 @@ def test_missing_optiondoc_yields_tbd_placeholder(tmp_path: Path, monkeypatch) -
     """Pop a known OptionDoc and verify the encyclopedia falls back to
     the explicit TBD placeholder instead of crashing."""
 
-    from macroforecast.scaffold.option_docs import OPTION_DOCS
+    from tools.docgen.option_docs import OPTION_DOCS
 
     key = ("l0", "l0_a", "failure_policy", "fail_fast")
     assert key in OPTION_DOCS, "fixture missing"
@@ -89,7 +89,7 @@ def test_cli_smoke(tmp_path: Path) -> None:
     """``macroforecast scaffold`` CLI exposes the ``encyclopedia``
     subcommand as required by the v0.7.0 CI sync gate."""
 
-    from macroforecast.scaffold import cli
+    from tools.docgen import cli
 
     rc = cli.main(["encyclopedia", str(tmp_path)])
     assert rc == 0
@@ -99,10 +99,10 @@ def test_cli_smoke(tmp_path: Path) -> None:
 
 
 def test_module_main_smoke(tmp_path: Path) -> None:
-    """``python -m macroforecast.scaffold encyclopedia <out>`` is the form
+    """``python -m tools.docgen encyclopedia <out>`` is the form
     used by the CI sync gate; exercise it through the same dispatcher."""
 
-    from macroforecast.scaffold import __main__ as scaffold_main
+    from tools.docgen import __main__ as scaffold_main
 
     rc = scaffold_main._main(["encyclopedia", str(tmp_path)])
     assert rc == 0

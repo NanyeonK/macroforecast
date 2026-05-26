@@ -74,11 +74,11 @@ _PUBLIC_MODULES = [
     "macroforecast.functions.misc",
     "macroforecast.functions.timeseries",
     "macroforecast.functions.transforms",
-    "macroforecast.scaffold.introspect",
-    "macroforecast.scaffold.option_docs.l3",
-    "macroforecast.scaffold.option_docs.l7_a",
-    "macroforecast.scaffold.option_docs.l8",
-    "macroforecast.scaffold.render_encyclopedia",
+    "tools.docgen.introspect",
+    "tools.docgen.option_docs.l3",
+    "tools.docgen.option_docs.l7_a",
+    "tools.docgen.option_docs.l8",
+    "tools.docgen.render_encyclopedia",
 ]
 
 
@@ -101,7 +101,7 @@ def test_t1_no_dag_in_module_docstring(module_name: str) -> None:
     "macroforecast.functions.misc",
     "macroforecast.functions.timeseries",
     "macroforecast.functions.transforms",
-    "macroforecast.scaffold.introspect",
+    "tools.docgen.introspect",
 ])
 def test_t1_no_dag_in_public_symbol_docstrings(module_name: str) -> None:
     """T1: Public callable docstrings must not contain standalone DAG/dag word."""

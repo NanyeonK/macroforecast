@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.scaffold import introspect
-from macroforecast.scaffold.option_docs import OPTION_DOCS
+from tools.docgen import introspect
+from tools.docgen.option_docs import OPTION_DOCS
 
 
 # v1.0 release flips every value to True. Layer-by-layer content PRs
@@ -94,7 +94,7 @@ def test_v1_quality_floor():
     gauntlet -- if every entry meets these minimums the author can
     spot-check rather than line-edit."""
 
-    from macroforecast.scaffold.option_docs import OPTION_DOCS
+    from tools.docgen.option_docs import OPTION_DOCS
 
     short_desc: list[tuple] = []
     short_when: list[tuple] = []

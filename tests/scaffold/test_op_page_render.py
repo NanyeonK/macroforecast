@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from macroforecast.scaffold import render_encyclopedia
+from tools.docgen import render_encyclopedia
 
 
 @pytest.fixture(scope="module")

@@ -1,8 +1,8 @@
-"""``python -m macroforecast.scaffold`` entry point.
+"""``python -m tools.docgen`` entry point.
 
 Currently dispatches to the encyclopedia renderer:
 
-    python -m macroforecast.scaffold encyclopedia <out_dir>
+    python -m tools.docgen encyclopedia <out_dir>
 
 This is the form used by the CI sync gate (``ci-docs.yml``) to keep
 ``docs/encyclopedia/`` aligned with the live ``LayerImplementationSpec``
@@ -16,8 +16,8 @@ import sys
 
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m macroforecast.scaffold",
-        description="Scaffold-package CLI entry point (encyclopedia renderer).",
+        prog="python -m tools.docgen",
+        description="Doc-generator CLI entry point (encyclopedia renderer).",
     )
     sub = parser.add_subparsers(dest="command")
     encyc_p = sub.add_parser(
@@ -37,7 +37,7 @@ def _main(argv: list[str] | None = None) -> int:
 
         written = render_encyclopedia.write_all(args.output)
         print(
-            f"[macroforecast.scaffold encyclopedia] wrote "
+            f"[tools.docgen encyclopedia] wrote "
             f"{len(written)} pages to {args.output}",
             file=sys.stderr,
         )

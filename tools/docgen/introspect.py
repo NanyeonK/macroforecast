@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from importlib import import_module
 from typing import Any
 
-from ..core.layer_specs import AxisSpec, LayerImplementationSpec, Option
+from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Option
 
 
 # Layer modules that expose ``<LAYER>_LAYER_SPEC`` constants. Order
@@ -390,7 +390,7 @@ def _build_l3_fallback() -> tuple[AxisInfo, ...]:
     except ImportError:
         pass
     try:
-        from ..core.ops.registry import _OPS as _OPS_REGISTRY
+        from macroforecast.core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
         return ()
     options = tuple(
@@ -580,7 +580,7 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
     except ImportError:
         pass
     try:
-        from ..core.ops.registry import _OPS as _OPS_REGISTRY
+        from macroforecast.core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
         return ()
     # v0.9: include future-status ops so paper-coverage atomic primitives

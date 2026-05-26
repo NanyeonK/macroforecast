@@ -28,7 +28,6 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.layers.l3_features`` -- feature engineering ops, transforms, selection (v0.10 restructure)
 - ``macroforecast.layers.l3_5_diagnostic`` -- feature diagnostics schema (v0.10 restructure)
 - ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
-- ``macroforecast.scaffold`` -- recipe scaffold (RecipeBuilder + OptionDoc)
 - ``macroforecast.layers.l4_models.tuning`` -- hyperparameter search engines
 """
 
@@ -137,7 +136,6 @@ _LAZY_EXPORTS = {
 }
 
 _LAZY_MODULES: tuple[str, ...] = (
-    "scaffold",
     "recipes",
     "api",
     # Cycle 63: promoted public namespaces

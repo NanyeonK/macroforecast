@@ -45,10 +45,10 @@ jobs:
           # scratch directory and diff against the committed tree; any
           # divergence means a contributor edited the schema or OptionDoc
           # without re-running the renderer.
-          python -m macroforecast.scaffold encyclopedia /tmp/encyc_check
+          python -m tools.docgen encyclopedia /tmp/encyc_check
           if ! diff -r docs/reference/encyclopedia/ /tmp/encyc_check/ >/dev/null; then
               echo "docs/reference/encyclopedia/ is out of sync with the registries."
-              echo "Run: python -m macroforecast.scaffold encyclopedia docs/reference/encyclopedia/"
+              echo "Run: python -m tools.docgen encyclopedia docs/reference/encyclopedia/"
               echo "Then commit the resulting changes."
               diff -r docs/reference/encyclopedia/ /tmp/encyc_check/ | head -80 || true
               exit 1
