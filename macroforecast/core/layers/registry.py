@@ -39,7 +39,7 @@ from macroforecast.layers.l3_features.schema import L3FeatureEngineering
 from macroforecast.layers.l4_models.schema import L4ForecastingModel
 from .l5 import L5Evaluation
 from .l6 import L6StatisticalTests
-from .l7 import L7Interpretation
+from macroforecast.layers.l7_interpretation.schema import L7Interpretation
 from .l8 import L8Output
 from macroforecast.layers.l1_5_diagnostic.schema import L1_5DataSummary
 from macroforecast.layers.l2_5_diagnostic.schema import L2_5PrePostPreprocessing

@@ -561,6 +561,11 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
         import macroforecast.layers.l3_features.ops  # noqa: F401
     except ImportError:
         pass
+    # Ensure L7 ops module loaded so its registrations populate _OPS_REGISTRY.
+    try:
+        import macroforecast.layers.l7_interpretation.ops  # noqa: F401
+    except ImportError:
+        pass
     try:
         from ..core.ops.registry import _OPS as _OPS_REGISTRY
     except ImportError:
