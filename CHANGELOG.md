@@ -30,6 +30,31 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
 ### Bug fixes
 
+- **PR11: goulet_coulombe_2021_replication.yaml — 6 obsolete axis/op names updated**
+
+  `examples/recipes/goulet_coulombe_2021_replication.yaml` used six names that
+  were renamed in earlier refactors and have no alias support at the recipe
+  level. Attempting `mf.run()` on the recipe raised
+  `RuntimeError: unknown L1 axis 'custom_source_policy'` before any model was
+  fitted.
+
+  Changes applied (all in the recipe YAML, no runtime code touched):
+
+  | Location | Old name | Canonical name |
+  |----------|----------|----------------|
+  | `0_meta` `fixed_axes` | `reproducibility_mode` | `reproducibility_policy` |
+  | `0_meta` `fixed_axes` | `compute_mode` | `compute_policy` |
+  | `1_data` `fixed_axes` | `custom_source_policy` | `panel_composition` |
+  | `4_forecasting_model` nodes (×2) | `op: fit_model` | `op: fit` |
+  | `4_forecasting_model` params (×2) | `family:` | `model:` |
+  | `4_forecasting_model` params (×2) | `forecast_strategy:` | `forecast_policy:` |
+
+  The statistical content is preserved exactly: ridge baseline on FRED-MD
+  INDPRO, h ∈ {1, 3, 6, 12}, AR(BIC) benchmark, DM (HLN-corrected) test.
+
+  Smoke: `mf.run('examples/recipes/goulet_coulombe_2021_replication.yaml')`
+  completes with `cells = 1`.
+
 - **PR7 (HIGH): L2 temporal dispatch audit — rolling_window_per_origin leak path closed**
 
   `_validate_imputation` in `macroforecast/layers/l2_preprocessing/schema.py`
