@@ -71,7 +71,7 @@ print(imp.importances_mean_)
 
 > Or use the recipe DSL for full reproducible studies — see
 > [docs/index.md](docs/index.md) and
-> [docs/two_entry_points.md](docs/two_entry_points.md) for a decision guide.
+> [docs/tutorial/two_entry_points.md](docs/tutorial/two_entry_points.md) for a decision guide.
 
 ## 5-line quickstart
 
@@ -150,7 +150,7 @@ The canonical layer design is documented in the architecture reference.
 ## Operational coverage
 
 > Before relying on advanced families/tests in a paper workflow, check
-> [`docs/recipe_api/runtime_support.md`](docs/recipe_api/runtime_support.md)
+> [`docs/reference/recipe_schema/runtime_support.md`](docs/reference/recipe_schema/runtime_support.md)
 > for the exact current path coverage. Some listed families are wired
 > through legacy/specialized paths or optional extras, not necessarily
 > through the minimal core runtime end-to-end.

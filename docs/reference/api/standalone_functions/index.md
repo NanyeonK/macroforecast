@@ -74,5 +74,5 @@ imp = mf.functions.permutation_importance(fit_result, X, y, n_repeats=10, random
 print("Feature importances:", imp.importances_mean_)
 ```
 
-See [two_entry_points](../two_entry_points.md) for a decision guide on when
+See [two_entry_points](../../../tutorial/two_entry_points.md) for a decision guide on when
 to use the recipe DSL vs standalone callables.
