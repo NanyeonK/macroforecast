@@ -65,4 +65,4 @@ Output:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l5/`](../../reference/encyclopedia/l5/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l5/`](../../reference/l5/index.md).

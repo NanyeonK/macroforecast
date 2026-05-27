@@ -43,7 +43,7 @@ from .api.functions.transforms import (
     time_trend_transform,
     holiday_transform,
 )
-from .layers.l3_features.transforms import chow_lin_disaggregate
+from .features.transforms import chow_lin_disaggregate
 
 __all__ = [
     "chow_lin_disaggregate",

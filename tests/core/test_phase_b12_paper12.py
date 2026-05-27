@@ -39,7 +39,7 @@ import numpy as np
 import pandas as pd
 
 import macroforecast
-from macroforecast.layers.l4_models.paper_methods import dual_interpretation
+from macroforecast.models.paper_methods import dual_interpretation
 
 
 # ----------------------------------------------------------------------

@@ -33,26 +33,26 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 
-import macroforecast.layers.l6_tests.schema as l6_layer
-import macroforecast.layers.l7_interpretation.schema as l7_layer
-import macroforecast.layers.l8_output.schema as l8_layer
-import macroforecast.layers.l1_5_diagnostic.schema as l1_5_layer
-import macroforecast.layers.l2_5_diagnostic.schema as l2_5_layer
-import macroforecast.layers.l3_5_diagnostic.schema as l3_5_layer
-import macroforecast.layers.l4_5_diagnostic.schema as l4_5_layer
-import macroforecast.layers.l3_features.schema as l3_layer
-import macroforecast.layers.l4_models.schema as l4_layer
-import macroforecast.layers.l5_evaluation.schema as l5_layer
-import macroforecast.layers.l1_data.schema as l1_layer
-import macroforecast.layers.l2_preprocessing.schema as l2_layer
+import macroforecast.stat_tests.schema as l6_layer
+import macroforecast.interpretation.schema as l7_layer
+import macroforecast.output.schema as l8_layer
+import macroforecast.diagnostics.data_summary.schema as l1_5_layer
+import macroforecast.diagnostics.preprocessing.schema as l2_5_layer
+import macroforecast.diagnostics.features.schema as l3_5_layer
+import macroforecast.diagnostics.generator.schema as l4_5_layer
+import macroforecast.features.schema as l3_layer
+import macroforecast.models.schema as l4_layer
+import macroforecast.evaluation.schema as l5_layer
+import macroforecast.data.schema as l1_layer
+import macroforecast.preprocessing.schema as l2_layer
 # Load collocated ops for side-effect registration (l5/l6/l8 ops no longer
 # in core/ops/__init__.py after Phase 3f restructure).
-import macroforecast.layers.l5_evaluation.ops  # noqa: F401
-import macroforecast.layers.l6_tests.ops  # noqa: F401
-import macroforecast.layers.l7_interpretation.ops  # noqa: F401
-import macroforecast.layers.l8_output.ops  # noqa: F401
-from ..layers.l1_data import load_fred_md, load_fred_qd, load_fred_sd
-from ..layers.l1_data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
+import macroforecast.evaluation.ops  # noqa: F401
+import macroforecast.stat_tests.ops  # noqa: F401
+import macroforecast.interpretation.ops  # noqa: F401
+import macroforecast.output.ops  # noqa: F401
+from ..data import load_fred_md, load_fred_qd, load_fred_sd
+from ..data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
     DiagnosticArtifact,
     L1DataDefinitionArtifact,
@@ -1863,8 +1863,10 @@ def materialize_l4_minimal(
     # so those values map to the same execution as ``models`` for the
     # multi-fit-node case and ``oos_dates`` for the single-fit-node case.
     l0 = recipe_root.get("0_meta", {}) or {}
-    parallel_unit = (l0.get("fixed_axes", {}) or {}).get("parallel_unit", "cells")
-    n_workers = int((l0.get("leaf_config", {}) or {}).get("n_workers_inner", 4))
+    l0_leaf = l0.get("leaf_config", {}) or {}
+    l0_fixed = l0.get("fixed_axes", {}) or {}
+    parallel_unit = l0_leaf.get("parallel_unit", l0_fixed.get("parallel_unit", "cells"))
+    n_workers = int(l0_leaf.get("n_workers_inner", l0_leaf.get("n_workers", 4)))
     if parallel_unit == "models" and len(fit_nodes) > 1:
         from concurrent.futures import ThreadPoolExecutor
 
@@ -3318,7 +3320,7 @@ def _build_l4_model(
             from pyearth import Earth  # type: ignore
         except ImportError as exc:  # pragma: no cover - optional dep
             raise NotImplementedError(
-                "mars family requires `pip install macroforecast[mars]`"
+                "mars family requires `pip install macroforecast[mars]`; sklearn-contrib-py-earth currently supports only Python <3.11"
             ) from exc
         return Earth(
             max_terms=int(params.get("max_terms", 21)),
@@ -14838,7 +14840,7 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
     # ALFRED vintage correction -- applies when vintage_policy="real_time_alfred" (v0.9.3).
     # Replaces panel column values with vintage-correct ALFRED snapshots.
     if resolved.get("vintage_policy") == "real_time_alfred":
-        from ..layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
+        from ..data.alfred_adapter import apply_alfred_vintage_to_panel
         frame = apply_alfred_vintage_to_panel(frame, resolved, leaf_config)
         metadata["vintage_policy"] = "real_time_alfred"
     return _panel_from_frame(frame, metadata=metadata)
@@ -16348,22 +16350,32 @@ def _bic_select_k(
     import warnings
 
     K_max = max(1, math.ceil(1.5 * freq_ratio))
-    # BIC intractability warning (v0.8.x)
-    _BIC_K_MAX_WARNING_THRESHOLD = 30  # empirical threshold above which BIC search becomes slow
-    if K_max > _BIC_K_MAX_WARNING_THRESHOLD:
-        warnings.warn(
-            f"U-MIDAS BIC search will enumerate K_max={K_max} candidates "
-            f"(freq_ratio={freq_ratio}). For freq_ratio > {_BIC_K_MAX_WARNING_THRESHOLD / 1.5:.0f}, "
-            "this may take hours. Consider setting `n_lags_high` manually in the L3 op params "
-            "to bypass BIC search, or use a coarser frequency representation.",
-            UserWarning,
-            stacklevel=2,
-        )
+    _BIC_K_MAX_WARNING_THRESHOLD = 30
     best_ic_val = np.inf
     best_K = 1
     any_valid = False
 
-    for K_cand in range(1, K_max + 1):
+    # Candidates whose parameter count already exceeds the available LF
+    # observations cannot pass the degrees-of-freedom check below. Prune
+    # them before constructing expensive lag-stacked designs.
+    search_K_max = K_max
+    if y_lf is not None and frame_hf.shape[1] > 0:
+        y_nonmissing = int(y_lf.dropna().shape[0])
+        y_lag_cols = 1 if include_y_lag else 0
+        max_feasible_by_df = (y_nonmissing - 3 - y_lag_cols) // int(frame_hf.shape[1])
+        search_K_max = min(K_max, max(0, max_feasible_by_df))
+
+    if K_max > _BIC_K_MAX_WARNING_THRESHOLD:
+        warnings.warn(
+            f"U-MIDAS BIC search requested K_max={K_max} candidates "
+            f"(freq_ratio={freq_ratio}); degrees-of-freedom pruning will evaluate "
+            f"{search_K_max} candidates. Consider setting `n_lags_high` manually "
+            "in the L3 op params to bypass IC search, or use a coarser frequency representation.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    for K_cand in range(1, search_K_max + 1):
         # Build lag-stacked design
         stacked = _midas_lag_stack(
             frame_hf, freq_ratio=freq_ratio, n_lags_high=K_cand, target_freq="low"

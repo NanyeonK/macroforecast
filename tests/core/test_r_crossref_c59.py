@@ -31,18 +31,18 @@ import pandas as pd
 import pytest
 
 # ---------------------------------------------------------------------------
-# Guard: skip the entire module at collection time if rpy2 is absent.
-# Each test also calls pytest.importorskip("rpy2") individually so that
-# the skip reason appears per-test in the report.
+# Guard: skip the entire module at collection time if rpy2 is absent or the
+# linked system R C API is incompatible with the installed rpy2 wheel.
 # ---------------------------------------------------------------------------
 
-rpy2 = pytest.importorskip(
-    "rpy2",
-    reason=(
-        "rpy2 not installed — install macroforecast[validation] to run R "
-        "cross-reference tests (Boruta / midasr / rugarch)."
-    ),
-)
+try:
+    import rpy2  # noqa: F401
+    from rpy2 import robjects as _rpy2_robjects  # noqa: F401
+except Exception as exc:  # pragma: no cover - environment guard
+    pytest.skip(
+        f"rpy2/R bridge unavailable for C59 cross-reference tests: {type(exc).__name__}: {exc}",
+        allow_module_level=True,
+    )
 
 
 # ---------------------------------------------------------------------------

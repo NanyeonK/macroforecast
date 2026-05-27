@@ -33,6 +33,7 @@ def test_forecast_default_recipe_layer0_seed_and_axes():
     assert l0["fixed_axes"]["failure_policy"] == "fail_fast"
     assert l0["fixed_axes"]["reproducibility_policy"] == "seeded_reproducible"
     assert l0["fixed_axes"]["compute_policy"] == "serial"
+    assert "study_scope" not in l0["fixed_axes"]
     assert l0["leaf_config"]["random_seed"] == 42
 
 

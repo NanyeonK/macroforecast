@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.core.runtime import _derive_saved_objects, _lasso_inclusion_frame, _l7_transformation_attribution
-from macroforecast.layers.l7_interpretation.ops import PRE_DEFINED_BLOCKS
+from macroforecast.interpretation.ops import PRE_DEFINED_BLOCKS
 from macroforecast.core.types import L5EvaluationArtifact, ModelArtifact
 from sklearn.linear_model import Lasso
 

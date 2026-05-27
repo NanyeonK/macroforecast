@@ -82,7 +82,7 @@ def _multi_cell_recipe(
 
 def test_parallel_unit_cells_in_options():
     """Cycle 16 N-2: PARALLEL_UNIT_OPTIONS contains cells."""
-    from macroforecast.layers.l0_meta.schema import PARALLEL_UNIT_OPTIONS
+    from macroforecast.meta.schema import PARALLEL_UNIT_OPTIONS
     assert "cells" in PARALLEL_UNIT_OPTIONS, (
         f"cells missing from PARALLEL_UNIT_OPTIONS: {PARALLEL_UNIT_OPTIONS}"
     )
@@ -90,7 +90,7 @@ def test_parallel_unit_cells_in_options():
 
 def test_parallel_unit_cells_all_original_options_retained():
     """Cycle 16 N-2: adding cells does not drop original options."""
-    from macroforecast.layers.l0_meta.schema import PARALLEL_UNIT_OPTIONS
+    from macroforecast.meta.schema import PARALLEL_UNIT_OPTIONS
     for opt in ("models", "horizons", "targets", "oos_dates"):
         assert opt in PARALLEL_UNIT_OPTIONS, f"{opt} missing after adding cells"
 

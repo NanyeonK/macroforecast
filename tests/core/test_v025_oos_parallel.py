@@ -10,8 +10,9 @@ import macroforecast
 
 _BASE = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible, parallel_unit: __PU__}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
   leaf_config:
+    parallel_unit: __PU__
     n_workers_inner: 2
 1_data:
   fixed_axes:

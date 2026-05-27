@@ -28,7 +28,7 @@ import pandas as pd
 import pytest
 
 from macroforecast.core.runtime import _build_l4_model
-from macroforecast.layers.l4_models.ops import (
+from macroforecast.models.ops import (
     OPERATIONAL_MODELS,
     FUTURE_MODELS,
     get_family_status,
@@ -119,7 +119,7 @@ class TestValidation:
 
         Verifies test-spec.md behavioral contract #3.
         """
-        from macroforecast.layers.l4_models.schema import validate_layer, parse_layer_yaml
+        from macroforecast.models.schema import validate_layer, parse_layer_yaml
 
         for family in ("midas_almon", "midas_beta", "midas_step", "dfm_unrestricted_midas"):
             yaml_text = f"""
@@ -161,7 +161,7 @@ class TestValidation:
         Updated in C49 to reflect promotion to operational. A recipe using
         realized_garch must now pass validation without hard errors.
         """
-        from macroforecast.layers.l4_models.schema import validate_layer, parse_layer_yaml
+        from macroforecast.models.schema import validate_layer, parse_layer_yaml
 
         yaml_text = """
 4_forecasting_model:

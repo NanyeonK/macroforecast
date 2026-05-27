@@ -1,12 +1,9 @@
-from .types import HPDistribution, TuningResult, TuningSpec, TuningTrial
-from .budget import TuningBudget
-from .engine import run_tuning
+"""Compatibility shim for macroforecast.models.tuning."""
 
-__all__ = [
-    "HPDistribution",
-    "TuningSpec",
-    "TuningTrial",
-    "TuningResult",
-    "TuningBudget",
-    "run_tuning",
-]
+from __future__ import annotations
+
+from macroforecast.models.tuning import *  # noqa: F401,F403
+try:
+    from macroforecast.models.tuning import __all__ as __all__  # type: ignore[attr-defined]
+except ImportError:
+    __all__ = [name for name in globals() if not name.startswith("_")]

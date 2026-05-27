@@ -233,8 +233,8 @@ def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
 
     recipe = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible, parallel_unit: oos_dates}
-  leaf_config: {n_workers_inner: 4, random_seed: 42}
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
+  leaf_config: {parallel_unit: oos_dates, n_workers_inner: 4, random_seed: 42}
 1_data:
   fixed_axes:
     panel_composition: custom_panel_only

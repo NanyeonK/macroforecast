@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-from macroforecast.layers.l7_interpretation.schema import (
+from macroforecast.interpretation.schema import (
     make_l7_yaml,
     make_l7_yaml_with_lineage_attribution,
     normalize_to_dag_form,
@@ -13,7 +13,7 @@ from macroforecast.layers.l7_interpretation.schema import (
     validate_recipe,
 )
 from macroforecast.core.ops import get_op, list_ops
-from macroforecast.layers.l7_interpretation.ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
+from macroforecast.interpretation.ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
 from macroforecast.core.validator import validate_dag
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -398,7 +398,7 @@ def test_l7_7_pre_defined_blocks():
 
 def test_l7_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l7_interpretation.schema import L7Interpretation
+    from macroforecast.interpretation.schema import L7Interpretation
 
     spec = get_layer("l7")
     assert spec.cls is L7Interpretation

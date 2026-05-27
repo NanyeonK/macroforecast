@@ -7,7 +7,7 @@ macroforecast exposes two ways to run forecasting models:
 
 | | Standalone models | Recipe pipeline |
 |---|---|---|
-| Interface | `from macroforecast.layers.l4_models import X` | YAML file |
+| Interface | `from macroforecast.models import X` | YAML file |
 | Scope | Single model, direct Python call | Full L0–L8 pipeline |
 | Bit-exact replay | Re-run the script | `mf.recipes.run(manifest.json)` |
 | Output | Python return value | Artifact directory + manifest |
@@ -27,7 +27,7 @@ macroforecast exposes two ways to run forecasting models:
   pandas code directly.
 
 ```python
-from macroforecast.layers.l4_models import LinearAR
+from macroforecast.models import LinearAR
 import pandas as pd
 
 model = LinearAR(p=2)
@@ -79,7 +79,7 @@ without changing the underlying models.
 
 ```text
 Working in a notebook or one-off script?
-    YES  ->  Standalone  ->  from macroforecast.layers.l4_models import X
+    YES  ->  Standalone  ->  from macroforecast.models import X
     NO
      |
      v

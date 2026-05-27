@@ -29,8 +29,8 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.layers.l4_models.schema import parse_layer_yaml, validate_layer
-from macroforecast.layers.l4_models.ops import (
+from macroforecast.models.schema import parse_layer_yaml, validate_layer
+from macroforecast.models.ops import (
     FUTURE_MODEL_FAMILIES,
     MODEL_FAMILY_STATUS,
     OPERATIONAL_MODEL_FAMILIES,

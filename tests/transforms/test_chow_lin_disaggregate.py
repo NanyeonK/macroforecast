@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macroforecast.layers.l3_features.transforms import chow_lin_disaggregate
+from macroforecast.features.transforms import chow_lin_disaggregate
 
 
 # ---------------------------------------------------------------------------
@@ -303,20 +303,20 @@ class TestAR1Covariance:
     """Verify _ar1_covariance produces a valid positive definite Toeplitz matrix."""
 
     def test_v_h_is_symmetric(self) -> None:
-        from macroforecast.layers.l3_features.transforms import chow_lin_disaggregate  # noqa: F401
-        from macroforecast.layers.l3_features.transforms import _ar1_covariance
+        from macroforecast.features.transforms import chow_lin_disaggregate  # noqa: F401
+        from macroforecast.features.transforms import _ar1_covariance
 
         V = _ar1_covariance(0.5, 6)
         np.testing.assert_allclose(V, V.T, atol=1e-15)
 
     def test_v_h_diagonal_is_one(self) -> None:
-        from macroforecast.layers.l3_features.transforms import _ar1_covariance
+        from macroforecast.features.transforms import _ar1_covariance
 
         V = _ar1_covariance(0.7, 5)
         np.testing.assert_allclose(np.diag(V), np.ones(5), atol=1e-15)
 
     def test_v_h_off_diagonal_decays(self) -> None:
-        from macroforecast.layers.l3_features.transforms import _ar1_covariance
+        from macroforecast.features.transforms import _ar1_covariance
 
         rho = 0.6
         V = _ar1_covariance(rho, 4)
@@ -326,14 +326,14 @@ class TestAR1Covariance:
         assert abs(V[0, 3] - rho ** 3) < 1e-15
 
     def test_v_h_is_positive_definite(self) -> None:
-        from macroforecast.layers.l3_features.transforms import _ar1_covariance
+        from macroforecast.features.transforms import _ar1_covariance
 
         V = _ar1_covariance(0.8, 10)
         eigenvalues = np.linalg.eigvalsh(V)
         assert np.all(eigenvalues > 0), "V_h must be positive definite for rho=0.8"
 
     def test_v_h_rho_zero_is_identity(self) -> None:
-        from macroforecast.layers.l3_features.transforms import _ar1_covariance
+        from macroforecast.features.transforms import _ar1_covariance
 
         V = _ar1_covariance(0.0, 5)
         np.testing.assert_allclose(V, np.eye(5), atol=1e-15)

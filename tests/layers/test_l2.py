@@ -1,4 +1,4 @@
-from macroforecast.layers.l2_preprocessing.schema import (
+from macroforecast.preprocessing.schema import (
     L2Preprocessing,
     normalize_to_dag_form,
     parse_layer_yaml,

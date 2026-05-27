@@ -180,7 +180,7 @@ def test_paper16_cv_schemes_all_in_search_algorithms_enum():
     dropped at runtime and the validator's options enum did not list
     them either."""
 
-    from macroforecast.layers.l4_models.ops import SEARCH_ALGORITHMS
+    from macroforecast.models.ops import SEARCH_ALGORITHMS
     for scheme in ("kfold", "poos", "aic", "bic"):
         assert scheme in SEARCH_ALGORITHMS, f"{scheme!r} missing from SEARCH_ALGORITHMS"
 

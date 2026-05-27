@@ -16,17 +16,17 @@ from textwrap import dedent
 import pytest
 
 from macroforecast.core import FUTURE, OPERATIONAL, ItemStatus, is_future, is_runnable
-from macroforecast.layers.l1_data.schema import parse_layer_yaml as l1_parse, validate_layer as l1_validate
-from macroforecast.layers.l4_models.schema import parse_layer_yaml as l4_parse, validate_layer as l4_validate
-from macroforecast.layers.l7_interpretation.schema import parse_layer_yaml as l7_parse, validate_layer as l7_validate
+from macroforecast.data.schema import parse_layer_yaml as l1_parse, validate_layer as l1_validate
+from macroforecast.models.schema import parse_layer_yaml as l4_parse, validate_layer as l4_validate
+from macroforecast.interpretation.schema import parse_layer_yaml as l7_parse, validate_layer as l7_validate
 from macroforecast.core.ops import list_ops
-from macroforecast.layers.l4_models.ops import (
+from macroforecast.models.ops import (
     FUTURE_MODELS,
     OPERATIONAL_MODELS,
     PLANNED_MODEL_FAMILIES,
     get_family_status,
 )
-from macroforecast.layers.l7_interpretation.ops import HONESTY_DEMOTED_L7_OPS
+from macroforecast.interpretation.ops import HONESTY_DEMOTED_L7_OPS
 
 
 # Items demoted from operational/planned to future during the v0.1
@@ -207,11 +207,11 @@ def test_old_constant_names_emit_deprecation() -> None:
     import warnings
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES  # noqa: F401
+        from macroforecast.models.ops import OPERATIONAL_MODEL_FAMILIES  # noqa: F401
         assert any(issubclass(warning.category, DeprecationWarning) for warning in w), \
             "OPERATIONAL_MODEL_FAMILIES must emit DeprecationWarning"
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES  # noqa: F401
+        from macroforecast.models.ops import FUTURE_MODEL_FAMILIES  # noqa: F401
         assert any(issubclass(warning.category, DeprecationWarning) for warning in w), \
             "FUTURE_MODEL_FAMILIES must emit DeprecationWarning"

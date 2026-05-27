@@ -1,14 +1,9 @@
-"""L0 study setup -- per-option documentation (collocated).
+"""Compatibility shim for macroforecast.meta.option_docs."""
 
-This module is the canonical Phase-3f collocated option_docs entry for L0.
-It delegates to the original scaffold modules so all ``register(...)`` calls
-happen exactly once, avoiding duplicate-registration errors.
-
-L0.A policy axes docs: ``tools.docgen.option_docs.l0``
-
-Imported here for side-effect registration.
-"""
 from __future__ import annotations
 
-# Trigger registration side-effects from the original scaffold module.
-import tools.docgen.option_docs.l0  # noqa: F401
+from macroforecast.meta.option_docs import *  # noqa: F401,F403
+try:
+    from macroforecast.meta.option_docs import __all__ as __all__  # type: ignore[attr-defined]
+except ImportError:
+    __all__ = [name for name in globals() if not name.startswith("_")]

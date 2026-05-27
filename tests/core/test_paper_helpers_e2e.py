@@ -36,7 +36,7 @@ import numpy as np
 import pytest
 
 import macroforecast
-from macroforecast.layers.l4_models.paper_methods import (
+from macroforecast.models.paper_methods import (
     adaptive_ma,
     anatomy_oos,
     arctic_var,
@@ -267,6 +267,8 @@ def test_paper_08_two_step_ridge(synth_panel):
 
 # Paper 9 — hemisphere_neural_network: Round 1 flagged that L4 dispatches to
 # LinearRegression rather than the HNN distrib methods.
+@pytest.mark.slow
+@pytest.mark.deep
 def test_paper_09_hemisphere_neural_network(synth_panel):
     pytest.importorskip("torch", reason="hemisphere_neural_network requires macroforecast[deep] (torch)")
     recipe = hemisphere_neural_network(target="y", horizon=1, panel=synth_panel)

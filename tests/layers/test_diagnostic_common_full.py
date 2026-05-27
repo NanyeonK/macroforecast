@@ -13,13 +13,13 @@ def layer_id_to_yaml_key(layer_id: str) -> str:
 
 def _module(layer_id: str):
     if layer_id == "l1_5":
-        from macroforecast.layers.l1_5_diagnostic import schema as module  # type: ignore[assignment]
+        from macroforecast.diagnostics.data_summary import schema as module  # type: ignore[assignment]
     elif layer_id == "l2_5":
         from macroforecast.core.layers import l2_5 as module
     elif layer_id == "l3_5":
         from macroforecast.core.layers import l3_5 as module
     else:
-        from macroforecast.layers.l4_5_diagnostic import schema as module  # type: ignore[assignment]
+        from macroforecast.diagnostics.generator import schema as module  # type: ignore[assignment]
     return module
 
 

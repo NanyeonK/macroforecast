@@ -1,4 +1,4 @@
-from macroforecast.layers.l1_data.schema import (
+from macroforecast.data.schema import (
     L1Data,
     build_recipe_with_l1_only,
     execute_recipe,

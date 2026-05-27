@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macroforecast.layers.l6_tests.schema import (
+from macroforecast.stat_tests.schema import (
     make_recipe_with_density_forecast,
     make_recipe_without_benchmark,
     normalize_to_dag_form,
@@ -187,7 +187,7 @@ def test_l6_step_m_operational_not_future():
 
 def test_l6_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l6_tests.schema import L6StatisticalTests
+    from macroforecast.stat_tests.schema import L6StatisticalTests
 
     spec = get_layer("l6")
     assert spec.cls is L6StatisticalTests

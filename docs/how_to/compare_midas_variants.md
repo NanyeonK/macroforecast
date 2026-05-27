@@ -2,7 +2,7 @@
 
 The goal is to compare four MIDAS variants on a common mixed-frequency
 dataset. We import `MidasAlmon`, `MidasBeta`, `MidasStep`, and
-`UnrestrictedMidas` from `macroforecast.layers.l4_models` and fit all four to the
+`UnrestrictedMidas` from `macroforecast.models` and fit all four to the
 same low-frequency target with the same high-frequency predictor lags.
 The four estimators differ only in how they parametrize the lag-weight
 function, so the comparison isolates the parsimony-flexibility
@@ -13,7 +13,7 @@ tradeoff.
 ```python
 import numpy as np
 import pandas as pd
-from macroforecast.layers.l4_models import (
+from macroforecast.models import (
     MidasAlmon, MidasBeta, MidasStep, UnrestrictedMidas,
 )
 

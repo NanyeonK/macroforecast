@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from macroforecast.layers.l1_data.cache import atomic_copy_to_cache
-from macroforecast.layers.l1_data import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
-from macroforecast.layers.l1_data.sources.fred_sd import (
+from macroforecast.data.cache import atomic_copy_to_cache
+from macroforecast.data import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
+from macroforecast.data.sources.fred_sd import (
     _extract_vintage_xlsx_from_zip,
     _latest_series_url_from_html,
     _series_xlsx_url,
     _series_zip_url,
 )
-from macroforecast.layers.l1_data.errors import RawDownloadError, RawVersionFormatError
+from macroforecast.data.errors import RawDownloadError, RawVersionFormatError
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

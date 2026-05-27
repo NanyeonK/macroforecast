@@ -362,8 +362,8 @@ _COMPUTE_PARALLEL = OptionDoc(
                 "0_meta:\n"
                 "  fixed_axes:\n"
                 "    compute_policy: parallel\n"
-                "    parallel_unit: cells\n"
                 "  leaf_config:\n"
+                "    parallel_unit: cells\n"
                 "    n_workers: 4\n"
             ),
         ),
@@ -382,12 +382,12 @@ _COMPUTE_PARALLEL = OptionDoc(
         ),
         ParameterDoc(
             name="n_workers",
-            type="int | None",
-            default=None,
-            constraint="None -> os.cpu_count() (or smaller per system); positive int caps the pool",
+            type="int | Literal['auto']",
+            default=REQUIRED,
+            constraint="required when compute_policy=parallel; positive int or 'auto'",
             description=(
-                "Process or thread pool size. Currently consumed by cell-level "
-                "ProcessPoolExecutor; sub-cell pool uses an internal default."
+                "Process or thread pool size. ``auto`` lets the runtime choose "
+                "a system-appropriate cap."
             ),
         ),
     ),

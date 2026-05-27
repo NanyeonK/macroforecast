@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from macroforecast.layers.l1_data import (
+from macroforecast.data import (
     RawLoadResult,
     load_fred_md,
     load_fred_qd,

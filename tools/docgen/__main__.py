@@ -5,7 +5,7 @@ Currently dispatches to the encyclopedia renderer:
     python -m tools.docgen encyclopedia <out_dir>
 
 This is the form used by the CI sync gate (``ci-docs.yml``) to keep
-``docs/encyclopedia/`` aligned with the live ``LayerImplementationSpec``
+``docs/reference/`` aligned with the live ``LayerImplementationSpec``
 + ``OPTION_DOCS`` registries.
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ def _main(argv: list[str] | None = None) -> int:
     )
     encyc_p.add_argument(
         "output",
-        help="Output directory (e.g. ``docs/encyclopedia``).",
+        help="Output directory (e.g. ``docs/reference``).",
     )
     args = parser.parse_args(argv)
     if args.command is None:

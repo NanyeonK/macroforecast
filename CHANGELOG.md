@@ -18,8 +18,8 @@ and will raise `TypeError` in v0.10.0.
 - `Experiment(model_families=)` keyword argument -- use `models=` instead
 - `mf.forecast(model_family=)` keyword argument -- use `model=` instead
 - `build_default_recipe_dict(model_family=, model_families=, benchmark_family=)` -- use `model=, models=, benchmark_model=`
-- `macroforecast.layers.l4_models.ops.OPERATIONAL_MODEL_FAMILIES` -- use `OPERATIONAL_MODELS`
-- `macroforecast.layers.l4_models.ops.FUTURE_MODEL_FAMILIES` -- use `FUTURE_MODELS`
+- `macroforecast.models.ops.OPERATIONAL_MODEL_FAMILIES` -- use `OPERATIONAL_MODELS`
+- `macroforecast.models.ops.FUTURE_MODEL_FAMILIES` -- use `FUTURE_MODELS`
 - L6 result dict key `decision_at_5pct` -- use `decision`
 
 Note: axis renames (`custom_source_policy` -> `panel_composition`, `forecast_strategy` ->
@@ -431,8 +431,8 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   | `build_default_recipe_dict(..., model_family=...)` | `build_default_recipe_dict(..., model=...)` |
   | `build_default_recipe_dict(..., model_families=...)` | `build_default_recipe_dict(..., models=...)` |
   | `build_default_recipe_dict(..., benchmark_family=...)` | `build_default_recipe_dict(..., benchmark_model=...)` |
-  | `from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES` | `import OPERATIONAL_MODELS` |
-  | `from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES` | `import FUTURE_MODELS` |
+  | `from macroforecast.models.ops import OPERATIONAL_MODEL_FAMILIES` | `import OPERATIONAL_MODELS` |
+  | `from macroforecast.models.ops import FUTURE_MODEL_FAMILIES` | `import FUTURE_MODELS` |
 
   New module: `macroforecast.api._deprecations` centralizes all deprecation-shim logic
   (`resolve_model`, `resolve_models`, `resolve_benchmark_model`). Module-level `__getattr__`
@@ -720,9 +720,9 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
 
   | File | Old import | New import |
   |------|-----------|-----------|
-  | `docs/how_to/feature_selection_boruta.md` | `macroforecast.feature_selection` | `macroforecast.layers.l3_features.selection` |
-  | `docs/how_to/advanced_recipes.md` | `macroforecast.feature_selection` | `macroforecast.layers.l3_features.selection` |
-  | `docs/how_to/chow_lin_disaggregation.md` | `macroforecast.transforms` | `macroforecast.layers.l3_features.transforms` |
+  | `docs/how_to/feature_selection_boruta.md` | `macroforecast.feature_selection` | `macroforecast.features.selection` |
+  | `docs/how_to/advanced_recipes.md` | `macroforecast.feature_selection` | `macroforecast.features.selection` |
+  | `docs/how_to/chow_lin_disaggregation.md` | `macroforecast.transforms` | `macroforecast.features.transforms` |
 
   Prose module references in the same pages updated to match. The
   `macroforecast.interpretation.GIRF` shim in `irf_pesaran_shin_girf.md`
@@ -862,7 +862,7 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   | `tools/audit_docs_vs_code.py`: `_bootstrap_ops` old `core.ops.l5/l6/l8_ops` → `layers.*.ops` | `audit_docs_vs_code.py` |
   | `tools/gen_encyclopedia_docs.py`: same `_bootstrap_ops` import-path fix | `gen_encyclopedia_docs.py` |
   | `tests/api/`: `model_family=` → `model=` in 7 test call sites (post-PR4 drift) | `test_forecast.py`, `test_experiment.py` |
-  | `tests/core/test_l3_5_selection_view_none.py`: fix import to `macroforecast.layers.l3_5_diagnostic.schema` | `test_l3_5_selection_view_none.py` |
+  | `tests/core/test_l3_5_selection_view_none.py`: fix import to `macroforecast.diagnostics.features.schema` | `test_l3_5_selection_view_none.py` |
 
   **Verification results:**
 
@@ -894,8 +894,8 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   |--------|-------|
   | `OPERATIONAL_MODEL_FAMILIES` → `OPERATIONAL_MODELS` | `test_bvar_minnesota.py`, `test_dfm_mariano_murasawa.py`, `test_factor_augmented_var.py`, `test_mrf_gtvp.py`, `test_status_honesty.py`, `test_v09_paper_coverage.py`, `test_l4_midas_family_c48.py`, `test_l4_realized_garch_c49.py` |
   | `FUTURE_MODEL_FAMILIES` → `FUTURE_MODELS` | same set |
-  | `macroforecast.core.ops.l3_ops` → `macroforecast.layers.l3_features.ops` | `test_phase_c_top6.py` |
-  | `macroforecast.core.ops.l4_ops.OPERATIONAL_MODEL_FAMILIES` → `macroforecast.layers.l4_models.ops.OPERATIONAL_MODELS` | `test_encyclopedia_op_coverage.py` docstring |
+  | `macroforecast.core.ops.l3_ops` → `macroforecast.features.ops` | `test_phase_c_top6.py` |
+  | `macroforecast.core.ops.l4_ops.OPERATIONAL_MODEL_FAMILIES` → `macroforecast.models.ops.OPERATIONAL_MODELS` | `test_encyclopedia_op_coverage.py` docstring |
   | `tests/scaffold/` → `tests/tools/docgen/` (git mv) | 15 test files + `__init__.py` |
   | `ENC_ROOT = Path(__file__).parents[3]` (was `parents[2]` before move) | `test_encyclopedia_op_coverage.py` |
   | Add `conftest.py` at repo root: pinches project root to `sys.path[0]` | `conftest.py` (new) |
@@ -999,7 +999,7 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   - Modified: `macroforecast/core/runtime.py` (1 line: l7 layer source updated
     via side-effect import).
   - Test import paths updated in 11 files: all affected L7 test files updated
-    to canonical `macroforecast.layers.l7_interpretation` paths.
+    to canonical `macroforecast.interpretation` paths.
   - **Behavioral impact**: none. Dead-file removal + shim-to-body promotion only.
     This is the largest single PR in the Phase 3g-bis cascade by line count.
 
@@ -1013,7 +1013,7 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   - Modified: `macroforecast/core/runtime.py` (1 line: l6 layer source updated).
   - Test import paths updated in 1 file: `tests/layers/test_l6.py` (2 import
     sites; legacy `macroforecast.core.layers.l6` replaced with
-    `macroforecast.layers.l6_tests.schema`).
+    `macroforecast.stat_tests.schema`).
   - **Behavioral impact**: none. Dead-file removal + shim-to-body promotion only.
 
 - **Phase 3g-bis PR #D: collocate L5 schema and ops** (see PR)
@@ -1026,7 +1026,7 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   - Modified: `macroforecast/core/runtime.py` (1 line: l5 layer source updated).
   - Test import paths updated in 1 file: `tests/layers/test_l5.py` (lines 1
     and 149; legacy `macroforecast.core.layers.l5` replaced with
-    `macroforecast.layers.l5_evaluation.schema`).
+    `macroforecast.evaluation.schema`).
   - **Behavioral impact**: none. Dead-file removal + shim-to-body promotion only.
 
 - **Phase 3g-bis PR #C: delete legacy L0 schema body** (see PR)
@@ -1035,7 +1035,7 @@ See `docs/explanation/deprecation_timeline.md` for the full deprecation referenc
   - Canonical location (unchanged): `macroforecast/layers/l0_meta/schema.py`.
   - Test import paths updated in 2 files: `tests/layers/test_l0.py` and
     `tests/core/test_parallel_unit_cells.py` (legacy `core.layers.l0` path
-    replaced with `macroforecast.layers.l0_meta.schema`).
+    replaced with `macroforecast.meta.schema`).
   - **Behavioral impact**: none. Dead-file removal only.
 
 - **Phase 3g-bis: eliminate registry.py circular-import workaround** (see PR)

@@ -96,6 +96,7 @@ def _make_signal_panel(
 # NULL — False-positive rate test (30 seeds)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.slow
 class TestBorutaNullBaseline:
     """NULL: Shuffled-label DGP — any accepted feature is a false positive.
 
@@ -175,6 +176,7 @@ class TestBorutaNullBaseline:
 # SIG — Signal calibration test (tightened C47 threshold)
 # ---------------------------------------------------------------------------
 
+@pytest.mark.slow
 class TestBorutaSignalCalibrated:
     """SIG: Tightened C47 threshold — recall >= 3/4 AND precision >= 0.5.
 

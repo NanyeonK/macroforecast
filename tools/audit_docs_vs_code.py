@@ -17,7 +17,7 @@ Usage::
     python tools/audit_docs_vs_code.py --root docs/ --fail-on-drift
 
     # Scan standalone_functions only (expected near-zero drift):
-    python tools/audit_docs_vs_code.py --root docs/reference/api/standalone_functions/ --out audit.json
+    python tools/audit_docs_vs_code.py --root docs/reference/standalone_functions/ --out audit.json
 
     # Exclude archive and changelog:
     python tools/audit_docs_vs_code.py --root docs/ \\
@@ -48,12 +48,12 @@ if _REPO_ROOT not in sys.path:
 
 def _bootstrap_ops() -> None:
     """Import all ops modules to populate the registry."""
-    import macroforecast.layers.l3_features.ops  # noqa: F401
-    import macroforecast.layers.l4_models.ops  # noqa: F401
-    import macroforecast.layers.l5_evaluation.ops  # noqa: F401
-    import macroforecast.layers.l6_tests.ops  # noqa: F401
-    import macroforecast.layers.l7_interpretation.ops  # noqa: F401
-    import macroforecast.layers.l8_output.ops  # noqa: F401
+    import macroforecast.features.ops  # noqa: F401
+    import macroforecast.models.ops  # noqa: F401
+    import macroforecast.evaluation.ops  # noqa: F401
+    import macroforecast.stat_tests.ops  # noqa: F401
+    import macroforecast.interpretation.ops  # noqa: F401
+    import macroforecast.output.ops  # noqa: F401
     import macroforecast.core.ops.diagnostic_ops  # noqa: F401
     import macroforecast.core.ops.universal  # noqa: F401
 
@@ -263,7 +263,7 @@ def resolve_yaml_recipe_key(
     if key == "family":
         # Check against MODEL_FAMILY_STATUS
         try:
-            from macroforecast.layers.l4_models.ops import MODEL_FAMILY_STATUS
+            from macroforecast.models.ops import MODEL_FAMILY_STATUS
             if value in MODEL_FAMILY_STATUS:
                 return "PASS", f"family {value!r} in MODEL_FAMILY_STATUS"
             return "DRIFT", f"family {value!r} not in MODEL_FAMILY_STATUS"

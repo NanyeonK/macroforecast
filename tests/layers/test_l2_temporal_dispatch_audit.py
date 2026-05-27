@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.layers.l2_preprocessing.schema import (
+from macroforecast.preprocessing.schema import (
     parse_layer_yaml,
     validate_layer,
 )

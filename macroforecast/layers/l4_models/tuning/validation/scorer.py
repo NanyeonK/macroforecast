@@ -1,15 +1,9 @@
+"""Compatibility shim for macroforecast.models.tuning.validation.scorer."""
+
 from __future__ import annotations
 
-import numpy as np
-
-SCORERS = {
-    "validation_mse": lambda y, yhat: float(np.mean((y - yhat) ** 2)),
-    "validation_rmse": lambda y, yhat: float(np.sqrt(np.mean((y - yhat) ** 2))),
-    "validation_mae": lambda y, yhat: float(np.mean(np.abs(y - yhat))),
-}
-
-
-def get_scorer(objective: str):
-    if objective not in SCORERS:
-        raise ValueError(f"unknown tuning_objective: {objective}")
-    return SCORERS[objective]
+from macroforecast.models.tuning.validation.scorer import *  # noqa: F401,F403
+try:
+    from macroforecast.models.tuning.validation.scorer import __all__ as __all__  # type: ignore[attr-defined]
+except ImportError:
+    __all__ = [name for name in globals() if not name.startswith("_")]

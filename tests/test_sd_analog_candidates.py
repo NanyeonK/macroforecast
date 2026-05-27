@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from macroforecast.layers.l1_data.sd_analog_candidates import (
+from macroforecast.data.sd_analog_candidates import (
     ALLOWED_CONFIDENCE,
     ALLOWED_DATASETS,
     DEFAULT_CANDIDATE_CODES,
@@ -9,7 +9,7 @@ from macroforecast.layers.l1_data.sd_analog_candidates import (
     SOURCE,
     candidates_by_variable,
 )
-from macroforecast.layers.l1_data.sd_inferred_tcodes import (
+from macroforecast.data.sd_inferred_tcodes import (
     DEFAULT_RUNTIME_STATUSES,
     SD_INFERRED_TCODE_MAP,
     STATE_SERIES_STATIONARITY_OVERRIDE_VERSION,

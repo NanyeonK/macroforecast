@@ -111,24 +111,24 @@ def test_benchmark_family_conflict_raises_value_error():
 
 def test_operational_model_families_emits_deprecation_warning():
     """OPERATIONAL_MODEL_FAMILIES access via __getattr__ must emit DeprecationWarning."""
-    import macroforecast.layers.l4_models.ops as ops_mod
+    import macroforecast.models.ops as ops_mod
     with pytest.warns(DeprecationWarning, match="OPERATIONAL_MODEL_FAMILIES"):
         result = ops_mod.OPERATIONAL_MODEL_FAMILIES
     # Value must equal the canonical OPERATIONAL_MODELS tuple.
-    from macroforecast.layers.l4_models.ops import OPERATIONAL_MODELS
+    from macroforecast.models.ops import OPERATIONAL_MODELS
     assert result == OPERATIONAL_MODELS
 
 
 def test_future_model_families_emits_deprecation_warning():
     """FUTURE_MODEL_FAMILIES access via __getattr__ must emit DeprecationWarning."""
-    import macroforecast.layers.l4_models.ops as ops_mod
+    import macroforecast.models.ops as ops_mod
     with pytest.warns(DeprecationWarning, match="FUTURE_MODEL_FAMILIES"):
         result = ops_mod.FUTURE_MODEL_FAMILIES
-    from macroforecast.layers.l4_models.ops import FUTURE_MODELS
+    from macroforecast.models.ops import FUTURE_MODELS
     assert result == FUTURE_MODELS
 
 
 def test_operational_model_families_removal_version_in_warning():
-    import macroforecast.layers.l4_models.ops as ops_mod
+    import macroforecast.models.ops as ops_mod
     with pytest.warns(DeprecationWarning, match="v0.10.0"):
         _ = ops_mod.OPERATIONAL_MODEL_FAMILIES

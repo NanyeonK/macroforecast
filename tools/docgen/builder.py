@@ -72,18 +72,28 @@ class _L0(_LayerNamespace):
         failure_policy: str = "fail_fast",
         reproducibility_policy: str = "seeded_reproducible",
         compute_policy: str = "serial",
-        random_seed: int | None = 0,
+        random_seed: int | None | object = None,
+        parallel_unit: str | None = None,
+        n_workers: int | str | None = None,
+        gpu_deterministic: bool | None = None,
         **leaf: Any,
     ) -> "_L0":
-        self.set_axis(
+        from macroforecast.meta import configure
+
+        kwargs: dict[str, Any] = dict(
             failure_policy=failure_policy,
             reproducibility_policy=reproducibility_policy,
             compute_policy=compute_policy,
+            parallel_unit=parallel_unit,
+            n_workers=n_workers,
+            gpu_deterministic=gpu_deterministic,
+            **leaf,
         )
         if random_seed is not None:
-            self.leaf_config["random_seed"] = int(random_seed)
-        if leaf:
-            self.set_leaf(**leaf)
+            kwargs["random_seed"] = random_seed
+        root = configure(**kwargs)
+        self.block.clear()
+        self.block.update(root["0_meta"])
         return self
 
 
@@ -395,15 +405,15 @@ class RecipeBuilder:
 
         errors: list[str] = []
         layer_validators = (
-            ("0_meta", "macroforecast.layers.l0_meta.schema"),
-            ("1_data", "macroforecast.layers.l1_data.schema"),
-            ("2_preprocessing", "macroforecast.layers.l2_preprocessing.schema"),
-            ("3_feature_engineering", "macroforecast.layers.l3_features.schema"),
-            ("4_forecasting_model", "macroforecast.layers.l4_models.schema"),
-            ("5_evaluation", "macroforecast.layers.l5_evaluation.schema"),
-            ("6_statistical_tests", "macroforecast.layers.l6_tests.schema"),
-            ("7_interpretation", "macroforecast.layers.l7_interpretation.schema"),
-            ("8_output", "macroforecast.layers.l8_output.schema"),
+            ("0_meta", "macroforecast.meta.schema"),
+            ("1_data", "macroforecast.data.schema"),
+            ("2_preprocessing", "macroforecast.preprocessing.schema"),
+            ("3_feature_engineering", "macroforecast.features.schema"),
+            ("4_forecasting_model", "macroforecast.models.schema"),
+            ("5_evaluation", "macroforecast.evaluation.schema"),
+            ("6_statistical_tests", "macroforecast.stat_tests.schema"),
+            ("7_interpretation", "macroforecast.interpretation.schema"),
+            ("8_output", "macroforecast.output.schema"),
         )
         for key, module_name in layer_validators:
             block = self._recipe.get(key)

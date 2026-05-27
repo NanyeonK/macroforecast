@@ -17,7 +17,7 @@ from tools.docgen import RecipeBuilder
 # L0
 # ---------------------------------------------------------------------------
 
-def test_l0_default_call_emits_three_axes_plus_seed():
+def test_l0_default_call_emits_three_axes_plus_default_seed():
     b = RecipeBuilder()
     b.l0()
     block = b.build()["0_meta"]
@@ -26,15 +26,16 @@ def test_l0_default_call_emits_three_axes_plus_seed():
         "reproducibility_policy": "seeded_reproducible",
         "compute_policy": "serial",
     }
-    assert block["leaf_config"]["random_seed"] == 0
+    assert block["leaf_config"]["random_seed"] == 42
 
 
 def test_l0_explicit_overrides():
     b = RecipeBuilder()
-    b.l0(random_seed=42, compute_policy="parallel", n_workers=4)
+    b.l0(random_seed=42, compute_policy="parallel", parallel_unit="cells", n_workers=4)
     block = b.build()["0_meta"]
     assert block["fixed_axes"]["compute_policy"] == "parallel"
     assert block["leaf_config"]["random_seed"] == 42
+    assert block["leaf_config"]["parallel_unit"] == "cells"
     assert block["leaf_config"]["n_workers"] == 4
 
 

@@ -50,97 +50,97 @@ class TestModelsImport:
     # --- A1: flat re-export from mf.models ---
 
     def test_A1_midas_almon_importable(self) -> None:
-        from macroforecast.layers.l4_models import MidasAlmon
+        from macroforecast.models import MidasAlmon
         assert MidasAlmon is not None
 
     def test_A1_midas_beta_importable(self) -> None:
-        from macroforecast.layers.l4_models import MidasBeta
+        from macroforecast.models import MidasBeta
         assert MidasBeta is not None
 
     def test_A1_midas_step_importable(self) -> None:
-        from macroforecast.layers.l4_models import MidasStep
+        from macroforecast.models import MidasStep
         assert MidasStep is not None
 
     def test_A1_unrestricted_midas_importable(self) -> None:
-        from macroforecast.layers.l4_models import UnrestrictedMidas
+        from macroforecast.models import UnrestrictedMidas
         assert UnrestrictedMidas is not None
 
     def test_A1_linear_ar_importable(self) -> None:
-        from macroforecast.layers.l4_models import LinearAR
+        from macroforecast.models import LinearAR
         assert LinearAR is not None
 
     def test_A1_factor_augmented_ar_importable(self) -> None:
-        from macroforecast.layers.l4_models import FactorAugmentedAR
+        from macroforecast.models import FactorAugmentedAR
         assert FactorAugmentedAR is not None
 
     def test_A1_nonneg_ridge_importable(self) -> None:
-        from macroforecast.layers.l4_models import NonNegRidge
+        from macroforecast.models import NonNegRidge
         assert NonNegRidge is not None
 
     def test_A1_rw_ridge_importable(self) -> None:
-        from macroforecast.layers.l4_models import TwoStageRandomWalkRidge
+        from macroforecast.models import TwoStageRandomWalkRidge
         assert TwoStageRandomWalkRidge is not None
 
     def test_A1_shrink_ridge_importable(self) -> None:
-        from macroforecast.layers.l4_models import ShrinkToTargetRidge
+        from macroforecast.models import ShrinkToTargetRidge
         assert ShrinkToTargetRidge is not None
 
     def test_A1_fused_ridge_importable(self) -> None:
-        from macroforecast.layers.l4_models import FusedDifferenceRidge
+        from macroforecast.models import FusedDifferenceRidge
         assert FusedDifferenceRidge is not None
 
     def test_A1_pcr_importable(self) -> None:
-        from macroforecast.layers.l4_models import PrincipalComponentRegression
+        from macroforecast.models import PrincipalComponentRegression
         assert PrincipalComponentRegression is not None
 
     def test_A1_favar_importable(self) -> None:
-        from macroforecast.layers.l4_models import FactorAugmentedVAR
+        from macroforecast.models import FactorAugmentedVAR
         assert FactorAugmentedVAR is not None
 
     def test_A1_var_importable(self) -> None:
-        from macroforecast.layers.l4_models import VAR
+        from macroforecast.models import VAR
         assert VAR is not None
 
     def test_A1_glmboost_importable(self) -> None:
-        from macroforecast.layers.l4_models import GLMBoost
+        from macroforecast.models import GLMBoost
         assert GLMBoost is not None
 
     def test_A1_bvar_importable(self) -> None:
-        from macroforecast.layers.l4_models import BVAR
+        from macroforecast.models import BVAR
         assert BVAR is not None
 
     def test_A1_bvar_minnesota_importable(self) -> None:
-        from macroforecast.layers.l4_models import BVARMinnesota
+        from macroforecast.models import BVARMinnesota
         assert BVARMinnesota is not None
 
     def test_A1_dfm_mixed_importable(self) -> None:
-        from macroforecast.layers.l4_models import DFMMixedFrequency
+        from macroforecast.models import DFMMixedFrequency
         assert DFMMixedFrequency is not None
 
     def test_A1_garch_importable(self) -> None:
-        from macroforecast.layers.l4_models import GARCH
+        from macroforecast.models import GARCH
         assert GARCH is not None
 
     def test_A1_realized_garch_importable(self) -> None:
-        from macroforecast.layers.l4_models import RealizedGARCH
+        from macroforecast.models import RealizedGARCH
         assert RealizedGARCH is not None
 
     def test_A1_ets_importable(self) -> None:
-        from macroforecast.layers.l4_models import ETS
+        from macroforecast.models import ETS
         assert ETS is not None
 
     def test_A1_theta_importable(self) -> None:
-        from macroforecast.layers.l4_models import Theta
+        from macroforecast.models import Theta
         assert Theta is not None
 
     def test_A1_holt_winters_importable(self) -> None:
-        from macroforecast.layers.l4_models import HoltWinters
+        from macroforecast.models import HoltWinters
         assert HoltWinters is not None
 
     # --- A2: submodule imports ---
 
     def test_A2_linear_submodule_imports(self) -> None:
-        from macroforecast.layers.l4_models.linear import (
+        from macroforecast.models.linear import (
             MidasAlmon, MidasBeta, MidasStep, UnrestrictedMidas,
             LinearAR, FactorAugmentedAR,
             NonNegRidge, TwoStageRandomWalkRidge, ShrinkToTargetRidge,
@@ -156,34 +156,34 @@ class TestModelsImport:
         ]) == 14
 
     def test_A2_bayesian_submodule_imports(self) -> None:
-        from macroforecast.layers.l4_models.bayesian import BVAR, BVARMinnesota, DFMMixedFrequency
+        from macroforecast.models.bayesian import BVAR, BVARMinnesota, DFMMixedFrequency
         assert BVAR is not None
         assert BVARMinnesota is not None
         assert DFMMixedFrequency is not None
 
     def test_A2_volatility_submodule_imports(self) -> None:
-        from macroforecast.layers.l4_models.volatility import GARCH, RealizedGARCH
+        from macroforecast.models.volatility import GARCH, RealizedGARCH
         assert GARCH is not None
         assert RealizedGARCH is not None
 
     def test_A2_timeseries_submodule_imports(self) -> None:
-        from macroforecast.layers.l4_models.timeseries import ETS, Theta, HoltWinters
+        from macroforecast.models.timeseries import ETS, Theta, HoltWinters
         assert ETS is not None
         assert Theta is not None
         assert HoltWinters is not None
 
-    # --- A3: direct import via macroforecast.layers.l4_models ---
+    # --- A3: direct import via macroforecast.models ---
 
     def test_A3_mf_models_lazy_accessible(self) -> None:
-        import macroforecast.layers.l4_models as mmod
+        import macroforecast.models as mmod
         assert hasattr(mmod, "RealizedGARCH")
         assert hasattr(mmod, "MidasAlmon")
         assert hasattr(mmod, "BVAR")
         assert hasattr(mmod, "ETS")
 
     def test_A3_mf_models_identity_preserved(self) -> None:
-        import macroforecast.layers.l4_models as mmod
-        from macroforecast.layers.l4_models import RealizedGARCH
+        import macroforecast.models as mmod
+        from macroforecast.models import RealizedGARCH
         assert mmod.RealizedGARCH is RealizedGARCH
 
     # --- A4: __all__ count ---
@@ -197,7 +197,7 @@ class TestModelsImport:
         + PCR + FactorAugmentedVAR + VAR + GLMBoost = 14). C63 total = 22.
         C64 adds: tree.py (6) + neural.py (2) = 8 more. Grand total = 30.
         """
-        import macroforecast.layers.l4_models as mmod
+        import macroforecast.models as mmod
         assert len(mmod.__all__) == 30
 
 
@@ -250,67 +250,67 @@ class TestBackwardCompat:
 
     # isinstance checks for L4 classes
     def test_B2_isinstance_RealizedGARCH(self) -> None:
-        from macroforecast.layers.l4_models import RealizedGARCH
+        from macroforecast.models import RealizedGARCH
         from macroforecast.core.runtime import _RealizedGARCHModel
         obj = RealizedGARCH()
         assert isinstance(obj, _RealizedGARCHModel)
 
     def test_B2_isinstance_GARCH(self) -> None:
-        from macroforecast.layers.l4_models import GARCH
+        from macroforecast.models import GARCH
         from macroforecast.core.runtime import _GARCHFamily
         obj = GARCH()
         assert isinstance(obj, _GARCHFamily)
 
     def test_B2_isinstance_MidasAlmon(self) -> None:
-        from macroforecast.layers.l4_models import MidasAlmon
+        from macroforecast.models import MidasAlmon
         from macroforecast.core.runtime import _MidasAlmonModel
         obj = MidasAlmon()
         assert isinstance(obj, _MidasAlmonModel)
 
     def test_B2_isinstance_BVAR(self) -> None:
-        from macroforecast.layers.l4_models import BVAR
+        from macroforecast.models import BVAR
         from macroforecast.core.runtime import _BayesianVAR
         obj = BVAR()
         assert isinstance(obj, _BayesianVAR)
 
     def test_B2_isinstance_BVARMinnesota(self) -> None:
-        from macroforecast.layers.l4_models import BVARMinnesota
+        from macroforecast.models import BVARMinnesota
         from macroforecast.core.runtime import _BayesianVAR
         obj = BVARMinnesota()
         assert isinstance(obj, _BayesianVAR)
 
     def test_B2_isinstance_DFMMixedFrequency(self) -> None:
-        from macroforecast.layers.l4_models import DFMMixedFrequency
+        from macroforecast.models import DFMMixedFrequency
         from macroforecast.core.runtime import _DFMMixedFrequency
         obj = DFMMixedFrequency()
         assert isinstance(obj, _DFMMixedFrequency)
 
     def test_B2_isinstance_VAR(self) -> None:
-        from macroforecast.layers.l4_models import VAR
+        from macroforecast.models import VAR
         from macroforecast.core.runtime import _VARWrapper
         obj = VAR()
         assert isinstance(obj, _VARWrapper)
 
     def test_B2_isinstance_ETS(self) -> None:
-        from macroforecast.layers.l4_models import ETS
+        from macroforecast.models import ETS
         from macroforecast.core.runtime import _ETSWrapper
         obj = ETS()
         assert isinstance(obj, _ETSWrapper)
 
     def test_B2_isinstance_Theta(self) -> None:
-        from macroforecast.layers.l4_models import Theta
+        from macroforecast.models import Theta
         from macroforecast.core.runtime import _ThetaWrapper
         obj = Theta()
         assert isinstance(obj, _ThetaWrapper)
 
     def test_B2_isinstance_HoltWinters(self) -> None:
-        from macroforecast.layers.l4_models import HoltWinters
+        from macroforecast.models import HoltWinters
         from macroforecast.core.runtime import _HoltWintersWrapper
         obj = HoltWinters()
         assert isinstance(obj, _HoltWintersWrapper)
 
     def test_B2_isinstance_NonNegRidge(self) -> None:
-        from macroforecast.layers.l4_models import NonNegRidge
+        from macroforecast.models import NonNegRidge
         from macroforecast.core.runtime import _NonNegRidge
         obj = NonNegRidge()
         assert isinstance(obj, _NonNegRidge)
@@ -325,7 +325,7 @@ class TestRealizedGARCHSmoke:
 
     def test_C1_fit_predict_finite(self) -> None:
         """RealizedGARCH.fit().predict() returns finite predictions."""
-        from macroforecast.layers.l4_models import RealizedGARCH
+        from macroforecast.models import RealizedGARCH
         rng = _rng(17)
         n = 120
         X = pd.DataFrame(rng.randn(n, 2), columns=["rv", "x1"])
@@ -339,7 +339,7 @@ class TestRealizedGARCHSmoke:
 
     def test_C2_predict_shape(self) -> None:
         """predict() output length equals input rows."""
-        from macroforecast.layers.l4_models import RealizedGARCH
+        from macroforecast.models import RealizedGARCH
         rng = _rng(31)
         n = 60
         X = pd.DataFrame(rng.randn(n, 1), columns=["x0"])
@@ -703,17 +703,17 @@ class TestLazyImportsInit:
     def test_H1_four_names_in_dir(self) -> None:
         import macroforecast as mf
         d = dir(mf)
-        # models namespace moved to macroforecast.layers.l4_models (Phase 3b);
+        # models namespace moved to macroforecast.models (Phase 3b);
         # the remaining three lazy modules are still in mf.__dir__()
         for name in ("feature_selection", "transforms", "interpretation"):
             assert name in d, f"'{name}' not found in macroforecast.__dir__()"
         # layers.l4_models is accessible via direct subpackage import
-        import macroforecast.layers.l4_models as mmod
+        import macroforecast.models as mmod
         assert hasattr(mmod, "RealizedGARCH")
 
     def test_H2_models_identity(self) -> None:
-        import macroforecast.layers.l4_models as mmod
-        from macroforecast.layers.l4_models import RealizedGARCH
+        import macroforecast.models as mmod
+        from macroforecast.models import RealizedGARCH
         assert mmod.RealizedGARCH is RealizedGARCH
 
     def test_H2_feature_selection_identity(self) -> None:

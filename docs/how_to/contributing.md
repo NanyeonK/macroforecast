@@ -8,6 +8,7 @@ ship a release. Start here.
 | Goal | Page |
 |---|---|
 | Understand the bit-exact replicate contract every change must preserve | [Reproducibility policy](reproducibility_policy.md) |
+| Decide where to start a function or feature review | [Feature review router](#feature-review-router) |
 | Read the canonical layer design before touching `core/` | [Architecture index](../explanation/architecture/index.md) |
 | Read the per-layer contract before touching one layer | [Architecture: layer pages](../explanation/architecture/index.md) |
 | Run the test suite locally | see [`CLAUDE.md`](../../CLAUDE.md) at the repo root |
@@ -19,20 +20,23 @@ ship a release. Start here.
 ```
 macroforecast/
   __init__.py             # lazy-export top-level surface
-  api.py                  # macroforecast.run / macroforecast.replicate
-  core/
-    execution.py          # cell loop + replicate_recipe (bit-exact)
-    runtime.py            # per-layer materialize_l{1..8}_minimal helpers
-    figures.py            # matplotlib backend + US choropleth
-    layers/               # l0..l8 + l1_5/l2_5/l3_5/l4_5 schema definitions
-    ops/                  # universal/l3/l4/l5/l6/l7/l8/diagnostic op registry
-    cache.py, pipeline.py, sweep.py, manifest.py, validator.py, yaml.py, types.py
-  raw/                    # FRED-MD/QD/SD adapters + vintage manager
-  preprocessing/          # contract helpers (legacy support)
-  custom.py               # register_model / register_preprocessor / ...
-  tools/docgen/           # RecipeBuilder + OptionDoc + templates
-  defaults.py             # default profile dict template
-  tuning/                 # HP search engines (optional, integrated via L4)
+  api/                    # run / replicate / forecast / Experiment public API
+  meta/                   # L0 study setup, seed, reproducibility, compute policy
+  data/                   # L1 data sources, FRED adapters, vintages, manifests
+  preprocessing/          # L2 preprocessing schema and contract helpers
+  features/               # L3 feature graph ops, transforms, selectors
+  models/                 # L4 model families, paper helpers, tuning engines
+  evaluation/             # L5 metrics and evaluation ops
+  stat_tests/             # L6 forecast-comparison tests
+  interpretation/         # L7 importance, attribution, IRF, interpretation methods
+  output/                 # L8 artifact/provenance/export ops
+  diagnostics/            # L1.5/L2.5/L3.5/L4.5 diagnostic schemas
+  core/                   # runtime, pipeline.py execution, registry, cache, manifest, validator
+  layers/                 # compatibility aliases only; do not add new implementation here
+  functions/              # backward-compatible shim to api/functions
+  recipes/                # recipe-orchestration public namespace
+  _vendor/                # vendored third-party implementations
+tools/docgen/             # RecipeBuilder + OptionDoc + encyclopedia generation
 tests/                    # test suite (counts vary by extras; see CI badges)
 examples/recipes/         # YAML recipe examples per layer
 ```

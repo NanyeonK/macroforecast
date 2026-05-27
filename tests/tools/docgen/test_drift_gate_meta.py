@@ -84,7 +84,7 @@ def test_informative_failure_message_on_missing_page() -> None:
         f"Actual message: {failure_message}"
     )
     # Path reference: the message must contain some path-like substring.
-    assert "docs/reference/encyclopedia" in failure_message or fake_op_name in failure_message, (
+    assert "docs/reference" in failure_message or fake_op_name in failure_message, (
         f"Failure message must contain a file path reference.\n"
         f"Actual message: {failure_message}"
     )

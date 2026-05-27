@@ -24,7 +24,7 @@ import pytest
 def test_l2_chow_lin_now_accepted():
     """Contract: chow_lin is accepted by the validator when FRED-SD context enables
     quarterly_to_monthly disaggregation."""
-    from macroforecast.layers.l2_preprocessing.schema import validate_layer, parse_layer_yaml
+    from macroforecast.preprocessing.schema import validate_layer, parse_layer_yaml
 
     # Provide the L2 layer with fred_md+fred_sd context so the frequency gate
     # activates. The test mirrors Scenario 2.1 from test-spec.md.
@@ -142,7 +142,7 @@ def test_chow_lin_deterministic():
 
 def test_l2_keep_with_indicator_now_accepted():
     """Contract: keep_with_indicator is accepted by the L2 validator after C50."""
-    from macroforecast.layers.l2_preprocessing.schema import parse_layer_yaml, validate_layer
+    from macroforecast.preprocessing.schema import parse_layer_yaml, validate_layer
 
     yaml_text = """
     2_preprocessing:

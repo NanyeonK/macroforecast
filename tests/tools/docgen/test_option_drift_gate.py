@@ -78,7 +78,7 @@ _DRIFT_BASELINES: list[tuple[str, str, int, int]] = [
 
 def _l2_code_options(axis: str) -> set[str]:
     return _code_options_from_spec(
-        "macroforecast.layers.l2_preprocessing.schema", "L2_LAYER_SPEC", axis
+        "macroforecast.preprocessing.schema", "L2_LAYER_SPEC", axis
     )
 
 
@@ -87,7 +87,7 @@ def _l3_code_ops() -> set[str]:
     # Import both universal (diff/log/lag etc.) and l3_features (all L3-specific ops)
     from macroforecast.core.ops import registry
     import macroforecast.core.ops.universal  # noqa: F401
-    import macroforecast.layers.l3_features.ops  # noqa: F401
+    import macroforecast.features.ops  # noqa: F401
     _INTERNAL = {
         "kernel", "polynomial", "u_midas", "midas", "varimax_rotation",
         "target_construction", "l3_feature_bundle", "l3_metadata_build",
@@ -104,20 +104,20 @@ def _l3_code_ops() -> set[str]:
 
 
 def _l4_code_models() -> set[str]:
-    from macroforecast.layers.l4_models.ops import OPERATIONAL_MODELS, FUTURE_MODELS
+    from macroforecast.models.ops import OPERATIONAL_MODELS, FUTURE_MODELS
     return set(OPERATIONAL_MODELS) | set(FUTURE_MODELS)
 
 
 def _l5_code_options(axis: str) -> set[str]:
     return _code_options_from_spec(
-        "macroforecast.layers.l5_evaluation.schema", "L5_LAYER_SPEC", axis
+        "macroforecast.evaluation.schema", "L5_LAYER_SPEC", axis
     )
 
 
 def _l7_code_ops() -> set[str]:
     """L7 ops from registry (layer_scope includes l7)."""
     from macroforecast.core.ops import registry
-    import macroforecast.layers.l7_interpretation.schema  # noqa: F401
+    import macroforecast.interpretation.schema  # noqa: F401
     all_ops = registry.list_ops()
     result = set()
     for name, op in all_ops.items():
