@@ -19,16 +19,25 @@ Curated reference for the public surface of the macroforecast package. The encyc
 |--------|---------|
 | `macroforecast.core` | layered recipe runtime (foundation, layers, ops, runtime, execution, figures) |
 | `macroforecast.layers.l1_data` | FRED-MD/QD/SD adapters, vintage manager, manifest |
-| `macroforecast.preprocessing` | Preprocessing contract helpers |
+| `macroforecast.layers.l2_preprocessing` | canonical preprocessing contract helpers |
+| `macroforecast.preprocessing` | compatibility alias for preprocessing contract helpers |
+| `macroforecast.layers.l3_features` | canonical feature engineering ops, transforms, and selectors |
+| `macroforecast.feature_selection` | promoted selector classes |
+| `macroforecast.transforms` | promoted transform callables |
+| `macroforecast.layers.l4_models` | canonical public model classes |
+| `macroforecast.models` | compatibility alias for public model classes |
 | `macroforecast.layers.l4_models.tuning` | Hyperparameter search engines |
+| `macroforecast.layers.l7_interpretation` | canonical interpretation methods |
+| `macroforecast.interpretation` | promoted interpretation classes |
 | `macroforecast.custom` | User-defined model/preprocessor/feature registration |
 | `macroforecast.defaults` | Default profile dict template |
 
 ## Layer modules
 
-`macroforecast.core.layers.l{0..8}` (plus `l{1,2,3,4}_5` diagnostics) hold the
-canonical schema (`LayerImplementationSpec`) for each layer. Runtime
-materialization helpers live in `macroforecast.core.runtime`:
+`macroforecast.layers.*` holds the canonical layer schema and op implementations.
+`macroforecast.core.layers` owns the layer registry and keeps thin compatibility
+modules at `macroforecast.core.layers.l{0..8}` plus `l{1,2,3,4}_5` for older
+imports. Runtime materialization helpers live in `macroforecast.core.runtime`:
 
 - `materialize_l1`, `materialize_l2`, `materialize_l3_minimal`,
   `materialize_l4_minimal`, `materialize_l5_minimal`,

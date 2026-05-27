@@ -18,7 +18,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _example(name: str) -> str:
-    return (ROOT / "examples" / "recipes" / name).read_text()
+    path = ROOT / "examples" / "recipes" / name
+    if not path.exists():
+        path = ROOT / "docs" / "recipe-snippets" / name
+    return path.read_text()
 
 
 def _base_nodes(extra_x, y_params=None):

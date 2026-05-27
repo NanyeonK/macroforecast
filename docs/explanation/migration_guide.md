@@ -116,8 +116,11 @@ No value changes are required — only key names changed.
 
 | Old import | Canonical import | Status |
 |-----------|-----------------|--------|
-| `import macroforecast.interpretation` | `from macroforecast.layers.l7_interpretation import ...` | SHIM EXISTS in v0.9.x — works but emits deprecation; use canonical |
-| `import macroforecast.recipes` | `from macroforecast.layers import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.models` | `from macroforecast.layers.l4_models import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.preprocessing` | `from macroforecast.layers.l2_preprocessing import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.interpretation` | `from macroforecast.layers.l7_interpretation import ...` | SHIM EXISTS in v0.9.x |
+| `from macroforecast.core.layers.l3 import ...` | `from macroforecast.layers.l3_features.schema import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.recipes` | `from macroforecast.api import ...` | SHIM EXISTS in v0.9.x |
 
 ### Always-current paths
 

@@ -24,11 +24,15 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.custom`` -- user-defined model / preprocessor / feature registration
 - ``macroforecast.defaults`` -- default profile dict template
 - ``macroforecast.layers.l2_preprocessing`` -- preprocessing contract helpers
+- ``macroforecast.preprocessing`` -- compatibility alias for preprocessing helpers
 - ``macroforecast.layers.l1_data`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
+- ``macroforecast.models`` -- compatibility alias for promoted L4 model classes
+- ``macroforecast.feature_selection`` -- promoted L3 selector classes
+- ``macroforecast.transforms`` -- promoted transform callables
+- ``macroforecast.interpretation`` -- promoted L7 interpretation classes
 - ``macroforecast.layers.l3_features`` -- feature engineering ops, transforms, selection (v0.10 restructure)
 - ``macroforecast.layers.l3_5_diagnostic`` -- feature diagnostics schema (v0.10 restructure)
 - ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
-- ``macroforecast.layers.l4_models.tuning`` -- hyperparameter search engines
 """
 
 from __future__ import annotations
@@ -139,6 +143,8 @@ _LAZY_MODULES: tuple[str, ...] = (
     "recipes",
     "api",
     # Promoted in v0.9.5: public namespaces
+    "models",
+    "preprocessing",
     "feature_selection",
     "transforms",
     "interpretation",
