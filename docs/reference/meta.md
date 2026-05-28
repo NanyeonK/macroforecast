@@ -27,9 +27,9 @@ file into the same `macroforecast.meta` functions.
 
 | Key | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `random_seed` | `int | None` | `42` | Seed used by stochastic runtime components when no run-specific seed is supplied. `None` leaves stochastic components unseeded. |
-| `n_jobs` | `int | "auto"` | `1` | Default worker count. `1` means serial execution; `"auto"` lets the runtime choose a bounded worker count. |
-| `on_error` | `"raise" | "continue"` | `"raise"` | Default cell failure behavior. `"raise"` stops on failure; `"continue"` records the failure and continues where supported. |
+| `random_seed` | <code>int &#124; None</code> | `42` | Seed used by stochastic runtime components when no run-specific seed is supplied. `None` leaves stochastic components unseeded. |
+| `n_jobs` | <code>int &#124; "auto"</code> | `1` | Default worker count. `1` means serial execution; `"auto"` lets the runtime choose a bounded worker count. |
+| `on_error` | <code>"raise" &#124; "continue"</code> | `"raise"` | Default cell failure behavior. `"raise"` stops on failure; `"continue"` records the failure and continues where supported. |
 | `verbose` | `int` | `0` | Default verbosity level for future runtime logging surfaces. |
 
 The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
@@ -68,9 +68,9 @@ All inputs are keyword-only. Omitted inputs keep their current values.
 
 | Name | Type | Default if omitted | Allowed Values | Meaning |
 | --- | --- | --- | --- | --- |
-| `random_seed` | `int | None` | keep current value | non-negative integer or `None` | Sets the default seed for stochastic components. |
-| `n_jobs` | `int | "auto"` | keep current value | positive integer or `"auto"` | Sets the default worker count. |
-| `on_error` | `"raise" | "continue"` | keep current value | `"raise"`, `"continue"` | Sets default failure behavior. |
+| `random_seed` | <code>int &#124; None</code> | keep current value | non-negative integer or `None` | Sets the default seed for stochastic components. |
+| `n_jobs` | <code>int &#124; "auto"</code> | keep current value | positive integer or `"auto"` | Sets the default worker count. |
+| `on_error` | <code>"raise" &#124; "continue"</code> | keep current value | `"raise"`, `"continue"` | Sets default failure behavior. |
 | `verbose` | `int` | keep current value | non-negative integer | Sets default verbosity. |
 
 ### Output
@@ -166,9 +166,9 @@ Returns the value for `name`.
 
 | `name` | Output Type |
 | --- | --- |
-| `"random_seed"` | `int | None` |
-| `"n_jobs"` | `int | "auto"` |
-| `"on_error"` | `"raise" | "continue"` |
+| `"random_seed"` | <code>int &#124; None</code> |
+| `"n_jobs"` | <code>int &#124; "auto"</code> |
+| `"on_error"` | <code>"raise" &#124; "continue"</code> |
 | `"verbose"` | `int` |
 
 ### Errors
@@ -248,9 +248,9 @@ The inputs match `configure`.
 
 | Name | Type | Default if omitted | Allowed Values | Meaning |
 | --- | --- | --- | --- | --- |
-| `random_seed` | `int | None` | keep current value inside context | non-negative integer or `None` | Temporary default seed. |
-| `n_jobs` | `int | "auto"` | keep current value inside context | positive integer or `"auto"` | Temporary worker count. |
-| `on_error` | `"raise" | "continue"` | keep current value inside context | `"raise"`, `"continue"` | Temporary failure behavior. |
+| `random_seed` | <code>int &#124; None</code> | keep current value inside context | non-negative integer or `None` | Temporary default seed. |
+| `n_jobs` | <code>int &#124; "auto"</code> | keep current value inside context | positive integer or `"auto"` | Temporary worker count. |
+| `on_error` | <code>"raise" &#124; "continue"</code> | keep current value inside context | `"raise"`, `"continue"` | Temporary failure behavior. |
 | `verbose` | `int` | keep current value inside context | non-negative integer | Temporary verbosity. |
 
 ### Output
