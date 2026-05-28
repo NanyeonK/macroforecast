@@ -151,8 +151,6 @@ import macroforecast.recipes as mf_recipes
 result = mf_recipes.run("path/to/my_study.yaml", output_directory="./out/tut02/")
 ```
 
-For full recipe syntax, see the recipe DSL reference. The next tutorial,
-{doc}`03_custom_model`, shows how to define your own model class and use it
-directly in the same `TimeSeriesSplit` loop. For systematic model sweeps in the
-recipe pipeline, see {doc}`../how_to/sweep_over_models`. For the conceptual
-comparison of standalone and recipe modes, see {doc}`two_entry_points`.
+The next tutorial, {doc}`03_custom_model`, shows how to define your own model
+class and use it directly in the same `TimeSeriesSplit` loop. For systematic
+model sweeps, see {doc}`../how_to/sweep_over_models`.

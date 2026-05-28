@@ -1,10 +1,17 @@
 # macroforecast.data
 
-`macroforecast.data` loads or normalizes a data panel and then attaches run-level
-data choices to that panel. It does not transform, impute, scale, engineer
-features, fit models, or evaluate forecasts.
+[Back to reference](index.md)
 
-The public flow is:
+`macroforecast.data` is the data entry point for the package. It loads official
+or user-supplied data, normalizes it to one pandas panel contract, and attaches
+source metadata. It also creates run-level data specifications and combines
+national FRED-MD/FRED-QD data with state-level FRED-SD panels.
+
+This module does not apply stationarity transforms, outlier rules, imputation,
+feature engineering, model fitting, or evaluation. Those steps happen later.
+The main output is always a `DataBundle` or `DataSpec`.
+
+The usual flow is:
 
 ```python
 import macroforecast as mf
@@ -53,6 +60,32 @@ Metadata is explicit on `DataBundle.metadata`. The panel also carries
 FRED-QD transform codes are attached to
 `panel.attrs["macroforecast_transform_codes"]`; preprocessing is responsible
 for using them.
+
+### Metadata Contract
+
+Every loader writes a metadata dictionary with these common keys.
+
+| Key | Type | Meaning |
+| --- | --- | --- |
+| `dataset` | `str` | Dataset identifier such as `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`. |
+| `source_family` | `str` | Source family. Official loaders use `fred-md`, `fred-qd`, `fred-sd`, or `combined`. |
+| `frequency` | `str` | Loader-level frequency label: `monthly`, `quarterly`, `state_monthly`, `mixed`, or the chosen combined frequency. |
+| `version_mode` | `str` | `current`, `vintage`, or `mixed` for combined inputs with different modes. |
+| `vintage` | `str` or `None` | Requested vintage label in `YYYY-MM` form, or `None` for current data. |
+| `data_through` | `str` or `None` | Last date present in the loaded panel, formatted as `YYYY-MM`. |
+| `support_tier` | `str` | `stable` for official loaders, `provisional` for user-supplied files. |
+| `parse_notes` | `tuple[str, ...]` | Loader notes, including discouraged frequency alignments for combined datasets. |
+| `artifact` | `dict` or `None` | Raw-file provenance for single-source loads; combined bundles use `None`. |
+| `transform_codes` | `dict[str, int]` | Official FRED-MD/FRED-QD t-codes when available. FRED-SD has no official t-code map. |
+
+Combined bundles add:
+
+| Key | Type | Meaning |
+| --- | --- | --- |
+| `combined_sources` | `list[dict]` | Full metadata dictionaries from the source bundles. |
+| `source_by_column` | `dict[str, str]` | Source dataset for each output column. |
+| `frequency_conversion_warnings` | `list[dict]` | Records of monthly-to-quarterly or quarterly-to-monthly conversions. |
+| `alignment` | `dict` | Chosen target frequency, alignment rules, and source-level alignment summaries. |
 
 ## DataBundle
 
@@ -124,7 +157,11 @@ macroforecast.data.load_fred_md(
 
 ### Output
 
-Returns `DataBundle` with monthly FRED-MD panel and metadata.
+Returns `DataBundle` with a monthly FRED-MD panel and metadata. The official
+CSV transform row is parsed into `metadata["transform_codes"]` and
+`panel.attrs["macroforecast_transform_codes"]`.
+
+See [FRED-MD](fred_md.md) for dataset-specific details.
 
 ## load_fred_qd
 
@@ -140,7 +177,11 @@ macroforecast.data.load_fred_qd(
 ) -> DataBundle
 ```
 
-Returns a quarterly canonical panel.
+Returns a quarterly canonical panel. The official CSV transform row is parsed
+into `metadata["transform_codes"]` and
+`panel.attrs["macroforecast_transform_codes"]`.
+
+See [FRED-QD](fred_qd.md) for dataset-specific details.
 
 ## load_fred_sd
 
@@ -165,7 +206,195 @@ macroforecast.data.load_fred_sd(
 | `states` | <code>list[str] &#124; None</code> | `None` | Optional state subset. |
 | `variables` | <code>list[str] &#124; None</code> | `None` | Optional FRED-SD variable subset. |
 
-FRED-SD columns are wide variable-state IDs such as `UR_CA`.
+FRED-SD columns are wide variable-state IDs such as `UR_CA`. The loader also
+adds `panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]`, which
+records each column's state, FRED-SD variable, observed date range, non-missing
+count, and native frequency inferred from the official series workbook.
+
+See [FRED-SD](fred_sd.md) for monthly/quarterly series details and t-code
+limitations.
+
+## load_fred_md_sd
+
+Load FRED-MD and FRED-SD, align them to one panel, and return `DataBundle`.
+
+```python
+macroforecast.data.load_fred_md_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | pathlib.Path | None = None,
+    local_fred_md_source: str | pathlib.Path | None = None,
+    local_fred_sd_source: str | pathlib.Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+    frequency: str = "monthly",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    monthly_to_quarterly: str = "quarterly_average",
+) -> DataBundle
+```
+
+### Purpose
+
+Use this when the outcome or main state panel is monthly and national
+macroeconomic controls should come from FRED-MD. This is the recommended
+combined dataset for monthly state analysis.
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `vintage` | <code>str &#124; None</code> | `None` | Vintage label shared across FRED-MD and FRED-SD. |
+| `force` | `bool` | `False` | Re-download or re-copy raw sources. |
+| `cache_root` | path-like or `None` | `None` | Raw cache root used by both loaders. |
+| `local_fred_md_source` | path-like or `None` | `None` | Local FRED-MD CSV source. |
+| `local_fred_sd_source` | path-like or `None` | `None` | Local FRED-SD workbook or CSV source. |
+| `states` | <code>list[str] &#124; None</code> | `None` | FRED-SD state subset. |
+| `variables` | <code>list[str] &#124; None</code> | `None` | FRED-SD variable subset. |
+| `frequency` | `str` | `"monthly"` | `"monthly"`, `"quarterly"`, or `"native"`. Quarterly is supported but not recommended for this loader. |
+| `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | Rule used if an included FRED-SD series is quarterly and the target panel is monthly. |
+| `monthly_to_quarterly` | `str` | `"quarterly_average"` | Rule used only when `frequency="quarterly"`. |
+
+### Output
+
+Returns a combined `DataBundle` with:
+
+- `metadata["dataset"] == "fred_md+fred_sd"`
+- `metadata["source_family"] == "combined"`
+- `metadata["frequency"] == frequency`
+- FRED-MD official t-codes in `metadata["transform_codes"]`
+- FRED-SD series metadata preserved in `panel.attrs["macrocast_reports"]`
+- any frequency conversions recorded in `metadata["frequency_conversion_warnings"]`
+
+If a quarterly FRED-SD series is included in a monthly panel, the function
+emits a `UserWarning` and records the conversion. The default
+`quarterly_to_monthly="repeat_within_quarter"` assigns the quarterly value to
+each month inside the quarter.
+
+## load_fred_qd_sd
+
+Load FRED-QD and FRED-SD, align them to one panel, and return `DataBundle`.
+
+```python
+macroforecast.data.load_fred_qd_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | pathlib.Path | None = None,
+    local_fred_qd_source: str | pathlib.Path | None = None,
+    local_fred_sd_source: str | pathlib.Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+    frequency: str = "quarterly",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    monthly_to_quarterly: str = "quarterly_average",
+) -> DataBundle
+```
+
+### Purpose
+
+Use this when the target or outcome is quarterly and national controls should
+come from FRED-QD. This is the recommended combined dataset for quarterly
+state-level analysis.
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `vintage` | <code>str &#124; None</code> | `None` | Vintage label shared across FRED-QD and FRED-SD. |
+| `force` | `bool` | `False` | Re-download or re-copy raw sources. |
+| `cache_root` | path-like or `None` | `None` | Raw cache root used by both loaders. |
+| `local_fred_qd_source` | path-like or `None` | `None` | Local FRED-QD CSV source. |
+| `local_fred_sd_source` | path-like or `None` | `None` | Local FRED-SD workbook or CSV source. |
+| `states` | <code>list[str] &#124; None</code> | `None` | FRED-SD state subset. |
+| `variables` | <code>list[str] &#124; None</code> | `None` | FRED-SD variable subset. |
+| `frequency` | `str` | `"quarterly"` | `"quarterly"`, `"monthly"`, or `"native"`. Monthly is supported but not recommended for this loader. |
+| `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | Rule used only when `frequency="monthly"`. |
+| `monthly_to_quarterly` | `str` | `"quarterly_average"` | Rule used if an included FRED-SD series is monthly and the target panel is quarterly. |
+
+### Output
+
+Returns a combined `DataBundle` with:
+
+- `metadata["dataset"] == "fred_qd+fred_sd"`
+- `metadata["source_family"] == "combined"`
+- `metadata["frequency"] == frequency`
+- FRED-QD official t-codes in `metadata["transform_codes"]`
+- FRED-SD series metadata preserved in `panel.attrs["macrocast_reports"]`
+- any frequency conversions recorded in `metadata["frequency_conversion_warnings"]`
+
+If a monthly FRED-SD series is included in a quarterly panel, the function
+emits a `UserWarning` and records the conversion. The default
+`monthly_to_quarterly="quarterly_average"` averages monthly observations inside
+each quarter.
+
+## combine
+
+Combine already-loaded `DataBundle` objects into one canonical panel.
+
+```python
+macroforecast.data.combine(
+    *bundles,
+    dataset: str | None = None,
+    frequency: str = "native",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    monthly_to_quarterly: str = "quarterly_average",
+) -> DataBundle
+```
+
+### Input
+
+| Name | Type | Default | Choices |
+| --- | --- | --- | --- |
+| `*bundles` | `DataBundle` | required | Two or more bundles to concatenate by date index. |
+| `dataset` | `str` or `None` | joined source names | Output dataset label. |
+| `frequency` | `str` | `"native"` | `"native"`, `"monthly"`, or `"quarterly"`. |
+| `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | `"repeat_within_quarter"`, `"quarter_end_ffill"`, `"linear_interpolation"`. |
+| `monthly_to_quarterly` | `str` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"`. |
+
+### Frequency Conversion Rules
+
+| Direction | Rule | Meaning |
+| --- | --- | --- |
+| quarterly to monthly | `repeat_within_quarter` | Assign the quarterly value to each month in that quarter. |
+| quarterly to monthly | `quarter_end_ffill` | Place the quarterly value at quarter end and forward-fill after it is observed. |
+| quarterly to monthly | `linear_interpolation` | Interpolate between observed quarter-end values on the monthly grid. |
+| monthly to quarterly | `quarterly_average` | Average monthly observations in the quarter. |
+| monthly to quarterly | `quarterly_endpoint` | Use the last monthly observation in the quarter. |
+| monthly to quarterly | `quarterly_sum` | Sum monthly observations in the quarter. |
+
+Weekly data are not supported in combined official-data bundles. If a source
+contains a native weekly column, `combine()` raises `ValueError`.
+
+### Output
+
+Returns `DataBundle`. The panel is a column-wise concatenation after frequency
+alignment. Duplicate output column names raise `ValueError`.
+
+### Frequency Conversion Warnings
+
+When `combine()` changes a source column's native frequency, it emits
+`UserWarning` and records the same information in
+`metadata["frequency_conversion_warnings"]`.
+
+Each record has:
+
+| Key | Type | Meaning |
+| --- | --- | --- |
+| `dataset` | `str` | Source dataset whose columns were converted. |
+| `from_frequency` | `str` | Native frequency before alignment. |
+| `to_frequency` | `str` | Combined panel frequency. |
+| `rule` | `str` | Alignment rule used. |
+| `variables` | `list[str]` | Variable-level names, e.g. `["NQGSP"]` for `NQGSP_CA`. |
+| `columns` | `list[str]` | Exact converted panel columns. |
+| `n_columns` | `int` | Number of converted columns. |
+
+Example warning:
+
+```text
+fred_sd monthly variables were aligned to quarterly using quarterly_average:
+UR, ICLAIMS (102 columns).
+```
 
 ## load_custom_csv
 
@@ -312,3 +541,8 @@ target, targets, horizons, sample dates, predictors, and panel summary.
 `list_vintages(dataset, start, end)` returns candidate vintage labels. The
 selected vintage is passed to `load_fred_md`, `load_fred_qd`, or `load_fred_sd`
 through `vintage=`.
+
+## Official Source Pages
+
+- FRED-MD and FRED-QD source page: <https://www.stlouisfed.org/research/economists/mccracken/fred-databases>
+- FRED-SD source page: <https://www.stlouisfed.org/research/economists/owyang/fred-sd>

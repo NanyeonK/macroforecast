@@ -1,8 +1,8 @@
 # macroforecast
 
-Run macro-forecasting studies on **FRED-MD / FRED-QD / FRED-SD** (or your
-own data) with reproducible YAML recipes — or call every layer operation
-directly as a Python callable.
+Load macroeconomic panels from **FRED-MD / FRED-QD / FRED-SD** or your own
+files, configure study-wide defaults, and build forecasting workflows through
+the public Python API.
 
 ::::{grid} 1 2 2 2
 :gutter: 3
@@ -20,24 +20,22 @@ install through your first complete study.
 :link: how_to/index
 :link-type: doc
 
-Task-specific recipes for custom models, data ingestion, hooks,
-and contributing to the package.
+Task-specific guides for data ingestion, custom models, hooks, and contributing
+to the package.
 :::
 
 :::{grid-item-card} Reference
 :link: reference/index
 :link-type: doc
 
-Complete schema documentation — recipe options, standalone functions,
-architecture design, and the encyclopedia.
+Function-level API documentation for the public package surface.
 :::
 
 :::{grid-item-card} Explanation
 :link: explanation/index
 :link-type: doc
 
-Background reading — design rationale, cross-layer contracts, and
-conceptual guides.
+Background reading on design rationale, reproducibility, and package concepts.
 :::
 
 ::::

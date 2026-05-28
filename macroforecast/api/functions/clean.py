@@ -326,10 +326,12 @@ def em_factor_impute_clean(
     panel: pd.DataFrame,
     *,
     n_factors: int = 8,
-    max_iter: int = 20,
-    tol: float = 1e-4,
+    max_iter: int = 50,
+    tol: float = 1e-6,
+    factor_selection: str = "baing_p2",
+    demean: int = 2,
 ) -> pd.DataFrame:
-    """Impute missing values using the McCracken-Ng PCA-EM algorithm (fixed rank).
+    """Impute missing values using the McCracken-Ng PCA-EM algorithm.
 
     Parameters
     ----------
@@ -337,12 +339,22 @@ def em_factor_impute_clean(
         Input panel. Each column is a variable; rows are time periods.
         Series is promoted to a single-column DataFrame internally.
     n_factors : int, default 8
-        Rank for SVD truncation. McCracken-Ng production default is 8.
-        Must be >= 1.
-    max_iter : int, default 20
+        Maximum number of factors considered. With the default
+        ``factor_selection="baing_p2"``, this is the Bai-Ng search cap
+        ``kmax`` used by the FRED-MD Matlab code. With
+        ``factor_selection="fixed"``, it is the fixed rank.
+    max_iter : int, default 50
         Maximum number of EM iterations. Must be >= 1.
-    tol : float, default 1e-4
-        Convergence tolerance (relative Frobenius norm change). Must be > 0.
+    tol : float, default 1e-6
+        Convergence tolerance for the relative change in fitted values.
+        Must be > 0.
+    factor_selection : str, default "baing_p2"
+        Factor-count rule. ``"baing_p2"`` matches the FRED-MD Matlab
+        default ``jj=2``. ``"baing_p1"`` and ``"baing_p3"`` are also
+        available. ``"fixed"`` preserves the old fixed-rank behavior.
+    demean : int, default 2
+        EM standardization rule from ``factors_em.m``. ``2`` means demean
+        and standardize before principal components.
 
     Returns
     -------
@@ -352,12 +364,11 @@ def em_factor_impute_clean(
 
     Notes
     -----
-    Algorithm (bit-exact with ``_pca_em_imputation(panel, n_factors=n_factors,
-    max_iter=max_iter, tol=tol)`` in runtime):
-
-    Calls ``_pca_em_imputation`` from ``macroforecast.core.runtime`` directly.
-    The rank is clamped internally to ``min(n_factors, min(T,K) - 1)``.
-    If the effective rank < 1, falls back to per-column mean imputation.
+    The default path follows ``factors_em.m`` from the public FRED-MD
+    Matlab code: fill initial missing values with column means, demean and
+    standardize, select the factor count with Bai-Ng PC_p2 up to ``kmax=8``,
+    update missing values from factor predictions, and iterate until the
+    fitted values converge.
 
     Equivalent recipe configuration::
 
@@ -365,6 +376,10 @@ def em_factor_impute_clean(
           imputation_policy: em_factor
           leaf_config:
             em_n_factors: 8
+            em_factor_selection: baing_p2
+            em_demean: 2
+            em_max_iter: 50
+            em_tolerance: 1e-6
 
     Examples
     --------
@@ -392,9 +407,178 @@ def em_factor_impute_clean(
         raise ValueError(f"max_iter must be >= 1; got {max_iter!r}")
     if tol <= 0:
         raise ValueError(f"tol must be > 0; got {tol!r}")
+    if demean not in {0, 1, 2, 3}:
+        raise ValueError(f"demean must be one of 0, 1, 2, 3; got {demean!r}")
 
-    from macroforecast.core.runtime import _pca_em_imputation  # noqa: PLC0415
-    return _pca_em_imputation(panel, n_factors=n_factors, max_iter=max_iter, tol=tol)
+    selection = factor_selection.lower()
+    if selection in {"fixed", "fixed_rank"}:
+        from macroforecast.core.runtime import _pca_em_imputation  # noqa: PLC0415
+
+        return _pca_em_imputation(panel, n_factors=n_factors, max_iter=max_iter, tol=tol)
+    jj = _factor_selection_to_jj(selection)
+    return _fred_md_em_factor_impute(
+        panel,
+        kmax=n_factors,
+        jj=jj,
+        demean=demean,
+        max_iter=max_iter,
+        tol=tol,
+    )
+
+
+def _fred_md_em_factor_impute(
+    panel: pd.DataFrame,
+    *,
+    kmax: int,
+    jj: int,
+    demean: int,
+    max_iter: int,
+    tol: float,
+) -> pd.DataFrame:
+    numeric = panel.select_dtypes("number")
+    if numeric.empty:
+        return panel
+    matrix = numeric.to_numpy(dtype=float)
+    missing = np.isnan(matrix)
+    if not missing.any():
+        return panel
+    if (missing.sum(axis=1) == matrix.shape[1]).any():
+        raise ValueError(
+            "em_factor cannot process an all-missing row; run "
+            "handle_transform_missing(..., method='fred_md') before imputation"
+        )
+    if (missing.sum(axis=0) == matrix.shape[0]).any():
+        raise ValueError("em_factor cannot process an all-missing column")
+
+    means = np.nanmean(matrix, axis=0)
+    x2 = matrix.copy()
+    x2[missing] = np.take(means, np.where(missing)[1])
+
+    x3, center, scale = _em_transform_data(x2, demean)
+    factor_count = _baing_factor_count(x3, kmax=kmax, jj=jj)
+    chat = _pc2_chat(x3, factor_count)
+    previous = chat.copy()
+
+    for _ in range(max_iter):
+        predicted = chat * scale + center
+        x2 = matrix.copy()
+        x2[missing] = predicted[missing]
+
+        x3, center, scale = _em_transform_data(x2, demean)
+        factor_count = _baing_factor_count(x3, kmax=kmax, jj=jj)
+        chat = _pc2_chat(x3, factor_count)
+        denom = max(float(np.sum(previous * previous)), 1e-12)
+        error = float(np.sum((chat - previous) ** 2) / denom)
+        previous = chat.copy()
+        if error <= tol:
+            break
+
+    result = panel.copy()
+    result[numeric.columns] = x2
+    return result
+
+
+def _factor_selection_to_jj(value: str) -> int:
+    aliases = {
+        "baing_p1": 1,
+        "pc_p1": 1,
+        "p1": 1,
+        "baing_p2": 2,
+        "pc_p2": 2,
+        "p2": 2,
+        "fred_md": 2,
+        "mccracken_ng_2016": 2,
+        "baing_p3": 3,
+        "pc_p3": 3,
+        "p3": 3,
+    }
+    if value not in aliases:
+        choices = sorted([*aliases, "fixed", "fixed_rank"])
+        raise ValueError(f"factor_selection must be one of {choices}; got {value!r}")
+    return aliases[value]
+
+
+def _em_transform_data(matrix: np.ndarray, demean: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    rows, cols = matrix.shape
+    if demean == 0:
+        center = np.zeros((rows, cols))
+        scale = np.ones((rows, cols))
+        transformed = matrix.copy()
+    elif demean == 1:
+        center = np.tile(matrix.mean(axis=0), (rows, 1))
+        scale = np.ones((rows, cols))
+        transformed = matrix - center
+    elif demean == 2:
+        center = np.tile(matrix.mean(axis=0), (rows, 1))
+        scale_values = matrix.std(axis=0, ddof=1)
+        if np.any(~np.isfinite(scale_values)) or np.any(scale_values == 0):
+            raise ValueError("em_factor requires finite non-zero column standard deviations")
+        scale = np.tile(scale_values, (rows, 1))
+        transformed = (matrix - center) / scale
+    elif demean == 3:
+        center = np.vstack([matrix[: row + 1].mean(axis=0) for row in range(rows)])
+        scale_values = matrix.std(axis=0, ddof=1)
+        if np.any(~np.isfinite(scale_values)) or np.any(scale_values == 0):
+            raise ValueError("em_factor requires finite non-zero column standard deviations")
+        scale = np.tile(scale_values, (rows, 1))
+        transformed = (matrix - center) / scale
+    else:  # pragma: no cover - guarded by caller
+        raise ValueError(f"demean must be one of 0, 1, 2, 3; got {demean!r}")
+    return transformed, center, scale
+
+
+def _baing_factor_count(matrix: np.ndarray, *, kmax: int, jj: int) -> int:
+    rows, cols = matrix.shape
+    kmax_eff = max(1, min(int(kmax), rows, cols))
+    total = rows * cols
+    total_margin = rows + cols
+    factors = np.arange(1, kmax_eff + 1)
+    if jj == 1:
+        penalty = np.log(total / total_margin) * factors * total_margin / total
+    elif jj == 2:
+        penalty = (total_margin / total) * np.log(min(rows, cols)) * factors
+    elif jj == 3:
+        gct = min(rows, cols)
+        penalty = factors * np.log(gct) / gct
+    else:  # pragma: no cover - guarded by caller
+        raise ValueError(f"jj must be one of 1, 2, 3; got {jj!r}")
+
+    fhat0, lambda0 = _pc_components(matrix)
+    values: list[float] = []
+    for count, term in zip(factors, penalty, strict=True):
+        fhat = fhat0[:, :count]
+        loadings = lambda0[:, :count]
+        residual = matrix - fhat @ loadings.T
+        sigma = float(np.sum(residual * residual) / total)
+        values.append(np.log(max(sigma, 1e-300)) + float(term))
+    sigma_zero = float(np.sum(matrix * matrix) / total)
+    values.append(np.log(max(sigma_zero, 1e-300)))
+    selected = int(np.argmin(values)) + 1
+    return selected if selected <= kmax_eff else 0
+
+
+def _pc_components(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    rows, cols = matrix.shape
+    if rows < cols:
+        u, _, _ = np.linalg.svd(matrix @ matrix.T, full_matrices=False)
+        fhat0 = np.sqrt(rows) * u
+        lambda0 = matrix.T @ fhat0 / rows
+    else:
+        u, _, _ = np.linalg.svd(matrix.T @ matrix, full_matrices=False)
+        lambda0 = np.sqrt(cols) * u
+        fhat0 = matrix @ lambda0 / cols
+    return fhat0, lambda0
+
+
+def _pc2_chat(matrix: np.ndarray, n_factors: int) -> np.ndarray:
+    if n_factors <= 0:
+        return np.zeros_like(matrix)
+    cols = matrix.shape[1]
+    u, _, _ = np.linalg.svd(matrix.T @ matrix, full_matrices=False)
+    n_factors = min(n_factors, u.shape[1])
+    loadings = u[:, :n_factors] * np.sqrt(cols)
+    factors = matrix @ loadings / cols
+    return factors @ loadings.T
 
 
 def em_multivariate_impute_clean(
@@ -780,10 +964,12 @@ def apply_tcode_transform(
     * 1 = level (identity)
     * 2 = first difference ``y_t - y_{t-1}``
     * 3 = second difference ``(y_t - y_{t-1}) - (y_{t-1} - y_{t-2})``
-    * 4 = log (safe: NaN for <= 0 values)
+    * 4 = natural log; if the series minimum is below 1e-6, the whole
+      transformed series is NaN, matching ``prepare_missing.m``
     * 5 = first difference of log (≈ growth rate)
     * 6 = second difference of log
-    * 7 = percentage change ``y_t / y_{t-1} - 1``
+    * 7 = first difference of percent change
+      ``(x_t / x_{t-1} - 1) - (x_{t-1} / x_{t-2} - 1)``
 
     Algorithm (bit-exact with ``_apply_transform`` / ``_apply_tcode``
     in runtime):

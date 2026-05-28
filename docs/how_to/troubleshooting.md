@@ -199,8 +199,8 @@ print(l3[0].X_final.head())                       # L3 features
 print(l3[0].y_final.head())                       # L3 target
 ```
 
-Full guide:
-{doc}`partial_layer_execution`.
+This runtime debugging path is part of the old recipe executor surface and is
+being rewritten with the callable API.
 
 ---
 

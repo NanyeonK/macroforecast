@@ -1,25 +1,16 @@
 # Explanation
 
-These pages explain the design rationale and architectural decisions behind
-macroforecast. They answer the question "why is it built this way?" rather
-than "how do I use it?". Read them to build a mental model before working
-with complex recipes or extending the package.
+These pages explain design rationale and package concepts behind
+macroforecast. They answer "why is it built this way?" rather than "what does
+this function accept?". Exact callable contracts live in the reference pages.
 
 ```{toctree}
 :maxdepth: 1
 
-layer_design
 bit_exact_replicate
 honesty_pass
-recipe_to_run
-architecture/index
 foundation
 philosophy
-layer_boundary_contract
-recipe_layers
-artifacts_and_manifest
 reproducibility
 terminology
-deprecation_timeline
-migration_guide
 ```

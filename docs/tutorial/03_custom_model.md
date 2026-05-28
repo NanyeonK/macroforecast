@@ -189,5 +189,4 @@ mf_custom.register_model("constant_trend_plus_ar", constant_trend_plus_ar)
 After registration, the name `"constant_trend_plus_ar"` is accepted as a
 `model_family` value in any recipe running in the same Python process. For
 full details on the registration contract and context fields, see
-{doc}`../how_to/add_custom_model`. For the conceptual comparison of standalone
-and recipe modes, see {doc}`two_entry_points`.
+{doc}`../how_to/add_custom_model`.

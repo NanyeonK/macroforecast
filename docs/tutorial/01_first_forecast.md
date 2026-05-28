@@ -142,7 +142,5 @@ data:
 result = mf_recipes.run(recipe, output_directory="./out/tut01/")
 ```
 
-For full recipe syntax, see the recipe DSL reference. For the conceptual
-comparison of standalone and recipe modes, see {doc}`two_entry_points`. The
-next tutorial, {doc}`02_full_study`, extends this setup to a three-model
+The next tutorial, {doc}`02_full_study`, extends this setup to a three-model
 comparison using `TimeSeriesSplit` and a five-feature macro panel.

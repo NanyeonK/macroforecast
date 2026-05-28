@@ -16,6 +16,7 @@ import tempfile
 from typing import Any, Literal, cast
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
+import warnings
 import zipfile
 
 import pandas as pd
@@ -44,6 +45,8 @@ _FIRST_VINTAGE: dict[DatasetId, str] = {
     "fred_md": "1999-01",
     "fred_qd": "2005-01",
     "fred_sd": "2005-06",
+    "fred_md+fred_sd": "2005-06",
+    "fred_qd+fred_sd": "2005-06",
 }
 
 
@@ -434,6 +437,84 @@ def load_fred_sd(
     )
 
 
+def load_fred_md_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_fred_md_source: str | Path | None = None,
+    local_fred_sd_source: str | Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+    frequency: str = "monthly",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    monthly_to_quarterly: str = "quarterly_average",
+) -> DataBundle:
+    """Load FRED-MD plus FRED-SD as one canonical data bundle."""
+
+    national = load_fred_md(
+        vintage=vintage,
+        force=force,
+        cache_root=cache_root,
+        local_source=local_fred_md_source,
+    )
+    regional = load_fred_sd(
+        vintage=vintage,
+        force=force,
+        cache_root=cache_root,
+        local_source=local_fred_sd_source,
+        states=states,
+        variables=variables,
+    )
+    return combine(
+        national,
+        regional,
+        dataset="fred_md+fred_sd",
+        frequency=frequency,
+        quarterly_to_monthly=quarterly_to_monthly,
+        monthly_to_quarterly=monthly_to_quarterly,
+    )
+
+
+def load_fred_qd_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_fred_qd_source: str | Path | None = None,
+    local_fred_sd_source: str | Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+    frequency: str = "quarterly",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    monthly_to_quarterly: str = "quarterly_average",
+) -> DataBundle:
+    """Load FRED-QD plus FRED-SD as one canonical data bundle."""
+
+    national = load_fred_qd(
+        vintage=vintage,
+        force=force,
+        cache_root=cache_root,
+        local_source=local_fred_qd_source,
+    )
+    regional = load_fred_sd(
+        vintage=vintage,
+        force=force,
+        cache_root=cache_root,
+        local_source=local_fred_sd_source,
+        states=states,
+        variables=variables,
+    )
+    return combine(
+        national,
+        regional,
+        dataset="fred_qd+fred_sd",
+        frequency=frequency,
+        quarterly_to_monthly=quarterly_to_monthly,
+        monthly_to_quarterly=monthly_to_quarterly,
+    )
+
+
 def load_custom_csv(
     path: str | Path,
     *,
@@ -669,12 +750,368 @@ def _custom_bundle(
     return bundle
 
 
+def combine(
+    *bundles: DataBundle,
+    dataset: str | None = None,
+    frequency: str = "native",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    monthly_to_quarterly: str = "quarterly_average",
+) -> DataBundle:
+    """Combine already-loaded data bundles into one canonical panel."""
+
+    if len(bundles) < 2:
+        raise ValueError("combine() requires at least two DataBundle objects")
+    target_frequency = _normalize_combined_frequency(frequency)
+    aligned_panels: list[pd.DataFrame] = []
+    combined_reports: dict[str, Any] = {}
+    combined_sources: list[dict[str, Any]] = []
+    frequency_conversion_warnings: list[dict[str, Any]] = []
+    transform_codes: dict[str, int] = {}
+    source_by_column: dict[str, str] = {}
+    seen_columns: set[str] = set()
+    alignment_reports: list[dict[str, Any]] = []
+
+    for index, bundle in enumerate(bundles):
+        if not isinstance(bundle, DataBundle):
+            raise TypeError("combine() expects DataBundle arguments")
+        source_dataset = str(bundle.metadata.get("dataset") or f"source_{index + 1}")
+        panel, alignment = _align_bundle_for_combination(
+            bundle,
+            frequency=target_frequency,
+            quarterly_to_monthly=quarterly_to_monthly,
+            monthly_to_quarterly=monthly_to_quarterly,
+        )
+        for record in alignment.get("frequency_conversions", ()):
+            frequency_conversion_warnings.append({"dataset": source_dataset, **dict(record)})
+        duplicate_columns = sorted(seen_columns.intersection(str(column) for column in panel.columns))
+        if duplicate_columns:
+            raise ValueError(f"combined data has duplicate columns: {duplicate_columns[:5]}")
+        seen_columns.update(str(column) for column in panel.columns)
+        aligned_panels.append(panel)
+        alignment_reports.append({"dataset": source_dataset, **alignment})
+        combined_sources.append(dict(bundle.metadata))
+        source_codes = dict(bundle.metadata.get("transform_codes", {}))
+        transform_codes.update({str(column): int(code) for column, code in source_codes.items() if str(column) in panel.columns})
+        for column in panel.columns:
+            source_by_column[str(column)] = source_dataset
+        _merge_macrocast_reports(combined_reports, panel.attrs.get("macrocast_reports", {}), source_dataset=source_dataset)
+
+    merged = pd.concat(aligned_panels, axis=1).sort_index()
+    output_dataset = dataset or "+".join(str(bundle.metadata.get("dataset") or f"source_{idx + 1}") for idx, bundle in enumerate(bundles))
+    parse_notes = _combined_parse_notes(output_dataset, target_frequency)
+    metadata = {
+        "dataset": output_dataset,
+        "source_family": "combined",
+        "frequency": target_frequency if target_frequency != "native" else "mixed",
+        "version_mode": _combined_version_mode(combined_sources),
+        "vintage": _combined_vintage(combined_sources),
+        "data_through": _data_through(merged),
+        "support_tier": "stable",
+        "parse_notes": tuple(parse_notes),
+        "artifact": None,
+        "transform_codes": transform_codes,
+        "combined_sources": combined_sources,
+        "source_by_column": source_by_column,
+        "frequency_conversion_warnings": frequency_conversion_warnings,
+        "alignment": {
+            "frequency": target_frequency,
+            "quarterly_to_monthly": quarterly_to_monthly,
+            "monthly_to_quarterly": monthly_to_quarterly,
+            "sources": alignment_reports,
+        },
+    }
+    if combined_reports:
+        merged.attrs["macrocast_reports"] = combined_reports
+    _emit_frequency_conversion_warnings(frequency_conversion_warnings)
+    return _bundle(merged, metadata)
+
+
 def _bundle(panel: pd.DataFrame, metadata: Mapping[str, Any]) -> DataBundle:
     frame = as_panel(panel, metadata=metadata)
     if metadata.get("transform_codes"):
         frame.attrs["macroforecast_transform_codes"] = dict(metadata["transform_codes"])
     frame.attrs["macroforecast_metadata"] = dict(metadata)
     return DataBundle(panel=frame, metadata=dict(metadata))
+
+
+def _normalize_combined_frequency(frequency: str) -> str:
+    aliases = {
+        "native": "native",
+        "mixed": "native",
+        "keep": "native",
+        "monthly": "monthly",
+        "month": "monthly",
+        "quarterly": "quarterly",
+        "quarter": "quarterly",
+    }
+    key = str(frequency).lower()
+    if key not in aliases:
+        raise ValueError("frequency must be one of ['native', 'monthly', 'quarterly']")
+    return aliases[key]
+
+
+def _align_bundle_for_combination(
+    bundle: DataBundle,
+    *,
+    frequency: str,
+    quarterly_to_monthly: str,
+    monthly_to_quarterly: str,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    panel = bundle.panel.copy()
+    if frequency == "native":
+        return panel, {"method": "native", "source_frequency": bundle.metadata.get("frequency")}
+    native_frequencies = _bundle_native_frequencies(bundle)
+    if any(value == "weekly" for value in native_frequencies.values()):
+        weekly_columns = [column for column, value in native_frequencies.items() if value == "weekly"]
+        raise ValueError(f"weekly columns are not supported in data combination: {weekly_columns[:5]}")
+    if frequency == "monthly":
+        conversions = _frequency_conversion_records(
+            native_frequencies,
+            from_frequency="quarterly",
+            to_frequency="monthly",
+            rule=quarterly_to_monthly,
+        )
+        aligned = _align_panel_to_monthly(
+            panel,
+            native_frequencies=native_frequencies,
+            quarterly_to_monthly=quarterly_to_monthly,
+        )
+    elif frequency == "quarterly":
+        conversions = _frequency_conversion_records(
+            native_frequencies,
+            from_frequency="monthly",
+            to_frequency="quarterly",
+            rule=monthly_to_quarterly,
+        )
+        aligned = _align_panel_to_quarterly(
+            panel,
+            native_frequencies=native_frequencies,
+            monthly_to_quarterly=monthly_to_quarterly,
+        )
+    else:  # pragma: no cover - guarded by _normalize_combined_frequency
+        raise ValueError(f"unknown combined frequency {frequency!r}")
+    aligned.attrs.update(dict(getattr(panel, "attrs", {}) or {}))
+    return aligned, {
+        "method": f"align_to_{frequency}",
+        "source_frequency": bundle.metadata.get("frequency"),
+        "native_frequency_counts": dict(sorted(Counter(native_frequencies.values()).items())),
+        "frequency_conversions": conversions,
+    }
+
+
+def _bundle_native_frequencies(bundle: DataBundle) -> dict[str, str]:
+    metadata_frequency = str(bundle.metadata.get("frequency", "")).lower()
+    if metadata_frequency == "monthly":
+        return {str(column): "monthly" for column in bundle.panel.columns}
+    if metadata_frequency == "quarterly":
+        return {str(column): "quarterly" for column in bundle.panel.columns}
+    report_frequencies = _fred_sd_frequency_map(bundle.panel)
+    if report_frequencies:
+        return {
+            str(column): report_frequencies.get(str(column), _infer_native_frequency(bundle.panel[column]))
+            for column in bundle.panel.columns
+        }
+    return {str(column): _infer_native_frequency(bundle.panel[column]) for column in bundle.panel.columns}
+
+
+def _fred_sd_frequency_map(panel: pd.DataFrame) -> dict[str, str]:
+    reports = getattr(panel, "attrs", {}).get("macrocast_reports", {})
+    if not isinstance(reports, Mapping):
+        return {}
+    report = reports.get("fred_sd_series_metadata", {})
+    if not isinstance(report, Mapping):
+        return {}
+    rows = report.get("series", ())
+    if not isinstance(rows, (list, tuple)):
+        return {}
+    result: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            continue
+        column = row.get("column")
+        frequency = row.get("native_frequency")
+        if column is not None and frequency:
+            result[str(column)] = str(frequency)
+    return result
+
+
+def _align_panel_to_monthly(
+    panel: pd.DataFrame,
+    *,
+    native_frequencies: Mapping[str, str],
+    quarterly_to_monthly: str,
+) -> pd.DataFrame:
+    index = _monthly_index(panel)
+    columns: dict[str, pd.Series] = {}
+    for column in panel.columns:
+        name = str(column)
+        series = panel[column].dropna()
+        native = native_frequencies.get(name, "unknown")
+        if native == "quarterly":
+            aligned = _quarterly_series_to_monthly(series, quarterly_to_monthly, index=index)
+        elif native in {"monthly", "unknown", "irregular"}:
+            aligned = _series_to_monthly(series)
+        else:
+            raise ValueError(f"cannot align {name!r} with native frequency {native!r} to monthly")
+        columns[name] = aligned.reindex(index)
+    return pd.DataFrame(columns, index=index)
+
+
+def _align_panel_to_quarterly(
+    panel: pd.DataFrame,
+    *,
+    native_frequencies: Mapping[str, str],
+    monthly_to_quarterly: str,
+) -> pd.DataFrame:
+    index = _quarterly_index(panel)
+    columns: dict[str, pd.Series] = {}
+    for column in panel.columns:
+        name = str(column)
+        series = panel[column].dropna()
+        native = native_frequencies.get(name, "unknown")
+        if native == "monthly":
+            aligned = _monthly_series_to_quarterly(series, monthly_to_quarterly)
+        elif native in {"quarterly", "unknown", "irregular"}:
+            aligned = _series_to_quarterly(series)
+        else:
+            raise ValueError(f"cannot align {name!r} with native frequency {native!r} to quarterly")
+        columns[name] = aligned.reindex(index)
+    return pd.DataFrame(columns, index=index)
+
+
+def _monthly_index(panel: pd.DataFrame) -> pd.DatetimeIndex:
+    index = pd.DatetimeIndex(panel.index)
+    start = index.min().to_period("M").to_timestamp()
+    end = index.max().to_period("M").to_timestamp()
+    return pd.date_range(start, end, freq="MS", name="date")
+
+
+def _quarterly_index(panel: pd.DataFrame) -> pd.DatetimeIndex:
+    periods = pd.DatetimeIndex(panel.index).to_period("Q")
+    start = periods.min().start_time
+    end = periods.max().start_time
+    return pd.date_range(start, end, freq="QS", name="date")
+
+
+def _series_to_monthly(series: pd.Series) -> pd.Series:
+    if series.empty:
+        return series.copy()
+    result = series.copy()
+    result.index = pd.DatetimeIndex(result.index).to_period("M").to_timestamp()
+    return result.groupby(level=0).last().sort_index()
+
+
+def _series_to_quarterly(series: pd.Series) -> pd.Series:
+    if series.empty:
+        return series.copy()
+    result = series.copy()
+    result.index = pd.DatetimeIndex(result.index).to_period("Q").to_timestamp()
+    return result.groupby(level=0).last().sort_index()
+
+
+def _quarterly_series_to_monthly(series: pd.Series, rule: str, *, index: pd.DatetimeIndex) -> pd.Series:
+    key = str(rule).lower()
+    quarterly = _series_to_quarterly(series)
+    if key in {"repeat_within_quarter", "repeat", "spread"}:
+        by_quarter = dict(zip(pd.DatetimeIndex(quarterly.index).to_period("Q"), quarterly.to_numpy(), strict=False))
+        values = [by_quarter.get(period) for period in pd.DatetimeIndex(index).to_period("Q")]
+        return pd.Series(values, index=index, dtype="float64")
+    if key in {"quarter_end_ffill", "step_forward", "ffill_from_quarter_end"}:
+        observed = quarterly.copy()
+        observed.index = pd.DatetimeIndex(observed.index).to_period("Q").asfreq("M", how="end").to_timestamp()
+        return observed.reindex(index).ffill()
+    if key in {"linear_interpolation", "linear"}:
+        observed = quarterly.copy()
+        observed.index = pd.DatetimeIndex(observed.index).to_period("Q").asfreq("M", how="end").to_timestamp()
+        return observed.reindex(index.union(observed.index)).sort_index().interpolate(method="time").reindex(index)
+    raise ValueError(
+        "quarterly_to_monthly must be one of "
+        "['repeat_within_quarter', 'quarter_end_ffill', 'linear_interpolation']"
+    )
+
+
+def _monthly_series_to_quarterly(series: pd.Series, rule: str) -> pd.Series:
+    key = str(rule).lower()
+    monthly = _series_to_monthly(series)
+    if key in {"quarterly_average", "average", "mean"}:
+        return monthly.groupby(pd.DatetimeIndex(monthly.index).to_period("Q").to_timestamp()).mean()
+    if key in {"quarterly_endpoint", "endpoint", "last"}:
+        return monthly.groupby(pd.DatetimeIndex(monthly.index).to_period("Q").to_timestamp()).last()
+    if key in {"quarterly_sum", "sum"}:
+        return monthly.groupby(pd.DatetimeIndex(monthly.index).to_period("Q").to_timestamp()).sum(min_count=1)
+    raise ValueError("monthly_to_quarterly must be one of ['quarterly_average', 'quarterly_endpoint', 'quarterly_sum']")
+
+
+def _frequency_conversion_records(
+    native_frequencies: Mapping[str, str],
+    *,
+    from_frequency: str,
+    to_frequency: str,
+    rule: str,
+) -> list[dict[str, Any]]:
+    columns = [column for column, frequency in native_frequencies.items() if frequency == from_frequency]
+    if not columns:
+        return []
+    variables = sorted({_series_variable_name(column) for column in columns})
+    return [
+        {
+            "from_frequency": from_frequency,
+            "to_frequency": to_frequency,
+            "rule": str(rule),
+            "variables": variables,
+            "columns": sorted(columns),
+            "n_columns": len(columns),
+        }
+    ]
+
+
+def _series_variable_name(column: str) -> str:
+    name = str(column)
+    if "_" not in name:
+        return name
+    return name.rsplit("_", 1)[0]
+
+
+def _emit_frequency_conversion_warnings(records: list[dict[str, Any]]) -> None:
+    for record in records:
+        variables = ", ".join(record["variables"][:8])
+        if len(record["variables"]) > 8:
+            variables = f"{variables}, ..."
+        message = (
+            f"{record['dataset']} {record['from_frequency']} variables were aligned to "
+            f"{record['to_frequency']} using {record['rule']}: {variables} "
+            f"({record['n_columns']} columns)."
+        )
+        warnings.warn(message, UserWarning, stacklevel=3)
+
+
+def _merge_macrocast_reports(target: dict[str, Any], source: Any, *, source_dataset: str) -> None:
+    if not isinstance(source, Mapping):
+        return
+    for key, value in source.items():
+        if key not in target:
+            target[key] = value
+        else:
+            target[f"{source_dataset}.{key}"] = value
+
+
+def _combined_version_mode(sources: list[dict[str, Any]]) -> str:
+    modes = {str(source.get("version_mode")) for source in sources}
+    return modes.pop() if len(modes) == 1 else "mixed"
+
+
+def _combined_vintage(sources: list[dict[str, Any]]) -> str | None:
+    vintages = {source.get("vintage") for source in sources}
+    return vintages.pop() if len(vintages) == 1 else None
+
+
+def _combined_parse_notes(dataset: str, frequency: str) -> list[str]:
+    notes = ["combined national and state-level data bundle"]
+    if dataset == "fred_md+fred_sd" and frequency == "quarterly":
+        notes.append("quarterly alignment of FRED-MD is supported but not recommended; prefer fred_qd+fred_sd for quarterly targets")
+    if dataset == "fred_qd+fred_sd" and frequency == "monthly":
+        notes.append("monthly alignment of FRED-QD is supported but not recommended; prefer fred_md+fred_sd for monthly targets")
+    return notes
 
 
 def _data_through(panel: pd.DataFrame) -> str | None:
@@ -973,9 +1410,12 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
 
 
 __all__ = [
+    "combine",
     "load_fred_md",
     "load_fred_qd",
     "load_fred_sd",
+    "load_fred_md_sd",
+    "load_fred_qd_sd",
     "load_custom_csv",
     "load_custom_parquet",
     "list_vintages",

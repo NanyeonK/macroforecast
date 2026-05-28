@@ -329,11 +329,22 @@ class TestEmFactorImputeClean:
         with pytest.raises(ValueError, match="empty"):
             em_factor_impute_clean(pd.DataFrame())
 
-    def test_bit_exact_vs_runtime(self):
+    def test_fixed_selection_bit_exact_vs_runtime(self):
         from macroforecast.core.runtime import _pca_em_imputation
         expected = _pca_em_imputation(PANEL_WITH_NAN, n_factors=8, max_iter=20, tol=1e-4)
-        out = em_factor_impute_clean(PANEL_WITH_NAN, n_factors=8, max_iter=20, tol=1e-4)
+        out = em_factor_impute_clean(
+            PANEL_WITH_NAN,
+            n_factors=8,
+            max_iter=20,
+            tol=1e-4,
+            factor_selection="fixed",
+        )
         pd.testing.assert_frame_equal(out, expected)
+
+    def test_default_uses_fred_md_baing_path(self):
+        out = em_factor_impute_clean(PANEL_WITH_NAN, n_factors=8)
+        assert out.shape == PANEL_WITH_NAN.shape
+        assert out.isna().sum().sum() == 0
 
     def test_namespace_wiring(self):
         assert hasattr(mf.functions, "em_factor_impute_clean")
@@ -629,12 +640,12 @@ class TestApplyTcodeTransform:
         expected = PANEL["a"].diff()
         pd.testing.assert_series_equal(out["a"], expected)
 
-    def test_tcode_7_pct_change(self):
+    def test_tcode_7_first_difference_of_percent_change(self):
         # Use positive panel to avoid log issues
         panel_pos = pd.DataFrame({"a": [1.0, 2.0, 4.0, 8.0], "b": [10.0, 20.0, 30.0, 40.0]})
         tmap = {"a": 7}
         out = apply_tcode_transform(panel_pos, tmap)
-        expected = panel_pos["a"].pct_change()
+        expected = panel_pos["a"].pct_change(fill_method=None).diff()
         pd.testing.assert_series_equal(out["a"], expected)
 
     def test_untransformed_cols_preserved(self):
@@ -985,4 +996,3 @@ class TestBLKF3EmSvdRng99:
         panel = self._make_rng99_panel()
         out = em_multivariate_impute_clean(panel, max_iter=20, tol=1e-4)
         assert out.isna().sum().sum() == 0
-

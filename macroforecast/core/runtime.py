@@ -15721,21 +15721,28 @@ def _apply_tcode(series: pd.Series, tcode: int) -> pd.Series:
     if tcode == 3:
         return series.diff().diff()
     if tcode == 4:
-        return _safe_log(series)
+        return _fred_md_log(series, require_strictly_positive=False)
     if tcode == 5:
-        return _safe_log(series).diff()
+        return _fred_md_log(series, require_strictly_positive=True).diff()
     if tcode == 6:
-        return _safe_log(series).diff().diff()
+        return _fred_md_log(series, require_strictly_positive=True).diff().diff()
     if tcode == 7:
-        return series.pct_change()
+        return series.pct_change(fill_method=None).diff()
     raise ValueError(f"unsupported tcode {tcode}; expected 1..7")
 
 
-def _safe_log(series: pd.Series) -> pd.Series:
-    positive = series.where(series > 0)
-    return positive.map(
-        lambda value: pd.NA if pd.isna(value) else __import__("math").log(value)
-    )
+def _fred_md_log(series: pd.Series, *, require_strictly_positive: bool) -> pd.Series:
+    numeric = pd.to_numeric(series, errors="coerce")
+    minimum = numeric.min(skipna=True)
+    small = 1e-6
+    if pd.isna(minimum):
+        return pd.Series(pd.NA, index=series.index, name=series.name, dtype="Float64")
+    if require_strictly_positive:
+        if minimum <= small:
+            return pd.Series(pd.NA, index=series.index, name=series.name, dtype="Float64")
+    elif minimum < small:
+        return pd.Series(pd.NA, index=series.index, name=series.name, dtype="Float64")
+    return numeric.map(lambda value: pd.NA if pd.isna(value) else __import__("math").log(value))
 
 
 def _try_custom_l2_preprocessor(

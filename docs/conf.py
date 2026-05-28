@@ -44,6 +44,35 @@ exclude_patterns = [
     ".DS_Store",
     "_archive",
     "_archive/**",
+    "_audit",
+    "_audit/**",
+    "recipe-snippets",
+    "recipe-snippets/**",
+    "for_recipe_authors/**",
+    "for_researchers/**",
+    "getting_started.md",
+    "replications.md",
+    "user_guide.md",
+    "explanation/architecture/**",
+    "explanation/artifacts_and_manifest.md",
+    "explanation/deprecation_timeline.md",
+    "explanation/layer_boundary_contract.md",
+    "explanation/layer_design.md",
+    "explanation/migration_guide.md",
+    "explanation/recipe_layers.md",
+    "explanation/recipe_to_run.md",
+    "how_to/advanced_recipes.md",
+    "how_to/partial_execution.md",
+    "how_to/partial_layer_execution.md",
+    "reference/data_policies.md",
+    "reference/generated/**",
+    "reference/navigator/**",
+    "reference/output.md",
+    "reference/public_api.md",
+    "reference/runtime_support.md",
+    "reference/standalone_functions/**",
+    "tutorial/replications/**",
+    "tutorial/two_entry_points.md",
 ]
 
 # -- MyST ---------------------------------------------------------------------
@@ -144,4 +173,3 @@ suppress_warnings = ["myst.xref_missing", "toc.not_included", "myst.header"]
 #   python -m tools.docgen encyclopedia docs/reference/
 # CI diffs the output to enforce sync; the sphinx build itself no longer
 # mutates the docs tree.
-

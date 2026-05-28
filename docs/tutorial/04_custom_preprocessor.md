@@ -407,7 +407,7 @@ print(mf.list_custom_preprocessors())   # ()
 - See {doc}`../how_to/use_extension_points` for all five extension points:
   custom feature blocks, combiners, preprocessors, target transformers,
   and models.
-- See {doc}`../explanation/layer_design` for the full rationale behind
-  why the L2 boundary exists and what it prevents.
+- See {doc}`../reference/preprocessing` for the current preprocessing API
+  surface.
 - See {doc}`03_custom_model` to compare the preprocessor contract with the
   model contract.
