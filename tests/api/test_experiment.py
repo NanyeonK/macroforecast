@@ -161,9 +161,9 @@ def test_experiment_to_yaml_round_trips_through_execute_recipe(tmp_path):
 def test_experiment_to_recipe_dict_returns_deep_copy():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1], model="ridge")
     snapshot = exp.to_recipe_dict()
-    snapshot["0_meta"]["leaf_config"]["random_seed"] = 9999
+    snapshot["data"]["leaf_config"]["target"] = "changed"
     again = exp.to_recipe_dict()
-    assert again["0_meta"]["leaf_config"]["random_seed"] != 9999
+    assert again["data"]["leaf_config"]["target"] == "y"
 
 
 # ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import inspect
 import math
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 from typing import Any, Literal
@@ -57,6 +58,7 @@ import macroforecast.evaluation.ops  # noqa: F401
 import macroforecast.stat_tests.ops  # noqa: F401
 import macroforecast.interpretation.ops  # noqa: F401
 import macroforecast.output.ops  # noqa: F401
+from ..meta import get_config
 from ..data import load_fred_md_result, load_fred_qd_result, load_fred_sd_result
 from ..data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
@@ -1804,17 +1806,23 @@ def materialize_l3_per_origin(
 
 
 def _resolve_l0_seed(recipe_root: dict[str, Any]) -> int | None:
-    """Mirror ``execution._resolve_seed`` so L4 estimator construction can
-    inherit the L0 ``random_seed`` when a fit node does not pin its
-    own ``params.random_state`` (issue #215)."""
+    """Resolve the run seed from legacy recipe metadata or global config."""
 
     l0 = recipe_root.get("0_meta", {}) or {}
     leaf = l0.get("leaf_config", {}) or {}
     fixed = l0.get("fixed_axes", {}) or {}
     if "random_seed" in leaf:
         return int(leaf["random_seed"])
+    if "random_seed" in fixed:
+        return int(fixed["random_seed"])
     repro = fixed.get("reproducibility_policy", "seeded_reproducible")
-    return 0 if repro == "seeded_reproducible" else None
+    return get_config()["random_seed"] if repro == "seeded_reproducible" else None
+
+
+def _resolve_worker_count(value: Any) -> int:
+    if value == "auto":
+        return max(1, min(8, (os.cpu_count() or 2) - 1))
+    return int(value)
 
 
 def materialize_l4_minimal(
@@ -1871,8 +1879,11 @@ def materialize_l4_minimal(
     l0 = recipe_root.get("0_meta", {}) or {}
     l0_leaf = l0.get("leaf_config", {}) or {}
     l0_fixed = l0.get("fixed_axes", {}) or {}
+    meta_config = get_config()
     parallel_unit = l0_leaf.get("parallel_unit", l0_fixed.get("parallel_unit", "cells"))
-    n_workers = int(l0_leaf.get("n_workers_inner", l0_leaf.get("n_workers", 4)))
+    n_workers = _resolve_worker_count(
+        l0_leaf.get("n_workers_inner", l0_leaf.get("n_workers", meta_config["n_jobs"]))
+    )
     if parallel_unit == "models" and len(fit_nodes) > 1:
         from concurrent.futures import ThreadPoolExecutor
 
@@ -14705,7 +14716,7 @@ def _capture_random_seed_used(recipe_root: dict[str, Any]) -> int | None:
         except (TypeError, ValueError):
             return None
     repro = fixed.get("reproducibility_policy", "seeded_reproducible")
-    return 0 if repro == "seeded_reproducible" else None
+    return get_config()["random_seed"] if repro == "seeded_reproducible" else None
 
 
 def _stringify_recipe_root(recipe_root: dict[str, Any]) -> str:

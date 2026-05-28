@@ -32,7 +32,6 @@ def ridge_baseline(*, target: str = "y") -> RecipeBuilder:
         "x1": [0.5 * v for v in range(1, 13)],
     }
     b = RecipeBuilder()
-    b.l0(random_seed=0)
     b.l1.custom_panel(target=target, panel=panel)
     b.l2.no_op()
     b.l3.lag_only(n_lag=1)
@@ -46,7 +45,6 @@ def horse_race_md(*, target: str = "CPIAUCSL") -> RecipeBuilder:
     as benchmark for relative-MSE reporting."""
 
     b = RecipeBuilder()
-    b.l0(random_seed=42)
     b.l1.fred_md(target=target)
     b.l2.standard()
     b.l3.lag_only(n_lag=6)
@@ -63,7 +61,6 @@ def regime_conditional(*, target: str = "INDPRO") -> RecipeBuilder:
     """
 
     b = RecipeBuilder()
-    b.l0(random_seed=42)
     b.l1.fred_md(
         target=target,
         regime_definition="estimated_markov_switching",
@@ -87,7 +84,6 @@ def fred_md_replication(*, target: str = "CPIAUCSL", horizon_set: str = "standar
     """
 
     b = RecipeBuilder()
-    b.l0(random_seed=2016)  # year of the McCracken-Ng paper
     b.l1.fred_md(target=target, horizon_set=horizon_set)
     b.l2.standard()
     b.l3.lag_only(n_lag=12)
@@ -103,7 +99,6 @@ def fred_sd_geographic(*, target: str = "PAYEMS") -> RecipeBuilder:
     figure type for geographic-importance visualisation."""
 
     b = RecipeBuilder()
-    b.l0(random_seed=42)
     b.l1(
         panel_composition="official_only",
         dataset="fred_sd",

@@ -11,7 +11,6 @@ from ..types import (
     FeatureBundle,
     FeatureMetadata,
     ForecastArtifact,
-    L0MetaArtifact,
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
     L2CleanPanelArtifact,
@@ -108,9 +107,6 @@ def list_layers() -> dict[LayerId, LayerSpec]:
 
 
 LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
-    "l0": {
-        "l0_meta_v1": L0MetaArtifact,
-    },
     "l1": {
         "l1_data_definition_v1": L1DataDefinitionArtifact,
         "l1_regime_metadata_v1": L1RegimeMetadataArtifact,
@@ -148,7 +144,6 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
 
 
 LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
-    "l0": ("failure_policy", "reproducibility_policy", "compute_policy"),
     "l1": (),
     "l1_5": ("enabled",),
     "l2": (),
@@ -162,5 +157,4 @@ LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
     "l7": (),
     "l8": (),
 }
-
 

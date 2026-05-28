@@ -14,32 +14,6 @@ from tools.docgen import RecipeBuilder
 
 
 # ---------------------------------------------------------------------------
-# L0
-# ---------------------------------------------------------------------------
-
-def test_l0_default_call_emits_three_axes_plus_default_seed():
-    b = RecipeBuilder()
-    b.l0()
-    block = b.build()["0_meta"]
-    assert block["fixed_axes"] == {
-        "failure_policy": "fail_fast",
-        "reproducibility_policy": "seeded_reproducible",
-        "compute_policy": "serial",
-    }
-    assert block["leaf_config"]["random_seed"] == 42
-
-
-def test_l0_explicit_overrides():
-    b = RecipeBuilder()
-    b.l0(random_seed=42, compute_policy="parallel", parallel_unit="cells", n_workers=4)
-    block = b.build()["0_meta"]
-    assert block["fixed_axes"]["compute_policy"] == "parallel"
-    assert block["leaf_config"]["random_seed"] == 42
-    assert block["leaf_config"]["parallel_unit"] == "cells"
-    assert block["leaf_config"]["n_workers"] == 4
-
-
-# ---------------------------------------------------------------------------
 # L1 presets
 # ---------------------------------------------------------------------------
 
@@ -136,7 +110,6 @@ def test_builder_run_executes_end_to_end(tmp_path):
         "x1": [float(v) / 2 for v in range(1, 13)],
     }
     b = RecipeBuilder()
-    b.l0(random_seed=42)
     b.l1.custom_panel(target="y", panel=panel)
     b.l2.no_op()
     b.l3.lag_only(n_lag=1)
@@ -149,7 +122,6 @@ def test_builder_run_executes_end_to_end(tmp_path):
 
 def test_to_yaml_round_trips_through_run(tmp_path):
     b = RecipeBuilder()
-    b.l0(random_seed=7)
     b.l1.custom_panel(
         target="y",
         panel={"date": [f"2018-{m:02d}-01" for m in range(1, 11)],
@@ -167,7 +139,6 @@ def test_to_yaml_round_trips_through_run(tmp_path):
 
 def test_validate_returns_empty_for_well_formed_recipe():
     b = RecipeBuilder()
-    b.l0(random_seed=0)
     b.l1.custom_panel(
         target="y",
         panel={"date": ["2018-01-01"], "y": [1.0], "x1": [0.5]},

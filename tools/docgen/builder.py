@@ -9,7 +9,6 @@ Usage::
     import macroforecast as mf
 
     b = mf.scaffold.RecipeBuilder()
-    b.l0(random_seed=42)
     b.l1.fred_md(target="CPIAUCSL", horizon_set="standard_md")
     b.l2.standard()
     b.l3.lag_only(n_lag=12)
@@ -60,40 +59,6 @@ class _LayerNamespace:
         """Set one or more leaf_config entries."""
 
         self.leaf_config.update(kwargs)
-        return self
-
-
-class _L0(_LayerNamespace):
-    layer_key = "0_meta"
-
-    def __call__(
-        self,
-        *,
-        failure_policy: str = "fail_fast",
-        reproducibility_policy: str = "seeded_reproducible",
-        compute_policy: str = "serial",
-        random_seed: int | None | object = None,
-        parallel_unit: str | None = None,
-        n_workers: int | str | None = None,
-        gpu_deterministic: bool | None = None,
-        **leaf: Any,
-    ) -> "_L0":
-        from macroforecast.meta import configure
-
-        kwargs: dict[str, Any] = dict(
-            failure_policy=failure_policy,
-            reproducibility_policy=reproducibility_policy,
-            compute_policy=compute_policy,
-            parallel_unit=parallel_unit,
-            n_workers=n_workers,
-            gpu_deterministic=gpu_deterministic,
-            **leaf,
-        )
-        if random_seed is not None:
-            kwargs["random_seed"] = random_seed
-        root = configure(**kwargs)
-        self.block.clear()
-        self.block.update(root["0_meta"])
         return self
 
 
@@ -324,8 +289,7 @@ class RecipeBuilder:
     """Programmatic recipe authoring entry.
 
     Each ``b.l<N>`` attribute returns a per-layer namespace object
-    (``_L0`` / ``_L1`` / ... / ``_L8``); calling the namespace --
-    either bare (``b.l0()`` to apply defaults) or via its
+    (``_L1`` / ... / ``_L8``); calling the namespace via its
     ``.preset_name()`` / ``.set_axis()`` methods -- populates the
     underlying recipe dict in place. The dict is consumed by
     ``.build()`` (returns a deep copy) or ``.run(output_directory)``
@@ -338,7 +302,6 @@ class RecipeBuilder:
     own statement::
 
         b = RecipeBuilder()
-        b.l0(failure_policy="fail_fast")
         b.l1.fred_md(target="INDPRO", target_horizons=[1, 3, 6])
         b.l2.standard()
         b.l3.lag_only(n_lag=4)
@@ -347,16 +310,11 @@ class RecipeBuilder:
         recipe = b.build()
         manifest = b.run("out/")
 
-    A jQuery-style chain like ``b.l0().l1.fred_md(...).l2.standard()``
-    is intentionally **not** supported -- ``b.l0()`` returns the ``_L0``
-    namespace object (so ``.set_axis()`` / ``.set_leaf()`` keep working
-    after the bare call), not the builder. Chain through ``b`` itself
-    instead.
+    Chain through ``b`` itself instead of chaining across namespace calls.
     """
 
     def __init__(self) -> None:
         self._recipe: dict[str, Any] = {}
-        self.l0 = _L0(self._recipe)
         self.l1 = _L1(self._recipe)
         self.l2 = _L2(self._recipe)
         self.l3 = _L3(self._recipe)
@@ -405,7 +363,6 @@ class RecipeBuilder:
 
         errors: list[str] = []
         layer_validators = (
-            ("0_meta", "macroforecast.meta.schema"),
             ("data", "macroforecast.data.config"),
             ("preprocessing", "macroforecast.preprocessing.schema"),
             ("3_feature_engineering", "macroforecast.features.schema"),

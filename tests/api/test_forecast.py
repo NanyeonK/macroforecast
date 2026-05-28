@@ -1,6 +1,6 @@
 """Tests for the v0.8.0 ``mf.forecast(...)`` one-shot helper.
 
-We exercise the wiring of the default recipe (L0 seed, L1 dataset/target,
+We exercise the wiring of the default recipe (L1 dataset/target,
 L2/L3/L4/L5 defaults) by inspecting the recipe ``Experiment`` would
 produce for the same args; the actual ``execute_recipe`` path is covered
 in test_experiment.py via the offline custom-panel substitution.
@@ -17,7 +17,7 @@ def test_forecast_is_publicly_exported():
     assert callable(mf.forecast)
 
 
-def test_forecast_default_recipe_layer0_seed_and_axes():
+def test_forecast_default_recipe_omits_legacy_meta_block():
     b = _build_default_recipe(
         dataset="fred_md",
         target="INDPRO",
@@ -26,15 +26,9 @@ def test_forecast_default_recipe_layer0_seed_and_axes():
         start="1980-01",
         end="2019-12",
         model="ar_p",
-        random_seed=42,
     )
     recipe = b.build()
-    l0 = recipe["0_meta"]
-    assert l0["fixed_axes"]["failure_policy"] == "fail_fast"
-    assert l0["fixed_axes"]["reproducibility_policy"] == "seeded_reproducible"
-    assert l0["fixed_axes"]["compute_policy"] == "serial"
-    assert "study_scope" not in l0["fixed_axes"]
-    assert l0["leaf_config"]["random_seed"] == 42
+    assert "0_meta" not in recipe
 
 
 def test_forecast_default_recipe_layer1_target_horizons_and_window():
@@ -46,7 +40,6 @@ def test_forecast_default_recipe_layer1_target_horizons_and_window():
         start="1980-01",
         end="2019-12",
         model="ar_p",
-        random_seed=0,
     )
     recipe = b.build()
     l1 = recipe["data"]
@@ -70,7 +63,6 @@ def test_forecast_fred_qd_sets_quarterly_frequency():
         start=None,
         end=None,
         model="ar_p",
-        random_seed=0,
     )
     recipe = b.build()
     assert recipe["data"]["fixed_axes"]["frequency"] == "quarterly"
@@ -86,7 +78,6 @@ def test_forecast_fred_sd_alone_requires_explicit_frequency():
             start=None,
             end=None,
             model="ar_p",
-            random_seed=0,
         )
 
 
@@ -100,7 +91,6 @@ def test_forecast_fred_md_rejects_conflicting_frequency():
             start=None,
             end=None,
             model="ar_p",
-            random_seed=0,
         )
 
 
@@ -113,7 +103,6 @@ def test_forecast_default_layer4_has_single_fit_model_with_chosen_family():
         start=None,
         end=None,
         model="ridge",
-        random_seed=0,
     )
     recipe = b.build()
     l4 = recipe["4_forecasting_model"]
@@ -131,7 +120,6 @@ def test_forecast_default_layer5_primary_metric_mse():
         start=None,
         end=None,
         model="ar_p",
-        random_seed=0,
     )
     recipe = b.build()
     assert recipe["5_evaluation"]["fixed_axes"]["primary_metric"] == "mse"
@@ -147,5 +135,4 @@ def test_forecast_rejects_empty_horizons():
             start=None,
             end=None,
             model="ar_p",
-            random_seed=0,
         )

@@ -15,7 +15,6 @@ from .status import ItemStatus
 
 
 LayerId = Literal[
-    "l0",
     "l1",
     "l1_5",
     "l2",
@@ -30,7 +29,7 @@ LayerId = Literal[
     "l8",
 ]
 
-LayerCategory = Literal["setup", "construction", "diagnostic", "consumption"]
+LayerCategory = Literal["construction", "diagnostic", "consumption"]
 NodeType = Literal["source", "axis", "step", "combine", "sink"]
 # Alias to the package-wide unified vocabulary so any legacy "registry_only"
 # / "planned" / "approximation" string still type-checks (the runtime

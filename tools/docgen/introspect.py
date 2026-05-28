@@ -19,7 +19,6 @@ from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Op
 # matches the canonical layer-execution order so wizard prompts walk in
 # dependency order.
 _LAYER_MODULES: tuple[tuple[str, str], ...] = (
-    ("l0", "macroforecast.meta.schema"),
     ("l1", "macroforecast.data.config"),
     ("l1_5", "macroforecast.diagnostics.data_summary.schema"),
     ("l2", "macroforecast.preprocessing.schema"),

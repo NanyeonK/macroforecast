@@ -25,7 +25,7 @@ import pandas as pd
 from .cache import canonical_dict
 from .runtime import RuntimeResult, execute_minimal_forecast
 from .yaml import parse_recipe_yaml
-from ..defaults import DEFAULT_RANDOM_SEED
+from ..meta import get_config
 
 
 L0_KEY = "0_meta"
@@ -344,7 +344,21 @@ def _resolve_seed(recipe_root: dict[str, Any]) -> int | None:
     if "random_seed" in leaf:
         return int(leaf["random_seed"])
     repro = fixed.get("reproducibility_policy", "seeded_reproducible")
-    return DEFAULT_RANDOM_SEED if repro == "seeded_reproducible" else None
+    return get_config()["random_seed"] if repro == "seeded_reproducible" else None
+
+
+def _failure_policy_from_meta(on_error: str) -> str:
+    return "continue_on_failure" if on_error == "continue" else "fail_fast"
+
+
+def _compute_policy_from_meta(n_jobs: int | str) -> str:
+    return "serial" if n_jobs == 1 else "parallel"
+
+
+def _resolve_n_workers(value: Any) -> int:
+    if value == "auto":
+        return _default_n_workers()
+    return int(value)
 
 
 def _resolve_cache_root(
@@ -564,6 +578,7 @@ class ManifestExecutionResult:
     recipe_root: dict[str, Any]
     cells: tuple[CellExecutionResult, ...]
     failure_policy: str
+    meta_config: dict[str, Any] = field(default_factory=dict)
     sweep_paths: tuple[str, ...] = ()
     duration_seconds: float = 0.0
     started_at: str = ""
@@ -768,6 +783,10 @@ class ManifestExecutionResult:
                 if len(_valid_idx):
                     _sample_start_resolved = str(_valid_idx[0])
                     _sample_end_resolved = str(_valid_idx[-1])
+        random_seed_used = _capture_random_seed_used(self.recipe_root)
+        if L0_KEY not in self.recipe_root and self.meta_config:
+            random_seed_used = self.meta_config.get("random_seed")
+
         provenance = {
             "package_version": _capture_package_version(),
             "python_version": platform.python_version(),
@@ -776,7 +795,7 @@ class ManifestExecutionResult:
             "git_commit_sha": git_sha,
             "git_branch_name": git_branch,
             "data_revision_tag": _data_revision_tag,
-            "random_seed_used": _capture_random_seed_used(self.recipe_root),
+            "random_seed_used": random_seed_used,
             "dependency_lockfile_paths": _dependency_lockfile_paths(),
             "dependency_lockfile_content": _capture_dependency_lockfile_content(),
             "runtime_environment": _json_safe(_capture_full_runtime_environment()),
@@ -789,6 +808,7 @@ class ManifestExecutionResult:
             "started_at": self.started_at,
             "duration_seconds": self.duration_seconds,
             "failure_policy": self.failure_policy,
+            "meta_config": _json_safe(self.meta_config),
             "sweep_paths": list(self.sweep_paths),
             "recipe_root": _json_safe(self.recipe_root),
             "cache_root": self.cache_root,
@@ -971,11 +991,12 @@ def execute_recipe(
         if "output_directory" not in l8_leaf:
             l8_leaf["output_directory"] = str(Path(output_directory))
 
+    meta_config = get_config()
     fixed_axes = (recipe_root.get(L0_KEY, {}) or {}).get("fixed_axes", {}) or {}
     leaf = (recipe_root.get(L0_KEY, {}) or {}).get("leaf_config", {}) or {}
-    failure_policy = fixed_axes.get("failure_policy") or "fail_fast"
-    compute_policy = fixed_axes.get("compute_policy") or "serial"
-    n_workers = int(leaf.get("n_workers", _default_n_workers()))
+    failure_policy = fixed_axes.get("failure_policy") or _failure_policy_from_meta(meta_config["on_error"])
+    compute_policy = fixed_axes.get("compute_policy") or _compute_policy_from_meta(meta_config["n_jobs"])
+    n_workers = _resolve_n_workers(leaf.get("n_workers", meta_config["n_jobs"]))
     base_seed = _resolve_seed(recipe_root)
 
     concrete_roots, sweep_paths = _expand_cells(recipe_root)
@@ -1005,6 +1026,7 @@ def execute_recipe(
         recipe_root=recipe_root,
         cells=tuple(cells),
         failure_policy=failure_policy,
+        meta_config=dict(meta_config),
         sweep_paths=sweep_paths_str,
         duration_seconds=total_duration,
         started_at=started_at,
@@ -1162,7 +1184,15 @@ def replicate_recipe(manifest_path: str | Path) -> ReplicationResult:
     recipe_root = payload.get("recipe_root")
     if not isinstance(recipe_root, dict):
         raise ValueError(f"manifest at {manifest_path} is missing recipe_root")
-    new_result = execute_recipe(recipe_root)
+    meta_config = payload.get("meta_config")
+    if isinstance(meta_config, dict):
+        from ..meta import use_config
+
+        allowed = {key: meta_config[key] for key in ("random_seed", "n_jobs", "on_error", "verbose") if key in meta_config}
+        with use_config(**allowed):
+            new_result = execute_recipe(recipe_root)
+    else:
+        new_result = execute_recipe(recipe_root)
 
     per_cell_match: dict[str, bool] = {}
     expected_cells = {cell["cell_id"]: cell for cell in payload.get("cells", [])}

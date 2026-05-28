@@ -5,10 +5,9 @@ Lookup pages for the public Python surface, recipe YAML contract, and generated 
 > **Looking for design rationale?** Use [Architecture](../explanation/architecture/index.md). Reference pages define names, keys, options, and import surfaces; architecture pages explain why the packages are separated and how they interact.
 
 ## Recipe API
-
 - [Recipe gallery](gallery.md): runnable examples.
 - [Recipe contract](layer_contract.md): recipe keys, step shape, and complete recipe form.
-- [Meta](meta.md): study setup, failure policy, reproducibility, and compute policy.
+- [Meta](meta.md): package-wide execution settings.
 - [Data](data.md): source, target, horizon, and geography choices.
 - [Preprocessing](preprocessing.md): frequency alignment, transforms, outlier handling, imputation, and frame-edge rules.
 - [Data policies](data_policies.md): missingness, outliers, release lags, and same-period predictors.

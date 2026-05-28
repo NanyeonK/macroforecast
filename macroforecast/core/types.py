@@ -57,19 +57,6 @@ class MappingArtifact(MetadataArtifact):
 
 
 @dataclass(frozen=True)
-class L0MetaArtifact(DataType):
-    failure_policy: Literal["fail_fast", "continue_on_failure"]
-    reproducibility_policy: Literal["seeded_reproducible", "exploratory"]
-    compute_policy: Literal["serial", "parallel"]
-    random_seed: int | None
-    parallel_unit: Literal["cells", "models", "horizons", "targets", "oos_dates"] | None
-    n_workers: int | Literal["auto"] | None
-    gpu_deterministic: bool
-    derived_study_scope: str
-    derived_execution_route: str = "comparison_sweep"
-
-
-@dataclass(frozen=True)
 class L1DataDefinitionArtifact(DataType):
     panel_composition: Literal["official_only", "custom_panel_only", "official_plus_custom"]
     dataset: Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"] | None

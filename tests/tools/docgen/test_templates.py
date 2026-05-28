@@ -29,8 +29,8 @@ def test_template_returns_recipe_builder(name):
     b = from_template(name)
     assert isinstance(b, RecipeBuilder)
     recipe = b.build()
-    # Every template should populate L0 + L1 + L4 at minimum.
-    for required in ("0_meta", "data", "4_forecasting_model"):
+    # Every template should populate L1 + L4 at minimum.
+    for required in ("data", "4_forecasting_model"):
         assert required in recipe, f"{name} missing {required}"
 
 
@@ -49,8 +49,6 @@ def test_template_overrides_pass_through():
 def test_template_user_can_modify_after_construction(tmp_path):
     """Common workflow: pick template, tweak one field, run."""
     b = from_template("ridge_baseline")
-    # Override the random seed by re-calling l0.
-    b.l0(random_seed=999)
-    assert b.build()["0_meta"]["leaf_config"]["random_seed"] == 999
+    b.l4.fit("ols", min_train_size=4)
     result = b.run(output_directory=tmp_path)
     assert result.cells[0].succeeded

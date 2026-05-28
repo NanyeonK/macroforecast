@@ -34,6 +34,7 @@ from ..core.execution import (
     execute_recipe,
     replicate_recipe,
 )
+from ..meta import use_config
 from tools.docgen.builder import RecipeBuilder
 from .defaults import (
     DEFAULT_HORIZONS,
@@ -141,16 +142,12 @@ def _build_default_recipe(
     start: str | None,
     end: str | None,
     model: str,
-    random_seed: int,
 ) -> RecipeBuilder:
     """Construct the v0.8.0 minimal default recipe via ``RecipeBuilder``.
 
-    L0 ``fail_fast`` + ``seeded_reproducible`` + ``serial``; L1 with the
-    requested dataset + target + horizons + sample window; L2 no-transform
-    pass-through (the default profile already routes through the real
-    McCracken-Ng pipeline when L2 is set ``standard()``, but PR 1's contract
-    is "minimal viable"); L3 ``lag_only(n_lag=1)`` + ``target_construction``;
-    L4 a single fit node with the requested model; L5 ``standard``.
+    L1 contains the requested dataset + target + horizons + sample window;
+    L2 uses a no-transform pass-through; L3 emits lag-only features; L4 fits
+    one requested model; L5 uses the standard metric block.
     """
 
     horizons_list = [int(h) for h in horizons]
@@ -160,7 +157,6 @@ def _build_default_recipe(
     resolved_frequency = _resolve_frequency(dataset, frequency)
 
     b = RecipeBuilder()
-    b.l0(random_seed=int(random_seed))
     # L1 -- official source path.
     b.l1(
         panel_composition="official_only",
@@ -238,7 +234,7 @@ def forecast(
     cache_root
         Shared raw-data cache root; forwarded to :func:`execute_recipe`.
     random_seed
-        L0 ``random_seed`` (default ``42``, see ``macroforecast.defaults.DEFAULT_RANDOM_SEED``).
+        Temporary ``macroforecast.meta`` random seed for this run.
 
     Returns
     -------
@@ -257,7 +253,6 @@ def forecast(
         start=start,
         end=end,
         model=resolved_model,
-        random_seed=random_seed,
     )
     # v0.8.6 Gap 2: normalize the lone L4 fit node id for the one-shot
     # path too -- there is no chained .compare() follow-up here, but we
@@ -265,11 +260,12 @@ def forecast(
     # produce identical recipe blocks for the same inputs.
     _normalize_fit_main_id(builder._recipe)
     recipe = builder.build()
-    manifest = execute_recipe(
-        recipe,
-        output_directory=output_directory,
-        cache_root=cache_root,
-    )
+    with use_config(random_seed=int(random_seed)):
+        manifest = execute_recipe(
+            recipe,
+            output_directory=output_directory,
+            cache_root=cache_root,
+        )
     out_dir = Path(output_directory) if output_directory is not None else None
     return ForecastResult(manifest=manifest, output_directory=out_dir)
 
@@ -481,7 +477,6 @@ class Experiment:
             start=start,
             end=end,
             model=resolved_model,
-            random_seed=self._random_seed,
         )
         # v0.8.6 Gap 2: normalize the lone L4 fit node id to ``fit_main``
         # so chained ``.compare(...)`` follow-ups can use a stable dotted
@@ -785,11 +780,12 @@ class Experiment:
         """Execute the recipe and return a :class:`ForecastResult`."""
 
         recipe = self.to_recipe_dict()
-        manifest = execute_recipe(
-            recipe,
-            output_directory=output_directory,
-            cache_root=cache_root,
-        )
+        with use_config(random_seed=self._random_seed):
+            manifest = execute_recipe(
+                recipe,
+                output_directory=output_directory,
+                cache_root=cache_root,
+            )
         out_dir = Path(output_directory) if output_directory is not None else None
         return ForecastResult(manifest=manifest, output_directory=out_dir)
 

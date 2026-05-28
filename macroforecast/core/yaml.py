@@ -10,7 +10,6 @@ from .layers import list_layers
 
 
 LAYER_YAML_KEYS: dict[LayerId, str] = {
-    "l0": "0_meta",
     "l1": "data",
     "l1_5": "1_5_data_summary",
     "l2": "preprocessing",

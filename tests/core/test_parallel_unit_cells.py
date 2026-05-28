@@ -1,8 +1,6 @@
 """Cycle 16 N-2: parallel_unit=cells validator acceptance and correctness.
 
 Verifies:
-* PARALLEL_UNIT_OPTIONS now contains "cells".
-* ParallelUnit Literal includes "cells".
 * mf.run with compute_policy=parallel + parallel_unit=cells + n_workers=2 completes.
 * cell_ids match between serial and cells-parallel runs (structural equivalence).
 """
@@ -78,21 +76,6 @@ def _multi_cell_recipe(
           fixed_axes: {{primary_metric: mse}}
         """
     )
-
-
-def test_parallel_unit_cells_in_options():
-    """Cycle 16 N-2: PARALLEL_UNIT_OPTIONS contains cells."""
-    from macroforecast.meta.schema import PARALLEL_UNIT_OPTIONS
-    assert "cells" in PARALLEL_UNIT_OPTIONS, (
-        f"cells missing from PARALLEL_UNIT_OPTIONS: {PARALLEL_UNIT_OPTIONS}"
-    )
-
-
-def test_parallel_unit_cells_all_original_options_retained():
-    """Cycle 16 N-2: adding cells does not drop original options."""
-    from macroforecast.meta.schema import PARALLEL_UNIT_OPTIONS
-    for opt in ("models", "horizons", "targets", "oos_dates"):
-        assert opt in PARALLEL_UNIT_OPTIONS, f"{opt} missing after adding cells"
 
 
 def test_parallel_unit_cells_run(tmp_path):

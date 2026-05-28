@@ -117,7 +117,6 @@ def normalize_to_dag_form(layer: dict[str, Any] | L8Layer, layer_id: Literal["l8
     raw = layer.raw_yaml if isinstance(layer, L8Layer) else layer
     resolved = resolve_axes_from_raw(raw, context=context)
     nodes: dict[str, Node] = {
-        "src_l0_meta": Node("src_l0_meta", "source", "l8", "source", selector=SourceSelector("l0", "l0_meta_v1")),
         "src_l1_data": Node("src_l1_data", "source", "l8", "source", selector=SourceSelector("l1", "l1_data_definition_v1")),
         "src_l1_regime": Node("src_l1_regime", "source", "l8", "source", selector=SourceSelector("l1", "l1_regime_metadata_v1")),
         "src_l2_clean": Node("src_l2_clean", "source", "l8", "source", selector=SourceSelector("l2", "l2_clean_panel_v1")),
@@ -404,7 +403,6 @@ L8_LAYER_SPEC = _LayerImplSpec(
     name="Output / provenance",
     category="consumption",
     expected_inputs=(
-        "l0_meta_v1",
         "l1_data_definition_v1",
         "l2_clean_panel_v1",
         "l3_features_v1",

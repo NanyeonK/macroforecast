@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from .registry import register_layer
 
-from macroforecast.meta.schema import L0StudySetup
 from macroforecast.data.config import Data
 from macroforecast.preprocessing.schema import L2Preprocessing
 from macroforecast.features.schema import L3FeatureEngineering
@@ -21,15 +20,6 @@ from macroforecast.diagnostics.data_summary.schema import L1_5DataSummary
 from macroforecast.diagnostics.preprocessing.schema import L2_5PrePostPreprocessing
 from macroforecast.diagnostics.features.schema import L3_5FeatureDiagnostics
 from macroforecast.diagnostics.generator.schema import L4_5GeneratorDiagnostics
-
-
-register_layer(
-    id="l0",
-    name="Study Setup",
-    category="setup",
-    produces=("l0_meta_v1",),
-    ui_mode="list",
-)(L0StudySetup)
 
 
 register_layer(
@@ -146,7 +136,7 @@ register_layer(
     name="Output / provenance",
     category="consumption",
     expected_inputs=(
-        "l0_meta_v1", "l1_data_definition_v1", "l1_regime_metadata_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1",
+        "l1_data_definition_v1", "l1_regime_metadata_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1",
         "l4_forecasts_v1", "l4_model_artifacts_v1", "l4_training_metadata_v1", "l5_evaluation_v1", "l6_tests_v1",
         "l7_importance_v1", "l7_transformation_attribution_v1",
     ),

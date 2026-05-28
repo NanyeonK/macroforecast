@@ -20,7 +20,7 @@ Horse race research benchmarking package for macro forecasting.
 
 - ``macroforecast.recipes`` -- recipe orchestration namespace; ``mf.run`` /
   ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are aliases here.
-- ``macroforecast.meta`` -- study setup policy and reproducibility schema.
+- ``macroforecast.meta`` -- package-wide execution settings.
 - ``macroforecast.data`` -- data recipe authoring plus FRED-MD/QD/SD adapters,
   vintage manager, manifests.
 - ``macroforecast.preprocessing`` -- preprocessing schemas and contract helpers.
@@ -57,8 +57,6 @@ _LAZY_EXPORTS = {
     "DEFAULT_PROFILE": ".api.defaults",
     "DEFAULT_PROFILE_NAME": ".api.defaults",
     "build_default_recipe_dict": ".api.defaults",
-    # callable recipe blocks
-    "l0": ".meta",
     # custom (now at macroforecast.api.custom)
     "custom_feature_block": ".api.custom",
     "custom_feature_combiner": ".api.custom",
