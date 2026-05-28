@@ -2,33 +2,34 @@
 
 [Back to reference](index.md)
 
-`macroforecast.preprocessing` defines the recipe block that turns a raw data
+`macroforecast.preprocessing` defines the cleaning settings that turn a raw data
 panel from [Data](data.md) into the cleaned panel consumed by feature
 engineering and models.
-
-The public authoring key is `preprocessing`. It replaces the older numbered key
-in hand-written recipes.
 
 ## Python Call
 
 ```python
 import macroforecast as mf
 
-recipe = {
-    **mf.data.data(dataset="fred_md", target="INDPRO"),
-    **mf.preprocessing.preprocessing(
-        transform_policy="apply_official_tcode",
-        outlier_policy="mccracken_ng_iqr",
-        outlier_action="flag_as_nan",
-        imputation_policy="em_factor",
-        imputation_temporal_rule="expanding_window_per_origin",
-        frame_edge_policy="truncate_to_balanced",
-    ),
-}
+bundle = mf.data.load_fred_md()
+data_spec = mf.data.spec(bundle, target="INDPRO", horizons=[1, 3, 6, 12])
+
+preprocessing_settings = mf.preprocessing.preprocessing(
+    transform_policy="apply_official_tcode",
+    outlier_policy="mccracken_ng_iqr",
+    outlier_action="flag_as_nan",
+    imputation_policy="em_factor",
+    imputation_temporal_rule="expanding_window_per_origin",
+    frame_edge_policy="truncate_to_balanced",
+)
 ```
 
 `mf.preprocessing.configure(...)` is an alias for
 `mf.preprocessing.preprocessing(...)`.
+
+`data_spec` keeps the canonical panel and data metadata together.
+Preprocessing outputs should append their own metadata stage instead of
+discarding data metadata.
 
 ## YAML
 

@@ -348,8 +348,6 @@ def test_t7_recipe_schema_docs_no_dag() -> None:
             "data_policies.md",
             "defaults.md",
             "fred_datasets.md",
-            "gallery.md",
-            "layer_contract.md",
             "output.md",
             "runtime_support.md",
         )

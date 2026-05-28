@@ -1,47 +1,39 @@
-"""Custom Parquet loader — load a user-supplied Parquet file conforming to a FRED-family schema.
+"""Custom Parquet loader for user-supplied macro panels.
 
-Parquet-counterpart to :mod:`macroforecast.raw.datasets.custom_csv`. Same
-contract: recipes choose an official ``dataset``, set ``panel_composition``
-to ``"official_plus_custom"`` or ``"custom_panel_only"``, and provide
-``leaf_config.custom_source_path``.
-The compiler infers the parser from ``.parquet``/``.pq`` and infers the
-internal loader schema from the selected ``dataset``/``frequency`` route.
-
-Requires ``pyarrow`` or ``fastparquet`` to be installed (pandas picks
-whichever is available).
+The loader reads a Parquet file, normalizes it to macroforecast's canonical
+``DatetimeIndex`` panel contract, and returns a raw load result that the
+public ``macroforecast.data.load_custom_parquet`` wrapper converts to
+``DataBundle``. Requires ``pyarrow`` or ``fastparquet`` through pandas.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 import pandas as pd
 
 from ..errors import RawParseError
-from ..manager import build_raw_artifact_record, normalize_version_request
 from ..manifest import append_raw_manifest_entry
+from ..panel import as_panel
+from ..types import RawArtifactRecord
 from ..types import RawDatasetMetadata, RawLoadResult
-
-
-_SUPPORTED_SCHEMAS = {"fred_md", "fred_qd", "fred_sd"}
 
 
 def load_custom_parquet(
     path: str | Path,
     *,
-    dataset: str,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    frequency: str = "unknown",
+    metadata: Mapping[str, Any] | None = None,
     cache_root: str | Path | None = None,
 ) -> RawLoadResult:
-    """Load ``path`` as a Parquet file conforming to ``dataset``'s schema.
-
-    See :func:`macroforecast.raw.datasets.custom_csv.load_custom_csv` for the
-    shared schema contract.
-    """
-
-    if dataset not in _SUPPORTED_SCHEMAS:
-        raise RawParseError(
-            f"dataset={dataset!r} is not a supported schema for custom_parquet; "
-            f"expected one of {_SUPPORTED_SCHEMAS}"
-        )
+    """Load ``path`` as a user Parquet panel and normalize it."""
 
     pq_path = Path(path)
     if not pq_path.exists():
@@ -52,36 +44,16 @@ def load_custom_parquet(
     except Exception as exc:
         raise RawParseError(f"failed to parse custom Parquet at {pq_path}") from exc
 
-    # Normalise to date-indexed numeric panel.
-    if not isinstance(df.index, pd.DatetimeIndex):
-        # Try to coerce the first column as the date index.
-        date_col = df.columns[0]
-        try:
-            df[date_col] = pd.to_datetime(df[date_col])
-            df = df.set_index(date_col)
-        except Exception:
-            raise RawParseError(
-                f"custom Parquet at {pq_path} must have a DatetimeIndex "
-                "or a parseable date as its first column"
-            )
+    try:
+        df = as_panel(df, date=date, columns=columns, rename=rename, metadata=metadata)
+    except Exception as exc:
+        raise RawParseError(f"failed to normalize custom Parquet at {pq_path}") from exc
 
-    df = df.apply(pd.to_numeric, errors="coerce")
-    df = df.dropna(axis=1, how="all")
-    df.index.name = "date"
-    df.sort_index(inplace=True)
-
-    request = normalize_version_request(dataset, vintage=None)
-    artifact = build_raw_artifact_record(
-        request=request,
-        source_url=str(pq_path),
-        local_path=pq_path,
-        file_format="parquet",
-        cache_hit=False,
-    )
+    artifact = _custom_artifact(dataset=dataset, path=pq_path, file_format="parquet")
     metadata = RawDatasetMetadata(
         dataset=dataset,
         source_family="custom-parquet",
-        frequency=_frequency_for_dataset(dataset),
+        frequency=frequency,
         version_mode="current",
         vintage=None,
         data_through=df.index[-1].strftime("%Y-%m") if len(df) else None,
@@ -94,12 +66,21 @@ def load_custom_parquet(
     return result
 
 
-def _frequency_for_dataset(dataset: str) -> str:
-    return {
-        "fred_md": "monthly",
-        "fred_qd": "quarterly",
-        "fred_sd": "state_monthly",
-    }.get(dataset, "monthly")
+def _custom_artifact(*, dataset: str, path: Path, file_format: str) -> RawArtifactRecord:
+    content = path.read_bytes()
+    return RawArtifactRecord(
+        dataset=dataset,
+        version_mode="current",
+        vintage=None,
+        source_url=str(path),
+        local_path=str(path),
+        file_format=file_format,
+        downloaded_at=datetime.now(timezone.utc).isoformat(),
+        file_sha256=hashlib.sha256(content).hexdigest(),
+        file_size_bytes=len(content),
+        cache_hit=False,
+        manifest_version="v1",
+    )
 
 
 __all__ = ["load_custom_parquet"]

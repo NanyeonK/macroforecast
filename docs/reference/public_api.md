@@ -16,17 +16,18 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.replicate(manifest_path)` | Re-execute a stored manifest and verify sink hashes. |
 | `macroforecast.ManifestExecutionResult` | Per-cell `RuntimeResult` plus sink hashes. |
 | `macroforecast.ReplicationResult` | Bit-exact replication comparison result. |
-| `macroforecast.l0(...)` | Callable L0/meta recipe block builder; equivalent to authoring `0_meta` in YAML. |
 
 ## Callable Recipe Blocks
 
 | Symbol | Description |
 |--------|-------------|
-| `macroforecast.meta.configure(...)` | Build and validate a canonical `0_meta` block. |
-| `macroforecast.meta.l0(...)` | Alias for `configure(...)`; also exported as `macroforecast.l0(...)`. |
-| `macroforecast.data.data(...)` | Build and validate the canonical `data` block without loading a dataset. |
-| `macroforecast.data.load_fred_md(...)`, `load_fred_qd(...)`, `load_fred_sd(...)` | Load cached or downloaded official datasets as pandas data frames. |
-| `macroforecast.data.metadata(frame_or_result)` | Return dataset metadata/provenance stored on a loaded frame or raw load result. |
+| `macroforecast.meta.configure(...)` | Update package-wide execution settings. |
+| `macroforecast.meta.get_config()` | Return the active meta settings. |
+| `macroforecast.data.load_fred_md(...)`, `load_fred_qd(...)`, `load_fred_sd(...)` | Load cached or downloaded official datasets as `DataBundle` objects. |
+| `macroforecast.data.load_custom_csv(...)`, `load_custom_parquet(...)` | Load user files into canonical `DataBundle` objects. |
+| `macroforecast.data.as_panel(...)` | Normalize a pandas `DataFrame` to the canonical date-indexed panel form. |
+| `macroforecast.data.spec(...)` | Combine a panel/bundle with target, horizons, sample window, and predictor choices. |
+| `macroforecast.data.metadata(bundle_or_spec_or_result)` | Return explicit dataset metadata/provenance. |
 | `macroforecast.data.load_fred_md_result(...)`, `load_fred_qd_result(...)`, `load_fred_sd_result(...)` | Advanced raw load envelope with metadata, artifact record, and transform codes. |
 | `macroforecast.preprocessing.preprocessing(...)` | Build and validate the canonical `preprocessing` block without executing cleaning. |
 | `macroforecast.preprocessing.configure(...)` | Alias for `preprocessing(...)`. |
@@ -36,8 +37,8 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | Module | Purpose |
 |--------|---------|
 | `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
-| `macroforecast.meta` | L0 study setup, failure policy, reproducibility, and compute policy. |
-| `macroforecast.data` | Data recipe authoring, FRED-MD/QD/SD adapters, vintage manager, manifests, and cache helpers. |
+| `macroforecast.meta` | Package-wide execution settings. |
+| `macroforecast.data` | Canonical panels, data metadata, FRED/custom loaders, run-level data specs, vintage manager, manifests, and cache helpers. |
 | `macroforecast.preprocessing` | Preprocessing recipe authoring, cleaning schemas, transformations, and contract helpers. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |

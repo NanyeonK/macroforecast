@@ -14,7 +14,7 @@ _FIRST_VINTAGE: dict[DatasetId, str] = {
     "fred_qd": "2005-01",
     "fred_sd": "2005-06",
 }
-_ARTIFACT_FORMATS: set[ArtifactFormat] = {"csv", "xlsx", "mixed"}
+_ARTIFACT_FORMATS: set[ArtifactFormat] = {"csv", "xlsx", "parquet", "mixed"}
 
 
 def _dataset_id(dataset: str) -> DatasetId:

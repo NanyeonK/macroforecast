@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from .registry import register_layer
 
-from macroforecast.data.config import Data
+from macroforecast.data import DataSpec
 from macroforecast.preprocessing.schema import L2Preprocessing
 from macroforecast.features.schema import L3FeatureEngineering
 from macroforecast.models.schema import L4ForecastingModel
@@ -28,7 +28,7 @@ register_layer(
     category="construction",
     produces=("l1_data_definition_v1", "l1_regime_metadata_v1"),
     ui_mode="list",
-)(Data)
+)(DataSpec)
 
 
 register_layer(

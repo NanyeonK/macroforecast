@@ -1,14 +1,13 @@
 # Reference
 
-Lookup pages for the public Python surface, recipe YAML contract, and generated option dictionary. These pages are for exact lookup; tutorials and design narrative live elsewhere.
+Lookup pages for the public Python surface and generated option dictionary.
+These pages are for exact lookup; tutorials and design narrative live elsewhere.
 
 > **Looking for design rationale?** Use [Architecture](../explanation/architecture/index.md). Reference pages define names, keys, options, and import surfaces; architecture pages explain why the packages are separated and how they interact.
 
 ## Recipe API
-- [Recipe gallery](gallery.md): runnable examples.
-- [Recipe contract](layer_contract.md): recipe keys, step shape, and complete recipe form.
 - [Meta](meta.md): package-wide execution settings.
-- [Data](data.md): source, target, horizon, and geography choices.
+- [Data](data.md): canonical panels, metadata, loaders, and run-level data specs.
 - [Preprocessing](preprocessing.md): frequency alignment, transforms, outlier handling, imputation, and frame-edge rules.
 - [Data policies](data_policies.md): missingness, outliers, release lags, and same-period predictors.
 - [Defaults](defaults.md): package-level default profiles.
@@ -44,8 +43,6 @@ lookup, but they are not the primary user narrative.
 ```{toctree}
 :maxdepth: 1
 
-gallery
-layer_contract
 meta
 data
 preprocessing

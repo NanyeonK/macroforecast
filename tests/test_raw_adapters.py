@@ -5,8 +5,10 @@ from pathlib import Path
 import pandas as pd
 
 from macroforecast.data import (
+    DataBundle,
     RawLoadResult,
     load_fred_md,
+    load_custom_csv,
     load_fred_md_result,
     load_fred_qd_result,
     metadata,
@@ -60,16 +62,43 @@ def test_parse_fred_qd_ignores_factors_row(tmp_path: Path) -> None:
 
 def test_load_fred_md_from_fixture_copy(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_md_sample.csv"
-    frame = load_fred_md(local_source=fixture, cache_root=tmp_path)
+    bundle = load_fred_md(local_source=fixture, cache_root=tmp_path)
     result = load_fred_md_result(local_source=fixture, cache_root=tmp_path)
 
-    assert isinstance(frame, pd.DataFrame)
-    assert metadata(frame)["dataset"] == "fred_md"
+    assert isinstance(bundle, DataBundle)
+    assert isinstance(bundle.panel, pd.DataFrame)
+    assert metadata(bundle)["dataset"] == "fred_md"
     assert isinstance(result, RawLoadResult)
     assert result.dataset_metadata.dataset == "fred_md"
     assert result.dataset_metadata.frequency == "monthly"
     assert result.artifact.file_format == "csv"
     assert result.data.index[0].strftime("%Y-%m") == "2000-01"
+
+
+def test_load_custom_csv_accepts_date_column_selection_and_rename(tmp_path: Path) -> None:
+    path = tmp_path / "custom.csv"
+    path.write_text(
+        "DATE,x_raw,target,drop_me\n"
+        "2020-02-01,2.0,4.0,a\n"
+        "2020-01-01,1.0,3.0,b\n",
+        encoding="utf-8",
+    )
+
+    bundle = load_custom_csv(
+        path,
+        date="DATE",
+        columns=["x_raw", "target"],
+        rename={"x_raw": "x"},
+        frequency="monthly",
+        metadata={"owner": "research"},
+    )
+
+    assert isinstance(bundle, DataBundle)
+    assert list(bundle.panel.columns) == ["x", "target"]
+    assert bundle.panel.index[0].strftime("%Y-%m-%d") == "2020-01-01"
+    assert metadata(bundle)["dataset"] == "custom"
+    assert metadata(bundle)["frequency"] == "monthly"
+    assert metadata(bundle)["owner"] == "research"
 
 
 def test_load_fred_qd_from_fixture_copy(tmp_path: Path) -> None:

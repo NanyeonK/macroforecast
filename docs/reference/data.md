@@ -1,215 +1,326 @@
-# Data
+# macroforecast.data
 
-`macroforecast.data` has two user-facing jobs:
-
-1. author the recipe's `data` block with `macroforecast.data.data(...)`;
-2. load FRED or custom datasets as pandas `DataFrame` objects.
-
-The `data` block decides what panel exists before preprocessing starts. It
-selects the source, target, predictor universe, geography, sample window,
-horizons, and regime metadata. It does not clean, transform, impute, engineer
+`macroforecast.data` loads or normalizes a data panel and then attaches run-level
+data choices to that panel. It does not transform, impute, scale, engineer
 features, fit models, or evaluate forecasts.
 
-## Minimal Use
+The public flow is:
 
 ```python
 import macroforecast as mf
 
-recipe_part = mf.data.data(
-    dataset="fred_md",
-    target="CPIAUCSL",
+bundle = mf.data.load_fred_md()
+
+data_spec = mf.data.spec(
+    bundle,
+    target="INDPRO",
+    horizons=[1, 3, 6, 12],
+    start="1960-01",
+    end="2024-12",
+    predictors="all",
 )
 ```
 
-This returns a recipe fragment:
+## Canonical Panel
+
+Every public loader returns a `DataBundle`.
 
 ```python
-{
-    "data": {
-        "fixed_axes": {"dataset": "fred_md"},
-        "leaf_config": {"target": "CPIAUCSL"},
-    }
-}
+panel = bundle.panel
+metadata = bundle.metadata
 ```
 
-The equivalent YAML is:
+`DataBundle` also supports tuple unpacking:
 
-```yaml
-data:
-  fixed_axes:
-    dataset: fred_md
-  leaf_config:
-    target: CPIAUCSL
+```python
+panel, metadata = mf.data.load_fred_md()
 ```
 
-The top-level key is `data`. There is no public `1_data` key in the current
-semantic recipe surface.
+### Panel Contract
 
-## Required Choices
-
-Most users choose only the target and, when not using the default FRED-MD
-monthly panel, the dataset.
-
-| Use case | Required input |
+| Property | Required Value |
 | --- | --- |
-| FRED-MD default | `target` |
-| FRED-QD | `dataset="fred_qd"`, `target` |
-| FRED-SD only | `dataset="fred_sd"`, `frequency`, `target` |
-| custom panel only | `panel_composition="custom_panel_only"`, `frequency`, `target`, and one custom data source |
-| official plus custom | `panel_composition="official_plus_custom"`, `custom_source_path`, `custom_merge_rule`, and target settings |
-| multiple targets | `targets=[...]`; `target_structure="multi_target"` is inferred |
+| Type | `pandas.DataFrame` |
+| Index | `pandas.DatetimeIndex` |
+| Index name | `"date"` |
+| Sort order | ascending date order |
+| Duplicate dates | not allowed |
+| Columns | variable IDs |
+| Values | numeric values or `NaN` |
 
-Custom panel sources can be supplied through `custom_source_path`,
-`custom_panel_inline`, or `custom_panel_records`.
+Metadata is explicit on `DataBundle.metadata`. The panel also carries
+`panel.attrs["macroforecast_metadata"]` for pandas-native handoff. FRED-MD and
+FRED-QD transform codes are attached to
+`panel.attrs["macroforecast_transform_codes"]`; preprocessing is responsible
+for using them.
 
-## Default Axes
+## DataBundle
 
-When omitted, these axes resolve as follows:
+```python
+macroforecast.data.DataBundle(
+    panel: pandas.DataFrame,
+    metadata: dict,
+)
+```
 
-| Axis | Default |
-| --- | --- |
-| `panel_composition` | `official_only` |
-| `dataset` | `fred_md` |
-| `information_set_type` | `final_revised_data` |
-| `vintage_policy` | `current_vintage` |
-| `target_structure` | `single_target` |
-| `variable_universe` | `all_variables` |
-| `fred_sd_frequency_policy` | `report_only` |
-| `state_selection` | `all_states` |
-| `sd_variable_selection` | `all_sd_variables` |
-| `missing_availability` | `zero_fill_leading_predictor_gaps` |
-| `release_lag_rule` | `ignore_release_lag` |
-| `contemporaneous_x_rule` | `allow_same_period_predictors` |
-| `target_geography_policy` | `all_states` |
-| `predictor_geography_policy` | `match_target` |
-| `sample_start_rule` | `max_balanced` |
-| `sample_end_rule` | `latest_available` |
-| `regime_definition` | `none` |
+### Output
 
-`frequency` is derived for FRED-MD and FRED-QD families:
-
-| Dataset | Resolved frequency |
-| --- | --- |
-| `fred_md`, `fred_md+fred_sd` | `monthly` |
-| `fred_qd`, `fred_qd+fred_sd` | `quarterly` |
-| `fred_sd` | user must set `frequency` |
-| custom-only data | user must set `frequency` |
-
-`horizon_set` is also derived from frequency unless explicitly set:
-
-| Frequency | Derived `horizon_set` | Horizons |
+| Field | Type | Meaning |
 | --- | --- | --- |
-| `monthly` | `standard_md` | `(1, 3, 6, 12)` |
-| `quarterly` | `standard_qd` | `(1, 2, 4, 8)` |
+| `panel` | `pandas.DataFrame` | Canonical date-indexed data panel. |
+| `metadata` | `dict` | Source, vintage, artifact, frequency, and transform-code metadata. |
 
-For custom horizons, use `horizon_set="single"` or `"custom_list"` with
-`target_horizons`, or `horizon_set="range_up_to_h"` with `max_horizon`.
+### Methods
 
-## Source Axes
+| Method | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `attach(stage, values)` | `stage: str`, `values: Mapping` | `DataBundle` | Return a new bundle with one metadata stage added. |
 
-| Axis | Choices |
-| --- | --- |
-| `panel_composition` | `official_only`, `custom_panel_only`, `official_plus_custom` |
-| `dataset` | `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, `fred_qd+fred_sd` |
-| `frequency` | `monthly`, `quarterly` |
-| `information_set_type` | `final_revised_data`, `pseudo_oos_on_revised_data` |
-| `vintage_policy` | `current_vintage`, `real_time_alfred` |
+Preprocessing outputs can use the same metadata-attachment pattern.
 
-`real_time_alfred` currently requires local ALFRED snapshot configuration when
-`alfred_mode="local"`.
-
-## Target And Predictor Axes
-
-| Axis | Choices |
-| --- | --- |
-| `target_structure` | `single_target`, `multi_target` |
-| `variable_universe` | `all_variables`, `core_variables`, `category_variables`, `target_specific_variables`, `explicit_variable_list` |
-| `missing_availability` | `require_complete_rows`, `keep_available_rows`, `impute_predictors_only`, `zero_fill_leading_predictor_gaps` |
-| `release_lag_rule` | `ignore_release_lag`, `fixed_lag_all_series`, `series_specific_lag` |
-| `contemporaneous_x_rule` | `allow_same_period_predictors`, `forbid_same_period_predictors` |
-
-Conditional leaf settings:
-
-| Choice | Required leaf setting |
-| --- | --- |
-| `single_target` | `target` |
-| `multi_target` | `targets` |
-| `category_variables` | `variable_universe_category_columns`, `variable_universe_category` |
-| `target_specific_variables` | `target_specific_columns` |
-| `explicit_variable_list` | `variable_universe_columns` |
-| `fixed_lag_all_series` | `fixed_lag_periods` |
-| `series_specific_lag` | `release_lag_per_series` |
-
-## Geography And FRED-SD
-
-These axes matter when the dataset includes FRED-SD:
-
-| Axis | Choices |
-| --- | --- |
-| `fred_sd_frequency_policy` | `report_only`, `allow_mixed_frequency`, `reject_mixed_known_frequency`, `require_single_known_frequency` |
-| `fred_sd_state_group` | `all_states`, Census regions/divisions, `contiguous_48_plus_dc`, `custom_state_group` |
-| `state_selection` | `all_states`, `selected_states` |
-| `fred_sd_variable_group` | `all_sd_variables`, domain groups, analog-confidence groups, `custom_sd_variable_group` |
-| `sd_variable_selection` | `all_sd_variables`, `selected_sd_variables` |
-| `target_geography_policy` | `single_state`, `all_states`, `selected_states` |
-| `predictor_geography_policy` | `match_target`, `all_states`, `selected_states`, `national_only` |
-
-Use leaf settings such as `target_state`, `target_states`, `predictor_states`,
-`sd_states`, and `sd_variables` when selecting subsets.
-
-## Sample And Regime Axes
-
-| Axis | Choices |
-| --- | --- |
-| `sample_start_rule` | `earliest_available`, `fixed_date`, `max_balanced` |
-| `sample_end_rule` | `latest_available`, `fixed_date` |
-| `regime_definition` | `none`, `external_nber`, `external_user_provided`, `estimated_markov_switching`, `estimated_threshold`, `estimated_structural_break` |
-| `regime_estimation_temporal_rule` | `expanding_window_per_origin`, `rolling_window_per_origin`, `block_recompute` |
-
-`fixed_date` sample rules require `sample_start_date` or `sample_end_date`.
-Partial ISO dates such as `2020` and `2020-03` are accepted and normalized.
-
-Regime settings are metadata at this stage. Estimated regime choices validate
-their required inputs and mark runtime estimation work for the later model path.
-
-## Dataset Loaders
-
-Public loaders return pandas frames:
+## DataSpec
 
 ```python
-df = mf.data.load_fred_md()
-df = mf.data.load_fred_qd()
-df = mf.data.load_fred_sd()
-df = mf.data.load_custom_csv("panel.csv")
-df = mf.data.load_custom_parquet("panel.parquet")
+macroforecast.data.DataSpec(
+    panel: pandas.DataFrame,
+    metadata: dict,
+    target: str | None,
+    targets: tuple[str, ...],
+    horizons: tuple[int, ...],
+    start: str | None = None,
+    end: str | None = None,
+    predictors: "all" | tuple[str, ...] = "all",
+)
 ```
 
-Metadata is stored on the frame and accessed through `metadata(...)`:
+`DataSpec` is the output of `spec(...)`. It keeps the canonical panel and
+metadata together with the target, horizons, sample window, and predictor
+selection for a run.
+
+## load_fred_md
+
+Load FRED-MD and return `DataBundle`.
 
 ```python
-df = mf.data.load_fred_md()
-info = mf.data.metadata(df)
-print(info["dataset"])
-print(info["artifact"]["cache_hit"])
+macroforecast.data.load_fred_md(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | pathlib.Path | None = None,
+    local_source: str | pathlib.Path | None = None,
+    local_zip_source: str | pathlib.Path | None = None,
+) -> DataBundle
 ```
 
-Advanced callers that need the raw envelope can use the `_result` variants:
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `vintage` | <code>str &#124; None</code> | `None` | Vintage in `YYYY-MM` form. `None` loads current. |
+| `force` | `bool` | `False` | Re-download or re-copy even if cache exists. |
+| `cache_root` | path-like or `None` | `None` | Raw cache root. |
+| `local_source` | path-like or `None` | `None` | Local CSV source instead of download. |
+| `local_zip_source` | path-like or `None` | `None` | Local historical zip source for vintage files. |
+
+### Output
+
+Returns `DataBundle` with monthly FRED-MD panel and metadata.
+
+## load_fred_qd
+
+Load FRED-QD and return `DataBundle`.
 
 ```python
-result = mf.data.load_fred_md_result()
-frame = result.data
-info = mf.data.metadata(result)
+macroforecast.data.load_fred_qd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | pathlib.Path | None = None,
+    local_source: str | pathlib.Path | None = None,
+) -> DataBundle
 ```
 
-The result object keeps the parsed frame, dataset metadata, artifact provenance,
-and transform codes together.
+Returns a quarterly canonical panel.
 
-## Connection To Other Recipe Blocks
+## load_fred_sd
 
-- `meta` sets study-wide execution policy and reproducibility.
-- `data` defines the raw panel, target, horizons, and source metadata.
-- `preprocessing` receives the materialized data panel and applies cleaning,
-  transforms, imputation, and frame-edge rules.
+Load FRED-SD and return `DataBundle`.
 
-Use `data` for source and target decisions only. Use preprocessing and later
-recipe blocks for all transformations after the raw panel exists.
+```python
+macroforecast.data.load_fred_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | pathlib.Path | None = None,
+    local_source: str | pathlib.Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+) -> DataBundle
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `states` | <code>list[str] &#124; None</code> | `None` | Optional state subset. |
+| `variables` | <code>list[str] &#124; None</code> | `None` | Optional FRED-SD variable subset. |
+
+FRED-SD columns are wide variable-state IDs such as `UR_CA`.
+
+## load_custom_csv
+
+Load a user CSV and normalize it to the canonical panel contract.
+
+```python
+macroforecast.data.load_custom_csv(
+    path,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    frequency: str = "unknown",
+    metadata: Mapping[str, object] | None = None,
+) -> DataBundle
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `path` | path-like | required | CSV file path. |
+| `date` | <code>str &#124; None</code> | `None` | Date column. If omitted, uses a DatetimeIndex or parses the first column. |
+| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
+| `rename` | mapping or `None` | `None` | Column rename map. |
+| `dataset` | `str` | `"custom"` | Metadata dataset label. |
+| `frequency` | `str` | `"unknown"` | Metadata frequency label. |
+| `metadata` | mapping or `None` | `None` | User metadata to attach. |
+
+## load_custom_parquet
+
+Load a user Parquet file with the same normalization contract as
+`load_custom_csv`.
+
+```python
+macroforecast.data.load_custom_parquet(
+    path,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    frequency: str = "unknown",
+    metadata: Mapping[str, object] | None = None,
+) -> DataBundle
+```
+
+## as_panel
+
+Normalize an existing pandas `DataFrame`.
+
+```python
+macroforecast.data.as_panel(
+    frame,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    metadata: Mapping[str, object] | None = None,
+) -> pandas.DataFrame
+```
+
+`as_panel` returns a canonical panel. It raises if the date column is missing,
+dates are duplicated, or any retained column cannot be represented as numeric
+values or `NaN`.
+
+## validate_panel
+
+Validate the canonical panel contract.
+
+```python
+macroforecast.data.validate_panel(panel) -> None
+```
+
+Raises `TypeError` or `ValueError` when the panel is not canonical.
+
+## panel_info
+
+Return a compact panel summary.
+
+```python
+macroforecast.data.panel_info(bundle_or_panel) -> dict
+```
+
+Output keys include `n_rows`, `n_columns`, `start`, `end`, `columns`,
+`missing_values`, and inferred `frequency`.
+
+## metadata
+
+Return explicit metadata from a `DataBundle`, `DataSpec`, `(panel, metadata)`
+tuple, `DataFrame`, or advanced raw load result.
+
+```python
+macroforecast.data.metadata(obj) -> dict
+```
+
+## spec
+
+Attach run-level data choices to a bundle or panel.
+
+```python
+macroforecast.data.spec(
+    data,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    target: str | None = None,
+    targets: Iterable[str] | None = None,
+    horizons: Iterable[int] | int | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    predictors: "all" | Iterable[str] = "all",
+) -> DataSpec
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `data` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | required | Canonical data input. |
+| `metadata` | mapping or `None` | `None` | Extra metadata to merge. |
+| `target` | <code>str &#124; None</code> | `None` | Single target column. |
+| `targets` | iterable or `None` | `None` | Multiple target columns. |
+| `horizons` | iterable, int, or `None` | derived | Forecast horizons. |
+| `start` | <code>str &#124; None</code> | `None` | Start date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
+| `end` | <code>str &#124; None</code> | `None` | End date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
+| `predictors` | <code>"all" &#124; iterable</code> | `"all"` | Predictor columns to keep. |
+
+### Default Horizons
+
+| Metadata frequency | Default horizons |
+| --- | --- |
+| `monthly` | `(1, 3, 6, 12)` |
+| `quarterly` | `(1, 2, 4, 8)` |
+| other or unknown | `(1,)` |
+
+### Output
+
+Returns `DataSpec`. Its metadata contains a `data_spec` entry with the chosen
+target, targets, horizons, sample dates, predictors, and panel summary.
+
+## Advanced Raw Results
+
+The `_result` loaders return `RawLoadResult` envelopes:
+
+```python
+result = macroforecast.data.load_fred_md_result()
+```
+
+Use these when artifact provenance or raw transform codes are needed before
+conversion to `DataBundle`. Most user workflows should use the non-result
+loaders.
+
+## Vintage Helpers
+
+`list_vintages(dataset, start, end)` returns candidate vintage labels. The
+selected vintage is passed to `load_fred_md`, `load_fred_qd`, or `load_fred_sd`
+through `vintage=`.

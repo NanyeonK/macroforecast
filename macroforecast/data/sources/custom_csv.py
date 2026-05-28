@@ -1,91 +1,79 @@
-"""Custom CSV loader — load a user-supplied CSV conforming to a FRED-family schema.
+"""Custom CSV loader for user-supplied macro panels.
 
-The caller provides the CSV path via ``leaf_config.custom_source_path``.
-Recipes should choose an official ``dataset`` and set ``panel_composition``
-to ``"official_plus_custom"`` or ``"custom_panel_only"``. The compiler
-infers the parser from the ``.csv`` extension and infers the internal
-loader schema from the selected ``dataset``/``frequency`` route.
+The loader reads a CSV file, normalizes it to macroforecast's canonical
+``DatetimeIndex`` panel contract, and returns a raw load result that the
+public ``macroforecast.data.load_custom_csv`` wrapper converts to
+``DataBundle``.
 
 Schema requirements:
 
-- First column is a date index (any parseable date format).
-- Remaining columns are numeric; column names are series IDs.
-- Optional first row may hold FRED-MD-style transformation codes — the
-  loader does NOT detect or consume this automatically. Users who need
-  T-code-aware preprocessing should pre-strip the T-code row from the
-  file OR rely on Layer 2 ``tcode_policy: raw_only`` (the default).
+- A parseable date column, or a first column that can be parsed as dates.
+- Remaining retained columns are macro variables.
+- Values are coerced to numeric values or ``NaN``.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 import pandas as pd
 
 from ..errors import RawParseError
-from ..manager import build_raw_artifact_record, normalize_version_request
 from ..manifest import append_raw_manifest_entry
+from ..panel import as_panel
 from ..types import RawDatasetMetadata, RawLoadResult
-
-
-_SUPPORTED_SCHEMAS = {"fred_md", "fred_qd", "fred_sd"}
+from ..types import RawArtifactRecord
 
 
 def load_custom_csv(
     path: str | Path,
     *,
-    dataset: str,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    frequency: str = "unknown",
+    metadata: Mapping[str, Any] | None = None,
     cache_root: str | Path | None = None,
 ) -> RawLoadResult:
-    """Load ``path`` as a CSV conforming to ``dataset``'s schema.
+    """Load ``path`` as a user panel and normalize it to the canonical format.
 
     Args:
         path: Filesystem path to the CSV.
-        dataset: Schema label (``fred_md`` / ``fred_qd`` / ``fred_sd``).
-            Determines how the loaded panel is labelled downstream.
+        date: Optional date column name. If omitted, a DatetimeIndex is used
+            when present, otherwise the first column is parsed as dates.
+        columns: Optional columns to keep before renaming.
+        rename: Optional mapping from source column names to canonical names.
+        dataset: Metadata label for the loaded panel.
+        frequency: Metadata frequency label.
+        metadata: Optional user metadata to attach.
         cache_root: Ignored for custom loaders (no cache — user supplies
             the file directly). Accepted to match the canonical FRED
             loader signature.
     """
-
-    if dataset not in _SUPPORTED_SCHEMAS:
-        raise RawParseError(
-            f"dataset={dataset!r} is not a supported schema for custom_csv; "
-            f"expected one of {_SUPPORTED_SCHEMAS}"
-        )
 
     csv_path = Path(path)
     if not csv_path.exists():
         raise RawParseError(f"custom_csv source path does not exist: {csv_path}")
 
     try:
-        df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
+        raw = pd.read_csv(csv_path)
     except Exception as exc:
         raise RawParseError(f"failed to parse custom CSV at {csv_path}") from exc
 
-    if not isinstance(df.index, pd.DatetimeIndex):
-        raise RawParseError(
-            f"custom CSV at {csv_path} must have a parseable date index as its first column"
-        )
+    try:
+        df = as_panel(raw, date=date, columns=columns, rename=rename, metadata=metadata)
+    except Exception as exc:
+        raise RawParseError(f"failed to normalize custom CSV at {csv_path}") from exc
 
-    # Coerce all remaining columns to numeric, dropping any that are
-    # entirely non-numeric (matches FRED loader behaviour).
-    df = df.apply(pd.to_numeric, errors="coerce")
-    df = df.dropna(axis=1, how="all")
-    df.index.name = "date"
-    df.sort_index(inplace=True)
-
-    request = normalize_version_request(dataset, vintage=None)
-    artifact = build_raw_artifact_record(
-        request=request,
-        source_url=str(csv_path),
-        local_path=csv_path,
-        file_format="csv",
-        cache_hit=False,
-    )
+    artifact = _custom_artifact(dataset=dataset, path=csv_path, file_format="csv")
     metadata = RawDatasetMetadata(
         dataset=dataset,
         source_family="custom-csv",
-        frequency=_frequency_for_dataset(dataset),
+        frequency=frequency,
         version_mode="current",
         vintage=None,
         data_through=df.index[-1].strftime("%Y-%m") if len(df) else None,
@@ -98,12 +86,21 @@ def load_custom_csv(
     return result
 
 
-def _frequency_for_dataset(dataset: str) -> str:
-    return {
-        "fred_md": "monthly",
-        "fred_qd": "quarterly",
-        "fred_sd": "state_monthly",
-    }.get(dataset, "monthly")
+def _custom_artifact(*, dataset: str, path: Path, file_format: str) -> RawArtifactRecord:
+    content = path.read_bytes()
+    return RawArtifactRecord(
+        dataset=dataset,
+        version_mode="current",
+        vintage=None,
+        source_url=str(path),
+        local_path=str(path),
+        file_format=file_format,
+        downloaded_at=datetime.now(timezone.utc).isoformat(),
+        file_sha256=hashlib.sha256(content).hexdigest(),
+        file_size_bytes=len(content),
+        cache_hit=False,
+        manifest_version="v1",
+    )
 
 
 __all__ = ["load_custom_csv"]

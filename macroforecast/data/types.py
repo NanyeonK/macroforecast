@@ -5,7 +5,7 @@ from typing import Any, Literal
 
 DatasetId = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
 VersionMode = Literal["current", "vintage"]
-ArtifactFormat = Literal["csv", "xlsx", "mixed"]
+ArtifactFormat = Literal["csv", "xlsx", "parquet", "mixed"]
 SupportTier = Literal["stable", "provisional"]
 
 

@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from macroforecast.data import RawLoadResult, load_fred_sd, load_fred_sd_result, metadata
+from macroforecast.data import DataBundle, RawLoadResult, load_fred_sd, load_fred_sd_result, metadata
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_load_fred_sd_from_fixture_workbook(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
-    frame = load_fred_sd(local_source=fixture, cache_root=tmp_path)
+    bundle = load_fred_sd(local_source=fixture, cache_root=tmp_path)
     result = load_fred_sd_result(local_source=fixture, cache_root=tmp_path)
 
-    assert metadata(frame)["dataset"] == "fred_sd"
+    assert isinstance(bundle, DataBundle)
+    assert metadata(bundle)["dataset"] == "fred_sd"
     assert isinstance(result, RawLoadResult)
     assert result.dataset_metadata.dataset == "fred_sd"
     assert result.dataset_metadata.frequency == "state_monthly"
