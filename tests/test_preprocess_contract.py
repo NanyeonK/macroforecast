@@ -11,7 +11,7 @@ from macroforecast import (
     preprocess_summary,
     preprocess_to_dict,
 )
-from macroforecast.layers.l2_preprocessing import (
+from macroforecast.preprocessing import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
     CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION,

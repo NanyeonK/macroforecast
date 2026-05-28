@@ -60,7 +60,7 @@ def test_informative_failure_message_on_missing_page() -> None:
     """
     fake_op_name = "__fake_test_op_xyz__"
     # Build the path the gate would expect (does not exist on disk).
-    enc_root = Path(__file__).parents[3] / "docs" / "reference" / "encyclopedia"
+    enc_root = Path(__file__).parents[3] / "docs" / "reference" / "generated"
     fake_page_path = enc_root / "l7" / "op" / f"{fake_op_name}.md"
 
     # Confirm the page truly does NOT exist (pre-condition for a valid test).
@@ -84,7 +84,7 @@ def test_informative_failure_message_on_missing_page() -> None:
         f"Actual message: {failure_message}"
     )
     # Path reference: the message must contain some path-like substring.
-    assert "docs/reference/encyclopedia" in failure_message or fake_op_name in failure_message, (
+    assert "docs/reference" in failure_message or fake_op_name in failure_message, (
         f"Failure message must contain a file path reference.\n"
         f"Actual message: {failure_message}"
     )

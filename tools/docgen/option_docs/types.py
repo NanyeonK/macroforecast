@@ -147,7 +147,7 @@ class OptionDoc:
 
     # Per-op page (v0.8.x)
     # When True, render_encyclopedia.py emits a dedicated page at
-    # ``docs/encyclopedia/<layer>/<axis>/<option>.md`` with Function signature
+    # ``docs/<layer>/<axis>/<option>.md`` with Function signature
     # + Parameters table + Behavior + In recipe context + References sections.
     # The axis page's option section is replaced by a 1-2 line stub + link.
     op_page: bool = False

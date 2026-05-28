@@ -73,10 +73,8 @@ jobs:
           # for_contributors / reference) plus architecture/ and replications/.
           # Any live (non-_archive) doc that still links to a removed tree
           # path is a dangling link from the migration.
-          # Note: api/ is intentionally excluded from this check.
-          # docs/reference/api/ is a live valid subdirectory (standalone functions
-          # and API reference). The old stale pattern was a top-level docs/api/
-          # audience tree which no longer exists; docs/reference/api/ is live.
+          # docs/reference/ is live. The stale pattern was a top-level docs/api/
+          # audience tree, not the flattened reference pages.
           live_docs=$(find docs -name '*.md' -type f -not -path 'docs/_archive/*')
           if echo "$live_docs" | xargs grep -lE '\((\.\./)*(getting_started|user_guide|fred_dataset|simple|detail|dev)/' 2>/dev/null ; then
               echo "Stale audience-tree reference left over from v0.6.2 docs reorg"

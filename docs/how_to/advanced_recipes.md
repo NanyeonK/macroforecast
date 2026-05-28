@@ -17,7 +17,7 @@ configurations. The study will be shared as a unit, for example as a
 paper replication package or a CI artifact. The study depends on
 cross-layer references such as L4 `is_benchmark`, L6.D `mcs_inclusion`,
 or L3 `lineage`. We recommend standalone code (`mf.models.*`,
-`macroforecast.layers.l3_features.selection.*`, and the other public submodules) when the
+`macroforecast.features.selection.*`, and the other public submodules) when the
 study is exploratory, when the user is iterating on a single estimator,
 or when the input data does not match the FRED-MD, QD, or SD adapter
 contracts.
@@ -33,12 +33,12 @@ gallery in `examples/recipes/` ships runnable templates including
 study_id: minimal_ridge
 random_seed: 0
 
-1_data:
+data:
   dataset: fred_md
   target: INDPRO
   horizon: 1
 
-2_preprocessing:
+preprocessing:
   transform: difference
   outlier: winsor_1_99
 
@@ -128,7 +128,7 @@ estimator.
 
 ```python
 import macroforecast as mf
-from macroforecast.layers.l3_features.selection import Boruta
+from macroforecast.features.selection import Boruta
 
 X, y = load_my_data()
 sel = Boruta(random_state=0).fit(X, y)

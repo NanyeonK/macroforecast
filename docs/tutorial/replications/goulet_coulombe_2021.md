@@ -82,7 +82,7 @@ To replicate the actual paper figures (1960-onwards walk-forward over
 the full FRED-MD vintage), swap two YAML keys:
 
 ```diff
- 1_data:
+ data:
    fixed_axes:
 -    panel_composition: custom_panel_only
 +    panel_composition: official_only
@@ -108,7 +108,7 @@ horse race.
 To extend to MRF (the paper's headline result), add another L4 fit
 node with `model: macroeconomic_random_forest` alongside the ridge
 (`is_benchmark: true`). See
-[encyclopedia L4](../encyclopedia/l4/index.md) for the full family
+[encyclopedia L4](../../reference/generated/l4/index.md) for the full family
 list.
 
 ## What this page proves vs. what is still TBD
@@ -125,5 +125,5 @@ list.
   layer reading using the smaller `l4_minimal_ridge.yaml`.
 - [Recipe gallery](../recipe_api/gallery.md) — full
   list of bundled recipes including GC2021.
-- [`encyclopedia/l4/axes/family.md`](../encyclopedia/l4/axes/family.md)
+- [`l4/axes/family.md`](../../reference/generated/l4/axes/family.md)
   — every L4 model family available for horse-race extension.

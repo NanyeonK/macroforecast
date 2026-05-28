@@ -129,48 +129,49 @@ def test_mf_run_result_documented_attrs_via_api(tmp_path):
 
     recipe = """
 0_meta:
-  experiment_id: k2_attr_test
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
+  leaf_config: {random_seed: 42}
 
-1_data_definition:
-  fixed_axes:
-    source: custom_csv
-    file_path: /tmp/__k2_smoke.csv
+data:
+  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
+  leaf_config:
+    target: y
+    target_horizons: [1]
+    custom_panel_inline:
+      date: [2010-01-01, 2010-02-01, 2010-03-01, 2010-04-01, 2010-05-01, 2010-06-01, 2010-07-01, 2010-08-01, 2010-09-01, 2010-10-01, 2010-11-01, 2010-12-01]
+      y:  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
+      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
 
-2_preprocessing:
-  fixed_axes:
-    mixed_frequency_representation: calendar_aligned_frame
-    target_missing_policy: none
-    x_missing_policy: none
+preprocessing:
+  fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 
-3_features:
-  fixed_axes:
-    feature_mode: raw_panel
+3_feature_engineering:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
+    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
+  sinks:
+    l3_features_v1: {X_final: lag_x, y_final: y_h}
+    l3_metadata_v1: auto
 
-4_model:
-  fixed_axes:
-    model_family: ar_p
-    horizons: [1]
-
-5_evaluation:
-  fixed_axes:
-    evaluation_mode: oos
-
-8_output:
-  fixed_axes:
-    export_forecasts: false
+4_forecasting_model:
+  nodes:
+    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
+    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
+    - id: fit_ridge
+      type: step
+      op: fit
+      params: {model: ridge, alpha: 1.0, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none, min_train_size: 6}
+      is_benchmark: true
+      inputs: [src_X, src_y]
+    - {id: predict_ridge, type: step, op: predict, inputs: [fit_ridge, src_X]}
+  sinks:
+    l4_forecasts_v1: predict_ridge
+    l4_model_artifacts_v1: fit_ridge
+    l4_training_metadata_v1: auto
 """
-    # Create a minimal CSV so the source exists
-    csv_path = tmp_path / "k2_smoke.csv"
-    import pandas as pd
-    import numpy as np
-    rng = np.random.default_rng(0)
-    dates = pd.date_range("2010-01-01", periods=36, freq="MS")
-    df = pd.DataFrame({"y": rng.standard_normal(36)}, index=dates)
-    df.index.name = "date"
-    df.to_csv(csv_path)
-
-    # Patch file_path in recipe to the real tmp csv
-    recipe_with_path = recipe.replace("/tmp/__k2_smoke.csv", str(csv_path))
+    recipe_with_path = recipe
 
     try:
         r = mf.run(recipe_with_path, output_directory=str(tmp_path / "out"))

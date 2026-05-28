@@ -37,27 +37,27 @@ graph TD
         LSPECS["core/layer_specs.py<br/>LayerImplementationSpec"]
     end
 
-    subgraph LAYERS["Layer Implementation (L0-L8)"]
-        L0["layers/l0_meta<br/>study setup, seed, compute_mode"]
-        L1["layers/l1_data<br/>FRED-MD/QD/SD, target, regime"]
-        L1D["layers/l1_5_diagnostic"]
-        L2["layers/l2_preprocessing<br/>transform, outlier, imputation"]
-        L2D["layers/l2_5_diagnostic"]
-        L3["layers/l3_features<br/>feature engineering DAG"]
-        L3D["layers/l3_5_diagnostic"]
-        L4["layers/l4_models<br/>30+ estimator families"]
-        L4D["layers/l4_5_diagnostic"]
-        L5["layers/l5_evaluation<br/>metrics, decomposition"]
-        L6["layers/l6_tests<br/>DM/CW/MCS/GR/DMP"]
-        L7["layers/l7_interpretation<br/>SHAP, PFI, ALE, IRF"]
-        L8["layers/l8_output<br/>json/csv/parquet/latex"]
+    subgraph LAYERS["Semantic Layer Implementation (L0-L8)"]
+        L0["meta<br/>study setup, seed, compute_mode"]
+        L1["data<br/>FRED-MD/QD/SD, target, regime"]
+        L1D["diagnostics/data_summary"]
+        L2["preprocessing<br/>transform, outlier, imputation"]
+        L2D["diagnostics/preprocessing"]
+        L3["features<br/>feature engineering DAG"]
+        L3D["diagnostics/features"]
+        L4["models<br/>30+ estimator families"]
+        L4D["diagnostics/generator"]
+        L5["evaluation<br/>metrics, decomposition"]
+        L6["stat_tests<br/>DM/CW/MCS/GR/DMP"]
+        L7["interpretation<br/>SHAP, PFI, ALE, IRF"]
+        L8["output<br/>json/csv/parquet/latex"]
     end
 
     subgraph L3SUB["L3 Sub-modules"]
-        L3SEL["layers/l3_features/selection.py<br/>Boruta class"]
-        L3TRF["layers/l3_features/transforms.py<br/>chow_lin_disaggregate"]
-        L3OPS["layers/l3_features/ops.py<br/>37 DAG ops registry"]
-        L3SCH["layers/l3_features/schema.py<br/>L3 schema definition"]
+        L3SEL["features/selection.py<br/>Boruta class"]
+        L3TRF["features/transforms.py<br/>chow_lin_disaggregate"]
+        L3OPS["features/ops.py<br/>37 DAG ops registry"]
+        L3SCH["features/schema.py<br/>L3 schema definition"]
     end
 
     subgraph DOCS8["Docs (PR8 touch surface)"]
@@ -68,7 +68,7 @@ graph TD
     end
 
     subgraph SHIMS["Backward-compat Shims"]
-        INTERP["interpretation/__init__.py<br/>GIRF shim to l7_interpretation"]
+        INTERP["interpretation/__init__.py<br/>GIRF/LSTMHiddenState public surface"]
         RECIPES["recipes/__init__.py<br/>shim to layers"]
         FUNCS["functions/<br/>shim to api/functions"]
     end
@@ -123,10 +123,10 @@ graph TD
 | `core/execution.py` | Cell loop, seed propagation, bit-exact replicate | `core/runtime.py`, `core/manifest.py` | No |
 | `core/runtime.py` | Per-layer `materialize_lN` helpers | all `layers/` | No |
 | `core/status.py` | `OPERATIONAL` / `FUTURE` two-value vocabulary | -- | No |
-| `layers/l2_preprocessing/` | Transform, outlier, imputation; `freq_align_*_clean` callables | `core/`, `pandas` | No (source unchanged) |
-| `layers/l4_models/` | 35+ estimator families; `op: fit` dispatch | `core/`, `sklearn`, `statsmodels` | No (source unchanged) |
-| `layers/l7_interpretation/` | 30 importance ops: SHAP, PFI, ALE, IRF, lineage | `core/`, `shap`, `statsmodels` | No (source unchanged) |
-| `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `layers/l7_interpretation` | No |
+| `preprocessing/` | Transform, outlier, imputation; `freq_align_*_clean` callables | `core/`, `pandas` | No (source unchanged) |
+| `models/` | 35+ estimator families; `op: fit` dispatch | `core/`, `sklearn`, `statsmodels` | No (source unchanged) |
+| `interpretation/` | 30 importance ops: SHAP, PFI, ALE, IRF, lineage | `core/`, `shap`, `statsmodels` | No (source unchanged) |
+| `interpretation/__init__.py` | Backward-compat shim: `GIRF` to `l7_interpretation` | `interpretation` | No |
 | `docs/explanation/migration_guide.md` | Comprehensive migration guide: axis renames, module paths, CLI change, deprecations | `docs/explanation/deprecation_timeline.md` | **YES (PR8: CREATED)** |
 | `docs/explanation/index.md` | Explanation section toctree | -- | **YES (PR8: migration_guide added)** |
 | `README.md` | Project README with install + quickstart | -- | **YES (PR8: upgrading notice added)** |
@@ -173,7 +173,7 @@ graph TD
 | `mf.run` | Public entry point | `api/recipe.py` | No |
 | `execute_recipe` | Cell loop, seed prop, manifest write | `core/runtime.py` | No |
 | `sweep.expand_cells` | Expands `{sweep: [...]}` markers to cell list | `core/sweep.py` | No |
-| `runtime.materialize_l3` | Instantiates L3 DAG nodes, dispatches ops | `layers/l3_features/ops.py` | No |
+| `runtime.materialize_l3` | Instantiates L3 DAG nodes, dispatches ops | `features/ops.py` | No |
 | `Boruta.fit` | Runs Boruta iterative shadow-feature test | `numpy`, `sklearn.ensemble` | No (source); **docs fixed** |
 | `_fit_shadow_forest` | Fits RF on X augmented with shadow copies | `sklearn.ensemble.RandomForestClassifier` | No |
 | `_bonferroni_test` | Bonferroni significance test on hit counts | `scipy.stats.binom` | No |

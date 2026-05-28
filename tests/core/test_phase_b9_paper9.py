@@ -36,7 +36,7 @@ import pandas as pd
 import pytest
 
 import macroforecast
-from macroforecast.layers.l4_models.paper_methods import hemisphere_neural_network
+from macroforecast.models.paper_methods import hemisphere_neural_network
 
 
 # ----------------------------------------------------------------------

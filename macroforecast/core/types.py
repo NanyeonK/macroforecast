@@ -62,7 +62,7 @@ class L0MetaArtifact(DataType):
     reproducibility_policy: Literal["seeded_reproducible", "exploratory"]
     compute_policy: Literal["serial", "parallel"]
     random_seed: int | None
-    parallel_unit: Literal["models", "horizons", "targets", "oos_dates"] | None
+    parallel_unit: Literal["cells", "models", "horizons", "targets", "oos_dates"] | None
     n_workers: int | Literal["auto"] | None
     gpu_deterministic: bool
     derived_study_scope: str

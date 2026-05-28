@@ -36,7 +36,7 @@ def _multi_cell_recipe(
             compute_policy: {compute_policy}
           leaf_config:
             random_seed: 42{parallel_unit_block}{n_workers_block}
-        1_data:
+        data:
           fixed_axes:
             panel_composition: custom_panel_only
             frequency: monthly
@@ -49,7 +49,7 @@ def _multi_cell_recipe(
               y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
               x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
               x2: [0.1, 0.4, 0.2, 0.6, 0.3, 0.7, 0.5, 0.8, 0.4, 0.9, 0.6, 1.0]
-        2_preprocessing:
+        preprocessing:
           fixed_axes: {{transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}}
         3_feature_engineering:
           nodes:
@@ -82,7 +82,7 @@ def _multi_cell_recipe(
 
 def test_parallel_unit_cells_in_options():
     """Cycle 16 N-2: PARALLEL_UNIT_OPTIONS contains cells."""
-    from macroforecast.layers.l0_meta.schema import PARALLEL_UNIT_OPTIONS
+    from macroforecast.meta.schema import PARALLEL_UNIT_OPTIONS
     assert "cells" in PARALLEL_UNIT_OPTIONS, (
         f"cells missing from PARALLEL_UNIT_OPTIONS: {PARALLEL_UNIT_OPTIONS}"
     )
@@ -90,7 +90,7 @@ def test_parallel_unit_cells_in_options():
 
 def test_parallel_unit_cells_all_original_options_retained():
     """Cycle 16 N-2: adding cells does not drop original options."""
-    from macroforecast.layers.l0_meta.schema import PARALLEL_UNIT_OPTIONS
+    from macroforecast.meta.schema import PARALLEL_UNIT_OPTIONS
     for opt in ("models", "horizons", "targets", "oos_dates"):
         assert opt in PARALLEL_UNIT_OPTIONS, f"{opt} missing after adding cells"
 

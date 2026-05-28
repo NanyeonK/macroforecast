@@ -116,7 +116,7 @@ def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
     recipe = """
 0_meta:
   fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -129,7 +129,7 @@ def test_target_transformer_dispatch_runs_end_to_end(tmp_path):
       date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01]
       y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
       x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
-2_preprocessing:
+preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
@@ -176,7 +176,7 @@ def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
     recipe = """
 0_meta:
   fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -188,7 +188,7 @@ def test_fit_view_emits_fitted_vs_actual_and_residual_time(tmp_path):
       date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01, 2018-11-01, 2018-12-01]
       y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
       x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
-2_preprocessing:
+preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
@@ -233,9 +233,9 @@ def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
 
     recipe = """
 0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible, parallel_unit: oos_dates}
-  leaf_config: {n_workers_inner: 4, random_seed: 42}
-1_data:
+  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
+  leaf_config: {parallel_unit: oos_dates, n_workers_inner: 4, random_seed: 42}
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -247,7 +247,7 @@ def test_parallel_origins_seed_is_deterministic_across_runs(tmp_path):
       date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01, 2018-11-01, 2018-12-01]
       y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
       x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
-2_preprocessing:
+preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:

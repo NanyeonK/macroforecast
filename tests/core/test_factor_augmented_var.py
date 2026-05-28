@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.core.runtime import _FactorAugmentedVAR
-from macroforecast.layers.l4_models.ops import (
+from macroforecast.models.ops import (
     OPERATIONAL_MODELS,
     FUTURE_MODELS,
     get_family_status,

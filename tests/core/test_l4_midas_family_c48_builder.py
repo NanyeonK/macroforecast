@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macroforecast.layers.l4_models.ops import (
+from macroforecast.models.ops import (
     FUTURE_MODEL_FAMILIES,
     OPERATIONAL_MODEL_FAMILIES,
     get_family_status,

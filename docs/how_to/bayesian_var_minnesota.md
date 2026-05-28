@@ -2,7 +2,7 @@
 
 The goal is to fit a Bayesian VAR with the Litterman (1986) Minnesota
 prior using the public class `BVARMinnesota` from
-`macroforecast.layers.l4_models`. The model implements the closed-form posterior
+`macroforecast.models`. The model implements the closed-form posterior
 mean `β̂ = (V⁻¹ + X'X)⁻¹ (V⁻¹ m + X'y)` with a random-walk anchor on
 the first own-lag-1 column. The parent class `BVAR` exposes the more
 general interface for users who want to choose between the Minnesota and
@@ -13,7 +13,7 @@ Normal-Inverse-Wishart priors directly.
 ```python
 import numpy as np
 import pandas as pd
-from macroforecast.layers.l4_models import BVAR, BVARMinnesota
+from macroforecast.models import BVAR, BVARMinnesota
 
 rng = np.random.RandomState(0)
 T = 200

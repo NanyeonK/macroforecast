@@ -20,7 +20,7 @@ in v0.10.0.
 All three shims are centralized in `macroforecast.api._deprecations`
 (`resolve_model`, `resolve_models`, `resolve_benchmark_model`).
 
-### Constants in macroforecast.layers.l4_models.ops
+### Constants in macroforecast.models.ops
 
 | Deprecated | Replacement |
 |-----------|-------------|

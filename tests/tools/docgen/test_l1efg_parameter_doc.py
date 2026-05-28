@@ -20,7 +20,7 @@ Verifies that:
   * estimated_structural_break   -> max_breaks, break_ic_criterion
   * none / external_nber         -> no params
 
-- _KNOWN_LEAF_CONFIG_KEYS['1_data'] extended with all new regime + horizon keys
+- _KNOWN_LEAF_CONFIG_KEYS['data'] extended with all new regime + horizon keys
 
 - L1 audit is noted as complete in the module docstring
 
@@ -271,9 +271,9 @@ def test_l1efg_all_entries_tier1_complete():
 
 
 def test_known_leaf_config_keys_extended_with_l1efg_keys():
-    """_KNOWN_LEAF_CONFIG_KEYS['1_data'] includes all new L1.E/F/G conditional keys."""
+    """_KNOWN_LEAF_CONFIG_KEYS['data'] includes all new L1.E/F/G conditional keys."""
     from macroforecast.core.execution import _KNOWN_LEAF_CONFIG_KEYS
-    keys = _KNOWN_LEAF_CONFIG_KEYS["1_data"]
+    keys = _KNOWN_LEAF_CONFIG_KEYS["data"]
     # L1.F new key
     assert "max_horizon" in keys, "max_horizon missing from _KNOWN_LEAF_CONFIG_KEYS"
     # L1.G regime keys
@@ -289,7 +289,7 @@ def test_known_leaf_config_keys_extended_with_l1efg_keys():
         "block_recompute_interval",
     }
     missing = regime_keys - keys
-    assert not missing, f"Missing regime keys in _KNOWN_LEAF_CONFIG_KEYS['1_data']: {missing}"
+    assert not missing, f"Missing regime keys in _KNOWN_LEAF_CONFIG_KEYS['data']: {missing}"
 
 
 # ---------------------------------------------------------------------------
@@ -299,7 +299,7 @@ def test_known_leaf_config_keys_extended_with_l1efg_keys():
 
 def test_l1_option_docs_docstring_marks_audit_complete():
     """The option_docs/l1.py module docstring marks L1 audit as complete."""
-    import macroforecast.layers.l1_data.option_docs as l1_module
+    import macroforecast.data.option_docs as l1_module
     doc = l1_module.__doc__ or ""
     assert "L1 audit complete" in doc or "audit complete" in doc.lower(), (
         "option_docs/l1.py docstring should state 'L1 audit complete'"

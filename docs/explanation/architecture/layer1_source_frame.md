@@ -100,7 +100,7 @@ Minimal YAML:
 
 ```yaml
 path:
-  1_data:
+  data:
     fixed_axes:
       dataset: fred_md
       panel_composition: official_only
@@ -116,7 +116,7 @@ Replace FRED-MD with a custom CSV:
 
 ```yaml
 path:
-  1_data:
+  data:
     fixed_axes:
       panel_composition: custom_panel_only
       frequency: monthly
@@ -131,7 +131,7 @@ Append custom state-level columns to FRED-MD:
 
 ```yaml
 path:
-  1_data:
+  data:
     fixed_axes:
       dataset: fred_md
       panel_composition: official_plus_custom

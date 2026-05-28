@@ -33,6 +33,7 @@ def test_forecast_default_recipe_layer0_seed_and_axes():
     assert l0["fixed_axes"]["failure_policy"] == "fail_fast"
     assert l0["fixed_axes"]["reproducibility_policy"] == "seeded_reproducible"
     assert l0["fixed_axes"]["compute_policy"] == "serial"
+    assert "study_scope" not in l0["fixed_axes"]
     assert l0["leaf_config"]["random_seed"] == 42
 
 
@@ -48,7 +49,7 @@ def test_forecast_default_recipe_layer1_target_horizons_and_window():
         random_seed=0,
     )
     recipe = b.build()
-    l1 = recipe["1_data"]
+    l1 = recipe["data"]
     assert l1["fixed_axes"]["dataset"] == "fred_md"
     assert l1["fixed_axes"]["frequency"] == "monthly"
     assert l1["fixed_axes"]["horizon_set"] == "custom_list"
@@ -72,7 +73,7 @@ def test_forecast_fred_qd_sets_quarterly_frequency():
         random_seed=0,
     )
     recipe = b.build()
-    assert recipe["1_data"]["fixed_axes"]["frequency"] == "quarterly"
+    assert recipe["data"]["fixed_axes"]["frequency"] == "quarterly"
 
 
 def test_forecast_fred_sd_alone_requires_explicit_frequency():

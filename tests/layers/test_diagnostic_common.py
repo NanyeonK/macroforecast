@@ -1,4 +1,4 @@
-from macroforecast.layers.l1_5_diagnostic.schema import parse_recipe_yaml as parse_l1_5_recipe
+from macroforecast.diagnostics.data_summary.schema import parse_recipe_yaml as parse_l1_5_recipe
 from macroforecast.core.layers.registry import get_layer
 
 
@@ -8,27 +8,27 @@ def layer_id_to_yaml_key(layer_id: str) -> str:
 
 def _parse_layer_yaml(yaml_text: str, layer_id: str):
     if layer_id == "l1_5":
-        from macroforecast.layers.l1_5_diagnostic.schema import parse_layer_yaml
+        from macroforecast.diagnostics.data_summary.schema import parse_layer_yaml
     else:
-        from macroforecast.layers.l2_5_diagnostic.schema import parse_layer_yaml
+        from macroforecast.diagnostics.preprocessing.schema import parse_layer_yaml
 
     return parse_layer_yaml(yaml_text, layer_id)
 
 
 def _normalize(layer: dict, layer_id: str):
     if layer_id == "l1_5":
-        from macroforecast.layers.l1_5_diagnostic.schema import normalize_to_dag_form
+        from macroforecast.diagnostics.data_summary.schema import normalize_to_dag_form
     else:
-        from macroforecast.layers.l2_5_diagnostic.schema import normalize_to_dag_form
+        from macroforecast.diagnostics.preprocessing.schema import normalize_to_dag_form
 
     return normalize_to_dag_form(layer, layer_id)
 
 
 def _resolve(dag, layer_id: str):
     if layer_id == "l1_5":
-        from macroforecast.layers.l1_5_diagnostic.schema import resolve_axes
+        from macroforecast.diagnostics.data_summary.schema import resolve_axes
     else:
-        from macroforecast.layers.l2_5_diagnostic.schema import resolve_axes
+        from macroforecast.diagnostics.preprocessing.schema import resolve_axes
 
     return resolve_axes(dag)
 

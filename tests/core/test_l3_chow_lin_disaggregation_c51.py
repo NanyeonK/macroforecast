@@ -83,7 +83,7 @@ def test_chow_lin_op_matches_helper_directly() -> None:
     Tolerance: atol=1e-10 (test-spec.md).
     """
     from macroforecast.core.runtime import _chow_lin_disaggregate
-    from macroforecast.layers.l3_features.ops import chow_lin_disaggregation
+    from macroforecast.features.ops import chow_lin_disaggregation
 
     q_series, m_indicator, q_df, m_df = _make_fixture_seed42()
 
@@ -126,7 +126,7 @@ def test_chow_lin_op_matches_helper_directly() -> None:
 
 def test_chow_lin_op_raises_on_missing_indicator() -> None:
     """chow_lin_disaggregation([q_df], {}) must raise ValueError about chow_lin_indicator."""
-    from macroforecast.layers.l3_features.ops import chow_lin_disaggregation
+    from macroforecast.features.ops import chow_lin_disaggregation
 
     _, _, q_df, _ = _make_fixture_seed42()
 
@@ -140,7 +140,7 @@ def test_chow_lin_op_raises_on_missing_indicator() -> None:
 
 def test_chow_lin_op_no_error_two_inputs() -> None:
     """chow_lin_disaggregation([q_df, m_df], {}) must not raise any error."""
-    from macroforecast.layers.l3_features.ops import chow_lin_disaggregation
+    from macroforecast.features.ops import chow_lin_disaggregation
 
     _, _, q_df, m_df = _make_fixture_seed42()
     # Must not raise

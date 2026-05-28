@@ -1,1 +1,9 @@
-# macroforecast.layers.l4_5_diagnostic
+"""Compatibility shim for macroforecast.diagnostics.generator."""
+
+from __future__ import annotations
+
+from macroforecast.diagnostics.generator import *  # noqa: F401,F403
+try:
+    from macroforecast.diagnostics.generator import __all__ as __all__  # type: ignore[attr-defined]
+except ImportError:
+    __all__ = [name for name in globals() if not name.startswith("_")]

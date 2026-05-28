@@ -11,14 +11,14 @@ from macroforecast.core import execute_l1_l2
 
 
 _BASE_YAML = """
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
   leaf_config:
     target: y
     custom_panel_inline: {}
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none
@@ -30,7 +30,7 @@ _BASE_YAML = """
 def _recipe_with_inline(rows: dict) -> str:
     import yaml
     recipe = {
-        "1_data": {
+        "data": {
             "fixed_axes": {
                 "panel_composition": "custom_panel_only",
                 "frequency": "monthly",
@@ -40,7 +40,7 @@ def _recipe_with_inline(rows: dict) -> str:
                 "custom_panel_inline": rows,
             },
         },
-        "2_preprocessing": {
+        "preprocessing": {
             "fixed_axes": {
                 "transform_policy": "no_transform",
                 "outlier_policy": "none",

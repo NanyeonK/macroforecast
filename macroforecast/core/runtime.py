@@ -33,26 +33,32 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 
-import macroforecast.layers.l6_tests.schema as l6_layer
-import macroforecast.layers.l7_interpretation.schema as l7_layer
-import macroforecast.layers.l8_output.schema as l8_layer
-import macroforecast.layers.l1_5_diagnostic.schema as l1_5_layer
-import macroforecast.layers.l2_5_diagnostic.schema as l2_5_layer
-import macroforecast.layers.l3_5_diagnostic.schema as l3_5_layer
-import macroforecast.layers.l4_5_diagnostic.schema as l4_5_layer
-import macroforecast.layers.l3_features.schema as l3_layer
-import macroforecast.layers.l4_models.schema as l4_layer
-import macroforecast.layers.l5_evaluation.schema as l5_layer
-import macroforecast.layers.l1_data.schema as l1_layer
-import macroforecast.layers.l2_preprocessing.schema as l2_layer
+import macroforecast.stat_tests.schema as l6_layer
+import macroforecast.interpretation.schema as l7_layer
+import macroforecast.output.schema as l8_layer
+import macroforecast.diagnostics.data_summary.schema as l1_5_layer
+import macroforecast.diagnostics.preprocessing.schema as l2_5_layer
+import macroforecast.diagnostics.features.schema as l3_5_layer
+import macroforecast.diagnostics.generator.schema as l4_5_layer
+import macroforecast.features.schema as l3_layer
+import macroforecast.models.schema as l4_layer
+import macroforecast.evaluation.schema as l5_layer
+import macroforecast.preprocessing.schema as l2_layer
+from macroforecast.data.config import (
+    normalize_iso_partial as _data_normalize_iso_partial,
+    regime_metadata_from_resolved as _data_regime_metadata_from_resolved,
+    resolve_data_block as _resolve_data_block,
+    resolved_horizons as _data_resolved_horizons,
+    validate_data_block as _validate_data_block,
+)
 # Load collocated ops for side-effect registration (l5/l6/l8 ops no longer
 # in core/ops/__init__.py after Phase 3f restructure).
-import macroforecast.layers.l5_evaluation.ops  # noqa: F401
-import macroforecast.layers.l6_tests.ops  # noqa: F401
-import macroforecast.layers.l7_interpretation.ops  # noqa: F401
-import macroforecast.layers.l8_output.ops  # noqa: F401
-from ..layers.l1_data import load_fred_md, load_fred_qd, load_fred_sd
-from ..layers.l1_data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
+import macroforecast.evaluation.ops  # noqa: F401
+import macroforecast.stat_tests.ops  # noqa: F401
+import macroforecast.interpretation.ops  # noqa: F401
+import macroforecast.output.ops  # noqa: F401
+from ..data import load_fred_md_result, load_fred_qd_result, load_fred_sd_result
+from ..data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
     DiagnosticArtifact,
     L1DataDefinitionArtifact,
@@ -256,14 +262,14 @@ def execute_minimal_forecast(
 def materialize_l1(
     recipe_root: dict[str, Any],
 ) -> tuple[L1DataDefinitionArtifact, L1RegimeMetadataArtifact, dict[str, Any]]:
-    raw = recipe_root.get("1_data", {}) or {}
-    report = l1_layer.validate_layer(raw)
-    if report.has_hard_errors:
-        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    raw = recipe_root.get("data", {}) or {}
+    errors = _validate_data_block(raw)
+    if errors:
+        raise ValueError("; ".join(errors))
 
     fixed_axes = raw.get("fixed_axes", {}) or {}
     leaf_config = raw.get("leaf_config", {}) or {}
-    resolved = l1_layer.resolve_axes_from_raw(fixed_axes, leaf_config)
+    resolved = _resolve_data_block({"fixed_axes": fixed_axes, "leaf_config": leaf_config})
     raw_panel = _load_raw_panel(resolved, leaf_config)
     _target_for_lag = leaf_config.get("target")
     _lagged_data = _apply_release_lag(raw_panel.data, resolved, leaf_config, _target_for_lag)
@@ -289,7 +295,7 @@ def materialize_l1(
         sample_start_rule=resolved["sample_start_rule"],
         sample_end_rule=resolved["sample_end_rule"],
         horizon_set=resolved["horizon_set"],
-        target_horizons=l1_layer._resolved_horizons(resolved, leaf_config),
+        target_horizons=_data_resolved_horizons(resolved, leaf_config),
         regime_definition=resolved["regime_definition"],
         raw_panel=raw_panel,
         leaf_config=leaf_config,
@@ -337,7 +343,7 @@ def _apply_release_lag(
 def materialize_l2(
     recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact
 ) -> tuple[L2CleanPanelArtifact, l2_layer.L2ResolvedAxes]:
-    raw = recipe_root.get("2_preprocessing", {}) or {}
+    raw = recipe_root.get("preprocessing", {}) or {}
     l1_context = _l1_context(l1_artifact)
     report = l2_layer.validate_layer(raw, l1_context=l1_context)
     if report.has_hard_errors:
@@ -1863,8 +1869,10 @@ def materialize_l4_minimal(
     # so those values map to the same execution as ``models`` for the
     # multi-fit-node case and ``oos_dates`` for the single-fit-node case.
     l0 = recipe_root.get("0_meta", {}) or {}
-    parallel_unit = (l0.get("fixed_axes", {}) or {}).get("parallel_unit", "cells")
-    n_workers = int((l0.get("leaf_config", {}) or {}).get("n_workers_inner", 4))
+    l0_leaf = l0.get("leaf_config", {}) or {}
+    l0_fixed = l0.get("fixed_axes", {}) or {}
+    parallel_unit = l0_leaf.get("parallel_unit", l0_fixed.get("parallel_unit", "cells"))
+    n_workers = int(l0_leaf.get("n_workers_inner", l0_leaf.get("n_workers", 4)))
     if parallel_unit == "models" and len(fit_nodes) > 1:
         from concurrent.futures import ThreadPoolExecutor
 
@@ -3318,7 +3326,7 @@ def _build_l4_model(
             from pyearth import Earth  # type: ignore
         except ImportError as exc:  # pragma: no cover - optional dep
             raise NotImplementedError(
-                "mars family requires `pip install macroforecast[mars]`"
+                "mars family requires `pip install macroforecast[mars]`; sklearn-contrib-py-earth currently supports only Python <3.11"
             ) from exc
         return Earth(
             max_terms=int(params.get("max_terms", 21)),
@@ -13971,7 +13979,7 @@ def materialize_l8_runtime(
         "runtime_duration_per_layer": dict(runtime_durations or {}),
         "exported_files": [file.path.as_posix() for file in exported_files],
         # F-P1-13 fix: cache_root provenance (additive, not breaking)
-        "cache_root": recipe_root.get("1_data", {}).get("leaf_config", {}).get("cache_root"),
+        "cache_root": recipe_root.get("data", {}).get("leaf_config", {}).get("cache_root"),
         # resolved sample dates (v0.8.x)
         "sample_start_resolved": _sample_start_resolved,
         "sample_end_resolved": _sample_end_resolved,
@@ -14034,13 +14042,13 @@ def _derive_saved_objects(
     ``saved_objects_mode = explicit_only``."""
 
     derived: set[str] = set()
-    if "1_data" in recipe_root:
+    if "data" in recipe_root:
         derived.update({"forecasts", "raw_panel"})
-    l1 = recipe_root.get("1_data", {}) or {}
+    l1 = recipe_root.get("data", {}) or {}
     fixed = l1.get("fixed_axes", {}) or {}
     if fixed.get("regime_definition", "none") != "none":
         derived.update({"regime_metrics", "regime_metadata"})
-    if "2_preprocessing" in recipe_root:
+    if "preprocessing" in recipe_root:
         derived.update({"clean_panel", "cleaning_log"})
     if "3_feature_engineering" in recipe_root:
         derived.add("feature_metadata")
@@ -14386,7 +14394,7 @@ def _l8_render_html_report(
     lines.append("<h1>macroforecast study report</h1>")
 
     # Recipe digest -----------------------------------------------------
-    target = ((recipe_root.get("1_data", {}) or {}).get("leaf_config", {}) or {}).get(
+    target = ((recipe_root.get("data", {}) or {}).get("leaf_config", {}) or {}).get(
         "target"
     )
     if target:
@@ -14671,7 +14679,7 @@ def _capture_data_revision_tag(recipe_root: dict[str, Any]) -> str:
     """Mirror the FRED vintage tag (or generic data revision marker) for the
     L1 sub-graph so a replicate is locked to the source revision."""
 
-    l1 = recipe_root.get("1_data", {}) or {}
+    l1 = recipe_root.get("data", {}) or {}
     leaf = l1.get("leaf_config", {}) or {}
     tag = leaf.get("vintage_date_or_tag") or leaf.get("data_revision_tag")
     if tag:
@@ -14838,7 +14846,7 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
     # ALFRED vintage correction -- applies when vintage_policy="real_time_alfred" (v0.9.3).
     # Replaces panel column values with vintage-correct ALFRED snapshots.
     if resolved.get("vintage_policy") == "real_time_alfred":
-        from ..layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
+        from ..data.alfred_adapter import apply_alfred_vintage_to_panel
         frame = apply_alfred_vintage_to_panel(frame, resolved, leaf_config)
         metadata["vintage_policy"] = "real_time_alfred"
     return _panel_from_frame(frame, metadata=metadata)
@@ -14852,11 +14860,11 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
         "official_source_path"
     )
     if dataset == "fred_md":
-        return load_fred_md(
+        return load_fred_md_result(
             vintage=vintage, cache_root=cache_root, local_source=local_source
         )
     if dataset == "fred_qd":
-        return load_fred_qd(
+        return load_fred_qd_result(
             vintage=vintage, cache_root=cache_root, local_source=local_source
         )
     if dataset == "fred_sd":
@@ -14873,7 +14881,7 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
             variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
                 "sd_variables"
             )
-        return load_fred_sd(
+        return load_fred_sd_result(
             vintage=vintage,
             cache_root=cache_root,
             local_source=local_source,
@@ -14882,7 +14890,7 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
         )
     if dataset in {"fred_md+fred_sd", "fred_qd+fred_sd"}:
         national_loader = (
-            load_fred_md if dataset.startswith("fred_md") else load_fred_qd
+            load_fred_md_result if dataset.startswith("fred_md") else load_fred_qd_result
         )
         national = national_loader(
             vintage=vintage, cache_root=cache_root, local_source=local_source
@@ -14897,7 +14905,7 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
             variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
                 "sd_variables"
             )
-        regional = load_fred_sd(
+        regional = load_fred_sd_result(
             vintage=vintage,
             cache_root=cache_root,
             local_source=leaf_config.get("local_fred_sd_source"),
@@ -15009,13 +15017,13 @@ def _apply_sample_window(
         if first_observed is not None and pd.notna(first_observed):
             result = result.loc[first_observed:]
     elif start_rule == "fixed_date":
-        _start_norm = l1_layer._normalize_iso_partial(leaf_config["sample_start_date"], end_of_period=False) or leaf_config["sample_start_date"]
+        _start_norm = _data_normalize_iso_partial(leaf_config["sample_start_date"], end_of_period=False) or leaf_config["sample_start_date"]
         result = result.loc[pd.Timestamp(_start_norm) :]
     if end_rule == "latest_available":
         # default: keep as-is
         pass
     elif end_rule == "fixed_date":
-        _end_norm = l1_layer._normalize_iso_partial(leaf_config["sample_end_date"], end_of_period=True) or leaf_config["sample_end_date"]
+        _end_norm = _data_normalize_iso_partial(leaf_config["sample_end_date"], end_of_period=True) or leaf_config["sample_end_date"]
         result = result.loc[: pd.Timestamp(_end_norm)]
     return result
 
@@ -15027,7 +15035,7 @@ def _validate_targets_present(
     targets = tuple(leaf_config.get("targets", ()) or ((target,) if target else ()))
     missing = [name for name in targets if name not in frame.columns]
     if missing:
-        raise ValueError(f"[L1/1_data.leaf_config.target] target columns missing from custom panel: {missing}")  # v0.8.x:
+        raise ValueError(f"[L1/data.leaf_config.target] target columns missing from custom panel: {missing}")  # v0.8.x:
     if resolved.get("target_structure") == "single_target" and not target:
         raise ValueError("single_target runtime requires leaf_config.target")
 
@@ -16348,22 +16356,32 @@ def _bic_select_k(
     import warnings
 
     K_max = max(1, math.ceil(1.5 * freq_ratio))
-    # BIC intractability warning (v0.8.x)
-    _BIC_K_MAX_WARNING_THRESHOLD = 30  # empirical threshold above which BIC search becomes slow
-    if K_max > _BIC_K_MAX_WARNING_THRESHOLD:
-        warnings.warn(
-            f"U-MIDAS BIC search will enumerate K_max={K_max} candidates "
-            f"(freq_ratio={freq_ratio}). For freq_ratio > {_BIC_K_MAX_WARNING_THRESHOLD / 1.5:.0f}, "
-            "this may take hours. Consider setting `n_lags_high` manually in the L3 op params "
-            "to bypass BIC search, or use a coarser frequency representation.",
-            UserWarning,
-            stacklevel=2,
-        )
+    _BIC_K_MAX_WARNING_THRESHOLD = 30
     best_ic_val = np.inf
     best_K = 1
     any_valid = False
 
-    for K_cand in range(1, K_max + 1):
+    # Candidates whose parameter count already exceeds the available LF
+    # observations cannot pass the degrees-of-freedom check below. Prune
+    # them before constructing expensive lag-stacked designs.
+    search_K_max = K_max
+    if y_lf is not None and frame_hf.shape[1] > 0:
+        y_nonmissing = int(y_lf.dropna().shape[0])
+        y_lag_cols = 1 if include_y_lag else 0
+        max_feasible_by_df = (y_nonmissing - 3 - y_lag_cols) // int(frame_hf.shape[1])
+        search_K_max = min(K_max, max(0, max_feasible_by_df))
+
+    if K_max > _BIC_K_MAX_WARNING_THRESHOLD:
+        warnings.warn(
+            f"U-MIDAS BIC search requested K_max={K_max} candidates "
+            f"(freq_ratio={freq_ratio}); degrees-of-freedom pruning will evaluate "
+            f"{search_K_max} candidates. Consider setting `n_lags_high` manually "
+            "in the L3 op params to bypass IC search, or use a coarser frequency representation.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    for K_cand in range(1, search_K_max + 1):
         # Build lag-stacked design
         stacked = _midas_lag_stack(
             frame_hf, freq_ratio=freq_ratio, n_lags_high=K_cand, target_freq="low"
@@ -18536,7 +18554,7 @@ def _materialize_regime(
     list from ``leaf_config.regime_dates_list``.
     """
 
-    base = l1_layer._regime_artifact_from_resolved(resolved, leaf_config)
+    base = _data_regime_metadata_from_resolved(resolved, leaf_config)
     definition = base.definition
     if definition == "external_nber" and len(sample_index):
         labels = _build_nber_regime_series(sample_index)

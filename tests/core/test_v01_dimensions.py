@@ -76,7 +76,7 @@ def _custom_recipe(*, family: str = "ridge", n_lag: object = 1, l3_extra_node: s
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 7
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -89,7 +89,7 @@ def _custom_recipe(*, family: str = "ridge", n_lag: object = 1, l3_extra_node: s
       y: {_PANEL_VALUES}
       x1: {[v + 0.5 for v in _PANEL_VALUES]}
       x2: {[v % 3 for v in _PANEL_VALUES]}
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none
@@ -137,7 +137,7 @@ def test_dim1_l1_loads_fred_sd_from_local_fixture(tmp_path):
     fixtures = Path(__file__).resolve().parent.parent / "fixtures"
     root = parse_recipe_yaml(
         f"""
-1_data:
+data:
   fixed_axes:
     panel_composition: official_only
     dataset: fred_sd

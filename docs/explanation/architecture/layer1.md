@@ -89,8 +89,8 @@ L1 is canonical-only. Recipes should use the axis IDs in the decision-order tabl
 
 ## Related reference
 
-- [Data layer (source, target, horizon, geography)](../../reference/recipe_schema/data.md)
-- [Data policies](../../reference/recipe_schema/data_policies.md)
+- [Data layer (source, target, horizon, geography)](../../reference/data.md)
+- [Data policies](../../reference/data_policies.md)
 
 ```{toctree}
 :maxdepth: 1
@@ -104,7 +104,7 @@ layer1_frame_availability
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l1/`](../../reference/encyclopedia/l1/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l1/`](../../reference/generated/l1/index.md).
 
 ## v0.9.3 update
 

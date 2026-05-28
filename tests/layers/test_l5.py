@@ -1,4 +1,4 @@
-from macroforecast.layers.l5_evaluation.schema import (
+from macroforecast.evaluation.schema import (
     make_l5_yaml,
     make_recipe_with_benchmark,
     make_recipe_with_l3_metadata,
@@ -61,22 +61,22 @@ def test_l5_relative_metrics_inactive_without_benchmark():
 
 
 def test_l5_agg_target_inactive_for_single_target():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    target_structure: single_target\n5_evaluation:\n  fixed_axes:\n    agg_target: per_target_separate\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    target_structure: single_target\n5_evaluation:\n  fixed_axes:\n    agg_target: per_target_separate\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l5_agg_state_inactive_without_fred_sd():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    dataset: fred_md\n5_evaluation:\n  fixed_axes:\n    agg_state: per_state_separate\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    dataset: fred_md\n5_evaluation:\n  fixed_axes:\n    agg_state: per_state_separate\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l5_decomposition_by_state_requires_fred_sd():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    dataset: fred_md\n5_evaluation:\n  fixed_axes:\n    decomposition_target: by_state\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    dataset: fred_md\n5_evaluation:\n  fixed_axes:\n    decomposition_target: by_state\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l5_decomposition_by_regime_requires_regime_active():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: none\n5_evaluation:\n  fixed_axes:\n    decomposition_target: by_regime\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: none\n5_evaluation:\n  fixed_axes:\n    decomposition_target: by_regime\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
@@ -87,12 +87,12 @@ def test_l5_decomposition_order_inactive_when_target_none():
 
 
 def test_l5_regime_use_inactive_when_regime_none():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: none\n5_evaluation:\n  fixed_axes:\n    regime_use: per_regime\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: none\n5_evaluation:\n  fixed_axes:\n    regime_use: per_regime\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l5_regime_metrics_inactive_when_regime_use_pooled():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: external_nber\n5_evaluation:\n  fixed_axes:\n    regime_use: pooled\n    regime_metrics: [mse]\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: external_nber\n5_evaluation:\n  fixed_axes:\n    regime_use: pooled\n    regime_metrics: [mse]\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
@@ -146,7 +146,7 @@ def test_l5_economic_metrics_does_not_exist():
 
 def test_l5_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l5_evaluation.schema import L5Evaluation
+    from macroforecast.evaluation.schema import L5Evaluation
 
     spec = get_layer("l5")
     assert spec.cls is L5Evaluation

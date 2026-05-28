@@ -103,7 +103,7 @@ def test_l4_train_y_no_h_step_post_origin_leak(tmp_path):
     Acceptance: ``train_y.dropna().max() < 50`` -- no 100-valued leak.
     """
 
-    from macroforecast.layers.l4_models.paper_methods import _base_recipe, _l4_single_fit
+    from macroforecast.models.paper_methods import _base_recipe, _l4_single_fit
 
     panel = _step_panel(T=60, K=4, jump_t=20, seed=42)
     recipe = _base_recipe(
@@ -184,7 +184,7 @@ def test_l4_train_y_h_equals_1_unchanged(tmp_path):
     same train_y rows as before (one row per position, ending at
     ``position - 1``)."""
 
-    from macroforecast.layers.l4_models.paper_methods import _base_recipe, _l4_single_fit
+    from macroforecast.models.paper_methods import _base_recipe, _l4_single_fit
 
     panel = _step_panel(T=60, K=4, jump_t=20, seed=42)
     recipe = _base_recipe(

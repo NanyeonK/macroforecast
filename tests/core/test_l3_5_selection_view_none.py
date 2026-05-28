@@ -11,7 +11,7 @@ import pytest
 
 def _issues_for_fixed(fixed: dict) -> list:
     """Call _validate_values with enabled=True and given fixed axes."""
-    from macroforecast.layers.l3_5_diagnostic.schema import _validate_values, L3_5ResolvedAxes, DEFAULT_AXES
+    from macroforecast.diagnostics.features.schema import _validate_values, L3_5ResolvedAxes, DEFAULT_AXES
     values = {**DEFAULT_AXES, "enabled": True, **fixed}
     active = {k: True for k in values}
     resolved = L3_5ResolvedAxes(values, active)

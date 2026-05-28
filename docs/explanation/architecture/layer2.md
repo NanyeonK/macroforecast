@@ -28,11 +28,11 @@ controls FRED's published t-codes, while `sd_tcode_policy` selects the
 SD-specific inferred / empirical policy when working with FRED-SD.
 
 For per-axis options + when-to-use guidance see the
-[L2 encyclopedia page](../../encyclopedia/l2/index.md) and per-axis
+[L2 encyclopedia page](../../reference/generated/l2/index.md) and per-axis
 pages such as
-[`mixed_frequency_representation`](../../encyclopedia/l2/axes/mixed_frequency_representation.md)
+[`mixed_frequency_representation`](../../reference/generated/l2/axes/mixed_frequency_representation.md)
 and
-[`sd_tcode_policy`](../../reference/encyclopedia/l2/axes/sd_tcode_policy.md).
+[`sd_tcode_policy`](../../reference/generated/l2/axes/sd_tcode_policy.md).
 
 ## Custom extension point
 
@@ -62,7 +62,7 @@ Output:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l2/`](../../reference/encyclopedia/l2/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l2/`](../../reference/generated/l2/index.md).
 
 ## v0.9.3 update
 

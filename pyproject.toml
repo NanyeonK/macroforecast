@@ -48,7 +48,7 @@ lightgbm = ["lightgbm>=4.0"]
 catboost = ["catboost>=1.2"]
 parquet = ["pyarrow>=14.0"]
 deep = ["torch>=2.0"]
-mars = ["pyearth>=0.1"]
+mars = ["sklearn-contrib-py-earth>=0.1.0; python_version < \"3.11\""]
 # Phase C M9 (2026-05-08): GARCH(1,1) / EGARCH / Realized-GARCH families
 # wrap the ``arch`` package. Kept optional (not promoted to top-level
 # ``dependencies``) so users not using vol forecasting do not pay an
@@ -108,21 +108,20 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [
     "macroforecast.core.layers.l0",
-    "macroforecast.layers.l0_meta.schema",
-    "macroforecast.layers.l1_data.schema",
-    "macroforecast.layers.l1_5_diagnostic.schema",
+    "macroforecast.meta.schema",
+    "macroforecast.diagnostics.data_summary.schema",
     "macroforecast.core.layers.l3",
-    "macroforecast.layers.l3_features.schema",
-    "macroforecast.layers.l3_5_diagnostic.schema",
+    "macroforecast.features.schema",
+    "macroforecast.diagnostics.features.schema",
     "macroforecast.core.runtime",
     "tools.docgen.builder",
-    "macroforecast.layers.l4_models.tuning.engine",
-    "macroforecast.layers.l2_preprocessing.schema",
-    "macroforecast.layers.l2_5_diagnostic.schema",
-    "macroforecast.layers.l7_interpretation.schema",
-    "macroforecast.layers.l5_evaluation.schema",
-    "macroforecast.layers.l6_tests.schema",
-    "macroforecast.layers.l8_output.schema",
+    "macroforecast.models.tuning.engine",
+    "macroforecast.preprocessing.schema",
+    "macroforecast.diagnostics.preprocessing.schema",
+    "macroforecast.interpretation.schema",
+    "macroforecast.evaluation.schema",
+    "macroforecast.stat_tests.schema",
+    "macroforecast.output.schema",
 ]
 ignore_errors = true
 

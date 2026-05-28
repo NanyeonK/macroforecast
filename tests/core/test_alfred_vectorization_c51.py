@@ -126,7 +126,7 @@ def _call_vectorized_rolling(
     Patches _read_snapshot_file to return full_snapshot so no disk I/O occurs.
     Uses a sentinel snapshot_path so the path-existence guard passes.
     """
-    from macroforecast.layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
+    from macroforecast.data.alfred_adapter import apply_alfred_vintage_to_panel
 
     resolved = {"vintage_policy": "real_time_alfred"}
     # Use a sentinel path; we will patch _read_snapshot_file to return our df.
@@ -136,9 +136,9 @@ def _call_vectorized_rolling(
         # No alfred_vintage_date -> rolling mode
     }
 
-    with patch("macroforecast.layers.l1_data.alfred_adapter._read_snapshot_file",
+    with patch("macroforecast.data.alfred_adapter._read_snapshot_file",
                return_value=full_snapshot), \
-         patch("macroforecast.layers.l1_data.alfred_adapter.Path") as mock_path_cls:
+         patch("macroforecast.data.alfred_adapter.Path") as mock_path_cls:
         # Make Path(...).exists() return True so the guard passes
         mock_path_instance = mock_path_cls.return_value
         mock_path_instance.exists.return_value = True
@@ -214,7 +214,7 @@ def test_alfred_rolling_empty_snapshot_unchanged() -> None:
 
 def test_alfred_non_real_time_policy_guard() -> None:
     """Guard: resolved vintage_policy != 'real_time_alfred' returns unchanged (TC-FlagC-3)."""
-    from macroforecast.layers.l1_data.alfred_adapter import apply_alfred_vintage_to_panel
+    from macroforecast.data.alfred_adapter import apply_alfred_vintage_to_panel
 
     _, panel_df = _make_fixture_seed99()
 

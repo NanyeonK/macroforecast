@@ -4,7 +4,7 @@ macroforecast is designed for research workflows where the difficult part is not
 
 ## Option reference
 
-The package has many choices across data, representation, model, evaluation, output, statistical tests, and interpretation. Every option is documented in the [Encyclopedia](../encyclopedia/index.md), which lists every axis and option value with description, when-to-use, when-NOT-to-use, and references.
+The package has many choices across data, representation, model, evaluation, output, statistical tests, and interpretation. Every option is documented in the [Encyclopedia](../reference/index.md), which lists every axis and option value with description, when-to-use, when-NOT-to-use, and references.
 
 ## Defaults are explicit
 

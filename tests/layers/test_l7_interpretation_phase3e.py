@@ -1,4 +1,4 @@
-"""Phase 3e smoke tests: macroforecast.layers.l7_interpretation collocation.
+"""Phase 3e smoke tests: macroforecast.interpretation collocation.
 
 Verifies that:
 1. The collocated schema, ops, methods, and option_docs submodules are importable.
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 
 def test_collocated_schema_import() -> None:
-    from macroforecast.layers.l7_interpretation.schema import (
+    from macroforecast.interpretation.schema import (
         L7Interpretation,
         L7_OUTPUT_AXES,
         DEFAULT_AXES,
@@ -23,7 +23,7 @@ def test_collocated_schema_import() -> None:
 
 
 def test_collocated_ops_import() -> None:
-    from macroforecast.layers.l7_interpretation.ops import (
+    from macroforecast.interpretation.ops import (
         OPERATIONAL_OPS,
         PRE_DEFINED_BLOCKS,
         DEFAULT_FIGURE_MAPPING,
@@ -35,13 +35,13 @@ def test_collocated_ops_import() -> None:
 
 
 def test_collocated_methods_import() -> None:
-    from macroforecast.layers.l7_interpretation.methods import GIRF, LSTMHiddenState
+    from macroforecast.interpretation.methods import GIRF, LSTMHiddenState
     assert GIRF is not None
     assert LSTMHiddenState is not None
 
 
 def test_collocated_option_docs_import() -> None:
-    import macroforecast.layers.l7_interpretation.option_docs  # noqa: F401
+    import macroforecast.interpretation.option_docs  # noqa: F401
     # option_docs triggers registration; verify the docs are present
     from tools.docgen.option_docs import OPTION_DOCS
     l7_keys = [k for k in OPTION_DOCS if k[0] == "l7"]
@@ -50,7 +50,7 @@ def test_collocated_option_docs_import() -> None:
 
 def test_l7_registry_uses_collocated_class() -> None:
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l7_interpretation.schema import L7Interpretation
+    from macroforecast.interpretation.schema import L7Interpretation
 
     spec = get_layer("l7")
     assert spec.cls is L7Interpretation
@@ -58,7 +58,7 @@ def test_l7_registry_uses_collocated_class() -> None:
 
 def test_backward_compat_core_ops_l7_ops() -> None:
     # Legacy path deleted in PR-F; canonical path is now the source.
-    from macroforecast.layers.l7_interpretation.ops import (
+    from macroforecast.interpretation.ops import (
         OPERATIONAL_OPS,
         PRE_DEFINED_BLOCKS,
         HONESTY_DEMOTED_L7_OPS,

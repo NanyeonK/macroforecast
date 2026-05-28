@@ -1,4 +1,5 @@
-from macroforecast.layers.l0_meta.schema import (
+from macroforecast.meta.schema import (
+    build_layer_block,
     build_minimal_recipe,
     build_recipe_with_l0_only,
     execute_recipe,
@@ -6,7 +7,54 @@ from macroforecast.layers.l0_meta.schema import (
     parse_layer_yaml,
     resolve_axes,
     validate_layer,
+    configure,
 )
+
+
+def test_l0_callable_block_matches_yaml_body():
+    """Callable L0 authoring and YAML authoring use the same canonical body."""
+    callable_root = configure(
+        failure_policy="continue_on_failure",
+        reproducibility_policy="seeded_reproducible",
+        compute_policy="parallel",
+        random_seed=100,
+        parallel_unit="cells",
+        n_workers=4,
+    )
+    yaml_layer = parse_layer_yaml(
+        """
+        0_meta:
+          fixed_axes:
+            failure_policy: continue_on_failure
+            reproducibility_policy: seeded_reproducible
+            compute_policy: parallel
+          leaf_config:
+            random_seed: 100
+            parallel_unit: cells
+            n_workers: 4
+        """,
+        "l0",
+    )
+    assert callable_root["0_meta"] == yaml_layer.raw_yaml
+
+
+def test_l0_callable_parallel_defaults_to_cell_unit():
+    block = build_layer_block(compute_policy="parallel", n_workers=2)
+    assert block["leaf_config"]["parallel_unit"] == "cells"
+    assert not validate_layer(block).has_hard_errors
+
+
+def test_l0_callable_exploratory_omits_default_seed():
+    block = build_layer_block(reproducibility_policy="exploratory")
+    assert "random_seed" not in block.get("leaf_config", {})
+    assert not validate_layer(block).has_hard_errors
+
+
+def test_l0_top_level_callable_export():
+    import macroforecast as mf
+
+    root = mf.l0(random_seed=7)
+    assert root["0_meta"]["leaf_config"]["random_seed"] == 7
 
 
 def test_l0_minimal_yaml_parses():
@@ -135,7 +183,7 @@ def test_l0_manifest_records_all_resolved():
 
 
 def test_l0_registered_with_spec_correct_class():
-    from macroforecast.layers.l0_meta.schema import L0StudySetup
+    from macroforecast.meta.schema import L0StudySetup
     from macroforecast.core.layers.registry import get_layer
 
     spec = get_layer("l0")

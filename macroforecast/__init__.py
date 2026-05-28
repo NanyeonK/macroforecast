@@ -18,17 +18,20 @@ Horse race research benchmarking package for macro forecasting.
 
 **Importable submodule surface**
 
-- ``macroforecast.recipes`` -- canonical recipe-orchestration namespace (v0.9.5a);
-  ``mf.run`` / ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are
-  backward-compatible aliases pointing here.
-- ``macroforecast.custom`` -- user-defined model / preprocessor / feature registration
-- ``macroforecast.defaults`` -- default profile dict template
-- ``macroforecast.layers.l2_preprocessing`` -- preprocessing contract helpers
-- ``macroforecast.layers.l1_data`` -- FRED-MD/QD/SD adapters and custom CSV/Parquet loaders
-- ``macroforecast.layers.l3_features`` -- feature engineering ops, transforms, selection (v0.10 restructure)
-- ``macroforecast.layers.l3_5_diagnostic`` -- feature diagnostics schema (v0.10 restructure)
-- ``macroforecast.core`` -- 12-layer recipe runtime (foundation, layers, ops, runtime, execution)
-- ``macroforecast.layers.l4_models.tuning`` -- hyperparameter search engines
+- ``macroforecast.recipes`` -- recipe orchestration namespace; ``mf.run`` /
+  ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are aliases here.
+- ``macroforecast.meta`` -- study setup policy and reproducibility schema.
+- ``macroforecast.data`` -- data recipe authoring plus FRED-MD/QD/SD adapters,
+  vintage manager, manifests.
+- ``macroforecast.preprocessing`` -- preprocessing schemas and contract helpers.
+- ``macroforecast.features`` -- feature engineering ops, transforms, selectors.
+- ``macroforecast.models`` -- public model classes, model ops, paper helpers, tuning.
+- ``macroforecast.evaluation`` -- forecast metric schema and ops.
+- ``macroforecast.stat_tests`` -- forecast-comparison statistical tests.
+- ``macroforecast.interpretation`` -- interpretation schemas, ops, and methods.
+- ``macroforecast.output`` -- output/provenance schema and export ops.
+- ``macroforecast.diagnostics`` -- data/preprocessing/features/generator diagnostics.
+- ``macroforecast.core`` -- cross-layer runtime, registry, manifest, cache, and execution.
 """
 
 from __future__ import annotations
@@ -54,6 +57,8 @@ _LAZY_EXPORTS = {
     "DEFAULT_PROFILE": ".api.defaults",
     "DEFAULT_PROFILE_NAME": ".api.defaults",
     "build_default_recipe_dict": ".api.defaults",
+    # callable recipe blocks
+    "l0": ".meta",
     # custom (now at macroforecast.api.custom)
     "custom_feature_block": ".api.custom",
     "custom_feature_combiner": ".api.custom",
@@ -94,61 +99,70 @@ _LAZY_EXPORTS = {
     "clear_custom_models": ".api.custom",
     "clear_custom_extensions": ".api.custom",
     # raw adapters
-    "normalize_version_request": ".layers.l1_data",
-    "list_vintages": ".layers.l1_data",
-    "get_raw_cache_root": ".layers.l1_data",
-    "get_manifest_path": ".layers.l1_data",
-    "get_raw_file_path": ".layers.l1_data",
-    "build_raw_artifact_record": ".layers.l1_data",
-    "append_raw_manifest_entry": ".layers.l1_data",
-    "read_raw_manifest": ".layers.l1_data",
-    "parse_fred_csv": ".layers.l1_data",
-    "load_custom_csv": ".layers.l1_data",
-    "load_custom_parquet": ".layers.l1_data",
-    "load_fred_md": ".layers.l1_data",
-    "load_fred_qd": ".layers.l1_data",
-    "load_fred_sd": ".layers.l1_data",
-    "RawVersionRequest": ".layers.l1_data",
-    "RawDatasetMetadata": ".layers.l1_data",
-    "RawArtifactRecord": ".layers.l1_data",
-    "RawLoadResult": ".layers.l1_data",
+    "normalize_version_request": ".data",
+    "list_vintages": ".data",
+    "get_raw_cache_root": ".data",
+    "get_manifest_path": ".data",
+    "get_raw_file_path": ".data",
+    "build_raw_artifact_record": ".data",
+    "append_raw_manifest_entry": ".data",
+    "read_raw_manifest": ".data",
+    "parse_fred_csv": ".data",
+    "load_custom_csv": ".data",
+    "load_custom_parquet": ".data",
+    "load_fred_md": ".data",
+    "load_fred_qd": ".data",
+    "load_fred_sd": ".data",
+    "RawVersionRequest": ".data",
+    "RawDatasetMetadata": ".data",
+    "RawArtifactRecord": ".data",
+    "RawLoadResult": ".data",
     # preprocessing
-    "build_preprocess_contract": ".layers.l2_preprocessing",
-    "check_preprocess_governance": ".layers.l2_preprocessing",
-    "is_operational_preprocess_contract": ".layers.l2_preprocessing",
-    "preprocess_summary": ".layers.l2_preprocessing",
-    "preprocess_to_dict": ".layers.l2_preprocessing",
-    "PreprocessContractError": ".layers.l2_preprocessing",
-    "PreprocessValidationError": ".layers.l2_preprocessing",
-    "PreprocessContract": ".layers.l2_preprocessing",
-    "TargetTransformPolicy": ".layers.l2_preprocessing",
-    "XTransformPolicy": ".layers.l2_preprocessing",
-    "TcodePolicy": ".layers.l2_preprocessing",
-    "MissingPolicy": ".layers.l2_preprocessing",
-    "OutlierPolicy": ".layers.l2_preprocessing",
-    "ScalingPolicy": ".layers.l2_preprocessing",
-    "DimensionalityReductionPolicy": ".layers.l2_preprocessing",
-    "FeatureSelectionPolicy": ".layers.l2_preprocessing",
-    "PreprocessOrder": ".layers.l2_preprocessing",
-    "PreprocessFitScope": ".layers.l2_preprocessing",
-    "InverseTransformPolicy": ".layers.l2_preprocessing",
-    "EvaluationScale": ".layers.l2_preprocessing",
+    "build_preprocess_contract": ".preprocessing",
+    "check_preprocess_governance": ".preprocessing",
+    "is_operational_preprocess_contract": ".preprocessing",
+    "preprocess_summary": ".preprocessing",
+    "preprocess_to_dict": ".preprocessing",
+    "PreprocessContractError": ".preprocessing",
+    "PreprocessValidationError": ".preprocessing",
+    "PreprocessContract": ".preprocessing",
+    "TargetTransformPolicy": ".preprocessing",
+    "XTransformPolicy": ".preprocessing",
+    "TcodePolicy": ".preprocessing",
+    "MissingPolicy": ".preprocessing",
+    "OutlierPolicy": ".preprocessing",
+    "ScalingPolicy": ".preprocessing",
+    "DimensionalityReductionPolicy": ".preprocessing",
+    "FeatureSelectionPolicy": ".preprocessing",
+    "PreprocessOrder": ".preprocessing",
+    "PreprocessFitScope": ".preprocessing",
+    "InverseTransformPolicy": ".preprocessing",
+    "EvaluationScale": ".preprocessing",
 }
 
 _LAZY_MODULES: tuple[str, ...] = (
     "recipes",
     "api",
-    # Promoted in v0.9.5: public namespaces
+    "meta",
+    "data",
+    "preprocessing",
+    "features",
+    "models",
+    "evaluation",
+    "stat_tests",
+    "interpretation",
+    "output",
+    "diagnostics",
+    # Promoted compatibility namespaces
     "feature_selection",
     "transforms",
-    "interpretation",
 )
 """Submodules exposed as ``macroforecast.<name>`` via lazy import.
 
 v0.1.0: ``functions`` added for the per-op standalone callable namespace
 (``mf.functions.ridge_fit``, ``mf.functions.theil_u1``, etc.).
-v0.9.5: ``models``, ``feature_selection``, ``transforms``,
-``interpretation`` added for promoted public class/function namespaces.
+v0.9.5: semantic module namespaces expose the former numbered layer bodies;
+``feature_selection`` and ``transforms`` remain promoted compatibility namespaces.
 """
 
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))

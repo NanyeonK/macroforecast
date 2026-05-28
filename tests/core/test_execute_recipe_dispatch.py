@@ -25,7 +25,7 @@ _RECIPE_YAML = textwrap.dedent(
     0_meta:
       fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
       leaf_config: {random_seed: 0}
-    1_data:
+    data:
       fixed_axes:
         panel_composition: custom_panel_only
         frequency: monthly
@@ -37,7 +37,7 @@ _RECIPE_YAML = textwrap.dedent(
           date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01, 2020-05-01, 2020-06-01]
           y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
           x: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-    2_preprocessing:
+    preprocessing:
       fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
     3_feature_engineering:
       nodes:

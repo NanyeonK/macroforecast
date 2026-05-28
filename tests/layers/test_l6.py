@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macroforecast.layers.l6_tests.schema import (
+from macroforecast.stat_tests.schema import (
     make_recipe_with_density_forecast,
     make_recipe_without_benchmark,
     normalize_to_dag_form,
@@ -17,7 +17,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _example(name: str) -> str:
-    return (ROOT / "examples" / "recipes" / name).read_text()
+    path = ROOT / "examples" / "recipes" / name
+    if not path.exists():
+        path = ROOT / "docs" / "recipe-snippets" / name
+    return path.read_text()
 
 
 def test_l6_disabled_by_default():
@@ -74,7 +77,7 @@ def test_l6_b_clark_west_with_no_adjustment_hard_error():
 
 
 def test_l6_c_regime_conditioning_requires_regime_active():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: none\n6_statistical_tests:\n  enabled: true\n  sub_layers:\n    L6_C_cpa:\n      enabled: true\n      fixed_axes:\n        cpa_conditioning_info: regime\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: none\n6_statistical_tests:\n  enabled: true\n  sub_layers:\n    L6_C_cpa:\n      enabled: true\n      fixed_axes:\n        cpa_conditioning_info: regime\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
@@ -143,7 +146,7 @@ def test_l6_g_residual_test_default():
 
 
 def test_l6_g_residual_lag_count_derived_default():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    frequency: quarterly\n6_statistical_tests:\n  enabled: true\n  sub_layers:\n    L6_G_residual:\n      enabled: true\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    frequency: quarterly\n6_statistical_tests:\n  enabled: true\n  sub_layers:\n    L6_G_residual:\n      enabled: true\n")
     resolved = resolve_axes(recipe.layers["l6"].dag)
     assert resolved["L6_G_residual"]["residual_lag_count"] == 4
 
@@ -161,7 +164,7 @@ def test_l6_global_dependence_correction_default():
 
 
 def test_l6_overlap_handling_none_with_h_gt_1_hard_error():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    horizon_set: custom_list\n  leaf_config:\n    target_horizons: [1, 6]\n6_statistical_tests:\n  enabled: true\n  overlap_handling: none\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    horizon_set: custom_list\n  leaf_config:\n    target_horizons: [1, 6]\n6_statistical_tests:\n  enabled: true\n  overlap_handling: none\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
@@ -184,7 +187,7 @@ def test_l6_step_m_operational_not_future():
 
 def test_l6_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l6_tests.schema import L6StatisticalTests
+    from macroforecast.stat_tests.schema import L6StatisticalTests
 
     spec = get_layer("l6")
     assert spec.cls is L6StatisticalTests
@@ -269,7 +272,7 @@ def test_l6_inverse_msfe_alias_works_in_l4_combine_check_unchanged():
 
 
 def test_l6_regime_conditioning_inactive_for_pooled_test():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: external_nber\n6_statistical_tests:\n  enabled: true\n  test_scope: pooled\n  sub_layers:\n    L6_C_cpa:\n      enabled: true\n      fixed_axes:\n        cpa_conditioning_info: regime\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: external_nber\n6_statistical_tests:\n  enabled: true\n  test_scope: pooled\n  sub_layers:\n    L6_C_cpa:\n      enabled: true\n      fixed_axes:\n        cpa_conditioning_info: regime\n")
     assert validate_recipe(recipe).has_hard_errors is False
 
 

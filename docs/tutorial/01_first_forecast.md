@@ -1,7 +1,7 @@
 # Your first forecast
 
 Fit and evaluate a linear autoregressive model on a synthetic monthly series using
-`macroforecast.layers.l4_models.LinearAR`, with no YAML required. This takes about five minutes.
+`macroforecast.models.LinearAR`, with no YAML required. This takes about five minutes.
 
 ---
 
@@ -51,7 +51,7 @@ internally by `LinearAR` but must be passed. Passing an empty DataFrame with
 a matching index is the cleanest option when no predictors are available.
 
 ```python
-from macroforecast.layers.l4_models import LinearAR
+from macroforecast.models import LinearAR
 import pandas as pd
 
 # Split: 80 observations for training, 20 for evaluation
@@ -127,7 +127,7 @@ recipe = """
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly

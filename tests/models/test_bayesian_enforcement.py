@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 
 from macroforecast.core.runtime import _BayesianVAR
-from macroforecast.layers.l4_models.bayesian import BVAR, BVARMinnesota
+from macroforecast.models.bayesian import BVAR, BVARMinnesota
 
 
 # ---------------------------------------------------------------------------

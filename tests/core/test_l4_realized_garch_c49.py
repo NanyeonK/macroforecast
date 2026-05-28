@@ -33,8 +33,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
+pytestmark = pytest.mark.slow
+
 from macroforecast.core.runtime import _build_l4_model
-from macroforecast.layers.l4_models.ops import (
+from macroforecast.models.ops import (
     OPERATIONAL_MODELS,
     FUTURE_MODELS,
     get_family_status,

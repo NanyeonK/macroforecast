@@ -13,9 +13,12 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from macroforecast.core.runtime import _MRFExternalWrapper
-from macroforecast.layers.l4_models.ops import (
+pytestmark = pytest.mark.slow
+
+from macroforecast.models.ops import (
     OPERATIONAL_MODELS,
     FUTURE_MODELS,
     get_family_status,

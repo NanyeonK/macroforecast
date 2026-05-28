@@ -16,8 +16,8 @@ def test_use_fred_sd_selection_emits_l1_axes_and_leafs():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_fred_sd_selection(states=["CA", "TX"], variables=["UR"])
     recipe = exp.to_recipe_dict()
-    fixed = recipe["1_data"]["fixed_axes"]
-    leaf = recipe["1_data"]["leaf_config"]
+    fixed = recipe["data"]["fixed_axes"]
+    leaf = recipe["data"]["leaf_config"]
     assert fixed["state_selection"] == "selected_states"
     assert fixed["sd_variable_selection"] == "selected_sd_variables"
     assert leaf["selected_states"] == ["CA", "TX"]
@@ -28,8 +28,8 @@ def test_use_fred_sd_selection_states_only():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_fred_sd_selection(states=["NY"])
     recipe = exp.to_recipe_dict()
-    fixed = recipe["1_data"]["fixed_axes"]
-    leaf = recipe["1_data"]["leaf_config"]
+    fixed = recipe["data"]["fixed_axes"]
+    leaf = recipe["data"]["leaf_config"]
     assert fixed["state_selection"] == "selected_states"
     assert "sd_variable_selection" not in fixed
     assert leaf["selected_states"] == ["NY"]
@@ -48,7 +48,7 @@ def test_use_fred_sd_state_group_sets_axis():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_fred_sd_state_group("census_region_west")
     recipe = exp.to_recipe_dict()
-    assert recipe["1_data"]["fixed_axes"]["fred_sd_state_group"] == "census_region_west"
+    assert recipe["data"]["fixed_axes"]["fred_sd_state_group"] == "census_region_west"
 
 
 def test_use_fred_sd_state_group_rejects_unknown():
@@ -61,7 +61,7 @@ def test_use_fred_sd_variable_group_sets_axis():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_fred_sd_variable_group("housing")
     recipe = exp.to_recipe_dict()
-    assert recipe["1_data"]["fixed_axes"]["fred_sd_variable_group"] == "housing"
+    assert recipe["data"]["fixed_axes"]["fred_sd_variable_group"] == "housing"
 
 
 def test_use_fred_sd_variable_group_rejects_unknown():
@@ -79,7 +79,7 @@ def test_use_mixed_frequency_representation_sets_axis():
     exp.use_mixed_frequency_representation("native_frequency_block_payload")
     recipe = exp.to_recipe_dict()
     assert (
-        recipe["2_preprocessing"]["fixed_axes"]["mixed_frequency_representation"]
+        recipe["preprocessing"]["fixed_axes"]["mixed_frequency_representation"]
         == "native_frequency_block_payload"
     )
 
@@ -98,7 +98,7 @@ def test_use_sd_inferred_tcodes_sets_l2_axis():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_sd_inferred_tcodes()
     recipe = exp.to_recipe_dict()
-    assert recipe["2_preprocessing"]["fixed_axes"]["sd_tcode_policy"] == "inferred"
+    assert recipe["preprocessing"]["fixed_axes"]["sd_tcode_policy"] == "inferred"
 
 
 # ---------------------------------------------------------------------------
@@ -109,8 +109,8 @@ def test_use_sd_empirical_tcodes_variable_global():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_sd_empirical_tcodes("variable_global", audit_uri="audit.csv")
     recipe = exp.to_recipe_dict()
-    fixed = recipe["2_preprocessing"]["fixed_axes"]
-    leaf = recipe["2_preprocessing"]["leaf_config"]
+    fixed = recipe["preprocessing"]["fixed_axes"]
+    leaf = recipe["preprocessing"]["leaf_config"]
     assert fixed["sd_tcode_policy"] == "empirical"
     assert leaf["sd_tcode_unit"] == "variable_global"
     assert leaf["sd_tcode_audit_uri"] == "audit.csv"
@@ -125,7 +125,7 @@ def test_use_sd_empirical_tcodes_state_series():
         audit_uri="state_audit.csv",
     )
     recipe = exp.to_recipe_dict()
-    leaf = recipe["2_preprocessing"]["leaf_config"]
+    leaf = recipe["preprocessing"]["leaf_config"]
     assert leaf["sd_tcode_unit"] == "state_series"
     assert leaf["sd_tcode_code_map"] == {"UR_CA": 2, "UR_TX": 5}
     assert leaf["sd_tcode_audit_uri"] == "state_audit.csv"
@@ -151,7 +151,7 @@ def test_use_preprocessor_sets_l2_leaf():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
     exp.use_preprocessor("custom_x_demean")
     recipe = exp.to_recipe_dict()
-    assert recipe["2_preprocessing"]["leaf_config"]["custom_postprocessor"] == "custom_x_demean"
+    assert recipe["preprocessing"]["leaf_config"]["custom_postprocessor"] == "custom_x_demean"
 
 
 def test_use_preprocessor_l2_writes_pre_pipeline_leaf():
@@ -161,7 +161,7 @@ def test_use_preprocessor_l2_writes_pre_pipeline_leaf():
 
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
     exp.use_preprocessor("custom_x_demean", applied_at="l2")
-    leaf = exp.to_recipe_dict()["2_preprocessing"]["leaf_config"]
+    leaf = exp.to_recipe_dict()["preprocessing"]["leaf_config"]
     assert leaf["custom_preprocessor"] == "custom_x_demean"
     # The post-pipeline slot stays empty unless the user opts in too.
     assert "custom_postprocessor" not in leaf
@@ -228,9 +228,9 @@ def test_chain_use_methods_round_trips_recipe():
         .compare_models(["ridge", "ols"])
     )
     recipe = exp.to_recipe_dict()
-    assert recipe["1_data"]["fixed_axes"]["state_selection"] == "selected_states"
+    assert recipe["data"]["fixed_axes"]["state_selection"] == "selected_states"
     assert (
-        recipe["2_preprocessing"]["fixed_axes"]["mixed_frequency_representation"]
+        recipe["preprocessing"]["fixed_axes"]["mixed_frequency_representation"]
         == "calendar_aligned_frame"
     )
     # compare_models should still have inserted a sweep marker on family.

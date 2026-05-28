@@ -8,19 +8,19 @@ from __future__ import annotations
 
 from .registry import register_layer
 
-from macroforecast.layers.l0_meta.schema import L0StudySetup
-from macroforecast.layers.l1_data.schema import L1Data
-from macroforecast.layers.l2_preprocessing.schema import L2Preprocessing
-from macroforecast.layers.l3_features.schema import L3FeatureEngineering
-from macroforecast.layers.l4_models.schema import L4ForecastingModel
-from macroforecast.layers.l5_evaluation.schema import L5Evaluation
-from macroforecast.layers.l6_tests.schema import L6StatisticalTests
-from macroforecast.layers.l7_interpretation.schema import L7Interpretation
-from macroforecast.layers.l8_output.schema import L8Output
-from macroforecast.layers.l1_5_diagnostic.schema import L1_5DataSummary
-from macroforecast.layers.l2_5_diagnostic.schema import L2_5PrePostPreprocessing
-from macroforecast.layers.l3_5_diagnostic.schema import L3_5FeatureDiagnostics
-from macroforecast.layers.l4_5_diagnostic.schema import L4_5GeneratorDiagnostics
+from macroforecast.meta.schema import L0StudySetup
+from macroforecast.data.config import Data
+from macroforecast.preprocessing.schema import L2Preprocessing
+from macroforecast.features.schema import L3FeatureEngineering
+from macroforecast.models.schema import L4ForecastingModel
+from macroforecast.evaluation.schema import L5Evaluation
+from macroforecast.stat_tests.schema import L6StatisticalTests
+from macroforecast.interpretation.schema import L7Interpretation
+from macroforecast.output.schema import L8Output
+from macroforecast.diagnostics.data_summary.schema import L1_5DataSummary
+from macroforecast.diagnostics.preprocessing.schema import L2_5PrePostPreprocessing
+from macroforecast.diagnostics.features.schema import L3_5FeatureDiagnostics
+from macroforecast.diagnostics.generator.schema import L4_5GeneratorDiagnostics
 
 
 register_layer(
@@ -38,7 +38,7 @@ register_layer(
     category="construction",
     produces=("l1_data_definition_v1", "l1_regime_metadata_v1"),
     ui_mode="list",
-)(L1Data)
+)(Data)
 
 
 register_layer(

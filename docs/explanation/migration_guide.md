@@ -51,16 +51,16 @@ All three shims are centralized in `macroforecast.api._deprecations`
 (`resolve_model`, `resolve_models`, `resolve_benchmark_model`). No value
 transformation is required — the values (model family strings) are identical.
 
-### Constants in macroforecast.layers.l4_models.ops
+### Constants in macroforecast.models.ops
 
 ```python
 # Before (deprecated)
-from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES
-from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES
+from macroforecast.models.ops import OPERATIONAL_MODEL_FAMILIES
+from macroforecast.models.ops import FUTURE_MODEL_FAMILIES
 
 # After
-from macroforecast.layers.l4_models.ops import OPERATIONAL_MODELS
-from macroforecast.layers.l4_models.ops import FUTURE_MODELS
+from macroforecast.models.ops import OPERATIONAL_MODELS
+from macroforecast.models.ops import FUTURE_MODELS
 ```
 
 ### L6 result dict key alias
@@ -116,8 +116,11 @@ No value changes are required — only key names changed.
 
 | Old import | Canonical import | Status |
 |-----------|-----------------|--------|
-| `import macroforecast.interpretation` | `from macroforecast.layers.l7_interpretation import ...` | SHIM EXISTS in v0.9.x — works but emits deprecation; use canonical |
-| `import macroforecast.recipes` | `from macroforecast.layers import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.models` | `from macroforecast.models import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.preprocessing` | `from macroforecast.preprocessing import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.interpretation` | `from macroforecast.interpretation import ...` | SHIM EXISTS in v0.9.x |
+| `from macroforecast.core.layers.l3 import ...` | `from macroforecast.features.schema import ...` | SHIM EXISTS in v0.9.x |
+| `import macroforecast.recipes` | `from macroforecast.api import ...` | SHIM EXISTS in v0.9.x |
 
 ### Always-current paths
 
@@ -125,7 +128,7 @@ No value changes are required — only key names changed.
 |--------|-------|
 | `macroforecast.raw` | Unchanged — FRED-MD/QD/SD adapters, vintage manager |
 | `macroforecast.tuning` | Unchanged — HP search engines; used internally by L4 |
-| `macroforecast.core` | Unchanged — execution engine, dag, sweep, manifest |
+| `macroforecast.core` | Unchanged - execution engine, pipeline, sweep, manifest |
 | `macroforecast.api` | Unchanged — `run`, `replicate`, `Experiment`, `forecast()` |
 
 ---
@@ -135,7 +138,7 @@ No value changes are required — only key names changed.
 | Feature | Removed in | Replacement |
 |---------|-----------|-------------|
 | Interactive scaffold wizard (`macroforecast scaffold` interactive mode) | v0.9.5 Phase 0 | Use a recipe template from `examples/recipes/`; see [Recipe authors guide](../for_recipe_authors/index.md) |
-| Navigator pages (`docs/reference/api/navigator*`) | v0.6.2 docs reorg | See `docs/reference/` index |
+| Navigator pages (`docs/reference/navigator*`) | v0.6.2 docs reorg | See `docs/reference/` index |
 | Audience-tree doc paths (`getting_started/`, `user_guide/`, `fred_dataset/`, `simple/`, `detail/`, `dev/`) | v0.6.2 docs reorg | See `docs/tutorial/`, `docs/how_to/`, `docs/reference/` |
 | `scripts/v01_smoke_check.py` | v0.9.5 (deep-audit) | Run `python -m pytest tests/ -x -q` for smoke validation |
 | `examples/recipes/l2_fred_sd_alignment.yaml` | v0.9.5 (deep-audit PR4) | Renamed to `l2_preprocessing_minimal.yaml` — functionally identical |
@@ -153,7 +156,7 @@ macroforecast run recipe.yaml -o out/
 macroforecast replicate out/manifest.json
 macroforecast validate recipe.yaml
 macroforecast scaffold -o recipe.yaml
-macroforecast encyclopedia docs/reference/encyclopedia/
+macroforecast encyclopedia docs/reference/
 ```
 
 The `python -m macroforecast` form also works and is equivalent.
@@ -208,9 +211,9 @@ Summary:
 
 ## Where to Get Help
 
-- **Encyclopedia** (`docs/reference/encyclopedia/`) — per-option reference for
+- **Encyclopedia** (`docs/reference/`) — per-option reference for
   every axis, op, and model family.
-- **Recipe schema** (`docs/reference/recipe_schema/`) — full YAML schema
+- **Recipe schema** (`docs/reference/`) — full YAML schema
   with allowed keys and value constraints.
 - **Architecture explanation** (`docs/explanation/architecture/`) — layer
   design rationale and layer boundary contract.

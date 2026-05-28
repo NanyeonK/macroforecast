@@ -56,7 +56,7 @@ def _e2e_recipe(scheme: str) -> str:
 0_meta:
   fixed_axes: {{failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}}
   leaf_config: {{random_seed: 42}}
-1_data:
+data:
   fixed_axes: {{panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}}
   leaf_config:
     target: y
@@ -66,7 +66,7 @@ def _e2e_recipe(scheme: str) -> str:
       y: {_Y_VALUES}
       x1: {_X1_VALUES}
       x2: {_X2_VALUES}
-2_preprocessing:
+preprocessing:
   fixed_axes: {{transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}}
 3_feature_engineering:
   nodes:

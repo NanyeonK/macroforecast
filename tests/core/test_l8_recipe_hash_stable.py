@@ -26,14 +26,14 @@ def _compute_hash_via_runtime(recipe: dict) -> str:
 
 
 _RECIPE_A = {
-    "1_data": {
+    "data": {
         "fixed_axes": {"panel_composition": "custom_panel_only", "frequency": "monthly"},
         "leaf_config": {"target": "y"},
     }
 }
 
 _RECIPE_B = {
-    "1_data": {
+    "data": {
         "fixed_axes": {"panel_composition": "custom_panel_only", "frequency": "quarterly"},
         "leaf_config": {"target": "y"},
     }
@@ -58,8 +58,8 @@ class TestRecipeHashStable:
 
     def test_key_order_invariant(self):
         """Key order in the recipe dict must not affect the hash."""
-        recipe_1 = {"1_data": {"fixed_axes": {"a": 1, "b": 2}}}
-        recipe_2 = {"1_data": {"fixed_axes": {"b": 2, "a": 1}}}
+        recipe_1 = {"data": {"fixed_axes": {"a": 1, "b": 2}}}
+        recipe_2 = {"data": {"fixed_axes": {"b": 2, "a": 1}}}
         h1 = _compute_hash_via_runtime(recipe_1)
         h2 = _compute_hash_via_runtime(recipe_2)
         assert h1 == h2
@@ -71,7 +71,7 @@ class TestRecipeHashStable:
             "import sys, hashlib, json\n"
             "sys.path.insert(0, '/home/nanyeon99/project/macroforecast')\n"
             "from macroforecast.core.runtime import _jsonable\n"
-            "recipe = {'1_data': {'fixed_axes': {'panel_composition': 'custom_panel_only', 'frequency': 'monthly'}, 'leaf_config': {'target': 'y'}}}\n"
+            "recipe = {'data': {'fixed_axes': {'panel_composition': 'custom_panel_only', 'frequency': 'monthly'}, 'leaf_config': {'target': 'y'}}}\n"
             "cj = json.dumps(_jsonable(recipe), sort_keys=True, default=str, separators=(',', ':'))\n"
             "print(hashlib.sha256(cj.encode()).hexdigest()[:16])\n"
         )

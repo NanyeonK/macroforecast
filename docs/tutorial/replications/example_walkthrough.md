@@ -35,7 +35,7 @@ sink hash matches bit-for-bit.
 ## Layer 1 — data
 
 ```yaml
-1_data:
+data:
   fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
   leaf_config:
     target: y
@@ -59,7 +59,7 @@ sink hash matches bit-for-bit.
 ## Layer 2 — preprocessing
 
 ```yaml
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none
@@ -76,7 +76,7 @@ realistic FRED-MD recipe would use:
 - `frame_edge_policy: truncate_to_balanced`.
 
 For FRED-SD / mixed-frequency studies see
-[`mixed_frequency_representation`](../encyclopedia/l2/axes/mixed_frequency_representation.md).
+[`mixed_frequency_representation`](../../reference/generated/l2/axes/mixed_frequency_representation.md).
 
 ## Layer 3 — feature engineering steps
 
@@ -102,7 +102,7 @@ For FRED-SD / mixed-frequency studies see
 
 Real recipes compose richer pipelines: `pca` reduction,
 `ma_increasing_order` (MARX), `scaled_pca`, `feature_selection`, etc.
-See the [encyclopedia L3 page](../encyclopedia/l3/index.md) for the 37
+See the [encyclopedia L3 page](../../reference/generated/l3/index.md) for the 37
 operational ops.
 
 ## Layer 4 — forecasting model
@@ -136,7 +136,7 @@ operational ops.
   Replace with `lasso`, `elastic_net`, `ar_p`, `random_forest`,
   `xgboost`, `bayesian_ridge`, `bvar_minnesota`,
   `macroeconomic_random_forest`, `dfm_mixed_mariano_murasawa`, ... see
-  the [encyclopedia L4 page](../encyclopedia/l4/index.md) for all 35+.
+  the [encyclopedia L4 page](../../reference/generated/l4/index.md) for all 35+.
 - `forecast_policy: direct` — train one model per horizon (vs.
   `iterated` which recursively rolls h=1 forecasts).
 - `training_start_rule: expanding` + `refit_policy: every_origin` —
@@ -162,7 +162,7 @@ recipes add:
 ```
 
 For statistical inference (DM / MCS / SPA / Reality Check), enable
-L6 — see the [encyclopedia L6 page](../encyclopedia/l6/index.md).
+L6 — see the [encyclopedia L6 page](../../reference/generated/l6/index.md).
 
 ## Output (Layer 8)
 

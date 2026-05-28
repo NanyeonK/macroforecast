@@ -30,7 +30,7 @@ def test_template_returns_recipe_builder(name):
     assert isinstance(b, RecipeBuilder)
     recipe = b.build()
     # Every template should populate L0 + L1 + L4 at minimum.
-    for required in ("0_meta", "1_data", "4_forecasting_model"):
+    for required in ("0_meta", "data", "4_forecasting_model"):
         assert required in recipe, f"{name} missing {required}"
 
 
@@ -43,7 +43,7 @@ def test_ridge_baseline_runs_end_to_end(tmp_path):
 
 def test_template_overrides_pass_through():
     b = from_template("ridge_baseline", target="custom_y")
-    assert b.build()["1_data"]["leaf_config"]["target"] == "custom_y"
+    assert b.build()["data"]["leaf_config"]["target"] == "custom_y"
 
 
 def test_template_user_can_modify_after_construction(tmp_path):

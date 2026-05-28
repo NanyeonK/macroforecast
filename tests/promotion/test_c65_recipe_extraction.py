@@ -149,7 +149,7 @@ class TestRecipesNamespaceCompleteness:
     """T6: All 8 symbols are in macroforecast.recipes and its __all__.
 
     Phase 3b removed paper_methods from macroforecast.recipes; it now lives at
-    macroforecast.layers.l4_models.paper_methods.
+    macroforecast.models.paper_methods.
     """
 
     _EXPECTED_SYMBOLS = [
@@ -243,10 +243,10 @@ class TestRecipesDocstring:
         )
 
     def test_docstring_mentions_models_namespace(self):
-        """T11: __doc__ mentions the standalone model API (macroforecast.layers.l4_models)."""
+        """T11: __doc__ mentions the standalone model API (macroforecast.models)."""
         import macroforecast as mf
-        assert "macroforecast.layers.l4_models" in mf.recipes.__doc__, (
-            f"Expected 'macroforecast.layers.l4_models' in recipes.__doc__.\n"
+        assert "macroforecast.models" in mf.recipes.__doc__, (
+            f"Expected 'macroforecast.models' in recipes.__doc__.\n"
             f"Actual docstring excerpt: {mf.recipes.__doc__[:300]!r}"
         )
 
@@ -271,12 +271,12 @@ class TestEdgeCaseImports:
         assert callable(mf_recipes.run)
 
     def test_EC3_paper_methods_accessible(self):
-        """EC3: macroforecast.layers.l4_models.paper_methods is the paper_methods module.
+        """EC3: macroforecast.models.paper_methods is the paper_methods module.
 
         Phase 3b relocated paper_methods from macroforecast.recipes to
-        macroforecast.layers.l4_models.paper_methods.
+        macroforecast.models.paper_methods.
         """
-        import macroforecast.layers.l4_models.paper_methods as pm
+        import macroforecast.models.paper_methods as pm
         # The module should have at least one callable (e.g., macroeconomic_random_forest)
         assert pm is not None
         assert hasattr(pm, "__name__"), "paper_methods should be a module"

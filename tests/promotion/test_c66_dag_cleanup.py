@@ -67,15 +67,15 @@ def _file_dag_matches(path: Path) -> list[str]:
 # ---------------------------------------------------------------------------
 
 _PUBLIC_MODULES = [
-    "macroforecast.functions.linear",
-    "macroforecast.functions.tree",
-    "macroforecast.functions.deep",
-    "macroforecast.functions.ridge",
-    "macroforecast.functions.misc",
-    "macroforecast.functions.timeseries",
-    "macroforecast.functions.transforms",
+    "macroforecast.api.functions.linear",
+    "macroforecast.api.functions.tree",
+    "macroforecast.api.functions.deep",
+    "macroforecast.api.functions.ridge",
+    "macroforecast.api.functions.misc",
+    "macroforecast.api.functions.timeseries",
+    "macroforecast.api.functions.transforms",
     "tools.docgen.introspect",
-    "tools.docgen.option_docs.l3",
+    "macroforecast.features.option_docs",
     "tools.docgen.option_docs.l7_a",
     "tools.docgen.option_docs.l8",
     "tools.docgen.render_encyclopedia",
@@ -94,13 +94,13 @@ def test_t1_no_dag_in_module_docstring(module_name: str) -> None:
 
 
 @pytest.mark.parametrize("module_name", [
-    "macroforecast.functions.linear",
-    "macroforecast.functions.tree",
-    "macroforecast.functions.deep",
-    "macroforecast.functions.ridge",
-    "macroforecast.functions.misc",
-    "macroforecast.functions.timeseries",
-    "macroforecast.functions.transforms",
+    "macroforecast.api.functions.linear",
+    "macroforecast.api.functions.tree",
+    "macroforecast.api.functions.deep",
+    "macroforecast.api.functions.ridge",
+    "macroforecast.api.functions.misc",
+    "macroforecast.api.functions.timeseries",
+    "macroforecast.api.functions.transforms",
     "tools.docgen.introspect",
 ])
 def test_t1_no_dag_in_public_symbol_docstrings(module_name: str) -> None:
@@ -163,7 +163,7 @@ def test_t2a_l3_error_message_no_dag() -> None:
 
 def test_t2b_l4_error_message_no_dag() -> None:
     """T2-b: L4 normalize_to_dag_form error says 'step graph', not 'DAG'."""
-    from macroforecast.layers.l4_models.schema import normalize_to_dag_form
+    from macroforecast.models.schema import normalize_to_dag_form
 
     with pytest.raises(ValueError, match="L4 uses a step graph") as exc_info:
         normalize_to_dag_form({"fixed_axes": {}})
@@ -303,11 +303,10 @@ def test_t5_validator_error_messages_updated() -> None:
 
 
 def test_t7_reference_architecture_docs_no_dag() -> None:
-    """T7: docs/reference/architecture/ must have no standalone DAG/dag.
+    """T7: reference architecture docs must have no standalone DAG/dag.
 
-    Exception: docs/reference/architecture/layer7/index.md line 31 contains
-    'importance DAG body' which is a KEEP decision per impact.md 2.17 --
-    it refers to the frozen API schema field L7_A_importance_dag_body.
+    Exception: the frozen API schema field L7_A_importance_dag_body may still
+    appear where the docs explicitly discuss that public field name.
     """
     arch_dir = REPO_ROOT / "docs" / "reference" / "architecture"
     failures = []
@@ -315,13 +314,6 @@ def test_t7_reference_architecture_docs_no_dag() -> None:
         content = md_file.read_text(encoding="utf-8")
         for i, line in enumerate(content.splitlines()):
             if _DAG_PATTERN.search(line):
-                # Allow the frozen schema field reference in layer7/index.md
-                # (impact.md section 2.17: KEEP -- refers to frozen API name
-                # L7_A_importance_dag_body).
-                # Impact.md 2.17: 'importance DAG body' in layer7/index.md is a KEEP
-                # decision -- it is the human-readable description of the frozen
-                # API schema field L7_A_importance_dag_body. The condition matches
-                # both the underscore form (field name) and the space form (description).
                 is_frozen_ref = (
                     "layer7" in str(md_file)
                     and ("importance_dag_body" in line or "importance DAG body" in line)
@@ -348,10 +340,22 @@ def test_t7_explanation_docs_no_dag() -> None:
 
 
 def test_t7_recipe_schema_docs_no_dag() -> None:
-    """T7: docs/reference/recipe_schema/ must have no standalone DAG/dag matches."""
-    schema_dir = REPO_ROOT / "docs" / "reference" / "recipe_schema"
+    """T7: docs/reference/ must have no standalone DAG/dag matches."""
+    schema_files = [
+        REPO_ROOT / "docs" / "reference" / name
+        for name in (
+            "data.md",
+            "data_policies.md",
+            "defaults.md",
+            "fred_datasets.md",
+            "gallery.md",
+            "layer_contract.md",
+            "output.md",
+            "runtime_support.md",
+        )
+    ]
     failures = []
-    for md_file in schema_dir.rglob("*.md"):
+    for md_file in schema_files:
         matches = _file_dag_matches(md_file)
         if matches:
             failures.append(f"\n{md_file.relative_to(REPO_ROOT)}:\n  " + "\n  ".join(matches))
@@ -359,29 +363,33 @@ def test_t7_recipe_schema_docs_no_dag() -> None:
 
 
 def test_t7_api_docs_no_dag() -> None:
-    """T7: docs/reference/api/ must have no DAG/dag except frozen schema field names."""
-    api_dir = REPO_ROOT / "docs" / "reference" / "api"
+    """T7: callable reference docs must have no DAG/dag except frozen schema field names."""
+    api_dirs = [
+        REPO_ROOT / "docs" / "reference" / "standalone_functions",
+        REPO_ROOT / "docs" / "reference" / "navigator",
+    ]
     failures = []
-    for md_file in api_dir.rglob("*.md"):
-        content = md_file.read_text(encoding="utf-8")
-        for i, line in enumerate(content.splitlines()):
-            if _DAG_PATTERN.search(line):
-                # Allow frozen schema field names in any context.
-                frozen_ok = (
-                    "navigator_selected_dag_items" in line
-                    or "L7_A_importance_dag_body" in line
-                    or "importance_dag_body" in line
-                )
-                if not frozen_ok:
-                    failures.append(
-                        f"\n{md_file.relative_to(REPO_ROOT)}:{i+1}: {line}"
+    for api_dir in api_dirs:
+        for md_file in api_dir.rglob("*.md"):
+            content = md_file.read_text(encoding="utf-8")
+            for i, line in enumerate(content.splitlines()):
+                if _DAG_PATTERN.search(line):
+                    # Allow frozen schema field names in any context.
+                    frozen_ok = (
+                        "navigator_selected_dag_items" in line
+                        or "L7_A_importance_dag_body" in line
+                        or "importance_dag_body" in line
                     )
+                    if not frozen_ok:
+                        failures.append(
+                            f"\n{md_file.relative_to(REPO_ROOT)}:{i+1}: {line}"
+                        )
     assert not failures, "API docs still contain non-frozen DAG/dag:" + "".join(failures)
 
 
 def test_t7_encyclopedia_l1_no_dag() -> None:
-    """T7: docs/reference/encyclopedia/l1/ must have no standalone DAG/dag."""
-    l1_dir = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "l1"
+    """T7: docs/reference/l1/ must have no standalone DAG/dag."""
+    l1_dir = REPO_ROOT / "docs" / "reference" / "generated" / "l1"
     failures = []
     for md_file in l1_dir.rglob("*.md"):
         matches = _file_dag_matches(md_file)
@@ -391,8 +399,8 @@ def test_t7_encyclopedia_l1_no_dag() -> None:
 
 
 def test_t7_encyclopedia_l8_no_dag() -> None:
-    """T7: docs/reference/encyclopedia/l8/ must have no standalone DAG/dag."""
-    l8_dir = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "l8"
+    """T7: docs/reference/l8/ must have no standalone DAG/dag."""
+    l8_dir = REPO_ROOT / "docs" / "reference" / "generated" / "l8"
     failures = []
     for md_file in l8_dir.rglob("*.md"):
         matches = _file_dag_matches(md_file)
@@ -402,8 +410,8 @@ def test_t7_encyclopedia_l8_no_dag() -> None:
 
 
 def test_t7_public_api_md_no_dag() -> None:
-    """T7: docs/reference/encyclopedia/public_api.md must have no DAG/dag."""
-    f = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "public_api.md"
+    """T7: docs/reference/public_api.md must have no DAG/dag."""
+    f = REPO_ROOT / "docs" / "reference" / "public_api.md"
     matches = _file_dag_matches(f)
     assert not matches, (
         "public_api.md still contains DAG/dag:\n" + "\n".join(matches)
@@ -417,7 +425,7 @@ def test_t7_public_api_md_no_dag() -> None:
 
 def test_t8a_l7_importance_dag_body_preserved() -> None:
     """T8-a: L7_A_importance_dag_body frozen field name must still appear in l7/index.md."""
-    f = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "l7" / "index.md"
+    f = REPO_ROOT / "docs" / "reference" / "generated" / "l7" / "index.md"
     content = f.read_text(encoding="utf-8")
     assert "L7_A_importance_dag_body" in content, (
         "Frozen schema field L7_A_importance_dag_body was incorrectly renamed in l7/index.md"
@@ -426,7 +434,7 @@ def test_t8a_l7_importance_dag_body_preserved() -> None:
 
 def test_t8b_navigator_selected_dag_items_preserved() -> None:
     """T8-b: navigator_selected_dag_items frozen field must still appear in tree_navigator.md."""
-    f = REPO_ROOT / "docs" / "reference" / "api" / "navigator" / "tree_navigator.md"
+    f = REPO_ROOT / "docs" / "reference" / "navigator" / "tree_navigator.md"
     content = f.read_text(encoding="utf-8")
     assert "navigator_selected_dag_items" in content, (
         "Frozen schema field navigator_selected_dag_items was incorrectly renamed in tree_navigator.md"
@@ -440,7 +448,7 @@ def test_t8b_navigator_selected_dag_items_preserved() -> None:
 
 def test_t9a_l3_op_pages_no_dag_boilerplate() -> None:
     """T9-a: L3 op pages must not contain 'feature engineering is a DAG'."""
-    l3_op_dir = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "l3" / "op"
+    l3_op_dir = REPO_ROOT / "docs" / "reference" / "generated" / "l3" / "op"
     failures = []
     for md_file in l3_op_dir.glob("*.md"):
         content = md_file.read_text(encoding="utf-8")
@@ -454,7 +462,7 @@ def test_t9a_l3_op_pages_no_dag_boilerplate() -> None:
 
 def test_t9b_pca_has_pipeline_boilerplate() -> None:
     """T9-b: pca.md must contain new 'feature engineering is a pipeline' boilerplate."""
-    pca_file = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "l3" / "op" / "pca.md"
+    pca_file = REPO_ROOT / "docs" / "reference" / "generated" / "l3" / "op" / "pca.md"
     content = pca_file.read_text(encoding="utf-8")
     assert "feature engineering is a pipeline" in content, (
         "pca.md does not contain new 'feature engineering is a pipeline' boilerplate. "
@@ -464,7 +472,7 @@ def test_t9b_pca_has_pipeline_boilerplate() -> None:
 
 def test_t9c_asymmetric_trim_no_l3_dag_dispatch() -> None:
     """T9-c: asymmetric_trim.md must not contain 'L3 DAG can dispatch'."""
-    f = REPO_ROOT / "docs" / "reference" / "encyclopedia" / "l3" / "op" / "asymmetric_trim.md"
+    f = REPO_ROOT / "docs" / "reference" / "generated" / "l3" / "op" / "asymmetric_trim.md"
     content = f.read_text(encoding="utf-8")
     assert "L3 DAG can dispatch" not in content, (
         "asymmetric_trim.md still contains 'L3 DAG can dispatch'"
@@ -493,13 +501,13 @@ def test_te1_validate_dag_signature_unchanged() -> None:
 
 
 def test_te3_no_double_replacement_linear() -> None:
-    """Edge T-E3: macroforecast.functions.linear must not contain 'pipeline pipeline'."""
-    import macroforecast.functions.linear as m
+    """Edge T-E3: macroforecast.api.functions.linear must not contain 'pipeline pipeline'."""
+    import macroforecast.api.functions.linear as m
 
-    assert m.__doc__ is not None, "macroforecast.functions.linear has no module docstring"
+    assert m.__doc__ is not None, "macroforecast.api.functions.linear has no module docstring"
     assert "pipeline pipeline" not in m.__doc__, (
-        "Double replacement occurred in macroforecast.functions.linear docstring"
+        "Double replacement occurred in macroforecast.api.functions.linear docstring"
     )
     assert "DAG" not in m.__doc__, (
-        "macroforecast.functions.linear module docstring still contains 'DAG'"
+        "macroforecast.api.functions.linear module docstring still contains 'DAG'"
     )
