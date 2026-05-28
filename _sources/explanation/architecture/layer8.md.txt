@@ -76,4 +76,4 @@ When `saved_objects` is omitted, L8 derives it from the active recipe:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l8/`](../../reference/encyclopedia/l8/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l8/`](../../reference/generated/l8/index.md).

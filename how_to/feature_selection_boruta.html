@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -477,15 +470,15 @@
 <h1>How to select features with Boruta<a class="headerlink" href="#how-to-select-features-with-boruta" title="Link to this heading">#</a></h1>
 <p>The goal is to select a subset of features under proper false-positive
 control using the Kursa-Rudnicki (2010) Boruta algorithm. We use the
-public class <code class="docutils literal notranslate"><span class="pre">Boruta</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l3_features.selection</span></code>, which
+public class <code class="docutils literal notranslate"><span class="pre">Boruta</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.features.selection</span></code>, which
 follows the sklearn <code class="docutils literal notranslate"><span class="pre">fit</span></code> and <code class="docutils literal notranslate"><span class="pre">transform</span></code> interface and inherits from
-<code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> and <code class="docutils literal notranslate"><span class="pre">TransformerMixin</span></code> since C64. The implementation is
+<code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> and <code class="docutils literal notranslate"><span class="pre">TransformerMixin</span></code> since v0.9.5. The implementation is
 pure numpy and sklearn, so no external <code class="docutils literal notranslate"><span class="pre">boruta</span></code> package is required.</p>
 <section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l3_features.selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.features.selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">n</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">20</span>
@@ -515,7 +508,7 @@ pure numpy and sklearn, so no external <code class="docutils literal notranslate
 </div>
 <p>The Bonferroni significance level <code class="docutils literal notranslate"><span class="pre">alpha=0.05</span></code> and the multi-shadow
 calibration <code class="docutils literal notranslate"><span class="pre">n_shadow_copies=6</span></code> jointly control the family-wise
-false-positive rate. The C59 fix removed the always-accept-one fallback,
+false-positive rate. The v0.9.4 fix removed the always-accept-one fallback,
 so an empty <code class="docutils literal notranslate"><span class="pre">selected_features_</span></code> list is a legitimate outcome under a
 null DGP.</p>
 </section>
@@ -551,7 +544,7 @@ chains the two calls.</p>
 </tr>
 <tr class="row-odd"><td><p>High false-positive rate</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">n_shadow_copies</span></code> set too low</p></td>
-<td><p>Keep the default <code class="docutils literal notranslate"><span class="pre">n_shadow_copies=6</span></code> or higher, since C59 verified that values below 6 inflate the FP rate</p></td>
+<td><p>Keep the default <code class="docutils literal notranslate"><span class="pre">n_shadow_copies=6</span></code> or higher, since v0.9.4 verified that values below 6 inflate the FP rate</p></td>
 </tr>
 </tbody>
 </table>

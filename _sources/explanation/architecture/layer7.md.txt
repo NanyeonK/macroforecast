@@ -5,7 +5,7 @@
 - Current: L7
 - Next: [Layer L8](layer8.md)
 
-L7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML. As of Cycle 49 (2026-05-21), `generalized_irf` (Pesaran-Shin 1998) is operational; `FUTURE_OPS` contains only `lstm_hidden_state`.
+L7 explains model forecasts through importance, attribution, marginal effects, lineage aggregation, and transformation attribution. It is default off and uses graph-form YAML. As of v0.9.3, `generalized_irf` (Pesaran-Shin 1998) is operational; `FUTURE_OPS` is now empty.
 
 ## Contract
 
@@ -60,8 +60,8 @@ Outputs:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l7/`](../../reference/encyclopedia/l7/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l7/`](../../reference/generated/l7/index.md).
 
-## Cycle 50 update (2026-05-22)
+## v0.9.3 update
 
 `lstm_hidden_state` promoted to **operational** (was future). Extracts per-timestep LSTM hidden-state activations via a PyTorch forward hook and renders them as a heatmap (rows = hidden units, columns = observations). Requires `macroforecast[deep]`. Reference: Karpathy, Johnson & Fei-Fei (2015) arXiv:1506.02078.

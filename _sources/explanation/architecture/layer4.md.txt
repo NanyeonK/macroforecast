@@ -5,7 +5,7 @@
 - Current: L4
 - Next: [Layer L5](layer5.md)
 
-L4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer. As of Cycle 49 (2026-05-21), L4 has **47 operational families** (`realized_garch` promoted in C49; 4 MIDAS families promoted in C48). `FUTURE_MODEL_FAMILIES` is now empty.
+L4 consumes `X_final` and `y_final`, fits forecasting models, emits forecasts, and records model/training artifacts. It is a graph layer. As of v0.9.3, L4 has **47 operational models** (`realized_garch` promoted in v0.9.3; 4 MIDAS models also promoted in v0.9.3). `FUTURE_MODEL_FAMILIES` is now empty.
 
 ## Contract
 
@@ -70,4 +70,4 @@ Forecast combination belongs in L4 and consumes forecast artifacts:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l4/`](../../reference/encyclopedia/l4/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l4/`](../../reference/generated/l4/index.md).

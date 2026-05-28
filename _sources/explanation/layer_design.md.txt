@@ -91,8 +91,7 @@ all downstream layers, and is recorded in the manifest.
 L3 (`3_feature_engineering`) separates *what the model sees* from *how the
 model uses it*. It owns feature construction — lags, moving averages,
 dimensionality reduction, wavelet decomposition, and target construction
-(rolling means, cumulative averages) — expressed as a directed acyclic graph
-(a directed pipeline graph).
+(rolling means, cumulative averages) — expressed as a step graph.
 
 This pipeline graph structure is not incidental. Feature pipelines in real research are not
 linear. A study might apply PCA to a subset of predictors, compute lags from

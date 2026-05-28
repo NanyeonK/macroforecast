@@ -51,8 +51,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API Reference" href="api/index.html" />
-    <link rel="prev" title="Redirect notice" href="../how_to/partial_execution.html" />
+    <link rel="next" title="Recipe Gallery" href="gallery.html" />
+    <link rel="prev" title="Advanced recipe orchestration" href="../how_to/advanced_recipes.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5a0" />
@@ -379,219 +379,226 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/standalone_functions/index.html">Standalone functions - namespace overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Recipe Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_contract.html">Recipe Layer Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meta.html">Meta</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_policies.html">Data Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="defaults.html">Recipe Defaults</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Understanding Recipe Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_datasets.html">FRED Datasets in Recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="standalone_functions/index.html">Standalone functions - namespace overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="generated/index.html">Generated Encyclopedia</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/browse_by_layer.html">Browse by layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/browse_by_axis.html">Browse by axis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/browse_by_option.html">Browse by option</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l0/index.html">Layer L0  –  Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l0/axes/failure_policy.html"><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l0/axes/reproducibility_policy.html"><code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l0/axes/compute_policy.html"><code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="recipe_schema/index.html">Recipe API</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="encyclopedia/index.html">Encyclopedia</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l0/index.html">Layer L0  –  Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l0/axes/failure_policy.html"><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l0/axes/reproducibility_policy.html"><code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l0/axes/compute_policy.html"><code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l1/index.html">Layer L1  –  Data</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/panel_composition.html"><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l1/index.html">Layer L1  –  Data</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/panel_composition.html"><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1/axes/regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l1_5/index.html">Layer L1.5  –  Data summary</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/coverage_view.html"><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/summary_metrics.html"><code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/summary_split.html"><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/stationarity_test.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/stationarity_test_scope.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/missing_view.html"><code class="docutils literal notranslate"><span class="pre">missing_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/outlier_view.html"><code class="docutils literal notranslate"><span class="pre">outlier_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l1_5/index.html">Layer L1.5  –  Data summary</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/coverage_view.html"><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/summary_metrics.html"><code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/summary_split.html"><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/stationarity_test.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/stationarity_test_scope.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/missing_view.html"><code class="docutils literal notranslate"><span class="pre">missing_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/outlier_view.html"><code class="docutils literal notranslate"><span class="pre">outlier_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l1_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l2/index.html">Layer L2  –  Preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/sd_series_frequency_filter.html"><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/mixed_frequency_representation.html"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/quarterly_to_monthly_policy.html"><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/monthly_to_quarterly_policy.html"><code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/transform_policy.html"><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/sd_tcode_policy.html"><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/outlier_action.html"><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/imputation_policy.html"><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/imputation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">imputation_temporal_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/frame_edge_policy.html"><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l2/index.html">Layer L2  –  Preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/sd_series_frequency_filter.html"><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/mixed_frequency_representation.html"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/quarterly_to_monthly_policy.html"><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/monthly_to_quarterly_policy.html"><code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/transform_policy.html"><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/sd_tcode_policy.html"><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/outlier_action.html"><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/imputation_policy.html"><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/imputation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">imputation_temporal_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2/axes/frame_edge_policy.html"><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/comparison_pair.html"><code class="docutils literal notranslate"><span class="pre">comparison_pair</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/distribution_metric.html"><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/distribution_view.html"><code class="docutils literal notranslate"><span class="pre">distribution_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/correlation_shift.html"><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/cleaning_summary_view.html"><code class="docutils literal notranslate"><span class="pre">cleaning_summary_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/t_code_application_log.html"><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/comparison_pair.html"><code class="docutils literal notranslate"><span class="pre">comparison_pair</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/distribution_metric.html"><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/distribution_view.html"><code class="docutils literal notranslate"><span class="pre">distribution_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/correlation_shift.html"><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/cleaning_summary_view.html"><code class="docutils literal notranslate"><span class="pre">cleaning_summary_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/t_code_application_log.html"><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l2_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l3/index.html">Layer L3  –  Feature engineering</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l3/index.html">Layer L3  –  Feature engineering</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l3_5/index.html">Layer L3.5  –  Feature diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/comparison_stages.html"><code class="docutils literal notranslate"><span class="pre">comparison_stages</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/factor_view.html"><code class="docutils literal notranslate"><span class="pre">factor_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/dfm_diagnostics.html"><code class="docutils literal notranslate"><span class="pre">dfm_diagnostics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/feature_correlation.html"><code class="docutils literal notranslate"><span class="pre">feature_correlation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/lag_view.html"><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/marx_view.html"><code class="docutils literal notranslate"><span class="pre">marx_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/selection_view.html"><code class="docutils literal notranslate"><span class="pre">selection_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/stability_metric.html"><code class="docutils literal notranslate"><span class="pre">stability_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l3_5/index.html">Layer L3.5  –  Feature diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/comparison_stages.html"><code class="docutils literal notranslate"><span class="pre">comparison_stages</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/factor_view.html"><code class="docutils literal notranslate"><span class="pre">factor_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/dfm_diagnostics.html"><code class="docutils literal notranslate"><span class="pre">dfm_diagnostics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/feature_correlation.html"><code class="docutils literal notranslate"><span class="pre">feature_correlation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/lag_view.html"><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/marx_view.html"><code class="docutils literal notranslate"><span class="pre">marx_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/selection_view.html"><code class="docutils literal notranslate"><span class="pre">selection_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/stability_metric.html"><code class="docutils literal notranslate"><span class="pre">stability_metric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l3_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l4/index.html">Layer L4  –  Forecasting model</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/model.html"><code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/forecast_policy.html"><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/training_start_rule.html"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/refit_policy.html"><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/search_algorithm.html"><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/pi_correction.html"><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l4/index.html">Layer L4  –  Forecasting model</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4/axes/model.html"><code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4/axes/forecast_policy.html"><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4/axes/training_start_rule.html"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4/axes/refit_policy.html"><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4/axes/search_algorithm.html"><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4/axes/pi_correction.html"><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l4_5/index.html">Layer L4.5  –  Generator diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/fit_view.html"><code class="docutils literal notranslate"><span class="pre">fit_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/fit_per_origin.html"><code class="docutils literal notranslate"><span class="pre">fit_per_origin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/forecast_scale_view.html"><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/back_transform_method.html"><code class="docutils literal notranslate"><span class="pre">back_transform_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/window_view.html"><code class="docutils literal notranslate"><span class="pre">window_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/coef_view_models.html"><code class="docutils literal notranslate"><span class="pre">coef_view_models</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/tuning_view.html"><code class="docutils literal notranslate"><span class="pre">tuning_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/ensemble_view.html"><code class="docutils literal notranslate"><span class="pre">ensemble_view</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/weights_over_time_method.html"><code class="docutils literal notranslate"><span class="pre">weights_over_time_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l4_5/index.html">Layer L4.5  –  Generator diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/fit_view.html"><code class="docutils literal notranslate"><span class="pre">fit_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/fit_per_origin.html"><code class="docutils literal notranslate"><span class="pre">fit_per_origin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/forecast_scale_view.html"><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/back_transform_method.html"><code class="docutils literal notranslate"><span class="pre">back_transform_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/window_view.html"><code class="docutils literal notranslate"><span class="pre">window_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/coef_view_models.html"><code class="docutils literal notranslate"><span class="pre">coef_view_models</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/tuning_view.html"><code class="docutils literal notranslate"><span class="pre">tuning_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/ensemble_view.html"><code class="docutils literal notranslate"><span class="pre">ensemble_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/weights_over_time_method.html"><code class="docutils literal notranslate"><span class="pre">weights_over_time_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l4_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l5/index.html">Layer L5  –  Evaluation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/primary_metric.html"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/density_metrics.html"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l5/index.html">Layer L5  –  Evaluation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/primary_metric.html"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/density_metrics.html"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l5/axes/report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l6/index.html">Layer L6  –  Statistical tests</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/equal_predictive_test.html"><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/loss_function.html"><code class="docutils literal notranslate"><span class="pre">loss_function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/model_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">model_pair_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/hln_correction.html"><code class="docutils literal notranslate"><span class="pre">hln_correction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/nested_test.html"><code class="docutils literal notranslate"><span class="pre">nested_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/nested_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cw_adjustment.html"><code class="docutils literal notranslate"><span class="pre">cw_adjustment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/enc_test_one_sided.html"><code class="docutils literal notranslate"><span class="pre">enc_test_one_sided</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_test.html"><code class="docutils literal notranslate"><span class="pre">cpa_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_window_type.html"><code class="docutils literal notranslate"><span class="pre">cpa_window_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_conditioning_info.html"><code class="docutils literal notranslate"><span class="pre">cpa_conditioning_info</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_critical_value_method.html"><code class="docutils literal notranslate"><span class="pre">cpa_critical_value_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/multiple_model_test.html"><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/mcs_alpha.html"><code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/mmt_loss_function.html"><code class="docutils literal notranslate"><span class="pre">mmt_loss_function</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/bootstrap_method.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/bootstrap_n_replications.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_n_replications</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/bootstrap_block_length.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_block_length</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/mcs_t_statistic.html"><code class="docutils literal notranslate"><span class="pre">mcs_t_statistic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/spa_studentization.html"><code class="docutils literal notranslate"><span class="pre">spa_studentization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/stepm_alpha.html"><code class="docutils literal notranslate"><span class="pre">stepm_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/density_test.html"><code class="docutils literal notranslate"><span class="pre">density_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/interval_test.html"><code class="docutils literal notranslate"><span class="pre">interval_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/coverage_levels.html"><code class="docutils literal notranslate"><span class="pre">coverage_levels</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/pit_n_bins.html"><code class="docutils literal notranslate"><span class="pre">pit_n_bins</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/pit_test_horizon_dependence.html"><code class="docutils literal notranslate"><span class="pre">pit_test_horizon_dependence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/direction_test.html"><code class="docutils literal notranslate"><span class="pre">direction_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/direction_threshold.html"><code class="docutils literal notranslate"><span class="pre">direction_threshold</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/direction_alpha.html"><code class="docutils literal notranslate"><span class="pre">direction_alpha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_test.html"><code class="docutils literal notranslate"><span class="pre">residual_test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_lag_count.html"><code class="docutils literal notranslate"><span class="pre">residual_lag_count</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_test_scope.html"><code class="docutils literal notranslate"><span class="pre">residual_test_scope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_alpha.html"><code class="docutils literal notranslate"><span class="pre">residual_alpha</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l6/index.html">Layer L6  –  Statistical tests</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/equal_predictive_test.html"><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/loss_function.html"><code class="docutils literal notranslate"><span class="pre">loss_function</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/model_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">model_pair_strategy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/hln_correction.html"><code class="docutils literal notranslate"><span class="pre">hln_correction</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/nested_test.html"><code class="docutils literal notranslate"><span class="pre">nested_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/nested_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/cw_adjustment.html"><code class="docutils literal notranslate"><span class="pre">cw_adjustment</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/enc_test_one_sided.html"><code class="docutils literal notranslate"><span class="pre">enc_test_one_sided</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/cpa_test.html"><code class="docutils literal notranslate"><span class="pre">cpa_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/cpa_window_type.html"><code class="docutils literal notranslate"><span class="pre">cpa_window_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/cpa_conditioning_info.html"><code class="docutils literal notranslate"><span class="pre">cpa_conditioning_info</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/cpa_critical_value_method.html"><code class="docutils literal notranslate"><span class="pre">cpa_critical_value_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/multiple_model_test.html"><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/mcs_alpha.html"><code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/mmt_loss_function.html"><code class="docutils literal notranslate"><span class="pre">mmt_loss_function</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/bootstrap_method.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/bootstrap_n_replications.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_n_replications</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/bootstrap_block_length.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_block_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/mcs_t_statistic.html"><code class="docutils literal notranslate"><span class="pre">mcs_t_statistic</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/spa_studentization.html"><code class="docutils literal notranslate"><span class="pre">spa_studentization</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/stepm_alpha.html"><code class="docutils literal notranslate"><span class="pre">stepm_alpha</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/density_test.html"><code class="docutils literal notranslate"><span class="pre">density_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/interval_test.html"><code class="docutils literal notranslate"><span class="pre">interval_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/coverage_levels.html"><code class="docutils literal notranslate"><span class="pre">coverage_levels</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/pit_n_bins.html"><code class="docutils literal notranslate"><span class="pre">pit_n_bins</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/pit_test_horizon_dependence.html"><code class="docutils literal notranslate"><span class="pre">pit_test_horizon_dependence</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/direction_test.html"><code class="docutils literal notranslate"><span class="pre">direction_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/direction_threshold.html"><code class="docutils literal notranslate"><span class="pre">direction_threshold</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/direction_alpha.html"><code class="docutils literal notranslate"><span class="pre">direction_alpha</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/residual_test.html"><code class="docutils literal notranslate"><span class="pre">residual_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/residual_lag_count.html"><code class="docutils literal notranslate"><span class="pre">residual_lag_count</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/residual_test_scope.html"><code class="docutils literal notranslate"><span class="pre">residual_test_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l6/axes/residual_alpha.html"><code class="docutils literal notranslate"><span class="pre">residual_alpha</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l7/index.html">Layer L7  –  Interpretation / importance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/output_table_format.html"><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/figure_type.html"><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/top_k_features_to_show.html"><code class="docutils literal notranslate"><span class="pre">top_k_features_to_show</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/precision_digits.html"><code class="docutils literal notranslate"><span class="pre">precision_digits</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/figure_format.html"><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/latex_table_export.html"><code class="docutils literal notranslate"><span class="pre">latex_table_export</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/markdown_table_export.html"><code class="docutils literal notranslate"><span class="pre">markdown_table_export</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l7/index.html">Layer L7  –  Interpretation / importance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/output_table_format.html"><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/figure_type.html"><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/top_k_features_to_show.html"><code class="docutils literal notranslate"><span class="pre">top_k_features_to_show</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/precision_digits.html"><code class="docutils literal notranslate"><span class="pre">precision_digits</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/figure_format.html"><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/latex_table_export.html"><code class="docutils literal notranslate"><span class="pre">latex_table_export</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/markdown_table_export.html"><code class="docutils literal notranslate"><span class="pre">markdown_table_export</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l7/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l8/index.html">Layer L8  –  Output / provenance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/export_format.html"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/compression.html"><code class="docutils literal notranslate"><span class="pre">compression</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/saved_objects.html"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/model_artifacts_format.html"><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/provenance_fields.html"><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/manifest_format.html"><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/artifact_granularity.html"><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/naming_convention.html"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="encyclopedia/l8/index.html">Layer L8  –  Output / provenance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/export_format.html"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/compression.html"><code class="docutils literal notranslate"><span class="pre">compression</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/saved_objects.html"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/model_artifacts_format.html"><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/provenance_fields.html"><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/manifest_format.html"><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/artifact_granularity.html"><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="encyclopedia/l8/axes/naming_convention.html"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/browse_by_layer.html">Browse by layer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/browse_by_axis.html">Browse by axis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/browse_by_option.html">Browse by option</a></li>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/public_api.html">Public Python API</a></li>
 </ul>
 </details></li>
 </ul>
@@ -653,43 +660,68 @@
                   
   <section id="reference">
 <h1>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h1>
-<p>Complete, accurate descriptions of everything macroforecast exposes.
-These pages are for look-up, not for learning.</p>
-<section id="architecture">
-<h2>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">#</a></h2>
-<p>Architecture and design-rationale pages have moved to the
-<a class="reference internal" href="../explanation/architecture/index.html"><span class="std std-doc">Explanation section</span></a>.</p>
+<p>Lookup pages for the public Python surface, recipe YAML contract, and generated option dictionary. These pages are for exact lookup; tutorials and design narrative live elsewhere.</p>
+<blockquote>
+<div><p><strong>Looking for design rationale?</strong> Use <a class="reference internal" href="../explanation/architecture/index.html"><span class="std std-doc">Architecture</span></a>. Reference pages define names, keys, options, and import surfaces; architecture pages explain why the packages are separated and how they interact.</p>
+</div></blockquote>
+<section id="recipe-api">
+<h2>Recipe API<a class="headerlink" href="#recipe-api" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="gallery.html"><span class="std std-doc">Recipe gallery</span></a>: runnable examples.</p></li>
+<li><p><a class="reference internal" href="layer_contract.html"><span class="std std-doc">Recipe contract</span></a>: recipe keys, step shape, and complete recipe form.</p></li>
+<li><p><a class="reference internal" href="meta.html"><span class="std std-doc">Meta</span></a>: study setup, failure policy, reproducibility, and compute policy.</p></li>
+<li><p><a class="reference internal" href="data.html"><span class="std std-doc">Data</span></a>: source, target, horizon, and geography choices.</p></li>
+<li><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc">Preprocessing</span></a>: frequency alignment, transforms, outlier handling, imputation, and frame-edge rules.</p></li>
+<li><p><a class="reference internal" href="data_policies.html"><span class="std std-doc">Data policies</span></a>: missingness, outliers, release lags, and same-period predictors.</p></li>
+<li><p><a class="reference internal" href="defaults.html"><span class="std std-doc">Defaults</span></a>: package-level default profiles.</p></li>
+<li><p><a class="reference internal" href="runtime_support.html"><span class="std std-doc">Runtime support</span></a>: what executes today.</p></li>
+<li><p><a class="reference internal" href="output.html"><span class="std std-doc">Output</span></a>: artifact directory and manifest layout.</p></li>
+<li><p><a class="reference internal" href="fred_datasets.html"><span class="std std-doc">FRED datasets</span></a>: FRED-MD, FRED-QD, and FRED-SD reference status.</p></li>
+</ul>
 </section>
-<section id="api">
-<h2>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h2>
-<p>Complete API documentation for macroforecast’s public Python surface:
-standalone layer-operation callables and the layer-topology Navigator.</p>
-<p><a class="reference internal" href="api/index.html"><span class="std std-doc">API reference</span></a></p>
+<section id="python-surface">
+<h2>Python Surface<a class="headerlink" href="#python-surface" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a>: top-level imports and semantic package map.</p></li>
+<li><p><a class="reference internal" href="standalone_functions/index.html"><span class="std std-doc">Standalone functions</span></a>: direct <code class="docutils literal notranslate"><span class="pre">mf.functions.*</span></code> callables.</p></li>
+<li><p><a class="reference internal" href="navigator/tree_navigator.html"><span class="std std-doc">Navigator</span></a>: generated topology navigator details.</p></li>
+</ul>
 </section>
-<section id="recipe-schema">
-<h2>Recipe Schema<a class="headerlink" href="#recipe-schema" title="Link to this heading">#</a></h2>
-<p>Full recipe grammar: data sources, defaults, layer contracts, runtime
-support matrix, and the recipe gallery.</p>
-<p><a class="reference internal" href="recipe_schema/index.html"><span class="std std-doc">Recipe schema</span></a></p>
+<section id="generated-encyclopedia">
+<h2>Generated Encyclopedia<a class="headerlink" href="#generated-encyclopedia" title="Link to this heading">#</a></h2>
+<p>Generated from the live implementation registry plus the <code class="docutils literal notranslate"><span class="pre">OPTION_DOCS</span></code> registry
+under <code class="docutils literal notranslate"><span class="pre">tools/docgen/option_docs/</span></code>. These pages are useful for exact option
+lookup, but they are not the primary user narrative.</p>
+<ul class="simple">
+<li><p>Numbered groups: 13</p></li>
+<li><p>Subgroups: 62</p></li>
+<li><p>Axes (operational + future): 164</p></li>
+<li><p>Option values: 600</p></li>
+<li><p>OptionDoc entries: 600</p></li>
+<li><p><a class="reference internal" href="generated/index.html"><span class="std std-doc">Generated encyclopedia</span></a></p></li>
+<li><p><a class="reference internal" href="generated/browse_by_layer.html"><span class="std std-doc">Browse by group</span></a></p></li>
+<li><p><a class="reference internal" href="generated/browse_by_axis.html"><span class="std std-doc">Browse by axis</span></a></p></li>
+<li><p><a class="reference internal" href="generated/browse_by_option.html"><span class="std std-doc">Browse by option</span></a></p></li>
+</ul>
 </section>
-<section id="encyclopedia">
-<h2>Encyclopedia<a class="headerlink" href="#encyclopedia" title="Link to this heading">#</a></h2>
-<p>Auto-generated look-up for every recipe axis and option value. One page
-per option: definition, when to use, when not to use, references.</p>
-<p><a class="reference internal" href="encyclopedia/index.html"><span class="std std-doc">Encyclopedia</span></a></p>
+<section id="pages">
+<h2>Pages<a class="headerlink" href="#pages" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/index.html#standalone-functions">Standalone Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="recipe_schema/index.html">Recipe API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="encyclopedia/index.html">Encyclopedia</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/index.html#counts">Counts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/index.html#browse">Browse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="encyclopedia/index.html#layer-pages">Layer pages</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Recipe Gallery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="layer_contract.html">Recipe Layer Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meta.html">Meta</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_policies.html">Data Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="defaults.html">Recipe Defaults</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">Understanding Recipe Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_datasets.html">FRED Datasets in Recipes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="standalone_functions/index.html">Standalone functions - namespace overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="navigator/tree_navigator.html">Tree Navigator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/index.html">Generated Encyclopedia</a></li>
 </ul>
 </div>
 </section>
@@ -706,20 +738,20 @@ per option: definition, when to use, when not to use, references.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../how_to/partial_execution.html"
+       href="../how_to/advanced_recipes.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">Advanced recipe orchestration</p>
       </div>
     </a>
     <a class="right-next"
-       href="api/index.html"
+       href="gallery.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">API Reference</p>
+        <p class="prev-next-title">Recipe Gallery</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -742,10 +774,10 @@ per option: definition, when to use, when not to use, references.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-schema">Recipe Schema</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#encyclopedia">Encyclopedia</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-api">Recipe API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-surface">Python Surface</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generated-encyclopedia">Generated Encyclopedia</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pages">Pages</a></li>
 </ul>
   </nav></div>
 

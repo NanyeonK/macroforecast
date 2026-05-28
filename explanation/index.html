@@ -52,7 +52,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="The Layer Design" href="layer_design.html" />
-    <link rel="prev" title="Public Python API" href="../reference/encyclopedia/public_api.html" />
+    <link rel="prev" title="naming_convention" href="../reference/generated/l8/axes/naming_convention.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5a0" />
@@ -384,12 +384,11 @@
 <li class="toctree-l1"><a class="reference internal" href="honesty_pass.html">The Honesty Pass</a></li>
 <li class="toctree-l1"><a class="reference internal" href="recipe_to_run.html">From Recipe to Run</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Meta / Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_derived_study_scope.html">Derived Study Scope</a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer1.html">Layer L1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -407,11 +406,10 @@
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer6.html">Layer L6: Statistical Tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer7.html">Layer L7: Interpretation / Importance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer8.html">Layer L8: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_derived_study_scope.html">Derived Study Scope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
@@ -426,6 +424,8 @@
 <li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deprecation_timeline.html">Deprecation Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_guide.html">Migration Guide</a></li>
 </ul>
 </div>
 </nav></div>
@@ -503,6 +503,8 @@ with complex recipes or extending the package.</p>
 <li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deprecation_timeline.html">Deprecation Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_guide.html">Migration Guide</a></li>
 </ul>
 </div>
 </section>
@@ -518,12 +520,12 @@ with complex recipes or extending the package.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../reference/encyclopedia/public_api.html"
+       href="../reference/generated/l8/axes/naming_convention.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Public Python API</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></p>
       </div>
     </a>
     <a class="right-next"

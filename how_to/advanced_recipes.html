@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Redirect notice" href="add_dataset.html" />
+    <link rel="next" title="Reference" href="../reference/index.html" />
     <link rel="prev" title="Docs Conventions" href="conventions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -407,13 +407,6 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -491,7 +484,7 @@ configurations. The study will be shared as a unit, for example as a
 paper replication package or a CI artifact. The study depends on
 cross-layer references such as L4 <code class="docutils literal notranslate"><span class="pre">is_benchmark</span></code>, L6.D <code class="docutils literal notranslate"><span class="pre">mcs_inclusion</span></code>,
 or L3 <code class="docutils literal notranslate"><span class="pre">lineage</span></code>. We recommend standalone code (<code class="docutils literal notranslate"><span class="pre">mf.models.*</span></code>,
-<code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l3_features.selection.*</span></code>, and the other public submodules) when the
+<code class="docutils literal notranslate"><span class="pre">macroforecast.features.selection.*</span></code>, and the other public submodules) when the
 study is exploratory, when the user is iterating on a single estimator,
 or when the input data does not match the FRED-MD, QD, or SD adapter
 contracts.</p>
@@ -505,12 +498,12 @@ gallery in <code class="docutils literal notranslate"><span class="pre">examples
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">study_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minimal_ridge</span>
 <span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
 
-<span class="nt">1_data</span><span class="p">:</span>
+<span class="nt">data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">dataset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fred_md</span>
 <span class="w">  </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INDPRO</span>
 <span class="w">  </span><span class="nt">horizon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 
-<span class="nt">2_preprocessing</span><span class="p">:</span>
+<span class="nt">preprocessing</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">transform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">difference</span>
 <span class="w">  </span><span class="nt">outlier</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">winsor_1_99</span>
 
@@ -591,7 +584,7 @@ guarantee is what underwrites paper replication packages.</p>
 <p>Consider a standalone study that fits a Boruta selector and a Ridge
 estimator.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l3_features.selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.features.selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Boruta</span>
 
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_my_data</span><span class="p">()</span>
 <span class="n">sel</span> <span class="o">=</span> <span class="n">Boruta</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -648,11 +641,11 @@ support, and CI auditability, in exchange for the YAML overhead.</p>
       </div>
     </a>
     <a class="right-next"
-       href="add_dataset.html"
+       href="../reference/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Redirect notice</p>
+        <p class="prev-next-title">Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -624,7 +617,7 @@ on-disk raw cache when you pass <code class="docutils literal notranslate"><span
 <p>Resolution order (first non-None wins):</p>
 <ol class="arabic simple">
 <li><p>The explicit <code class="docutils literal notranslate"><span class="pre">cache_root=</span></code> argument.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">recipe['1_data']['leaf_config']['cache_root']</span></code> (recipe-level
+<li><p><code class="docutils literal notranslate"><span class="pre">recipe['data']['leaf_config']['cache_root']</span></code> (recipe-level
 override).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">output_directory</span> <span class="pre">/</span> <span class="pre">&quot;.raw_cache&quot;</span></code> (auto-derived).</p></li>
 <li><p>The raw loader’s package default.</p></li>

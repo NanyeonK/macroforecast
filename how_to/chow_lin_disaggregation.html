@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -478,15 +471,15 @@
 <p>The goal is to disaggregate a quarterly series to monthly frequency
 using the Chow and Lin (1971) canonical GLS method with an AR(1) error
 structure and a related high-frequency indicator. We use the public
-function <code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregate</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l3_features.transforms</span></code>. The
-C63.1 promotion implements the full canonical algorithm directly (BLUE
+function <code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregate</span></code> from <code class="docutils literal notranslate"><span class="pre">macroforecast.features.transforms</span></code>. The
+The v0.9.5 promotion implements the full canonical algorithm directly (BLUE
 correction with AR(1) covariance), in contrast to the simpler OLS
 fallback used in older internal helpers.</p>
 <section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l3_features.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">chow_lin_disaggregate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.features.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">chow_lin_disaggregate</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 

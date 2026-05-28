@@ -44,13 +44,3 @@ conventions
 
 advanced_recipes
 ```
-
-```{toctree}
-:hidden:
-
-add_dataset
-user_data_workflow
-custom_model
-custom_hooks
-partial_execution
-```

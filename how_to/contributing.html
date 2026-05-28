@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -489,19 +482,22 @@ ship a release. Start here.</p>
 <tr class="row-even"><td><p>Understand the bit-exact replicate contract every change must preserve</p></td>
 <td><p><a class="reference internal" href="reproducibility_policy.html"><span class="std std-doc">Reproducibility policy</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Read the canonical layer design before touching <code class="docutils literal notranslate"><span class="pre">core/</span></code></p></td>
+<tr class="row-odd"><td><p>Decide where to start a function or feature review</p></td>
+<td><p><a class="reference internal" href="#feature-review-router"><span class="xref myst">Feature review router</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p>Read the canonical layer design before touching <code class="docutils literal notranslate"><span class="pre">core/</span></code></p></td>
 <td><p><a class="reference internal" href="../explanation/architecture/index.html"><span class="std std-doc">Architecture index</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p>Read the per-layer contract before touching one layer</p></td>
+<tr class="row-odd"><td><p>Read the per-layer contract before touching one layer</p></td>
 <td><p><a class="reference internal" href="../explanation/architecture/index.html"><span class="std std-doc">Architecture: layer pages</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Run the test suite locally</p></td>
+<tr class="row-even"><td><p>Run the test suite locally</p></td>
 <td><p>see <a class="reference internal" href="#../../CLAUDE.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">CLAUDE.md</span></code></span></a> at the repo root</p></td>
 </tr>
-<tr class="row-even"><td><p>Cut a release</p></td>
+<tr class="row-odd"><td><p>Cut a release</p></td>
 <td><p><a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/.github/RELEASE_CHECKLIST.md"><code class="docutils literal notranslate"><span class="pre">.github/RELEASE_CHECKLIST.md</span></code></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Write an axis page that follows the docs convention</p></td>
+<tr class="row-even"><td><p>Write an axis page that follows the docs convention</p></td>
 <td><p><a class="reference internal" href="#../CONVENTIONS.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">docs/CONVENTIONS.md</span></code></span></a></p></td>
 </tr>
 </tbody>
@@ -512,20 +508,23 @@ ship a release. Start here.</p>
 <h2>Code map<a class="headerlink" href="#code-map" title="Link to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">/</span>
   <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>             <span class="c1"># lazy-export top-level surface</span>
-  <span class="n">api</span><span class="o">.</span><span class="n">py</span>                  <span class="c1"># macroforecast.run / macroforecast.replicate</span>
-  <span class="n">core</span><span class="o">/</span>
-    <span class="n">execution</span><span class="o">.</span><span class="n">py</span>          <span class="c1"># cell loop + replicate_recipe (bit-exact)</span>
-    <span class="n">runtime</span><span class="o">.</span><span class="n">py</span>            <span class="c1"># per-layer materialize_l{1..8}_minimal helpers</span>
-    <span class="n">figures</span><span class="o">.</span><span class="n">py</span>            <span class="c1"># matplotlib backend + US choropleth</span>
-    <span class="n">layers</span><span class="o">/</span>               <span class="c1"># l0..l8 + l1_5/l2_5/l3_5/l4_5 schema definitions</span>
-    <span class="n">ops</span><span class="o">/</span>                  <span class="c1"># universal/l3/l4/l5/l6/l7/l8/diagnostic op registry</span>
-    <span class="n">cache</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">sweep</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">manifest</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">validator</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">py</span>
-  <span class="n">raw</span><span class="o">/</span>                    <span class="c1"># FRED-MD/QD/SD adapters + vintage manager</span>
-  <span class="n">preprocessing</span><span class="o">/</span>          <span class="c1"># contract helpers (legacy support)</span>
-  <span class="n">custom</span><span class="o">.</span><span class="n">py</span>               <span class="c1"># register_model / register_preprocessor / ...</span>
-  <span class="n">tools</span><span class="o">/</span><span class="n">docgen</span><span class="o">/</span>           <span class="c1"># RecipeBuilder + OptionDoc + templates</span>
-  <span class="n">defaults</span><span class="o">.</span><span class="n">py</span>             <span class="c1"># default profile dict template</span>
-  <span class="n">tuning</span><span class="o">/</span>                 <span class="c1"># HP search engines (optional, integrated via L4)</span>
+  <span class="n">api</span><span class="o">/</span>                    <span class="c1"># run / replicate / forecast / Experiment public API</span>
+  <span class="n">meta</span><span class="o">/</span>                   <span class="c1"># L0 study setup, seed, reproducibility, compute policy</span>
+  <span class="n">data</span><span class="o">/</span>                   <span class="c1"># L1 data sources, FRED adapters, vintages, manifests</span>
+  <span class="n">preprocessing</span><span class="o">/</span>          <span class="c1"># L2 preprocessing schema and contract helpers</span>
+  <span class="n">features</span><span class="o">/</span>               <span class="c1"># L3 feature graph ops, transforms, selectors</span>
+  <span class="n">models</span><span class="o">/</span>                 <span class="c1"># L4 model families, paper helpers, tuning engines</span>
+  <span class="n">evaluation</span><span class="o">/</span>             <span class="c1"># L5 metrics and evaluation ops</span>
+  <span class="n">stat_tests</span><span class="o">/</span>             <span class="c1"># L6 forecast-comparison tests</span>
+  <span class="n">interpretation</span><span class="o">/</span>         <span class="c1"># L7 importance, attribution, IRF, interpretation methods</span>
+  <span class="n">output</span><span class="o">/</span>                 <span class="c1"># L8 artifact/provenance/export ops</span>
+  <span class="n">diagnostics</span><span class="o">/</span>            <span class="c1"># L1.5/L2.5/L3.5/L4.5 diagnostic schemas</span>
+  <span class="n">core</span><span class="o">/</span>                   <span class="c1"># runtime, pipeline.py execution, registry, cache, manifest, validator</span>
+  <span class="n">layers</span><span class="o">/</span>                 <span class="c1"># compatibility aliases only; do not add new implementation here</span>
+  <span class="n">functions</span><span class="o">/</span>              <span class="c1"># backward-compatible shim to api/functions</span>
+  <span class="n">recipes</span><span class="o">/</span>                <span class="c1"># recipe-orchestration public namespace</span>
+  <span class="n">_vendor</span><span class="o">/</span>                <span class="c1"># vendored third-party implementations</span>
+<span class="n">tools</span><span class="o">/</span><span class="n">docgen</span><span class="o">/</span>             <span class="c1"># RecipeBuilder + OptionDoc + encyclopedia generation</span>
 <span class="n">tests</span><span class="o">/</span>                    <span class="c1"># test suite (counts vary by extras; see CI badges)</span>
 <span class="n">examples</span><span class="o">/</span><span class="n">recipes</span><span class="o">/</span>         <span class="c1"># YAML recipe examples per layer</span>
 </pre></div>

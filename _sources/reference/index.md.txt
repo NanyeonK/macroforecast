@@ -1,38 +1,62 @@
 # Reference
 
-Complete, accurate descriptions of everything macroforecast exposes.
-These pages are for look-up, not for learning.
+Lookup pages for the public Python surface, recipe YAML contract, and generated option dictionary. These pages are for exact lookup; tutorials and design narrative live elsewhere.
 
-## Architecture
+> **Looking for design rationale?** Use [Architecture](../explanation/architecture/index.md). Reference pages define names, keys, options, and import surfaces; architecture pages explain why the packages are separated and how they interact.
 
-Architecture and design-rationale pages have moved to the
-[Explanation section](../explanation/architecture/index.md).
+## Recipe API
 
-## API
+- [Recipe gallery](gallery.md): runnable examples.
+- [Recipe contract](layer_contract.md): recipe keys, step shape, and complete recipe form.
+- [Meta](meta.md): study setup, failure policy, reproducibility, and compute policy.
+- [Data](data.md): source, target, horizon, and geography choices.
+- [Preprocessing](preprocessing.md): frequency alignment, transforms, outlier handling, imputation, and frame-edge rules.
+- [Data policies](data_policies.md): missingness, outliers, release lags, and same-period predictors.
+- [Defaults](defaults.md): package-level default profiles.
+- [Runtime support](runtime_support.md): what executes today.
+- [Output](output.md): artifact directory and manifest layout.
+- [FRED datasets](fred_datasets.md): FRED-MD, FRED-QD, and FRED-SD reference status.
 
-Complete API documentation for macroforecast's public Python surface:
-standalone layer-operation callables and the layer-topology Navigator.
+## Python Surface
 
-[API reference](api/index.md)
+- [Public Python API](public_api.md): top-level imports and semantic package map.
+- [Standalone functions](standalone_functions/index.md): direct `mf.functions.*` callables.
+- [Navigator](navigator/tree_navigator.md): generated topology navigator details.
 
-## Recipe Schema
+## Generated Encyclopedia
 
-Full recipe grammar: data sources, defaults, layer contracts, runtime
-support matrix, and the recipe gallery.
+Generated from the live implementation registry plus the `OPTION_DOCS` registry
+under `tools/docgen/option_docs/`. These pages are useful for exact option
+lookup, but they are not the primary user narrative.
 
-[Recipe schema](recipe_schema/index.md)
+- Numbered groups: 13
+- Subgroups: 62
+- Axes (operational + future): 164
+- Option values: 600
+- OptionDoc entries: 600
 
-## Encyclopedia
+- [Generated encyclopedia](generated/index.md)
+- [Browse by group](generated/browse_by_layer.md)
+- [Browse by axis](generated/browse_by_axis.md)
+- [Browse by option](generated/browse_by_option.md)
 
-Auto-generated look-up for every recipe axis and option value. One page
-per option: definition, when to use, when not to use, references.
-
-[Encyclopedia](encyclopedia/index.md)
+## Pages
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 
-api/index
-recipe_schema/index
-encyclopedia/index
+gallery
+layer_contract
+meta
+data
+preprocessing
+data_policies
+defaults
+runtime_support
+output
+fred_datasets
+public_api
+standalone_functions/index
+navigator/tree_navigator
+generated/index
 ```

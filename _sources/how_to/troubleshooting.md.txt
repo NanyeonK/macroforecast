@@ -18,7 +18,7 @@ recipe. For inline panels, the column name must exist in
 `custom_panel_inline`.
 
 ```yaml
-1_data:
+data:
   fixed_axes: {target_structure: single_target}
   leaf_config:
     target: INDPRO              # required
@@ -161,7 +161,7 @@ pip install "macroforecast[xgboost,lightgbm,catboost,shap]"
 ## Sphinx encyclopedia drift CI fails on PR
 
 ```
-docs/reference/encyclopedia/ is out of sync. Run: python -m tools.docgen encyclopedia docs/reference/encyclopedia/
+docs/reference/ is out of sync. Run: python -m tools.docgen encyclopedia docs/reference/
 ```
 
 You edited a `LayerImplementationSpec` axis or an `OPTION_DOCS` entry,
@@ -171,8 +171,8 @@ generator output.
 **Fix**:
 
 ```bash
-python -m tools.docgen encyclopedia docs/reference/encyclopedia/
-git add docs/reference/encyclopedia/
+python -m tools.docgen encyclopedia docs/reference/
+git add docs/reference/
 git commit -m "docs(encyclopedia): regen after axis/OptionDoc edit"
 ```
 

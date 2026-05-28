@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -478,14 +471,14 @@
 <p>The goal is to forecast one-step-ahead conditional variance using the
 Hansen-Huang-Shek (2012) Realized GARCH model with a realized-variance
 side channel. We use the public class <code class="docutils literal notranslate"><span class="pre">RealizedGARCH</span></code> from
-<code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l4_models</span></code>, which exposes a sklearn-style <code class="docutils literal notranslate"><span class="pre">fit</span></code> and
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>, which exposes a sklearn-style <code class="docutils literal notranslate"><span class="pre">fit</span></code> and
 <code class="docutils literal notranslate"><span class="pre">predict_variance</span></code> interface. The model does not require the optional
 <code class="docutils literal notranslate"><span class="pre">arch</span></code> package because the joint MLE is implemented in scipy.</p>
 <section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RealizedGARCH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RealizedGARCH</span>
 
 <span class="c1"># Synthetic daily returns with a stylized realized-variance series.</span>
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -512,7 +505,7 @@ side channel. We use the public class <code class="docutils literal notranslate"
 <p>The <code class="docutils literal notranslate"><span class="pre">realized_variance</span></code> argument names the column in <code class="docutils literal notranslate"><span class="pre">X</span></code> that carries
 the realized-variance side channel. The constructor defaults to
 <code class="docutils literal notranslate"><span class="pre">n_starts=8</span></code> multi-starts and <code class="docutils literal notranslate"><span class="pre">random_state=0</span></code>. If every start returns a
-non-finite objective the model raises <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>, the C56 safety
+non-finite objective the model raises <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>, a safety
 guard against silent convergence to a degenerate parameter vector.</p>
 </section>
 <section id="output">

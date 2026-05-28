@@ -459,7 +459,7 @@ this tutorial.</p>
 <hr class="docutils" />
 <section id="the-sklearn-subclassing-contract">
 <h2>The sklearn subclassing contract<a class="headerlink" href="#the-sklearn-subclassing-contract" title="Link to this heading">#</a></h2>
-<p>macroforecast model classes in <code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l4_models</span></code> all follow the sklearn
+<p>macroforecast model classes in <code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code> all follow the sklearn
 estimator convention. Any class that inherits from <code class="docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code>
 and <code class="docutils literal notranslate"><span class="pre">sklearn.base.RegressorMixin</span></code> can be used in the same way.</p>
 <p><code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code> provides <code class="docutils literal notranslate"><span class="pre">get_params()</span></code> and <code class="docutils literal notranslate"><span class="pre">set_params()</span></code> automatically, derived
@@ -583,7 +583,7 @@ argument name.</p>
 <h2>Inheriting macroforecast machinery (optional)<a class="headerlink" href="#inheriting-macroforecast-machinery-optional" title="Link to this heading">#</a></h2>
 <p>If your custom model is a variant of an existing macroforecast model, you
 can subclass both the private implementation class and the sklearn mixins. The 30
-public model classes in <code class="docutils literal notranslate"><span class="pre">mf.layers.l4_models</span></code> follow exactly this pattern. For example,
+public model classes in <code class="docutils literal notranslate"><span class="pre">mf.models</span></code> follow exactly this pattern. For example,
 <code class="docutils literal notranslate"><span class="pre">LinearAR</span></code> is defined as <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">LinearAR(_LinearARModel):</span> <span class="pre">pass</span></code>. A custom variant
 that adds a constraint would look like:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyLinearAR</span><span class="p">(</span><span class="n">_LinearARModel</span><span class="p">,</span> <span class="n">BaseEstimator</span><span class="p">,</span> <span class="n">RegressorMixin</span><span class="p">):</span>

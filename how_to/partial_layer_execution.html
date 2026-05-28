@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -1033,7 +1026,7 @@ manages the cell loop).</p>
 <span class="n">recipe_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">0_meta:</span>
 <span class="s2">  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}</span>
-<span class="s2">1_data:</span>
+<span class="s2">data:</span>
 <span class="s2">  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}</span>
 <span class="s2">  leaf_config:</span>
 <span class="s2">    target: y</span>
@@ -1043,7 +1036,7 @@ manages the cell loop).</p>
 <span class="s2">             2018-06-01, 2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01]</span>
 <span class="s2">      y:  [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]</span>
 <span class="s2">      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 99.0]</span>
-<span class="s2">2_preprocessing:</span>
+<span class="s2">preprocessing:</span>
 <span class="s2">  fixed_axes:</span>
 <span class="s2">    transform_policy: no_transform</span>
 <span class="s2">    outlier_policy: zscore_threshold</span>
@@ -1068,7 +1061,7 @@ which policy ran, what action it took, and how many cells it flagged.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">materialize_l1</span><span class="p">,</span> <span class="n">materialize_l2</span><span class="p">,</span> <span class="n">materialize_l3_minimal</span>
 
-<span class="n">recipe</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">parse_recipe_yaml</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;examples/recipes/l3_minimal_lag_only.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+<span class="n">recipe</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">parse_recipe_yaml</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;docs/recipe-snippets/l3_minimal_lag_only.yaml&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 
 <span class="c1"># Run L1 + L2 once; cache the artifacts.</span>
 <span class="n">l1_artifact</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">materialize_l1</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>

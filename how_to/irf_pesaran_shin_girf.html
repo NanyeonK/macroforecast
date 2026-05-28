@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -478,7 +471,7 @@
 <p>The goal is to compute generalized impulse response functions from a
 fitted VAR using the Pesaran and Shin (1998) order-invariant
 formulation. We fit the VAR via the public class <code class="docutils literal notranslate"><span class="pre">VAR</span></code> from
-<code class="docutils literal notranslate"><span class="pre">macroforecast.layers.l4_models</span></code> and pass the fitted result to the <code class="docutils literal notranslate"><span class="pre">GIRF</span></code> class
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code> and pass the fitted result to the <code class="docutils literal notranslate"><span class="pre">GIRF</span></code> class
 from <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code>. The generalized IRF avoids the
 dependency of orthogonalized IRFs on the Cholesky ordering, which is one
 of the central limitations of structural VAR analysis.</p>
@@ -486,7 +479,7 @@ of the central limitations of structural VAR analysis.</p>
 <h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.layers.l4_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">VAR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">VAR</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.interpretation</span><span class="w"> </span><span class="kn">import</span> <span class="n">GIRF</span>
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -547,7 +540,7 @@ input is not a statsmodels VAR.</p>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">importance</span></code> column matches permutation importance</p></td>
 <td><p>Input was not a statsmodels VAR result</p></td>
-<td><p>Confirm the model was fit via <code class="docutils literal notranslate"><span class="pre">mf.layers.l4_models.VAR</span></code> or another VAR-producing function</p></td>
+<td><p>Confirm the model was fit via <code class="docutils literal notranslate"><span class="pre">mf.models.VAR</span></code> or another VAR-producing function</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_periods</span></code> ignored</p></td>
 <td><p>Passed as a positional arg in the wrong position</p></td>

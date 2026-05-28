@@ -384,12 +384,11 @@
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">The Honesty Pass</a></li>
 <li class="toctree-l1"><a class="reference internal" href="recipe_to_run.html">From Recipe to Run</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Meta / Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_derived_study_scope.html">Derived Study Scope</a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer1.html">Layer L1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -407,11 +406,10 @@
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer6.html">Layer L6: Statistical Tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer7.html">Layer L7: Interpretation / Importance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer8.html">Layer L8: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_derived_study_scope.html">Derived Study Scope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
@@ -426,6 +424,8 @@
 <li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deprecation_timeline.html">Deprecation Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_guide.html">Migration Guide</a></li>
 </ul>
 </div>
 </nav></div>
@@ -602,11 +602,11 @@ the Engle-Manganelli DQ test for density forecast evaluation, and the
 Diebold-Mariano-Pesaran joint multi-horizon test. After v0.3, the schema
 was audited clean.</p>
 </section>
-<section id="v0-9-3-c49-and-c50-final-algorithmic-cycle">
-<h3>v0.9.3 (C49 and C50) — Final Algorithmic Cycle<a class="headerlink" href="#v0-9-3-c49-and-c50-final-algorithmic-cycle" title="Link to this heading">#</a></h3>
+<section id="v0-9-3-final-algorithmic-cycle">
+<h3>v0.9.3 — Final Algorithmic Cycle<a class="headerlink" href="#v0-9-3-final-algorithmic-cycle" title="Link to this heading">#</a></h3>
 <p>Two schema items remained non-operational through v0.3: <code class="docutils literal notranslate"><span class="pre">realized_garch</span></code>
 in L4 and <code class="docutils literal notranslate"><span class="pre">generalized_irf</span></code> via <code class="docutils literal notranslate"><span class="pre">lstm_hidden_state</span></code> in L7. These were
-promoted in C49 and C50 respectively. After the C50 merge:</p>
+promoted in v0.9.3. After this merge:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FUTURE_MODEL_FAMILIES</span> <span class="o">=</span> <span class="p">()</span>
 <span class="n">FUTURE_OPS</span> <span class="o">=</span> <span class="p">()</span>
 </pre></div>
@@ -618,7 +618,7 @@ corresponds to an <code class="docutils literal notranslate"><span class="pre">o
 <hr class="docutils" />
 <section id="operational-coverage-today">
 <h2>Operational Coverage Today<a class="headerlink" href="#operational-coverage-today" title="Link to this heading">#</a></h2>
-<p>Following C50, the operational inventory is:</p>
+<p>Following v0.9.3, the operational inventory is:</p>
 <ul class="simple">
 <li><p>35+ L4 forecasting models: linear models, tree ensembles, boosting,
 SVM, kNN, MLP, deep neural networks (LSTM/GRU/Transformer with
@@ -716,7 +716,7 @@ of truth for the two-value vocabulary and all legacy alias mappings.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-2-first-honesty-pass">v0.2 — First Honesty Pass</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-25-second-honesty-pass">v0.25 — Second Honesty Pass</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-3-third-honesty-pass-plus-new-features">v0.3 — Third Honesty Pass Plus New Features</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-9-3-c49-and-c50-final-algorithmic-cycle">v0.9.3 (C49 and C50) — Final Algorithmic Cycle</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#v0-9-3-final-algorithmic-cycle">v0.9.3 — Final Algorithmic Cycle</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#operational-coverage-today">Operational Coverage Today</a></li>

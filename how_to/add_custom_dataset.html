@@ -407,13 +407,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="advanced_recipes.html">Advanced recipe orchestration</a></li>
 </ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="add_dataset.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="user_data_workflow.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_model.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="custom_hooks.html">Redirect notice</a></li>
-<li class="toctree-l1"><a class="reference internal" href="partial_execution.html">Redirect notice</a></li>
-</ul>
 </div>
 </nav></div>
     </div>
@@ -495,7 +488,7 @@
 <hr class="docutils" />
 <section id="recipe-snippet-for-a-csv-file">
 <h2>Recipe snippet for a CSV file<a class="headerlink" href="#recipe-snippet-for-a-csv-file" title="Link to this heading">#</a></h2>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
 <span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
@@ -521,7 +514,7 @@ where you call <code class="docutils literal notranslate"><span class="pre">mf.r
 <h2>Using inline data<a class="headerlink" href="#using-inline-data" title="Link to this heading">#</a></h2>
 <p>For quick tests or reproducible examples, embed the panel directly in the recipe.
 This removes any dependency on external files:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">custom_panel_only</span>
 <span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>
@@ -543,7 +536,7 @@ any external files.</p>
 <h2>Adding custom series to FRED<a class="headerlink" href="#adding-custom-series-to-fred" title="Link to this heading">#</a></h2>
 <p>To run FRED-MD plus your own extra series, use <code class="docutils literal notranslate"><span class="pre">panel_composition:</span> <span class="pre">official_plus_custom</span></code>.
 The <code class="docutils literal notranslate"><span class="pre">custom_merge_rule</span></code> controls how the two panels are aligned:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">official_plus_custom</span>
 <span class="w">    </span><span class="nt">frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monthly</span>

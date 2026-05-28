@@ -480,7 +480,7 @@ are paper-faithful.</p>
 <li><p><strong>Source</strong>: Working paper / JAE 2024</p></li>
 <li><p><strong>Recipe ports the ridge baseline</strong> of the paper’s FRED-MD INDPRO
 forecasting horse race. The full MRF / GTVP route lives at
-<a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/examples/recipes/l4_mrf_placeholder.yaml"><code class="docutils literal notranslate"><span class="pre">examples/recipes/l4_mrf_placeholder.yaml</span></code></a>.</p></li>
+<a class="reference external" href="https://github.com/NanyeonK/macroforecast/blob/main/docs/recipe-snippets/l4_mrf_placeholder.yaml"><code class="docutils literal notranslate"><span class="pre">docs/recipe-snippets/l4_mrf_placeholder.yaml</span></code></a>.</p></li>
 </ul>
 </section>
 <section id="recipe-shape">
@@ -555,7 +555,7 @@ is expected. Regenerate your manifest at v0.9.1 to establish the new baseline.</
 <h2>Real FRED-MD (full paper replication)<a class="headerlink" href="#real-fred-md-full-paper-replication" title="Link to this heading">#</a></h2>
 <p>To replicate the actual paper figures (1960-onwards walk-forward over
 the full FRED-MD vintage), swap two YAML keys:</p>
-<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w"> </span>1_data:
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="w"> </span>data:
 <span class="w"> </span>  fixed_axes:
 <span class="gd">-    panel_composition: custom_panel_only</span>
 <span class="gi">+    panel_composition: official_only</span>
@@ -580,7 +580,7 @@ horse race.</p>
 <p>To extend to MRF (the paper’s headline result), add another L4 fit
 node with <code class="docutils literal notranslate"><span class="pre">model:</span> <span class="pre">macroeconomic_random_forest</span></code> alongside the ridge
 (<code class="docutils literal notranslate"><span class="pre">is_benchmark:</span> <span class="pre">true</span></code>). See
-<a class="reference internal" href="#../encyclopedia/l4/index.md"><span class="xref myst">encyclopedia L4</span></a> for the full family
+<a class="reference internal" href="../../reference/generated/l4/index.html"><span class="std std-doc">encyclopedia L4</span></a> for the full family
 list.</p>
 </section>
 <section id="what-this-page-proves-vs-what-is-still-tbd">
@@ -600,7 +600,7 @@ list.</p>
 layer reading using the smaller <code class="docutils literal notranslate"><span class="pre">l4_minimal_ridge.yaml</span></code>.</p></li>
 <li><p><a class="reference internal" href="#../recipe_api/gallery.md"><span class="xref myst">Recipe gallery</span></a> — full
 list of bundled recipes including GC2021.</p></li>
-<li><p><a class="reference internal" href="#../encyclopedia/l4/axes/family.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">encyclopedia/l4/axes/family.md</span></code></span></a>
+<li><p><a class="reference internal" href="#../../reference/generated/l4/axes/family.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">l4/axes/family.md</span></code></span></a>
 — every L4 model family available for horse-race extension.</p></li>
 </ul>
 </section>

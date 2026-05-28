@@ -488,7 +488,7 @@ plus the cell index. This is what makes
 </section>
 <section id="layer-1-data">
 <h2>Layer 1 — data<a class="headerlink" href="#layer-1-data" title="Link to this heading">#</a></h2>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1_data</span><span class="p">:</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">panel_composition</span><span class="p">:</span><span class="w"> </span><span class="nv">custom_panel_only</span><span class="p p-Indicator">,</span><span class="nt"> frequency</span><span class="p">:</span><span class="w"> </span><span class="nv">monthly</span><span class="p p-Indicator">,</span><span class="nt"> horizon_set</span><span class="p">:</span><span class="w"> </span><span class="nv">custom_list</span><span class="p p-Indicator">}</span>
 <span class="w">  </span><span class="nt">leaf_config</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">y</span>
@@ -513,7 +513,7 @@ Multi-horizon recipes use <code class="docutils literal notranslate"><span class
 </section>
 <section id="layer-2-preprocessing">
 <h2>Layer 2 — preprocessing<a class="headerlink" href="#layer-2-preprocessing" title="Link to this heading">#</a></h2>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">2_preprocessing</span><span class="p">:</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">preprocessing</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">fixed_axes</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">transform_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no_transform</span>
 <span class="w">    </span><span class="nt">outlier_policy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
@@ -530,7 +530,7 @@ realistic FRED-MD recipe would use:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">frame_edge_policy:</span> <span class="pre">truncate_to_balanced</span></code>.</p></li>
 </ul>
 <p>For FRED-SD / mixed-frequency studies see
-<a class="reference internal" href="#../encyclopedia/l2/axes/mixed_frequency_representation.md"><span class="xref myst"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></span></a>.</p>
+<a class="reference internal" href="../../reference/generated/l2/axes/mixed_frequency_representation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></span></a>.</p>
 </section>
 <section id="layer-3-feature-engineering-steps">
 <h2>Layer 3 — feature engineering steps<a class="headerlink" href="#layer-3-feature-engineering-steps" title="Link to this heading">#</a></h2>
@@ -555,7 +555,7 @@ cumulative).</p></li>
 </ul>
 <p>Real recipes compose richer pipelines: <code class="docutils literal notranslate"><span class="pre">pca</span></code> reduction,
 <code class="docutils literal notranslate"><span class="pre">ma_increasing_order</span></code> (MARX), <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_selection</span></code>, etc.
-See the <a class="reference internal" href="#../encyclopedia/l3/index.md"><span class="xref myst">encyclopedia L3 page</span></a> for the 37
+See the <a class="reference internal" href="../../reference/generated/l3/index.html"><span class="std std-doc">encyclopedia L3 page</span></a> for the 37
 operational ops.</p>
 </section>
 <section id="layer-4-forecasting-model">
@@ -589,7 +589,7 @@ operational ops.</p>
 Replace with <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">ar_p</span></code>, <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>,
 <code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>,
 <code class="docutils literal notranslate"><span class="pre">macroeconomic_random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>, … see
-the <a class="reference internal" href="#../encyclopedia/l4/index.md"><span class="xref myst">encyclopedia L4 page</span></a> for all 35+.</p></li>
+the <a class="reference internal" href="../../reference/generated/l4/index.html"><span class="std std-doc">encyclopedia L4 page</span></a> for all 35+.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">forecast_policy:</span> <span class="pre">direct</span></code> — train one model per horizon (vs.
 <code class="docutils literal notranslate"><span class="pre">iterated</span></code> which recursively rolls h=1 forecasts).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">training_start_rule:</span> <span class="pre">expanding</span></code> + <code class="docutils literal notranslate"><span class="pre">refit_policy:</span> <span class="pre">every_origin</span></code> —
@@ -614,7 +614,7 @@ recipes add:</p>
 </pre></div>
 </div>
 <p>For statistical inference (DM / MCS / SPA / Reality Check), enable
-L6 — see the <a class="reference internal" href="#../encyclopedia/l6/index.md"><span class="xref myst">encyclopedia L6 page</span></a>.</p>
+L6 — see the <a class="reference internal" href="../../reference/generated/l6/index.html"><span class="std std-doc">encyclopedia L6 page</span></a>.</p>
 </section>
 <section id="output-layer-8">
 <h2>Output (Layer 8)<a class="headerlink" href="#output-layer-8" title="Link to this heading">#</a></h2>

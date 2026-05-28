@@ -50,7 +50,7 @@ Representative operational ops:
 - combine: `concat`, `interact`, `hierarchical_pca`, `weighted_concat`, `simple_average`;
 - selection: `feature_selection`, `boruta_selection`, `recursive_feature_elimination`, `lasso_path_selection`, `stability_selection`, `genetic_algorithm_selection`.
 
-**Cycle 47 (2026-05-21)**: five selection ops promoted from `future` to `operational` (total L3 ops: 41). See `CHANGELOG.md` and `ARCHITECTURE.md` for paper references and implementation details.
+**v0.9.3 (2026-05-21)**: five selection ops promoted from `future` to `operational` (total L3 ops: 41). See `CHANGELOG.md` and `ARCHITECTURE.md` for paper references and implementation details.
 
 Compatibility aliases remain available where older recipes used them: `varimax_rotation`, `polynomial_expansion`, `kernel_features`, and `nystroem_features`.
 
@@ -75,4 +75,4 @@ Compatibility aliases remain available where older recipes used them: `varimax_r
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`encyclopedia/l3/`](../../reference/encyclopedia/l3/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l3/`](../../reference/generated/l3/index.md).

@@ -384,12 +384,11 @@
 <li class="toctree-l1"><a class="reference internal" href="honesty_pass.html">The Honesty Pass</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">From Recipe to Run</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="architecture/index.html">Architecture</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer0.html">Layer L0: Meta / Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_derived_study_scope.html">Derived Study Scope</a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="architecture/layer1.html">Layer L1: Data Source, Target y, Predictor x</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -407,11 +406,10 @@
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer6.html">Layer L6: Statistical Tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer7.html">Layer L7: Interpretation / Importance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer8.html">Layer L8: Output / Provenance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_study_scope.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">study_scope</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_derived_study_scope.html">Derived Study Scope</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_failure_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_reproducibility_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer0_compute_policy.html">Layer L0 Axis: <code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture/layer0_axis_type.html">Registry Catalog: <code class="docutils literal notranslate"><span class="pre">axis_type</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_availability_timing.html">Forecast-Time Information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_frame_availability.html">Frame Availability</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture/layer1_fred_sd_source_selection.html">FRED-SD Predictor Scope</a></li>
@@ -426,6 +424,8 @@
 <li class="toctree-l1"><a class="reference internal" href="artifacts_and_manifest.html">Artifacts And Manifest</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reproducibility.html">Reproducibility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deprecation_timeline.html">Deprecation Timeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_guide.html">Migration Guide</a></li>
 </ul>
 </div>
 </nav></div>
@@ -533,7 +533,7 @@ user a fraction of a second, not the duration of a full study run.</p>
 <hr class="docutils" />
 <section id="step-2-compile-pipeline-per-layer">
 <h2>Step 2: Compile Pipeline per Layer<a class="headerlink" href="#step-2-compile-pipeline-per-layer" title="Link to this heading">#</a></h2>
-<p>Three layers (L3, L4, and L7) use directed acyclic graphs rather than flat
+<p>Three layers (L3, L4, and L7) use step graphs rather than flat
 lists of axis values. At this step, the recipe’s <code class="docutils literal notranslate"><span class="pre">nodes</span></code> declarations are
 compiled into actual graph objects and topologically sorted.</p>
 <p>Five node types exist:</p>
