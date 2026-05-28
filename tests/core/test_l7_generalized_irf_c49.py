@@ -34,7 +34,7 @@ import pytest
 
 from macroforecast.core.runtime import _var_girf_frame, _var_impulse_frame
 from macroforecast.core.types import ModelArtifact
-from macroforecast.layers.l7_interpretation.ops import FUTURE_OPS, OPERATIONAL_OPS
+from macroforecast.interpretation.ops import FUTURE_OPS, OPERATIONAL_OPS
 
 
 # ---------------------------------------------------------------------------

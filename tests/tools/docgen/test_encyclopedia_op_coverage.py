@@ -11,9 +11,9 @@ Sources
 - **L3**: ``macroforecast.core.ops.registry._OPS`` — runtime registry
   populated by ``register_op()`` calls in layer ops modules. Filter:
   ``status == 'operational'`` AND ``'l3' in layer_scope``.
-- **L4**: ``macroforecast.layers.l4_models.ops.OPERATIONAL_MODELS`` —
+- **L4**: ``macroforecast.models.ops.OPERATIONAL_MODELS`` —
   explicit tuple of operational model names.
-- **L7**: ``macroforecast.layers.l7_interpretation.ops.OPERATIONAL_OPS`` —
+- **L7**: ``macroforecast.interpretation.ops.OPERATIONAL_OPS`` —
   derived tuple of operational importance ops.
 
 Skip contract
@@ -46,7 +46,7 @@ form::
     Expected: {relative_path}
     Add the page or set op_page=False in its OptionDoc to intentionally opt out.
 
-This test reads the checked-in ``docs/reference/encyclopedia/`` tree,
+This test reads the checked-in ``docs/reference/`` tree,
 NOT a rendered tmp directory.  ``render_encyclopedia.write_all`` is
 never called here.
 """
@@ -56,17 +56,17 @@ from pathlib import Path
 
 import pytest
 
-from macroforecast.layers.l4_models.ops import OPERATIONAL_MODELS
-from macroforecast.layers.l7_interpretation.ops import OPERATIONAL_OPS
+from macroforecast.models.ops import OPERATIONAL_MODELS
+from macroforecast.interpretation.ops import OPERATIONAL_OPS
 from macroforecast.core.ops.registry import _OPS
 from tools.docgen.option_docs import OPTION_DOCS
 
 # ---------------------------------------------------------------------------
 # ENC_ROOT: path to the checked-in encyclopedia tree.
 # From tests/tools/docgen/ we go up three levels to reach the repo root, then
-# descend into docs/reference/encyclopedia/.
+# descend into docs/reference/.
 # ---------------------------------------------------------------------------
-ENC_ROOT: Path = Path(__file__).parents[3] / "docs" / "reference" / "encyclopedia"
+ENC_ROOT: Path = Path(__file__).parents[3] / "docs" / "reference" / "generated"
 
 
 # ---------------------------------------------------------------------------

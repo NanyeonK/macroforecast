@@ -37,9 +37,11 @@ Thumbs.db
 .env
 .env.local
 
-# Claude Code local settings
-.claude/settings.local.json
-.claude/session-*.md
+# Agent local/runtime state
+.claude/
+.claire/
+.hermes/
+.worktrees/
 CLAUDE.md
 
 # Internal workflow artifacts (agent comms + design specs)
@@ -52,7 +54,6 @@ site/
 
 # Notebook outputs (examples/results/ is gitignored)
 examples/results/
-.worktrees/
 
 # Local-only research wiki / downloaded source archive (never push)
 local_only/

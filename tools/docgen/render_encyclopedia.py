@@ -1,7 +1,6 @@
-"""Emit the source-committed Encyclopedia tree under ``docs/encyclopedia/``.
+"""Emit the source-committed generated reference tree under ``docs/reference/``.
 
-Replaces the legacy ``docs/reference/`` auto-emit (one giant per-layer RST
-page per layer) with an encyclopedia-style markdown tree where every
+Maintains the generated option-reference pages with an encyclopedia-style markdown tree where every
 layer / sub-layer / axis has a discoverable page or anchor:
 
 * ``index.md``                 -- landing + global counts + 3 browse links.
@@ -22,7 +21,7 @@ Generated entirely from ``macroforecast.scaffold.introspect`` (which walks
 each layer's ``LayerImplementationSpec`` plus the L3/L4/L6/L7 fallback
 manual axis lists) and the ``OPTION_DOCS`` registry. No content is
 authored here -- this module is a pure renderer. CI re-runs it on every
-push and diffs the output against ``docs/encyclopedia/`` to enforce that
+push and diffs the generated output under ``docs/reference/`` to enforce that
 the encyclopedia stays in sync with the schema.
 """
 from __future__ import annotations
@@ -502,7 +501,7 @@ def _render_layer_index(layer_id: str) -> str:
     parts.append(f"# Layer {layer_disp}  --  {info.name}")
     parts.append("")
     parts.append(
-        f"[Back to encyclopedia](../index.md) | "
+        f"[Back to reference](../index.md) | "
         f"[Browse layers](../browse_by_layer.md) | "
         f"[Browse all axes](../browse_by_axis.md)"
     )
@@ -561,62 +560,78 @@ def _render_layer_index(layer_id: str) -> str:
 
 def _render_top_index(stats: dict[str, int]) -> str:
     parts: list[str] = []
-    parts.append("# Encyclopedia")
+    parts.append("# Reference")
     parts.append("")
     parts.append(
-        "Encyclopedia-style browse for every macroforecast schema choice. "
-        "Each layer, sub-layer, axis, and option value has its own page or "
-        "anchor; the tree below is generated from the live "
-        "`LayerImplementationSpec` registry plus the `OPTION_DOCS` "
-        "documentation registry under `tools/docgen/option_docs/`."
+        "Lookup pages for the public Python surface, recipe YAML "
+        "contract, and generated layer option dictionary. These pages are "
+        "for exact lookup; tutorials and design narrative live elsewhere."
     )
     parts.append("")
     parts.append(
-        "> **Looking for the design narrative instead?** Use "
-        "[Architecture](../../explanation/architecture/index.md) -- that's where the "
-        "prose \"why is L2 separated from L3\" / \"how does L7 read L4 "
-        "sinks\" / cross-layer reference explanations live. Encyclopedia "
-        "pages here are **auto-generated lookup** for individual option "
-        "values (description, when to use, when NOT, references, related "
-        "options); Architecture pages there are **hand-written narrative** "
-        "for the design contracts. Both are sourced from the same "
-        "`LayerImplementationSpec` registry -- encyclopedia is the "
-        "machine-locked option dictionary, architecture is the "
-        "human-edited design guide."
+        "> **Looking for design rationale?** Use "
+        "[Architecture](../explanation/architecture/index.md). Reference pages "
+        "define names, keys, options, and import surfaces; architecture pages "
+        "explain why the layers are separated and how they interact."
     )
     parts.append("")
-    parts.append("## Counts")
+    parts.append("## Recipe API")
+    parts.append("")
+    parts.append("- [Recipe gallery](gallery.md): runnable examples.")
+    parts.append("- [Layer contract](layer_contract.md): layer keys, graph node shape, and complete recipe form.")
+    parts.append("- [Data](data.md): source, target, horizon, and geography choices.")
+    parts.append("- [Data policies](data_policies.md): missingness, outliers, release lags, and same-period predictors.")
+    parts.append("- [Defaults](defaults.md): package-level default profiles.")
+    parts.append("- [Runtime support](runtime_support.md): what executes today.")
+    parts.append("- [Output](output.md): artifact directory and manifest layout.")
+    parts.append("- [FRED datasets](fred_datasets.md): FRED-MD, FRED-QD, and FRED-SD reference status.")
+    parts.append("")
+    parts.append("## Python Surface")
+    parts.append("")
+    parts.append("- [Public Python API](public_api.md): top-level imports and semantic package map.")
+    parts.append("- [Standalone functions](standalone_functions/index.md): direct `mf.functions.*` callables.")
+    parts.append("- [Navigator](navigator/tree_navigator.md): layer-topology navigator details.")
+    parts.append("")
+    parts.append("## Option Encyclopedia")
+    parts.append("")
+    parts.append(
+        "Generated from the live `LayerImplementationSpec` registry plus the "
+        "`OPTION_DOCS` registry under `tools/docgen/option_docs/`."
+    )
     parts.append("")
     parts.append(f"- Layers: {stats['n_layers']}")
     parts.append(f"- Sub-layers: {stats['n_sublayers']}")
     parts.append(f"- Axes (operational + future): {stats['n_axes']}")
     parts.append(f"- Option values: {stats['n_options']}")
-    parts.append(f"- OptionDoc entries (full prose): {stats['n_documented']}")
+    parts.append(f"- OptionDoc entries: {stats['n_documented']}")
     parts.append("")
-    parts.append("## Browse")
+    parts.append("Browse indexes:")
     parts.append("")
-    parts.append("- [Browse by layer](browse_by_layer.md)  --  L0 to L8 + diagnostics, table form.")
-    parts.append("- [Browse by axis](browse_by_axis.md)  --  every axis A-Z.")
-    parts.append("- [Browse by option](browse_by_option.md)  --  every option *value* A-Z (e.g. `ridge`, `pca`, `ar_p`).")
-    parts.append("- [Public Python API](public_api.md)  --  curated `macroforecast.run` / `macroforecast.replicate` surface.")
+    parts.append("- [Browse by layer](browse_by_layer.md)")
+    parts.append("- [Browse by axis](browse_by_axis.md)")
+    parts.append("- [Browse by option](browse_by_option.md)")
     parts.append("")
-    parts.append("## Layer pages")
+    parts.append("## Layer Pages")
     parts.append("")
     parts.append("```{toctree}")
     parts.append(":maxdepth: 1")
     parts.append("")
-    for layer_id in introspect.list_layers():
-        parts.append(f"{layer_id}/index")
-    parts.append("```")
-    parts.append("")
-    parts.append("```{toctree}")
-    parts.append(":hidden:")
-    parts.append(":maxdepth: 1")
-    parts.append("")
+    parts.append("gallery")
+    parts.append("layer_contract")
+    parts.append("data")
+    parts.append("data_policies")
+    parts.append("defaults")
+    parts.append("runtime_support")
+    parts.append("output")
+    parts.append("fred_datasets")
+    parts.append("public_api")
+    parts.append("standalone_functions/index")
+    parts.append("navigator/tree_navigator")
     parts.append("browse_by_layer")
     parts.append("browse_by_axis")
     parts.append("browse_by_option")
-    parts.append("public_api")
+    for layer_id in introspect.list_layers():
+        parts.append(f"{layer_id}/index")
     parts.append("```")
     parts.append("")
     return "\n".join(parts).rstrip() + "\n"
@@ -626,7 +641,7 @@ def _render_browse_by_layer() -> str:
     parts: list[str] = []
     parts.append("# Browse by layer")
     parts.append("")
-    parts.append("[Back to encyclopedia](index.md)")
+    parts.append("[Back to reference](index.md)")
     parts.append("")
     parts.append("| Layer | Name | Category | Sub-layers | Axes | Options |")
     parts.append("|---|---|---|---:|---:|---:|")
@@ -660,7 +675,7 @@ def _render_browse_by_axis() -> str:
     parts: list[str] = []
     parts.append("# Browse by axis")
     parts.append("")
-    parts.append("[Back to encyclopedia](index.md)")
+    parts.append("[Back to reference](index.md)")
     parts.append("")
     parts.append("Every axis across every layer, sorted A-Z by axis name. Same axis name can appear on more than one layer (e.g. ``selection_method`` shows up on multiple diagnostic layers); each row links to the page for that specific (layer, axis) pair.")
     parts.append("")
@@ -699,7 +714,7 @@ def _render_browse_by_option() -> str:
     parts: list[str] = []
     parts.append("# Browse by option")
     parts.append("")
-    parts.append("[Back to encyclopedia](index.md)")
+    parts.append("[Back to reference](index.md)")
     parts.append("")
     parts.append(
         "Every option *value* across every axis, sorted A-Z. Same value can "
@@ -735,68 +750,76 @@ def _render_browse_by_option() -> str:
 
 
 def _render_public_api() -> str:
-    """Preserve the curated public-API table from the legacy
-    ``docs/reference/public_api.md`` under encyclopedia/. Pure curated
-    content -- not generated from the schema."""
+    """Render the curated public Python surface page."""
 
-    return (
-        "# Public Python API\n"
-        "\n"
-        "[Back to encyclopedia](index.md)\n"
-        "\n"
-        "Curated reference for the public surface of the macroforecast"
-        " package. The encyclopedia tree above documents the YAML *recipe*"
-        " surface (axes / options); this page documents the Python"
-        " *package* surface (importable symbols).\n"
-        "\n"
-        "## Top-level API\n"
-        "\n"
-        "| Symbol | Description |\n"
-        "|--------|-------------|\n"
-        "| `macroforecast.run(recipe, output_directory=...)` | Execute a recipe end-to-end (L1->L8). Iterates every `{sweep: [...]}` cell, applies L0 failure_policy + seed, returns a `ManifestExecutionResult`. |\n"
-        "| `macroforecast.replicate(manifest_path)` | Re-execute a stored recipe and verify per-cell sink hashes match bit-for-bit. |\n"
-        "| `macroforecast.ManifestExecutionResult` | Per-cell `RuntimeResult` + `sink_hashes`; serializes to `manifest.json`. |\n"
-        "| `macroforecast.ReplicationResult` | `recipe_match`, `sink_hashes_match`, `per_cell_match`. |\n"
-        "\n"
-        "## Submodule surfaces\n"
-        "\n"
-        "| Module | Purpose |\n"
-        "|--------|---------|\n"
-        "| `macroforecast.core` | layered recipe runtime (foundation, layers, ops, runtime, execution, figures) |\n"
-        "| `macroforecast.layers.l1_data` | FRED-MD/QD/SD adapters, vintage manager, manifest |\n"
-        "| `macroforecast.preprocessing` | Preprocessing contract helpers |\n"
-        "| `macroforecast.layers.l4_models.tuning` | Hyperparameter search engines |\n"
-        "| `macroforecast.custom` | User-defined model/preprocessor/feature registration |\n"
-        "| `macroforecast.defaults` | Default profile dict template |\n"
-        "\n"
-        "## Layer modules\n"
-        "\n"
-        "`macroforecast.core.layers.l{0..8}` (plus `l{1,2,3,4}_5` diagnostics) hold the\n"
-        "canonical schema (`LayerImplementationSpec`) for each layer. Runtime\n"
-        "materialization helpers live in `macroforecast.core.runtime`:\n"
-        "\n"
-        "- `materialize_l1`, `materialize_l2`, `materialize_l3_minimal`,\n"
-        "  `materialize_l4_minimal`, `materialize_l5_minimal`,\n"
-        "  `materialize_l6_runtime`, `materialize_l7_runtime`,\n"
-        "  `materialize_l8_runtime`\n"
-        "- `materialize_l1_5_diagnostic` ... `materialize_l4_5_diagnostic`\n"
-        "- `execute_minimal_forecast(recipe)` -- single-cell convenience wrapper\n"
-        "\n"
-        "Sweep loop + bit-exact replicate are in `macroforecast.core.execution`:\n"
-        "`execute_recipe`, `replicate_recipe`, `CellExecutionResult`,\n"
-        "`ManifestExecutionResult`, `ReplicationResult`.\n"
-        "\n"
-        "Figure rendering (matplotlib + stylized US state choropleth) is in\n"
-        "`macroforecast.core.figures`: `render_bar_global`, `render_heatmap`,\n"
-        "`render_pdp_line`, `render_us_state_choropleth`,\n"
-        "`render_default_for_op`.\n"
-        "\n"
-        "## Operational coverage\n"
-        "\n"
-        "See [`CLAUDE.md`](https://github.com/NanyeonK/macroforecast/blob/main/CLAUDE.md) at the repo root for the operational\n"
-        "matrix: 30+ model families, 37 L3 ops, 7 L6 sub-layers, 29 L7 importance\n"
-        "ops, FRED-SD US state choropleth, parquet/latex/markdown export.\n"
-    )
+    return """# Public Python API
+
+[Back to reference](index.md)
+
+Curated reference for the importable macroforecast surface. The generated layer pages document recipe axes and options; this page documents Python imports and semantic package ownership.
+
+## Top-level API
+
+| Symbol | Description |
+|--------|-------------|
+| `macroforecast.forecast(...)` | One-shot helper that assembles a default recipe and runs it. |
+| `macroforecast.Experiment(...)` | Builder with `compare_models`, `compare`, `sweep`, `run`, `replicate`, `to_yaml`, and `validate`. |
+| `macroforecast.ForecastResult` | Thin facade over a recipe execution result. |
+| `macroforecast.run(recipe, output_directory=...)` | Execute a recipe end-to-end and return `ManifestExecutionResult`. |
+| `macroforecast.run_file(path, output_directory=...)` | Execute a recipe file. |
+| `macroforecast.replicate(manifest_path)` | Re-execute a stored manifest and verify sink hashes. |
+| `macroforecast.ManifestExecutionResult` | Per-cell `RuntimeResult` plus sink hashes. |
+| `macroforecast.ReplicationResult` | Bit-exact replication comparison result. |
+| `macroforecast.l0(...)` | Callable L0/meta recipe block builder; equivalent to authoring `0_meta` in YAML. |
+
+## Callable Recipe Blocks
+
+| Symbol | Description |
+|--------|-------------|
+| `macroforecast.meta.configure(...)` | Build and validate a canonical `0_meta` block. |
+| `macroforecast.meta.l0(...)` | Alias for `configure(...)`; also exported as `macroforecast.l0(...)`. |
+| `macroforecast.meta.build_layer_block(...)` | Internal helper for the body under `0_meta`. |
+
+## Submodule Surfaces
+
+| Module | Purpose |
+|--------|---------|
+| `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
+| `macroforecast.meta` | L0 study setup, failure policy, reproducibility, and compute policy. |
+| `macroforecast.data` | FRED-MD/QD/SD adapters, vintage manager, manifests, cache helpers. |
+| `macroforecast.preprocessing` | L2 preprocessing schemas, transformations, and contract helpers. |
+| `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
+| `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |
+| `macroforecast.evaluation` | L5 metrics and evaluation ops. |
+| `macroforecast.stat_tests` | L6 forecast-comparison statistical tests. |
+| `macroforecast.interpretation` | L7 interpretation schemas, ops, and methods. |
+| `macroforecast.output` | L8 artifact, provenance, and export ops. |
+| `macroforecast.diagnostics` | L1.5/L2.5/L3.5/L4.5 diagnostic packages. |
+| `macroforecast.core` | Cross-layer runtime, registry, manifest, cache, validation, execution, and figures. |
+| `macroforecast.api.functions` | Canonical standalone callable namespace; also available as `macroforecast.functions`. |
+| `macroforecast.api.defaults` | Canonical default profile helpers; also available through top-level lazy exports and `macroforecast.defaults`. |
+| `macroforecast.api.custom` | Custom model, preprocessor, feature, and target-transform registration. |
+| `macroforecast.feature_selection` | Promoted compatibility namespace for selector classes. |
+| `macroforecast.transforms` | Promoted compatibility namespace for transform callables. |
+
+## Layer Module Ownership
+
+Canonical implementation now lives in semantic packages: `meta`, `data`, `preprocessing`, `features`, `models`, `evaluation`, `stat_tests`, `interpretation`, `output`, and `diagnostics.*`.
+
+`macroforecast.layers.*` is compatibility-only. `macroforecast.core.layers` owns registry-facing compatibility modules and runtime glue, not the primary public implementation surface.
+
+## Runtime Helpers
+
+Runtime materialization helpers live in `macroforecast.core.runtime`:
+
+- `materialize_l1`, `materialize_l2`, `materialize_l3_minimal`, `materialize_l4_minimal`, `materialize_l5_minimal`, `materialize_l6_runtime`, `materialize_l7_runtime`, `materialize_l8_runtime`
+- `materialize_l1_5_diagnostic` through `materialize_l4_5_diagnostic`
+- `execute_minimal_forecast(recipe)`
+
+Sweep execution and bit-exact replication live in `macroforecast.core.execution`: `execute_recipe`, `replicate_recipe`, `CellExecutionResult`, `ManifestExecutionResult`, and `ReplicationResult`.
+"""
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -904,8 +927,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "-o", "--output",
-        default="docs/encyclopedia",
-        help="Output directory (default: docs/encyclopedia/).",
+        default="docs/reference",
+        help="Output directory (default: docs/reference/).",
     )
     args = parser.parse_args(argv)
     written = write_all(args.output)

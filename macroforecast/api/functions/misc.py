@@ -853,7 +853,7 @@ def mars_fit(
     """Standalone Multivariate Adaptive Regression Splines (MARS).
 
     Calls ``_build_l4_model("mars", params)`` directly; requires the optional
-    ``pyearth`` package (``pip install macroforecast[mars]``).
+    ``sklearn-contrib-py-earth`` package (``pip install macroforecast[mars]`` on Python <3.11).
 
     Parameters
     ----------
@@ -871,7 +871,7 @@ def mars_fit(
     Raises
     ------
     NotImplementedError
-        If ``pyearth`` package is not installed.
+        If ``sklearn-contrib-py-earth`` is not installed or unsupported on this Python.
 
     Examples
     --------

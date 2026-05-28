@@ -1,15 +1,9 @@
-from .custom_csv import load_custom_csv
-from .custom_parquet import load_custom_parquet
-from .fred_md import load_fred_md
-from .fred_qd import load_fred_qd
-from .fred_sd import load_fred_sd
-from .shared_csv import parse_fred_csv
+"""Compatibility shim for macroforecast.data.sources."""
 
-__all__ = [
-    "load_custom_csv",
-    "load_custom_parquet",
-    "load_fred_md",
-    "load_fred_qd",
-    "load_fred_sd",
-    "parse_fred_csv",
-]
+from __future__ import annotations
+
+from macroforecast.data.sources import *  # noqa: F401,F403
+try:
+    from macroforecast.data.sources import __all__ as __all__  # type: ignore[attr-defined]
+except ImportError:
+    __all__ = [name for name in globals() if not name.startswith("_")]

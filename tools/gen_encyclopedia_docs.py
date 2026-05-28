@@ -1,7 +1,7 @@
 """Introspection-based encyclopedia page generator for macroforecast.
 
 Produces one .md file per registered op (or per virtual op for L5/L6) into
-``docs/reference/encyclopedia/<layer>/<subdir>/<op_name>.md``, mirroring the
+``docs/reference/<layer>/<subdir>/<op_name>.md``, mirroring the
 existing per-op page structure exactly.
 
 Reuses patterns from ``tools/gen_standalone_docs.py`` (v0.9.2b1): same
@@ -13,11 +13,11 @@ Usage::
     # Dry-run all layers (print paths + first 5 lines, no writes):
     python tools/gen_encyclopedia_docs.py --layer all --dry-run
 
-    # Generate L3 into docs/reference/encyclopedia/ with a fixed date for idempotency:
-    python tools/gen_encyclopedia_docs.py --layer L3 --out docs/reference/encyclopedia/ --review-date 2026-05-21
+    # Generate L3 into docs/reference/ with a fixed date for idempotency:
+    python tools/gen_encyclopedia_docs.py --layer L3 --out docs/reference/ --review-date 2026-05-21
 
     # Diff L7 output against existing pages without writing:
-    python tools/gen_encyclopedia_docs.py --layer L7 --diff-against docs/reference/encyclopedia/
+    python tools/gen_encyclopedia_docs.py --layer L7 --diff-against docs/reference/
 
     # Generate a single layer into a temp directory:
     python tools/gen_encyclopedia_docs.py --layer L4 --out /tmp/enc_l4 --force
@@ -52,12 +52,12 @@ if _REPO_ROOT not in sys.path:
 
 def _bootstrap_ops() -> None:
     """Import all ops modules so the registry is fully populated."""
-    import macroforecast.layers.l3_features.ops  # noqa: F401
-    import macroforecast.layers.l4_models.ops  # noqa: F401
-    import macroforecast.layers.l5_evaluation.ops  # noqa: F401
-    import macroforecast.layers.l6_tests.ops  # noqa: F401
-    import macroforecast.layers.l7_interpretation.ops  # noqa: F401
-    import macroforecast.layers.l8_output.ops  # noqa: F401
+    import macroforecast.features.ops  # noqa: F401
+    import macroforecast.models.ops  # noqa: F401
+    import macroforecast.evaluation.ops  # noqa: F401
+    import macroforecast.stat_tests.ops  # noqa: F401
+    import macroforecast.interpretation.ops  # noqa: F401
+    import macroforecast.output.ops  # noqa: F401
     import macroforecast.core.ops.diagnostic_ops  # noqa: F401
     import macroforecast.core.ops.universal  # noqa: F401
 
@@ -391,7 +391,7 @@ EXCLUSION_LIST: set[str] = {
     # L7 ops that are in the registry but do NOT have encyclopedia pages yet.
     # These ops are operational/future but not yet documented in the per-op
     # encyclopedia surface. Generate pages only for the 8 ops that already
-    # have pages in docs/reference/encyclopedia/l7/op/.
+    # have pages in docs/reference/l7/op/.
     "attention_weights",
     "bootstrap_jackknife",
     "bvar_pip",
@@ -998,7 +998,7 @@ def collect_work_items(
     work: list[tuple[str, str, str, str, str, str | None]] = []
 
     # Lazily import L4 family lists (available after _bootstrap_ops)
-    from macroforecast.layers.l4_models.ops import (
+    from macroforecast.models.ops import (
         OPERATIONAL_MODEL_FAMILIES,
         FUTURE_MODEL_FAMILIES,
     )
@@ -1147,11 +1147,11 @@ def main() -> int:
     )
     parser.add_argument(
         "--out",
-        default="docs/reference/encyclopedia/",
+        default="docs/reference/",
         metavar="DIR",
         help=(
             "Output base directory (auto-created including parent directories if absent). "
-            "Default: docs/reference/encyclopedia/."
+            "Default: docs/reference/."
         ),
     )
     parser.add_argument(

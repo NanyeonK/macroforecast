@@ -7,7 +7,7 @@ removal) is stated once.
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from collections.abc import Iterable
 
 
 _REMOVAL_VERSION = "v0.10.0"
@@ -35,9 +35,9 @@ def resolve_model(model: str | None, model_family: str | None, default: str) -> 
 
 
 def resolve_models(
-    models: object | None,
-    model_families: object | None,
-) -> object | None:
+    models: Iterable[str] | None,
+    model_families: Iterable[str] | None,
+) -> Iterable[str] | None:
     """Resolve the canonical ``models`` parameter, handling deprecated ``model_families``."""
     if model_families is not None:
         _warn("model_families", "models")

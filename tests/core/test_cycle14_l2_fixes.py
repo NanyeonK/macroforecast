@@ -34,7 +34,7 @@ _MINI_RECIPE = {
         },
         "leaf_config": {"random_seed": 1},
     },
-    "1_data": {
+    "data": {
         "fixed_axes": {
             "panel_composition": "custom_panel_only",
             "frequency": "monthly",

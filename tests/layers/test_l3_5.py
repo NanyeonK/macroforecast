@@ -1,4 +1,4 @@
-from macroforecast.layers.l3_5_diagnostic.schema import (
+from macroforecast.diagnostics.features.schema import (
     normalize_to_dag_form,
     parse_layer_yaml,
     parse_recipe_yaml,
@@ -147,7 +147,7 @@ def test_l3_5_z_diagnostic_format_default():
 
 def test_l3_5_registered_with_spec_correct_class():
     spec = get_layer("l3_5")
-    from macroforecast.layers.l3_5_diagnostic.schema import L3_5FeatureDiagnostics
+    from macroforecast.diagnostics.features.schema import L3_5FeatureDiagnostics
 
     assert spec.cls is L3_5FeatureDiagnostics
     assert spec.produces == ("l3_5_diagnostic_v1",)

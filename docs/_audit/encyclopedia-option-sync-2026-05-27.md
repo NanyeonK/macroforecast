@@ -1,7 +1,7 @@
 # Encyclopedia Option Drift Audit — 2026-05-27
 
 **Branch**: `deep-audit/pr5-encyclopedia-drift`
-**Method**: Python import of `AxisSpec` options from each `L{N}_LAYER_SPEC`; registry-based extraction of L3/L7 ops; `OPERATIONAL_MODELS | FUTURE_MODELS` for L4; compared against file listing of `docs/reference/encyclopedia/{layer}/{axis}/` option sub-page directories.
+**Method**: Python import of `AxisSpec` options from each `L{N}_LAYER_SPEC`; registry-based extraction of L3/L7 ops; `OPERATIONAL_MODELS | FUTURE_MODELS` for L4; compared against file listing of `docs/reference/{layer}/{axis}/` option sub-page directories.
 **Scope**: Only axes that have per-option sub-page directories are compared (the majority of axes use a single `axes/{axis}.md` page, which is excluded from this drift check). L3 `op/`, L4 `model/`, L6 `equal_predictive_test/`, L6 `nested_test/`, L7 `op/` are all compared.
 
 ## Summary

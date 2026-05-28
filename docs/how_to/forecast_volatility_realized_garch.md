@@ -3,7 +3,7 @@
 The goal is to forecast one-step-ahead conditional variance using the
 Hansen-Huang-Shek (2012) Realized GARCH model with a realized-variance
 side channel. We use the public class `RealizedGARCH` from
-`macroforecast.layers.l4_models`, which exposes a sklearn-style `fit` and
+`macroforecast.models`, which exposes a sklearn-style `fit` and
 `predict_variance` interface. The model does not require the optional
 `arch` package because the joint MLE is implemented in scipy.
 
@@ -12,7 +12,7 @@ side channel. We use the public class `RealizedGARCH` from
 ```python
 import numpy as np
 import pandas as pd
-from macroforecast.layers.l4_models import RealizedGARCH
+from macroforecast.models import RealizedGARCH
 
 # Synthetic daily returns with a stylized realized-variance series.
 rng = np.random.RandomState(0)

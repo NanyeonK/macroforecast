@@ -12,7 +12,7 @@ from macroforecast.core.runtime import (
     _strobl_permutation_importance_frame,
 )
 from macroforecast.core.types import ModelArtifact
-from macroforecast.layers.l4_models.ops import OPERATIONAL_MODEL_FAMILIES, get_family_status
+from macroforecast.models.ops import OPERATIONAL_MODEL_FAMILIES, get_family_status
 
 
 # ---------------------------------------------------------------------------

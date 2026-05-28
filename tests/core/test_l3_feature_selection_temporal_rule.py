@@ -8,7 +8,7 @@ Verifies that:
 Uses validate_layer(parse_layer_yaml(...)) matching the existing scale/pca
 test pattern (tests/layers/test_l3.py::test_l3_full_sample_once_rejected_for_scale).
 """
-from macroforecast.layers.l3_features.schema import (
+from macroforecast.features.schema import (
     parse_layer_yaml,
     validate_layer,
 )

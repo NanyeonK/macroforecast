@@ -293,7 +293,6 @@ def build_default_recipe_dict(
     if benchmark_config:
         resolved_benchmark_config.update(benchmark_config)
 
-    study_scope = "one_target_compare_methods" if len(model_values) > 1 else "one_target_one_method"
     training_fixed = {
         "framework": framework,
         "benchmark_model": resolved_benchmark,
@@ -336,7 +335,6 @@ def build_default_recipe_dict(
         "recipe_id": resolved_recipe_id,
         "0_meta": {
             "fixed_axes": {
-                "study_scope": study_scope,
                 "reproducibility_policy": reproducibility_policy,
                 "failure_policy": failure_policy,
                 "compute_policy": compute_policy,
@@ -346,11 +344,11 @@ def build_default_recipe_dict(
                 "random_seed": int(random_seed),
             },
         },
-        "1_data": {
+        "data": {
             "fixed_axes": layer1_fixed_axes,
             "leaf_config": data_leaf,
         },
-        "2_preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
+        "preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
         "4_forecasting_model": training_block,
         "5_evaluation": {"fixed_axes": {"primary_metric": primary_metric}},
         "6_statistical_tests": {"fixed_axes": {}},

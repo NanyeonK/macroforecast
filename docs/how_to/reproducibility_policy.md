@@ -122,7 +122,7 @@ macroforecast.run(
 Resolution order (first non-None wins):
 
 1. The explicit `cache_root=` argument.
-2. `recipe['1_data']['leaf_config']['cache_root']` (recipe-level
+2. `recipe['data']['leaf_config']['cache_root']` (recipe-level
    override).
 3. `output_directory / ".raw_cache"` (auto-derived).
 4. The raw loader's package default.

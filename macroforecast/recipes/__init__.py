@@ -3,7 +3,7 @@
 Canonical entry point for YAML-driven forecasting studies. Re-exports the
 public API from macroforecast.api.recipe and macroforecast.api.quick.
 
-Paper-method recipe builders live at macroforecast.layers.l4_models.paper_methods
+Paper-method recipe builders live at macroforecast.models.paper_methods
 (relocated from this module in Phase 3b).
 
 Public API:

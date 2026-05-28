@@ -8,7 +8,7 @@ from macroforecast.core.types import L6TestsArtifact, L7ImportanceArtifact, L8Ar
 
 
 MINIMAL_RECIPE = """
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -21,7 +21,7 @@ MINIMAL_RECIPE = """
       y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
       x1: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
       x2: [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none

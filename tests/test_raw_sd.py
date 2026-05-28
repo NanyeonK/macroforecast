@@ -2,15 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from macroforecast.layers.l1_data import RawLoadResult, load_fred_sd
+from macroforecast.data import RawLoadResult, load_fred_sd, load_fred_sd_result, metadata
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_load_fred_sd_from_fixture_workbook(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
-    result = load_fred_sd(local_source=fixture, cache_root=tmp_path)
+    frame = load_fred_sd(local_source=fixture, cache_root=tmp_path)
+    result = load_fred_sd_result(local_source=fixture, cache_root=tmp_path)
 
+    assert metadata(frame)["dataset"] == "fred_sd"
     assert isinstance(result, RawLoadResult)
     assert result.dataset_metadata.dataset == "fred_sd"
     assert result.dataset_metadata.frequency == "state_monthly"
@@ -21,7 +23,7 @@ def test_load_fred_sd_from_fixture_workbook(tmp_path: Path) -> None:
 
 def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
-    result = load_fred_sd(
+    result = load_fred_sd_result(
         local_source=fixture,
         cache_root=tmp_path,
         variables=["UR"],
@@ -44,7 +46,7 @@ def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
 
 def test_load_fred_sd_vintage_is_marked_stable(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
-    result = load_fred_sd(
+    result = load_fred_sd_result(
         vintage="2020-01",
         local_source=fixture,
         cache_root=tmp_path,

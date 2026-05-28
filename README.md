@@ -71,7 +71,7 @@ print(imp.importances_mean_)
 
 > Or use the recipe DSL for full reproducible studies — see
 > [docs/index.md](docs/index.md) and
-> [docs/two_entry_points.md](docs/two_entry_points.md) for a decision guide.
+> [docs/tutorial/two_entry_points.md](docs/tutorial/two_entry_points.md) for a decision guide.
 
 ## 5-line quickstart
 
@@ -150,7 +150,7 @@ The canonical layer design is documented in the architecture reference.
 ## Operational coverage
 
 > Before relying on advanced families/tests in a paper workflow, check
-> [`docs/recipe_api/runtime_support.md`](docs/recipe_api/runtime_support.md)
+> [`docs/reference/recipe_schema/runtime_support.md`](docs/reference/recipe_schema/runtime_support.md)
 > for the exact current path coverage. Some listed families are wired
 > through legacy/specialized paths or optional extras, not necessarily
 > through the minimal core runtime end-to-end.
@@ -177,15 +177,15 @@ The canonical layer design is documented in the architecture reference.
 
 ## Recipe gallery
 
-`examples/recipes/` ships 38 bundled reference recipes; new in v0.3:
+`examples/recipes/` ships the runnable recipe gallery. Partial layer-only YAML
+snippets live under `docs/recipe-snippets/` and are not intended for `mf.run()`.
 
 * `l4_minimal_ridge.yaml` — minimal ridge on a custom panel.
-* `l4_random_forest.yaml`, `l4_xgboost.yaml`, `l4_lightgbm.yaml` (when extras installed).
 * `l4_quantile_regression_forest.yaml` — Meinshausen QRF with quantile bands.
 * `l4_bagging.yaml` — bootstrap-aggregated ridge.
-* `l4_dfm_mariano_murasawa.yaml` — mixed-frequency DFM.
-* `l4_macroeconomic_random_forest.yaml` — Coulombe MRF GTVP.
 * `l4_ensemble_ridge_xgb_vs_ar1.yaml` — horse race with benchmark.
+* `l6_standard.yaml`, `l6_full_replication.yaml` — statistical-test examples.
+* `replications/*.yaml` — paper-method replication templates.
 
 A replication script for Coulombe (2024) MRF on FRED-MD lives at
 `examples/replication/coulombe_2024_mrf_fred_md.py`.

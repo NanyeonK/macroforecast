@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macroforecast.layers.l8_output.schema import (
+from macroforecast.output.schema import (
     make_recipe_with_glmboost,
     make_recipe_with_l6_l7_active,
     make_recipe_without_ensemble,
@@ -17,7 +17,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _example(name: str) -> str:
-    return (ROOT / "examples" / "recipes" / name).read_text()
+    path = ROOT / "examples" / "recipes" / name
+    if not path.exists():
+        path = ROOT / "docs" / "recipe-snippets" / name
+    return path.read_text()
 
 
 def test_l8_minimal_yaml_parses_to_defaults():
@@ -158,12 +161,12 @@ def test_l8_latex_paper_export_yaml_parses():
 
 
 def test_l8_state_metrics_inactive_without_fred_sd():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    dataset: fred_md\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, state_metrics]\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    dataset: fred_md\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, state_metrics]\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l8_regime_metrics_inactive_without_regime():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: none\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, regime_metrics]\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: none\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, regime_metrics]\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
@@ -203,7 +206,7 @@ def test_l8_output_directory_default():
 
 def test_l8_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l8_output.schema import L8Output
+    from macroforecast.output.schema import L8Output
 
     spec = get_layer("l8")
     assert spec.cls is L8Output

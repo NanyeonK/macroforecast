@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.layers.l2_preprocessing.schema import (
+from macroforecast.preprocessing.schema import (
     parse_layer_yaml,
     validate_layer,
 )
@@ -28,7 +28,7 @@ from macroforecast.layers.l2_preprocessing.schema import (
 
 def _make_yaml(imputation_policy: str, temporal_rule: str) -> str:
     return f"""
-2_preprocessing:
+preprocessing:
   fixed_axes:
     imputation_policy: {imputation_policy}
     imputation_temporal_rule: {temporal_rule}
@@ -37,7 +37,7 @@ def _make_yaml(imputation_policy: str, temporal_rule: str) -> str:
 
 def _make_yaml_with_outlier(outlier_policy: str, temporal_rule: str) -> str:
     return f"""
-2_preprocessing:
+preprocessing:
   fixed_axes:
     outlier_policy: {outlier_policy}
     imputation_temporal_rule: {temporal_rule}

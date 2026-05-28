@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-from macroforecast.layers.l7_interpretation.schema import (
+from macroforecast.interpretation.schema import (
     make_l7_yaml,
     make_l7_yaml_with_lineage_attribution,
     normalize_to_dag_form,
@@ -13,14 +13,17 @@ from macroforecast.layers.l7_interpretation.schema import (
     validate_recipe,
 )
 from macroforecast.core.ops import get_op, list_ops
-from macroforecast.layers.l7_interpretation.ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
+from macroforecast.interpretation.ops import FIGURE_TYPES, PRE_DEFINED_BLOCKS
 from macroforecast.core.validator import validate_dag
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def _example(name: str) -> str:
-    return (ROOT / "examples" / "recipes" / name).read_text()
+    path = ROOT / "examples" / "recipes" / name
+    if not path.exists():
+        path = ROOT / "docs" / "recipe-snippets" / name
+    return path.read_text()
 
 
 def test_l7_disabled_by_default():
@@ -145,7 +148,7 @@ def test_l7_bvar_pip_rejects_non_bvar():
 
 def test_l7_mccracken_ng_md_groups_requires_fred_md():
     recipe = parse_recipe_yaml(
-        "1_data:\n  fixed_axes:\n    dataset: fred_qd\n"
+        "data:\n  fixed_axes:\n    dataset: fred_qd\n"
         + make_l7_yaml(op="group_aggregate", model_family="xgboost").replace(
             "params: {model_family: xgboost}",
             "params: {grouping: mccracken_ng_md_groups, aggregation: sum}",
@@ -156,7 +159,7 @@ def test_l7_mccracken_ng_md_groups_requires_fred_md():
 
 def test_l7_fred_sd_states_requires_fred_sd():
     recipe = parse_recipe_yaml(
-        "1_data:\n  fixed_axes:\n    dataset: fred_md\n"
+        "data:\n  fixed_axes:\n    dataset: fred_md\n"
         + make_l7_yaml(op="group_aggregate").replace(
             "params: {model_family: xgboost}",
             "params: {grouping: fred_sd_states, aggregation: sum}",
@@ -176,7 +179,7 @@ def test_l7_user_groups_works_in_leaf_config():
 
 def test_l7_theme_block_missing_series_hard_error():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     variable_universe: explicit_variable_list
   leaf_config:
@@ -395,7 +398,7 @@ def test_l7_7_pre_defined_blocks():
 
 def test_l7_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l7_interpretation.schema import L7Interpretation
+    from macroforecast.interpretation.schema import L7Interpretation
 
     spec = get_layer("l7")
     assert spec.cls is L7Interpretation

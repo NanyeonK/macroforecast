@@ -19,19 +19,19 @@ from macroforecast.core.layer_specs import AxisSpec, LayerImplementationSpec, Op
 # matches the canonical layer-execution order so wizard prompts walk in
 # dependency order.
 _LAYER_MODULES: tuple[tuple[str, str], ...] = (
-    ("l0", "macroforecast.layers.l0_meta.schema"),
-    ("l1", "macroforecast.layers.l1_data.schema"),
-    ("l1_5", "macroforecast.layers.l1_5_diagnostic.schema"),
-    ("l2", "macroforecast.layers.l2_preprocessing.schema"),
-    ("l2_5", "macroforecast.layers.l2_5_diagnostic.schema"),
-    ("l3", "macroforecast.layers.l3_features.schema"),
-    ("l3_5", "macroforecast.layers.l3_5_diagnostic.schema"),
-    ("l4", "macroforecast.layers.l4_models.schema"),
-    ("l4_5", "macroforecast.layers.l4_5_diagnostic.schema"),
-    ("l5", "macroforecast.layers.l5_evaluation.schema"),
-    ("l6", "macroforecast.layers.l6_tests.schema"),
-    ("l7", "macroforecast.layers.l7_interpretation.schema"),
-    ("l8", "macroforecast.layers.l8_output.schema"),
+    ("l0", "macroforecast.meta.schema"),
+    ("l1", "macroforecast.data.config"),
+    ("l1_5", "macroforecast.diagnostics.data_summary.schema"),
+    ("l2", "macroforecast.preprocessing.schema"),
+    ("l2_5", "macroforecast.diagnostics.preprocessing.schema"),
+    ("l3", "macroforecast.features.schema"),
+    ("l3_5", "macroforecast.diagnostics.features.schema"),
+    ("l4", "macroforecast.models.schema"),
+    ("l4_5", "macroforecast.diagnostics.generator.schema"),
+    ("l5", "macroforecast.evaluation.schema"),
+    ("l6", "macroforecast.stat_tests.schema"),
+    ("l7", "macroforecast.interpretation.schema"),
+    ("l8", "macroforecast.output.schema"),
 )
 
 
@@ -224,7 +224,7 @@ def _build_l4_fallback() -> tuple[AxisInfo, ...]:
     / ``refit_policy`` / ``search_algorithm`` here so the wizard + sphinx
     docs can iterate them."""
 
-    from macroforecast.layers.l4_models.ops import FUTURE_MODELS, OPERATIONAL_MODELS
+    from macroforecast.models.ops import FUTURE_MODELS, OPERATIONAL_MODELS
 
     family_options = tuple(
         OptionInfo(
@@ -386,7 +386,7 @@ def _build_l3_fallback() -> tuple[AxisInfo, ...]:
 
     # Ensure L3 ops module loaded so its registrations populate _OPS_REGISTRY.
     try:
-        import macroforecast.layers.l3_features.ops  # noqa: F401
+        import macroforecast.features.ops  # noqa: F401
     except ImportError:
         pass
     try:
@@ -558,25 +558,25 @@ def _build_l7_fallback() -> tuple[AxisInfo, ...]:
 
     # Ensure L3 ops module loaded so its registrations populate _OPS_REGISTRY.
     try:
-        import macroforecast.layers.l3_features.ops  # noqa: F401
+        import macroforecast.features.ops  # noqa: F401
     except ImportError:
         pass
     # Ensure L5/L6/L8 ops modules loaded so their registrations populate _OPS_REGISTRY.
     try:
-        import macroforecast.layers.l5_evaluation.ops  # noqa: F401
+        import macroforecast.evaluation.ops  # noqa: F401
     except ImportError:
         pass
     try:
-        import macroforecast.layers.l6_tests.ops  # noqa: F401
+        import macroforecast.stat_tests.ops  # noqa: F401
     except ImportError:
         pass
     try:
-        import macroforecast.layers.l8_output.ops  # noqa: F401
+        import macroforecast.output.ops  # noqa: F401
     except ImportError:
         pass
     # Ensure L7 ops module loaded so its registrations populate _OPS_REGISTRY.
     try:
-        import macroforecast.layers.l7_interpretation.ops  # noqa: F401
+        import macroforecast.interpretation.ops  # noqa: F401
     except ImportError:
         pass
     try:

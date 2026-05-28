@@ -2,7 +2,7 @@
 
 The goal is to select a subset of features under proper false-positive
 control using the Kursa-Rudnicki (2010) Boruta algorithm. We use the
-public class `Boruta` from `macroforecast.layers.l3_features.selection`, which
+public class `Boruta` from `macroforecast.features.selection`, which
 follows the sklearn `fit` and `transform` interface and inherits from
 `BaseEstimator` and `TransformerMixin` since v0.9.5. The implementation is
 pure numpy and sklearn, so no external `boruta` package is required.
@@ -12,7 +12,7 @@ pure numpy and sklearn, so no external `boruta` package is required.
 ```python
 import numpy as np
 import pandas as pd
-from macroforecast.layers.l3_features.selection import Boruta
+from macroforecast.features.selection import Boruta
 
 rng = np.random.RandomState(0)
 n, p = 300, 20

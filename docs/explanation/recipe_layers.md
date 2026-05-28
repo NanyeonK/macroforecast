@@ -30,10 +30,10 @@ Current layer-contract recipes use numeric YAML keys that map directly to layer 
 ## Minimal Skeleton
 
 ```yaml
-1_data:
+data:
   fixed_axes: {}
 
-2_preprocessing:
+preprocessing:
   fixed_axes: {}
 
 3_feature_engineering:

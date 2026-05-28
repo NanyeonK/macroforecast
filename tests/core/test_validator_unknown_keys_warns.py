@@ -26,7 +26,7 @@ def test_unknown_leaf_config_key_warns():
     from macroforecast.core.execution import _warn_unknown_recipe_keys
     with warnings.catch_warnings(record=True) as w_list:
         warnings.simplefilter("always")
-        _warn_unknown_recipe_keys({"1_data": {"leaf_config": {"typo_key": "value"}}})
+        _warn_unknown_recipe_keys({"data": {"leaf_config": {"typo_key": "value"}}})
     messages = [str(x.message) for x in w_list if issubclass(x.category, UserWarning)]
     assert any("typo_key" in m for m in messages), f"Expected UserWarning for typo_key, got: {messages}"
 
@@ -38,7 +38,7 @@ def test_known_keys_no_spurious_warning():
         warnings.simplefilter("always")
         _warn_unknown_recipe_keys({
             "0_meta": {},
-            "1_data": {"leaf_config": {"target": "y"}},
+            "data": {"leaf_config": {"target": "y"}},
             "4_forecasting_model": {},
         })
     uw = [x for x in w_list if issubclass(x.category, UserWarning)]

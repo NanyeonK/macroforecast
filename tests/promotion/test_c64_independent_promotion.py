@@ -44,20 +44,20 @@ def _panel_ts(n: int = 120, p: int = 4, seed: int = 7):
 class TestSlowGrowingTree:
     def test_ST1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import SlowGrowingTree
-        from macroforecast.layers.l4_models.tree import SlowGrowingTree as SGT2
+        from macroforecast.models import SlowGrowingTree
+        from macroforecast.models.tree import SlowGrowingTree as SGT2
         assert SlowGrowingTree is SGT2
 
     def test_ST2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import SlowGrowingTree
+        from macroforecast.models import SlowGrowingTree
         from macroforecast.core.runtime import _SlowGrowingTree
         m = SlowGrowingTree()
         assert isinstance(m, _SlowGrowingTree)
 
     def test_ST3_smoke_fit_predict(self):
         """T3: fit returns self; predict returns correct shape."""
-        from macroforecast.layers.l4_models import SlowGrowingTree
+        from macroforecast.models import SlowGrowingTree
         X, y = _panel()
         m = SlowGrowingTree(eta=0.1)
         result = m.fit(X, y)
@@ -67,7 +67,7 @@ class TestSlowGrowingTree:
 
     def test_ST4_get_params(self):
         """T4: get_params() returns dict containing init param names."""
-        from macroforecast.layers.l4_models import SlowGrowingTree
+        from macroforecast.models import SlowGrowingTree
         m = SlowGrowingTree(eta=0.2, random_state=1)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -78,7 +78,7 @@ class TestSlowGrowingTree:
 
     def test_ST5_feature_tracking(self):
         """T5: feature_names_in_ and n_features_in_ set after fit."""
-        from macroforecast.layers.l4_models import SlowGrowingTree
+        from macroforecast.models import SlowGrowingTree
         X, y = _panel()
         m = SlowGrowingTree()
         assert not hasattr(m, "feature_names_in_")
@@ -96,20 +96,20 @@ class TestSlowGrowingTree:
 class TestQuantileRegressionForest:
     def test_QRF1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import QuantileRegressionForest
-        from macroforecast.layers.l4_models.tree import QuantileRegressionForest as QRF2
+        from macroforecast.models import QuantileRegressionForest
+        from macroforecast.models.tree import QuantileRegressionForest as QRF2
         assert QuantileRegressionForest is QRF2
 
     def test_QRF2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import QuantileRegressionForest
+        from macroforecast.models import QuantileRegressionForest
         from macroforecast.core.runtime import _QuantileRegressionForest
         m = QuantileRegressionForest()
         assert isinstance(m, _QuantileRegressionForest)
 
     def test_QRF3_smoke_fit_predict(self):
         """T3: fit/predict smoke + predict_quantiles extended interface."""
-        from macroforecast.layers.l4_models import QuantileRegressionForest
+        from macroforecast.models import QuantileRegressionForest
         X, y = _panel()
         m = QuantileRegressionForest(n_estimators=10, random_state=0)
         m.fit(X, y)
@@ -122,7 +122,7 @@ class TestQuantileRegressionForest:
 
     def test_QRF4_get_params(self):
         """T4: get_params() returns dict with n_estimators key."""
-        from macroforecast.layers.l4_models import QuantileRegressionForest
+        from macroforecast.models import QuantileRegressionForest
         m = QuantileRegressionForest(n_estimators=50)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -131,7 +131,7 @@ class TestQuantileRegressionForest:
 
     def test_QRF5_feature_tracking(self):
         """T5: feature_names_in_ and n_features_in_ set after fit."""
-        from macroforecast.layers.l4_models import QuantileRegressionForest
+        from macroforecast.models import QuantileRegressionForest
         X, y = _panel()
         m = QuantileRegressionForest(n_estimators=5, random_state=0)
         assert not hasattr(m, "feature_names_in_")
@@ -147,20 +147,20 @@ class TestQuantileRegressionForest:
 class TestBagging:
     def test_BA1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import Bagging
-        from macroforecast.layers.l4_models.tree import Bagging as BA2
+        from macroforecast.models import Bagging
+        from macroforecast.models.tree import Bagging as BA2
         assert Bagging is BA2
 
     def test_BA2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import Bagging
+        from macroforecast.models import Bagging
         from macroforecast.core.runtime import _BaggingWrapper
         m = Bagging()
         assert isinstance(m, _BaggingWrapper)
 
     def test_BA3_smoke_fit_predict(self):
         """T3: fit/predict smoke on synthetic data."""
-        from macroforecast.layers.l4_models import Bagging
+        from macroforecast.models import Bagging
         X, y = _panel()
         m = Bagging(n_estimators=5, random_state=0)
         m.fit(X, y)
@@ -169,7 +169,7 @@ class TestBagging:
 
     def test_BA4_get_params(self):
         """T4: get_params() returns dict with init param names."""
-        from macroforecast.layers.l4_models import Bagging
+        from macroforecast.models import Bagging
         m = Bagging(base_family="ridge", n_estimators=20)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -178,7 +178,7 @@ class TestBagging:
 
     def test_BA5_feature_tracking(self):
         """T5: feature_names_in_ and n_features_in_ set after fit."""
-        from macroforecast.layers.l4_models import Bagging
+        from macroforecast.models import Bagging
         X, y = _panel()
         m = Bagging(n_estimators=3, random_state=0)
         assert not hasattr(m, "feature_names_in_")
@@ -194,13 +194,13 @@ class TestBagging:
 class TestBooging:
     def test_BO1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import Booging
-        from macroforecast.layers.l4_models.tree import Booging as BO2
+        from macroforecast.models import Booging
+        from macroforecast.models.tree import Booging as BO2
         assert Booging is BO2
 
     def test_BO2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import Booging
+        from macroforecast.models import Booging
         from macroforecast.core.runtime import _BoogingWrapper
         m = Booging()
         assert isinstance(m, _BoogingWrapper)
@@ -208,7 +208,7 @@ class TestBooging:
     @pytest.mark.slow
     def test_BO3_smoke_fit_predict(self):
         """T3: fit/predict smoke (marked slow — runs minimal B/inner_n_estimators)."""
-        from macroforecast.layers.l4_models import Booging
+        from macroforecast.models import Booging
         X, y = _panel(n=60)
         m = Booging(B=3, inner_n_estimators=10, random_state=0)
         m.fit(X, y)
@@ -217,7 +217,7 @@ class TestBooging:
 
     def test_BO4_get_params(self):
         """T4: get_params() returns dict with B and sample_frac."""
-        from macroforecast.layers.l4_models import Booging
+        from macroforecast.models import Booging
         m = Booging(B=5, sample_frac=0.6)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -226,7 +226,7 @@ class TestBooging:
 
     def test_BO5_feature_tracking(self):
         """T5: feature_names_in_ and n_features_in_ set after fit."""
-        from macroforecast.layers.l4_models import Booging
+        from macroforecast.models import Booging
         X, y = _panel(n=60)
         m = Booging(B=2, inner_n_estimators=5, random_state=0)
         assert not hasattr(m, "feature_names_in_")
@@ -241,13 +241,13 @@ class TestBooging:
 class TestMacroRandomForest:
     def test_MRF1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import MacroRandomForest
-        from macroforecast.layers.l4_models.tree import MacroRandomForest as MRF2
+        from macroforecast.models import MacroRandomForest
+        from macroforecast.models.tree import MacroRandomForest as MRF2
         assert MacroRandomForest is MRF2
 
     def test_MRF2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import MacroRandomForest
+        from macroforecast.models import MacroRandomForest
         from macroforecast.core.runtime import _MRFExternalWrapper
         m = MacroRandomForest()
         assert isinstance(m, _MRFExternalWrapper)
@@ -256,7 +256,7 @@ class TestMacroRandomForest:
     def test_MRF3_smoke_fit_predict(self):
         """T3: fit/predict smoke (guarded by importorskip)."""
         pytest.importorskip("macroforecast._vendor.macro_random_forest")
-        from macroforecast.layers.l4_models import MacroRandomForest
+        from macroforecast.models import MacroRandomForest
         X, y = _panel_ts(n=60, p=4)
         m = MacroRandomForest(B=5, random_state=0)
         m.fit(X, y)
@@ -265,7 +265,7 @@ class TestMacroRandomForest:
 
     def test_MRF4_get_params(self):
         """T4: get_params() returns dict with B and ridge_lambda."""
-        from macroforecast.layers.l4_models import MacroRandomForest
+        from macroforecast.models import MacroRandomForest
         m = MacroRandomForest(B=10, ridge_lambda=0.2)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -274,7 +274,7 @@ class TestMacroRandomForest:
 
     def test_MRF5_feature_tracking(self):
         """T5: feature_names_in_ NOT set before fit (sklearn convention)."""
-        from macroforecast.layers.l4_models import MacroRandomForest
+        from macroforecast.models import MacroRandomForest
         m = MacroRandomForest()
         assert not hasattr(m, "feature_names_in_")
 
@@ -286,20 +286,20 @@ class TestMacroRandomForest:
 class TestKNN:
     def test_KNN1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import KNN
-        from macroforecast.layers.l4_models.tree import KNN as KNN2
+        from macroforecast.models import KNN
+        from macroforecast.models.tree import KNN as KNN2
         assert KNN is KNN2
 
     def test_KNN2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import KNN
+        from macroforecast.models import KNN
         from macroforecast.core.runtime import _AutoClipKNN
         m = KNN()
         assert isinstance(m, _AutoClipKNN)
 
     def test_KNN3_smoke_fit_predict(self):
         """T3: fit/predict smoke on synthetic data."""
-        from macroforecast.layers.l4_models import KNN
+        from macroforecast.models import KNN
         X, y = _panel()
         m = KNN(n_neighbors=3)
         m.fit(X, y)
@@ -308,7 +308,7 @@ class TestKNN:
 
     def test_KNN4_get_params(self):
         """T4: get_params() returns dict with n_neighbors and weights."""
-        from macroforecast.layers.l4_models import KNN
+        from macroforecast.models import KNN
         m = KNN(n_neighbors=7, weights="distance")
         params = m.get_params()
         assert isinstance(params, dict)
@@ -317,7 +317,7 @@ class TestKNN:
 
     def test_KNN5_feature_tracking(self):
         """T5: feature_names_in_ and n_features_in_ set after fit."""
-        from macroforecast.layers.l4_models import KNN
+        from macroforecast.models import KNN
         X, y = _panel()
         m = KNN()
         assert not hasattr(m, "feature_names_in_")
@@ -333,13 +333,13 @@ class TestKNN:
 class TestSequenceModel:
     def test_SM1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import SequenceModel
-        from macroforecast.layers.l4_models.neural import SequenceModel as SM2
+        from macroforecast.models import SequenceModel
+        from macroforecast.models.neural import SequenceModel as SM2
         assert SequenceModel is SM2
 
     def test_SM2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import SequenceModel
+        from macroforecast.models import SequenceModel
         from macroforecast.core.runtime import _TorchSequenceModel
         m = SequenceModel()
         assert isinstance(m, _TorchSequenceModel)
@@ -348,7 +348,7 @@ class TestSequenceModel:
     def test_SM3_smoke_fit_predict(self):
         """T3: fit/predict smoke (requires torch)."""
         pytest.importorskip("torch")
-        from macroforecast.layers.l4_models import SequenceModel
+        from macroforecast.models import SequenceModel
         X, y = _panel()
         m = SequenceModel(kind="lstm", hidden_size=8, n_epochs=2, random_state=0)
         m.fit(X, y)
@@ -357,7 +357,7 @@ class TestSequenceModel:
 
     def test_SM4_get_params(self):
         """T4: get_params() returns dict with kind and hidden_size (no torch needed)."""
-        from macroforecast.layers.l4_models import SequenceModel
+        from macroforecast.models import SequenceModel
         m = SequenceModel(kind="gru", hidden_size=16)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -368,7 +368,7 @@ class TestSequenceModel:
     def test_SM5_feature_tracking(self):
         """T5: feature_names_in_ and n_features_in_ set after fit (requires torch)."""
         pytest.importorskip("torch")
-        from macroforecast.layers.l4_models import SequenceModel
+        from macroforecast.models import SequenceModel
         X, y = _panel()
         m = SequenceModel(kind="lstm", hidden_size=4, n_epochs=1, random_state=0)
         m.fit(X, y)
@@ -383,13 +383,13 @@ class TestSequenceModel:
 class TestHemisphereNN:
     def test_HNN1_importable(self):
         """T1: Importable from flat and grouped namespaces."""
-        from macroforecast.layers.l4_models import HemisphereNN
-        from macroforecast.layers.l4_models.neural import HemisphereNN as HNN2
+        from macroforecast.models import HemisphereNN
+        from macroforecast.models.neural import HemisphereNN as HNN2
         assert HemisphereNN is HNN2
 
     def test_HNN2_isinstance(self):
         """T2: isinstance check against private runtime class."""
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         from macroforecast.core.runtime import _HemisphereNN
         m = HemisphereNN()
         assert isinstance(m, _HemisphereNN)
@@ -398,7 +398,7 @@ class TestHemisphereNN:
     def test_HNN3_smoke_fit_predict(self):
         """T3: fit/predict smoke (requires torch)."""
         pytest.importorskip("torch")
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         X, y = _panel()
         m = HemisphereNN(lc=1, lm=1, lv=1, neurons=8, n_epochs=2, B=2, random_state=0)
         m.fit(X, y)
@@ -407,7 +407,7 @@ class TestHemisphereNN:
 
     def test_HNN4_get_params_nu_roundtrip(self):
         """T4: Critical — nu must appear in get_params(), nu_target must NOT."""
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         m = HemisphereNN(nu=0.4, B=5)
         params = m.get_params()
         assert isinstance(params, dict)
@@ -418,7 +418,7 @@ class TestHemisphereNN:
 
     def test_HNN5_set_params_roundtrip(self):
         """T5: set_params changes are reflected in get_params (no torch needed)."""
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         m = HemisphereNN()
         m.set_params(nu=0.6, lc=3)
         assert m.get_params()["nu"] == pytest.approx(0.6)
@@ -432,13 +432,13 @@ class TestHemisphereNN:
 class TestHemisphereNNSpecific:
     def test_H1_nu_get_params(self):
         """H1: HemisphereNN(nu=0.5).get_params()['nu'] == 0.5."""
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         m = HemisphereNN(nu=0.5)
         assert m.get_params()["nu"] == pytest.approx(0.5)
 
     def test_H2_nu_and_nu_target_attrs(self):
         """H2: Both .nu and .nu_target attributes present with correct value."""
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         m = HemisphereNN(nu=0.5)
         assert hasattr(m, "nu")
         assert m.nu == pytest.approx(0.5)
@@ -448,7 +448,7 @@ class TestHemisphereNNSpecific:
 
     def test_H3_clone_preserves_nu(self):
         """H3: clone(HemisphereNN(nu=0.5)) produces unfitted clone with nu=0.5."""
-        from macroforecast.layers.l4_models import HemisphereNN
+        from macroforecast.models import HemisphereNN
         m = HemisphereNN(nu=0.5)
         m2 = clone(m)
         assert m2 is not m
@@ -464,7 +464,7 @@ class TestHemisphereNNSpecific:
 class TestC63Regression:
     def test_all_22_c63_classes_still_importable(self):
         """Regression: all 22 C63 promotions remain importable after C64 changes."""
-        from macroforecast.layers.l4_models import (
+        from macroforecast.models import (
             MidasAlmon, MidasBeta, MidasStep, UnrestrictedMidas,
             LinearAR, FactorAugmentedAR,
             NonNegRidge, TwoStageRandomWalkRidge,
@@ -481,8 +481,8 @@ class TestC63Regression:
         assert MidasAlmon is not None
 
     def test_total_models_count_is_30(self):
-        """After C64, macroforecast.layers.l4_models.__all__ must have exactly 30 entries."""
-        import macroforecast.layers.l4_models as models
+        """After C64, macroforecast.models.__all__ must have exactly 30 entries."""
+        import macroforecast.models as models
         assert len(models.__all__) == 30, f"Expected 30, got {len(models.__all__)}"
 
     def test_feature_selection_fit_transform_still_works(self):

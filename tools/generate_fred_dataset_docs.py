@@ -519,7 +519,7 @@ def main() -> None:
 
 - Previous: [4. Detail (code): Full](../detail/index.md)
 - Current: FRED-Dataset
-- Next: [API Reference](../api/index.md)
+- Next: [API Reference](../index.md)
 
 This section is the dataset dictionary for macroforecast's official FRED-backed
 source panels. It is separate from Layer 1 because Layer 1 should decide the

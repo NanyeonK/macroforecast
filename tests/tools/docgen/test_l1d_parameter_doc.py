@@ -214,9 +214,9 @@ def test_l1d_fred_sd_variable_group_categorical_options_no_params():
 
 
 def test_known_leaf_config_keys_extended_with_l1d_geography_keys():
-    """_KNOWN_LEAF_CONFIG_KEYS['1_data'] includes all 8 L1.D Geography conditional keys."""
+    """_KNOWN_LEAF_CONFIG_KEYS['data'] includes all 8 L1.D Geography conditional keys."""
     from macroforecast.core.execution import _KNOWN_LEAF_CONFIG_KEYS
-    keys = _KNOWN_LEAF_CONFIG_KEYS["1_data"]
+    keys = _KNOWN_LEAF_CONFIG_KEYS["data"]
     expected = {
         "target_state",
         "target_states",
@@ -229,4 +229,4 @@ def test_known_leaf_config_keys_extended_with_l1d_geography_keys():
         "sd_variable_groups",
     }
     missing = expected - keys
-    assert not missing, f"Missing keys in _KNOWN_LEAF_CONFIG_KEYS['1_data']: {missing}"
+    assert not missing, f"Missing keys in _KNOWN_LEAF_CONFIG_KEYS['data']: {missing}"

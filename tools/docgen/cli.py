@@ -130,10 +130,10 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
     layer_validators = (
         ("0_meta", "macroforecast.core.layers.l0"),
-        ("1_data", "macroforecast.layers.l1_data.schema"),
-        ("2_preprocessing", "macroforecast.layers.l2_preprocessing.schema"),
-        ("3_feature_engineering", "macroforecast.layers.l3_features.schema"),
-        ("4_forecasting_model", "macroforecast.layers.l4_models.schema"),
+        ("data", "macroforecast.data.config"),
+        ("preprocessing", "macroforecast.preprocessing.schema"),
+        ("3_feature_engineering", "macroforecast.features.schema"),
+        ("4_forecasting_model", "macroforecast.models.schema"),
         ("5_evaluation", "macroforecast.core.layers.l5"),
         ("6_statistical_tests", "macroforecast.core.layers.l6"),
         ("7_interpretation", "macroforecast.core.layers.l7"),
@@ -191,13 +191,13 @@ def main(argv: list[str] | None = None) -> int:
         "encyclopedia",
         help=(
             "Emit the source-committed encyclopedia tree under <output>. "
-            "Used to refresh ``docs/reference/encyclopedia/`` after editing the "
+            "Used to refresh ``docs/reference/`` after editing the "
             "OptionDoc registry; CI diffs the output to enforce sync."
         ),
     )
     encyc_p.add_argument(
         "output",
-        help="Output directory (e.g. ``docs/reference/encyclopedia``).",
+        help="Output directory (e.g. ``docs/reference``).",
     )
     encyc_p.set_defaults(func=_cmd_encyclopedia)
 

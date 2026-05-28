@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from macroforecast.layers.l4_models.schema import (
+from macroforecast.models.schema import (
     execute_layer,
     make_l4_yaml,
     make_l4_yaml_no_benchmark,
@@ -26,7 +26,7 @@ from macroforecast.layers.l4_models.schema import (
     validate_recipe,
 )
 from macroforecast.core.ops import get_op, list_ops
-from macroforecast.layers.l4_models.ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES, get_family_status
+from macroforecast.models.ops import FUTURE_MODEL_FAMILIES, OPERATIONAL_MODEL_FAMILIES, get_family_status
 from macroforecast.core.validator import validate_dag
 
 
@@ -34,7 +34,10 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _example(name: str) -> str:
-    return (ROOT / "examples" / "recipes" / name).read_text()
+    path = ROOT / "examples" / "recipes" / name
+    if not path.exists():
+        path = ROOT / "docs" / "recipe-snippets" / name
+    return path.read_text()
 
 
 def test_l4_minimal_ridge_parses():
@@ -195,7 +198,7 @@ def test_l4_bivariate_ardl_requires_exactly_2():
 
 def test_l4_regime_wrapper_requires_l1_regime_active():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     regime_definition: none
 4_forecasting_model:
@@ -226,7 +229,7 @@ def test_l4_three_sinks_in_layer_sinks():
 
 def test_l4_registered_with_spec_correct_class():
     from macroforecast.core.layers.registry import get_layer
-    from macroforecast.layers.l4_models.schema import L4ForecastingModel
+    from macroforecast.models.schema import L4ForecastingModel
 
     spec = get_layer("l4")
     assert spec.cls is L4ForecastingModel
@@ -321,7 +324,7 @@ def test_l4_cv_optimized_default_window():
 
 def test_l4_horizon_in_l1_horizon_set():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     horizon_set: custom_list
   leaf_config:

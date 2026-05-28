@@ -29,7 +29,7 @@ from macroforecast.core.runtime import _build_l4_model
 
 def _pyearth_available() -> bool:
     try:
-        import pyearth  # noqa: F401
+        from pyearth import Earth  # noqa: F401
         return True
     except ImportError:
         return False

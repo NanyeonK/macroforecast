@@ -434,7 +434,7 @@ class TestHolidayTransform:
 
 class TestOD3AliasOpPageFalse:
     def test_OD_3_aliases_have_op_page_false(self):
-        from tools.docgen.option_docs.l3 import (
+        from macroforecast.features.option_docs import (
             _OP_VARIMAX_ROTATION,
             _OP_KERNEL,
             _OP_NYSTROEM_FEATURES,

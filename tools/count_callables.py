@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Count standalone callables in macroforecast.functions.
 
-Run after any API change to keep docs/reference/api/standalone_functions/index.md
+Run after any API change to keep docs/reference/standalone_functions/index.md
 accurate.
 
 Usage:

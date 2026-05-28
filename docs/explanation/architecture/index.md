@@ -5,7 +5,7 @@ and the design rationale behind each boundary. Read them to understand the canon
 contracts before authoring recipes, extending the runtime, or auditing manifests.
 
 > **Looking for option definitions?** Use the
-> [Encyclopedia](../../reference/encyclopedia/index.md) — one page per axis option
+> [Encyclopedia](../../reference/index.md) — one page per axis option
 > with description, when to use, when NOT to use, and references.
 
 ## Canonical layer flow
@@ -67,11 +67,10 @@ layer8
 :maxdepth: 1
 :caption: L0 sub-pages
 
-layer0_study_scope
+layer0_derived_study_scope
 layer0_failure_policy
 layer0_reproducibility_policy
 layer0_compute_policy
-layer0_axis_type
 ```
 
 ```{toctree}

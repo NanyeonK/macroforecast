@@ -25,7 +25,7 @@ Rules:
 ## Recipe snippet for a CSV file
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -56,7 +56,7 @@ For quick tests or reproducible examples, embed the panel directly in the recipe
 This removes any dependency on external files:
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -81,7 +81,7 @@ To run FRED-MD plus your own extra series, use `panel_composition: official_plus
 The `custom_merge_rule` controls how the two panels are aligned:
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     panel_composition: official_plus_custom
     frequency: monthly

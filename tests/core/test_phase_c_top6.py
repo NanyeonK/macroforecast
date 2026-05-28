@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 import macroforecast
-from macroforecast.layers.l4_models.paper_methods import (
+from macroforecast.models.paper_methods import (
     bai_ng_corrected_factor_ar,
     ets,
     garch_volatility,
@@ -1609,7 +1609,7 @@ class TestD2aM3NSlicesDefault:
 
     def test_ssuff_n_slices_default_is_10_schema(self):
         """params_schema for sliced_inverse_regression has default 10."""
-        import macroforecast.layers.l3_features.ops  # noqa: F401 — ensures op is registered
+        import macroforecast.features.ops  # noqa: F401 — ensures op is registered
         from macroforecast.core.ops import get_op
 
         op_meta = get_op("sliced_inverse_regression")

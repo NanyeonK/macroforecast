@@ -26,7 +26,7 @@ from macroforecast.core.runtime import (
     _TorchSequenceModel,
     _HemisphereNN,
 )
-from macroforecast.layers.l4_models import (
+from macroforecast.models import (
     SlowGrowingTree,
     QuantileRegressionForest,
     Bagging,
@@ -75,7 +75,7 @@ class TestT1ImportSurface:
     """All 8 new classes are importable from mf.models."""
 
     def test_tree_classes_importable(self) -> None:
-        """Tree-family public classes importable from macroforecast.layers.l4_models."""
+        """Tree-family public classes importable from macroforecast.models."""
         assert SlowGrowingTree is not None
         assert QuantileRegressionForest is not None
         assert Bagging is not None
@@ -84,7 +84,7 @@ class TestT1ImportSurface:
         assert KNN is not None
 
     def test_neural_classes_importable(self) -> None:
-        """Neural public classes importable from macroforecast.layers.l4_models."""
+        """Neural public classes importable from macroforecast.models."""
         assert SequenceModel is not None
         assert HemisphereNN is not None
 
@@ -98,7 +98,7 @@ class TestT1ImportSurface:
 
     def test_all_8_in_models_all(self) -> None:
         """All 8 new classes appear in mf.models.__all__."""
-        import macroforecast.layers.l4_models as mods
+        import macroforecast.models as mods
         for name in [
             "SlowGrowingTree", "QuantileRegressionForest", "Bagging", "Booging",
             "MacroRandomForest", "KNN", "SequenceModel", "HemisphereNN",

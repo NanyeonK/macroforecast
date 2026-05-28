@@ -21,7 +21,7 @@ import pandas as pd
 import pytest
 
 from macroforecast.core.runtime import _bic_select_k, _midas_lag_stack, _u_midas
-from macroforecast.layers.l4_models.paper_methods import u_midas
+from macroforecast.models.paper_methods import u_midas
 
 import macroforecast
 

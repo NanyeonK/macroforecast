@@ -76,6 +76,8 @@ def register(*entries: OptionDoc) -> None:
         entry = _ensure_quality_floor(raw_entry)
         key = (entry.layer, entry.sublayer, entry.axis, entry.option)
         if key in OPTION_DOCS:
+            if OPTION_DOCS[key] == entry:
+                continue
             raise ValueError(
                 f"duplicate OptionDoc registration for {key!r}; "
                 f"previously registered, now re-registering."
@@ -101,22 +103,26 @@ def _load_layer_modules() -> None:
     calls populate the global registry. Idempotent -- re-importing is a
     no-op because ``register`` rejects duplicate keys."""
 
-    from importlib import import_module
+    from importlib import import_module, reload
+    import sys
 
     for layer_module in (
-        "macroforecast.layers.l0_meta.option_docs",
-        "macroforecast.layers.l1_data.option_docs",
-        "macroforecast.layers.l2_preprocessing.option_docs",
-        "macroforecast.layers.l3_features.option_docs",
-        "macroforecast.layers.l4_models.option_docs",
-        "macroforecast.layers.l5_evaluation.option_docs",
-        "macroforecast.layers.l6_tests.option_docs",
-        "macroforecast.layers.l7_interpretation.option_docs",
-        "macroforecast.layers.l8_output.option_docs",
+        "macroforecast.meta.option_docs",
+        "macroforecast.data.option_docs",
+        "macroforecast.preprocessing.option_docs",
+        "macroforecast.features.option_docs",
+        "macroforecast.models.option_docs",
+        "macroforecast.evaluation.option_docs",
+        "macroforecast.stat_tests.option_docs",
+        "macroforecast.interpretation.option_docs",
+        "macroforecast.output.option_docs",
         "tools.docgen.option_docs.diagnostics",
     ):
         try:
-            import_module(layer_module)
+            cached = layer_module in sys.modules
+            module = import_module(layer_module)
+            if cached:
+                reload(module)
         except ModuleNotFoundError:
             # Layer's docs PR has not landed yet; skip silently. The
             # completeness test catches the gap separately.
