@@ -63,7 +63,7 @@ Standard recession-conditioning studies; comparing models' performance during re
 *NBER-conditioned ridge*
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     regime_definition: external_nber
 

@@ -75,4 +75,4 @@ Compatibility aliases remain available where older recipes used them: `varimax_r
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l3/`](../../reference/l3/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l3/`](../../reference/generated/l3/index.md).

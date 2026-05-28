@@ -18,7 +18,7 @@ recipe. For inline panels, the column name must exist in
 `custom_panel_inline`.
 
 ```yaml
-1_data:
+data:
   fixed_axes: {target_structure: single_target}
   leaf_config:
     target: INDPRO              # required

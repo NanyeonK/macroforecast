@@ -45,7 +45,7 @@ def test_l1_5_axes_not_sweepable():
 
 def test_l1_5_per_regime_split_requires_regime():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         regime_definition: none
     1_5_data_summary:

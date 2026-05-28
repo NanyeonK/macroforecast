@@ -198,7 +198,7 @@ def test_l4_bivariate_ardl_requires_exactly_2():
 
 def test_l4_regime_wrapper_requires_l1_regime_active():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     regime_definition: none
 4_forecasting_model:
@@ -324,7 +324,7 @@ def test_l4_cv_optimized_default_window():
 
 def test_l4_horizon_in_l1_horizon_set():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     horizon_set: custom_list
   leaf_config:

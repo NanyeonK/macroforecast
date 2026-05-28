@@ -70,4 +70,4 @@ Forecast combination belongs in L4 and consumes forecast artifacts:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l4/`](../../reference/l4/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l4/`](../../reference/generated/l4/index.md).

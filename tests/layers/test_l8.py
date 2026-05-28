@@ -161,12 +161,12 @@ def test_l8_latex_paper_export_yaml_parses():
 
 
 def test_l8_state_metrics_inactive_without_fred_sd():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    dataset: fred_md\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, state_metrics]\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    dataset: fred_md\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, state_metrics]\n")
     assert validate_recipe(recipe).has_hard_errors
 
 
 def test_l8_regime_metrics_inactive_without_regime():
-    recipe = parse_recipe_yaml("1_data:\n  fixed_axes:\n    regime_definition: none\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, regime_metrics]\n")
+    recipe = parse_recipe_yaml("data:\n  fixed_axes:\n    regime_definition: none\n8_output:\n  fixed_axes:\n    saved_objects: [forecasts, metrics, ranking, regime_metrics]\n")
     assert validate_recipe(recipe).has_hard_errors
 
 

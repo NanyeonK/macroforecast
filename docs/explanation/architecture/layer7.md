@@ -60,7 +60,7 @@ Outputs:
 
 ## See encyclopedia
 
-For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l7/`](../../reference/l7/index.md).
+For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l7/`](../../reference/generated/l7/index.md).
 
 ## v0.9.3 update
 

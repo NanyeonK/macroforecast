@@ -238,7 +238,7 @@ def _fred_sd_series_metadata(
     return {
         "schema_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
         "contract_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
-        "owner_layer": "1_data_task",
+        "owner_layer": "data_task",
         "dataset": "fred_sd",
         "source_format": source_format,
         "selector": {

@@ -33,12 +33,12 @@ gallery in `examples/recipes/` ships runnable templates including
 study_id: minimal_ridge
 random_seed: 0
 
-1_data:
+data:
   dataset: fred_md
   target: INDPRO
   horizon: 1
 
-2_preprocessing:
+preprocessing:
   transform: difference
   outlier: winsor_1_99
 

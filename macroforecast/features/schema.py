@@ -452,7 +452,7 @@ def _cascade_dependencies(raw: dict[str, Any]) -> dict[str, set[str]]:
 
 
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
-    l1 = root.get("1_data", {}) or {}
+    l1 = root.get("data", {}) or {}
     fixed = l1.get("fixed_axes", {}) or {}
     leaf = l1.get("leaf_config", {}) or {}
     horizons = leaf.get("target_horizons")

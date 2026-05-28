@@ -543,7 +543,7 @@ def _validate_path_average(
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
     context = {
         "regime_definition": (
-            (root.get("1_data", {}) or {}).get("fixed_axes", {}) or {}
+            (root.get("data", {}) or {}).get("fixed_axes", {}) or {}
         ).get("regime_definition", "none")
     }
     for node in (root.get("3_feature_engineering", {}) or {}).get("nodes", ()):

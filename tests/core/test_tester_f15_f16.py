@@ -207,7 +207,7 @@ class TestF16MafPerVariablePca:
                 },
                 "leaf_config": {"random_seed": 42},
             },
-            "1_data": {
+            "data": {
                 "fixed_axes": {
                     "panel_composition": "custom_panel_only",
                     "frequency": "monthly",
@@ -223,7 +223,7 @@ class TestF16MafPerVariablePca:
                     },
                 },
             },
-            "2_preprocessing": {
+            "preprocessing": {
                 "fixed_axes": {
                     "transform_policy": "no_transform",
                     "outlier_policy": "none",

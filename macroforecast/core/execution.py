@@ -33,9 +33,9 @@ L0_KEY = "0_meta"
 # Canonical top-level recipe keys; unknown keys emit UserWarning
 _KNOWN_RECIPE_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
     "0_meta",
-    "1_data",
+    "data",
     "1_5_data_summary",
-    "2_preprocessing",
+    "preprocessing",
     "2_5_pre_post_preprocessing",
     "3_feature_engineering",
     "3_5_feature_diagnostics",
@@ -54,7 +54,7 @@ _KNOWN_RECIPE_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
 # Per-layer known leaf_config keys (non-exhaustive; covers fields the runtime reads)
 _KNOWN_LEAF_CONFIG_KEYS: dict[str, frozenset[str]] = {
     "0_meta": frozenset({"default_profile", "gpu_deterministic", "n_workers", "n_workers_inner", "random_seed", "parallel_unit"}),
-    "1_data": frozenset({
+    "data": frozenset({
         "target", "targets", "dataset", "cache_root", "sample_start_date", "sample_end_date",
         "sample_start_rule", "sample_end_rule", "vintage_policy", "fred_series", "custom_panel_path",
         "custom_panel_format", "frequency", "data_through",
@@ -357,14 +357,14 @@ def _resolve_cache_root(
     Resolution order (first non-None wins):
 
     1. ``explicit`` (the ``cache_root=`` argument to ``execute_recipe``)
-    2. ``recipe['1_data']['leaf_config']['cache_root']`` (recipe-level override)
+    2. ``recipe['data']['leaf_config']['cache_root']`` (recipe-level override)
     3. ``output_directory / '.raw_cache'``
     4. ``None`` (let the raw loader use its package default)
     """
 
     if explicit is not None:
         return Path(explicit)
-    l1 = recipe_root.get("1_data", {}) or {}
+    l1 = recipe_root.get("data", {}) or {}
     leaf = l1.get("leaf_config", {}) or {}
     if "cache_root" in leaf and leaf["cache_root"]:
         return Path(leaf["cache_root"])
@@ -374,10 +374,10 @@ def _resolve_cache_root(
 
 
 def _inject_cache_root(recipe_root: dict[str, Any], cache_root: Path) -> None:
-    """Force ``cache_root`` into ``recipe['1_data']['leaf_config']`` so every
+    """Force ``cache_root`` into ``recipe['data']['leaf_config']`` so every
     materialize_l1 call sees the same directory regardless of cell index."""
 
-    l1 = recipe_root.setdefault("1_data", {})
+    l1 = recipe_root.setdefault("data", {})
     leaf = l1.setdefault("leaf_config", {})
     leaf["cache_root"] = str(cache_root)
 
@@ -905,7 +905,7 @@ def execute_recipe(
         Resolution order:
 
         1. Explicit ``cache_root`` argument (this kwarg)
-        2. ``recipe['1_data']['leaf_config']['cache_root']`` already set in YAML
+        2. ``recipe['data']['leaf_config']['cache_root']`` already set in YAML
         3. ``output_directory / ".raw_cache"`` (when ``output_directory`` given)
         4. The raw loader's package default
 

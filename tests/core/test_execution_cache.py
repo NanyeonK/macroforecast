@@ -36,7 +36,7 @@ def _fred_md_recipe(*, target: str = "y") -> str:
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 0
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -48,7 +48,7 @@ def _fred_md_recipe(*, target: str = "y") -> str:
       date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01, 2020-05-01, 2020-06-01]
       {target}: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
       x: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-2_preprocessing:
+preprocessing:
   fixed_axes: {{transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}}
 3_feature_engineering:
   nodes:
@@ -83,13 +83,13 @@ def _fred_md_recipe(*, target: str = "y") -> str:
 # ---------------------------------------------------------------------------
 
 def test_resolve_cache_root_explicit_wins_over_leaf_config(tmp_path):
-    root = {"1_data": {"leaf_config": {"cache_root": str(tmp_path / "from_recipe")}}}
+    root = {"data": {"leaf_config": {"cache_root": str(tmp_path / "from_recipe")}}}
     explicit = tmp_path / "from_arg"
     assert _resolve_cache_root(root, explicit, None) == explicit
 
 
 def test_resolve_cache_root_leaf_config_wins_over_output_directory(tmp_path):
-    root = {"1_data": {"leaf_config": {"cache_root": str(tmp_path / "from_recipe")}}}
+    root = {"data": {"leaf_config": {"cache_root": str(tmp_path / "from_recipe")}}}
     out = tmp_path / "out"
     assert _resolve_cache_root(root, None, out) == tmp_path / "from_recipe"
 
@@ -136,7 +136,7 @@ def test_execute_recipe_injects_cache_root_into_recipe_for_downstream(tmp_path):
 
     explicit = tmp_path / "shared_raw_cache"
     result = macroforecast.run(_fred_md_recipe(), cache_root=explicit)
-    leaf = result.recipe_root["1_data"]["leaf_config"]
+    leaf = result.recipe_root["data"]["leaf_config"]
     assert leaf["cache_root"] == str(explicit)
 
 
@@ -149,14 +149,14 @@ def test_official_fred_md_with_shared_cache_root_writes_one_artifact(tmp_path):
     shared_cache = tmp_path / "shared"
     shared_cache.mkdir()
     recipe_a = f"""
-1_data:
+data:
   fixed_axes: {{panel_composition: official_only, dataset: fred_md, frequency: monthly}}
   leaf_config:
     target: INDPRO
     local_raw_source: {_FRED_MD_LOCAL}
 """
     recipe_b = f"""
-1_data:
+data:
   fixed_axes: {{panel_composition: official_only, dataset: fred_md, frequency: monthly}}
   leaf_config:
     target: INDPRO
@@ -187,7 +187,7 @@ def test_distinct_cache_roots_are_independent(tmp_path):
     cache_a.mkdir()
     cache_b.mkdir()
     recipe = f"""
-1_data:
+data:
   fixed_axes: {{panel_composition: official_only, dataset: fred_md, frequency: monthly}}
   leaf_config:
     target: INDPRO

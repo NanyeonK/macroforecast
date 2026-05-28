@@ -127,7 +127,7 @@ recipe = """
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 42
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly

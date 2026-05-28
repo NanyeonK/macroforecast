@@ -24,7 +24,7 @@ RECIPE = """
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 1989  # Hamilton (1989) MS year, in honour of v0.2 #195
-1_data:
+data:
   fixed_axes:
     panel_composition: official_only
     dataset: fred_md
@@ -36,7 +36,7 @@ RECIPE = """
     sample_end_rule: latest_available
   leaf_config:
     target: INDPRO
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: apply_official_tcode
     outlier_policy: mccracken_ng_iqr

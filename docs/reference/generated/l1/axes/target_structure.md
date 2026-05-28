@@ -44,7 +44,7 @@ Default. Any standard forecasting benchmark.
 *Forecast CPI inflation*
 
 ```yaml
-1_data:
+data:
   leaf_config:
     target: CPIAUCSL
 

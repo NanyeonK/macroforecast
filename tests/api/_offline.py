@@ -37,7 +37,7 @@ def install_custom_panel(experiment: "mf.Experiment", *, n: int = 24, target: st
 
     panel = _custom_panel(n=n)
     recipe = experiment._builder._recipe
-    recipe["1_data"] = {
+    recipe["data"] = {
         "fixed_axes": {
             "panel_composition": "custom_panel_only",
             "frequency": "monthly",

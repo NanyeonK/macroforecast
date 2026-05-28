@@ -300,7 +300,7 @@ def _validate_values(resolved: L8ResolvedAxes, leaf: dict[str, Any], context: di
 
 
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
-    l1 = root.get("1_data", {}) or {}
+    l1 = root.get("data", {}) or {}
     l1_fixed = l1.get("fixed_axes", {}) or {}
     l4 = root.get("4_forecasting_model", {}) or {}
     l4_nodes = l4.get("nodes", ()) or ()

@@ -24,6 +24,14 @@ from .feature_blocks import (
     validate_feature_combiner_callable_result,
 )
 from .target_scale import TARGET_SCALE_CONTRACT_VERSION, build_target_scale_contract
+from .schema import (
+    DEFAULT_AXES,
+    L2_AXIS_NAMES,
+    PREPROCESSING_BLOCK_KEY,
+    build_preprocessing_block,
+    configure,
+    preprocessing,
+)
 from .types import (
     AdditionalPreprocessing,
     DimensionalityReductionPolicy,
@@ -57,6 +65,12 @@ __all__ = [
     "preprocess_summary",
     "preprocess_to_dict",
     "build_target_scale_contract",
+    "preprocessing",
+    "configure",
+    "build_preprocessing_block",
+    "PREPROCESSING_BLOCK_KEY",
+    "DEFAULT_AXES",
+    "L2_AXIS_NAMES",
     "PreprocessContractError",
     "PreprocessValidationError",
     "CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION",

@@ -418,7 +418,7 @@ def test_R1_tutorial01_first_block_not_yaml() -> None:
     blocks = _extract_python_blocks(TUT01)
     assert blocks, "No Python blocks found in tutorial 01"
     first = blocks[0]
-    assert "0_meta:" not in first and "1_data:" not in first, (
+    assert "0_meta:" not in first and "data:" not in first, (
         f"First code block contains YAML keys:\n{first[:200]}"
     )
 
@@ -436,7 +436,7 @@ def test_R2_tutorial03_first_class_uses_baseestimator() -> None:
 
 def test_R3_tutorial02_minimal_yaml() -> None:
     """R3: Tutorial 02 must have fewer than 25 lines with YAML recipe keys."""
-    yaml_keys = ["fixed_axes:", "leaf_config:", "1_data:", "4_forecasting_model:"]
+    yaml_keys = ["fixed_axes:", "leaf_config:", "data:", "4_forecasting_model:"]
     lines = TUT02.read_text(encoding="utf-8").splitlines()
     count = sum(1 for line in lines if any(k in line for k in yaml_keys))
     assert count < 25, (
@@ -497,7 +497,7 @@ def test_T_first_h2_no_recipe_content(tutorial_path: Path) -> None:
     first_h2_start = h2_positions[0]
     end = h2_positions[1] if len(h2_positions) > 1 else len(text)
     first_section = text[first_h2_start:end]
-    bad_patterns = ["mf.run(", "mf.recipes.run(", "fixed_axes:", "leaf_config:", "1_data:", "4_forecasting_model:"]
+    bad_patterns = ["mf.run(", "mf.recipes.run(", "fixed_axes:", "leaf_config:", "data:", "4_forecasting_model:"]
     found = [p for p in bad_patterns if p in first_section]
     assert not found, (
         f"{tutorial_path.name}: first H2 section contains recipe-first patterns: {found}"

@@ -31,7 +31,7 @@ RECIPES_DIR = REPO_ROOT / "examples" / "recipes"
 
 _NEW_LAYER_KEYS = {
     # Main 9 layers
-    "0_meta", "1_data", "2_preprocessing", "3_feature_engineering",
+    "0_meta", "data", "preprocessing", "3_feature_engineering",
     "4_forecasting_model", "5_evaluation", "6_statistical_tests",
     "7_interpretation", "8_output",
     # Diagnostic layers (canonical recipe keys -- match the runtime's

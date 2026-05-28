@@ -43,10 +43,9 @@ from .defaults import (
 
 __all__ = ["Experiment", "ForecastResult", "forecast"]
 
-# v0.8.5: option lists shared with the L1 / L2 schema. Kept in sync with
-# ``macroforecast.core.layers.l1`` (state / variable groups) and ``l2``
-# (mixed_frequency_representation). The .use_* validators consult these
-# tuples so a typo on the user side raises a clear ValueError.
+# v0.8.5: option lists shared with data/preprocessing recipe authoring.
+# The .use_* validators consult these tuples so a typo on the user side raises
+# a clear ValueError.
 _FRED_SD_STATE_GROUP_OPTIONS: tuple[str, ...] = (
     "all_states",
     "census_region_northeast",

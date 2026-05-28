@@ -241,7 +241,7 @@ def test_l3_y_final_must_be_series():
 
 def test_l3_horizon_must_be_in_l1_horizon_set():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     horizon_set: custom_list
   leaf_config:
@@ -253,7 +253,7 @@ def test_l3_horizon_must_be_in_l1_horizon_set():
 
 def test_l3_l1_regime_metadata_required_when_regime_indicator_used():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     regime_definition: none
 3_feature_engineering:

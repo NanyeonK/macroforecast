@@ -31,6 +31,7 @@ L2_AXIS_NAMES: tuple[str, ...] = (
     "frame_edge_policy",
 )
 
+PREPROCESSING_BLOCK_KEY = "preprocessing"
 FRED_SD_DATASETS = frozenset({"fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"})
 ALL_SWEEPABLE_AXES = frozenset(L2_AXIS_NAMES)
 
@@ -49,6 +50,91 @@ DEFAULT_AXES: dict[str, Any] = {
 }
 
 PIPELINE_STEPS: tuple[str, ...] = ("freq_alignment", "transform", "outlier_handle", "imputation", "frame_edge")
+
+
+def preprocessing(
+    *,
+    sd_series_frequency_filter: str | None = None,
+    mixed_frequency_representation: str | None = None,
+    quarterly_to_monthly_policy: str | None = None,
+    monthly_to_quarterly_policy: str | None = None,
+    transform_policy: str | None = None,
+    sd_tcode_policy: str | None = None,
+    outlier_policy: str | None = None,
+    outlier_action: str | None = None,
+    imputation_policy: str | None = None,
+    imputation_temporal_rule: str | None = None,
+    frame_edge_policy: str | None = None,
+    **leaf_config: Any,
+) -> dict[str, dict[str, Any]]:
+    """Return a validated preprocessing recipe block.
+
+    This is the callable authoring surface for the semantic ``preprocessing``
+    YAML block. It builds the same shape that YAML authoring uses; it does not
+    load data or execute cleaning.
+    """
+
+    block = build_preprocessing_block(
+        sd_series_frequency_filter=sd_series_frequency_filter,
+        mixed_frequency_representation=mixed_frequency_representation,
+        quarterly_to_monthly_policy=quarterly_to_monthly_policy,
+        monthly_to_quarterly_policy=monthly_to_quarterly_policy,
+        transform_policy=transform_policy,
+        sd_tcode_policy=sd_tcode_policy,
+        outlier_policy=outlier_policy,
+        outlier_action=outlier_action,
+        imputation_policy=imputation_policy,
+        imputation_temporal_rule=imputation_temporal_rule,
+        frame_edge_policy=frame_edge_policy,
+        **leaf_config,
+    )
+    report = validate_layer(block)
+    if report.has_hard_errors:
+        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
+    return {PREPROCESSING_BLOCK_KEY: block}
+
+
+def configure(**kwargs: Any) -> dict[str, dict[str, Any]]:
+    """Alias for :func:`preprocessing`."""
+
+    return preprocessing(**kwargs)
+
+
+def build_preprocessing_block(
+    *,
+    sd_series_frequency_filter: str | None = None,
+    mixed_frequency_representation: str | None = None,
+    quarterly_to_monthly_policy: str | None = None,
+    monthly_to_quarterly_policy: str | None = None,
+    transform_policy: str | None = None,
+    sd_tcode_policy: str | None = None,
+    outlier_policy: str | None = None,
+    outlier_action: str | None = None,
+    imputation_policy: str | None = None,
+    imputation_temporal_rule: str | None = None,
+    frame_edge_policy: str | None = None,
+    **leaf_config: Any,
+) -> dict[str, Any]:
+    """Build a preprocessing block body without the top-level key."""
+
+    axis_values: dict[str, Any | None] = {
+        "sd_series_frequency_filter": sd_series_frequency_filter,
+        "mixed_frequency_representation": mixed_frequency_representation,
+        "quarterly_to_monthly_policy": quarterly_to_monthly_policy,
+        "monthly_to_quarterly_policy": monthly_to_quarterly_policy,
+        "transform_policy": transform_policy,
+        "sd_tcode_policy": sd_tcode_policy,
+        "outlier_policy": outlier_policy,
+        "outlier_action": outlier_action,
+        "imputation_policy": imputation_policy,
+        "imputation_temporal_rule": imputation_temporal_rule,
+        "frame_edge_policy": frame_edge_policy,
+    }
+    fixed_axes = {key: value for key, value in axis_values.items() if value is not None}
+    block: dict[str, Any] = {"fixed_axes": fixed_axes}
+    if leaf_config:
+        block["leaf_config"] = dict(leaf_config)
+    return block
 
 
 class L2ResolvedAxes(dict):
@@ -83,11 +169,11 @@ def parse_layer_yaml(yaml_text: str, layer_id: Literal["l2"] = "l2") -> Any:
     from macroforecast.core.yaml import LayerYamlSpec, parse_recipe_yaml
 
     root = parse_recipe_yaml(yaml_text)
-    raw = root.get("2_preprocessing", {})
+    raw = root.get(PREPROCESSING_BLOCK_KEY, {})
     if raw is None:
         raw = {}
     if not isinstance(raw, dict):
-        raise ValueError("2_preprocessing: layer YAML must be a mapping")
+        raise ValueError("preprocessing: layer YAML must be a mapping")
     return LayerYamlSpec(layer_id="l2", raw_yaml=raw, enabled=bool(raw.get("enabled", True)))
 
 
@@ -291,8 +377,8 @@ def validate_recipe(recipe_yaml: dict[str, Any] | str) -> Any:
     root = parse_recipe_yaml(recipe_yaml) if isinstance(recipe_yaml, str) else recipe_yaml
     l1_context = _l1_context_from_recipe(root)
     report = ValidationReport()
-    if "2_preprocessing" in root:
-        report = report.extend(validate_layer(root["2_preprocessing"], l1_context=l1_context).issues)
+    if PREPROCESSING_BLOCK_KEY in root:
+        report = report.extend(validate_layer(root[PREPROCESSING_BLOCK_KEY], l1_context=l1_context).issues)
     return report
 
 
@@ -555,7 +641,7 @@ def _step_gates(step_id: str) -> tuple[GatePredicate, ...]:
 
 
 def _l1_context_from_recipe(root: dict[str, Any]) -> dict[str, Any]:
-    l1 = root.get("1_data", {}) or {}
+    l1 = root.get("data", {}) or {}
     fixed = l1.get("fixed_axes", {}) or {}
     dataset = fixed.get("dataset", "fred_md")
     frequency = fixed.get("frequency")

@@ -21,7 +21,7 @@ recipe = """
   leaf_config:
     random_seed: 0
 
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -45,7 +45,7 @@ recipe = """
          5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0,
          10.5, 11.0, 11.5, 12.0]
 
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none

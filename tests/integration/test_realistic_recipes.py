@@ -35,7 +35,7 @@ def _custom_panel_recipe(target: str, n_lag: int = 4, family: str = "ridge") -> 
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 13
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -45,7 +45,7 @@ def _custom_panel_recipe(target: str, n_lag: int = 4, family: str = "ridge") -> 
     target_horizons: [1]
     custom_source_path: {_FIXTURE}
     date_column: sasdate
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: mccracken_ng_iqr

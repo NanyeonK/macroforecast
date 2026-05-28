@@ -344,11 +344,11 @@ def build_default_recipe_dict(
                 "random_seed": int(random_seed),
             },
         },
-        "1_data": {
+        "data": {
             "fixed_axes": layer1_fixed_axes,
             "leaf_config": data_leaf,
         },
-        "2_preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
+        "preprocessing": {"fixed_axes": dict(DEFAULT_PREPROCESSING_AXES)},
         "4_forecasting_model": training_block,
         "5_evaluation": {"fixed_axes": {"primary_metric": primary_metric}},
         "6_statistical_tests": {"fixed_axes": {}},

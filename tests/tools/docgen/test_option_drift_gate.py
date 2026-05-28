@@ -29,7 +29,7 @@ import pytest
 
 # ─── Repo paths ────────────────────────────────────────────────────────────────
 REPO_ROOT = Path(__file__).parents[3]
-ENC_ROOT = REPO_ROOT / "docs" / "reference" / "encyclopedia"
+ENC_ROOT = REPO_ROOT / "docs" / "reference" / "generated"
 
 
 # ─── Helpers ───────────────────────────────────────────────────────────────────

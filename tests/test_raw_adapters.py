@@ -7,7 +7,9 @@ import pandas as pd
 from macroforecast.data import (
     RawLoadResult,
     load_fred_md,
-    load_fred_qd,
+    load_fred_md_result,
+    load_fred_qd_result,
+    metadata,
     parse_fred_csv,
 )
 
@@ -58,8 +60,11 @@ def test_parse_fred_qd_ignores_factors_row(tmp_path: Path) -> None:
 
 def test_load_fred_md_from_fixture_copy(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_md_sample.csv"
-    result = load_fred_md(local_source=fixture, cache_root=tmp_path)
+    frame = load_fred_md(local_source=fixture, cache_root=tmp_path)
+    result = load_fred_md_result(local_source=fixture, cache_root=tmp_path)
 
+    assert isinstance(frame, pd.DataFrame)
+    assert metadata(frame)["dataset"] == "fred_md"
     assert isinstance(result, RawLoadResult)
     assert result.dataset_metadata.dataset == "fred_md"
     assert result.dataset_metadata.frequency == "monthly"
@@ -69,7 +74,7 @@ def test_load_fred_md_from_fixture_copy(tmp_path: Path) -> None:
 
 def test_load_fred_qd_from_fixture_copy(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_qd_sample.csv"
-    result = load_fred_qd(local_source=fixture, cache_root=tmp_path)
+    result = load_fred_qd_result(local_source=fixture, cache_root=tmp_path)
 
     assert isinstance(result, RawLoadResult)
     assert result.dataset_metadata.dataset == "fred_qd"

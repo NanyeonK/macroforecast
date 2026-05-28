@@ -188,4 +188,4 @@ layer0_compute_policy
 
 ## Reference
 
-For the full per-axis and per-option catalogue, see [`reference/l0`](../../reference/l0/index.md).
+For the full per-axis and per-option catalogue, see [`generated/l0`](../../reference/generated/l0/index.md).

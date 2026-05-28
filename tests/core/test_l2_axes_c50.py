@@ -29,7 +29,7 @@ def test_l2_chow_lin_now_accepted():
     # Provide the L2 layer with fred_md+fred_sd context so the frequency gate
     # activates. The test mirrors Scenario 2.1 from test-spec.md.
     yaml_text = """
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         quarterly_to_monthly_policy: chow_lin
         sd_series_frequency_filter: both
@@ -145,7 +145,7 @@ def test_l2_keep_with_indicator_now_accepted():
     from macroforecast.preprocessing.schema import parse_layer_yaml, validate_layer
 
     yaml_text = """
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         outlier_action: keep_with_indicator
     """

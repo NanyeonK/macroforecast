@@ -249,7 +249,7 @@ def make_recipe_with_l3_metadata() -> dict[str, Any]:
 
 
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
-    l1_fixed = ((root.get("1_data", {}) or {}).get("fixed_axes", {}) or {})
+    l1_fixed = ((root.get("data", {}) or {}).get("fixed_axes", {}) or {})
     l4_nodes = ((root.get("4_forecasting_model", {}) or {}).get("nodes", ()) or ())
     has_benchmark = any(node.get("is_benchmark") for node in l4_nodes if isinstance(node, dict))
     return {

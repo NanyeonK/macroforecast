@@ -3,6 +3,7 @@ from macroforecast.preprocessing.schema import (
     normalize_to_dag_form,
     parse_layer_yaml,
     parse_recipe_yaml,
+    preprocessing,
     resolve_axes,
     topological_order,
     validate_layer,
@@ -11,7 +12,7 @@ from macroforecast.preprocessing.schema import (
 
 
 def test_l2_minimal_yaml_parses_to_mccracken_ng_path():
-    yaml_text = "2_preprocessing:\n  fixed_axes: {}"
+    yaml_text = "preprocessing:\n  fixed_axes: {}"
     layer = parse_layer_yaml(yaml_text, "l2")
     resolved = resolve_axes(normalize_to_dag_form(layer, "l2"))
     assert resolved["transform_policy"] == "apply_official_tcode"
@@ -19,6 +20,19 @@ def test_l2_minimal_yaml_parses_to_mccracken_ng_path():
     assert resolved["outlier_action"] == "flag_as_nan"
     assert resolved["imputation_policy"] == "em_factor"
     assert resolved["frame_edge_policy"] == "truncate_to_balanced"
+
+
+def test_l2_callable_preprocessing_block_matches_yaml_key():
+    block = preprocessing(
+        transform_policy="no_transform",
+        outlier_policy="none",
+        imputation_policy="none_propagate",
+    )
+    assert set(block) == {"preprocessing"}
+    fixed = block["preprocessing"]["fixed_axes"]
+    assert fixed["transform_policy"] == "no_transform"
+    assert fixed["outlier_policy"] == "none"
+    assert fixed["imputation_policy"] == "none_propagate"
 
 
 def test_l2_no_scaling_axis_exists():
@@ -30,7 +44,7 @@ def test_l2_no_scaling_axis_exists():
 
 def test_l2_full_sample_once_rejected_for_imputation():
     yaml_text = """
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         imputation_temporal_rule: full_sample_once
     """
@@ -43,11 +57,11 @@ def test_l2_chow_lin_now_operational():
     # C50: chow_lin is now operational. The validator must accept it
     # without emitting the "future" rejection message.
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         dataset: fred_md+fred_sd
         frequency: monthly
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         sd_series_frequency_filter: both
         quarterly_to_monthly_policy: chow_lin
@@ -60,7 +74,7 @@ def test_l2_chow_lin_now_operational():
 def test_l2_keep_with_indicator_now_operational():
     # C50: keep_with_indicator is now operational. The validator must accept it.
     yaml_text = """
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         outlier_action: keep_with_indicator
     """
@@ -73,10 +87,10 @@ def test_l2_keep_with_indicator_now_operational():
 
 def test_l2_a_inactive_when_no_fred_sd():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         dataset: fred_md
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         sd_series_frequency_filter: both
     """
@@ -87,11 +101,11 @@ def test_l2_a_inactive_when_no_fred_sd():
 
 def test_l2_a_quarterly_to_monthly_only_active_for_monthly_frequency():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         dataset: fred_qd+fred_sd
         frequency: quarterly
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         quarterly_to_monthly_policy: step_backward
     """
@@ -101,7 +115,7 @@ def test_l2_a_quarterly_to_monthly_only_active_for_monthly_frequency():
 
 
 def test_l2_pipeline_order_in_dag():
-    yaml_text = "2_preprocessing:\n  fixed_axes: {}"
+    yaml_text = "preprocessing:\n  fixed_axes: {}"
     layer = parse_layer_yaml(yaml_text, "l2")
     dag = normalize_to_dag_form(layer, "l2")
     order = topological_order(dag)
@@ -114,7 +128,7 @@ def test_l2_pipeline_order_in_dag():
 
 def test_l2_replace_with_cap_value_requires_winsorize():
     yaml_text = """
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         outlier_policy: mccracken_ng_iqr
         outlier_action: replace_with_cap_value
@@ -126,7 +140,7 @@ def test_l2_replace_with_cap_value_requires_winsorize():
 
 def test_l2_custom_tcode_requires_map():
     yaml_text = """
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: custom_tcode
     """
@@ -150,14 +164,14 @@ def test_l2_registered_with_spec_correct_class():
 
 def test_l2_only_reads_l1_data_definition_not_regime():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         regime_definition: external_nber
-    2_preprocessing:
+    preprocessing:
       fixed_axes: {}
     """
     recipe = parse_recipe_yaml(yaml_text)
-    dag = normalize_to_dag_form(recipe["2_preprocessing"], "l2")
+    dag = normalize_to_dag_form(recipe["preprocessing"], "l2")
     sources = [node for node in dag.nodes.values() if node.type == "source"]
     sink_refs = [source.selector.sink_name for source in sources]
     assert "l1_data_definition_v1" in sink_refs

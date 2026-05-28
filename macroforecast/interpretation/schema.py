@@ -332,8 +332,8 @@ def _validate_grouping(node: dict[str, Any], context: dict[str, Any]) -> list[An
 
 
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
-    l1_fixed = ((root.get("1_data", {}) or {}).get("fixed_axes", {}) or {})
-    l1_leaf = ((root.get("1_data", {}) or {}).get("leaf_config", {}) or {})
+    l1_fixed = ((root.get("data", {}) or {}).get("fixed_axes", {}) or {})
+    l1_leaf = ((root.get("data", {}) or {}).get("leaf_config", {}) or {})
     l6 = root.get("6_statistical_tests", {}) or {}
     l6d = ((l6.get("sub_layers", {}) or {}).get("L6_D_multiple_model", {}) or {})
     return {

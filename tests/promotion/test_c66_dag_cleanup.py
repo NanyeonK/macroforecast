@@ -389,7 +389,7 @@ def test_t7_api_docs_no_dag() -> None:
 
 def test_t7_encyclopedia_l1_no_dag() -> None:
     """T7: docs/reference/l1/ must have no standalone DAG/dag."""
-    l1_dir = REPO_ROOT / "docs" / "reference" / "l1"
+    l1_dir = REPO_ROOT / "docs" / "reference" / "generated" / "l1"
     failures = []
     for md_file in l1_dir.rglob("*.md"):
         matches = _file_dag_matches(md_file)
@@ -400,7 +400,7 @@ def test_t7_encyclopedia_l1_no_dag() -> None:
 
 def test_t7_encyclopedia_l8_no_dag() -> None:
     """T7: docs/reference/l8/ must have no standalone DAG/dag."""
-    l8_dir = REPO_ROOT / "docs" / "reference" / "l8"
+    l8_dir = REPO_ROOT / "docs" / "reference" / "generated" / "l8"
     failures = []
     for md_file in l8_dir.rglob("*.md"):
         matches = _file_dag_matches(md_file)
@@ -425,7 +425,7 @@ def test_t7_public_api_md_no_dag() -> None:
 
 def test_t8a_l7_importance_dag_body_preserved() -> None:
     """T8-a: L7_A_importance_dag_body frozen field name must still appear in l7/index.md."""
-    f = REPO_ROOT / "docs" / "reference" / "l7" / "index.md"
+    f = REPO_ROOT / "docs" / "reference" / "generated" / "l7" / "index.md"
     content = f.read_text(encoding="utf-8")
     assert "L7_A_importance_dag_body" in content, (
         "Frozen schema field L7_A_importance_dag_body was incorrectly renamed in l7/index.md"
@@ -448,7 +448,7 @@ def test_t8b_navigator_selected_dag_items_preserved() -> None:
 
 def test_t9a_l3_op_pages_no_dag_boilerplate() -> None:
     """T9-a: L3 op pages must not contain 'feature engineering is a DAG'."""
-    l3_op_dir = REPO_ROOT / "docs" / "reference" / "l3" / "op"
+    l3_op_dir = REPO_ROOT / "docs" / "reference" / "generated" / "l3" / "op"
     failures = []
     for md_file in l3_op_dir.glob("*.md"):
         content = md_file.read_text(encoding="utf-8")
@@ -462,7 +462,7 @@ def test_t9a_l3_op_pages_no_dag_boilerplate() -> None:
 
 def test_t9b_pca_has_pipeline_boilerplate() -> None:
     """T9-b: pca.md must contain new 'feature engineering is a pipeline' boilerplate."""
-    pca_file = REPO_ROOT / "docs" / "reference" / "l3" / "op" / "pca.md"
+    pca_file = REPO_ROOT / "docs" / "reference" / "generated" / "l3" / "op" / "pca.md"
     content = pca_file.read_text(encoding="utf-8")
     assert "feature engineering is a pipeline" in content, (
         "pca.md does not contain new 'feature engineering is a pipeline' boilerplate. "
@@ -472,7 +472,7 @@ def test_t9b_pca_has_pipeline_boilerplate() -> None:
 
 def test_t9c_asymmetric_trim_no_l3_dag_dispatch() -> None:
     """T9-c: asymmetric_trim.md must not contain 'L3 DAG can dispatch'."""
-    f = REPO_ROOT / "docs" / "reference" / "l3" / "op" / "asymmetric_trim.md"
+    f = REPO_ROOT / "docs" / "reference" / "generated" / "l3" / "op" / "asymmetric_trim.md"
     content = f.read_text(encoding="utf-8")
     assert "L3 DAG can dispatch" not in content, (
         "asymmetric_trim.md still contains 'L3 DAG can dispatch'"

@@ -25,7 +25,7 @@ _INLINE_RECIPE = """
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 1
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -41,7 +41,7 @@ _INLINE_RECIPE = """
           1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
       x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0,
            0.3, 0.6, 0.9, 1.2, 1.5, 1.8]
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none

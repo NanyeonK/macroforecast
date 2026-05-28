@@ -142,7 +142,7 @@ _L1A_SOURCE_OFFICIAL_ONLY = _entry(
         CodeExample(
             title="FRED-MD baseline",
             code=(
-                "1_data:\n"
+                "data:\n"
                 "  fixed_axes:\n"
                 "    panel_composition: official_only\n"
                 "    dataset: fred_md\n"
@@ -183,7 +183,7 @@ _L1A_SOURCE_CUSTOM_PANEL = _entry(
         CodeExample(
             title="Inline panel for a unit test",
             code=(
-                "1_data:\n"
+                "data:\n"
                 "  fixed_axes:\n"
                 "    panel_composition: custom_panel_only\n"
                 "  leaf_config:\n"
@@ -224,7 +224,7 @@ _L1A_SOURCE_OFFICIAL_PLUS_CUSTOM = _entry(
         CodeExample(
             title="FRED-MD plus a single proprietary series",
             code=(
-                "1_data:\n"
+                "data:\n"
                 "  fixed_axes:\n"
                 "    panel_composition: official_plus_custom\n"
                 "    dataset: fred_md\n"
@@ -657,7 +657,7 @@ _L1B_TARGET_SINGLE = _entry(
     examples=(
         CodeExample(
             title="Forecast CPI inflation",
-            code="1_data:\n  leaf_config:\n    target: CPIAUCSL\n",
+            code="data:\n  leaf_config:\n    target: CPIAUCSL\n",
         ),
     ),
 )
@@ -1165,7 +1165,7 @@ _L1G_REGIME_NBER = _entry(
         CodeExample(
             title="NBER-conditioned ridge",
             code=(
-                "1_data:\n"
+                "data:\n"
                 "  fixed_axes:\n"
                 "    regime_definition: external_nber\n"
             ),

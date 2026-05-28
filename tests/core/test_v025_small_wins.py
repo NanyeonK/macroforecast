@@ -133,8 +133,8 @@ def test_term_structure_block_spans_short_to_long_end():
 
 def test_saved_objects_derived_minimal_recipe():
     recipe = {
-        "1_data": {},
-        "2_preprocessing": {},
+        "data": {},
+        "preprocessing": {},
         "3_feature_engineering": {},
         "4_forecasting_model": {},
         "5_evaluation": {},
@@ -147,7 +147,7 @@ def test_saved_objects_derived_minimal_recipe():
 
 def test_saved_objects_includes_regime_when_active():
     recipe = {
-        "1_data": {"fixed_axes": {"regime_definition": "external_nber"}},
+        "data": {"fixed_axes": {"regime_definition": "external_nber"}},
     }
     derived = _derive_saved_objects(recipe, upstream_artifacts={})
     assert "regime_metrics" in derived

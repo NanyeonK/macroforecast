@@ -25,7 +25,7 @@ import macroforecast as mf
 # ---------------------------------------------------------------------------
 # Recipe: 2018-01 to 2023-12 inline panel (72 months).
 # sample_start_rule=fixed_date 2020-01-01, sample_end_rule=fixed_date 2022-12-01.
-# Note: sample_start_rule / sample_end_rule belong in 1_data.fixed_axes.
+# Note: sample_start_rule / sample_end_rule belong in data.fixed_axes.
 # ---------------------------------------------------------------------------
 _WINDOWED_RECIPE = """
 0_meta:
@@ -34,7 +34,7 @@ _WINDOWED_RECIPE = """
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 1
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -71,7 +71,7 @@ _WINDOWED_RECIPE = """
            0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1.05, 1.15, 1.25, 1.35,
            0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4,
            0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95, 1.05, 1.15, 1.25, 1.35, 1.45]
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none

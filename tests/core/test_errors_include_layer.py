@@ -1,7 +1,7 @@
 """Cycle 14 L1-1 -- error messages include layer name and recipe key path.
 
 Verifies that:
-1. L1 error for missing target columns includes "[L1/1_data..." prefix.
+1. L1 error for missing target columns includes "[L1/data..." prefix.
 2. L4 error for missing fit_model node includes "[L4/4_forecasting_model..." prefix.
 """
 from __future__ import annotations
@@ -14,14 +14,14 @@ import pytest
 # ---------------------------------------------------------------------------
 
 def test_l1_target_missing_includes_layer_prefix():
-    """L1 'target columns missing' error must include [L1/1_data...] prefix."""
+    """L1 'target columns missing' error must include [L1/data...] prefix."""
     from macroforecast.core.runtime import _validate_targets_present
     import pandas as pd
 
     frame = pd.DataFrame({"x1": [1.0, 2.0]})
     leaf_config = {"target": "NONEXISTENT", "targets": ["NONEXISTENT"]}
     resolved = {}
-    with pytest.raises(ValueError, match=r"\[L1/1_data"):
+    with pytest.raises(ValueError, match=r"\[L1/data"):
         _validate_targets_present(frame, leaf_config, resolved)
 
 

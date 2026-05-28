@@ -208,7 +208,7 @@ def _validate_values(resolved: L1_5ResolvedAxes, context: dict[str, Any]) -> lis
 
 
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
-    l1_axes = ((root.get("1_data") or {}).get("fixed_axes") or {})
+    l1_axes = ((root.get("data") or {}).get("fixed_axes") or {})
     return {"regime_active": l1_axes.get("regime_definition", "none") != "none"}
 
 

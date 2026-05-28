@@ -98,7 +98,7 @@ class _L0(_LayerNamespace):
 
 
 class _L1(_LayerNamespace):
-    layer_key = "1_data"
+    layer_key = "data"
 
     def __call__(
         self,
@@ -170,7 +170,7 @@ class _L1(_LayerNamespace):
 
 
 class _L2(_LayerNamespace):
-    layer_key = "2_preprocessing"
+    layer_key = "preprocessing"
 
     def __call__(self, **axes: Any) -> "_L2":
         return self.set_axis(**axes)
@@ -406,8 +406,8 @@ class RecipeBuilder:
         errors: list[str] = []
         layer_validators = (
             ("0_meta", "macroforecast.meta.schema"),
-            ("1_data", "macroforecast.data.schema"),
-            ("2_preprocessing", "macroforecast.preprocessing.schema"),
+            ("data", "macroforecast.data.config"),
+            ("preprocessing", "macroforecast.preprocessing.schema"),
             ("3_feature_engineering", "macroforecast.features.schema"),
             ("4_forecasting_model", "macroforecast.models.schema"),
             ("5_evaluation", "macroforecast.evaluation.schema"),

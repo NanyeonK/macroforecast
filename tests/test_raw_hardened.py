@@ -8,7 +8,14 @@ from pathlib import Path
 import pytest
 
 from macroforecast.data.cache import atomic_copy_to_cache
-from macroforecast.data import load_fred_md, load_fred_qd, load_fred_sd, parse_fred_csv
+from macroforecast.data import (
+    load_fred_md,
+    load_fred_md_result,
+    load_fred_qd,
+    load_fred_sd,
+    load_fred_sd_result,
+    parse_fred_csv,
+)
 from macroforecast.data.sources.fred_sd import (
     _extract_vintage_xlsx_from_zip,
     _latest_series_url_from_html,
@@ -47,7 +54,7 @@ def test_load_fred_md_uses_local_historical_zip_fallback(tmp_path: Path) -> None
             "2/1/2000,101.0,1010.0,4.1,170.5\n",
         )
 
-    result = load_fred_md(
+    result = load_fred_md_result(
         vintage="2018-02",
         cache_root=tmp_path,
         local_zip_source=zip_path,
@@ -64,7 +71,7 @@ def test_load_fred_md_rejects_bad_vintage_format(tmp_path: Path) -> None:
 
 
 def test_load_fred_sd_accepts_local_csv_fixture_without_excel_extra(tmp_path: Path) -> None:
-    result = load_fred_sd(
+    result = load_fred_sd_result(
         cache_root=tmp_path,
         local_source=FIXTURES / "fred_sd_sample.csv",
     )
@@ -78,7 +85,7 @@ def test_load_fred_sd_accepts_local_csv_fixture_without_excel_extra(tmp_path: Pa
 
 
 def test_load_fred_sd_local_csv_supports_state_variable_filters(tmp_path: Path) -> None:
-    result = load_fred_sd(
+    result = load_fred_sd_result(
         cache_root=tmp_path,
         local_source=FIXTURES / "fred_sd_sample.csv",
         states=["CA"],

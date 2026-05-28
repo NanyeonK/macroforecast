@@ -318,8 +318,8 @@ def make_recipe_with_density_forecast() -> dict[str, Any]:
 
 
 def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
-    l1_fixed = ((root.get("1_data", {}) or {}).get("fixed_axes", {}) or {})
-    l1_leaf = ((root.get("1_data", {}) or {}).get("leaf_config", {}) or {})
+    l1_fixed = ((root.get("data", {}) or {}).get("fixed_axes", {}) or {})
+    l1_leaf = ((root.get("data", {}) or {}).get("leaf_config", {}) or {})
     l4 = root.get("4_forecasting_model", {}) or {}
     l4_nodes = l4.get("nodes", ()) or ()
     benchmark_count = sum(1 for node in l4_nodes if isinstance(node, dict) and node.get("is_benchmark"))

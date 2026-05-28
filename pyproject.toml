@@ -109,7 +109,6 @@ warn_unused_configs = true
 module = [
     "macroforecast.core.layers.l0",
     "macroforecast.meta.schema",
-    "macroforecast.data.schema",
     "macroforecast.diagnostics.data_summary.schema",
     "macroforecast.core.layers.l3",
     "macroforecast.features.schema",

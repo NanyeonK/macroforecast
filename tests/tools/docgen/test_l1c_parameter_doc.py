@@ -115,9 +115,9 @@ def test_l1c_contemporaneous_x_rule_no_params():
 
 
 def test_known_leaf_config_keys_extended():
-    """_KNOWN_LEAF_CONFIG_KEYS['1_data'] includes all 6 L1.C conditional keys."""
+    """_KNOWN_LEAF_CONFIG_KEYS['data'] includes all 6 L1.C conditional keys."""
     from macroforecast.core.execution import _KNOWN_LEAF_CONFIG_KEYS
-    keys = _KNOWN_LEAF_CONFIG_KEYS["1_data"]
+    keys = _KNOWN_LEAF_CONFIG_KEYS["data"]
     expected = {
         "variable_universe_columns",
         "fixed_lag_periods",
@@ -127,7 +127,7 @@ def test_known_leaf_config_keys_extended():
         "winsorize_quantiles",
     }
     missing = expected - keys
-    assert not missing, f"Missing keys in _KNOWN_LEAF_CONFIG_KEYS['1_data']: {missing}"
+    assert not missing, f"Missing keys in _KNOWN_LEAF_CONFIG_KEYS['data']: {missing}"
 
 
 # ---------------------------------------------------------------------------
@@ -184,6 +184,6 @@ def test_l1c_fixed_lag_periods_constraint_is_optional():
 def test_known_leaf_config_keys_includes_c19_followup_keys():
     """_KNOWN_LEAF_CONFIG_KEYS[1_data] includes x_imputation and raw_x_imputation."""
     from macroforecast.core.execution import _KNOWN_LEAF_CONFIG_KEYS
-    keys = _KNOWN_LEAF_CONFIG_KEYS["1_data"]
+    keys = _KNOWN_LEAF_CONFIG_KEYS["data"]
     assert "x_imputation" in keys, "x_imputation missing from _KNOWN_LEAF_CONFIG_KEYS[1_data]"
     assert "raw_x_imputation" in keys, "raw_x_imputation missing from _KNOWN_LEAF_CONFIG_KEYS[1_data]"

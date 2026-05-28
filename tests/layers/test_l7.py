@@ -148,7 +148,7 @@ def test_l7_bvar_pip_rejects_non_bvar():
 
 def test_l7_mccracken_ng_md_groups_requires_fred_md():
     recipe = parse_recipe_yaml(
-        "1_data:\n  fixed_axes:\n    dataset: fred_qd\n"
+        "data:\n  fixed_axes:\n    dataset: fred_qd\n"
         + make_l7_yaml(op="group_aggregate", model_family="xgboost").replace(
             "params: {model_family: xgboost}",
             "params: {grouping: mccracken_ng_md_groups, aggregation: sum}",
@@ -159,7 +159,7 @@ def test_l7_mccracken_ng_md_groups_requires_fred_md():
 
 def test_l7_fred_sd_states_requires_fred_sd():
     recipe = parse_recipe_yaml(
-        "1_data:\n  fixed_axes:\n    dataset: fred_md\n"
+        "data:\n  fixed_axes:\n    dataset: fred_md\n"
         + make_l7_yaml(op="group_aggregate").replace(
             "params: {model_family: xgboost}",
             "params: {grouping: fred_sd_states, aggregation: sum}",
@@ -179,7 +179,7 @@ def test_l7_user_groups_works_in_leaf_config():
 
 def test_l7_theme_block_missing_series_hard_error():
     yaml_text = """
-1_data:
+data:
   fixed_axes:
     variable_universe: explicit_variable_list
   leaf_config:

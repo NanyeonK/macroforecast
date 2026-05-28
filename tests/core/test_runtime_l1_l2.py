@@ -13,7 +13,7 @@ from macroforecast.core.yaml import parse_recipe_yaml
 
 def test_execute_l1_l2_materializes_inline_custom_panel():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         panel_composition: custom_panel_only
         frequency: monthly
@@ -24,7 +24,7 @@ def test_execute_l1_l2_materializes_inline_custom_panel():
           y: [1.0, 2.0, 3.0]
           x1: [10.0, null, 30.0]
           x2: [5.0, 6.0, 7.0]
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: no_transform
         outlier_policy: none
@@ -46,7 +46,7 @@ def test_execute_l1_l2_materializes_inline_custom_panel():
 
 def test_execute_l1_l2_applies_sample_window_and_tcode():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         panel_composition: custom_panel_only
         frequency: monthly
@@ -59,7 +59,7 @@ def test_execute_l1_l2_applies_sample_window_and_tcode():
           date: [2020-01-01, 2020-02-01, 2020-03-01]
           y: [1.0, 2.0, 3.0]
           x1: [10.0, 15.0, 21.0]
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: apply_official_tcode
         outlier_policy: none
@@ -86,7 +86,7 @@ def test_materialize_l1_supports_custom_source_path(tmp_path):
     ).to_csv(path, index=False)
     root = parse_recipe_yaml(
         f"""
-        1_data:
+        data:
           fixed_axes:
             panel_composition: custom_panel_only
             frequency: monthly
@@ -104,7 +104,7 @@ def test_materialize_l1_supports_custom_source_path(tmp_path):
 def test_materialize_l1_supports_official_fred_md_local_source(tmp_path):
     root = parse_recipe_yaml(
         f"""
-        1_data:
+        data:
           fixed_axes:
             panel_composition: official_only
             dataset: fred_md
@@ -129,7 +129,7 @@ def test_materialize_l1_supports_official_fred_md_local_source(tmp_path):
 
 def test_execute_l1_l2_applies_official_fred_md_transform_codes(tmp_path):
     yaml_text = f"""
-    1_data:
+    data:
       fixed_axes:
         panel_composition: official_only
         dataset: fred_md
@@ -138,7 +138,7 @@ def test_execute_l1_l2_applies_official_fred_md_transform_codes(tmp_path):
         target: INDPRO
         local_raw_source: tests/fixtures/fred_md_ar_sample.csv
         cache_root: {tmp_path}
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: apply_official_tcode
         outlier_policy: none
@@ -158,7 +158,7 @@ def test_execute_l1_l2_applies_official_fred_md_transform_codes(tmp_path):
 
 def test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         panel_composition: custom_panel_only
         frequency: monthly
@@ -168,7 +168,7 @@ def test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells():
           date: [2020-01-01, 2020-02-01, 2020-03-01, 2020-04-01]
           y: [1.0, 1.0, 1.0, 1.0]
           x1: [1.0, 2.0, 3.0, 100.0]
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: no_transform
         outlier_policy: winsorize
@@ -190,7 +190,7 @@ def test_execute_l1_l2_winsorize_replace_with_cap_value_counts_capped_cells():
 
 def test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         panel_composition: custom_panel_only
         frequency: monthly
@@ -206,7 +206,7 @@ def test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics():
       fixed_axes:
         summary_metrics: [mean, sd, n_obs, n_missing]
         correlation_view: full_matrix
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: no_transform
         outlier_policy: none
@@ -239,7 +239,7 @@ def test_execute_l1_l2_materializes_l1_5_l2_5_diagnostics():
 
 def test_execute_l1_l2_materializes_disabled_diagnostic_artifact():
     yaml_text = """
-    1_data:
+    data:
       fixed_axes:
         panel_composition: custom_panel_only
         frequency: monthly
@@ -250,7 +250,7 @@ def test_execute_l1_l2_materializes_disabled_diagnostic_artifact():
           y: [1.0, 2.0]
     1_5_data_summary:
       enabled: false
-    2_preprocessing:
+    preprocessing:
       fixed_axes:
         transform_policy: no_transform
         outlier_policy: none
@@ -271,7 +271,7 @@ def test_materialize_l1_loads_fred_sd_from_local_fixture(tmp_path):
     fixtures = Path(__file__).resolve().parent.parent / "fixtures"
     root = parse_recipe_yaml(
         f"""
-        1_data:
+        data:
           fixed_axes:
             panel_composition: official_only
             dataset: fred_sd

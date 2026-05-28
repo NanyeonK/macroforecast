@@ -2,7 +2,7 @@
 
 [Back to reference](index.md)
 
-Curated reference for the importable macroforecast surface. The generated layer pages document recipe axes and options; this page documents Python imports and semantic package ownership.
+Curated reference for the importable macroforecast surface. The generated pages document recipe axes and options; this page documents Python imports and semantic package ownership.
 
 ## Top-level API
 
@@ -24,7 +24,12 @@ Curated reference for the importable macroforecast surface. The generated layer 
 |--------|-------------|
 | `macroforecast.meta.configure(...)` | Build and validate a canonical `0_meta` block. |
 | `macroforecast.meta.l0(...)` | Alias for `configure(...)`; also exported as `macroforecast.l0(...)`. |
-| `macroforecast.meta.build_layer_block(...)` | Internal helper for the body under `0_meta`. |
+| `macroforecast.data.data(...)` | Build and validate the canonical `data` block without loading a dataset. |
+| `macroforecast.data.load_fred_md(...)`, `load_fred_qd(...)`, `load_fred_sd(...)` | Load cached or downloaded official datasets as pandas data frames. |
+| `macroforecast.data.metadata(frame_or_result)` | Return dataset metadata/provenance stored on a loaded frame or raw load result. |
+| `macroforecast.data.load_fred_md_result(...)`, `load_fred_qd_result(...)`, `load_fred_sd_result(...)` | Advanced raw load envelope with metadata, artifact record, and transform codes. |
+| `macroforecast.preprocessing.preprocessing(...)` | Build and validate the canonical `preprocessing` block without executing cleaning. |
+| `macroforecast.preprocessing.configure(...)` | Alias for `preprocessing(...)`. |
 
 ## Submodule Surfaces
 
@@ -32,8 +37,8 @@ Curated reference for the importable macroforecast surface. The generated layer 
 |--------|---------|
 | `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
 | `macroforecast.meta` | L0 study setup, failure policy, reproducibility, and compute policy. |
-| `macroforecast.data` | FRED-MD/QD/SD adapters, vintage manager, manifests, cache helpers. |
-| `macroforecast.preprocessing` | L2 preprocessing schemas, transformations, and contract helpers. |
+| `macroforecast.data` | Data recipe authoring, FRED-MD/QD/SD adapters, vintage manager, manifests, and cache helpers. |
+| `macroforecast.preprocessing` | Preprocessing recipe authoring, cleaning schemas, transformations, and contract helpers. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |
 | `macroforecast.evaluation` | L5 metrics and evaluation ops. |
@@ -48,7 +53,7 @@ Curated reference for the importable macroforecast surface. The generated layer 
 | `macroforecast.feature_selection` | Promoted compatibility namespace for selector classes. |
 | `macroforecast.transforms` | Promoted compatibility namespace for transform callables. |
 
-## Layer Module Ownership
+## Package Ownership
 
 Canonical implementation now lives in semantic packages: `meta`, `data`, `preprocessing`, `features`, `models`, `evaluation`, `stat_tests`, `interpretation`, `output`, and `diagnostics.*`.
 

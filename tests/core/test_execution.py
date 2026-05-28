@@ -16,7 +16,7 @@ _BASE_RECIPE = """
     reproducibility_policy: seeded_reproducible
   leaf_config:
     random_seed: 7
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
     frequency: monthly
@@ -29,7 +29,7 @@ _BASE_RECIPE = """
       y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
       x1: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
       x2: [2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0]
-2_preprocessing:
+preprocessing:
   fixed_axes:
     transform_policy: no_transform
     outlier_policy: none

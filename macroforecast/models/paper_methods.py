@@ -337,8 +337,8 @@ def _base_recipe(
             },
             "leaf_config": {"random_seed": seed},
         },
-        "1_data": _l1_minimal(target, horizon, panel),
-        "2_preprocessing": {
+        "data": _l1_minimal(target, horizon, panel),
+        "preprocessing": {
             "fixed_axes": {
                 "transform_policy": "no_transform",
                 "outlier_policy": "none",

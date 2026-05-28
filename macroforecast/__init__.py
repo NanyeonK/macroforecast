@@ -21,7 +21,8 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.recipes`` -- recipe orchestration namespace; ``mf.run`` /
   ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are aliases here.
 - ``macroforecast.meta`` -- study setup policy and reproducibility schema.
-- ``macroforecast.data`` -- FRED-MD/QD/SD adapters, vintage manager, manifests.
+- ``macroforecast.data`` -- data recipe authoring plus FRED-MD/QD/SD adapters,
+  vintage manager, manifests.
 - ``macroforecast.preprocessing`` -- preprocessing schemas and contract helpers.
 - ``macroforecast.features`` -- feature engineering ops, transforms, selectors.
 - ``macroforecast.models`` -- public model classes, model ops, paper helpers, tuning.

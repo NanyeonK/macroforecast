@@ -50,7 +50,7 @@ Forecasting on non-FRED panels (firm-level data, country-specific series); needs
 *FRED-MD baseline*
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     panel_composition: official_only
     dataset: fred_md
@@ -91,7 +91,7 @@ When McCracken-Ng's curation (t-codes, group tags) is part of the study design -
 *Inline panel for a unit test*
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     panel_composition: custom_panel_only
   leaf_config:
@@ -140,7 +140,7 @@ Pure custom panels (use ``custom_panel_only``); pure official panels (use ``offi
 *FRED-MD plus a single proprietary series*
 
 ```yaml
-1_data:
+data:
   fixed_axes:
     panel_composition: official_plus_custom
     dataset: fred_md

@@ -66,7 +66,7 @@ from tools.docgen.option_docs import OPTION_DOCS
 # From tests/tools/docgen/ we go up three levels to reach the repo root, then
 # descend into docs/reference/.
 # ---------------------------------------------------------------------------
-ENC_ROOT: Path = Path(__file__).parents[3] / "docs" / "reference"
+ENC_ROOT: Path = Path(__file__).parents[3] / "docs" / "reference" / "generated"
 
 
 # ---------------------------------------------------------------------------

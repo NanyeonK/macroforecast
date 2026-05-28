@@ -46,7 +46,7 @@ def test_l0_explicit_overrides():
 def test_l1_fred_md_preset_sets_canonical_axes():
     b = RecipeBuilder()
     b.l1.fred_md(target="CPIAUCSL")
-    l1 = b.build()["1_data"]
+    l1 = b.build()["data"]
     assert l1["fixed_axes"]["dataset"] == "fred_md"
     assert l1["fixed_axes"]["frequency"] == "monthly"
     assert l1["fixed_axes"]["horizon_set"] == "standard_md"
@@ -61,7 +61,7 @@ def test_l1_custom_panel_inlines_data():
     }
     b = RecipeBuilder()
     b.l1.custom_panel(target="y", panel=panel)
-    l1 = b.build()["1_data"]
+    l1 = b.build()["data"]
     assert l1["fixed_axes"]["panel_composition"] == "custom_panel_only"
     assert l1["leaf_config"]["custom_panel_inline"]["y"] == [1.0, 2.0]
 
@@ -73,7 +73,7 @@ def test_l1_custom_panel_inlines_data():
 def test_l2_standard_preset_matches_mccracken_ng_default():
     b = RecipeBuilder()
     b.l2.standard()
-    axes = b.build()["2_preprocessing"]["fixed_axes"]
+    axes = b.build()["preprocessing"]["fixed_axes"]
     assert axes["transform_policy"] == "apply_official_tcode"
     assert axes["outlier_policy"] == "mccracken_ng_iqr"
     assert axes["imputation_policy"] == "em_factor"

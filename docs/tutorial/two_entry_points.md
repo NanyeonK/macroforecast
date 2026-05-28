@@ -89,7 +89,7 @@ Need bit-exact replication across runs?
      |
      v
 Need FRED-MD/QD/SD dataset integration?
-    YES  ->  Recipe pipeline  ->  1_data: {fixed_axes: {dataset: fred_md}}
+    YES  ->  Recipe pipeline  ->  data: {fixed_axes: {dataset: fred_md}}
     NO
      |
      v
