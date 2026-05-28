@@ -5,7 +5,7 @@ This matrix describes current runtime behavior. When option docs and runtime dif
 | Layer | Runtime state |
 | --- | --- |
 | L0 | `fail_fast` / `continue_on_failure`, seeded/exploratory, serial/parallel schema. |
-| L1 | FRED-MD, FRED-QD, FRED-SD, custom inline/path panels, current vintage. `real_time_alfred` is future. |
+| L1 | FRED-MD, FRED-QD, FRED-SD, custom inline/path panels, current vintage. |
 | L2 | Mixed-frequency alignment, transform, outlier, imputation, frame-edge policies. |
 | L3 | Feature pipelines and `target_construction`; `lag` is a universal op now enumerated in `option_docs/l3.py`. |
 | L4 | Model pipeline nodes; 42 documented model options; `ar_p` is the default model constant. |

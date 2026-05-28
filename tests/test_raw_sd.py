@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from macroforecast.data import DataBundle, RawLoadResult, load_fred_sd, load_fred_sd_result, metadata
+from macroforecast.data import DataBundle, load_fred_sd, metadata
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -10,29 +10,26 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def test_load_fred_sd_from_fixture_workbook(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
     bundle = load_fred_sd(local_source=fixture, cache_root=tmp_path)
-    result = load_fred_sd_result(local_source=fixture, cache_root=tmp_path)
 
     assert isinstance(bundle, DataBundle)
     assert metadata(bundle)["dataset"] == "fred_sd"
-    assert isinstance(result, RawLoadResult)
-    assert result.dataset_metadata.dataset == "fred_sd"
-    assert result.dataset_metadata.frequency == "state_monthly"
-    assert result.dataset_metadata.support_tier == "stable"
-    assert result.data.shape[0] > 0
-    assert any(col.startswith("UR_") for col in result.data.columns)
+    assert metadata(bundle)["frequency"] == "state_monthly"
+    assert metadata(bundle)["support_tier"] == "stable"
+    assert bundle.panel.shape[0] > 0
+    assert any(col.startswith("UR_") for col in bundle.panel.columns)
 
 
 def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
-    result = load_fred_sd_result(
+    bundle = load_fred_sd(
         local_source=fixture,
         cache_root=tmp_path,
         variables=["UR"],
         states=["CA", "TX"],
     )
 
-    assert list(result.data.columns) == ["UR_CA", "UR_TX"]
-    report = result.data.attrs["macrocast_reports"]["fred_sd_series_metadata"]
+    assert list(bundle.panel.columns) == ["UR_CA", "UR_TX"]
+    report = bundle.panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]
     assert report["contract_version"] == "fred_sd_series_metadata_v1"
     assert report["selector"] == {"states": ["CA", "TX"], "variables": ["UR"]}
     assert report["series_count"] == 2
@@ -45,13 +42,13 @@ def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
     assert report["series"][0]["source_sheet"] == "UR"
 
 
-def test_load_fred_sd_vintage_is_marked_stable(tmp_path: Path) -> None:
+def test_load_fred_sd_vintage_metadata(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_sd_sample.xlsx"
-    result = load_fred_sd_result(
+    bundle = load_fred_sd(
         vintage="2020-01",
         local_source=fixture,
         cache_root=tmp_path,
     )
 
-    assert result.dataset_metadata.vintage == "2020-01"
-    assert result.dataset_metadata.support_tier == "stable"
+    assert metadata(bundle)["vintage"] == "2020-01"
+    assert metadata(bundle)["support_tier"] == "stable"

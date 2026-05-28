@@ -7,22 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from macroforecast.data.cache import atomic_copy_to_cache
-from macroforecast.data import (
-    load_fred_md,
-    load_fred_md_result,
-    load_fred_qd,
-    load_fred_sd,
-    load_fred_sd_result,
-    parse_fred_csv,
-)
-from macroforecast.data.sources.fred_sd import (
-    _extract_vintage_xlsx_from_zip,
-    _latest_series_url_from_html,
-    _series_xlsx_url,
-    _series_zip_url,
-)
+from macroforecast.data import load_fred_md, load_fred_qd, load_fred_sd, metadata
 from macroforecast.data.errors import RawDownloadError, RawVersionFormatError
+from macroforecast.data.loaders import (
+    _atomic_copy,
+    _extract_vintage_xlsx_from_zip,
+    _fred_sd_series_xlsx_url,
+    _fred_sd_series_zip_url,
+    _latest_series_url_from_html,
+    _parse_fred_csv,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -36,7 +30,7 @@ def test_parse_fred_csv_accepts_official_header_then_transform_layout(tmp_path: 
         "2/1/2000,101.0,4.1\n"
     )
 
-    df, tcodes = parse_fred_csv(path)
+    df, tcodes = _parse_fred_csv(path)
 
     assert list(df.columns) == ["INDPRO", "UNRATE"]
     assert tcodes == {"INDPRO": 5, "UNRATE": 2}
@@ -54,15 +48,15 @@ def test_load_fred_md_uses_local_historical_zip_fallback(tmp_path: Path) -> None
             "2/1/2000,101.0,1010.0,4.1,170.5\n",
         )
 
-    result = load_fred_md_result(
+    bundle = load_fred_md(
         vintage="2018-02",
         cache_root=tmp_path,
         local_zip_source=zip_path,
     )
 
-    assert result.dataset_metadata.dataset == "fred_md"
-    assert result.dataset_metadata.vintage == "2018-02"
-    assert result.data.shape == (2, 4)
+    assert metadata(bundle)["dataset"] == "fred_md"
+    assert metadata(bundle)["vintage"] == "2018-02"
+    assert bundle.panel.shape == (2, 4)
 
 
 def test_load_fred_md_rejects_bad_vintage_format(tmp_path: Path) -> None:
@@ -71,29 +65,29 @@ def test_load_fred_md_rejects_bad_vintage_format(tmp_path: Path) -> None:
 
 
 def test_load_fred_sd_accepts_local_csv_fixture_without_excel_extra(tmp_path: Path) -> None:
-    result = load_fred_sd_result(
+    bundle = load_fred_sd(
         cache_root=tmp_path,
         local_source=FIXTURES / "fred_sd_sample.csv",
     )
 
-    assert result.dataset_metadata.dataset == "fred_sd"
-    assert result.dataset_metadata.frequency == "state_monthly"
-    assert result.artifact.file_format == "csv"
-    assert result.artifact.source_url.endswith("fred_sd_sample.csv")
-    assert list(result.data.columns) == ["BPPRIVSA_CA", "UR_CA", "BPPRIVSA_TX", "UR_TX"]
-    assert result.data.index[0].strftime("%Y-%m") == "2000-01"
+    assert metadata(bundle)["dataset"] == "fred_sd"
+    assert metadata(bundle)["frequency"] == "state_monthly"
+    assert metadata(bundle)["artifact"]["file_format"] == "csv"
+    assert metadata(bundle)["artifact"]["source_url"].endswith("fred_sd_sample.csv")
+    assert list(bundle.panel.columns) == ["BPPRIVSA_CA", "UR_CA", "BPPRIVSA_TX", "UR_TX"]
+    assert bundle.panel.index[0].strftime("%Y-%m") == "2000-01"
 
 
 def test_load_fred_sd_local_csv_supports_state_variable_filters(tmp_path: Path) -> None:
-    result = load_fred_sd_result(
+    bundle = load_fred_sd(
         cache_root=tmp_path,
         local_source=FIXTURES / "fred_sd_sample.csv",
         states=["CA"],
         variables=["UR"],
     )
 
-    assert list(result.data.columns) == ["UR_CA"]
-    assert result.artifact.file_format == "csv"
+    assert list(bundle.panel.columns) == ["UR_CA"]
+    assert metadata(bundle)["artifact"]["file_format"] == "csv"
 
 
 def test_fred_sd_current_source_resolver_prefers_latest_by_series_workbook() -> None:
@@ -109,10 +103,10 @@ def test_fred_sd_current_source_resolver_prefers_latest_by_series_workbook() -> 
 
 
 def test_fred_sd_vintage_source_urls_use_official_by_series_layout() -> None:
-    assert _series_xlsx_url("2026-03").endswith("/fred-sd/series/series-2026-03.xlsx")
-    assert _series_zip_url("2024-12").endswith("/fred-sd/series/fredsd_byseries_2024.zip")
-    assert _series_zip_url("2020-05").endswith("/fred-sd/series/fredsd_byseries_2019_2020.zip")
-    assert _series_zip_url("2005-06").endswith("/fred-sd/series/fredsd_byseries_2005_2006.zip")
+    assert _fred_sd_series_xlsx_url("2026-03").endswith("/fred-sd/series/series-2026-03.xlsx")
+    assert _fred_sd_series_zip_url("2024-12").endswith("/fred-sd/series/fredsd_byseries_2024.zip")
+    assert _fred_sd_series_zip_url("2020-05").endswith("/fred-sd/series/fredsd_byseries_2019_2020.zip")
+    assert _fred_sd_series_zip_url("2005-06").endswith("/fred-sd/series/fredsd_byseries_2005_2006.zip")
 
 
 def test_fred_sd_zip_fallback_extracts_requested_by_series_vintage() -> None:
@@ -127,7 +121,11 @@ def test_fred_sd_zip_fallback_extracts_requested_by_series_vintage() -> None:
     assert workbook == b"PK workbook"
 
 
-def test_load_fred_qd_wraps_download_failure(tmp_path: Path) -> None:
+def test_load_fred_qd_wraps_download_failure(monkeypatch, tmp_path: Path) -> None:
+    def fail_urlopen(*args, **kwargs):
+        raise OSError("network unavailable")
+
+    monkeypatch.setattr("macroforecast.data.loaders.urlopen", fail_urlopen)
     with pytest.raises(RawDownloadError):
         load_fred_qd(vintage="2020-01", cache_root=tmp_path)
 
@@ -138,7 +136,7 @@ def test_atomic_cache_copy_supports_concurrent_writers(tmp_path: Path) -> None:
     source.write_text("sasdate,INDPRO\nTransform:,5\n1/1/2000,100\n")
 
     with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [executor.submit(atomic_copy_to_cache, source, target) for _ in range(16)]
+        futures = [executor.submit(_atomic_copy, source, target) for _ in range(16)]
         for future in futures:
             future.result()
 

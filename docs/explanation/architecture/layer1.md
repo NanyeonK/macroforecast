@@ -105,7 +105,3 @@ layer1_frame_availability
 ## See encyclopedia
 
 For the full per-axis × per-option catalogue (every value with its OptionDoc summary, when-to-use / when-NOT, references), see [`l1/`](../../reference/generated/l1/index.md).
-
-## v0.9.3 update
-
-`vintage_policy: real_time_alfred` promoted to **operational** (was future). Two modes: `alfred_mode=local` (pre-downloaded snapshots from `alfred_snapshot_dir`) and `alfred_mode=api` (ALFRED REST API). See the encyclopedia entry for parameter details.

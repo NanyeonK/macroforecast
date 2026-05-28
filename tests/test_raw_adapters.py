@@ -4,22 +4,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from macroforecast.data import (
-    DataBundle,
-    RawLoadResult,
-    load_fred_md,
-    load_custom_csv,
-    load_fred_md_result,
-    load_fred_qd_result,
-    metadata,
-    parse_fred_csv,
-)
+from macroforecast.data import DataBundle, load_custom_csv, load_fred_md, load_fred_qd, metadata
+from macroforecast.data.loaders import _parse_fred_csv
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_parse_fred_md_sample_csv() -> None:
-    df, tcodes = parse_fred_csv(FIXTURES / "fred_md_sample.csv")
+    df, tcodes = _parse_fred_csv(FIXTURES / "fred_md_sample.csv")
 
     assert isinstance(df, pd.DataFrame)
     assert isinstance(df.index, pd.DatetimeIndex)
@@ -29,7 +21,7 @@ def test_parse_fred_md_sample_csv() -> None:
 
 
 def test_parse_fred_qd_sample_csv() -> None:
-    df, tcodes = parse_fred_csv(FIXTURES / "fred_qd_sample.csv")
+    df, tcodes = _parse_fred_csv(FIXTURES / "fred_qd_sample.csv")
 
     assert isinstance(df.index, pd.DatetimeIndex)
     assert list(df.columns) == ["GDPC1", "CPIAUCSL", "FEDFUNDS"]
@@ -53,7 +45,7 @@ def test_parse_fred_qd_ignores_factors_row(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    df, tcodes = parse_fred_csv(path)
+    df, tcodes = _parse_fred_csv(path)
 
     assert list(df.columns) == ["GDPC1", "PCECC96", "UNRATE"]
     assert df.index[0].strftime("%Y-%m") == "2000-01"
@@ -63,16 +55,14 @@ def test_parse_fred_qd_ignores_factors_row(tmp_path: Path) -> None:
 def test_load_fred_md_from_fixture_copy(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_md_sample.csv"
     bundle = load_fred_md(local_source=fixture, cache_root=tmp_path)
-    result = load_fred_md_result(local_source=fixture, cache_root=tmp_path)
 
     assert isinstance(bundle, DataBundle)
     assert isinstance(bundle.panel, pd.DataFrame)
     assert metadata(bundle)["dataset"] == "fred_md"
-    assert isinstance(result, RawLoadResult)
-    assert result.dataset_metadata.dataset == "fred_md"
-    assert result.dataset_metadata.frequency == "monthly"
-    assert result.artifact.file_format == "csv"
-    assert result.data.index[0].strftime("%Y-%m") == "2000-01"
+    assert metadata(bundle)["frequency"] == "monthly"
+    assert metadata(bundle)["artifact"]["file_format"] == "csv"
+    assert metadata(bundle)["transform_codes"]["INDPRO"] == 5
+    assert bundle.panel.index[0].strftime("%Y-%m") == "2000-01"
 
 
 def test_load_custom_csv_accepts_date_column_selection_and_rename(tmp_path: Path) -> None:
@@ -103,10 +93,10 @@ def test_load_custom_csv_accepts_date_column_selection_and_rename(tmp_path: Path
 
 def test_load_fred_qd_from_fixture_copy(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_qd_sample.csv"
-    result = load_fred_qd_result(local_source=fixture, cache_root=tmp_path)
+    bundle = load_fred_qd(local_source=fixture, cache_root=tmp_path)
 
-    assert isinstance(result, RawLoadResult)
-    assert result.dataset_metadata.dataset == "fred_qd"
-    assert result.dataset_metadata.frequency == "quarterly"
-    assert result.artifact.file_format == "csv"
-    assert result.data.index[-1].strftime("%Y-%m") == "2001-04"
+    assert isinstance(bundle, DataBundle)
+    assert metadata(bundle)["dataset"] == "fred_qd"
+    assert metadata(bundle)["frequency"] == "quarterly"
+    assert metadata(bundle)["artifact"]["file_format"] == "csv"
+    assert bundle.panel.index[-1].strftime("%Y-%m") == "2001-04"

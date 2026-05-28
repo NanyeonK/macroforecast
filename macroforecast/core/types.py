@@ -61,7 +61,7 @@ class L1DataDefinitionArtifact(DataType):
     panel_composition: Literal["official_only", "custom_panel_only", "official_plus_custom"]
     dataset: Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"] | None
     frequency: Literal["monthly", "quarterly"]
-    vintage_policy: Literal["current_vintage", "real_time_alfred"] | None
+    vintage_policy: Literal["current_vintage"] | None
     target_structure: Literal["single_target", "multi_series_target"]
     target: str | None = None
     targets: tuple[str, ...] = ()

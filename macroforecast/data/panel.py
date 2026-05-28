@@ -9,9 +9,6 @@ from typing import Any, Literal, TypeAlias
 
 import pandas as pd
 
-from .types import RawLoadResult
-
-
 PredictorSelection = Literal["all"] | tuple[str, ...]
 
 
@@ -91,6 +88,7 @@ def as_panel(
         panel = panel.rename(columns=dict(rename))
 
     panel.index = pd.DatetimeIndex(panel.index)
+    panel = panel[panel.index.notna()]
     panel.index.name = "date"
     panel = panel.sort_index()
     if panel.index.has_duplicates:
@@ -149,11 +147,9 @@ def panel_info(panel: PanelInput) -> dict[str, Any]:
     }
 
 
-def metadata(obj: PanelInput | RawLoadResult) -> dict[str, Any]:
-    """Return metadata from a bundle, spec, frame, tuple, or raw load result."""
+def metadata(obj: PanelInput) -> dict[str, Any]:
+    """Return metadata from a bundle, spec, tuple, or DataFrame."""
 
-    if isinstance(obj, RawLoadResult):
-        return metadata_from_result(obj)
     return dict(_coerce_bundle(obj).metadata)
 
 
@@ -230,44 +226,6 @@ def spec(
         end=end_iso,
         predictors=predictor_values,
     )
-
-
-def bundle_from_result(result: RawLoadResult) -> DataBundle:
-    """Convert a raw loader envelope into the public bundle contract."""
-
-    meta = metadata_from_result(result)
-    existing = dict(result.data.attrs.get("macroforecast_metadata", {}) or {})
-    if existing:
-        meta = {**existing, **meta}
-    frame = as_panel(result.data, metadata=meta)
-    if result.transform_codes:
-        frame.attrs["macroforecast_transform_codes"] = dict(result.transform_codes)
-    frame.attrs["macroforecast_metadata"] = meta
-    return DataBundle(panel=frame, metadata=meta)
-
-
-def metadata_from_result(result: RawLoadResult) -> dict[str, Any]:
-    return {
-        "dataset": result.dataset_metadata.dataset,
-        "source_family": result.dataset_metadata.source_family,
-        "frequency": result.dataset_metadata.frequency,
-        "version_mode": result.dataset_metadata.version_mode,
-        "vintage": result.dataset_metadata.vintage,
-        "data_through": result.dataset_metadata.data_through,
-        "support_tier": result.dataset_metadata.support_tier,
-        "parse_notes": result.dataset_metadata.parse_notes,
-        "artifact": {
-            "source_url": result.artifact.source_url,
-            "local_path": result.artifact.local_path,
-            "file_format": result.artifact.file_format,
-            "downloaded_at": result.artifact.downloaded_at,
-            "file_sha256": result.artifact.file_sha256,
-            "file_size_bytes": result.artifact.file_size_bytes,
-            "cache_hit": result.artifact.cache_hit,
-            "manifest_version": result.artifact.manifest_version,
-        },
-        "transform_codes": dict(result.transform_codes),
-    }
 
 
 def attach_metadata(metadata: Mapping[str, Any], stage: str, values: Mapping[str, Any]) -> dict[str, Any]:

@@ -37,7 +37,7 @@ Benchmark and methods studies where vintage realism is not the primary focus; re
 
 **When NOT to use**
 
-Real-time evaluation papers where data revisions materially affect conclusions -- use ``real_time_alfred`` (operational as of v0.9.3).
+Real-time vintage evaluation is not currently supported by the public data API.
 
 **References**
 
@@ -55,13 +55,13 @@ Pseudo out-of-sample using revised series; explicit acknowledgement of using pos
 
 Numerically identical to ``final_revised_data`` in all released versions (v0.9.x and earlier): both options produce the same forecasts from the same revised data. The distinction is purely semantic -- selecting ``pseudo_oos_on_revised_data`` records the explicit recipe-author acknowledgement that revised data is being used for out-of-sample evaluation.
 
-This axis value is exposed so that recipes choosing pseudo-OOS-on-revised data are explicit about that choice. Studies that compare pseudo-OOS-on-revised against real-time ALFRED vintages use this option to label the revised-data branch explicitly, while ``real_time_alfred`` handles the vintage-correct branch.
+This axis value is exposed so that recipes choosing pseudo-OOS-on-revised data are explicit about that choice.
 
 Pairs with ``vintage_policy: current_vintage``.
 
 **When to use**
 
-Studies explicitly contrasting pseudo-OOS-on-revised-data vs real-time vintage performance; recipe scripts that want to make the revised-data protocol visible in the YAML rather than relying on the default.
+Recipe scripts that want to make the revised-data protocol visible in the YAML rather than relying on the default.
 
 **References**
 

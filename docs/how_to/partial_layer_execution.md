@@ -165,7 +165,7 @@ The artifacts are frozen dataclasses defined in ``macroforecast/core/types.py``.
 | ``panel_composition`` | ``Literal["official_only", "custom_panel_only", "official_plus_custom"]`` | Resolved from L1 fixed_axes. |
 | ``dataset`` | ``Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"] \| None`` | None for ``custom_panel_only``. |
 | ``frequency`` | ``Literal["monthly", "quarterly"]`` | Resolved frequency. |
-| ``vintage_policy`` | ``Literal["current_vintage", "real_time_alfred"] \| None`` | None for custom-panel runs. |
+| ``vintage_policy`` | ``Literal["current_vintage"] \| None`` | None for custom-panel runs. |
 | ``target_structure`` | ``Literal["single_target", "multi_series_target"]`` | -- |
 | ``target`` | ``str \| None`` | The single-target name (or first of ``targets``). |
 | ``targets`` | ``tuple[str, ...]`` | The full list when ``target_structure='multi_series_target'``. |

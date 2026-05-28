@@ -257,7 +257,7 @@ Output keys include `n_rows`, `n_columns`, `start`, `end`, `columns`,
 ## metadata
 
 Return explicit metadata from a `DataBundle`, `DataSpec`, `(panel, metadata)`
-tuple, `DataFrame`, or advanced raw load result.
+tuple, or `DataFrame`.
 
 ```python
 macroforecast.data.metadata(obj) -> dict
@@ -306,18 +306,6 @@ macroforecast.data.spec(
 
 Returns `DataSpec`. Its metadata contains a `data_spec` entry with the chosen
 target, targets, horizons, sample dates, predictors, and panel summary.
-
-## Advanced Raw Results
-
-The `_result` loaders return `RawLoadResult` envelopes:
-
-```python
-result = macroforecast.data.load_fred_md_result()
-```
-
-Use these when artifact provenance or raw transform codes are needed before
-conversion to `DataBundle`. Most user workflows should use the non-result
-loaders.
 
 ## Vintage Helpers
 

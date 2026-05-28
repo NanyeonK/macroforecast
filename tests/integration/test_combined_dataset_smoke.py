@@ -35,7 +35,7 @@ def _seed_cache(tmp_path: Path) -> Path:
     """Pre-populate the raw cache with the FRED-MD + FRED-SD fixtures.
 
     The L1 dispatch invokes ``load_fred_md(cache_root=...)`` and
-    ``load_fred_sd(cache_root=...)``; ``get_raw_file_path`` resolves to
+    ``load_fred_sd(cache_root=...)``; the data loader cache path resolves to
     ``<cache_root>/fred_md/current/raw.csv`` and
     ``<cache_root>/fred_sd/current/raw.csv``. By placing the fixtures
     at those slots before the loader runs we exercise the cache-hit
@@ -62,8 +62,8 @@ def test_fred_md_plus_fred_sd_loader_dispatches_combined(tmp_path):
 
     resolved = {"dataset": "fred_md+fred_sd"}
     leaf = {"cache_root": str(cache_root)}
-    result = _load_official_raw_result(resolved, leaf)
-    columns = set(result.data.columns)
+    bundle = _load_official_raw_result(resolved, leaf)
+    columns = set(bundle.panel.columns)
     # FRED-MD fixture columns
     assert {"INDPRO", "RPI", "UNRATE", "CPIAUCSL"}.issubset(columns)
     # FRED-SD fixture columns (variable_state)
@@ -118,8 +118,8 @@ def test_fred_qd_plus_fred_sd_dispatches_combined(tmp_path):
 
     resolved = {"dataset": "fred_qd+fred_sd"}
     leaf = {"cache_root": str(cache_root)}
-    result = _load_official_raw_result(resolved, leaf)
-    columns = set(result.data.columns)
+    bundle = _load_official_raw_result(resolved, leaf)
+    columns = set(bundle.panel.columns)
     # FRED-QD fixture columns
     assert {"GDPC1", "CPIAUCSL", "FEDFUNDS"}.issubset(columns)
     # FRED-SD fixture columns

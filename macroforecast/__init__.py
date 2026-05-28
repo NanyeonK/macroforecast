@@ -21,8 +21,7 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.recipes`` -- recipe orchestration namespace; ``mf.run`` /
   ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are aliases here.
 - ``macroforecast.meta`` -- package-wide execution settings.
-- ``macroforecast.data`` -- data recipe authoring plus FRED-MD/QD/SD adapters,
-  vintage manager, manifests.
+- ``macroforecast.data`` -- canonical panels, metadata, FRED/custom loaders, and data specs.
 - ``macroforecast.preprocessing`` -- preprocessing schemas and contract helpers.
 - ``macroforecast.features`` -- feature engineering ops, transforms, selectors.
 - ``macroforecast.models`` -- public model classes, model ops, paper helpers, tuning.
@@ -96,31 +95,20 @@ _LAZY_EXPORTS = {
     "clear_custom_target_transformers": ".api.custom",
     "clear_custom_models": ".api.custom",
     "clear_custom_extensions": ".api.custom",
-    # raw adapters
-    "normalize_version_request": ".data",
+    # data
     "list_vintages": ".data",
-    "get_raw_cache_root": ".data",
-    "get_manifest_path": ".data",
-    "get_raw_file_path": ".data",
-    "build_raw_artifact_record": ".data",
-    "append_raw_manifest_entry": ".data",
-    "read_raw_manifest": ".data",
-    "parse_fred_csv": ".data",
     "load_custom_csv": ".data",
     "load_custom_parquet": ".data",
     "load_fred_md": ".data",
     "load_fred_qd": ".data",
     "load_fred_sd": ".data",
     "as_panel": ".data",
+    "metadata": ".data",
     "spec": ".data",
     "validate_panel": ".data",
     "panel_info": ".data",
     "DataBundle": ".data",
     "DataSpec": ".data",
-    "RawVersionRequest": ".data",
-    "RawDatasetMetadata": ".data",
-    "RawArtifactRecord": ".data",
-    "RawLoadResult": ".data",
     # preprocessing
     "build_preprocess_contract": ".preprocessing",
     "check_preprocess_governance": ".preprocessing",

@@ -144,8 +144,7 @@ OPERATIONAL_MODELS: tuple[str, ...] = (
 #   approximation, not the Mariano-Murasawa Kalman state-space EM.
 FUTURE_MODELS: tuple[str, ...] = (
     # v0.9.3 honesty pass promoted ``realized_garch`` to OPERATIONAL (above).
-    # FUTURE_MODELS is now empty. v0.9.3 targets: lstm_hidden_state,
-    # real_time_alfred.
+    # FUTURE_MODELS is now empty.
 )
 
 

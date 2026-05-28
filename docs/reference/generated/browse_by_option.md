@@ -465,7 +465,6 @@ Every option *value* across every axis, sorted A-Z. Same value can appear on mor
 | [`raw_vs_imputed`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`raw_vs_outlier_handled`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
 | [`raw_vs_tcoded`](l2_5/axes/comparison_pair.md) | L2.5 | `comparison_pair` | operational |
-| [`real_time_alfred`](l1/axes/vintage_policy.md) | L1 | `vintage_policy` | operational |
 | [`reality_check_white`](l6/axes/multiple_model_test.md) | L6 | `multiple_model_test` | operational |
 | [`realized_garch`](l4/axes/model.md) | L4 | `model` | operational |
 | [`realized_garch_with_rv_exog`](l4/axes/model.md) | L4 | `model` | operational |

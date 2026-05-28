@@ -27,8 +27,7 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.data.load_custom_csv(...)`, `load_custom_parquet(...)` | Load user files into canonical `DataBundle` objects. |
 | `macroforecast.data.as_panel(...)` | Normalize a pandas `DataFrame` to the canonical date-indexed panel form. |
 | `macroforecast.data.spec(...)` | Combine a panel/bundle with target, horizons, sample window, and predictor choices. |
-| `macroforecast.data.metadata(bundle_or_spec_or_result)` | Return explicit dataset metadata/provenance. |
-| `macroforecast.data.load_fred_md_result(...)`, `load_fred_qd_result(...)`, `load_fred_sd_result(...)` | Advanced raw load envelope with metadata, artifact record, and transform codes. |
+| `macroforecast.data.metadata(bundle_or_spec_or_panel)` | Return explicit dataset metadata/provenance. |
 | `macroforecast.preprocessing.preprocessing(...)` | Build and validate the canonical `preprocessing` block without executing cleaning. |
 | `macroforecast.preprocessing.configure(...)` | Alias for `preprocessing(...)`. |
 
@@ -38,7 +37,7 @@ Curated reference for the importable macroforecast surface. The generated pages 
 |--------|---------|
 | `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
 | `macroforecast.meta` | Package-wide execution settings. |
-| `macroforecast.data` | Canonical panels, data metadata, FRED/custom loaders, run-level data specs, vintage manager, manifests, and cache helpers. |
+| `macroforecast.data` | Canonical panels, data metadata, FRED/custom loaders, run-level data specs, and vintage labels. |
 | `macroforecast.preprocessing` | Preprocessing recipe authoring, cleaning schemas, transformations, and contract helpers. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |

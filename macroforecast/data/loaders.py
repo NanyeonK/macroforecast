@@ -1,0 +1,982 @@
+from __future__ import annotations
+
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from html import unescape
+from io import BytesIO
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import tempfile
+from typing import Any, Literal, cast
+from urllib.parse import urljoin
+from urllib.request import Request, urlopen
+import zipfile
+
+import pandas as pd
+
+from .errors import RawDownloadError, RawManifestError, RawParseError, RawVersionFormatError
+from .panel import DataBundle, as_panel
+
+DatasetId = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
+VersionMode = Literal["current", "vintage"]
+
+_CURRENT_MD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv"
+_VINTAGE_MD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/{vintage}.csv"
+_CURRENT_QD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/current.csv"
+_VINTAGE_QD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/{vintage}.csv"
+
+_FRED_SD_LANDING_PAGE_URL = "https://www.stlouisfed.org/research/economists/owyang/fred-sd"
+_FRED_SD_SOURCE_BASE_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd"
+_FRED_SD_SERIES_XLSX_URL_TEMPLATE = f"{_FRED_SD_SOURCE_BASE_URL}/series/series-{{vintage}}.xlsx"
+_FRED_SD_SERIES_YEAR_ZIP_URL_TEMPLATE = f"{_FRED_SD_SOURCE_BASE_URL}/series/fredsd_byseries_{{year}}.zip"
+_FRED_SD_SERIES_RANGE_ZIP_URL_TEMPLATE = f"{_FRED_SD_SOURCE_BASE_URL}/series/fredsd_byseries_{{start_year}}_{{end_year}}.zip"
+_FRED_SD_SERIES_XLSX_LINK_RE = re.compile(r'href=["\']([^"\']*?/series/series-(\d{4}-\d{2})\.xlsx[^"\']*)["\']', re.I)
+_FRED_SD_HEADERS = {"User-Agent": "macroforecast FRED-SD loader (https://github.com/NanyeonK/macroforecast)"}
+_FRED_SD_SERIES_METADATA_CONTRACT_VERSION = "fred_sd_series_metadata_v1"
+
+_FIRST_VINTAGE: dict[DatasetId, str] = {
+    "fred_md": "1999-01",
+    "fred_qd": "2005-01",
+    "fred_sd": "2005-06",
+}
+
+
+@dataclass(frozen=True)
+class _VersionRequest:
+    dataset: DatasetId
+    mode: VersionMode
+    vintage: str | None
+
+
+FRED_SD_GROUP_SELECTION_CONTRACT_VERSION = "fred_sd_group_selection_v1"
+
+FRED_SD_STATE_GROUPS: dict[str, tuple[str, ...]] = {
+    "census_region_northeast": ("CT", "ME", "MA", "NH", "RI", "VT", "NJ", "NY", "PA"),
+    "census_region_midwest": ("IL", "IN", "MI", "OH", "WI", "IA", "KS", "MN", "MO", "NE", "ND", "SD"),
+    "census_region_south": (
+        "DE",
+        "DC",
+        "FL",
+        "GA",
+        "MD",
+        "NC",
+        "SC",
+        "VA",
+        "WV",
+        "AL",
+        "KY",
+        "MS",
+        "TN",
+        "AR",
+        "LA",
+        "OK",
+        "TX",
+    ),
+    "census_region_west": ("AZ", "CO", "ID", "MT", "NV", "NM", "UT", "WY", "AK", "CA", "HI", "OR", "WA"),
+    "census_division_new_england": ("CT", "ME", "MA", "NH", "RI", "VT"),
+    "census_division_middle_atlantic": ("NJ", "NY", "PA"),
+    "census_division_east_north_central": ("IL", "IN", "MI", "OH", "WI"),
+    "census_division_west_north_central": ("IA", "KS", "MN", "MO", "NE", "ND", "SD"),
+    "census_division_south_atlantic": ("DE", "DC", "FL", "GA", "MD", "NC", "SC", "VA", "WV"),
+    "census_division_east_south_central": ("AL", "KY", "MS", "TN"),
+    "census_division_west_south_central": ("AR", "LA", "OK", "TX"),
+    "census_division_mountain": ("AZ", "CO", "ID", "MT", "NV", "NM", "UT", "WY"),
+    "census_division_pacific": ("AK", "CA", "HI", "OR", "WA"),
+    "contiguous_48_plus_dc": (
+        "AL",
+        "AZ",
+        "AR",
+        "CA",
+        "CO",
+        "CT",
+        "DE",
+        "DC",
+        "FL",
+        "GA",
+        "ID",
+        "IL",
+        "IN",
+        "IA",
+        "KS",
+        "KY",
+        "LA",
+        "ME",
+        "MD",
+        "MA",
+        "MI",
+        "MN",
+        "MS",
+        "MO",
+        "MT",
+        "NE",
+        "NV",
+        "NH",
+        "NJ",
+        "NM",
+        "NY",
+        "NC",
+        "ND",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VT",
+        "VA",
+        "WA",
+        "WV",
+        "WI",
+        "WY",
+    ),
+}
+
+FRED_SD_VARIABLE_GROUPS: dict[str, tuple[str, ...]] = {
+    "labor_market_core": ("ICLAIMS", "LF", "NA", "PARTRATE", "UR"),
+    "employment_sector": ("CONS", "FIRE", "GOVT", "INFO", "MFG", "MFGHRS", "MINNG", "PSERV"),
+    "gsp_output": (
+        "NQGSP",
+        "CONSTNQGSP",
+        "FIRENQGSP",
+        "GOVNQGSP",
+        "INFONQGSP",
+        "MANNQGSP",
+        "NATURNQGSP",
+        "PSERVNQGSP",
+        "UTILNQGSP",
+    ),
+    "housing": ("BPPRIVSA", "RENTS", "STHPI"),
+    "trade": ("EXPORTS", "IMPORTS"),
+    "income": ("OTOT",),
+    "direct_analog_high_confidence": (
+        "CONS",
+        "FIRE",
+        "GOVT",
+        "ICLAIMS",
+        "INFO",
+        "LF",
+        "MFG",
+        "MFGHRS",
+        "MINNG",
+        "NA",
+        "PARTRATE",
+        "PSERV",
+        "UR",
+    ),
+    "provisional_analog_medium": ("EXPORTS", "IMPORTS", "NQGSP", "OTOT"),
+    "semantic_review_outputs": ("CONSTNQGSP", "GOVNQGSP", "MANNQGSP", "PSERVNQGSP"),
+    "no_reliable_analog": ("FIRENQGSP", "INFONQGSP", "NATURNQGSP", "RENTS", "UTILNQGSP"),
+}
+
+
+def _normalize_member_list(values: Sequence[Any], *, uppercase: bool) -> list[str]:
+    members = [str(value).strip() for value in values]
+    if uppercase:
+        members = [value.upper() for value in members]
+    if not members or any(not value for value in members):
+        raise ValueError("custom FRED-SD group members must be a non-empty list of non-empty strings")
+    return members
+
+
+def _resolve_custom_group(
+    leaf_config: Mapping[str, Any] | None,
+    *,
+    members_key: str,
+    mapping_key: str,
+    name_key: str,
+    label: str,
+    uppercase: bool = False,
+) -> tuple[list[str], str]:
+    payload = leaf_config or {}
+    direct = payload.get(members_key)
+    if isinstance(direct, Sequence) and not isinstance(direct, (str, bytes)):
+        return _normalize_member_list(direct, uppercase=uppercase), members_key
+
+    groups = payload.get(mapping_key)
+    name = payload.get(name_key)
+    if isinstance(groups, Mapping) and name in groups:
+        members = groups[name]
+        if isinstance(members, Sequence) and not isinstance(members, (str, bytes)):
+            return _normalize_member_list(members, uppercase=uppercase), f"{mapping_key}.{name}"
+
+    raise ValueError(
+        f"{label} requires leaf_config.{members_key} or "
+        f"leaf_config.{mapping_key} plus leaf_config.{name_key}"
+    )
+
+
+def resolve_fred_sd_state_group(
+    group: str | None,
+    leaf_config: Mapping[str, Any] | None = None,
+) -> tuple[list[str] | None, str]:
+    """Resolve a FRED-SD state group to state abbreviations.
+
+    Returns ``(None, "all_states")`` for the all-state default.
+    """
+
+    key = str(group or "all_states")
+    if key == "all_states":
+        return None, "all_states"
+    if key == "custom_state_group":
+        return _resolve_custom_group(
+            leaf_config,
+            members_key="sd_state_group_members",
+            mapping_key="sd_state_groups",
+            name_key="sd_state_group_name",
+            label="fred_sd_state_group='custom_state_group'",
+            uppercase=True,
+        )
+    if key not in FRED_SD_STATE_GROUPS:
+        allowed = sorted(("all_states", "custom_state_group", *FRED_SD_STATE_GROUPS))
+        raise ValueError(f"unsupported fred_sd_state_group={key!r}; allowed values: {allowed}")
+    return list(FRED_SD_STATE_GROUPS[key]), key
+
+
+def resolve_fred_sd_variable_group(
+    group: str | None,
+    leaf_config: Mapping[str, Any] | None = None,
+) -> tuple[list[str] | None, str]:
+    """Resolve a FRED-SD workbook-variable group to sheet names."""
+
+    key = str(group or "all_sd_variables")
+    if key == "all_sd_variables":
+        return None, "all_sd_variables"
+    if key == "custom_sd_variable_group":
+        return _resolve_custom_group(
+            leaf_config,
+            members_key="sd_variable_group_members",
+            mapping_key="sd_variable_groups",
+            name_key="sd_variable_group_name",
+            label="fred_sd_variable_group='custom_sd_variable_group'",
+        )
+    if key not in FRED_SD_VARIABLE_GROUPS:
+        allowed = sorted(("all_sd_variables", "custom_sd_variable_group", *FRED_SD_VARIABLE_GROUPS))
+        raise ValueError(f"unsupported fred_sd_variable_group={key!r}; allowed values: {allowed}")
+    return list(FRED_SD_VARIABLE_GROUPS[key]), key
+
+
+def list_vintages(dataset: str, start: str | None = None, end: str | None = None) -> list[str]:
+    """Return monthly vintage labels between ``start`` and ``end`` inclusive."""
+
+    dataset_id = _dataset_id(dataset)
+    start_value = start or _FIRST_VINTAGE[dataset_id]
+    _validate_vintage(start_value)
+    if end is None:
+        raise RawVersionFormatError("end must be supplied")
+    _validate_vintage(end)
+    start_year, start_month = map(int, start_value.split("-"))
+    end_year, end_month = map(int, end.split("-"))
+    vintages: list[str] = []
+    year, month = start_year, start_month
+    while (year, month) <= (end_year, end_month):
+        vintages.append(f"{year:04d}-{month:02d}")
+        if month == 12:
+            year += 1
+            month = 1
+        else:
+            month += 1
+    return vintages
+
+
+def load_fred_md(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+    local_zip_source: str | Path | None = None,
+) -> DataBundle:
+    request = _version_request("fred_md", vintage=vintage)
+    target = _raw_file_path(request, cache_root, suffix="csv")
+    cache_hit = target.exists() and not force and local_source is None and local_zip_source is None
+    source_url = _CURRENT_MD_URL if request.mode == "current" else _VINTAGE_MD_URL.format(vintage=request.vintage)
+
+    if not cache_hit:
+        try:
+            if local_source is not None:
+                _atomic_copy(Path(local_source), target)
+                source_url = str(local_source)
+            elif local_zip_source is not None:
+                if request.vintage is None:
+                    raise RawDownloadError("local_zip_source requires an explicit vintage")
+                _extract_md_vintage_from_zip(Path(local_zip_source), request.vintage, target)
+                source_url = str(local_zip_source)
+            else:
+                with urlopen(source_url) as src:
+                    _atomic_write(src.read(), target)
+        except Exception as exc:
+            raise RawDownloadError(f"failed to obtain FRED-MD raw file for request={request}") from exc
+
+    try:
+        panel, tcodes = _parse_fred_csv(target)
+    except Exception as exc:
+        raise RawParseError(f"failed to parse FRED-MD CSV at {target}") from exc
+    return _official_bundle(
+        panel,
+        dataset="fred_md",
+        source_family="fred-md",
+        frequency="monthly",
+        request=request,
+        source_url=source_url,
+        local_path=target,
+        file_format="csv",
+        cache_hit=cache_hit,
+        transform_codes=tcodes,
+        cache_root=cache_root,
+    )
+
+
+def load_fred_qd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+) -> DataBundle:
+    request = _version_request("fred_qd", vintage=vintage)
+    target = _raw_file_path(request, cache_root, suffix="csv")
+    cache_hit = target.exists() and not force and local_source is None
+    source_url = _CURRENT_QD_URL if request.mode == "current" else _VINTAGE_QD_URL.format(vintage=request.vintage)
+
+    if not cache_hit:
+        try:
+            if local_source is not None:
+                _atomic_copy(Path(local_source), target)
+                source_url = str(local_source)
+            else:
+                with urlopen(source_url) as src:
+                    _atomic_write(src.read(), target)
+        except Exception as exc:
+            raise RawDownloadError(f"failed to obtain FRED-QD raw file for request={request}") from exc
+
+    try:
+        panel, tcodes = _parse_fred_csv(target)
+    except Exception as exc:
+        raise RawParseError(f"failed to parse FRED-QD CSV at {target}") from exc
+    return _official_bundle(
+        panel,
+        dataset="fred_qd",
+        source_family="fred-qd",
+        frequency="quarterly",
+        request=request,
+        source_url=source_url,
+        local_path=target,
+        file_format="csv",
+        cache_hit=cache_hit,
+        transform_codes=tcodes,
+        cache_root=cache_root,
+    )
+
+
+def load_fred_sd(
+    vintage: str | None = None,
+    *,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+    states: list[str] | None = None,
+    variables: list[str] | None = None,
+) -> DataBundle:
+    request = _version_request("fred_sd", vintage=vintage)
+    source_format = _fred_sd_local_source_format(local_source)
+    target = _raw_file_path(request, cache_root, suffix=source_format)
+    cache_hit = target.exists() and not force and local_source is None
+    source_url = _FRED_SD_LANDING_PAGE_URL if request.mode == "current" else _fred_sd_series_xlsx_url(str(request.vintage))
+
+    if not cache_hit:
+        try:
+            if local_source is not None:
+                _atomic_copy(Path(local_source), target)
+                source_url = str(local_source)
+            else:
+                if request.mode == "current":
+                    source_url, payload = _fred_sd_read_current_series_xlsx()
+                else:
+                    source_url, payload = _fred_sd_read_vintage_series_xlsx(str(request.vintage))
+                _atomic_write(payload, target)
+        except Exception as exc:
+            raise RawDownloadError(f"failed to obtain FRED-SD raw file for request={request}") from exc
+
+    try:
+        if source_format == "csv":
+            panel = _read_local_fred_sd_csv(target, states=states, variables=variables)
+        else:
+            panel = _read_fred_sd_workbook(target, states=states, variables=variables)
+    except Exception as exc:
+        source_kind = "CSV" if source_format == "csv" else "workbook"
+        raise RawParseError(f"failed to parse FRED-SD {source_kind} at {target}") from exc
+
+    report = _fred_sd_series_metadata(panel, states=states, variables=variables, source_format=source_format)
+    reports = dict(panel.attrs.get("macrocast_reports", {}))
+    reports["fred_sd_series_metadata"] = report
+    panel.attrs["macrocast_reports"] = reports
+    return _official_bundle(
+        panel,
+        dataset="fred_sd",
+        source_family="fred-sd",
+        frequency="state_monthly",
+        request=request,
+        source_url=source_url,
+        local_path=target,
+        file_format=source_format,
+        cache_hit=cache_hit,
+        cache_root=cache_root,
+    )
+
+
+def load_custom_csv(
+    path: str | Path,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    frequency: str = "unknown",
+    metadata: Mapping[str, Any] | None = None,
+    cache_root: str | Path | None = None,
+) -> DataBundle:
+    csv_path = Path(path)
+    if not csv_path.exists():
+        raise RawParseError(f"custom CSV source path does not exist: {csv_path}")
+    try:
+        raw = pd.read_csv(csv_path)
+        panel = as_panel(raw, date=date, columns=columns, rename=rename)
+    except Exception as exc:
+        raise RawParseError(f"failed to normalize custom CSV at {csv_path}") from exc
+    return _custom_bundle(
+        panel,
+        dataset=dataset,
+        source_family="custom-csv",
+        frequency=frequency,
+        local_path=csv_path,
+        file_format="csv",
+        metadata=metadata,
+        cache_root=cache_root,
+    )
+
+
+def load_custom_parquet(
+    path: str | Path,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    frequency: str = "unknown",
+    metadata: Mapping[str, Any] | None = None,
+    cache_root: str | Path | None = None,
+) -> DataBundle:
+    pq_path = Path(path)
+    if not pq_path.exists():
+        raise RawParseError(f"custom Parquet source path does not exist: {pq_path}")
+    try:
+        raw = pd.read_parquet(pq_path)
+        panel = as_panel(raw, date=date, columns=columns, rename=rename)
+    except Exception as exc:
+        raise RawParseError(f"failed to normalize custom Parquet at {pq_path}") from exc
+    return _custom_bundle(
+        panel,
+        dataset=dataset,
+        source_family="custom-parquet",
+        frequency=frequency,
+        local_path=pq_path,
+        file_format="parquet",
+        metadata=metadata,
+        cache_root=cache_root,
+    )
+
+
+def _dataset_id(dataset: str) -> DatasetId:
+    if dataset not in _FIRST_VINTAGE:
+        raise RawVersionFormatError(f"unknown dataset={dataset!r}")
+    return cast(DatasetId, dataset)
+
+
+def _validate_vintage(vintage: str) -> None:
+    if not re.fullmatch(r"\d{4}-\d{2}", vintage):
+        raise RawVersionFormatError(f"invalid vintage format: {vintage!r}")
+
+
+def _version_request(dataset: str, vintage: str | None = None) -> _VersionRequest:
+    dataset_id = _dataset_id(dataset)
+    if vintage is None:
+        return _VersionRequest(dataset=dataset_id, mode="current", vintage=None)
+    _validate_vintage(vintage)
+    return _VersionRequest(dataset=dataset_id, mode="vintage", vintage=vintage)
+
+
+def _raw_cache_root(cache_root: str | Path | None = None) -> Path:
+    root = Path(cache_root).expanduser() if cache_root is not None else Path("~/.macroforecast/raw").expanduser()
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _manifest_path(cache_root: str | Path | None = None) -> Path:
+    path = _raw_cache_root(cache_root) / "manifest" / "raw_artifacts.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _raw_file_path(request: _VersionRequest, cache_root: str | Path | None = None, *, suffix: str) -> Path:
+    root = _raw_cache_root(cache_root)
+    if request.mode == "current":
+        path = root / request.dataset / "current" / f"raw.{suffix}"
+    else:
+        if request.vintage is None:
+            raise ValueError("vintage mode requires vintage string")
+        path = root / request.dataset / "vintages" / f"{request.vintage}.{suffix}"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _atomic_copy(source: Path, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
+    tmp_path = Path(tmp_name)
+    os.close(fd)
+    try:
+        shutil.copyfile(source, tmp_path)
+        os.replace(tmp_path, target)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+def _atomic_write(content: bytes, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(content)
+        os.replace(tmp_path, target)
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+def _file_artifact(*, dataset: str, request: _VersionRequest | None, source_url: str, local_path: Path, file_format: str, cache_hit: bool) -> dict[str, Any]:
+    content = local_path.read_bytes()
+    return {
+        "dataset": dataset,
+        "version_mode": request.mode if request is not None else "current",
+        "vintage": request.vintage if request is not None else None,
+        "source_url": source_url,
+        "local_path": str(local_path),
+        "file_format": file_format,
+        "downloaded_at": datetime.now(timezone.utc).isoformat(),
+        "file_sha256": hashlib.sha256(content).hexdigest(),
+        "file_size_bytes": len(content),
+        "cache_hit": cache_hit,
+        "manifest_version": "v1",
+    }
+
+
+def _append_manifest_entry(metadata: Mapping[str, Any], *, cache_root: str | Path | None = None) -> None:
+    try:
+        entry = {
+            **dict(metadata.get("artifact", {})),
+            "data_through": metadata.get("data_through"),
+            "support_tier": metadata.get("support_tier"),
+            "parse_notes": list(metadata.get("parse_notes", ())),
+        }
+        with _manifest_path(cache_root).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError as exc:
+        raise RawManifestError("failed to append raw manifest entry") from exc
+
+
+def _official_bundle(
+    panel: pd.DataFrame,
+    *,
+    dataset: str,
+    source_family: str,
+    frequency: str,
+    request: _VersionRequest,
+    source_url: str,
+    local_path: Path,
+    file_format: str,
+    cache_hit: bool,
+    transform_codes: Mapping[str, int] | None = None,
+    cache_root: str | Path | None = None,
+) -> DataBundle:
+    metadata = {
+        "dataset": dataset,
+        "source_family": source_family,
+        "frequency": frequency,
+        "version_mode": request.mode,
+        "vintage": request.vintage,
+        "data_through": _data_through(panel),
+        "support_tier": "stable",
+        "parse_notes": (),
+        "artifact": _file_artifact(
+            dataset=dataset,
+            request=request,
+            source_url=source_url,
+            local_path=local_path,
+            file_format=file_format,
+            cache_hit=cache_hit,
+        ),
+        "transform_codes": dict(transform_codes or {}),
+    }
+    bundle = _bundle(panel, metadata)
+    _append_manifest_entry(metadata, cache_root=cache_root)
+    return bundle
+
+
+def _custom_bundle(
+    panel: pd.DataFrame,
+    *,
+    dataset: str,
+    source_family: str,
+    frequency: str,
+    local_path: Path,
+    file_format: str,
+    metadata: Mapping[str, Any] | None,
+    cache_root: str | Path | None,
+) -> DataBundle:
+    source_metadata = {
+        "dataset": dataset,
+        "source_family": source_family,
+        "frequency": frequency,
+        "version_mode": "current",
+        "vintage": None,
+        "data_through": _data_through(panel),
+        "support_tier": "provisional",
+        "parse_notes": (f"user-supplied {file_format}; no vintage tracking",),
+        "artifact": _file_artifact(
+            dataset=dataset,
+            request=None,
+            source_url=str(local_path),
+            local_path=local_path,
+            file_format=file_format,
+            cache_hit=False,
+        ),
+        "transform_codes": {},
+    }
+    merged = {**dict(metadata or {}), **source_metadata}
+    bundle = _bundle(panel, merged)
+    if cache_root is not None:
+        _append_manifest_entry(merged, cache_root=cache_root)
+    return bundle
+
+
+def _bundle(panel: pd.DataFrame, metadata: Mapping[str, Any]) -> DataBundle:
+    frame = as_panel(panel, metadata=metadata)
+    if metadata.get("transform_codes"):
+        frame.attrs["macroforecast_transform_codes"] = dict(metadata["transform_codes"])
+    frame.attrs["macroforecast_metadata"] = dict(metadata)
+    return DataBundle(panel=frame, metadata=dict(metadata))
+
+
+def _data_through(panel: pd.DataFrame) -> str | None:
+    index = pd.DatetimeIndex(panel.index)
+    valid = index[index.notna()]
+    return valid[-1].strftime("%Y-%m") if len(valid) else None
+
+
+def _extract_md_vintage_from_zip(zip_path: Path, vintage: str, target: Path) -> None:
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        candidates = [f"{vintage}.csv", f"{vintage}-md.csv"]
+        match = next((name for name in zf.namelist() if any(name.endswith(candidate) for candidate in candidates)), None)
+        if match is None:
+            raise RawDownloadError(f"vintage {vintage!r} not found in historical zip {zip_path}")
+        with zf.open(match) as src:
+            _atomic_write(src.read(), target)
+
+
+def _parse_fred_csv(filepath: str | Path) -> tuple[pd.DataFrame, dict[str, int]]:
+    path = Path(filepath)
+    raw = pd.read_csv(path, header=None, dtype=str, na_values=["", ".", " "])
+    if raw.shape[0] < 3 or raw.shape[1] < 2:
+        raise ValueError(f"file does not look like a FRED CSV: {path}")
+
+    header_idx: int | None = None
+    tcodes_idx: int | None = None
+    for idx, value in raw.iloc[:, 0].items():
+        label = str(value).strip().lower()
+        if label == "nan":
+            label = ""
+        if label in {"sasdate", "sasqdate"} and header_idx is None:
+            header_idx = int(idx)
+        elif label in {"transform", "transform:"} and tcodes_idx is None:
+            tcodes_idx = int(idx)
+        if header_idx is not None and tcodes_idx is not None:
+            break
+
+    if header_idx is None:
+        fallback_header = str(raw.iloc[1, 0]).strip().lower()
+        if fallback_header in {"sasdate", "sasqdate"}:
+            header_idx = 1
+            tcodes_idx = 0
+        else:
+            raise ValueError(f"missing sasdate/sasqdate header row in {path}")
+    elif tcodes_idx is None:
+        tcodes_idx = header_idx - 1 if header_idx > 0 else header_idx + 1
+
+    header_row = raw.iloc[header_idx].tolist()
+    tcodes_row = raw.iloc[tcodes_idx].tolist()
+    data_start = max(header_idx, tcodes_idx) + 1
+
+    columns = [str(x).strip() for x in header_row]
+    if not columns or columns[0].lower() not in {"sasdate", "sasqdate"}:
+        raise ValueError(f"missing sasdate/sasqdate header row in {path}")
+
+    tcodes: dict[str, int] = {}
+    for name, value in zip(columns[1:], tcodes_row[1:], strict=False):
+        try:
+            tcodes[name] = int(float(str(value)))
+        except (TypeError, ValueError):
+            tcodes[name] = 1
+
+    data = raw.iloc[data_start:].copy()
+    data.columns = columns
+    date_col = columns[0]
+    data[date_col] = pd.to_datetime(data[date_col], errors="coerce")
+    data = data[data[date_col].notna()].set_index(date_col)
+    for col in columns[1:]:
+        data[col] = pd.to_numeric(data[col], errors="coerce")
+    data.index.name = "date"
+    data.sort_index(inplace=True)
+    return data, tcodes
+
+
+def _fred_sd_local_source_format(local_source: str | Path | None) -> str:
+    if local_source is None:
+        return "xlsx"
+    suffix = Path(local_source).suffix.lower().lstrip(".")
+    return "csv" if suffix == "csv" else "xlsx"
+
+
+def _fred_sd_request_url(url: str):
+    return urlopen(Request(url, headers=_FRED_SD_HEADERS))
+
+
+def _is_remote_xlsx(payload: bytes, content_type: str | None) -> bool:
+    if not payload.startswith(b"PK"):
+        return False
+    if content_type is None:
+        return True
+    normalized = content_type.lower()
+    return "spreadsheetml.sheet" in normalized or "application/octet-stream" in normalized
+
+
+def _fred_sd_read_remote_xlsx(url: str) -> tuple[str, bytes] | None:
+    with _fred_sd_request_url(url) as src:
+        payload = src.read()
+        content_type = src.headers.get("Content-Type")
+        if _is_remote_xlsx(payload, content_type):
+            return src.geturl(), payload
+    return None
+
+
+def _latest_series_url_from_html(html: str) -> str:
+    candidates: list[tuple[str, str]] = []
+    for href, vintage in _FRED_SD_SERIES_XLSX_LINK_RE.findall(html):
+        candidates.append((vintage, urljoin(_FRED_SD_LANDING_PAGE_URL, unescape(href))))
+    if not candidates:
+        raise RawDownloadError("failed to find a FRED-SD by-series workbook link on the official landing page")
+    return max(candidates, key=lambda item: item[0])[1]
+
+
+def _fred_sd_latest_series_url() -> str:
+    with _fred_sd_request_url(_FRED_SD_LANDING_PAGE_URL) as src:
+        html = src.read().decode("utf-8", errors="ignore")
+    return _latest_series_url_from_html(html)
+
+
+def _fred_sd_series_xlsx_url(vintage: str) -> str:
+    return _FRED_SD_SERIES_XLSX_URL_TEMPLATE.format(vintage=vintage)
+
+
+def _fred_sd_series_zip_url(vintage: str) -> str:
+    year = int(vintage[:4])
+    if year >= 2023:
+        return _FRED_SD_SERIES_YEAR_ZIP_URL_TEMPLATE.format(year=year)
+    start_year = year if year % 2 else year - 1
+    end_year = start_year + 1
+    return _FRED_SD_SERIES_RANGE_ZIP_URL_TEMPLATE.format(start_year=start_year, end_year=end_year)
+
+
+def _extract_vintage_xlsx_from_zip(payload: bytes, vintage: str) -> tuple[str, bytes]:
+    with zipfile.ZipFile(BytesIO(payload)) as zf:
+        candidates = [
+            name
+            for name in zf.namelist()
+            if name.lower().endswith(".xlsx") and vintage in name and "__macosx" not in name.lower()
+        ]
+        if not candidates:
+            raise RawDownloadError(f"FRED-SD by-series zip does not contain vintage={vintage!r}")
+        entry = sorted(candidates, key=lambda name: ("series" not in name.lower(), len(name), name))[0]
+        return entry, zf.read(entry)
+
+
+def _fred_sd_read_vintage_series_xlsx(vintage: str) -> tuple[str, bytes]:
+    direct_url = _fred_sd_series_xlsx_url(vintage)
+    direct = _fred_sd_read_remote_xlsx(direct_url)
+    if direct is not None:
+        return direct
+    zip_url = _fred_sd_series_zip_url(vintage)
+    with _fred_sd_request_url(zip_url) as src:
+        payload = src.read()
+        content_type = (src.headers.get("Content-Type") or "").lower()
+        if not payload.startswith(b"PK") or "html" in content_type:
+            raise RawDownloadError(f"failed to obtain FRED-SD by-series zip for vintage={vintage!r}")
+        entry, workbook = _extract_vintage_xlsx_from_zip(payload, vintage)
+        return f"{src.geturl()}#{entry}", workbook
+
+
+def _fred_sd_read_current_series_xlsx() -> tuple[str, bytes]:
+    current_url = _fred_sd_latest_series_url()
+    current = _fred_sd_read_remote_xlsx(current_url)
+    if current is None:
+        raise RawDownloadError(f"latest FRED-SD by-series link did not return an Excel workbook: {current_url}")
+    return current
+
+
+def _filter_wide_csv_columns(df: pd.DataFrame, *, states: list[str] | None, variables: list[str] | None) -> pd.DataFrame:
+    if states is None and variables is None:
+        return df
+    state_set = set(states or [])
+    variable_set = set(variables or [])
+    keep: list[str] = []
+    for column in df.columns:
+        name = str(column)
+        variable, state = name.rsplit("_", 1) if "_" in name else (name, "")
+        if variable_set and variable not in variable_set:
+            continue
+        if state_set and state not in state_set:
+            continue
+        keep.append(column)
+    return df[keep].copy()
+
+
+def _read_local_fred_sd_csv(path: Path, *, states: list[str] | None, variables: list[str] | None) -> pd.DataFrame:
+    df = pd.read_csv(path)
+    date_col = "date" if "date" in df.columns else df.columns[0]
+    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+    df = df[df[date_col].notna()].set_index(date_col)
+    df.index.name = "date"
+    df = df.apply(pd.to_numeric, errors="coerce")
+    df = _filter_wide_csv_columns(df, states=states, variables=variables)
+    if df.empty:
+        raise RawParseError("no matching columns found in local FRED-SD CSV")
+    df.sort_index(inplace=True)
+    return df
+
+
+def _read_fred_sd_workbook(path: Path, *, states: list[str] | None, variables: list[str] | None) -> pd.DataFrame:
+    sheet_name = None if variables is None else list(variables)
+    loaded_sheets = pd.read_excel(path, sheet_name=sheet_name, index_col=0, engine="openpyxl")
+    if isinstance(loaded_sheets, pd.DataFrame):
+        sheets = {str(sheet_name[0]): loaded_sheets} if sheet_name else {}
+    else:
+        sheets = loaded_sheets
+    if not sheets:
+        raise RawParseError("no matching sheets found in FRED-SD workbook")
+
+    wide_frames: list[pd.DataFrame] = []
+    for var_name, sheet_df in sheets.items():
+        if not isinstance(sheet_df.index, pd.DatetimeIndex):
+            sheet_df.index = pd.to_datetime(sheet_df.index, errors="coerce")
+            sheet_df = sheet_df[sheet_df.index.notna()]
+        selected_states = states if states is not None else list(sheet_df.columns)
+        available = [state for state in selected_states if state in sheet_df.columns]
+        sub = sheet_df[available].copy().apply(pd.to_numeric, errors="coerce")
+        sub.columns = [f"{var_name}_{state}" for state in available]
+        wide_frames.append(sub)
+    df = pd.concat(wide_frames, axis=1, sort=False)
+    df.index.name = "date"
+    df.sort_index(inplace=True)
+    return df
+
+
+def _column_observed_window(series: pd.Series) -> tuple[str | None, str | None, int]:
+    observed = series.dropna()
+    if observed.empty:
+        return None, None, 0
+    return observed.index[0].strftime("%Y-%m-%d"), observed.index[-1].strftime("%Y-%m-%d"), int(observed.shape[0])
+
+
+def _infer_native_frequency(series: pd.Series) -> str:
+    observed = series.dropna()
+    if observed.shape[0] < 2:
+        return "unknown"
+    periods = pd.DatetimeIndex(observed.index).to_period("M")
+    deltas = [int(right.ordinal - left.ordinal) for left, right in zip(periods[:-1], periods[1:]) if right.ordinal > left.ordinal]
+    if not deltas:
+        return "unknown"
+    most_common_delta, _ = Counter(deltas).most_common(1)[0]
+    if most_common_delta == 1:
+        return "monthly"
+    if most_common_delta == 3:
+        return "quarterly"
+    if most_common_delta == 12:
+        return "annual"
+    return "irregular"
+
+
+def _fred_sd_column_parts(column: object) -> tuple[str, str]:
+    name = str(column)
+    if "_" not in name:
+        return name, ""
+    return name.rsplit("_", 1)
+
+
+def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, variables: list[str] | None, source_format: str) -> dict[str, object]:
+    series: list[dict[str, object]] = []
+    for column in panel.columns:
+        variable, state = _fred_sd_column_parts(column)
+        observed_start, observed_end, non_missing_count = _column_observed_window(panel[column])
+        native_frequency = _infer_native_frequency(panel[column])
+        series.append(
+            {
+                "column": str(column),
+                "sd_variable": variable,
+                "state": state,
+                "source_sheet": variable,
+                "native_frequency": native_frequency,
+                "observed_start": observed_start,
+                "observed_end": observed_end,
+                "non_missing_observation_count": non_missing_count,
+            }
+        )
+    states_seen = sorted({str(row["state"]) for row in series if row["state"]})
+    variables_seen = sorted({str(row["sd_variable"]) for row in series})
+    frequency_counts = Counter(str(row["native_frequency"]) for row in series)
+    return {
+        "schema_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
+        "contract_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
+        "owner_layer": "data",
+        "dataset": "fred_sd",
+        "source_format": source_format,
+        "selector": {
+            "states": None if states is None else [str(state) for state in states],
+            "variables": None if variables is None else [str(variable) for variable in variables],
+        },
+        "series_count": len(series),
+        "state_count": len(states_seen),
+        "sd_variable_count": len(variables_seen),
+        "states": states_seen,
+        "sd_variables": variables_seen,
+        "native_frequency_counts": dict(sorted(frequency_counts.items())),
+        "series": series,
+    }
+
+
+__all__ = [
+    "load_fred_md",
+    "load_fred_qd",
+    "load_fred_sd",
+    "load_custom_csv",
+    "load_custom_parquet",
+    "list_vintages",
+]

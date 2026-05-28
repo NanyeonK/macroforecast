@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from calendar import monthrange
 from dataclasses import dataclass, field
 from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
@@ -11,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 from typing import Any, Literal
 import warnings
 
@@ -45,13 +47,6 @@ import macroforecast.features.schema as l3_layer
 import macroforecast.models.schema as l4_layer
 import macroforecast.evaluation.schema as l5_layer
 import macroforecast.preprocessing.schema as l2_layer
-from macroforecast.data.config import (
-    normalize_iso_partial as _data_normalize_iso_partial,
-    regime_metadata_from_resolved as _data_regime_metadata_from_resolved,
-    resolve_data_block as _resolve_data_block,
-    resolved_horizons as _data_resolved_horizons,
-    validate_data_block as _validate_data_block,
-)
 # Load collocated ops for side-effect registration (l5/l6/l8 ops no longer
 # in core/ops/__init__.py after Phase 3f restructure).
 import macroforecast.evaluation.ops  # noqa: F401
@@ -59,8 +54,8 @@ import macroforecast.stat_tests.ops  # noqa: F401
 import macroforecast.interpretation.ops  # noqa: F401
 import macroforecast.output.ops  # noqa: F401
 from ..meta import get_config
-from ..data import load_fred_md_result, load_fred_qd_result, load_fred_sd_result
-from ..data.fred_sd_groups import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
+from ..data import DataBundle, load_fred_md, load_fred_qd, load_fred_sd
+from ..data.loaders import FRED_SD_STATE_GROUPS, resolve_fred_sd_variable_group as _resolve_fred_sd_variable_group
 from .types import (
     DiagnosticArtifact,
     L1DataDefinitionArtifact,
@@ -260,6 +255,347 @@ def execute_minimal_forecast(
         runtime_durations=durations,
     )
 
+
+
+_DATASET_OPTIONS = ("fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd")
+_FRED_SD_DATASETS = frozenset({"fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"})
+_MONTHLY_DATASETS = frozenset({"fred_md", "fred_md+fred_sd"})
+_QUARTERLY_DATASETS = frozenset({"fred_qd", "fred_qd+fred_sd"})
+_REGIME_ESTIMATED_OPTIONS = frozenset(
+    {"estimated_markov_switching", "estimated_threshold", "estimated_structural_break"}
+)
+_REGIME_TEMPORAL_RULE_OPTIONS = (
+    "expanding_window_per_origin",
+    "rolling_window_per_origin",
+    "block_recompute",
+)
+_DATA_DEFAULT_AXES: dict[str, Any] = {
+    "panel_composition": "official_only",
+    "dataset": "fred_md",
+    "information_set_type": "final_revised_data",
+    "vintage_policy": "current_vintage",
+    "target_structure": "single_target",
+    "variable_universe": "all_variables",
+    "fred_sd_frequency_policy": "report_only",
+    "state_selection": "all_states",
+    "sd_variable_selection": "all_sd_variables",
+    "missing_availability": "zero_fill_leading_predictor_gaps",
+    "release_lag_rule": "ignore_release_lag",
+    "contemporaneous_x_rule": "allow_same_period_predictors",
+    "sample_start_rule": "max_balanced",
+    "sample_end_rule": "latest_available",
+    "regime_definition": "none",
+}
+_DATA_OPTION_SETS: dict[str, set[Any]] = {
+    "panel_composition": {"official_only", "custom_panel_only", "official_plus_custom"},
+    "dataset": set(_DATASET_OPTIONS),
+    "frequency": {"monthly", "quarterly"},
+    "information_set_type": {"final_revised_data", "pseudo_oos_on_revised_data"},
+    "vintage_policy": {"current_vintage"},
+    "target_structure": {"single_target", "multi_target"},
+    "variable_universe": {"all_variables", "core_variables", "category_variables", "target_specific_variables", "explicit_variable_list"},
+    "fred_sd_frequency_policy": {"report_only", "allow_mixed_frequency", "reject_mixed_known_frequency", "require_single_known_frequency"},
+    "fred_sd_state_group": {
+        "all_states",
+        "census_region_northeast",
+        "census_region_midwest",
+        "census_region_south",
+        "census_region_west",
+        "census_division_new_england",
+        "census_division_middle_atlantic",
+        "census_division_east_north_central",
+        "census_division_west_north_central",
+        "census_division_south_atlantic",
+        "census_division_east_south_central",
+        "census_division_west_south_central",
+        "census_division_mountain",
+        "census_division_pacific",
+        "contiguous_48_plus_dc",
+        "custom_state_group",
+    },
+    "state_selection": {"all_states", "selected_states"},
+    "fred_sd_variable_group": {
+        "all_sd_variables",
+        "labor_market_core",
+        "employment_sector",
+        "gsp_output",
+        "housing",
+        "trade",
+        "income",
+        "direct_analog_high_confidence",
+        "provisional_analog_medium",
+        "semantic_review_outputs",
+        "no_reliable_analog",
+        "custom_sd_variable_group",
+    },
+    "sd_variable_selection": {"all_sd_variables", "selected_sd_variables"},
+    "missing_availability": {"require_complete_rows", "keep_available_rows", "impute_predictors_only", "zero_fill_leading_predictor_gaps"},
+    "release_lag_rule": {"ignore_release_lag", "fixed_lag_all_series", "series_specific_lag"},
+    "contemporaneous_x_rule": {"allow_same_period_predictors", "forbid_same_period_predictors"},
+    "target_geography_policy": {"single_state", "all_states", "selected_states"},
+    "predictor_geography_policy": {"match_target", "all_states", "selected_states", "national_only"},
+    "sample_start_rule": {"earliest_available", "fixed_date", "max_balanced"},
+    "sample_end_rule": {"latest_available", "fixed_date"},
+    "horizon_set": {"standard_md", "standard_qd", "single", "custom_list", "range_up_to_h"},
+    "regime_definition": {"none", "external_nber", "external_user_provided", "estimated_markov_switching", "estimated_threshold", "estimated_structural_break"},
+    "regime_estimation_temporal_rule": set(_REGIME_TEMPORAL_RULE_OPTIONS),
+}
+
+
+def _resolve_data_block(block: dict[str, Any]) -> dict[str, Any]:
+    fixed_axes = block.get("fixed_axes", {}) or {}
+    custom_policy = fixed_axes.get("panel_composition", _DATA_DEFAULT_AXES["panel_composition"])
+    dataset = None if custom_policy == "custom_panel_only" else fixed_axes.get("dataset", _DATA_DEFAULT_AXES["dataset"])
+    frequency = fixed_axes.get("frequency")
+    if frequency is None:
+        frequency = _data_derived_frequency(custom_policy, dataset)
+    horizon_set = fixed_axes.get("horizon_set")
+    if horizon_set is None and frequency in {"monthly", "quarterly"}:
+        horizon_set = "standard_md" if frequency == "monthly" else "standard_qd"
+    regime_definition = fixed_axes.get("regime_definition", _DATA_DEFAULT_AXES["regime_definition"])
+    regime_temporal_rule = fixed_axes.get("regime_estimation_temporal_rule")
+    if regime_definition in _REGIME_ESTIMATED_OPTIONS and regime_temporal_rule is None:
+        regime_temporal_rule = "expanding_window_per_origin"
+
+    resolved = {
+        "panel_composition": custom_policy,
+        "dataset": dataset,
+        "frequency": frequency,
+        "information_set_type": fixed_axes.get("information_set_type", _DATA_DEFAULT_AXES["information_set_type"]),
+        "vintage_policy": None if custom_policy == "custom_panel_only" else fixed_axes.get("vintage_policy", "current_vintage"),
+        "target_structure": fixed_axes.get("target_structure", _DATA_DEFAULT_AXES["target_structure"]),
+        "variable_universe": fixed_axes.get("variable_universe", _DATA_DEFAULT_AXES["variable_universe"]),
+        "fred_sd_frequency_policy": fixed_axes.get("fred_sd_frequency_policy"),
+        "fred_sd_state_group": fixed_axes.get("fred_sd_state_group"),
+        "state_selection": fixed_axes.get("state_selection"),
+        "fred_sd_variable_group": fixed_axes.get("fred_sd_variable_group"),
+        "sd_variable_selection": fixed_axes.get("sd_variable_selection"),
+        "missing_availability": fixed_axes.get("missing_availability", _DATA_DEFAULT_AXES["missing_availability"]),
+        "release_lag_rule": fixed_axes.get("release_lag_rule", _DATA_DEFAULT_AXES["release_lag_rule"]),
+        "contemporaneous_x_rule": fixed_axes.get("contemporaneous_x_rule", _DATA_DEFAULT_AXES["contemporaneous_x_rule"]),
+        "target_geography_policy": None,
+        "predictor_geography_policy": None,
+        "sample_start_rule": fixed_axes.get("sample_start_rule", _DATA_DEFAULT_AXES["sample_start_rule"]),
+        "sample_end_rule": fixed_axes.get("sample_end_rule", _DATA_DEFAULT_AXES["sample_end_rule"]),
+        "horizon_set": horizon_set,
+        "regime_definition": regime_definition,
+        "regime_estimation_temporal_rule": regime_temporal_rule,
+    }
+    if custom_policy == "custom_panel_only" or dataset == "fred_sd":
+        resolved["variable_universe"] = fixed_axes.get("variable_universe") if "variable_universe" in fixed_axes else None
+    if dataset in _FRED_SD_DATASETS:
+        resolved["fred_sd_frequency_policy"] = fixed_axes.get("fred_sd_frequency_policy", _DATA_DEFAULT_AXES["fred_sd_frequency_policy"])
+        resolved["fred_sd_state_group"] = fixed_axes.get("fred_sd_state_group")
+        resolved["state_selection"] = fixed_axes.get("state_selection", _DATA_DEFAULT_AXES["state_selection"])
+        resolved["fred_sd_variable_group"] = fixed_axes.get("fred_sd_variable_group")
+        resolved["sd_variable_selection"] = fixed_axes.get("sd_variable_selection", _DATA_DEFAULT_AXES["sd_variable_selection"])
+        resolved["target_geography_policy"] = fixed_axes.get("target_geography_policy", "all_states")
+        resolved["predictor_geography_policy"] = fixed_axes.get("predictor_geography_policy", "match_target")
+    return resolved
+
+
+def _validate_data_block(block: dict[str, Any]) -> list[str]:
+    fixed_axes = block.get("fixed_axes", {}) or {}
+    leaf_config = block.get("leaf_config", {}) or {}
+    errors: list[str] = []
+    if not isinstance(fixed_axes, dict):
+        return ["data.fixed_axes must be a mapping"]
+    if not isinstance(leaf_config, dict):
+        return ["data.leaf_config must be a mapping"]
+    for key, value in fixed_axes.items():
+        allowed = _DATA_OPTION_SETS.get(key)
+        if allowed is None:
+            errors.append(f"unknown data option {key!r}")
+        elif not _data_is_sweep_marker(value) and value not in allowed:
+            errors.append(f"{key} must be one of {sorted(allowed)}")
+    resolved = _resolve_data_block(block)
+    errors.extend(_data_validate_source_selection(fixed_axes, leaf_config, resolved))
+    errors.extend(_data_validate_target(leaf_config, resolved))
+    errors.extend(_data_validate_variable_universe(leaf_config, resolved))
+    errors.extend(_data_validate_horizons(leaf_config, resolved))
+    errors.extend(_data_validate_sample_window(leaf_config, resolved))
+    errors.extend(_data_validate_regime(leaf_config, resolved))
+    return errors
+
+
+def _data_resolved_horizons(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> tuple[int, ...]:
+    horizon_set = resolved.get("horizon_set")
+    if horizon_set == "standard_md":
+        return (1, 3, 6, 12)
+    if horizon_set == "standard_qd":
+        return (1, 2, 4, 8)
+    if horizon_set in {"single", "custom_list"} and _data_positive_int_list(leaf_config.get("target_horizons")):
+        return tuple(leaf_config["target_horizons"])
+    if horizon_set == "range_up_to_h" and isinstance(leaf_config.get("max_horizon"), int) and leaf_config["max_horizon"] > 0:
+        return tuple(range(1, leaf_config["max_horizon"] + 1))
+    return ()
+
+
+def _data_regime_metadata_from_resolved(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> L1RegimeMetadataArtifact:
+    definition = resolved["regime_definition"]
+    metadata = {
+        "leaf_config": {
+            key: leaf_config[key]
+            for key in (
+                "regime_indicator_path",
+                "regime_dates_list",
+                "transition_variable",
+                "threshold_variable",
+                "n_thresholds",
+                "max_breaks",
+                "break_ic_criterion",
+                "regime_rolling_window_size",
+                "block_recompute_interval",
+            )
+            if key in leaf_config
+        }
+    }
+    if definition == "external_nber":
+        metadata["source_series"] = "USREC"
+    if definition in _REGIME_ESTIMATED_OPTIONS:
+        metadata["runtime_status"] = "schema_valid_runtime_estimator_pending"
+    return L1RegimeMetadataArtifact(
+        definition=definition,
+        n_regimes=leaf_config.get("n_regimes", 2),
+        regime_label_series=None,
+        regime_probabilities=None,
+        transition_matrix=None,
+        estimation_temporal_rule=resolved.get("regime_estimation_temporal_rule") if definition in _REGIME_ESTIMATED_OPTIONS else None,
+        estimation_metadata=metadata,
+    )
+
+
+def _data_normalize_iso_partial(value: Any, *, end_of_period: bool = False) -> str | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        date.fromisoformat(value)
+        return value
+    except ValueError:
+        pass
+    if re.match(r"^\d{4}-\d{2}$", value):
+        y, m = int(value[:4]), int(value[5:7])
+        if not (1 <= m <= 12):
+            return None
+        d = monthrange(y, m)[1] if end_of_period else 1
+        return f"{y:04d}-{m:02d}-{d:02d}"
+    if re.match(r"^\d{4}$", value):
+        return f"{value}-12-31" if end_of_period else f"{value}-01-01"
+    return None
+
+
+def _data_derived_frequency(custom_policy: Any, dataset: Any) -> str | None:
+    if custom_policy == "custom_panel_only" or dataset == "fred_sd":
+        return None
+    if dataset in _MONTHLY_DATASETS:
+        return "monthly"
+    if dataset in _QUARTERLY_DATASETS:
+        return "quarterly"
+    return None
+
+
+def _data_validate_source_selection(fixed_axes: dict[str, Any], leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[str]:
+    errors = []
+    custom_policy = resolved["panel_composition"]
+    dataset = resolved["dataset"]
+    if custom_policy == "custom_panel_only":
+        if not any(key in leaf_config for key in ("custom_source_path", "custom_panel_inline", "custom_panel_records")):
+            errors.append("custom_panel_only requires custom_source_path, custom_panel_inline, or custom_panel_records")
+        if "dataset" in fixed_axes:
+            errors.append("dataset is inactive when panel_composition=custom_panel_only")
+    if custom_policy == "official_plus_custom":
+        for key in ("custom_source_path", "custom_merge_rule"):
+            if key not in leaf_config:
+                errors.append(f"official_plus_custom requires {key}")
+    frequency = fixed_axes.get("frequency")
+    if dataset in _MONTHLY_DATASETS and frequency not in {None, "monthly"}:
+        errors.append("frequency must be monthly for FRED-MD datasets")
+    if dataset in _QUARTERLY_DATASETS and frequency not in {None, "quarterly"}:
+        errors.append("frequency must be quarterly for FRED-QD datasets")
+    if (dataset == "fred_sd" or custom_policy == "custom_panel_only") and frequency is None:
+        errors.append("frequency must be explicitly set for fred_sd standalone or custom-only data")
+    return errors
+
+
+def _data_validate_target(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[str]:
+    if resolved["target_structure"] == "single_target":
+        return [] if isinstance(leaf_config.get("target"), str) else ["single_target requires target string"]
+    targets = leaf_config.get("targets")
+    if not isinstance(targets, list) or not targets:
+        return ["multi_target requires non-empty targets list"]
+    return []
+
+
+def _data_validate_variable_universe(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[str]:
+    errors = []
+    variable_universe = resolved.get("variable_universe")
+    if variable_universe == "category_variables":
+        for key in ("variable_universe_category_columns", "variable_universe_category"):
+            if key not in leaf_config:
+                errors.append(f"category_variables requires {key}")
+    if variable_universe == "target_specific_variables" and not isinstance(leaf_config.get("target_specific_columns"), dict):
+        errors.append("target_specific_variables requires target_specific_columns")
+    if variable_universe == "explicit_variable_list":
+        columns = leaf_config.get("variable_universe_columns")
+        if not isinstance(columns, list) or not columns:
+            errors.append("explicit_variable_list requires non-empty variable_universe_columns")
+    return errors
+
+
+def _data_validate_horizons(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[str]:
+    horizon_set = resolved.get("horizon_set")
+    horizons = leaf_config.get("target_horizons")
+    if horizon_set == "single":
+        if not isinstance(horizons, list) or not _data_positive_int_list(horizons) or len(horizons) != 1:
+            return ["single horizon_set requires target_horizons list of length 1"]
+    if horizon_set == "custom_list" and not _data_positive_int_list(horizons):
+        return ["custom_list requires non-empty positive integer target_horizons"]
+    if horizon_set == "range_up_to_h":
+        max_horizon = leaf_config.get("max_horizon")
+        if not isinstance(max_horizon, int) or max_horizon <= 0:
+            return ["range_up_to_h requires positive integer max_horizon"]
+    return []
+
+
+def _data_validate_sample_window(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[str]:
+    errors = []
+    start = leaf_config.get("sample_start_date")
+    end = leaf_config.get("sample_end_date")
+    if resolved["sample_start_rule"] == "fixed_date" and _data_normalize_iso_partial(start) is None:
+        errors.append("fixed_date sample_start_rule requires sample_start_date")
+    if resolved["sample_end_rule"] == "fixed_date" and _data_normalize_iso_partial(end) is None:
+        errors.append("fixed_date sample_end_rule requires sample_end_date")
+    start_iso = _data_normalize_iso_partial(start)
+    end_iso = _data_normalize_iso_partial(end)
+    if start_iso is not None and end_iso is not None and date.fromisoformat(end_iso) < date.fromisoformat(start_iso):
+        errors.append("sample_end_date must be >= sample_start_date")
+    return errors
+
+
+def _data_validate_regime(leaf_config: dict[str, Any], resolved: dict[str, Any]) -> list[str]:
+    regime = resolved.get("regime_definition")
+    if regime in {None, "none"}:
+        return []
+    errors = []
+    if regime == "external_user_provided":
+        has_path = "regime_indicator_path" in leaf_config
+        has_dates = "regime_dates_list" in leaf_config
+        if has_path == has_dates:
+            errors.append("external_user_provided requires exactly one of regime_indicator_path or regime_dates_list")
+    if regime == "estimated_threshold" and not isinstance(leaf_config.get("threshold_variable"), str):
+        errors.append("estimated_threshold requires threshold_variable")
+    temporal_rule = resolved.get("regime_estimation_temporal_rule")
+    if regime in _REGIME_ESTIMATED_OPTIONS and temporal_rule not in _REGIME_TEMPORAL_RULE_OPTIONS:
+        errors.append(f"regime_estimation_temporal_rule must be one of {sorted(_REGIME_TEMPORAL_RULE_OPTIONS)}")
+    return errors
+
+
+def _data_positive_int_list(value: Any) -> bool:
+    return isinstance(value, list) and bool(value) and all(isinstance(item, int) and item > 0 for item in value)
+
+
+def _data_is_sweep_marker(value: Any) -> bool:
+    return isinstance(value, dict) and "sweep" in value
 
 def materialize_l1(
     recipe_root: dict[str, Any],
@@ -14809,16 +15145,17 @@ def _ks_statistic(left: pd.Series, right: pd.Series) -> float | None:
 def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Panel:
     policy = resolved["panel_composition"]
     if policy == "official_only":
-        raw_result = _load_official_raw_result(resolved, leaf_config)
-        frame = raw_result.data.copy()
+        bundle = _load_official_raw_result(resolved, leaf_config)
+        frame = bundle.panel.copy()
+        source_metadata = bundle.metadata
         metadata = {
             "stage": "l1_raw",
             "source": "official",
-            "dataset": raw_result.dataset_metadata.dataset,
-            "frequency": raw_result.dataset_metadata.frequency,
-            "vintage": raw_result.dataset_metadata.vintage,
-            "local_path": raw_result.artifact.local_path,
-            "transform_codes": dict(raw_result.transform_codes),
+            "dataset": source_metadata.get("dataset"),
+            "frequency": source_metadata.get("frequency"),
+            "vintage": source_metadata.get("vintage"),
+            "local_path": (source_metadata.get("artifact") or {}).get("local_path"),
+            "transform_codes": dict(source_metadata.get("transform_codes", {})),
         }
     elif policy in {"custom_panel_only", "official_plus_custom"}:
         if "custom_panel_inline" in leaf_config:
@@ -14834,17 +15171,16 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
         metadata = {"stage": "l1_raw", "source": "custom_panel"}
         if policy == "official_plus_custom":
             official = _load_official_raw_result(resolved, leaf_config)
-            official_frame = official.data.copy()
+            official_frame = official.panel.copy()
+            official_metadata = official.metadata
             # merge: prefer custom values when both have a column
             frame = frame.join(official_frame, how="outer", rsuffix="__official")
             metadata.update(
                 {
                     "source": "official_plus_custom",
-                    "official_dataset": official.dataset_metadata.dataset,
-                    "official_local_path": official.artifact.local_path,
-                    "transform_codes": dict(
-                        getattr(official, "transform_codes", {}) or {}
-                    ),
+                    "official_dataset": official_metadata.get("dataset"),
+                    "official_local_path": (official_metadata.get("artifact") or {}).get("local_path"),
+                    "transform_codes": dict(official_metadata.get("transform_codes", {})),
                 }
             )
     else:
@@ -14854,16 +15190,10 @@ def _load_raw_panel(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> Pa
     frame = _normalize_datetime_index(frame, leaf_config)
     frame = _apply_sample_window(frame, resolved, leaf_config)
     _validate_targets_present(frame, leaf_config, resolved)
-    # ALFRED vintage correction -- applies when vintage_policy="real_time_alfred" (v0.9.3).
-    # Replaces panel column values with vintage-correct ALFRED snapshots.
-    if resolved.get("vintage_policy") == "real_time_alfred":
-        from ..data.alfred_adapter import apply_alfred_vintage_to_panel
-        frame = apply_alfred_vintage_to_panel(frame, resolved, leaf_config)
-        metadata["vintage_policy"] = "real_time_alfred"
     return _panel_from_frame(frame, metadata=metadata)
 
 
-def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, Any]):
+def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, Any]) -> DataBundle:
     dataset = resolved.get("dataset")
     vintage = leaf_config.get("vintage")
     cache_root = leaf_config.get("cache_root")
@@ -14871,28 +15201,13 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
         "official_source_path"
     )
     if dataset == "fred_md":
-        return load_fred_md_result(
-            vintage=vintage, cache_root=cache_root, local_source=local_source
-        )
+        return load_fred_md(vintage=vintage, cache_root=cache_root, local_source=local_source)
     if dataset == "fred_qd":
-        return load_fred_qd_result(
-            vintage=vintage, cache_root=cache_root, local_source=local_source
-        )
+        return load_fred_qd(vintage=vintage, cache_root=cache_root, local_source=local_source)
     if dataset == "fred_sd":
         states = _resolve_fred_sd_states(resolved, leaf_config)
-        # F-P1-7 fix: resolve variable group to actual variable list before
-        # passing to loader. Groups (e.g. "labor_market") are stored in
-        # raw/fred_sd_groups.py; resolve_fred_sd_variable_group returns the
-        # list (or None for "all_sd_variables").
-        _sd_var_group = resolved.get("fred_sd_variable_group") or leaf_config.get("fred_sd_variable_group")
-        if _sd_var_group and _sd_var_group not in ("all_sd_variables", None):
-            _resolved_vars, _ = _resolve_fred_sd_variable_group(_sd_var_group, leaf_config)
-            variables = _resolved_vars
-        else:
-            variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
-                "sd_variables"
-            )
-        return load_fred_sd_result(
+        variables = _resolve_fred_sd_variables(resolved, leaf_config)
+        return load_fred_sd(
             vintage=vintage,
             cache_root=cache_root,
             local_source=local_source,
@@ -14900,40 +15215,36 @@ def _load_official_raw_result(resolved: dict[str, Any], leaf_config: dict[str, A
             variables=list(variables) if variables else None,
         )
     if dataset in {"fred_md+fred_sd", "fred_qd+fred_sd"}:
-        national_loader = (
-            load_fred_md_result if dataset.startswith("fred_md") else load_fred_qd_result
-        )
-        national = national_loader(
-            vintage=vintage, cache_root=cache_root, local_source=local_source
-        )
+        national_loader = load_fred_md if dataset.startswith("fred_md") else load_fred_qd
+        national = national_loader(vintage=vintage, cache_root=cache_root, local_source=local_source)
         states = _resolve_fred_sd_states(resolved, leaf_config)
-        # F-P1-7 fix: same variable group resolution as above
-        _sd_var_group = resolved.get("fred_sd_variable_group") or leaf_config.get("fred_sd_variable_group")
-        if _sd_var_group and _sd_var_group not in ("all_sd_variables", None):
-            _resolved_vars, _ = _resolve_fred_sd_variable_group(_sd_var_group, leaf_config)
-            variables = _resolved_vars
-        else:
-            variables = leaf_config.get("fred_sd_variables") or leaf_config.get(
-                "sd_variables"
-            )
-        regional = load_fred_sd_result(
+        variables = _resolve_fred_sd_variables(resolved, leaf_config)
+        regional = load_fred_sd(
             vintage=vintage,
             cache_root=cache_root,
             local_source=leaf_config.get("local_fred_sd_source"),
             states=list(states) if states else None,
             variables=list(variables) if variables else None,
         )
-        merged = national.data.join(regional.data, how="outer")
-        national.data.attrs.update(national.data.attrs)
-        return type(national)(
-            data=merged,
-            dataset_metadata=national.dataset_metadata,
-            artifact=national.artifact,
-            transform_codes=national.transform_codes,
-        )
+        merged = national.panel.join(regional.panel, how="outer")
+        metadata = dict(national.metadata)
+        metadata["dataset"] = dataset
+        metadata["combined_sources"] = [national.metadata, regional.metadata]
+        metadata["transform_codes"] = dict(national.metadata.get("transform_codes", {}))
+        merged.attrs.update(national.panel.attrs)
+        merged.attrs["macroforecast_metadata"] = metadata
+        return DataBundle(panel=merged, metadata=metadata)
     raise NotImplementedError(
         f"official dataset {dataset!r} is not supported by core L1 runtime yet"
     )
+
+
+def _resolve_fred_sd_variables(resolved: dict[str, Any], leaf_config: dict[str, Any]):
+    sd_var_group = resolved.get("fred_sd_variable_group") or leaf_config.get("fred_sd_variable_group")
+    if sd_var_group and sd_var_group not in ("all_sd_variables", None):
+        resolved_vars, _ = _resolve_fred_sd_variable_group(sd_var_group, leaf_config)
+        return resolved_vars
+    return leaf_config.get("fred_sd_variables") or leaf_config.get("sd_variables")
 
 
 def _resolve_fred_sd_states(

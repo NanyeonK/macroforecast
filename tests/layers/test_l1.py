@@ -59,13 +59,11 @@ def test_as_panel_accepts_date_column_selection_and_rename():
     assert panel["x"].dtype.kind in {"f", "i"}
 
 
-def test_data_result_loader_keeps_raw_envelope(tmp_path):
-    fixture = Path("tests/fixtures/fred_md_sample.csv")
-    result = mf.data.load_fred_md_result(local_source=fixture, cache_root=tmp_path)
-
-    assert result.dataset_metadata.dataset == "fred_md"
-    assert isinstance(result.data, pd.DataFrame)
-    assert mf.data.metadata(result)["dataset"] == "fred_md"
+def test_data_namespace_does_not_export_raw_result_api():
+    assert "load_fred_md_result" not in mf.data.__all__
+    assert "RawLoadResult" not in mf.data.__all__
+    assert not hasattr(mf.data, "load_fred_md_result")
+    assert not hasattr(mf.data, "RawLoadResult")
 
 
 def test_old_schema_namespace_is_not_public():
