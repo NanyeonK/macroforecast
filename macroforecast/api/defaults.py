@@ -5,15 +5,16 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Iterable
 
+from macroforecast.meta.config import DEFAULT_RANDOM_SEED
+
 DEFAULT_PROFILE_NAME = "macroforecast-default-v1"
 
-# Public defaults — single source of truth for user-facing API + recipe builder.
+# Public defaults for user-facing API + recipe builder.
 # Any change here propagates to:
 #   - mf.forecast() / mf.Experiment() signatures (via import)
 #   - DEFAULT_PROFILE (below)
 #   - Docs (simple_api/quickstart.md etc.)
 DEFAULT_MODEL: str = "ar_p"
-DEFAULT_RANDOM_SEED: int = 42
 DEFAULT_HORIZONS: tuple[int, ...] = (1,)
 
 # Optional convenience constants for L4 schema-level forecast settings (these

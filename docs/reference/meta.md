@@ -32,6 +32,9 @@ file into the same `macroforecast.meta` functions.
 | `on_error` | `"raise" | "continue"` | `"raise"` | Default cell failure behavior. `"raise"` stops on failure; `"continue"` records the failure and continues where supported. |
 | `verbose` | `int` | `0` | Default verbosity level for future runtime logging surfaces. |
 
+The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
+is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
+
 Example output:
 
 ```python

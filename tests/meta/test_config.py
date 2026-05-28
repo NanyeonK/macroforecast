@@ -10,6 +10,11 @@ def teardown_function() -> None:
     meta.reset_config()
 
 
+def test_default_random_seed_is_meta_owned():
+    assert meta.DEFAULT_RANDOM_SEED == 42
+    assert meta.get_config()["random_seed"] == meta.DEFAULT_RANDOM_SEED
+
+
 def test_configure_updates_global_defaults():
     active = meta.configure(random_seed=7, n_jobs="auto", on_error="continue", verbose=2)
 

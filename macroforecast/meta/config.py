@@ -5,11 +5,11 @@ from contextlib import contextmanager
 from threading import RLock
 from typing import Any, Iterator, Literal, TypedDict, cast
 
-from macroforecast.api.defaults import DEFAULT_RANDOM_SEED
-
 
 OnError = Literal["raise", "continue"]
 NJobs = int | Literal["auto"]
+
+DEFAULT_RANDOM_SEED: int = 42
 
 
 class MetaConfig(TypedDict):
