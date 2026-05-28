@@ -251,7 +251,7 @@ def build_default_recipe_dict(
     reproducibility_policy: str = "seeded_reproducible",
     failure_policy: str = "fail_fast",
     compute_policy: str = "serial",
-    random_seed: int = 42,
+    random_seed: int = DEFAULT_RANDOM_SEED,
     benchmark_config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the current minimal executable recipe for an Experiment.
