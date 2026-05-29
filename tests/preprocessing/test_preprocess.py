@@ -125,6 +125,35 @@ def test_transform_code_overrides_replace_metadata_codes():
 
     assert result.steps[1]["applied"] == {"target": 1, "x": 1}
     assert result.panel["target"].tolist() == [1.0, 2.0, 4.0, 8.0, 16.0]
+    assert result.panel.attrs["macroforecast_transform_codes"] == {"target": 1, "x": 1}
+    assert result.metadata["transform_codes_applied"] == {"target": 1, "x": 1}
+
+
+def test_official_transform_requires_a_matching_tcode_map():
+    bundle = mf.data.DataBundle(
+        mf.data.as_panel(_panel(), date="date"),
+        {"dataset": "custom", "source_family": "custom", "frequency": "monthly"},
+    )
+
+    with pytest.raises(ValueError, match="transform='official' requires transform_codes"):
+        mf.preprocessing.preprocess(bundle, transform="official")
+
+
+def test_explicit_transform_codes_reject_unknown_columns():
+    bundle = mf.data.DataBundle(
+        mf.data.as_panel(_panel(), date="date"),
+        {"dataset": "custom", "source_family": "custom", "frequency": "monthly"},
+    )
+
+    with pytest.raises(ValueError, match="not in the panel"):
+        mf.preprocessing.preprocess(
+            bundle,
+            transform="custom",
+            transform_codes={"target": 2, "missing_series": 1},
+            outliers="none",
+            impute="none",
+            frame="keep",
+        )
 
 
 def test_fred_sd_requires_explicit_transform_choice():
@@ -188,6 +217,24 @@ def test_handle_mixed_frequency_can_align_weekly_and_monthly_to_monthly():
     assert list(aligned.index.strftime("%Y-%m-%d")) == ["2020-01-01", "2020-02-01"]
     assert aligned["weekly"].tolist() == [2.5, 25.0]
     assert aligned["monthly"].tolist() == [100.0, 200.0]
+
+
+def test_handle_mixed_frequency_warns_when_frequency_is_inferred_unknown():
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=3, freq="MS"),
+                "sparse": [1.0, np.nan, np.nan],
+                "monthly": [10.0, 11.0, 12.0],
+            }
+        ),
+        date="date",
+    )
+
+    with pytest.warns(UserWarning, match="unknown columns"):
+        aligned = mf.preprocessing.handle_mixed_frequency(panel, method="monthly")
+
+    assert list(aligned.columns) == ["sparse", "monthly"]
 
 
 def test_handle_mixed_frequency_quarterly_to_monthly_matches_data_combine():
@@ -330,6 +377,40 @@ def test_em_factor_default_fills_missing_with_baing_path():
 
     assert imputed.shape == panel.shape
     assert imputed.isna().sum().sum() == 0
+
+
+def test_linear_interpolation_keeps_leading_and_trailing_edges_missing():
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=5, freq="MS"),
+                "x": [np.nan, 1.0, np.nan, 3.0, np.nan],
+            }
+        ),
+        date="date",
+    )
+
+    imputed = mf.preprocessing.impute_missing(panel, method="linear")
+
+    assert np.isnan(imputed["x"].iloc[0])
+    assert imputed["x"].iloc[2] == 2.0
+    assert np.isnan(imputed["x"].iloc[-1])
+
+
+def test_em_multivariate_rejects_all_missing_rows_like_em_factor():
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=3, freq="MS"),
+                "a": [1.0, np.nan, 3.0],
+                "b": [2.0, np.nan, 4.0],
+            }
+        ),
+        date="date",
+    )
+
+    with pytest.raises(ValueError, match="all-missing row"):
+        mf.preprocessing.impute_missing(panel, method="em_multivariate")
 
 
 def test_preprocess_warns_without_data_metadata():

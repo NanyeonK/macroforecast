@@ -13,6 +13,13 @@ The default `reprocess()` path follows the public McCracken-Ng FRED-MD Matlab
 workflow for FRED-MD/FRED-QD style panels. FRED-SD has no official t-code map,
 so the user must explicitly choose `transform="none"` or pass custom codes.
 
+Preprocessing fails closed on transformation metadata. If
+`transform="official"` is selected but no t-code map is available from
+`transform_codes`, `metadata["transform_codes"]`, or
+`panel.attrs["macroforecast_transform_codes"]`, `reprocess()` raises
+`ValueError`. If explicit transform-code keys do not match panel columns, it
+also raises. This prevents accidental no-op preprocessing.
+
 ## Public Flow
 
 ```python
@@ -109,8 +116,8 @@ macroforecast.preprocessing.reprocess(
 | `weekly_to_quarterly` | `str` | `"mean"` | `"mean"`, `"last"`, `"sum"`. |
 | `transform_order` | `str` | `"after_frequency"` | `"after_frequency"`/`"frequency_then_transform"` or `"before_frequency"`/`"transform_then_frequency"`. |
 | `transform` | `str` | `"official"` | `"official"`, `"custom"`, `"none"`; accepts aliases `apply_official_tcode`, `custom_tcode`, `no_transform`. |
-| `transform_codes` | mapping or `None` | from metadata | Full t-code map. Required for `transform="custom"` unless overrides provide every intended code. |
-| `transform_code_overrides` | mapping or `None` | `None` | Per-series override applied on top of official or custom codes. |
+| `transform_codes` | mapping or `None` | from metadata | Full t-code map. Required for `transform="custom"` and required for `transform="official"` when metadata does not provide codes. Explicit keys must match panel columns. |
+| `transform_code_overrides` | mapping or `None` | `None` | Per-series override applied on top of official or custom codes. Override keys must match panel columns. |
 | `tcode_lag` | `str` | `"drop"` | `"drop"`, `"keep"`, `"drop_all_missing_rows"`, `"drop_any_missing_rows"`. |
 | `outliers` | `str` | `"iqr"` | `"iqr"`, `"zscore"`, `"winsorize"`, `"none"`. |
 | `outlier_action` | `str` | `"flag_as_nan"` | `"flag_as_nan"`, `"replace_with_median"`, `"replace_with_cap_value"` for IQR/z-score methods. |
@@ -133,6 +140,23 @@ Returns `PreprocessedData`.
 `metadata["preprocessing"]["transform_state"]` stores inverse-transform support
 metadata for every transformed series: t-code, log-domain requirement, lag
 count, and the last observed raw values/dates available before transformation.
+
+When transforms are applied, the final post-override t-code map is also stored
+in `metadata["transform_codes_applied"]` and
+`processed.panel.attrs["macroforecast_transform_codes"]`. This is the map that
+actually ran, not just the raw loader metadata.
+
+### Error Conditions
+
+| Condition | Result |
+| --- | --- |
+| Plain `DataFrame` without data metadata | `UserWarning`; preprocessing still runs if the panel is canonical. |
+| `transform="official"` with no t-code map | `ValueError`. |
+| `transform="custom"` with no t-code map | `ValueError`. |
+| Explicit transform-code or override key not in the panel | `ValueError`. |
+| FRED-SD with default `transform="official"` | `ValueError`; choose `transform="none"` or custom FRED-SD codes. |
+| Frequency inference finds sparse unknown columns during alignment | `UserWarning`; supply data metadata when the source frequency is known. |
+| EM imputation sees an all-missing row or column | `ValueError`. |
 
 `PreprocessedData` supports tuple unpacking:
 
@@ -189,7 +213,8 @@ normalizes choices, but it does not transform, impute, or mutate the panel.
 | `metadata_warning` | Warning text that would matter for a panel without data-generated metadata, or `None`. |
 | `steps` | Ordered step names implied by `transform_order`. |
 | `frequency` | Requested frequency policy plus native-frequency map and metadata source. |
-| `transform` | Transform method, applied t-code map, and FRED-SD official-code error note when relevant. |
+| `frequency["issues"]` | Native-frequency inference concerns such as sparse `unknown`, `irregular`, or `annual` columns. |
+| `transform` | Transform method, applied t-code map, ignored metadata-only codes, and any no-code/no-match error note. |
 | `tcode_lag`, `outliers`, `impute`, `frame` | Normalized choice values. |
 
 ## report
@@ -235,6 +260,12 @@ McCracken-Ng formulas above. Columns without a matching t-code are copied
 unchanged. Leading missing values are not removed here; call
 `handle_tcode_lag()` or use `reprocess(tcode_lag=...)`.
 
+Note the distinction between this low-level helper and `reprocess()`.
+`apply_transform_codes()` ignores absent code keys for convenience when used
+interactively. `reprocess()` is stricter: explicit transform-code keys must
+match panel columns so a production run cannot silently miss a requested
+series.
+
 ## handle_mixed_frequency
 
 ```python
@@ -266,6 +297,11 @@ Returns a new `pandas.DataFrame`. Frequency detection uses
 date spacing only as fallback. Dataset composition such as FRED-MD+FRED-SD or
 FRED-QD+FRED-SD should still be handled in `macroforecast.data`; this helper is
 for direct preprocessing of an already-formed panel.
+
+If observed-date inference cannot classify a sparse column and alignment is
+requested, the helper emits `UserWarning`. The operation still proceeds because
+custom panels may intentionally have short series, but the warning means the
+caller should prefer loader-generated metadata when possible.
 
 For quarterly-to-monthly alignment, `step_backward` is kept as a compatibility
 alias for the package's current direct-call meaning: assign each quarterly
@@ -359,6 +395,13 @@ Returns a new `pandas.DataFrame`. The default `em_factor` path uses the
 FRED-MD-style PCA-EM algorithm. It raises if the panel contains an all-missing
 row or all-missing column; use `handle_tcode_lag()` before this step for the
 usual FRED-MD transform-induced leading missing rows.
+
+`method="linear"` fills only interior missing values bracketed by observed
+data. It does not extrapolate leading or trailing missing values, because those
+edges usually encode unavailable source observations.
+
+`method="em_multivariate"` uses the same all-missing row/column guard as
+`em_factor`.
 
 ## handle_frame_edges
 

@@ -7,6 +7,7 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import Any, Literal, TypeAlias
 
+import numpy as np
 import pandas as pd
 
 PredictorSelection = Literal["all"] | tuple[str, ...]
@@ -58,24 +59,50 @@ def as_panel(
     columns: Iterable[str] | None = None,
     rename: Mapping[str, str] | None = None,
     metadata: Mapping[str, Any] | None = None,
+    strict: bool = True,
 ) -> pd.DataFrame:
-    """Return ``frame`` as macroforecast's canonical date-indexed panel."""
+    """Return ``frame`` as macroforecast's canonical date-indexed panel.
+
+    ``strict=True`` is intentional. A forecasting panel should not silently
+    lose rows because date parsing failed, nor should string cells such as
+    ``"missing"`` become ``NaN`` without the caller noticing. Official FRED
+    files use real missing-value markers that are already parsed upstream; this
+    guard is mainly for custom CSV/Parquet inputs and ad hoc DataFrames.
+    """
 
     if not isinstance(frame, pd.DataFrame):
         raise TypeError("panel must be a pandas DataFrame")
     panel = frame.copy()
+    input_rows = int(panel.shape[0])
+    input_columns = [str(column) for column in panel.columns]
+    date_source: str | None = None
+    invalid_date_rows = 0
 
     if date is not None:
         if date not in panel.columns:
             raise ValueError(f"date column {date!r} is not in the DataFrame")
+        date_source = str(date)
         panel[date] = pd.to_datetime(panel[date], errors="coerce")
+        invalid_date_rows = int(panel[date].isna().sum())
+        if invalid_date_rows and strict:
+            raise ValueError(
+                f"date column {date!r} has {invalid_date_rows} invalid or missing date values"
+            )
         panel = panel[panel[date].notna()].set_index(date)
     elif not isinstance(panel.index, pd.DatetimeIndex):
         if not len(panel.columns):
             raise ValueError("panel must have a DatetimeIndex or a date column")
         first_column = panel.columns[0]
+        date_source = str(first_column)
         panel[first_column] = pd.to_datetime(panel[first_column], errors="coerce")
+        invalid_date_rows = int(panel[first_column].isna().sum())
+        if invalid_date_rows and strict:
+            raise ValueError(
+                f"date column {str(first_column)!r} has {invalid_date_rows} invalid or missing date values"
+            )
         panel = panel[panel[first_column].notna()].set_index(first_column)
+    else:
+        date_source = "index"
 
     if columns is not None:
         selected = [str(column) for column in columns]
@@ -88,6 +115,9 @@ def as_panel(
         panel = panel.rename(columns=dict(rename))
 
     panel.index = pd.DatetimeIndex(panel.index)
+    invalid_index_rows = int(panel.index.isna().sum())
+    if invalid_index_rows and strict:
+        raise ValueError(f"panel index has {invalid_index_rows} invalid or missing date values")
     panel = panel[panel.index.notna()]
     panel.index.name = "date"
     panel = panel.sort_index()
@@ -96,14 +126,43 @@ def as_panel(
         sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in duplicated[:3])
         raise ValueError(f"panel has duplicate dates: {sample}")
 
+    coercion_report = _numeric_coercion_report(panel)
     for column in panel.columns:
         panel[column] = pd.to_numeric(panel[column], errors="coerce")
+    if coercion_report["coerced_cells"] and strict:
+        examples = coercion_report["examples"]
+        raise ValueError(
+            "non-numeric panel values would be coerced to NaN; "
+            f"coerced_cells={coercion_report['coerced_cells']}, examples={examples}"
+        )
+    inf_report = _infinite_value_report(panel)
+    if inf_report["inf_cells"]:
+        raise ValueError(
+            "panel contains infinite values; replace them with finite values or missing values "
+            f"before loading. inf_cells={inf_report['inf_cells']}, examples={inf_report['examples']}"
+        )
     validate_panel(panel)
 
     attrs = dict(getattr(frame, "attrs", {}) or {})
     attrs.update(getattr(panel, "attrs", {}) or {})
+    panel_report = {
+        "contract": "macroforecast_panel_v1",
+        "strict": bool(strict),
+        "input_rows": input_rows,
+        "output_rows": int(panel.shape[0]),
+        "input_columns": input_columns,
+        "output_columns": [str(column) for column in panel.columns],
+        "date_source": date_source,
+        "invalid_date_rows_dropped": int(invalid_date_rows + invalid_index_rows),
+        "numeric_coercion": coercion_report,
+    }
+    attrs["macroforecast_panel_report"] = panel_report
     if metadata is not None:
-        attrs["macroforecast_metadata"] = dict(metadata)
+        # Keep panel-normalization metadata beside the data-source metadata.
+        # Later stages read this to tell whether a custom load required any
+        # lossy normalization. The source metadata itself remains unchanged
+        # unless the bundle constructor explicitly adopts this attrs payload.
+        attrs["macroforecast_metadata"] = attach_metadata(metadata, "panel", panel_report)
     panel.attrs.update(attrs)
     return panel
 
@@ -113,6 +172,8 @@ def validate_panel(panel: pd.DataFrame) -> None:
 
     if not isinstance(panel, pd.DataFrame):
         raise TypeError("panel must be a pandas DataFrame")
+    if panel.empty:
+        raise ValueError(f"panel must not be empty; got shape {panel.shape}")
     if not isinstance(panel.index, pd.DatetimeIndex):
         raise TypeError("panel index must be a pandas DatetimeIndex")
     if panel.index.name != "date":
@@ -128,6 +189,12 @@ def validate_panel(panel: pd.DataFrame) -> None:
     ]
     if non_numeric:
         raise TypeError(f"panel columns must be numeric: {non_numeric}")
+    inf_report = _infinite_value_report(panel)
+    if inf_report["inf_cells"]:
+        raise ValueError(
+            "panel must contain only finite numeric values or NaN; "
+            f"inf_cells={inf_report['inf_cells']}, examples={inf_report['examples']}"
+        )
 
 
 def panel_info(panel: PanelInput) -> dict[str, Any]:
@@ -182,11 +249,17 @@ def spec(
 
     predictor_values: PredictorSelection
     if predictors == "all":
-        predictor_values = "all"
+        # ``predictors='all'`` means all non-target columns. Recording the
+        # expanded tuple prevents a later model stage from accidentally using
+        # the target column as its own predictor when it consumes metadata.
+        predictor_values = tuple(str(column) for column in panel.columns if str(column) not in set(target_values))
     else:
-        predictor_values = tuple(str(value) for value in predictors)
+        predictor_values = tuple(dict.fromkeys(str(value) for value in predictors))
         if not predictor_values:
             raise ValueError("predictors must not be empty")
+        overlap = sorted(set(predictor_values).intersection(target_values))
+        if overlap:
+            raise ValueError(f"predictors must not include target columns: {overlap}")
 
     required_columns = set(target_values)
     if predictor_values != "all":
@@ -195,9 +268,8 @@ def spec(
     if missing:
         raise ValueError(f"requested columns are not in the panel: {missing}")
 
-    if predictor_values != "all":
-        ordered = list(dict.fromkeys([*predictor_values, *target_values]))
-        panel = panel[ordered]
+    ordered = list(dict.fromkeys([*predictor_values, *target_values]))
+    panel = panel[ordered]
     if panel.empty:
         raise ValueError("sample window leaves an empty panel")
 
@@ -210,7 +282,7 @@ def spec(
             "horizons": list(horizon_values),
             "start": start_iso,
             "end": end_iso,
-            "predictors": predictor_values if predictor_values == "all" else list(predictor_values),
+            "predictors": list(predictor_values),
             "panel": panel_info(DataBundle(panel, bundle.metadata)),
         },
     )
@@ -226,6 +298,47 @@ def spec(
         end=end_iso,
         predictors=predictor_values,
     )
+
+
+def _numeric_coercion_report(panel: pd.DataFrame) -> dict[str, Any]:
+    coerced_cells = 0
+    examples: list[dict[str, Any]] = []
+    for column in panel.columns:
+        before = panel[column]
+        after = pd.to_numeric(before, errors="coerce")
+        mask = before.notna() & after.isna()
+        count = int(mask.sum())
+        coerced_cells += count
+        if count and len(examples) < 5:
+            for index, value in before[mask].head(5 - len(examples)).items():
+                examples.append(
+                    {
+                        "date": pd.Timestamp(index).strftime("%Y-%m-%d"),
+                        "column": str(column),
+                        "value": str(value),
+                    }
+                )
+    return {"coerced_cells": int(coerced_cells), "examples": examples}
+
+
+def _infinite_value_report(panel: pd.DataFrame) -> dict[str, Any]:
+    numeric = panel.select_dtypes("number")
+    if numeric.empty:
+        return {"inf_cells": 0, "examples": []}
+    values = numeric.to_numpy(dtype=float, copy=False)
+    mask = np.isinf(values)
+    examples: list[dict[str, Any]] = []
+    if mask.any():
+        row_positions, column_positions = np.where(mask)
+        for row_pos, column_pos in zip(row_positions[:5], column_positions[:5], strict=False):
+            examples.append(
+                {
+                    "date": pd.Timestamp(numeric.index[int(row_pos)]).strftime("%Y-%m-%d"),
+                    "column": str(numeric.columns[int(column_pos)]),
+                    "value": float(values[int(row_pos), int(column_pos)]),
+                }
+            )
+    return {"inf_cells": int(mask.sum()), "examples": examples}
 
 
 def attach_metadata(metadata: Mapping[str, Any], stage: str, values: Mapping[str, Any]) -> dict[str, Any]:

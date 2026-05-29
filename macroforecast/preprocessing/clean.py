@@ -131,7 +131,10 @@ def linear_interpolate_clean(panel: pd.DataFrame) -> pd.DataFrame:
     """Fill interior missing values by linear interpolation."""
 
     _require_non_empty(panel)
-    return _copy_attrs(panel, panel.interpolate(method="linear"))
+    # Fill only gaps bracketed by observed data. Leading/trailing NaNs often
+    # encode a series' publication start/end, so extrapolating them would create
+    # observations that were not available in the source panel.
+    return _copy_attrs(panel, panel.interpolate(method="linear", limit_area="inside"))
 
 
 def truncate_to_balanced_clean(panel: pd.DataFrame) -> pd.DataFrame:
@@ -302,6 +305,11 @@ def _pca_em_imputation(
     missing = np.isnan(matrix)
     if not missing.any():
         return panel.copy()
+    if (missing.sum(axis=1) == matrix.shape[1]).any():
+        # A fully missing date has no cross-sectional signal. The FRED-MD-style
+        # EM path rejects it, and this generic PCA-EM helper follows the same
+        # convention so direct callable behavior is not looser than reprocess().
+        raise ValueError("PCA-EM cannot process an all-missing row")
     if (missing.sum(axis=0) == matrix.shape[0]).any():
         raise ValueError("PCA-EM cannot process an all-missing column")
     means = np.nanmean(matrix, axis=0)

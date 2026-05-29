@@ -227,11 +227,15 @@ def reprocess(
         "output_panel": output_info,
     }
     updated_metadata = attach_metadata(base.metadata, "preprocessing", stage)
+    if applied_codes:
+        updated_metadata = attach_metadata(updated_metadata, "transform_codes_applied", applied_codes)
     panel.attrs["macroforecast_metadata"] = updated_metadata
-    if transform_codes is not None:
-        panel.attrs["macroforecast_transform_codes"] = dict(transform_codes)
-    elif "macroforecast_transform_codes" in base.panel.attrs:
-        panel.attrs["macroforecast_transform_codes"] = dict(base.panel.attrs["macroforecast_transform_codes"])
+    if applied_codes:
+        # Store the final applied map, not merely the raw user input. This is
+        # important when transform_code_overrides changes official metadata:
+        # downstream diagnostics should see the exact transformations that were
+        # actually used on this output panel.
+        panel.attrs["macroforecast_transform_codes"] = dict(applied_codes)
     return PreprocessedData(
         panel=panel,
         metadata=updated_metadata,
@@ -372,6 +376,7 @@ def plan(
     if transform_method == "official" and _is_fred_sd_metadata(base.metadata):
         transform_error = "FRED-SD has no official t-code map"
         applied_codes: dict[str, int] = {}
+        ignored_codes: dict[str, int] = {}
     else:
         transform_error = None
         codes = (
@@ -385,7 +390,13 @@ def plan(
             )
         )
         applied_codes = {column: int(code) for column, code in codes.items() if column in base.panel.columns}
+        ignored_codes = {column: int(code) for column, code in codes.items() if column not in base.panel.columns}
+        if transform_method in {"official", "custom"} and not codes:
+            transform_error = f"transform={transform_method!r} has no t-code map"
+        elif transform_method in {"official", "custom"} and codes and not applied_codes:
+            transform_error = f"transform={transform_method!r} has no t-code keys matching panel columns"
     frequency_map, frequency_source = _column_frequency_map(base.panel)
+    frequency_issues = _frequency_hardening_issues(frequency_map)
     return {
         "input_panel": panel_info(DataBundle(base.panel, base.metadata)),
         "metadata_warning": _data_metadata_warning_message(base.metadata),
@@ -394,10 +405,12 @@ def plan(
             "method": frequency_method,
             "metadata_source": frequency_source,
             "native_frequencies": frequency_map,
+            "issues": frequency_issues,
         },
         "transform": {
             "method": transform_method,
             "applied_codes": applied_codes,
+            "ignored_codes": ignored_codes,
             "error": transform_error,
         },
         "tcode_lag": _normalize_tcode_lag(tcode_lag),
@@ -441,11 +454,13 @@ def handle_mixed_frequency(
 ) -> pd.DataFrame:
     """Keep, filter, or align a mixed-frequency panel."""
 
+    validate_panel(panel)
     method = _normalize_frequency(method)
     if method == "keep":
         return panel.copy()
 
     frequencies, _frequency_source = _column_frequency_map(panel)
+    _warn_frequency_hardening_issues(frequencies)
     if method in {"drop_non_monthly", "drop_non_quarterly"}:
         target_frequency = "monthly" if method == "drop_non_monthly" else "quarterly"
         columns = [column for column, frequency in frequencies.items() if frequency == target_frequency]
@@ -684,12 +699,30 @@ def _apply_transform_step(
         transform_codes,
         transform_code_overrides=transform_code_overrides,
     )
+    # Fail closed here. In macro forecasting, "official" and "custom" are
+    # semantic promises that a t-code map exists. A silent no-op would leave
+    # levels in place, break stationarity assumptions, and make the downstream
+    # evaluation look better or worse for the wrong reason.
+    if transform_method == "official" and not codes:
+        raise ValueError("transform='official' requires transform_codes or metadata transform_codes")
     if transform_method == "custom" and not codes:
         raise ValueError("transform='custom' requires transform_codes")
     applied_codes = {column: int(code) for column, code in codes.items() if column in panel.columns}
+    ignored_codes = {column: int(code) for column, code in codes.items() if column not in panel.columns}
+    if ignored_codes and (transform_codes is not None or transform_code_overrides is not None):
+        raise ValueError(f"transform code keys are not in the panel: {sorted(ignored_codes)}")
+    if not applied_codes:
+        raise ValueError(f"transform={transform_method!r} has no t-code keys matching panel columns")
     transform_state = _build_transform_state(panel, applied_codes)
     result = apply_transform_codes(panel, applied_codes) if applied_codes else panel.copy()
-    steps.append({"step": "transform", "method": transform_method, "applied": applied_codes})
+    steps.append(
+        {
+            "step": "transform",
+            "method": transform_method,
+            "applied": applied_codes,
+            "ignored_metadata_codes": ignored_codes,
+        }
+    )
     return result, applied_codes, transform_state
 
 
@@ -902,6 +935,32 @@ def _column_frequency_map(panel: pd.DataFrame) -> tuple[dict[str, str], str]:
             "fred_sd_series_metadata",
         )
     return ({str(column): _infer_column_frequency(panel[column]) for column in panel.columns}, "observed_dates")
+
+
+def _frequency_hardening_issues(frequencies: Mapping[str, str]) -> list[dict[str, Any]]:
+    issues: list[dict[str, Any]] = []
+    for frequency in ("unknown", "irregular", "annual"):
+        columns = sorted(column for column, value in frequencies.items() if value == frequency)
+        if columns:
+            issues.append({"frequency": frequency, "columns": columns, "n_columns": len(columns)})
+    return issues
+
+
+def _warn_frequency_hardening_issues(frequencies: Mapping[str, str]) -> None:
+    issues = _frequency_hardening_issues(frequencies)
+    for issue in issues:
+        if issue["frequency"] == "irregular":
+            continue
+        sample = ", ".join(issue["columns"][:5])
+        if issue["n_columns"] > 5:
+            sample = f"{sample}, ..."
+        warnings.warn(
+            "frequency inference found "
+            f"{issue['frequency']} columns before alignment: {sample}. "
+            "Use data metadata when the source frequency is known.",
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def _frequency_map_from_metadata(panel: pd.DataFrame) -> dict[str, str]:

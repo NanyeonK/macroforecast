@@ -528,6 +528,7 @@ def load_custom_csv(
     metadata: Mapping[str, Any] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
+    strict: bool = True,
 ) -> DataBundle:
     csv_path = Path(path)
     if not csv_path.exists():
@@ -541,7 +542,7 @@ def load_custom_csv(
             columns=columns,
             series_columns=series_columns,
         )
-        panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename)
+        panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename, strict=strict)
     except Exception as exc:
         raise RawParseError(f"failed to normalize custom CSV at {csv_path}") from exc
     return _custom_bundle(
@@ -570,6 +571,7 @@ def load_custom_parquet(
     metadata: Mapping[str, Any] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
+    strict: bool = True,
 ) -> DataBundle:
     pq_path = Path(path)
     if not pq_path.exists():
@@ -583,7 +585,7 @@ def load_custom_parquet(
             columns=columns,
             series_columns=series_columns,
         )
-        panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename)
+        panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename, strict=strict)
     except Exception as exc:
         raise RawParseError(f"failed to normalize custom Parquet at {pq_path}") from exc
     return _custom_bundle(
@@ -897,11 +899,21 @@ def combine(
 
 
 def _bundle(panel: pd.DataFrame, metadata: Mapping[str, Any]) -> DataBundle:
+    source_panel_report = getattr(panel, "attrs", {}).get("macroforecast_panel_report")
     frame = as_panel(panel, metadata=metadata)
-    if metadata.get("transform_codes"):
-        frame.attrs["macroforecast_transform_codes"] = dict(metadata["transform_codes"])
-    frame.attrs["macroforecast_metadata"] = dict(metadata)
-    return DataBundle(panel=frame, metadata=dict(metadata))
+    normalized_metadata = dict(frame.attrs.get("macroforecast_metadata", metadata))
+    if isinstance(source_panel_report, Mapping):
+        # Preserve the first normalization report from custom loaders. Re-running
+        # as_panel() on an already canonical panel would otherwise replace a
+        # lossy raw-file report, such as dropped invalid dates, with a clean
+        # second-pass report.
+        report = dict(source_panel_report)
+        frame.attrs["macroforecast_panel_report"] = report
+        normalized_metadata["panel"] = report
+    if normalized_metadata.get("transform_codes"):
+        frame.attrs["macroforecast_transform_codes"] = dict(normalized_metadata["transform_codes"])
+    frame.attrs["macroforecast_metadata"] = normalized_metadata
+    return DataBundle(panel=frame, metadata=normalized_metadata)
 
 
 def _normalize_combined_frequency(frequency: str) -> str:

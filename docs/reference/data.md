@@ -54,12 +54,33 @@ panel, metadata = mf.data.load_fred_md()
 | Duplicate dates | not allowed |
 | Columns | variable IDs |
 | Values | numeric values or `NaN` |
+| Empty panel | not allowed |
+| Infinite values | not allowed |
 
 Metadata is explicit on `DataBundle.metadata`. The panel also carries
 `panel.attrs["macroforecast_metadata"]` for pandas-native handoff. FRED-MD and
 FRED-QD transform codes are attached to
 `panel.attrs["macroforecast_transform_codes"]`; preprocessing is responsible
 for using them.
+
+Panel normalization is strict by default. Invalid date values, non-numeric
+cells that would be coerced to `NaN`, duplicate dates, empty panels, and
+infinite values raise errors. When a caller deliberately sets `strict=False`,
+lossy normalization is allowed but recorded in
+`panel.attrs["macroforecast_panel_report"]` and
+`metadata["panel"]` when the panel is returned inside a `DataBundle`.
+
+`macroforecast_panel_report` contains:
+
+| Key | Meaning |
+| --- | --- |
+| `contract` | Panel contract version, currently `macroforecast_panel_v1`. |
+| `strict` | Whether lossy date/numeric coercion was rejected. |
+| `input_rows`, `output_rows` | Row count before and after panel normalization. |
+| `input_columns`, `output_columns` | Column names before and after selection/renaming. |
+| `date_source` | Date source used: a column name or `"index"`. |
+| `invalid_date_rows_dropped` | Number of invalid date rows dropped when `strict=False`. |
+| `numeric_coercion` | Count and examples of non-numeric cells coerced to `NaN` when `strict=False`. |
 
 ### Metadata Contract
 
@@ -413,6 +434,7 @@ macroforecast.data.load_custom_csv(
     frequency: str = "unknown",
     metadata: Mapping[str, object] | None = None,
     transform_codes: Mapping[str, int] | None = None,
+    strict: bool = True,
 ) -> DataBundle
 ```
 
@@ -430,6 +452,7 @@ macroforecast.data.load_custom_csv(
 | `frequency` | `str` | `"unknown"` | Metadata frequency label. |
 | `metadata` | mapping or `None` | `None` | User metadata to attach. |
 | `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
+| `strict` | `bool` | `True` | Reject invalid date rows and non-numeric cells instead of silently coercing them. Set `False` only when you want a permissive load with a panel report. |
 
 ### Output
 
@@ -438,6 +461,11 @@ metadata as `bundle.metadata`. If `transform_codes` is provided, it is stored in
 both `bundle.metadata["transform_codes"]` and
 `bundle.panel.attrs["macroforecast_transform_codes"]`, so
 `mf.preprocessing.reprocess(bundle)` can use the codes automatically.
+
+Custom loaders also store the strict-normalization report at
+`bundle.metadata["panel"]`. With `strict=True`, malformed dates or non-numeric
+cells raise `RawParseError` wrapping the underlying validation error. With
+`strict=False`, those lossy operations are allowed and counted.
 
 Example:
 
@@ -471,11 +499,12 @@ macroforecast.data.load_custom_parquet(
     frequency: str = "unknown",
     metadata: Mapping[str, object] | None = None,
     transform_codes: Mapping[str, int] | None = None,
+    strict: bool = True,
 ) -> DataBundle
 ```
 
-`date_col`, `series_columns`, and `transform_codes` have the same meaning as in
-`load_custom_csv`.
+`date_col`, `series_columns`, `transform_codes`, and `strict` have the same
+meaning as in `load_custom_csv`.
 
 ## as_panel
 
@@ -489,12 +518,29 @@ macroforecast.data.as_panel(
     columns: Iterable[str] | None = None,
     rename: Mapping[str, str] | None = None,
     metadata: Mapping[str, object] | None = None,
+    strict: bool = True,
 ) -> pandas.DataFrame
 ```
 
 `as_panel` returns a canonical panel. It raises if the date column is missing,
-dates are duplicated, or any retained column cannot be represented as numeric
-values or `NaN`.
+dates are duplicated, the output is empty, infinite values are present, or any
+retained column cannot be represented as numeric values or `NaN`.
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `frame` | `pandas.DataFrame` | required | Raw or already canonical panel. |
+| `date` | <code>str &#124; None</code> | `None` | Date column. If omitted and the index is not a `DatetimeIndex`, the first column is parsed as dates. |
+| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
+| `rename` | mapping or `None` | `None` | Rename retained columns after selection. |
+| `metadata` | mapping or `None` | `None` | Metadata attached under `panel.attrs["macroforecast_metadata"]`. |
+| `strict` | `bool` | `True` | Reject lossy date/numeric coercion. `False` permits it and records a panel report. |
+
+### Output
+
+Returns a `pandas.DataFrame` with `DatetimeIndex` named `"date"`, ascending
+dates, numeric columns, and attrs containing `macroforecast_panel_report`.
 
 ## validate_panel
 
@@ -555,7 +601,7 @@ macroforecast.data.spec(
 | `horizons` | iterable, int, or `None` | derived | Forecast horizons. |
 | `start` | <code>str &#124; None</code> | `None` | Start date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
 | `end` | <code>str &#124; None</code> | `None` | End date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
-| `predictors` | <code>"all" &#124; iterable</code> | `"all"` | Predictor columns to keep. |
+| `predictors` | <code>"all" &#124; iterable</code> | `"all"` | Predictor columns to keep. `"all"` expands to all non-target columns. Explicit predictor lists may not include target columns. |
 
 ### Default Horizons
 
@@ -568,7 +614,10 @@ macroforecast.data.spec(
 ### Output
 
 Returns `DataSpec`. Its metadata contains a `data_spec` entry with the chosen
-target, targets, horizons, sample dates, predictors, and panel summary.
+target, targets, horizons, sample dates, expanded predictor list, and panel
+summary. This expansion is deliberate: downstream model stages should consume a
+concrete non-target predictor list, not infer from the full panel and risk
+target leakage.
 
 ## Vintage Helpers
 
