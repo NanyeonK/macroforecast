@@ -388,7 +388,7 @@ def test_plan_and_report_summarize_preprocessing_choices():
     assert summary["output_panel"]["n_columns"] == 2
 
 
-def test_reprocess_alias_matches_preprocess():
+def test_preprocess_is_backward_compatible_alias_for_reprocess():
     metadata = {
         "dataset": "custom",
         "source_family": "custom",
@@ -396,6 +396,8 @@ def test_reprocess_alias_matches_preprocess():
         "transform_codes": {"target": 2},
     }
     bundle = mf.data.DataBundle(mf.data.as_panel(_panel(), date="date", metadata=metadata), metadata)
+
+    assert mf.preprocessing.preprocess is mf.preprocessing.reprocess
 
     result = mf.preprocessing.reprocess(
         bundle,

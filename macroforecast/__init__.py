@@ -22,7 +22,8 @@ Horse race research benchmarking package for macro forecasting.
   ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are aliases here.
 - ``macroforecast.meta`` -- package-wide execution settings.
 - ``macroforecast.data`` -- canonical panels, metadata, FRED/custom loaders, and data specs.
-- ``macroforecast.preprocessing`` -- pandas preprocessing callables and contract helpers.
+- ``macroforecast.preprocessing`` -- pandas preprocessing callables and reports;
+  old contract helpers are compatibility-only.
 - ``macroforecast.features`` -- feature engineering ops, transforms, selectors.
 - ``macroforecast.models`` -- public model classes, model ops, paper helpers, tuning.
 - ``macroforecast.evaluation`` -- forecast metric schema and ops.

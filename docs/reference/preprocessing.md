@@ -221,11 +221,216 @@ macroforecast.preprocessing.report(processed: PreprocessedData) -> dict
 | `choices` | Final normalized preprocessing choices. |
 | `transform_state` | Inverse-transform support metadata saved during the transform step. |
 
+## apply_transform_codes
+
+```python
+macroforecast.preprocessing.apply_transform_codes(
+    panel: pandas.DataFrame,
+    codes: Mapping[str, int],
+) -> pandas.DataFrame
+```
+
+### Input
+
+| Name | Type | Required | Choices |
+| --- | --- | --- | --- |
+| `panel` | `pandas.DataFrame` | yes | Canonical date-indexed numeric panel. |
+| `codes` | mapping from column name to integer | yes | T-codes `1` through `7`. Columns absent from the panel are ignored. |
+
+### Output
+
+Returns a new `pandas.DataFrame` with matching columns transformed by the
+McCracken-Ng formulas above. Columns without a matching t-code are copied
+unchanged. Leading missing values are not removed here; call
+`handle_tcode_lag()` or use `reprocess(tcode_lag=...)`.
+
+## handle_mixed_frequency
+
+```python
+macroforecast.preprocessing.handle_mixed_frequency(
+    panel: pandas.DataFrame,
+    *,
+    method: str = "keep",
+    quarterly_to_monthly: str = "step_backward",
+    weekly_to_monthly: str = "mean",
+    monthly_to_quarterly: str = "quarterly_average",
+    weekly_to_quarterly: str = "mean",
+) -> pandas.DataFrame
+```
+
+### Input
+
+| Name | Default | Choices |
+| --- | --- | --- |
+| `method` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"` |
+| `quarterly_to_monthly` | `"step_backward"` | `"step_backward"`, `"step_forward"`, `"linear_interpolation"` |
+| `weekly_to_monthly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
+| `monthly_to_quarterly` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"` |
+| `weekly_to_quarterly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
+
+### Output
+
+Returns a new `pandas.DataFrame`. Frequency detection uses
+`panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]` first and observed
+date spacing only as fallback. Dataset composition such as FRED-MD+FRED-SD or
+FRED-QD+FRED-SD should still be handled in `macroforecast.data`; this helper is
+for direct preprocessing of an already-formed panel.
+
+## handle_tcode_lag
+
+```python
+macroforecast.preprocessing.handle_tcode_lag(
+    panel: pandas.DataFrame,
+    *,
+    method: str = "drop",
+    codes: Mapping[str, int] | None = None,
+) -> pandas.DataFrame
+```
+
+### Input
+
+| `method` | Meaning |
+| --- | --- |
+| `"drop"` | Drop the first `max(t-code lag)` rows. This is the FRED-MD default path after applying official t-codes. |
+| `"keep"` | Keep all rows, including transform-induced leading missing values. |
+| `"drop_all_missing_rows"` | Drop only rows where every column is missing. |
+| `"drop_any_missing_rows"` | Drop every row with at least one missing value. This is strict and often removes too much data. |
+
+### Output
+
+Returns a new `pandas.DataFrame`. The function does not impute; it only handles
+missing rows introduced by transformations.
+
+## handle_outliers
+
+```python
+macroforecast.preprocessing.handle_outliers(
+    panel: pandas.DataFrame,
+    *,
+    method: str = "iqr",
+    action: str = "flag_as_nan",
+    iqr_threshold: float = 10.0,
+    zscore_threshold: float = 3.0,
+    winsorize_quantiles: tuple[float, float] = (0.01, 0.99),
+) -> pandas.DataFrame
+```
+
+### Input
+
+| Name | Default | Choices |
+| --- | --- | --- |
+| `method` | `"iqr"` | `"iqr"`, `"zscore"`, `"winsorize"`, `"none"` |
+| `action` | `"flag_as_nan"` | `"flag_as_nan"`, `"replace_with_median"`, `"replace_with_cap_value"` for IQR/z-score methods |
+| `iqr_threshold` | `10.0` | Positive float. McCracken-Ng default is `10.0`. |
+| `zscore_threshold` | `3.0` | Positive float. |
+| `winsorize_quantiles` | `(0.01, 0.99)` | Lower and upper quantiles for winsorization. |
+
+### Output
+
+Returns a new `pandas.DataFrame`. The default marks IQR outliers as `NaN`, so
+the next imputation step can fill them.
+
+## impute_missing
+
+```python
+macroforecast.preprocessing.impute_missing(
+    panel: pandas.DataFrame,
+    *,
+    method: str = "em_factor",
+    em_n_factors: int = 8,
+    em_factor_selection: str = "baing_p2",
+    em_demean: int = 2,
+    em_max_iter: int = 50,
+    em_tolerance: float = 1e-6,
+) -> pandas.DataFrame
+```
+
+### Input
+
+| Name | Default | Choices |
+| --- | --- | --- |
+| `method` | `"em_factor"` | `"em_factor"`, `"em_multivariate"`, `"mean"`, `"forward_fill"`, `"linear"`, `"none"` |
+| `em_n_factors` | `8` | Maximum factor count for `em_factor`; fixed rank when `em_factor_selection="fixed"`. |
+| `em_factor_selection` | `"baing_p2"` | `"baing_p1"`, `"baing_p2"`, `"baing_p3"`, `"fixed"` |
+| `em_demean` | `2` | `0`, `1`, `2`, `3`, matching `factors_em.m` standardization modes. |
+| `em_max_iter` | `50` | Positive integer. |
+| `em_tolerance` | `1e-6` | Positive float. |
+
+### Output
+
+Returns a new `pandas.DataFrame`. The default `em_factor` path uses the
+FRED-MD-style PCA-EM algorithm. It raises if the panel contains an all-missing
+row or all-missing column; use `handle_tcode_lag()` before this step for the
+usual FRED-MD transform-induced leading missing rows.
+
+## handle_frame_edges
+
+```python
+macroforecast.preprocessing.handle_frame_edges(
+    panel: pandas.DataFrame,
+    *,
+    method: str = "keep",
+) -> pandas.DataFrame
+```
+
+### Input
+
+| `method` | Meaning |
+| --- | --- |
+| `"keep"` | Keep the panel as-is. This is the default after EM imputation. |
+| `"truncate"` | Truncate to the largest balanced sample. |
+| `"drop_unbalanced_series"` | Drop columns that keep unbalanced edges. |
+| `"zero_fill"` | Fill leading missing values with zero. |
+
+### Output
+
+Returns a new `pandas.DataFrame`.
+
 ## FRED-SD
 
 FRED-SD does not provide official t-codes. `reprocess(fred_sd_bundle)` with
 the default `transform="official"` raises an error. The user must choose one
 of these paths.
+
+## fred_sd_transform_codes
+
+```python
+macroforecast.preprocessing.fred_sd_transform_codes(
+    data,
+    *,
+    variable_codes: Mapping[str, int] | None = None,
+    state_series_codes: Mapping[str, int] | None = None,
+    use_national_analog_suggestions: bool = True,
+    include_medium_confidence: bool = False,
+    return_table: bool = False,
+) -> dict[str, int] | tuple[dict[str, int], pandas.DataFrame]
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `data` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | required | FRED-SD wide state-series panel. |
+| `variable_codes` | mapping or `None` | `None` | User t-code choices by FRED-SD variable, such as `{"UR": 2}`. Expanded to every matching state series. |
+| `state_series_codes` | mapping or `None` | `None` | User t-code choices by exact column, such as `{"UR_CA": 2}`. Overrides variable-level choices. |
+| `use_national_analog_suggestions` | `bool` | `True` | Include high-confidence package suggestions based on national FRED-MD/FRED-QD analogs. |
+| `include_medium_confidence` | `bool` | `False` | Include broader provisional suggestions. |
+| `return_table` | `bool` | `False` | Return a provenance table with the expanded code map. |
+
+### Output
+
+By default, returns `dict[str, int]` mapping FRED-SD state-series columns to
+t-codes. With `return_table=True`, returns `(codes, table)`. The table columns
+are `column`, `sd_variable`, `state`, `tcode`, `source`, and
+`suggestion_confidence`.
+
+`suggestion_confidence` is not a statistical confidence interval. It records
+whether the t-code came from a user state-series override, user variable-level
+choice, high-confidence package suggestion, medium-confidence package
+suggestion, or no assignment.
+
+`expand_fred_sd_transform_codes(...)` is a backward-compatible alias. Prefer
+`fred_sd_transform_codes(...)` in new code.
 
 No transform:
 

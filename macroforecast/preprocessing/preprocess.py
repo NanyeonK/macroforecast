@@ -90,7 +90,7 @@ FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES: dict[str, int] = {
 }
 
 
-def preprocess(
+def reprocess(
     data: PreprocessInput,
     *,
     metadata: Mapping[str, Any] | None = None,
@@ -269,10 +269,7 @@ def preprocess(
     )
 
 
-def reprocess(data: PreprocessInput, **kwargs: Any) -> PreprocessedData:
-    """Alias for :func:`preprocess` using the user-facing action name."""
-
-    return preprocess(data, **kwargs)
+preprocess = reprocess
 
 
 def apply_transform_codes(panel: pd.DataFrame, codes: Mapping[str, int]) -> pd.DataFrame:
@@ -757,7 +754,7 @@ def _data_metadata_warning_message(metadata: Mapping[str, Any]) -> str | None:
     if metadata.get("dataset") and metadata.get("source_family"):
         return None
     return (
-        "preprocess() works best with metadata produced by macroforecast.data. "
+        "reprocess() works best with metadata produced by macroforecast.data. "
         "Pass a DataBundle/DataSpec from mf.data.load_*(), mf.data.load_custom_*(), "
         "or a DataFrame with macroforecast_metadata attrs."
     )
@@ -1091,6 +1088,7 @@ def _aggregate_resample(series: pd.Series, rule: str, *, frequency: str, aliases
 
 __all__ = [
     "PreprocessedData",
+    "reprocess",
     "preprocess",
     "plan",
     "report",
