@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+from scipy.stats import ks_2samp
 
 from macroforecast.data_analysis import (
     DataAnalysisReport,
@@ -57,6 +58,18 @@ def test_missing_shift_returns_per_column_dataframe():
     assert out.loc["x1", "raw_missing"] == 1
     assert out.loc["x1", "clean_missing"] == 0
     assert out.loc["x1", "delta_missing"] == -1
+    assert out.loc["x1", "column_status"] == "common"
+
+
+def test_missing_shift_marks_raw_only_and_clean_only_columns():
+    raw, clean = _panels()
+    raw = raw.assign(raw_only=1.0)
+    clean = clean.assign(clean_only=2.0)
+
+    out = missing_shift(raw, clean)
+
+    assert out.loc["raw_only", "column_status"] == "raw_only"
+    assert out.loc["clean_only", "column_status"] == "clean_only"
 
 
 def test_distribution_shift_computes_requested_metrics():
@@ -67,6 +80,21 @@ def test_distribution_shift_computes_requested_metrics():
     assert {"mean_change", "sd_change", "ks_statistic"} <= set(out.columns)
     assert out.loc["x1", "mean_change"] == pytest.approx(-10.0)
     assert out.loc["x1", "ks_statistic"] is not None
+    assert out.loc["x1", "sample"] == "common_index"
+
+
+def test_distribution_shift_uses_common_index_by_default():
+    index = pd.date_range("2020-01-01", periods=3, freq="MS")
+    raw = pd.DataFrame({"x": [1.0, 100.0, 200.0]}, index=index)
+    clean = pd.DataFrame({"x": [110.0, 210.0]}, index=index[1:])
+
+    common = distribution_shift(raw, clean, metrics=("mean_change",))
+    full = distribution_shift(raw, clean, metrics=("mean_change",), sample="full")
+
+    assert common.loc["x", "sample_n"] == 2
+    assert common.loc["x", "mean_change"] == pytest.approx(10.0)
+    assert full.loc["x", "sample_n"] == 3
+    assert full.loc["x", "mean_change"] == pytest.approx(179.0 / 3.0)
 
 
 def test_distribution_shift_rejects_unknown_metric():
@@ -74,6 +102,17 @@ def test_distribution_shift_rejects_unknown_metric():
 
     with pytest.raises(ValueError, match="unknown distribution metric"):
         distribution_shift(raw, clean, metrics=("bad_metric",))  # type: ignore[list-item]
+
+
+def test_distribution_shift_ks_statistic_matches_scipy():
+    raw = pd.DataFrame({"x": [1.0, 2.0, 3.0, 5.0]})
+    clean = pd.DataFrame({"x": [1.5, 2.5, 4.0, 6.0]})
+
+    out = distribution_shift(raw, clean, metrics=("ks_statistic",))
+
+    assert out.loc["x", "ks_statistic"] == pytest.approx(
+        ks_2samp(raw["x"], clean["x"]).statistic
+    )
 
 
 def test_correlation_shift_returns_clean_minus_raw_matrix():
@@ -84,6 +123,17 @@ def test_correlation_shift_returns_clean_minus_raw_matrix():
     assert list(out.index) == ["y", "x1", "x2"]
     assert list(out.columns) == ["y", "x1", "x2"]
     assert out.loc["y", "y"] == pytest.approx(0.0)
+
+
+def test_correlation_shift_uses_common_index_by_default():
+    index = pd.date_range("2020-01-01", periods=4, freq="MS")
+    raw = pd.DataFrame({"a": [100.0, 1.0, 2.0, 3.0], "b": [0.0, 3.0, 2.0, 1.0]}, index=index)
+    clean = pd.DataFrame({"a": [1.0, 2.0, 3.0], "b": [1.0, 2.0, 3.0]}, index=index[1:])
+
+    out = correlation_shift(raw, clean)
+    expected = clean.corr() - raw.loc[index[1:]].corr()
+
+    pd.testing.assert_frame_equal(out, expected)
 
 
 def test_cleaning_effect_summary_normalizes_preprocessing_metadata():
@@ -129,9 +179,35 @@ def test_analyze_data_returns_report_with_optional_correlation():
     assert report.metadata["data_analysis"]["after"]["missing_values"] == 0
     assert report.metadata["data_analysis"]["common"]["changed_cells"] == 2
     assert report.metadata["data_analysis"]["options"]["include_correlation"] is True
+    assert report.metadata["data_analysis"]["options"]["sample"] == "common_index"
     assert report.metadata["data_analysis"]["effects"]["n_transform_codes"] == 1
     assert report.to_dict()["cleaning_effect_summary"]["transform_map_applied"] == {"x1": 1}
     assert report.to_dict()["metadata"]["data_analysis"]["after"]["missing_values"] == 0
+
+
+def test_analyze_data_reads_preprocessing_metadata_from_clean_panel():
+    raw, clean = _panels()
+    clean.attrs["macroforecast_metadata"] = {
+        "preprocessing": {
+            "transform_state": {"x1": {"tcode": 5}},
+            "steps": [
+                {"step": "transform", "method": "official", "applied": {"x1": 5}},
+                {"step": "tcode_lag", "method": "drop", "rows_removed": 1},
+                {"step": "outliers", "method": "iqr", "missing_added": 2},
+                {"step": "impute", "method": "em_factor", "missing_filled": 3},
+                {"step": "frame", "method": "truncate", "input_shape": (4, 3), "output_shape": (3, 3)},
+            ],
+        }
+    }
+
+    report = analyze_data(raw, clean)
+
+    assert report.cleaning_effect_summary["n_imputed_cells"] == 3
+    assert report.cleaning_effect_summary["n_outliers_flagged"] == 2
+    assert report.cleaning_effect_summary["n_truncated_obs"] == 2
+    assert report.cleaning_effect_summary["transform_map_applied"] == {"x1": 5}
+    assert report.cleaning_effect_summary["column_metadata"] == {"x1": {"tcode": 5}}
+    assert report.metadata["data_analysis"]["effects"]["has_cleaning_log"] is True
 
 
 def test_functions_require_pandas_dataframes():
@@ -141,3 +217,14 @@ def test_functions_require_pandas_dataframes():
         compare_panels({"x": [1]}, clean)  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="clean must be a pandas DataFrame"):
         compare_panels(raw, {"x": [1]})  # type: ignore[arg-type]
+
+
+def test_functions_reject_duplicate_index_and_negative_tolerance():
+    raw, clean = _panels()
+    duplicated = raw.copy()
+    duplicated.index = [raw.index[0], *raw.index[:3]]
+
+    with pytest.raises(ValueError, match="duplicate index"):
+        compare_panels(duplicated, clean)
+    with pytest.raises(ValueError, match="non-negative"):
+        compare_panels(raw, clean, tolerance=-1.0)

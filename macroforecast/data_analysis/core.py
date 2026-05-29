@@ -18,6 +18,7 @@ DistributionMetric = Literal[
     "ks_statistic",
 ]
 CorrelationMethod = Literal["pearson", "spearman", "kendall"]
+AnalysisSample = Literal["common_index", "full"]
 
 DEFAULT_DISTRIBUTION_METRICS: tuple[DistributionMetric, ...] = (
     "mean_change",
@@ -63,6 +64,8 @@ def compare_panels(
 
     raw = _validate_panel(raw, "raw")
     clean = _validate_panel(clean, "clean")
+    if tolerance < 0:
+        raise ValueError("tolerance must be non-negative")
     common_columns = list(raw.columns.intersection(clean.columns))
     common_index = raw.index.intersection(clean.index)
     changed_cells = _count_changed_cells(
@@ -101,6 +104,12 @@ def missing_shift(raw: pd.DataFrame, clean: pd.DataFrame) -> pd.DataFrame:
     for column in columns:
         raw_series = raw[column] if column in raw else pd.Series(dtype="float64")
         clean_series = clean[column] if column in clean else pd.Series(dtype="float64")
+        if column in raw and column in clean:
+            column_status = "common"
+        elif column in raw:
+            column_status = "raw_only"
+        else:
+            column_status = "clean_only"
         raw_missing = int(raw_series.isna().sum())
         clean_missing = int(clean_series.isna().sum())
         raw_n = int(len(raw_series))
@@ -108,6 +117,7 @@ def missing_shift(raw: pd.DataFrame, clean: pd.DataFrame) -> pd.DataFrame:
         rows.append(
             {
                 "column": column,
+                "column_status": column_status,
                 "raw_n": raw_n,
                 "clean_n": clean_n,
                 "raw_missing": raw_missing,
@@ -127,11 +137,13 @@ def distribution_shift(
     clean: pd.DataFrame,
     *,
     metrics: Sequence[DistributionMetric] | None = None,
+    sample: AnalysisSample = "common_index",
 ) -> pd.DataFrame:
     """Return per-series distribution changes from raw to cleaned data."""
 
     raw = _validate_panel(raw, "raw")
     clean = _validate_panel(clean, "clean")
+    _validate_sample(sample)
     selected = tuple(metrics or DEFAULT_DISTRIBUTION_METRICS)
     unknown = sorted(set(selected) - set(DEFAULT_DISTRIBUTION_METRICS))
     if unknown:
@@ -141,14 +153,17 @@ def distribution_shift(
         for column in raw.select_dtypes("number").columns
         if column in clean.select_dtypes("number").columns
     ]
+    raw_aligned, clean_aligned, index_n = _analysis_frames(raw, clean, common, sample=sample)
     rows: list[dict[str, Any]] = []
     for column in common:
-        raw_series = raw[column].dropna()
-        clean_series = clean[column].dropna()
+        raw_series = raw_aligned[column].dropna()
+        clean_series = clean_aligned[column].dropna()
         raw_sd = raw_series.std()
         clean_sd = clean_series.std()
         row: dict[str, Any] = {
             "column": column,
+            "sample": sample,
+            "sample_n": index_n,
             "raw_n": int(raw_series.shape[0]),
             "clean_n": int(clean_series.shape[0]),
         }
@@ -176,6 +191,7 @@ def correlation_shift(
     *,
     method: CorrelationMethod = "pearson",
     fill_value: float | None = None,
+    sample: AnalysisSample = "common_index",
 ) -> pd.DataFrame:
     """Return cleaned-minus-raw correlation matrix for common numeric columns."""
 
@@ -183,6 +199,7 @@ def correlation_shift(
         raise ValueError("method must be one of 'pearson', 'spearman', or 'kendall'")
     raw = _validate_panel(raw, "raw")
     clean = _validate_panel(clean, "clean")
+    _validate_sample(sample)
     common = [
         column
         for column in raw.select_dtypes("number").columns
@@ -190,7 +207,8 @@ def correlation_shift(
     ]
     if len(common) < 2:
         return pd.DataFrame(index=common, columns=common, dtype="float64")
-    delta = clean[common].corr(method=method) - raw[common].corr(method=method)
+    raw_aligned, clean_aligned, _index_n = _analysis_frames(raw, clean, common, sample=sample)
+    delta = clean_aligned[common].corr(method=method) - raw_aligned[common].corr(method=method)
     return delta.fillna(fill_value) if fill_value is not None else delta
 
 
@@ -207,19 +225,27 @@ def cleaning_effect_summary(
     """Normalize preprocessing metadata into a compact data analysis summary."""
 
     metadata = dict(cleaning_metadata or {})
+    transform_map = _coalesce(
+        transform_map_applied,
+        metadata.get("transform_map_applied"),
+        _transform_map_from_steps(metadata),
+        {},
+    )
+    log = _coalesce(cleaning_log, metadata.get("cleaning_log"), _cleaning_log_from_metadata(metadata), {})
+    columns = _coalesce(column_metadata, metadata.get("column_metadata"), metadata.get("transform_state"), {})
     return {
-        "n_imputed_cells": int(_coalesce(n_imputed_cells, metadata.get("n_imputed_cells"), 0)),
+        "n_imputed_cells": int(
+            _coalesce(n_imputed_cells, metadata.get("n_imputed_cells"), _imputed_cells_from_steps(metadata), 0)
+        ),
         "n_outliers_flagged": int(
-            _coalesce(n_outliers_flagged, metadata.get("n_outliers_flagged"), 0)
+            _coalesce(n_outliers_flagged, metadata.get("n_outliers_flagged"), _outliers_from_steps(metadata), 0)
         ),
-        "n_truncated_obs": int(_coalesce(n_truncated_obs, metadata.get("n_truncated_obs"), 0)),
-        "transform_map_applied": dict(
-            _coalesce(transform_map_applied, metadata.get("transform_map_applied"), {})
+        "n_truncated_obs": int(
+            _coalesce(n_truncated_obs, metadata.get("n_truncated_obs"), _truncated_obs_from_steps(metadata), 0)
         ),
-        "cleaning_log": dict(_coalesce(cleaning_log, metadata.get("cleaning_log"), {})),
-        "column_metadata": dict(
-            _coalesce(column_metadata, metadata.get("column_metadata"), {})
-        ),
+        "transform_map_applied": dict(transform_map),
+        "cleaning_log": dict(log),
+        "column_metadata": dict(columns),
     }
 
 
@@ -230,6 +256,7 @@ def analyze_data(
     distribution_metrics: Sequence[DistributionMetric] | None = None,
     include_correlation: bool = False,
     correlation_method: CorrelationMethod = "pearson",
+    sample: AnalysisSample = "common_index",
     cleaning_metadata: Mapping[str, Any] | None = None,
     cleaning_log: Mapping[str, Any] | None = None,
     transform_map_applied: Mapping[str, int] | None = None,
@@ -246,14 +273,17 @@ def analyze_data(
     selected_metrics = tuple(distribution_metrics or DEFAULT_DISTRIBUTION_METRICS)
     comparison = compare_panels(raw, clean, tolerance=tolerance)
     missing = missing_shift(raw, clean)
-    distribution = distribution_shift(raw, clean, metrics=selected_metrics)
+    distribution = distribution_shift(raw, clean, metrics=selected_metrics, sample=sample)
     correlation = (
-        correlation_shift(raw, clean, method=correlation_method)
+        correlation_shift(raw, clean, method=correlation_method, sample=sample)
         if include_correlation
         else None
     )
+    auto_cleaning_metadata = cleaning_metadata
+    if auto_cleaning_metadata is None:
+        auto_cleaning_metadata = _preprocessing_metadata(clean)
     effects = cleaning_effect_summary(
-        cleaning_metadata=cleaning_metadata,
+        cleaning_metadata=auto_cleaning_metadata,
         cleaning_log=cleaning_log,
         transform_map_applied=transform_map_applied,
         n_imputed_cells=n_imputed_cells,
@@ -269,6 +299,7 @@ def analyze_data(
         distribution_metrics=selected_metrics,
         include_correlation=include_correlation,
         correlation_method=correlation_method,
+        sample=sample,
         tolerance=tolerance,
     )
     return DataAnalysisReport(
@@ -286,6 +317,8 @@ def _validate_panel(frame: pd.DataFrame, name: str) -> pd.DataFrame:
         raise TypeError(f"{name} must be a pandas DataFrame")
     if frame.columns.has_duplicates:
         raise ValueError(f"{name} must not have duplicate column names")
+    if frame.index.has_duplicates:
+        raise ValueError(f"{name} must not have duplicate index values")
     return frame
 
 
@@ -298,6 +331,7 @@ def _data_analysis_metadata(
     distribution_metrics: Sequence[DistributionMetric],
     include_correlation: bool,
     correlation_method: CorrelationMethod,
+    sample: AnalysisSample,
     tolerance: float,
 ) -> dict[str, Any]:
     raw_metadata = _frame_metadata(raw)
@@ -319,6 +353,7 @@ def _data_analysis_metadata(
                 "distribution_metrics": list(distribution_metrics),
                 "include_correlation": bool(include_correlation),
                 "correlation_method": correlation_method if include_correlation else None,
+                "sample": sample,
                 "tolerance": float(tolerance),
             },
             "effects": _effect_snapshot(effects),
@@ -332,6 +367,12 @@ def _data_analysis_metadata(
 
 def _frame_metadata(frame: pd.DataFrame) -> dict[str, Any]:
     return dict(getattr(frame, "attrs", {}).get("macroforecast_metadata", {}) or {})
+
+
+def _preprocessing_metadata(frame: pd.DataFrame) -> Mapping[str, Any] | None:
+    metadata = _frame_metadata(frame)
+    stage = metadata.get("preprocessing")
+    return stage if isinstance(stage, Mapping) else None
 
 
 def _panel_snapshot(frame: pd.DataFrame) -> dict[str, Any]:
@@ -373,6 +414,81 @@ def _count_changed_cells(
         close = (raw[numeric_columns] - clean[numeric_columns]).abs() <= tolerance
         equal.loc[:, numeric_columns] = equal[numeric_columns] | close
     return int((~equal).sum().sum())
+
+
+def _analysis_frames(
+    raw: pd.DataFrame,
+    clean: pd.DataFrame,
+    columns: Sequence[Any],
+    *,
+    sample: AnalysisSample,
+) -> tuple[pd.DataFrame, pd.DataFrame, int]:
+    if sample == "common_index":
+        index = raw.index.intersection(clean.index)
+        return raw.loc[index, list(columns)], clean.loc[index, list(columns)], int(len(index))
+    if sample == "full":
+        return raw.loc[:, list(columns)], clean.loc[:, list(columns)], int(max(len(raw.index), len(clean.index)))
+    raise ValueError("sample must be one of 'common_index' or 'full'")
+
+
+def _validate_sample(sample: AnalysisSample) -> None:
+    if sample not in {"common_index", "full"}:
+        raise ValueError("sample must be one of 'common_index' or 'full'")
+
+
+def _steps(metadata: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    raw_steps = metadata.get("steps", ())
+    if not isinstance(raw_steps, (list, tuple)):
+        return []
+    return [step for step in raw_steps if isinstance(step, Mapping)]
+
+
+def _transform_map_from_steps(metadata: Mapping[str, Any]) -> dict[str, int]:
+    for step in _steps(metadata):
+        if step.get("step") != "transform":
+            continue
+        applied = step.get("applied", {})
+        if isinstance(applied, Mapping):
+            return {str(key): int(value) for key, value in applied.items()}
+    return {}
+
+
+def _imputed_cells_from_steps(metadata: Mapping[str, Any]) -> int:
+    return int(sum(_safe_int(step.get("missing_filled")) for step in _steps(metadata) if step.get("step") == "impute"))
+
+
+def _outliers_from_steps(metadata: Mapping[str, Any]) -> int:
+    return int(sum(_safe_int(step.get("missing_added")) for step in _steps(metadata) if step.get("step") == "outliers"))
+
+
+def _truncated_obs_from_steps(metadata: Mapping[str, Any]) -> int:
+    total = 0
+    for step in _steps(metadata):
+        if step.get("step") not in {"frame", "tcode_lag"}:
+            continue
+        if "rows_removed" in step:
+            total += _safe_int(step.get("rows_removed"))
+            continue
+        input_shape = step.get("input_shape")
+        output_shape = step.get("output_shape")
+        if isinstance(input_shape, (list, tuple)) and isinstance(output_shape, (list, tuple)):
+            if input_shape and output_shape:
+                total += max(_safe_int(input_shape[0]) - _safe_int(output_shape[0]), 0)
+    return int(total)
+
+
+def _cleaning_log_from_metadata(metadata: Mapping[str, Any]) -> dict[str, Any]:
+    steps = _steps(metadata)
+    if not steps:
+        return {}
+    return {"steps": [dict(step) for step in steps]}
+
+
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _ks_statistic(raw: pd.Series, clean: pd.Series) -> float | None:

@@ -35,6 +35,7 @@ macroforecast.data_analysis.analyze_data(
     distribution_metrics: Sequence[str] | None = None,
     include_correlation: bool = False,
     correlation_method: str = "pearson",
+    sample: str = "common_index",
     cleaning_metadata: Mapping[str, object] | None = None,
     cleaning_log: Mapping[str, object] | None = None,
     transform_map_applied: Mapping[str, int] | None = None,
@@ -55,7 +56,8 @@ macroforecast.data_analysis.analyze_data(
 | `distribution_metrics` | sequence or `None` | all defaults | Any of `mean_change`, `sd_change`, `sd_ratio`, `skew_change`, `kurtosis_change`, `ks_statistic`. |
 | `include_correlation` | `bool` | `False` | Whether to include cleaned-minus-raw correlations. |
 | `correlation_method` | `str` | `"pearson"` | `"pearson"`, `"spearman"`, `"kendall"`. |
-| `cleaning_metadata` and related kwargs | mappings/counts or `None` | `None` | Optional preprocessing metadata to normalize into `cleaning_effect_summary`. |
+| `sample` | `str` | `"common_index"` | `"common_index"` compares distributions/correlations on dates present in both panels; `"full"` uses each full panel. |
+| `cleaning_metadata` and related kwargs | mappings/counts or `None` | auto from `clean.attrs["macroforecast_metadata"]["preprocessing"]` when available | Optional preprocessing metadata to normalize into `cleaning_effect_summary`. |
 | `tolerance` | `float` | `0.0` | Absolute tolerance for changed-cell counting. |
 
 ### Output
@@ -96,14 +98,23 @@ The snapshots are intentionally compact. Full comparison tables remain in
 | `effects` | Compact preprocessing counters: imputed cells, outliers, truncated observations, transform-code count, column-metadata count, cleaning-log presence. |
 | `metadata_keys` | Metadata keys detected on raw and processed panels. |
 
+### Comparison Sample
+
+`distribution_shift` and `correlation_shift` default to `sample="common_index"`.
+This avoids mixing distribution changes with rows that only exist before or
+after preprocessing. Set `sample="full"` when you deliberately want each panel's
+full available sample.
+
+`ks_statistic` is the two-sample KS statistic only; it does not compute a p-value.
+
 ## Helper Functions
 
 | Function | Input | Output | Purpose |
 | --- | --- | --- | --- |
 | `compare_panels(raw, clean, tolerance=...)` | two DataFrames | `dict` | Panel shape/date/column/index comparison and changed-cell count. |
-| `missing_shift(raw, clean)` | two DataFrames | `DataFrame` | Missing-count and missing-rate changes. |
-| `distribution_shift(raw, clean, metrics=...)` | two DataFrames | `DataFrame` | Mean, variance, tail-shape, and KS-style distribution changes. |
-| `correlation_shift(raw, clean, method=...)` | two DataFrames | `DataFrame` | Cleaned-minus-raw correlation matrix. |
+| `missing_shift(raw, clean)` | two DataFrames | `DataFrame` | Missing-count and missing-rate changes with `column_status` (`common`, `raw_only`, `clean_only`). |
+| `distribution_shift(raw, clean, metrics=..., sample=...)` | two DataFrames | `DataFrame` | Mean, variance, tail-shape, and KS-style distribution changes. |
+| `correlation_shift(raw, clean, method=..., sample=...)` | two DataFrames | `DataFrame` | Cleaned-minus-raw correlation matrix. |
 | `cleaning_effect_summary(...)` | metadata/counters | `dict` | Normalize preprocessing effects into one compact object. |
 
 ## Boundary
