@@ -18,36 +18,6 @@ import pytest
 
 
 # ---------------------------------------------------------------------------
-# Scenario 2.1 -- Validator accepts chow_lin in a properly contextualized recipe
-# ---------------------------------------------------------------------------
-
-def test_l2_chow_lin_now_accepted():
-    """Contract: chow_lin is accepted by the validator when FRED-SD context enables
-    quarterly_to_monthly disaggregation."""
-    from macroforecast.preprocessing.schema import validate_layer, parse_layer_yaml
-
-    # Provide the L2 layer with fred_md+fred_sd context so the frequency gate
-    # activates. The test mirrors Scenario 2.1 from test-spec.md.
-    yaml_text = """
-    preprocessing:
-      fixed_axes:
-        quarterly_to_monthly_policy: chow_lin
-        sd_series_frequency_filter: both
-    """
-    # validate_layer with l1_context that activates the quarterly_to_monthly gate.
-    l1_context = {
-        "dataset": "fred_sd",
-        "frequency": "monthly",
-    }
-    layer = parse_layer_yaml(yaml_text, "l2")
-    report = validate_layer(layer, l1_context=l1_context)
-    assert not report.has_hard_errors, (
-        f"chow_lin must be accepted after C50 promotion: "
-        f"{[i.message for i in report.hard_errors]}"
-    )
-
-
-# ---------------------------------------------------------------------------
 # Scenario 2.2 -- Chow-Lin conservation property (atol=0.5 per test-spec.md)
 # ---------------------------------------------------------------------------
 
@@ -134,27 +104,6 @@ def test_chow_lin_deterministic():
     r1 = _chow_lin_disaggregate(q, ind)
     r2 = _chow_lin_disaggregate(q, ind)
     assert r1.equals(r2), "chow_lin must be deterministic for identical inputs"
-
-
-# ---------------------------------------------------------------------------
-# Scenario 2.5 -- Validator accepts keep_with_indicator (contract)
-# ---------------------------------------------------------------------------
-
-def test_l2_keep_with_indicator_now_accepted():
-    """Contract: keep_with_indicator is accepted by the L2 validator after C50."""
-    from macroforecast.preprocessing.schema import parse_layer_yaml, validate_layer
-
-    yaml_text = """
-    preprocessing:
-      fixed_axes:
-        outlier_action: keep_with_indicator
-    """
-    layer = parse_layer_yaml(yaml_text, "l2")
-    report = validate_layer(layer)
-    assert not report.has_hard_errors, (
-        f"keep_with_indicator must be accepted after C50: "
-        f"{[i.message for i in report.hard_errors]}"
-    )
 
 
 # ---------------------------------------------------------------------------

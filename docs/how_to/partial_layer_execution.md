@@ -46,7 +46,7 @@ from macroforecast.core import (
 | Function | Input | Returns |
 |---|---|---|
 | ``materialize_l1(recipe_root)`` | ``dict`` (parsed recipe) | ``(L1DataDefinitionArtifact, L1RegimeMetadataArtifact, dict[str, Any] resolved_axes)`` |
-| ``materialize_l2(recipe_root, l1_artifact)`` | ``dict``, L1 artifact | ``(L2CleanPanelArtifact, L2ResolvedAxes)`` |
+| ``materialize_l2(recipe_root, l1_artifact)`` | ``dict``, L1 artifact | ``(L2CleanPanelArtifact, dict[str, Any] resolved_axes)`` |
 | ``materialize_l3_minimal(recipe_root, l1_artifact, l2_artifact)`` | ``dict``, L1, L2 | ``(L3FeaturesArtifact, L3MetadataArtifact)`` |
 | ``materialize_l4_minimal(recipe_root, l3_features)`` | ``dict``, L3 features | ``(L4ForecastsArtifact, L4ModelArtifactsArtifact, L4TrainingMetadataArtifact)`` |
 | ``materialize_l5_minimal(recipe_root, l1_artifact, l3_features, l4_forecasts, l4_models)`` | as listed | ``L5EvaluationArtifact`` |

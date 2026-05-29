@@ -1,13 +1,13 @@
-# Layer 2 preprocessing axes — end-to-end runnable example.
-# Demonstrates 2_preprocessing with no_transform, no-outlier, none_propagate imputation,
+# Preprocessing axes -- end-to-end runnable example.
+# Demonstrates preprocessing with no_transform, no-outlier, none_propagate imputation,
 # and keep_unbalanced frame_edge policy using a self-contained inline panel.
 # L3+L4 are minimal lag-1 ridge baseline so the recipe is fully self-contained.
 # NOTE: For FRED-SD frequency alignment axes (sd_series_frequency_filter,
 # quarterly_to_monthly_policy), see the FRED-SD documentation (deferred to PR8+).
 metadata:
-  name: l2_preprocessing_minimal
+  name: preprocessing_minimal
   description: >
-    Layer 2 preprocessing axes with a self-contained inline panel.
+    Preprocessing axes with a self-contained inline panel.
     Demonstrates no-transform, no-outlier, none-propagate imputation,
     and keep-unbalanced frame edge policy. For FRED-SD frequency alignment
     (sd_series_frequency_filter, quarterly_to_monthly_policy), see the

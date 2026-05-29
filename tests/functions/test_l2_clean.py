@@ -141,11 +141,7 @@ class TestIqrOutlierClean:
     def test_bit_exact_vs_runtime(self):
         """Bit-exact check vs _apply_outlier_policy for policy=mccracken_ng_iqr."""
         from macroforecast.core.runtime import _apply_outlier_policy
-        from macroforecast.core.layers import l2 as l2_layer
-        resolved = l2_layer.L2ResolvedAxes(
-            {"outlier_policy": "mccracken_ng_iqr", "outlier_action": "flag_as_nan"},
-            {"outlier_policy": "explicit", "outlier_action": "explicit"},
-        )
+        resolved = {"outlier_policy": "mccracken_ng_iqr", "outlier_action": "flag_as_nan"}
         expected, _ = _apply_outlier_policy(
             PANEL_WITH_OUTLIER, resolved, {"outlier_iqr_threshold": 10.0}, {"steps": []}
         )
@@ -208,11 +204,7 @@ class TestZscoreOutlierClean:
 
     def test_bit_exact_vs_runtime(self):
         from macroforecast.core.runtime import _apply_outlier_policy
-        from macroforecast.core.layers import l2 as l2_layer
-        resolved = l2_layer.L2ResolvedAxes(
-            {"outlier_policy": "zscore_threshold", "outlier_action": "flag_as_nan"},
-            {"outlier_policy": "explicit", "outlier_action": "explicit"},
-        )
+        resolved = {"outlier_policy": "zscore_threshold", "outlier_action": "flag_as_nan"}
         expected, _ = _apply_outlier_policy(
             PANEL_WITH_OUTLIER, resolved, {"zscore_threshold_value": 3.0}, {"steps": []}
         )
@@ -264,11 +256,7 @@ class TestWinsorizeClean:
 
     def test_bit_exact_vs_runtime(self):
         from macroforecast.core.runtime import _apply_outlier_policy
-        from macroforecast.core.layers import l2 as l2_layer
-        resolved = l2_layer.L2ResolvedAxes(
-            {"outlier_policy": "winsorize", "outlier_action": "flag_as_nan"},
-            {"outlier_policy": "explicit", "outlier_action": "explicit"},
-        )
+        resolved = {"outlier_policy": "winsorize", "outlier_action": "flag_as_nan"}
         expected, _ = _apply_outlier_policy(
             PANEL, resolved, {"winsorize_quantiles": [0.01, 0.99]}, {"steps": []}
         )

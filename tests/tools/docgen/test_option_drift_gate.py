@@ -61,12 +61,6 @@ def _code_options_from_spec(layer_module: str, spec_var: str, axis_name: str) ->
 
 _DRIFT_BASELINES: list[tuple[str, str, int, int]] = [
     # (layer, axis, max_code_only, max_docs_only)
-    ("l2", "frame_edge_policy",           1, 0),  # keep_unbalanced
-    ("l2", "imputation_policy",           1, 0),  # none_propagate
-    ("l2", "monthly_to_quarterly_policy", 2, 0),  # quarterly_endpoint, quarterly_sum
-    ("l2", "outlier_policy",              1, 0),  # none
-    ("l2", "quarterly_to_monthly_policy", 3, 0),  # chow_lin, linear_interpolation, step_forward
-    ("l2", "transform_policy",            2, 0),  # custom_tcode, no_transform
     ("l3", "op",                          1, 0),  # regime_indicator
     ("l4", "model",                       4, 0),  # bagging, decision_tree, macroeconomic_random_forest, quantile_regression_forest
     ("l5", "density_metrics",             2, 0),  # crps, log_score
@@ -75,12 +69,6 @@ _DRIFT_BASELINES: list[tuple[str, str, int, int]] = [
 
 
 # ─── L3/L4/L7 ops from code ────────────────────────────────────────────────────
-
-def _l2_code_options(axis: str) -> set[str]:
-    return _code_options_from_spec(
-        "macroforecast.preprocessing.schema", "L2_LAYER_SPEC", axis
-    )
-
 
 def _l3_code_ops() -> set[str]:
     """L3 ops: all ops with l3 in scope, minus internal helpers."""
@@ -130,8 +118,6 @@ def _l7_code_ops() -> set[str]:
 
 def _get_code_options(layer: str, axis: str) -> set[str]:
     """Dispatch to the right getter."""
-    if layer == "l2":
-        return _l2_code_options(axis)
     if layer == "l3" and axis == "op":
         return _l3_code_ops()
     if layer == "l4" and axis == "model":
@@ -184,12 +170,6 @@ def test_option_drift_does_not_exceed_baseline(
 
 # Known CODE_ONLY sets at baseline (for informative failure messages only).
 _KNOWN_CODE_ONLY: dict[tuple[str, str], set[str]] = {
-    ("l2", "frame_edge_policy"):           {"keep_unbalanced"},
-    ("l2", "imputation_policy"):           {"none_propagate"},
-    ("l2", "monthly_to_quarterly_policy"): {"quarterly_endpoint", "quarterly_sum"},
-    ("l2", "outlier_policy"):              {"none"},
-    ("l2", "quarterly_to_monthly_policy"): {"chow_lin", "linear_interpolation", "step_forward"},
-    ("l2", "transform_policy"):            {"custom_tcode", "no_transform"},
     ("l3", "op"):                          {"regime_indicator"},
     ("l4", "model"):                       {"bagging", "decision_tree", "macroeconomic_random_forest", "quantile_regression_forest"},
     ("l5", "density_metrics"):             {"crps", "log_score"},

@@ -27,7 +27,7 @@ def test_every_layer_has_index_and_at_least_one_axis_page(tmp_path: Path) -> Non
         layer_dir = tmp_path / layer_id
         assert (layer_dir / "index.md").exists(), layer_id
         axes_dir = layer_dir / "axes"
-        # Every layer in the canonical 13 has at least one axis after the
+        # Every generated-reference layer has at least one axis after the
         # introspect fallback (L3 ``op`` axis, L7 ``op`` axis, ...).
         axis_files = list(axes_dir.glob("*.md"))
         assert axis_files, f"no axis pages emitted under {axes_dir}"
@@ -76,12 +76,12 @@ def test_missing_optiondoc_yields_tbd_placeholder(tmp_path: Path, monkeypatch) -
 
     from tools.docgen.option_docs import OPTION_DOCS
 
-    key = ("l0", "l0_a", "failure_policy", "fail_fast")
+    key = ("l4", "L4_A_model_selection", "model", "ar_p")
     assert key in OPTION_DOCS, "fixture missing"
     monkeypatch.delitem(OPTION_DOCS, key)
 
     render_encyclopedia.write_all(tmp_path)
-    body = (tmp_path / "l0" / "axes" / "failure_policy.md").read_text(encoding="utf-8")
+    body = (tmp_path / "l4" / "axes" / "model.md").read_text(encoding="utf-8")
     assert "TBD: option doc not yet authored" in body
 
 
@@ -114,7 +114,7 @@ def test_browse_by_axis_lists_every_axis(tmp_path: Path) -> None:
     body = (tmp_path / "browse_by_axis.md").read_text(encoding="utf-8")
     # Every layer's axes must show up. Grab a representative axis from
     # each layer and check the link text appears.
-    for axis_name in ("failure_policy", "dataset", "model", "search_algorithm"):
+    for axis_name in ("model", "search_algorithm", "primary_metric", "export_format"):
         assert f"`{axis_name}`" in body, axis_name
 
 

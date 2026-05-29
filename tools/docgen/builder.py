@@ -363,8 +363,6 @@ class RecipeBuilder:
 
         errors: list[str] = []
         layer_validators = (
-            ("data", "macroforecast.data.config"),
-            ("preprocessing", "macroforecast.preprocessing.schema"),
             ("3_feature_engineering", "macroforecast.features.schema"),
             ("4_forecasting_model", "macroforecast.models.schema"),
             ("5_evaluation", "macroforecast.evaluation.schema"),

@@ -22,8 +22,7 @@ Horse race research benchmarking package for macro forecasting.
   ``mf.replicate`` / ``mf.Experiment`` / ``mf.forecast`` are aliases here.
 - ``macroforecast.meta`` -- package-wide execution settings.
 - ``macroforecast.data`` -- canonical panels, metadata, FRED/custom loaders, and data specs.
-- ``macroforecast.preprocessing`` -- pandas preprocessing callables and reports;
-  old contract helpers are compatibility-only.
+- ``macroforecast.preprocessing`` -- pandas preprocessing callables and reports.
 - ``macroforecast.features`` -- feature engineering ops, transforms, selectors.
 - ``macroforecast.models`` -- public model classes, model ops, paper helpers, tuning.
 - ``macroforecast.evaluation`` -- forecast metric schema and ops.
@@ -114,28 +113,6 @@ _LAZY_EXPORTS = {
     "preprocess": ".preprocessing",
     "reprocess": ".preprocessing",
     "PreprocessedData": ".preprocessing",
-    # Compatibility exports kept while the old runtime/docgen contract layer
-    # still imports macroforecast.preprocessing.schema/build/types.
-    "build_preprocess_contract": ".preprocessing",
-    "check_preprocess_governance": ".preprocessing",
-    "is_operational_preprocess_contract": ".preprocessing",
-    "preprocess_summary": ".preprocessing",
-    "preprocess_to_dict": ".preprocessing",
-    "PreprocessContractError": ".preprocessing",
-    "PreprocessValidationError": ".preprocessing",
-    "PreprocessContract": ".preprocessing",
-    "TargetTransformPolicy": ".preprocessing",
-    "XTransformPolicy": ".preprocessing",
-    "TcodePolicy": ".preprocessing",
-    "MissingPolicy": ".preprocessing",
-    "OutlierPolicy": ".preprocessing",
-    "ScalingPolicy": ".preprocessing",
-    "DimensionalityReductionPolicy": ".preprocessing",
-    "FeatureSelectionPolicy": ".preprocessing",
-    "PreprocessOrder": ".preprocessing",
-    "PreprocessFitScope": ".preprocessing",
-    "InverseTransformPolicy": ".preprocessing",
-    "EvaluationScale": ".preprocessing",
 }
 
 _LAZY_MODULES: tuple[str, ...] = (

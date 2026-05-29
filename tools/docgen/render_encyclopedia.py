@@ -770,24 +770,24 @@ Curated reference for the importable macroforecast surface. The generated layer 
 | `macroforecast.replicate(manifest_path)` | Re-execute a stored manifest and verify sink hashes. |
 | `macroforecast.ManifestExecutionResult` | Per-cell `RuntimeResult` plus sink hashes. |
 | `macroforecast.ReplicationResult` | Bit-exact replication comparison result. |
-| `macroforecast.l0(...)` | Callable L0/meta recipe block builder; equivalent to authoring `0_meta` in YAML. |
+| `macroforecast.meta.configure(...)` | Update package-wide execution defaults for direct Python calls. |
 
 ## Callable Recipe Blocks
 
 | Symbol | Description |
 |--------|-------------|
-| `macroforecast.meta.configure(...)` | Build and validate a canonical `0_meta` block. |
-| `macroforecast.meta.l0(...)` | Alias for `configure(...)`; also exported as `macroforecast.l0(...)`. |
-| `macroforecast.meta.build_layer_block(...)` | Internal helper for the body under `0_meta`. |
+| `macroforecast.meta.configure(...)` | Update package-wide execution defaults. |
+| `macroforecast.meta.get_config()` | Return a copy of the active defaults. |
+| `macroforecast.meta.use_config(...)` | Temporarily override defaults in a context. |
 
 ## Submodule Surfaces
 
 | Module | Purpose |
 |--------|---------|
 | `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
-| `macroforecast.meta` | L0 study setup, failure policy, reproducibility, and compute policy. |
-| `macroforecast.data` | FRED-MD/QD/SD adapters, vintage manager, manifests, cache helpers. |
-| `macroforecast.preprocessing` | L2 preprocessing schemas, transformations, and contract helpers. |
+| `macroforecast.meta` | Package-wide execution settings. |
+| `macroforecast.data` | Canonical pandas panels, metadata, FRED/custom loaders, and data specs. |
+| `macroforecast.preprocessing` | Callable pandas preprocessing helpers and transformation utilities. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |
 | `macroforecast.evaluation` | L5 metrics and evaluation ops. |

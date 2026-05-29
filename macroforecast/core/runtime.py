@@ -46,7 +46,6 @@ import macroforecast.diagnostics.generator.schema as l4_5_layer
 import macroforecast.features.schema as l3_layer
 import macroforecast.models.schema as l4_layer
 import macroforecast.evaluation.schema as l5_layer
-import macroforecast.preprocessing.schema as l2_layer
 # Load collocated ops for side-effect registration (l5/l6/l8 ops no longer
 # in core/ops/__init__.py after Phase 3f restructure).
 import macroforecast.evaluation.ops  # noqa: F401
@@ -678,20 +677,73 @@ def _apply_release_lag(
                 result[col] = result[col].shift(int(lag))
     return result
 
+_L2_DIRECT_DEFAULTS: dict[str, Any] = {
+    "sd_series_frequency_filter": "both",
+    "mixed_frequency_representation": "calendar_aligned_frame",
+    "quarterly_to_monthly_policy": "step_backward",
+    "monthly_to_quarterly_policy": "quarterly_average",
+    "transform_policy": "apply_official_tcode",
+    "sd_tcode_policy": "none",
+    "outlier_policy": "mccracken_ng_iqr",
+    "outlier_action": "flag_as_nan",
+    "imputation_policy": "em_factor",
+    "imputation_temporal_rule": "expanding_window_per_origin",
+    "frame_edge_policy": "truncate_to_balanced",
+}
+
+_L2_ALLOWED_DIRECT_VALUES: dict[str, set[str]] = {
+    "sd_series_frequency_filter": {"monthly_only", "quarterly_only", "both"},
+    "mixed_frequency_representation": {
+        "calendar_aligned_frame",
+        "drop_unknown_native_frequency",
+        "drop_non_target_native_frequency",
+        "native_frequency_block_payload",
+        "mixed_frequency_model_adapter",
+    },
+    "quarterly_to_monthly_policy": {"linear_interpolation", "step_backward", "step_forward", "chow_lin"},
+    "monthly_to_quarterly_policy": {"quarterly_average", "quarterly_endpoint", "quarterly_sum"},
+    "transform_policy": {"apply_official_tcode", "no_transform", "custom_tcode"},
+    "sd_tcode_policy": {"none", "inferred", "empirical"},
+    "outlier_policy": {"mccracken_ng_iqr", "winsorize", "zscore_threshold", "none"},
+    "outlier_action": {"flag_as_nan", "replace_with_median", "replace_with_cap_value", "keep_with_indicator"},
+    "imputation_policy": {
+        "em_factor",
+        "em_multivariate",
+        "mean",
+        "forward_fill",
+        "linear_interpolation",
+        "none_propagate",
+    },
+    "imputation_temporal_rule": {"expanding_window_per_origin", "rolling_window_per_origin", "block_recompute"},
+    "frame_edge_policy": {"truncate_to_balanced", "drop_unbalanced_series", "keep_unbalanced", "zero_fill_leading"},
+}
+
+
+def _resolve_l2_direct_axes(raw: dict[str, Any]) -> dict[str, Any]:
+    fixed_axes = raw.get("fixed_axes", {}) or {}
+    if not isinstance(fixed_axes, dict):
+        raise ValueError("preprocessing.fixed_axes must be a mapping")
+    resolved = dict(_L2_DIRECT_DEFAULTS)
+    unknown = sorted(set(fixed_axes) - set(_L2_DIRECT_DEFAULTS))
+    if unknown:
+        raise ValueError(f"preprocessing.fixed_axes contains unknown keys: {unknown}")
+    for key, value in fixed_axes.items():
+        if isinstance(value, dict) and "sweep" in value:
+            raise ValueError(f"preprocessing.fixed_axes.{key} must be materialized before runtime; got sweep")
+        text = str(value)
+        allowed = _L2_ALLOWED_DIRECT_VALUES[key]
+        if text not in allowed:
+            raise ValueError(f"preprocessing.fixed_axes.{key} must be one of {sorted(allowed)}; got {value!r}")
+        resolved[key] = text
+    return resolved
+
+
 def materialize_l2(
     recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact
-) -> tuple[L2CleanPanelArtifact, l2_layer.L2ResolvedAxes]:
+) -> tuple[L2CleanPanelArtifact, dict[str, Any]]:
     raw = recipe_root.get("preprocessing", {}) or {}
-    l1_context = _l1_context(l1_artifact)
-    report = l2_layer.validate_layer(raw, l1_context=l1_context)
-    if report.has_hard_errors:
-        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-
-    fixed_axes = raw.get("fixed_axes", {}) or {}
     leaf_config = raw.get("leaf_config", {}) or {}
-    resolved = l2_layer.resolve_axes_from_raw(
-        fixed_axes, leaf_config, l1_context=l1_context
-    )
+    resolved = _resolve_l2_direct_axes(raw)
     df = l1_artifact.raw_panel.data.copy()
     if df.empty:
         raise ValueError(
@@ -1744,7 +1796,7 @@ def materialize_l3_minimal(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
     l2_artifact: L2CleanPanelArtifact,
-    l2_resolved: "l2_layer.L2ResolvedAxes | None" = None,
+    l2_resolved: dict[str, Any] | None = None,
 ) -> tuple[L3FeaturesArtifact, L3MetadataArtifact]:
     raw = recipe_root.get("3_feature_engineering", {}) or {}
     report = l3_layer.validate_layer(raw, recipe_context=_l3_context(l1_artifact))
@@ -15672,7 +15724,7 @@ def _apply_fred_sd_frequency_alignment(
 
 def _apply_transform(
     frame: pd.DataFrame,
-    resolved: l2_layer.L2ResolvedAxes,
+    resolved: dict[str, Any],
     l2_leaf: dict[str, Any],
     l1_leaf: dict[str, Any],
     cleaning_log: dict[str, Any],
@@ -15827,7 +15879,7 @@ def _try_custom_l2_preprocessor(
 
 def _apply_outlier_policy_per_origin(
     frame: pd.DataFrame,
-    resolved: "l2_layer.L2ResolvedAxes",
+    resolved: dict[str, Any],
     leaf_config: dict[str, Any],
     cutoff_ts: Any,
 ) -> pd.DataFrame:
@@ -15891,7 +15943,7 @@ def _apply_outlier_policy_per_origin(
 
 def _apply_imputation_per_origin(
     frame: pd.DataFrame,
-    resolved: "l2_layer.L2ResolvedAxes",
+    resolved: dict[str, Any],
     cutoff_ts: Any,
 ) -> pd.DataFrame:
     """Apply imputation using stats computed only up to cutoff_ts.
@@ -15935,7 +15987,7 @@ def _apply_imputation_per_origin(
 
 def _apply_outlier_policy(
     frame: pd.DataFrame,
-    resolved: l2_layer.L2ResolvedAxes,
+    resolved: dict[str, Any],
     leaf_config: dict[str, Any],
     cleaning_log: dict[str, Any],
 ) -> tuple[pd.DataFrame, int]:
@@ -16009,7 +16061,7 @@ def _apply_outlier_policy(
 
 
 def _apply_imputation(
-    frame: pd.DataFrame, resolved: l2_layer.L2ResolvedAxes, cleaning_log: dict[str, Any]
+    frame: pd.DataFrame, resolved: dict[str, Any], cleaning_log: dict[str, Any]
 ) -> tuple[pd.DataFrame, int]:
     policy = resolved.get("imputation_policy")
     missing_before = int(frame.isna().sum().sum())
@@ -16101,7 +16153,7 @@ def _pca_em_imputation(
 
 
 def _apply_frame_edge(
-    frame: pd.DataFrame, resolved: l2_layer.L2ResolvedAxes, cleaning_log: dict[str, Any]
+    frame: pd.DataFrame, resolved: dict[str, Any], cleaning_log: dict[str, Any]
 ) -> tuple[pd.DataFrame, int]:
     policy = resolved.get("frame_edge_policy")
     before = len(frame)
@@ -19414,15 +19466,6 @@ def _build_user_provided_regime_series(
             labels.loc[(index >= start) & (index <= end)] = label
         return labels
     return None
-
-
-def _l1_context(artifact: L1DataDefinitionArtifact) -> dict[str, Any]:
-    return {
-        "panel_composition": artifact.panel_composition,
-        "dataset": artifact.dataset,
-        "frequency": artifact.frequency,
-        "custom_has_tcode_column": bool(artifact.leaf_config.get("custom_tcode_map")),
-    }
 
 
 def _l3_context(artifact: L1DataDefinitionArtifact) -> dict[str, Any]:

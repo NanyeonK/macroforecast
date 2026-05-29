@@ -141,7 +141,7 @@ No value changes are required — only key names changed.
 | Navigator pages (`docs/reference/navigator*`) | v0.6.2 docs reorg | See `docs/reference/` index |
 | Audience-tree doc paths (`getting_started/`, `user_guide/`, `fred_dataset/`, `simple/`, `detail/`, `dev/`) | v0.6.2 docs reorg | See `docs/tutorial/`, `docs/how_to/`, `docs/reference/` |
 | `scripts/v01_smoke_check.py` | v0.9.5 (deep-audit) | Run `python -m pytest tests/ -x -q` for smoke validation |
-| `examples/recipes/l2_fred_sd_alignment.yaml` | v0.9.5 (deep-audit PR4) | Renamed to `l2_preprocessing_minimal.yaml` — functionally identical |
+| `examples/recipes/l2_fred_sd_alignment.yaml` | v0.9.5 (deep-audit PR4) | Renamed to `preprocessing_minimal.yaml` -- functionally identical |
 
 ---
 

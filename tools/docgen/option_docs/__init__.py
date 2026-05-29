@@ -108,7 +108,6 @@ def _load_layer_modules() -> None:
 
     for layer_module in (
         "macroforecast.data.option_docs",
-        "macroforecast.preprocessing.option_docs",
         "macroforecast.features.option_docs",
         "macroforecast.models.option_docs",
         "macroforecast.evaluation.option_docs",

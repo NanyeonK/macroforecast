@@ -23,7 +23,7 @@ macroforecast/
   api/                    # run / replicate / forecast / Experiment public API
   meta/                   # L0 study setup, seed, reproducibility, compute policy
   data/                   # L1 data sources, FRED adapters, vintages, manifests
-  preprocessing/          # L2 preprocessing schema and contract helpers
+  preprocessing/          # callable pandas preprocessing helpers
   features/               # L3 feature graph ops, transforms, selectors
   models/                 # L4 model families, paper helpers, tuning engines
   evaluation/             # L5 metrics and evaluation ops

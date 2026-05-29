@@ -18,10 +18,7 @@ from tools.docgen.option_docs import OPTION_DOCS
 # v1.0 release flips every value to True. Layer-by-layer content PRs
 # update this map as their docs land.
 _V1_REQUIRED_LAYERS: dict[str, bool] = {
-    "l0": True,   # PR-A1: 6 entries
-    "l1": True,    # PR-A2 + extension: 107 entries
     "l1_5": True,  # PR-A3: 50 entries (diagnostics module)
-    "l2": True,    # PR-A3: 48 entries (5-stage pipeline + scopes)
     "l2_5": True,  # PR-A3: 42 entries (diagnostics module)
     "l3": True,    # PR-A3: 37 ops
     "l3_5": True,  # PR-A3: 49 entries (diagnostics module)

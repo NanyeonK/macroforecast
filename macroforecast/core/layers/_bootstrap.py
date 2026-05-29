@@ -9,7 +9,6 @@ from __future__ import annotations
 from .registry import register_layer
 
 from macroforecast.data import DataSpec
-from macroforecast.preprocessing.schema import L2Preprocessing
 from macroforecast.features.schema import L3FeatureEngineering
 from macroforecast.models.schema import L4ForecastingModel
 from macroforecast.evaluation.schema import L5Evaluation
@@ -20,6 +19,10 @@ from macroforecast.diagnostics.data_summary.schema import L1_5DataSummary
 from macroforecast.diagnostics.preprocessing.schema import L2_5PrePostPreprocessing
 from macroforecast.diagnostics.features.schema import L3_5FeatureDiagnostics
 from macroforecast.diagnostics.generator.schema import L4_5GeneratorDiagnostics
+
+
+class DirectPreprocessing:
+    """Registry marker for the direct pandas preprocessing callable surface."""
 
 
 register_layer(
@@ -38,7 +41,7 @@ register_layer(
     expected_inputs=("l1_data_definition_v1",),
     produces=("l2_clean_panel_v1",),
     ui_mode="list",
-)(L2Preprocessing)
+)(DirectPreprocessing)
 
 
 register_layer(

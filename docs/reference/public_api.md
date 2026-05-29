@@ -40,7 +40,7 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
 | `macroforecast.meta` | Package-wide execution settings. |
 | `macroforecast.data` | Canonical panels, data metadata, FRED/custom loaders, run-level data specs, and vintage labels. |
-| `macroforecast.preprocessing` | Pandas preprocessing callables, transformations, and reports. Legacy contract helpers remain compatibility-only while runtime/docgen are being rebuilt. |
+| `macroforecast.preprocessing` | Pandas preprocessing callables, transformations, and reports. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |
 | `macroforecast.evaluation` | L5 metrics and evaluation ops. |
@@ -60,24 +60,6 @@ Curated reference for the importable macroforecast surface. The generated pages 
 Canonical implementation now lives in semantic packages: `meta`, `data`, `preprocessing`, `features`, `models`, `evaluation`, `stat_tests`, `interpretation`, `output`, and `diagnostics.*`.
 
 `macroforecast.layers.*` is compatibility-only. `macroforecast.core.layers` owns registry-facing compatibility modules and runtime glue, not the primary public implementation surface.
-
-## Compatibility Boundaries
-
-These symbols are still importable for existing tests, runtime glue, and
-generated-option documentation, but they are not the current callable path for
-new user code:
-
-- `macroforecast.build_preprocess_contract`
-- `macroforecast.check_preprocess_governance`
-- `macroforecast.is_operational_preprocess_contract`
-- `macroforecast.preprocess_summary`
-- `macroforecast.preprocess_to_dict`
-- `macroforecast.PreprocessContract`
-
-Use `macroforecast.preprocessing.reprocess(...)`,
-`macroforecast.preprocessing.plan(...)`, and
-`macroforecast.preprocessing.report(...)` for the current pandas preprocessing
-surface.
 
 ## Runtime Helpers
 

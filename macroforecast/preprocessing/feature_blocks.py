@@ -4,9 +4,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from .errors import PreprocessValidationError
-
-
 CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION = "custom_feature_block_callable_v1"
 CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION = "custom_feature_combiner_v1"
 CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION = "custom_final_z_selection_v1"
@@ -115,35 +112,35 @@ def custom_final_z_selection_required_fields() -> tuple[str, ...]:
 
 def validate_feature_block_callable_result(result: FeatureBlockCallableResult) -> None:
     if result.contract_version != CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION:
-        raise PreprocessValidationError(
+        raise ValueError(
             f"custom feature block result must use contract_version={CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION!r}"
         )
     if not result.feature_names:
-        raise PreprocessValidationError("custom feature block result requires at least one feature name")
+        raise ValueError("custom feature block result requires at least one feature name")
     if len(set(result.feature_names)) != len(result.feature_names):
-        raise PreprocessValidationError("custom feature block feature_names must be unique")
+        raise ValueError("custom feature block feature_names must be unique")
     if result.runtime_feature_names and len(result.runtime_feature_names) != len(result.feature_names):
-        raise PreprocessValidationError("runtime_feature_names must be empty or match feature_names length")
+        raise ValueError("runtime_feature_names must be empty or match feature_names length")
     if result.runtime_feature_names and len(set(result.runtime_feature_names)) != len(result.runtime_feature_names):
-        raise PreprocessValidationError("custom feature block runtime_feature_names must be unique")
+        raise ValueError("custom feature block runtime_feature_names must be unique")
     if "lookahead" not in result.leakage_metadata:
-        raise PreprocessValidationError("custom feature block leakage_metadata must record lookahead policy")
+        raise ValueError("custom feature block leakage_metadata must record lookahead policy")
 
 
 def validate_feature_combiner_callable_result(result: FeatureCombinerCallableResult) -> None:
     if result.contract_version != CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION:
-        raise PreprocessValidationError(
+        raise ValueError(
             f"custom feature combiner result must use contract_version={CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION!r}"
         )
     if not result.feature_names:
-        raise PreprocessValidationError("custom feature combiner result requires at least one feature name")
+        raise ValueError("custom feature combiner result requires at least one feature name")
     if len(set(result.feature_names)) != len(result.feature_names):
-        raise PreprocessValidationError("custom feature combiner feature_names must be unique")
+        raise ValueError("custom feature combiner feature_names must be unique")
     if "lookahead" not in result.leakage_metadata:
-        raise PreprocessValidationError("custom feature combiner leakage_metadata must record lookahead policy")
+        raise ValueError("custom feature combiner leakage_metadata must record lookahead policy")
     unknown_roles = set(result.block_roles) - set(result.feature_names)
     if unknown_roles:
-        raise PreprocessValidationError(
+        raise ValueError(
             f"custom feature combiner block_roles contains names not present in feature_names: {sorted(unknown_roles)}"
         )
 

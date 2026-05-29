@@ -75,8 +75,10 @@ realistic FRED-MD recipe would use:
 - `imputation_policy: em_factor` — McCracken-Ng PCA-EM imputation.
 - `frame_edge_policy: truncate_to_balanced`.
 
-For FRED-SD / mixed-frequency studies see
-[`mixed_frequency_representation`](../../reference/generated/l2/axes/mixed_frequency_representation.md).
+For FRED-SD / mixed-frequency studies, start from the dataset-combination and
+frequency-conversion rules in [macroforecast.data](../../reference/data.md) and
+the callable preprocessing workflow in
+[macroforecast.preprocessing](../../reference/preprocessing.md).
 
 ## Layer 3 — feature engineering steps
 

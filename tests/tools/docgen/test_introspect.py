@@ -12,9 +12,9 @@ import pytest
 from tools.docgen import introspect
 
 
-def test_list_layers_returns_canonical_thirteen():
+def test_list_layers_returns_direct_callable_reference_layers():
     layers = introspect.list_layers()
-    expected = ("l0", "l1", "l1_5", "l2", "l2_5", "l3", "l3_5", "l4", "l4_5", "l5", "l6", "l7", "l8")
+    expected = ("l1_5", "l2_5", "l3", "l3_5", "l4", "l4_5", "l5", "l6", "l7", "l8")
     assert layers == expected
 
 
@@ -45,11 +45,10 @@ def test_axis_info_carries_options():
     """Pick a known layer with rich options and verify the walker produces
     the expected (axis -> options) structure."""
 
-    l1_axes = {a.name: a for a in introspect.axes("l1")}
-    assert "panel_composition" in l1_axes
-    options = {o.value for o in l1_axes["panel_composition"].options}
-    # All three documented options for the source policy must surface.
-    assert {"official_only", "custom_panel_only", "official_plus_custom"} <= options
+    l4_axes = {a.name: a for a in introspect.axes("l4")}
+    assert "model" in l4_axes
+    options = {o.value for o in l4_axes["model"].options}
+    assert {"ridge", "ar_p"} <= options
 
 
 def test_operational_options_filters_by_status():

@@ -1,6 +1,8 @@
-# Standalone functions: L2 clean (14 ops)
+# Standalone functions: preprocessing clean helpers
 
-L2 clean callables apply a single data-cleaning operation to a panel DataFrame and return a cleaned DataFrame. Each callable maps to a recipe axis option in the L2 preprocessing layer.
+These callables apply one data-cleaning operation to a panel DataFrame and
+return a cleaned DataFrame. For the full callable preprocessing workflow, see
+[macroforecast.preprocessing](../preprocessing.md).
 
 ## Callables
 
@@ -15,7 +17,7 @@ panel = pd.DataFrame({"a": [1.0, 2.0, 3.0]})
 out = mf.functions.apply_tcode_transform(panel, {"a": 2})
 ```
 
-[Encyclopedia](../l2/transform_policy/apply_official_tcode.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `drop_unbalanced_series_clean(panel: pd.DataFrame) -> pd.DataFrame`
 
@@ -28,7 +30,7 @@ panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
 out = mf.functions.drop_unbalanced_series_clean(panel)
 ```
 
-[Encyclopedia](../l2/frame_edge_policy/drop_unbalanced_series.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `em_factor_impute_clean(panel: pd.DataFrame, *, n_factors: int = 8, max_iter: int = 20, tol: float = 0.0001) -> pd.DataFrame`
 
@@ -42,7 +44,7 @@ panel.iloc[5:8, 2] = np.nan
 out = mf.functions.em_factor_impute_clean(panel, n_factors=2)
 ```
 
-[Encyclopedia](../l2/imputation_policy/em_factor.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `em_multivariate_impute_clean(panel: pd.DataFrame, *, max_iter: int = 20, tol: float = 0.0001) -> pd.DataFrame`
 
@@ -56,7 +58,7 @@ panel.iloc[5:8, 2] = np.nan
 out = mf.functions.em_multivariate_impute_clean(panel)
 ```
 
-[Encyclopedia](../l2/imputation_policy/em_multivariate.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `forward_fill_clean(panel: pd.DataFrame) -> pd.DataFrame`
 
@@ -69,7 +71,7 @@ panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
 out = mf.functions.forward_fill_clean(panel)
 ```
 
-[Encyclopedia](../l2/imputation_policy/forward_fill.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `freq_align_monthly_to_quarterly_clean(panel: pd.DataFrame, monthly_columns: list[str], *, rule: str = quarterly_average) -> pd.DataFrame`
 
@@ -83,7 +85,7 @@ panel = pd.DataFrame({'gdp': range(24)}, index=monthly_idx)
 out = mf.functions.freq_align_monthly_to_quarterly_clean(panel, ['gdp'])
 ```
 
-[Encyclopedia](../l2/monthly_to_quarterly_policy/quarterly_average.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `freq_align_quarterly_to_monthly_clean(panel: pd.DataFrame, quarterly_columns: list[str], *, rule: str = step_backward) -> pd.DataFrame`
 
@@ -97,7 +99,7 @@ panel = pd.DataFrame({'cpi': range(8)}, index=q_idx)
 out = mf.functions.freq_align_quarterly_to_monthly_clean(panel, ['cpi'])
 ```
 
-[Encyclopedia](../l2/quarterly_to_monthly_policy/step_backward.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `iqr_outlier_clean(panel: pd.DataFrame, *, threshold: float = 10.0, action: str = flag_as_nan) -> pd.DataFrame`
 
@@ -110,7 +112,7 @@ panel = pd.DataFrame({"x": np.random.randn(100)})
 out = mf.functions.iqr_outlier_clean(panel, threshold=3.0)
 ```
 
-[Encyclopedia](../l2/outlier_policy/mccracken_ng_iqr.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `linear_interpolate_clean(panel: pd.DataFrame) -> pd.DataFrame`
 
@@ -123,7 +125,7 @@ panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
 out = mf.functions.linear_interpolate_clean(panel)
 ```
 
-[Encyclopedia](../l2/imputation_policy/linear_interpolation.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `mean_impute_clean(panel: pd.DataFrame) -> pd.DataFrame`
 
@@ -136,7 +138,7 @@ panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
 out = mf.functions.mean_impute_clean(panel)
 ```
 
-[Encyclopedia](../l2/imputation_policy/mean.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `truncate_to_balanced_clean(panel: pd.DataFrame) -> pd.DataFrame`
 
@@ -149,7 +151,7 @@ panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
 out = mf.functions.truncate_to_balanced_clean(panel)
 ```
 
-[Encyclopedia](../l2/frame_edge_policy/truncate_to_balanced.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `winsorize_clean(panel: pd.DataFrame, *, lower_quantile: float = 0.01, upper_quantile: float = 0.99) -> pd.DataFrame`
 
@@ -162,7 +164,7 @@ panel = pd.DataFrame({"x": [-10.0, 0.0, 1.0, 2.0, 100.0]})
 out = mf.functions.winsorize_clean(panel, lower_quantile=0.01, upper_quantile=0.99)
 ```
 
-[Encyclopedia](../l2/outlier_policy/winsorize.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `zero_fill_leading_clean(panel: pd.DataFrame) -> pd.DataFrame`
 
@@ -175,7 +177,7 @@ panel = pd.DataFrame({"a": [None, 1.0, 2.0, 3.0]})
 out = mf.functions.zero_fill_leading_clean(panel)
 ```
 
-[Encyclopedia](../l2/frame_edge_policy/zero_fill_leading.md)
+[Preprocessing reference](../preprocessing.md)
 
 #### `zscore_outlier_clean(panel: pd.DataFrame, *, threshold: float = 3.0, action: str = flag_as_nan) -> pd.DataFrame`
 
@@ -188,7 +190,7 @@ panel = pd.DataFrame({"x": np.random.randn(100)})
 out = mf.functions.zscore_outlier_clean(panel, threshold=3.0)
 ```
 
-[Encyclopedia](../l2/outlier_policy/zscore_threshold.md)
+[Preprocessing reference](../preprocessing.md)
 
 ## Quick example
 

@@ -1,10 +1,3 @@
-from .build import (
-    build_preprocess_contract,
-    check_preprocess_governance,
-    is_operational_preprocess_contract,
-    preprocess_summary,
-    preprocess_to_dict,
-)
 from .preprocess import (
     FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES,
     FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES,
@@ -38,7 +31,6 @@ from macroforecast.api.functions.clean import (
     zero_fill_leading_clean,
     zscore_outlier_clean,
 )
-from .errors import PreprocessContractError, PreprocessValidationError
 from .feature_blocks import (
     CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION,
     CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION,
@@ -55,32 +47,6 @@ from .feature_blocks import (
     custom_final_z_selection_required_fields,
     validate_feature_block_callable_result,
     validate_feature_combiner_callable_result,
-)
-from .target_scale import TARGET_SCALE_CONTRACT_VERSION, build_target_scale_contract
-from .types import (
-    AdditionalPreprocessing,
-    DimensionalityReductionPolicy,
-    EvaluationScale,
-    FeatureGrouping,
-    FeatureSelectionPolicy,
-    InverseTransformPolicy,
-    MissingPolicy,
-    OutlierPolicy,
-    PreprocessContract,
-    PreprocessFitScope,
-    PreprocessOrder,
-    PreprocessingAxisRole,
-    RepresentationPolicy,
-    RecipeMode,
-    ScalingPolicy,
-    ScalingScope,
-    TargetDomain,
-    TargetNormalization,
-    TargetTransform,
-    TargetTransformPolicy,
-    TcodePolicy,
-    XLagCreation,
-    XTransformPolicy,
 )
 
 __all__ = [
@@ -113,20 +79,9 @@ __all__ = [
     "apply_tcode_transform",
     "freq_align_quarterly_to_monthly_clean",
     "freq_align_monthly_to_quarterly_clean",
-    # Compatibility exports kept until runtime/docgen no longer import the old
-    # preprocessing contract layer.
-    "build_preprocess_contract",
-    "check_preprocess_governance",
-    "is_operational_preprocess_contract",
-    "preprocess_summary",
-    "preprocess_to_dict",
-    "build_target_scale_contract",
-    "PreprocessContractError",
-    "PreprocessValidationError",
     "CUSTOM_FEATURE_BLOCK_CONTRACT_VERSION",
     "CUSTOM_FEATURE_COMBINER_CONTRACT_VERSION",
     "CUSTOM_FINAL_Z_SELECTION_CONTRACT_VERSION",
-    "TARGET_SCALE_CONTRACT_VERSION",
     "FeatureBlockCallableContext",
     "FeatureBlockCallableResult",
     "FeatureCombinerCallableContext",
@@ -139,27 +94,4 @@ __all__ = [
     "custom_final_z_selection_required_fields",
     "validate_feature_block_callable_result",
     "validate_feature_combiner_callable_result",
-    "PreprocessContract",
-    "TargetTransformPolicy",
-    "XTransformPolicy",
-    "TcodePolicy",
-    "RepresentationPolicy",
-    "PreprocessingAxisRole",
-    "MissingPolicy",
-    "OutlierPolicy",
-    "ScalingPolicy",
-    "DimensionalityReductionPolicy",
-    "FeatureSelectionPolicy",
-    "PreprocessOrder",
-    "PreprocessFitScope",
-    "InverseTransformPolicy",
-    "EvaluationScale",
-    "TargetTransform",
-    "TargetNormalization",
-    "TargetDomain",
-    "ScalingScope",
-    "AdditionalPreprocessing",
-    "XLagCreation",
-    "FeatureGrouping",
-    "RecipeMode",
 ]

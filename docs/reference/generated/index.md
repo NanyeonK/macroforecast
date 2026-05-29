@@ -21,10 +21,7 @@ guides should link to semantic reference pages such as [Meta](../meta.md) and
 browse_by_layer
 browse_by_axis
 browse_by_option
-l0/index
-l1/index
 l1_5/index
-l2/index
 l2_5/index
 l3/index
 l3_5/index

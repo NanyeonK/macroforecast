@@ -12,7 +12,6 @@ from __future__ import annotations
 import pytest
 
 from tools.docgen.option_docs.types import CodeExample, OptionDoc, ParameterDoc, Reference, REQUIRED
-from tools.docgen.option_docs import OPTION_DOCS
 from tools.docgen.render_encyclopedia import _render_option_body
 from tools.docgen.introspect import OptionInfo
 
@@ -96,56 +95,6 @@ def test_option_doc_default_parameters_empty():
         reviewer="test",
     )
     assert o.parameters == ()
-
-
-# ---------------------------------------------------------------------------
-# L0 option doc registry checks
-# ---------------------------------------------------------------------------
-
-
-def test_l0_seeded_reproducible_has_random_seed_param():
-    """L0 seeded_reproducible option has random_seed ParameterDoc."""
-    doc = OPTION_DOCS[("l0", "l0_a", "reproducibility_policy", "seeded_reproducible")]
-    assert len(doc.parameters) == 1
-    p = doc.parameters[0]
-    assert p.name == "random_seed"
-    assert p.type == "int"
-    assert p.default == 42
-    assert p.constraint is not None
-    assert ">=0" in p.constraint
-
-
-def test_l0_exploratory_has_no_parameters():
-    """L0 exploratory option explicitly sets parameters=() (no args)."""
-    doc = OPTION_DOCS[("l0", "l0_a", "reproducibility_policy", "exploratory")]
-    assert doc.parameters == ()
-
-
-def test_l0_parallel_has_parallel_unit_and_n_workers():
-    """L0 parallel option has parallel_unit and n_workers ParameterDocs."""
-    doc = OPTION_DOCS[("l0", "l0_a", "compute_policy", "parallel")]
-    assert len(doc.parameters) == 2
-    names = [p.name for p in doc.parameters]
-    assert "parallel_unit" in names
-    assert "n_workers" in names
-    pu = next(p for p in doc.parameters if p.name == "parallel_unit")
-    assert pu.default is REQUIRED  # parallel_unit is required (migrated C26)
-    assert "cells" in pu.type
-    nw = next(p for p in doc.parameters if p.name == "n_workers")
-    assert "int" in nw.type
-
-
-def test_l0_serial_has_no_parameters():
-    """L0 serial option explicitly sets parameters=() (no conditional leaf_config)."""
-    doc = OPTION_DOCS[("l0", "l0_a", "compute_policy", "serial")]
-    assert doc.parameters == ()
-
-
-def test_l0_failure_policy_options_have_no_parameters():
-    """L0 failure_policy options are categorical-only with no parameters."""
-    for option in ("fail_fast", "continue_on_failure"):
-        doc = OPTION_DOCS[("l0", "l0_a", "failure_policy", option)]
-        assert doc.parameters == (), f"Expected empty parameters for {option}"
 
 
 # ---------------------------------------------------------------------------
@@ -243,24 +192,3 @@ def test_render_option_body_none_default_renders_dash():
     )
     assert "| `parallel_unit` |" in rendered
     assert "| — |" in rendered
-
-
-def test_encyclopedia_l0_pages_contain_parameters_table():
-    """Full encyclopedia render for L0 axis pages contains Parameters table."""
-    from tools.docgen.render_encyclopedia import _render_axis_page
-    from tools.docgen.introspect import axes
-
-    l0_axes = {ax.name: ax for ax in axes("l0")}
-
-    repro_page = _render_axis_page("l0", l0_axes["reproducibility_policy"])
-    assert "**Parameters**" in repro_page
-    assert "random_seed" in repro_page
-
-    compute_page = _render_axis_page("l0", l0_axes["compute_policy"])
-    assert "**Parameters**" in compute_page
-    assert "parallel_unit" in compute_page
-    assert "n_workers" in compute_page
-
-    # failure_policy has no parameters — table should NOT appear
-    failure_page = _render_axis_page("l0", l0_axes["failure_policy"])
-    assert "**Parameters**" not in failure_page

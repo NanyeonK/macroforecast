@@ -7,23 +7,24 @@ from pathlib import Path
 import pytest
 
 from tools.docgen import render_rst
+from tools.docgen import introspect
 
 
 def test_render_index_lists_every_layer():
     rst = render_rst.render_index()
     assert "Reference" in rst
-    for layer_id in ("l0", "l1", "l4", "l8"):
+    for layer_id in introspect.list_layers():
         assert f"   {layer_id}" in rst
 
 
-def test_render_layer_l0_includes_documented_option():
-    """L0 ``fail_fast`` has a Tier-1 OptionDoc; the rendered RST must
+def test_render_layer_l4_includes_documented_option():
+    """L4 ``ar_p`` has a Tier-1 OptionDoc; the rendered RST must
     surface its summary and references."""
-    rst = render_rst.render_layer("l0")
-    assert "``fail_fast``" in rst
-    assert "Stop the entire study on the first cell" in rst
+    rst = render_rst.render_layer("l4")
+    assert "``ar_p``" in rst
+    assert "Autoregressive AR(p)" in rst
     assert "When to use" in rst
-    assert "fail_fast vs continue_on_failure" in rst  # reference text
+    assert "Stock & Watson" in rst  # reference text
 
 
 def test_render_layer_handles_missing_optiondoc_with_warning(monkeypatch):
@@ -32,17 +33,16 @@ def test_render_layer_handles_missing_optiondoc_with_warning(monkeypatch):
     simulate a missing entry by popping a known key from the registry
     inside the test (restored automatically by ``monkeypatch``)."""
     from tools.docgen.option_docs import OPTION_DOCS
-    key = ("l0", "l0_a", "failure_policy", "fail_fast")
+    key = ("l4", "L4_A_model_selection", "model", "ar_p")
     assert key in OPTION_DOCS, "fixture target missing from registry"
     monkeypatch.delitem(OPTION_DOCS, key)
-    rst = render_rst.render_layer("l0")
+    rst = render_rst.render_layer("l4")
     assert ".. warning:: Detailed OptionDoc not yet registered" in rst
 
 
 def test_write_all_creates_one_file_per_layer(tmp_path):
     written = render_rst.write_all(tmp_path)
-    # 13 layers + 1 index.
-    assert len(written) == 14
+    assert len(written) == len(introspect.list_layers()) + 1
     for path in written:
         assert path.exists()
         assert path.suffix == ".rst"
