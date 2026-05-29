@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "macroforecast"
-version = "0.9.5a0"
-description = "Fair, reproducible macro forecasting benchmarking package"
+version = "0.10.0a0"
+description = "Pandas-first macro forecasting workflow package"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "NanyeonK", email = "104714490+NanyeonK@users.noreply.github.com"}]
-keywords = ["forecasting", "macroeconomics", "fred-md", "fred-qd", "midas", "garch", "bit-exact-replication"]
+keywords = ["forecasting", "macroeconomics", "fred-md", "fred-qd", "fred-sd", "pandas"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3.10",
@@ -26,11 +26,8 @@ dependencies = [
     "numpy>=2.0",
     "scikit-learn>=1.5",
     "statsmodels>=0.14",
-    "PyYAML>=6.0",
     "scipy>=1.11",
-    "matplotlib>=3.7",
     "openpyxl>=3.1",
-    "cvxpy>=1.4",
 ]
 
 [project.urls]
@@ -40,23 +37,7 @@ Issues = "https://github.com/NanyeonK/macroforecast/issues"
 Changelog = "https://github.com/NanyeonK/macroforecast/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
-tuning = ["optuna>=3.0"]
-shap = ["shap>=0.47"]
-lime = ["lime>=0.2"]
-xgboost = ["xgboost>=3.0,<3.1"]
-lightgbm = ["lightgbm>=4.0"]
-catboost = ["catboost>=1.2"]
 parquet = ["pyarrow>=14.0"]
-deep = ["torch>=2.0"]
-mars = ["sklearn-contrib-py-earth>=0.1.0; python_version < \"3.11\""]
-# Phase C M9 (2026-05-08): GARCH(1,1) / EGARCH / Realized-GARCH families
-# wrap the ``arch`` package. Kept optional (not promoted to top-level
-# ``dependencies``) so users not using vol forecasting do not pay an
-# import-time cost. Mirrors the xgboost / lightgbm / catboost / deep
-# pattern -- the L4 fit raises ``NotImplementedError`` with an install
-# hint when ``arch`` is missing.
-arch = ["arch>=6.0"]
-anatomy = ["anatomy"]
 docs = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
@@ -65,32 +46,26 @@ docs = [
     "sphinx-copybutton>=0.5",
 ]
 typecheck = ["mypy>=1.13"]
-# Cycle 14 L2-1 fix: tabulate required for markdown_report export_format (DataFrame.to_markdown)
 markdown = ["tabulate>=0.9"]
-# rpy2 bridge for R cross-implementation validation (Boruta / midasr / rugarch)
-validation = ["rpy2>=3.5"]
-all = ["macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,deep,mars,arch,anatomy,markdown,validation]"]
-ci = ["pytest>=8.0", "macroforecast[tuning,shap,lime,xgboost,lightgbm,catboost,parquet,arch,anatomy,markdown]"]
+all = ["macroforecast[parquet,markdown]"]
+ci = ["pytest>=8.0", "macroforecast[parquet,markdown]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
 macroforecast = "macroforecast.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["macroforecast*", "tools*"]
+include = ["macroforecast*"]
 
 [tool.setuptools.package-data]
 macroforecast = ["py.typed"]
-"macroforecast._vendor.macro_random_forest" = ["LICENSE", "PATCHES.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = ["--import-mode=importlib"]
 markers = [
-    "deep: tests that require torch (skipped unless [deep] extra is installed)",
     "slow: realistic-shape integration tests (gated; opt in with `pytest -m slow`)",
-    "integration: live integration tests against the actual repository docs surface",
 ]
 
 [tool.mypy]
@@ -101,26 +76,6 @@ follow_imports = "skip"
 show_error_codes = true
 pretty = true
 warn_unused_configs = true
-
-[[tool.mypy.overrides]]
-module = [
-    "macroforecast.core.layers.l0",
-    "macroforecast.meta.schema",
-    "macroforecast.diagnostics.data_summary.schema",
-    "macroforecast.core.layers.l3",
-    "macroforecast.features.schema",
-    "macroforecast.diagnostics.features.schema",
-    "macroforecast.core.runtime",
-    "tools.docgen.builder",
-    "macroforecast.models.tuning.engine",
-    "macroforecast.preprocessing.schema",
-    "macroforecast.diagnostics.preprocessing.schema",
-    "macroforecast.interpretation.schema",
-    "macroforecast.evaluation.schema",
-    "macroforecast.stat_tests.schema",
-    "macroforecast.output.schema",
-]
-ignore_errors = true
 
 [dependency-groups]
 dev = [

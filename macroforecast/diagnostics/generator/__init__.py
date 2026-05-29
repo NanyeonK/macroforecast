@@ -1,1 +1,0 @@
-# macroforecast.diagnostics.generator

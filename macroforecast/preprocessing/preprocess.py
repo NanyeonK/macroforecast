@@ -7,7 +7,7 @@ import warnings
 
 import pandas as pd
 
-from macroforecast.api.functions.clean import (
+from macroforecast.preprocessing.clean import (
     apply_tcode_transform,
     drop_unbalanced_series_clean,
     em_factor_impute_clean,
@@ -96,10 +96,9 @@ def reprocess(
 ) -> PreprocessedData:
     """Preprocess a canonical macroforecast panel.
 
-    Parameters use user-facing names. Backward-compatible recipe-axis values
-    such as ``apply_official_tcode`` and ``truncate_to_balanced`` are accepted
-    as aliases, but the returned metadata records the canonical direct-call
-    names.
+    Parameters use user-facing names. Common legacy aliases such as
+    ``apply_official_tcode`` and ``truncate_to_balanced`` are accepted, but
+    returned metadata records the canonical direct-call names.
     """
 
     base = _coerce_input(data, metadata=metadata)

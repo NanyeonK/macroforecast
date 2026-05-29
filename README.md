@@ -1,215 +1,76 @@
 # macroforecast
 
-> Fair, reproducible macro forecasting benchmarking. One YAML recipe → end-to-end study with bit-exact replication.
+`macroforecast` is being rebuilt as a pandas-first macro forecasting workflow
+package. The current public surface is intentionally small:
 
-[![ci-core](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-core.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-core.yml)
-[![ci-docs](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-docs.yml)
-[![ci-typecheck](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-typecheck.yml/badge.svg)](https://github.com/NanyeonK/macroforecast/actions/workflows/ci-typecheck.yml)
-[![python](https://img.shields.io/badge/python-3.10+-blue)](#)
-[![docs](https://readthedocs.org/projects/macroforecast/badge/?version=latest)](https://macroforecast.readthedocs.io/en/latest/)
+- `macroforecast.meta`: package-wide defaults such as random seed and worker count.
+- `macroforecast.data`: canonical date-indexed panels, metadata, FRED/custom loaders, and study data specs.
+- `macroforecast.preprocessing`: direct pandas preprocessing callables.
+- `macroforecast.data_summary`: one-panel summary tables.
+- `macroforecast.data_analysis`: before/after preprocessing analysis.
+- `macroforecast.evaluation`: reserved for the next callable evaluation pass.
 
-> **v0.9.5a0** — extensive test suite (counts vary by extras and Python version; see CI badges above).
->
-> **Renamed from `macrocast` -> `macroforecast`** in v0.6.0 (PyPI
-> namespace ownership). See ``CHANGELOG.md`` for the migration diff.
->
-> **Upgrading from v0.8.x or v0.1?** See the
-> [Migration Guide](docs/explanation/migration_guide.md) for axis renames,
-> module path changes, CLI entry point change, and the v0.10.0 deprecation
-> removal schedule.
+The old YAML/runtime implementation is no longer part of the clean importable
+package. A reference copy is preserved on the `legacy-runtime-reference` branch.
 
 ## Install
 
 ```bash
-pip install macroforecast                    # core
-pip install 'macroforecast[deep]'            # + torch / captum (LSTM / GRU / Transformer)
-pip install 'macroforecast[xgboost,lightgbm]'  # + optional gradient-boosting backends
-pip install 'macroforecast[tuning]'          # + optuna for bayesian_optimization
-pip install 'macroforecast[shap]'            # + shap package for richer L7 figures
-```
-
-Or pin to a tagged release directly from GitHub:
-
-```bash
-pip install "git+https://github.com/NanyeonK/macroforecast.git@v0.9.5a0"
-```
-
-For development:
-
-```bash
-git clone https://github.com/NanyeonK/macroforecast.git
-cd macroforecast
 pip install -e ".[dev]"
-pip install -e ".[typecheck]"  # optional: local mypy baseline
 ```
 
-## Quick standalone use
+Torch is not installed by default in this rebuild.
 
-Use individual operations directly as Python callables — no YAML needed:
+## Quick Use
 
 ```python
 import macroforecast as mf
-import numpy as np
 
-rng = np.random.RandomState(42)
-X = rng.randn(100, 5)
-y = X @ np.array([1, 2, 3, 4, 5]) + 0.5 * rng.randn(100)
+mf.configure(random_seed=42, n_jobs=1)
 
-# L4: fit a ridge model
-result = mf.functions.ridge_fit(X, y, alpha=1.0)
-print(result.summary())
-print(result.coef_)
+bundle = mf.data.load_custom_csv(
+    "panel.csv",
+    date="date",
+    dataset="my_panel",
+    frequency="monthly",
+)
 
-# L5: compute a metric
-u1 = mf.functions.theil_u1(y, result.predict(X))
-print(f"Theil U1 = {u1:.4f}")
+data_spec = mf.data.spec(
+    bundle,
+    target="INDPRO",
+    horizons=[1, 3, 6],
+    start="1990-01-01",
+    end="2024-12-01",
+)
 
-# L7: permutation importance
-imp = mf.functions.permutation_importance(result, X, y, n_repeats=10, random_state=42)
-print(imp.importances_mean_)
+processed = mf.preprocessing.reprocess(
+    data_spec,
+    transform="custom",
+    transform_codes={"INDPRO": 5},
+    outliers="iqr",
+    impute="em_factor",
+)
+
+summary = mf.data_summary.summarize_data(processed.panel)
+analysis = mf.data_analysis.analyze_data(bundle.panel, processed.panel)
 ```
 
-> Or use the recipe DSL for full reproducible studies — see
-> [docs/index.md](docs/index.md) and
-> [docs/tutorial/two_entry_points.md](docs/tutorial/two_entry_points.md) for a decision guide.
+## Data Shape
 
-## 5-line quickstart
+The standard panel is a `pandas.DataFrame` with:
 
-```python
-import macroforecast
+- a `DatetimeIndex` named `date`
+- one macro series per column
+- numeric values in the cells
+- dataset metadata stored separately and mirrored in `panel.attrs["macroforecast_metadata"]`
 
-result = macroforecast.run("recipe.yaml", output_directory="out/")
-print(result.cells[0].sink_hashes)            # per-cell sink hashes
-replication = macroforecast.replicate("out/manifest.json")
-assert replication.sink_hashes_match           # bit-exact replication
-```
+`macroforecast.data.load_*()` returns a `DataBundle(panel, metadata)`.
+`macroforecast.data.spec(...)` attaches target, horizon, sample-window, and
+predictor choices to that panel.
 
-A minimal recipe:
+## Documentation
 
-```yaml
-0_meta:
-  fixed_axes: {failure_policy: fail_fast, reproducibility_policy: seeded_reproducible}
-1_data:
-  fixed_axes: {panel_composition: custom_panel_only, frequency: monthly, horizon_set: custom_list}
-  leaf_config:
-    target: y
-    target_horizons: [1]
-    custom_panel_inline:
-      date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01,
-             2018-07-01, 2018-08-01, 2018-09-01, 2018-10-01, 2018-11-01, 2018-12-01]
-      y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]
-      x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
-2_preprocessing:
-  fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
-3_feature_engineering:
-  nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
-    - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
-    - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
-  sinks: {l3_features_v1: {X_final: lag_x, y_final: y_h}, l3_metadata_v1: auto}
-4_forecasting_model:
-  nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: X_final}}}
-    - {id: src_y, type: source, selector: {layer_ref: l3, sink_name: l3_features_v1, subset: {component: y_final}}}
-    - id: fit
-      type: step
-      op: fit
-      params: {model: ridge, alpha: 0.1, min_train_size: 4, forecast_policy: direct, training_start_rule: expanding, refit_policy: every_origin, search_algorithm: none}
-      inputs: [src_X, src_y]
-    - {id: predict, type: step, op: predict, inputs: [fit, src_X]}
-  sinks: {l4_forecasts_v1: predict, l4_model_artifacts_v1: fit, l4_training_metadata_v1: auto}
-5_evaluation:
-  fixed_axes: {primary_metric: mse}
-```
-
-## Bring your own data or model
-
-To run a study on your own CSV / Parquet data (monthly or quarterly):
-
-- [Bring your own data guide](docs/for_researchers/user_data_workflow.md) -- file format spec, end-to-end recipe walkthrough, FRED merge pattern
-
-To register a custom forecasting model, preprocessor, or target transformer:
-
-- [Custom function quickstart](docs/for_recipe_authors/custom_function_quickstart.md) -- decorator APIs, YAML integration, common pitfalls
-
-## Architecture
-
-```
-L0 study setup → L1 data → L2 preprocess → L3 features (pipeline, 37 ops)
-                ↓                                ↓
-                L1.5 / L2.5 / L3.5 (diagnostics, default-off)
-                                                 ↓
-              L4 model (40+ families) → L4.5 → L5 evaluation → L6 tests
-                                                                    ↓
-                                                  L7 interpretation → L8 output
-```
-
-The canonical layer design is documented in the architecture reference.
-
-## Operational coverage
-
-> Before relying on advanced families/tests in a paper workflow, check
-> [`docs/reference/recipe_schema/runtime_support.md`](docs/reference/recipe_schema/runtime_support.md)
-> for the exact current path coverage. Some listed families are wired
-> through legacy/specialized paths or optional extras, not necessarily
-> through the minimal core runtime end-to-end.
-
-* **40+ L4 families** — linear (8), tree / boosting (8), SVM (3), kNN, MLP, deep
-  NN (3, opt-in via `[deep]`), AR_p, factor_augmented_ar, BVAR Minnesota / NIW,
-  FAVAR, MRF GTVP (Coulombe 2024), DFM (Mariano-Murasawa MQ Kalman),
-  quantile_regression_forest, bagging.
-* **18 L7 figure types** — bar / heatmap / pdp / ALE / SHAP family /
-  attribution / IRF with CI / decomp stacked / state choropleth.
-* **L6 tests** — Diebold-Mariano (with HLN + HAC kernels), Clark-West,
-  Giacomini-Rossi (simulated CVs), MCS / SPA / RC / StepM via stationary
-  bootstrap, Pesaran-Timmermann, residual battery, density tests
-  (PIT-Berkowitz / KS / Kupiec / Christoffersen / Engle-Manganelli DQ),
-  Diebold-Mariano-Pesaran joint multi-horizon.
-* **L1.G regimes** — none / NBER / user-provided / Hamilton MS / Tong SETAR /
-  Bai-Perron breaks.
-* **3 sweep kinds** — param-level (`{sweep: [...]}`), recipe-level (external
-  axis), node-level (`sweep_groups`). Combine via grid (default) or zip.
-* **Sub-cell parallelism** — `parallel_unit ∈ {cells, models, oos_dates,
-  horizons, targets}`.
-* **Bit-exact replication** — `replicate()` re-executes and verifies
-  per-cell sink hashes match.
-
-## Recipe gallery
-
-`examples/recipes/` ships the runnable recipe gallery. Partial layer-only YAML
-snippets live under `docs/recipe-snippets/` and are not intended for `mf.run()`.
-
-* `l4_minimal_ridge.yaml` — minimal ridge on a custom panel.
-* `l4_quantile_regression_forest.yaml` — Meinshausen QRF with quantile bands.
-* `l4_bagging.yaml` — bootstrap-aggregated ridge.
-* `l4_ensemble_ridge_xgb_vs_ar1.yaml` — horse race with benchmark.
-* `l6_standard.yaml`, `l6_full_replication.yaml` — statistical-test examples.
-* `replications/*.yaml` — paper-method replication templates.
-
-A replication script for Coulombe (2024) MRF on FRED-MD lives at
-`examples/replication/coulombe_2024_mrf_fred_md.py`.
-
-Browse the full encyclopedia (every layer × sublayer × axis × option, with
-OptionDoc summaries / when-to-use / references) at
-[`docs/encyclopedia/`](docs/encyclopedia/index.md).
-
-## Status levels
-
-Two-value vocabulary (defined in `macroforecast.core.status`):
-* **`operational`** — runtime executes the full design-spec procedure.
-* **`future`** — schema-only; validator hard-rejects, runtime raises
-  `NotImplementedError`.
-
-The package shipped 19 honesty-pass demotions in v0.1.1; **all of them have
-real implementations in v0.2 / v0.25 / v0.3** (every `future` flag in the
-v0.1.1 audit table is now `operational`).
-
-## Citing
-
-If you use macroforecast in published work, please cite:
-
-> macroforecast: Fair, reproducible macro forecasting benchmarking. v0.9.5a0, 2026.
+Function-level documentation lives under `docs/reference/`.
 
 ## License
 

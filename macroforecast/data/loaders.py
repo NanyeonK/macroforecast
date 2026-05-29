@@ -1462,7 +1462,7 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
     return {
         "schema_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
         "contract_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
-        "owner_layer": "data",
+        "owner_stage": "data",
         "dataset": "fred_sd",
         "source_format": source_format,
         "selector": {

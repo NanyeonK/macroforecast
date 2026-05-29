@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from macroforecast import meta
-from macroforecast.core.execution import _resolve_seed
 
 
 def teardown_function() -> None:
@@ -63,7 +62,7 @@ def test_invalid_options_raise():
         meta.configure(verbose=-1)
 
 
-def test_seed_resolution_uses_global_config_without_legacy_block():
+def test_random_seed_is_read_from_global_config():
     meta.configure(random_seed=123)
 
-    assert _resolve_seed({}) == 123
+    assert meta.get_config()["random_seed"] == 123
