@@ -110,6 +110,9 @@ _LAZY_EXPORTS = {
     "DataBundle": ".data",
     "DataSpec": ".data",
     # preprocessing
+    "preprocess": ".preprocessing",
+    "reprocess": ".preprocessing",
+    "PreprocessedData": ".preprocessing",
     "build_preprocess_contract": ".preprocessing",
     "check_preprocess_governance": ".preprocessing",
     "is_operational_preprocess_contract": ".preprocessing",

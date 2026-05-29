@@ -269,6 +269,12 @@ def preprocess(
     )
 
 
+def reprocess(data: PreprocessInput, **kwargs: Any) -> PreprocessedData:
+    """Alias for :func:`preprocess` using the user-facing action name."""
+
+    return preprocess(data, **kwargs)
+
+
 def apply_transform_codes(panel: pd.DataFrame, codes: Mapping[str, int]) -> pd.DataFrame:
     """Apply McCracken-Ng transform codes to matching panel columns."""
 

@@ -28,8 +28,10 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.data.as_panel(...)` | Normalize a pandas `DataFrame` to the canonical date-indexed panel form. |
 | `macroforecast.data.spec(...)` | Combine a panel/bundle with target, horizons, sample window, and predictor choices. |
 | `macroforecast.data.metadata(bundle_or_spec_or_panel)` | Return explicit dataset metadata/provenance. |
-| `macroforecast.preprocessing.preprocessing(...)` | Build and validate the canonical `preprocessing` block without executing cleaning. |
-| `macroforecast.preprocessing.configure(...)` | Alias for `preprocessing(...)`. |
+| `macroforecast.preprocessing.reprocess(...)` | Run the standard pandas preprocessing sequence and return `PreprocessedData`. |
+| `macroforecast.preprocessing.preprocess(...)` | Backward-compatible alias for `reprocess(...)`. |
+| `macroforecast.preprocessing.plan(...)` | Dry-run preprocessing choices without mutating the panel. |
+| `macroforecast.preprocessing.report(...)` | Summarize a completed `PreprocessedData` result. |
 
 ## Submodule Surfaces
 
@@ -38,7 +40,7 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.recipes` | Recipe orchestration namespace; top-level `run`, `replicate`, `Experiment`, and `forecast` route here. |
 | `macroforecast.meta` | Package-wide execution settings. |
 | `macroforecast.data` | Canonical panels, data metadata, FRED/custom loaders, run-level data specs, and vintage labels. |
-| `macroforecast.preprocessing` | Preprocessing recipe authoring, cleaning schemas, transformations, and contract helpers. |
+| `macroforecast.preprocessing` | Pandas preprocessing callables, transformations, reports, and legacy contract helpers. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |
 | `macroforecast.evaluation` | L5 metrics and evaluation ops. |

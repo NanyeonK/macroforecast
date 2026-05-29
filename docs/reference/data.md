@@ -405,11 +405,14 @@ macroforecast.data.load_custom_csv(
     path,
     *,
     date: str | None = None,
+    date_col: str | int | None = None,
     columns: Iterable[str] | None = None,
+    series_columns: Iterable[str] | None = None,
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
     metadata: Mapping[str, object] | None = None,
+    transform_codes: Mapping[str, int] | None = None,
 ) -> DataBundle
 ```
 
@@ -419,11 +422,36 @@ macroforecast.data.load_custom_csv(
 | --- | --- | --- | --- |
 | `path` | path-like | required | CSV file path. |
 | `date` | <code>str &#124; None</code> | `None` | Date column. If omitted, uses a DatetimeIndex or parses the first column. |
+| `date_col` | <code>str &#124; int &#124; None</code> | `None` | Alias for `date`; integer values select the date column by zero-based position. |
 | `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
+| `series_columns` | iterable or `None` | `None` | Alias for `columns`; use this name when thinking in panel series IDs. |
 | `rename` | mapping or `None` | `None` | Column rename map. |
 | `dataset` | `str` | `"custom"` | Metadata dataset label. |
 | `frequency` | `str` | `"unknown"` | Metadata frequency label. |
 | `metadata` | mapping or `None` | `None` | User metadata to attach. |
+| `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
+
+### Output
+
+Returns a `DataBundle`. The normalized panel is available as `bundle.panel` and
+metadata as `bundle.metadata`. If `transform_codes` is provided, it is stored in
+both `bundle.metadata["transform_codes"]` and
+`bundle.panel.attrs["macroforecast_transform_codes"]`, so
+`mf.preprocessing.reprocess(bundle)` can use the codes automatically.
+
+Example:
+
+```python
+bundle = mf.data.load_custom_csv(
+    "panel.csv",
+    date_col="DATE",
+    series_columns=["INDPRO", "spread"],
+    frequency="monthly",
+    transform_codes={"INDPRO": 5, "spread": 2},
+)
+
+processed = mf.preprocessing.reprocess(bundle)
+```
 
 ## load_custom_parquet
 
@@ -435,13 +463,19 @@ macroforecast.data.load_custom_parquet(
     path,
     *,
     date: str | None = None,
+    date_col: str | int | None = None,
     columns: Iterable[str] | None = None,
+    series_columns: Iterable[str] | None = None,
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
     metadata: Mapping[str, object] | None = None,
+    transform_codes: Mapping[str, int] | None = None,
 ) -> DataBundle
 ```
+
+`date_col`, `series_columns`, and `transform_codes` have the same meaning as in
+`load_custom_csv`.
 
 ## as_panel
 

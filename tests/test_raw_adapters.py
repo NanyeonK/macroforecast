@@ -91,6 +91,28 @@ def test_load_custom_csv_accepts_date_column_selection_and_rename(tmp_path: Path
     assert metadata(bundle)["owner"] == "research"
 
 
+def test_load_custom_csv_accepts_panel_aliases_and_transform_codes(tmp_path: Path) -> None:
+    path = tmp_path / "custom_aliases.csv"
+    path.write_text(
+        "DATE,x,target,unused\n"
+        "2020-01-01,1.0,3.0,a\n"
+        "2020-02-01,2.0,4.0,b\n",
+        encoding="utf-8",
+    )
+
+    bundle = load_custom_csv(
+        path,
+        date_col="DATE",
+        series_columns=["x", "target"],
+        frequency="monthly",
+        transform_codes={"x": 2, "target": 5},
+    )
+
+    assert list(bundle.panel.columns) == ["x", "target"]
+    assert metadata(bundle)["transform_codes"] == {"x": 2, "target": 5}
+    assert bundle.panel.attrs["macroforecast_transform_codes"] == {"x": 2, "target": 5}
+
+
 def test_load_fred_qd_from_fixture_copy(tmp_path: Path) -> None:
     fixture = FIXTURES / "fred_qd_sample.csv"
     bundle = load_fred_qd(local_source=fixture, cache_root=tmp_path)

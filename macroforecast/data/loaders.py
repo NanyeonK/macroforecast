@@ -519,11 +519,14 @@ def load_custom_csv(
     path: str | Path,
     *,
     date: str | None = None,
+    date_col: str | int | None = None,
     columns: Iterable[str] | None = None,
+    series_columns: Iterable[str] | None = None,
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
     metadata: Mapping[str, Any] | None = None,
+    transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
 ) -> DataBundle:
     csv_path = Path(path)
@@ -531,7 +534,14 @@ def load_custom_csv(
         raise RawParseError(f"custom CSV source path does not exist: {csv_path}")
     try:
         raw = pd.read_csv(csv_path)
-        panel = as_panel(raw, date=date, columns=columns, rename=rename)
+        resolved_date, resolved_columns = _normalize_custom_loader_columns(
+            raw,
+            date=date,
+            date_col=date_col,
+            columns=columns,
+            series_columns=series_columns,
+        )
+        panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename)
     except Exception as exc:
         raise RawParseError(f"failed to normalize custom CSV at {csv_path}") from exc
     return _custom_bundle(
@@ -542,6 +552,7 @@ def load_custom_csv(
         local_path=csv_path,
         file_format="csv",
         metadata=metadata,
+        transform_codes=transform_codes,
         cache_root=cache_root,
     )
 
@@ -550,11 +561,14 @@ def load_custom_parquet(
     path: str | Path,
     *,
     date: str | None = None,
+    date_col: str | int | None = None,
     columns: Iterable[str] | None = None,
+    series_columns: Iterable[str] | None = None,
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
     metadata: Mapping[str, Any] | None = None,
+    transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
 ) -> DataBundle:
     pq_path = Path(path)
@@ -562,7 +576,14 @@ def load_custom_parquet(
         raise RawParseError(f"custom Parquet source path does not exist: {pq_path}")
     try:
         raw = pd.read_parquet(pq_path)
-        panel = as_panel(raw, date=date, columns=columns, rename=rename)
+        resolved_date, resolved_columns = _normalize_custom_loader_columns(
+            raw,
+            date=date,
+            date_col=date_col,
+            columns=columns,
+            series_columns=series_columns,
+        )
+        panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename)
     except Exception as exc:
         raise RawParseError(f"failed to normalize custom Parquet at {pq_path}") from exc
     return _custom_bundle(
@@ -573,8 +594,35 @@ def load_custom_parquet(
         local_path=pq_path,
         file_format="parquet",
         metadata=metadata,
+        transform_codes=transform_codes,
         cache_root=cache_root,
     )
+
+
+def _normalize_custom_loader_columns(
+    raw: pd.DataFrame,
+    *,
+    date: str | None,
+    date_col: str | int | None,
+    columns: Iterable[str] | None,
+    series_columns: Iterable[str] | None,
+) -> tuple[str | None, Iterable[str] | None]:
+    if date is not None and date_col is not None and date != date_col:
+        raise ValueError("provide either date or date_col, not both")
+    if columns is not None and series_columns is not None:
+        raise ValueError("provide either columns or series_columns, not both")
+    resolved_date: str | None
+    if isinstance(date_col, int):
+        try:
+            resolved_date = str(raw.columns[date_col])
+        except IndexError as exc:
+            raise ValueError(f"date_col index {date_col} is outside the input columns") from exc
+    elif date_col is None:
+        resolved_date = date
+    else:
+        resolved_date = str(date_col)
+    resolved_columns = columns if columns is not None else series_columns
+    return resolved_date, resolved_columns
 
 
 def _dataset_id(dataset: str) -> DatasetId:
@@ -722,8 +770,10 @@ def _custom_bundle(
     local_path: Path,
     file_format: str,
     metadata: Mapping[str, Any] | None,
+    transform_codes: Mapping[str, int] | None,
     cache_root: str | Path | None,
 ) -> DataBundle:
+    normalized_tcodes = _normalize_custom_transform_codes(transform_codes, columns=panel.columns)
     source_metadata = {
         "dataset": dataset,
         "source_family": source_family,
@@ -741,13 +791,33 @@ def _custom_bundle(
             file_format=file_format,
             cache_hit=False,
         ),
-        "transform_codes": {},
+        "transform_codes": normalized_tcodes,
     }
     merged = {**dict(metadata or {}), **source_metadata}
     bundle = _bundle(panel, merged)
     if cache_root is not None:
         _append_manifest_entry(merged, cache_root=cache_root)
     return bundle
+
+
+def _normalize_custom_transform_codes(
+    transform_codes: Mapping[str, int] | None,
+    *,
+    columns: pd.Index,
+) -> dict[str, int]:
+    if transform_codes is None:
+        return {}
+    column_names = {str(column) for column in columns}
+    normalized: dict[str, int] = {}
+    for key, raw_code in transform_codes.items():
+        name = str(key)
+        if name not in column_names:
+            raise ValueError(f"transform_codes includes unknown series {name!r}")
+        code = int(raw_code)
+        if code not in {1, 2, 3, 4, 5, 6, 7}:
+            raise ValueError(f"transform code for {name!r} must be in 1..7")
+        normalized[name] = code
+    return normalized
 
 
 def combine(

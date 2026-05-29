@@ -19,6 +19,7 @@ from .preprocess import (
     impute_missing,
     plan,
     preprocess,
+    reprocess,
     report,
 )
 from macroforecast.api.functions.clean import (
@@ -85,6 +86,7 @@ from .types import (
 __all__ = [
     "build_preprocess_contract",
     "preprocess",
+    "reprocess",
     "plan",
     "report",
     "PreprocessedData",

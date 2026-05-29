@@ -9,7 +9,7 @@ then returns a `PreprocessedData` object. The preferred input is a
 `DataBundle` or `DataSpec` produced by `macroforecast.data`; if preprocessing
 receives a plain panel without data-generated metadata, it emits a warning.
 
-The default `preprocess()` path follows the public McCracken-Ng FRED-MD Matlab
+The default `reprocess()` path follows the public McCracken-Ng FRED-MD Matlab
 workflow for FRED-MD/FRED-QD style panels. FRED-SD has no official t-code map,
 so the user must explicitly choose `transform="none"` or pass custom codes.
 
@@ -21,7 +21,7 @@ import macroforecast as mf
 bundle = mf.data.load_fred_md()
 data_spec = mf.data.spec(bundle, target="INDPRO", horizons=[1, 3, 6, 12])
 
-processed = mf.preprocessing.preprocess(data_spec)
+processed = mf.preprocessing.reprocess(data_spec)
 
 panel = processed.panel
 metadata = processed.metadata
@@ -61,10 +61,13 @@ The official FRED-MD/FRED-QD t-code map uses these formulas for a raw series
 | `6` | `(log(x_t) - log(x_{t-1})) - (log(x_{t-1}) - log(x_{t-2}))` | `2` | requires `min(x) > 1e-6`; otherwise all missing |
 | `7` | `(x_t / x_{t-1} - 1) - (x_{t-1} / x_{t-2} - 1)` | `2` | none |
 
-## preprocess
+`mf.preprocessing.preprocess(...)` is kept as a backward-compatible alias for
+`reprocess(...)`.
+
+## reprocess
 
 ```python
-macroforecast.preprocessing.preprocess(
+macroforecast.preprocessing.reprocess(
     data,
     *,
     metadata: Mapping[str, object] | None = None,
@@ -175,7 +178,7 @@ macroforecast.preprocessing.plan(
 
 ### Input
 
-Same data input contract as `preprocess()`. `plan()` validates the panel and
+Same data input contract as `reprocess()`. `plan()` validates the panel and
 normalizes choices, but it does not transform, impute, or mutate the panel.
 
 ### Output
@@ -197,7 +200,7 @@ macroforecast.preprocessing.report(processed: PreprocessedData) -> dict
 
 ### Input
 
-`processed` must be the object returned by `preprocess()`.
+`processed` must be the object returned by `reprocess()`.
 
 ### Output
 
@@ -211,14 +214,14 @@ macroforecast.preprocessing.report(processed: PreprocessedData) -> dict
 
 ## FRED-SD
 
-FRED-SD does not provide official t-codes. `preprocess(fred_sd_bundle)` with
+FRED-SD does not provide official t-codes. `reprocess(fred_sd_bundle)` with
 the default `transform="official"` raises an error. The user must choose one
 of these paths.
 
 No transform:
 
 ```python
-processed = mf.preprocessing.preprocess(fred_sd_bundle, transform="none")
+processed = mf.preprocessing.reprocess(fred_sd_bundle, transform="none")
 ```
 
 Variable-level t-codes expanded to all state series:
@@ -229,7 +232,7 @@ codes = mf.preprocessing.fred_sd_transform_codes(
     variable_codes={"UR": 2, "ICLAIMS": 5},
 )
 
-processed = mf.preprocessing.preprocess(
+processed = mf.preprocessing.reprocess(
     fred_sd_bundle,
     frequency="monthly",
     transform="custom",

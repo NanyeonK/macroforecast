@@ -386,3 +386,24 @@ def test_plan_and_report_summarize_preprocessing_choices():
 
     assert summary["choices"]["transform"] == "official"
     assert summary["output_panel"]["n_columns"] == 2
+
+
+def test_reprocess_alias_matches_preprocess():
+    metadata = {
+        "dataset": "custom",
+        "source_family": "custom",
+        "frequency": "monthly",
+        "transform_codes": {"target": 2},
+    }
+    bundle = mf.data.DataBundle(mf.data.as_panel(_panel(), date="date", metadata=metadata), metadata)
+
+    result = mf.preprocessing.reprocess(
+        bundle,
+        transform="official",
+        outliers="none",
+        impute="none",
+        frame="keep",
+    )
+
+    assert isinstance(result, mf.preprocessing.PreprocessedData)
+    assert result.metadata["preprocessing"]["transform"] == "official"
