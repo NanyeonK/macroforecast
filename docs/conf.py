@@ -68,7 +68,6 @@ exclude_patterns = [
     "reference/generated/**",
     "reference/navigator/**",
     "reference/output.md",
-    "reference/public_api.md",
     "reference/runtime_support.md",
     "reference/standalone_functions/**",
     "tutorial/replications/**",

@@ -113,6 +113,8 @@ _LAZY_EXPORTS = {
     "preprocess": ".preprocessing",
     "reprocess": ".preprocessing",
     "PreprocessedData": ".preprocessing",
+    # Compatibility exports kept while the old runtime/docgen contract layer
+    # still imports macroforecast.preprocessing.schema/build/types.
     "build_preprocess_contract": ".preprocessing",
     "check_preprocess_governance": ".preprocessing",
     "is_operational_preprocess_contract": ".preprocessing",

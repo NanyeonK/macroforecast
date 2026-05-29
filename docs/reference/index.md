@@ -15,6 +15,7 @@ inputs, outputs, defaults, side effects, and validation behavior.
 - [FRED-QD](fred_qd.md): quarterly national macroeconomic database loader and metadata contract.
 - [FRED-SD](fred_sd.md): state-level database loader, monthly/quarterly frequency handling, and t-code limitations.
 - [Preprocessing](preprocessing.md): frequency alignment, transforms, outlier handling, imputation, and frame-edge rules.
+- [Public API](public_api.md): importable Python surface and compatibility boundaries.
 - [Defaults](defaults.md): package-level default profiles.
 - [FRED datasets](fred_datasets.md): dataset-selection overview and source notes.
 
@@ -29,6 +30,7 @@ fred_md
 fred_qd
 fred_sd
 preprocessing
+public_api
 defaults
 fred_datasets
 ```

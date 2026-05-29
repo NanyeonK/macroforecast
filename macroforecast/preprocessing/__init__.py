@@ -84,7 +84,6 @@ from .types import (
 )
 
 __all__ = [
-    "build_preprocess_contract",
     "preprocess",
     "reprocess",
     "plan",
@@ -114,6 +113,9 @@ __all__ = [
     "apply_tcode_transform",
     "freq_align_quarterly_to_monthly_clean",
     "freq_align_monthly_to_quarterly_clean",
+    # Compatibility exports kept until runtime/docgen no longer import the old
+    # preprocessing contract layer.
+    "build_preprocess_contract",
     "check_preprocess_governance",
     "is_operational_preprocess_contract",
     "preprocess_summary",

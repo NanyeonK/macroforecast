@@ -157,6 +157,15 @@ These helpers return `pandas.DataFrame` unless noted.
 | `impute_missing(panel, method=...)` | DataFrame | DataFrame | Fill missing values. |
 | `handle_frame_edges(panel, method=...)` | DataFrame | DataFrame | Keep/drop/truncate/fill remaining unbalanced edges. |
 
+## Compatibility Boundary
+
+The current user-facing preprocessing path is `reprocess()`, `plan()`,
+`report()`, and the step helpers above. Older contract helpers such as
+`build_preprocess_contract`, `PreprocessContract`, `preprocess_summary`, and
+`preprocess_to_dict` remain importable for existing runtime/docgen compatibility
+only. They will be revisited after the recipe/YAML wrapper is rebuilt around
+the direct pandas API.
+
 ## plan
 
 ```python
