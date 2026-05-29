@@ -45,10 +45,10 @@ preprocessing:
   nodes:
     - id: src_X
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}
     - id: src_y
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}
     - id: lag_x
       type: step
       op: lag

@@ -2,7 +2,7 @@
 
 Most recipe-author work is iterative: tweak one knob, rerun, inspect.
 ``macroforecast.run(...)`` executes the entire L1 → L8 cell loop, which is
-overkill when you only care about whether the L2 outlier policy actually
+overkill when you only care about whether the preprocessing outlier policy actually
 flagged what you expected, or whether your new L3 op produces the right
 ``X_final``.
 
@@ -13,17 +13,17 @@ pipeline would have produced -- so you can inspect intermediate sinks
 without invoking L4 / L5 / L6 / L7 / L8.
 
 > See also: {doc}`use_extension_points` -- developing a custom extension point
-> almost always involves L1+L2 once and then iterating on the layer the
+> almost always involves data+preprocessing once and then iterating on the layer the
 > extension point is registered against.
 
 ## Why this exists
 
 | Use case | Helper(s) |
 |---|---|
-| "Did L2 actually flag my outliers?" | ``materialize_l1`` + ``materialize_l2``, then read ``L2CleanPanelArtifact.cleaning_log['steps']``. |
-| "Does my new L3 op produce the X_final I expect?" | ``materialize_l1`` + ``materialize_l2`` + ``materialize_l3_minimal``; iterate on L3 only. |
-| "Walk forward through L1 → L5 once, no L6/L7/L8" | ``execute_minimal_forecast`` -- the same helper that the integration tests use. |
-| "Bridge from a custom-panel YAML straight to the L2 sink" | ``execute_l1_l2`` -- L1 + L2 only, no L3+ overhead. |
+| "Did preprocessing actually flag my outliers?" | ``materialize_l1`` + ``materialize_preprocessing``, then read ``PreprocessedPanelArtifact.cleaning_log['steps']``. |
+| "Does my new L3 op produce the X_final I expect?" | ``materialize_l1`` + ``materialize_preprocessing`` + ``materialize_l3_minimal``; iterate on L3 only. |
+| "Walk forward through data → L5 once, no L6/L7/L8" | ``execute_minimal_forecast`` -- the same helper that the integration tests use. |
+| "Bridge from a custom-panel YAML straight to the preprocessing sink" | ``execute_data_preprocessing`` -- data + preprocessing only, no L3+ overhead. |
 | "Replay one pipeline node from cache" | ``execute_node`` -- foundation primitive used by ``execute_recipe``. |
 
 ## Public API surface
@@ -33,11 +33,11 @@ All six helpers live on ``macroforecast.core``:
 ```python
 from macroforecast.core import (
     materialize_l1,
-    materialize_l2,
+    materialize_preprocessing,
     materialize_l3_minimal,
     materialize_l4_minimal,
     materialize_l5_minimal,
-    execute_l1_l2,
+    execute_data_preprocessing,
     execute_minimal_forecast,
     execute_node,
 )
@@ -46,19 +46,19 @@ from macroforecast.core import (
 | Function | Input | Returns |
 |---|---|---|
 | ``materialize_l1(recipe_root)`` | ``dict`` (parsed recipe) | ``(L1DataDefinitionArtifact, L1RegimeMetadataArtifact, dict[str, Any] resolved_axes)`` |
-| ``materialize_l2(recipe_root, l1_artifact)`` | ``dict``, L1 artifact | ``(L2CleanPanelArtifact, dict[str, Any] resolved_axes)`` |
-| ``materialize_l3_minimal(recipe_root, l1_artifact, l2_artifact)`` | ``dict``, L1, L2 | ``(L3FeaturesArtifact, L3MetadataArtifact)`` |
+| ``materialize_preprocessing(recipe_root, l1_artifact)`` | ``dict``, L1 artifact | ``(PreprocessedPanelArtifact, dict[str, Any] resolved_axes)`` |
+| ``materialize_l3_minimal(recipe_root, l1_artifact, preprocessed_artifact)`` | ``dict``, L1, preprocessing | ``(L3FeaturesArtifact, L3MetadataArtifact)`` |
 | ``materialize_l4_minimal(recipe_root, l3_features)`` | ``dict``, L3 features | ``(L4ForecastsArtifact, L4ModelArtifactsArtifact, L4TrainingMetadataArtifact)`` |
 | ``materialize_l5_minimal(recipe_root, l1_artifact, l3_features, l4_forecasts, l4_models)`` | as listed | ``L5EvaluationArtifact`` |
-| ``execute_l1_l2(recipe)`` | ``dict`` or YAML ``str`` | ``RuntimeResult`` with ``l1_data_definition_v1`` + ``l1_regime_metadata_v1`` + ``l2_clean_panel_v1`` (plus L1.5 / L2.5 diagnostics if enabled). |
-| ``execute_minimal_forecast(recipe)`` | ``dict`` or YAML ``str`` | ``RuntimeResult`` with L1 → L5 sinks + any enabled L1.5 / L2.5 / L3.5 / L4.5 / L6 / L7 / L8 sinks. |
+| ``execute_data_preprocessing(recipe)`` | ``dict`` or YAML ``str`` | ``RuntimeResult`` with ``l1_data_definition_v1`` + ``l1_regime_metadata_v1`` + ``preprocessed_panel_v1`` (plus L1.5 / data diagnostics if enabled). |
+| ``execute_minimal_forecast(recipe)`` | ``dict`` or YAML ``str`` | ``RuntimeResult`` with data → L5 sinks + any enabled L1.5 / data diagnostic / L3.5 / L4.5 / L6 / L7 / L8 sinks. |
 | ``execute_node(node, dag, runtime_context, cache_dir)`` | one pipeline ``Node`` | the materialized node value (cached on disk). |
 
 ``RuntimeResult`` (from ``macroforecast.core``) is a frozen dataclass with
 ``artifacts: dict[str, Any]`` (sink_name → artifact),
 ``resolved_axes: dict[str, dict]`` (per-layer resolved axis values), and
-``runtime_durations: dict[str, float]`` (L1 / L2 / L3 / ... wall-clock
-seconds). Access a single sink with ``rt.sink("l2_clean_panel_v1")``.
+``runtime_durations: dict[str, float]`` (data / preprocessing / L3 / ... wall-clock
+seconds). Access a single sink with ``rt.sink("preprocessed_panel_v1")``.
 
 ## Worked sequence
 
@@ -69,7 +69,7 @@ hand.
 ```python
 import macroforecast as mf
 from macroforecast.core import (
-    materialize_l1, materialize_l2, materialize_l3_minimal,
+    materialize_l1, materialize_preprocessing, materialize_l3_minimal,
     materialize_l4_minimal, materialize_l5_minimal,
 )
 
@@ -82,15 +82,15 @@ print("L1 target    :", l1_artifact.target)
 print("L1 raw_panel :", l1_artifact.raw_panel.data.shape, "rows x cols")
 print("L1 axes keys :", sorted(l1_axes)[:6])
 
-# --- L2 ---------------------------------------------------------------
-l2_artifact, l2_axes = materialize_l2(recipe, l1_artifact)
-print("L2 panel     :", l2_artifact.panel.data.shape)
-print("L2 cleaning_log steps:", [step for step in l2_artifact.cleaning_log["steps"]])
-print("L2 n_outliers:", l2_artifact.n_outliers_flagged)
-print("L2 n_imputed :", l2_artifact.n_imputed_cells)
+# --- preprocessing ---------------------------------------------------------------
+preprocessed_artifact, preprocessing_axes = materialize_preprocessing(recipe, l1_artifact)
+print("preprocessed panel     :", preprocessed_artifact.panel.data.shape)
+print("preprocessing cleaning_log steps:", [step for step in preprocessed_artifact.cleaning_log["steps"]])
+print("preprocessing n_outliers:", preprocessed_artifact.n_outliers_flagged)
+print("preprocessing n_imputed :", preprocessed_artifact.n_imputed_cells)
 
 # --- L3 ---------------------------------------------------------------
-l3_features, l3_metadata = materialize_l3_minimal(recipe, l1_artifact, l2_artifact)
+l3_features, l3_metadata = materialize_l3_minimal(recipe, l1_artifact, preprocessed_artifact)
 print("L3 X_final   :", l3_features.X_final.data.shape)
 print("L3 y_final   :", l3_features.y_final.shape, l3_features.y_final.name)
 print("L3 horizons  :", l3_features.horizon_set)
@@ -104,10 +104,10 @@ L1 frequency : monthly
 L1 target    : y
 L1 raw_panel : (12, 2) rows x cols
 L1 axes keys : ['panel_composition', 'dataset', 'frequency', ...]
-L2 panel     : (12, 2)
-L2 cleaning_log steps: [{'transform': 'no_transform'}, {'outlier': 'none'}, ...]
-L2 n_outliers: 0
-L2 n_imputed : 0
+preprocessed panel     : (12, 2)
+preprocessing cleaning_log steps: [{'transform': 'no_transform'}, {'outlier': 'none'}, ...]
+preprocessing n_outliers: 0
+preprocessing n_imputed : 0
 L3 X_final   : (10, 1)
 L3 y_final   : (10,) y
 L3 horizons  : (1,)
@@ -132,22 +132,22 @@ When you do not need the artifact dataclasses directly, two helpers wrap the
 materialize calls and return a ``RuntimeResult``:
 
 ```python
-from macroforecast.core import execute_l1_l2, execute_minimal_forecast
+from macroforecast.core import execute_data_preprocessing, execute_minimal_forecast
 
-# L1 + L2 only -- no L3+ overhead. Good for "did the cleaner do its job?"
-rt = execute_l1_l2(open("examples/recipes/l2_minimal.yaml").read())
+# data + preprocessing only -- no L3+ overhead. Good for "did the cleaner do its job?"
+rt = execute_data_preprocessing(open("examples/recipes/data_preprocessing_minimal.yaml").read())
 print("sinks       :", sorted(rt.artifacts))
-panel = rt.sink("l2_clean_panel_v1").panel.data
+panel = rt.sink("preprocessed_panel_v1").panel.data
 print("panel shape :", panel.shape)
-print("L2 axes     :", sorted(rt.resolved_axes["l2"])[:6])
+print("preprocessing axes     :", sorted(rt.resolved_axes["preprocessing"])[:6])
 
-# L1 → L5 (plus any enabled L1.5 / L2.5 / L3.5 / L4.5 / L6 / L7 / L8 sinks).
+# data → L5 (plus any enabled L1.5 / data diagnostic / L3.5 / L4.5 / L6 / L7 / L8 sinks).
 rt5 = execute_minimal_forecast(open("examples/recipes/l4_minimal_ridge.yaml").read())
 print("durations   :", rt5.runtime_durations)
 print("forecasts   :", rt5.sink("l4_forecasts_v1").model_ids)
 ```
 
-Use ``execute_l1_l2`` while debugging L2 settings; use
+Use ``execute_data_preprocessing`` while debugging preprocessing settings; use
 ``execute_minimal_forecast`` when you want a full minimal end-to-end pass
 without going through ``execute_recipe`` (which writes a manifest and
 manages the cell loop).
@@ -192,7 +192,7 @@ There is no separate ``target_series`` field; the target column lives inside
 | ``estimation_temporal_rule`` | ``str \| None`` | ``None`` for external regimes. |
 | ``estimation_metadata`` | ``dict`` | Empty for external regimes. |
 
-### ``L2CleanPanelArtifact``
+### ``PreprocessedPanelArtifact``
 
 Inherits from ``Panel``; therefore exposes ``data``, ``shape``, ``column_names``, ``index``, ``metadata`` directly **and** repeats them through the ``panel`` field.
 
@@ -271,7 +271,7 @@ Records ``forecast_origins``, ``refit_origins``, ``training_window_per_origin``,
 
 ```python
 import macroforecast as mf
-from macroforecast.core import materialize_l1, materialize_l2
+from macroforecast.core import materialize_l1, materialize_preprocessing
 
 recipe_str = """
 0_meta:
@@ -296,10 +296,10 @@ preprocessing:
 """
 recipe = mf.core.parse_recipe_yaml(recipe_str)
 l1_artifact, _, _ = materialize_l1(recipe)
-l2_artifact, _ = materialize_l2(recipe, l1_artifact)
+preprocessed_artifact, _ = materialize_preprocessing(recipe, l1_artifact)
 
-print("flagged cells :", l2_artifact.n_outliers_flagged)
-for step in l2_artifact.cleaning_log["steps"]:
+print("flagged cells :", preprocessed_artifact.n_outliers_flagged)
+for step in preprocessed_artifact.cleaning_log["steps"]:
     print(" -", step)
 ```
 
@@ -310,25 +310,25 @@ which policy ran, what action it took, and how many cells it flagged.
 
 ```python
 import macroforecast as mf
-from macroforecast.core import materialize_l1, materialize_l2, materialize_l3_minimal
+from macroforecast.core import materialize_l1, materialize_preprocessing, materialize_l3_minimal
 
 recipe = mf.core.parse_recipe_yaml(open("docs/recipe-snippets/l3_minimal_lag_only.yaml").read())
 
-# Run L1 + L2 once; cache the artifacts.
+# Run data + preprocessing once; cache the artifacts.
 l1_artifact, _, _ = materialize_l1(recipe)
-l2_artifact, _ = materialize_l2(recipe, l1_artifact)
+preprocessed_artifact, _ = materialize_preprocessing(recipe, l1_artifact)
 
 # Iterate on L3 -- swap ops, change params, re-run only this step.
 recipe["3_feature_engineering"]["nodes"][2]["params"]["n_lag"] = 3
-l3_features, l3_metadata = materialize_l3_minimal(recipe, l1_artifact, l2_artifact)
+l3_features, l3_metadata = materialize_l3_minimal(recipe, l1_artifact, preprocessed_artifact)
 print("X_final shape:", l3_features.X_final.data.shape)
 
 recipe["3_feature_engineering"]["nodes"][2]["params"]["n_lag"] = 6
-l3_features, l3_metadata = materialize_l3_minimal(recipe, l1_artifact, l2_artifact)
+l3_features, l3_metadata = materialize_l3_minimal(recipe, l1_artifact, preprocessed_artifact)
 print("X_final shape:", l3_features.X_final.data.shape)
 ```
 
-Each L3 iteration reuses the same ``l1_artifact`` and ``l2_artifact``, so
+Each L3 iteration reuses the same ``l1_artifact`` and ``preprocessed_artifact``, so
 the experiment is bounded by L3 cost rather than full L1 → L8 cost.
 
 When developing a custom L3 ``feature_block`` or ``feature_combiner``

@@ -180,21 +180,21 @@ See [`.github/RELEASE_CHECKLIST.md`](https://github.com/NanyeonK/macroforecast/b
 
 ---
 
-## Want to inspect L1 / L2 / L3 outputs without running L4-L8
+## Want to inspect data / preprocessing / L3 outputs without running L4-L8
 
 ```python
-from macroforecast.core import materialize_l1, materialize_l2, materialize_l3_minimal
+from macroforecast.core import materialize_l1, materialize_preprocessing, materialize_l3_minimal
 from macroforecast.core.yaml import parse_recipe_yaml
 
 recipe = parse_recipe_yaml(open("recipe.yaml").read())
 l1 = materialize_l1(recipe)
 print(l1[0].raw_panel.head())                     # raw L1 panel
 
-l2, _ = materialize_l2(recipe, l1[0])
-print(l2.cleaned_panel.head())                    # post-McCracken-Ng panel
-print(l2.cleaning_log["steps"])                   # which stages applied what
+preprocessed, _ = materialize_preprocessing(recipe, l1[0])
+print(preprocessed.panel.data.head())                    # post-McCracken-Ng panel
+print(preprocessed.cleaning_log["steps"])                   # which stages applied what
 
-l3 = materialize_l3_minimal(recipe, l1[0], l2)
+l3 = materialize_l3_minimal(recipe, l1[0], preprocessed)
 print(l3[0].X_final.head())                       # L3 features
 print(l3[0].y_final.head())                       # L3 target
 ```

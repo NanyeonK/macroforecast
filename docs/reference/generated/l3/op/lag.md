@@ -37,7 +37,7 @@ Always when building AR features or lagged-X feature blocks.
 
 **When NOT to use**
 
-When the target itself is already differenced/lagged in L2 -- avoid double-lagging.
+When the target itself is already differenced/lagged in preprocessing -- avoid double-lagging.
 
 ## In recipe context
 

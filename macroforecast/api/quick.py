@@ -35,7 +35,33 @@ from ..core.execution import (
     replicate_recipe,
 )
 from ..meta import use_config
-from tools.docgen.builder import RecipeBuilder
+
+
+def _load_recipe_builder_class():
+    try:
+        from tools.docgen.builder import RecipeBuilder as builder_cls
+
+        return builder_cls
+    except ModuleNotFoundError as exc:
+        # Pytest can place tests/tools ahead of the repository-root tools
+        # package. Load the builder by file path so the public API does not
+        # depend on that import-order accident.
+        builder_path = Path(__file__).resolve().parents[2] / "tools" / "docgen" / "builder.py"
+        if not builder_path.exists():
+            raise exc
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "_macroforecast_tools_docgen_builder", builder_path
+        )
+        if spec is None or spec.loader is None:
+            raise exc
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.RecipeBuilder
+
+
+RecipeBuilder = _load_recipe_builder_class()
 from .defaults import (
     DEFAULT_HORIZONS,
     DEFAULT_MODEL,
@@ -146,7 +172,7 @@ def _build_default_recipe(
     """Construct the v0.8.0 minimal default recipe via ``RecipeBuilder``.
 
     L1 contains the requested dataset + target + horizons + sample window;
-    L2 uses a no-transform pass-through; L3 emits lag-only features; L4 fits
+    preprocessing uses a no-transform pass-through; L3 emits lag-only features; L4 fits
     one requested model; L5 uses the standard metric block.
     """
 
@@ -173,8 +199,8 @@ def _build_default_recipe(
     if end is not None:
         b.l1.set_axis(sample_end_rule="fixed_date")
         b.l1.set_leaf(sample_end_date=end)
-    # L2 -- no-transform pass-through.
-    b.l2.no_op()
+    # preprocessing -- no-transform pass-through.
+    b.preprocessing.no_op()
     # L3 -- minimal lag1 + target construction.
     b.l3.lag_only(n_lag=1)
     # L4 -- single fit node + predict.
@@ -629,9 +655,9 @@ class Experiment:
         return self
 
     def use_mixed_frequency_representation(self, mode: str) -> "Experiment":
-        """Choose how mixed-frequency columns are rendered into L2.
+        """Choose how mixed-frequency columns are rendered into preprocessing.
 
-        Sets the L2.A ``mixed_frequency_representation`` axis (added in
+        Sets the preprocessing ``mixed_frequency_representation`` axis (added in
         v0.8.5). Five options:
 
         * ``calendar_aligned_frame`` (default)
@@ -648,17 +674,17 @@ class Experiment:
                 f"mixed_frequency_representation={mode!r} is not valid; "
                 f"choose from {sorted(_MIXED_FREQUENCY_REPRESENTATION_OPTIONS)}"
             )
-        self._builder.l2.set_axis(mixed_frequency_representation=mode)
+        self._builder.preprocessing.set_axis(mixed_frequency_representation=mode)
         return self
 
     def use_sd_inferred_tcodes(self) -> "Experiment":
         """Opt into the inferred (national-analog) FRED-SD t-code map.
 
-        Sets the L2.B ``sd_tcode_policy`` axis to ``inferred``. Returns
+        Sets the preprocessing ``sd_tcode_policy`` axis to ``inferred``. Returns
         ``self``.
         """
 
-        self._builder.l2.set_axis(sd_tcode_policy="inferred")
+        self._builder.preprocessing.set_axis(sd_tcode_policy="inferred")
         return self
 
     def use_sd_empirical_tcodes(
@@ -669,7 +695,7 @@ class Experiment:
     ) -> "Experiment":
         """Opt into the empirical (stationarity-audit) FRED-SD t-code map.
 
-        Sets the L2.B ``sd_tcode_policy`` axis to ``empirical`` and
+        Sets the preprocessing ``sd_tcode_policy`` axis to ``empirical`` and
         writes the supporting leaf_config keys:
 
         * ``sd_tcode_unit`` -- ``variable_global`` or ``state_series``
@@ -692,13 +718,13 @@ class Experiment:
                 "use_sd_empirical_tcodes(unit='state_series') requires a "
                 "non-empty code_map={'<VAR>_<STATE>': <tcode int>}"
             )
-        self._builder.l2.set_axis(sd_tcode_policy="empirical")
+        self._builder.preprocessing.set_axis(sd_tcode_policy="empirical")
         leaf: dict[str, Any] = {"sd_tcode_unit": unit}
         if code_map is not None:
             leaf["sd_tcode_code_map"] = dict(code_map)
         if audit_uri is not None:
             leaf["sd_tcode_audit_uri"] = audit_uri
-        self._builder.l2.set_leaf(**leaf)
+        self._builder.preprocessing.set_leaf(**leaf)
         return self
 
     def use_preprocessor(self, name: str, applied_at: str = "l3") -> "Experiment":
@@ -709,20 +735,20 @@ class Experiment:
         ``@mf.custom_preprocessor`` decorator). Two dispatch points:
 
         * ``applied_at='l3'`` (default) -- v0.2.5 PR #251 post-pipeline
-          hook. The callable receives the L2 clean panel *after* the
+          hook. The callable receives the preprocessed panel *after* the
           McCracken-Ng pipeline (transform / outlier / impute /
-          frame_edge) has run; its output becomes the L2 clean panel
+          frame_edge) has run; its output becomes the preprocessed panel
           that L3 reads. Useful for "the cleaned panel, plus my one
           extra step" workflows.
-        * ``applied_at='l2'`` (v0.8.6 Gap 1) -- pre-pipeline hook. The
+        * ``applied_at='preprocessing'`` (v0.8.6 Gap 1) -- pre-pipeline hook. The
           callable receives the *raw* L1 panel and returns a panel that
-          the canonical L2 pipeline then transforms / cleans. Useful
+          the canonical preprocessing pipeline then transforms / cleans. Useful
           for upstream cleanup (drop bad columns, deflation,
           normalisation, custom resampling) before the official t-codes
           apply.
 
         Both hooks dispatch to ``macroforecast.custom`` registrations
-        through the same contract; only the timing within L2 differs.
+        through the same contract; only the timing within preprocessing differs.
         Routing the same name to both points is allowed and emits two
         distinct cleaning_log entries.
 
@@ -730,17 +756,17 @@ class Experiment:
         """
 
         if applied_at == "l3":
-            # v0.2.5 #251 wired this on L2.leaf_config.custom_postprocessor.
-            self._builder.l2.set_leaf(custom_postprocessor=str(name))
+            # v0.2.5 #251 wired this on preprocessing.leaf_config.custom_postprocessor.
+            self._builder.preprocessing.set_leaf(custom_postprocessor=str(name))
             return self
-        if applied_at == "l2":
+        if applied_at == "preprocessing":
             # v0.8.6 Gap 1: pre-pipeline hook on
-            # L2.leaf_config.custom_preprocessor.
-            self._builder.l2.set_leaf(custom_preprocessor=str(name))
+            # preprocessing.leaf_config.custom_preprocessor.
+            self._builder.preprocessing.set_leaf(custom_preprocessor=str(name))
             return self
         raise ValueError(
             f"applied_at={applied_at!r} is not valid; choose from "
-            "{'l2', 'l3'} (l2 = pre-pipeline raw-panel hook, "
+            "{'preprocessing', 'l3'} (preprocessing = pre-pipeline raw-panel hook, "
             "l3 = post-pipeline clean-panel hook)"
         )
 

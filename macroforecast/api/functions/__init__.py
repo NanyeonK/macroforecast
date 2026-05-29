@@ -13,7 +13,7 @@ L3 basic panel transforms standalone-ization (v0.8.0, 10 ops).
 L3 advanced panel transforms standalone-ization (v0.8.0, 12 ops).
 L3 supervised/mixed transforms standalone-ization (v0.8.0, 6 ops).
 L3 final B1 transforms standalone-ization (v0.8.0, 8 ops).
-L2 clean panel ops standalone-ization (v0.8.0, 14 ops).
+Preprocessing clean-panel ops standalone-ization (v0.8.0, 14 ops).
 L4 tree/ensemble family standalone-ization (v0.8.0, 6 ops).
 L7 importance standalone callables (v0.8.0, 8 ops).
 
@@ -127,7 +127,7 @@ from .transforms import (
     holiday_transform,
 )
 
-# L2 clean panel ops (v0.8.0)
+# Preprocessing clean-panel ops (v0.8.0)
 from .clean import (
     iqr_outlier_clean,
     zscore_outlier_clean,
@@ -323,7 +323,7 @@ __all__ = [
     "nystroem_transform",
     "time_trend_transform",
     "holiday_transform",
-    # L2 clean panel ops (v0.8.0)
+    # Preprocessing clean-panel ops (v0.8.0)
     "iqr_outlier_clean",
     "zscore_outlier_clean",
     "winsorize_clean",

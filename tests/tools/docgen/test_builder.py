@@ -41,12 +41,12 @@ def test_l1_custom_panel_inlines_data():
 
 
 # ---------------------------------------------------------------------------
-# L2 / L3 presets
+# Preprocessing / L3 presets
 # ---------------------------------------------------------------------------
 
-def test_l2_standard_preset_matches_mccracken_ng_default():
+def test_preprocessing_standard_preset_matches_mccracken_ng_default():
     b = RecipeBuilder()
-    b.l2.standard()
+    b.preprocessing.standard()
     axes = b.build()["preprocessing"]["fixed_axes"]
     assert axes["transform_policy"] == "apply_official_tcode"
     assert axes["outlier_policy"] == "mccracken_ng_iqr"
@@ -111,7 +111,7 @@ def test_builder_run_executes_end_to_end(tmp_path):
     }
     b = RecipeBuilder()
     b.l1.custom_panel(target="y", panel=panel)
-    b.l2.no_op()
+    b.preprocessing.no_op()
     b.l3.lag_only(n_lag=1)
     b.l4.fit("ridge", alpha=0.1, min_train_size=4)
     b.l5.standard()
@@ -128,7 +128,7 @@ def test_to_yaml_round_trips_through_run(tmp_path):
                "y": list(range(1, 11)),
                "x1": [0.5 * v for v in range(1, 11)]},
     )
-    b.l2.no_op()
+    b.preprocessing.no_op()
     b.l3.lag_only(n_lag=1)
     b.l4.fit("ols", min_train_size=4)
     yaml_path = tmp_path / "recipe.yaml"

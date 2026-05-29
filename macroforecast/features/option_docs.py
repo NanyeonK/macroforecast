@@ -135,7 +135,7 @@ _OP_LEVEL = _o(
     (
         "No-op transform; the column flows through unchanged. Used as "
         "an explicit anchor in the pipeline so downstream ops can reference "
-        "the level form even when the L2 transform_policy converted to "
+        "the level form even when the preprocessing transform_policy converted to "
         "log-differences. Useful when you want both ``level`` and ``diff`` "
         "branches in the same recipe."
     ),
@@ -149,10 +149,10 @@ _OP_DIFF = _o(
     (
         "Computes the simple first difference on the input column. The "
         "first observation becomes NaN. Combine with ``lag`` to recover "
-        "level features when the L2 layer already differenced the panel."
+        "level features when the preprocessing layer already differenced the panel."
     ),
-    "I(1) variables that need a stationary representation in addition to the L2-applied tcode.",
-    when_not_to_use="When the panel is already differenced by L2.B (avoids double-differencing).",
+    "I(1) variables that need a stationary representation in addition to the preprocessing-applied tcode.",
+    when_not_to_use="When the panel is already differenced by preprocessing transform (avoids double-differencing).",
     related_options=("level", "log_diff", "pct_change"),
     op_page=True,
     op_func_name="diff_transform",
@@ -255,7 +255,7 @@ _OP_LAG = _o(
         "the lag depth. Standard predictor for autoregressive baselines."
     ),
     "Always when building AR features or lagged-X feature blocks.",
-    when_not_to_use="When the target itself is already differenced/lagged in L2 -- avoid double-lagging.",
+    when_not_to_use="When the target itself is already differenced/lagged in preprocessing -- avoid double-lagging.",
     related_options=("seasonal_lag", "target_construction"),
     op_page=True,
     op_func_name="lag_matrix",
@@ -1871,7 +1871,7 @@ _OP_ASYMMETRIC_TRIM = _o(
         "average to each rank-position time series (paper §3 mentions "
         "3-month MA for noisy components; users can chain ``ma_window`` "
         "explicitly when they want a different window).\n\n"
-        "Operational from v0.8.9 (B-6). Layer scope ``(l2, l3)`` so "
+        "Operational from v0.8.9 (B-6). Layer scope ``(preprocessing, l3)`` so "
         "the L3 pipeline can dispatch it at recipe time. Algorithm spec: "
         "``docs/replications/maximally_forward_looking_algorithm_notes.md``."
     ),
@@ -2206,7 +2206,7 @@ _OP_SLICED_INVERSE_REGRESSION = _o(
 )
 
 
-# chow_lin_disaggregation encyclopedia page (L2-scoped op, lives in l3_ops.py).
+# chow_lin_disaggregation encyclopedia page (preprocessing-scoped op, lives in l3_ops.py).
 _OP_CHOW_LIN_DISAGGREGATION = _o(
     "chow_lin_disaggregation",
     "Chow-Lin (1971) regression-based temporal disaggregation from quarterly to monthly frequency.",
@@ -2308,6 +2308,6 @@ register(
     _OP_SLICED_INVERSE_REGRESSION,
     # v0.9.0 phase-f16: per-variable PCA MAF (Coulombe et al. 2021 IJF Eq. 7)
     _OP_MAF_PER_VARIABLE_PCA,
-    # L2-scoped Chow-Lin disaggregation op page
+    # Preprocessing-scoped Chow-Lin disaggregation op page
     _OP_CHOW_LIN_DISAGGREGATION,
 )

@@ -5,15 +5,15 @@ This page records the current public layer boundaries.
 ## Canonical Flow
 
 ```text
-L0 -> L1 -> L2 -> L3 -> L4 -> L5 -> L6 -> L7 -> L8
+L0 -> L1 -> preprocessing -> L3 -> L4 -> L5 -> L6 -> L7 -> L8
 ```
 
 Diagnostics attach as side branches:
 
 ```text
 L1.5 <- L1
-L2.5 <- L1 + L2
-L3.5 <- L1 + L2 + L3
+data diagnostic <- L1 + preprocessing
+L3.5 <- L1 + preprocessing + L3
 L4.5 <- L4 + L3
 ```
 
@@ -23,8 +23,8 @@ L4.5 <- L4 + L3
 |---|---|---|---|
 | L0 | runtime policy | none | `l0_meta_v1` |
 | L1 | data definition | none | `l1_data_definition_v1`, `l1_regime_metadata_v1` |
-| L2 | preprocessing | `l1_data_definition_v1` | `l2_clean_panel_v1` |
-| L3 | feature engineering and target construction | L1 raw/regime access, `l2_clean_panel_v1` | `l3_features_v1`, `l3_metadata_v1` |
+| preprocessing | preprocessing | `l1_data_definition_v1` | `preprocessed_panel_v1` |
+| L3 | feature engineering and target construction | L1 raw/regime access, `preprocessed_panel_v1` | `l3_features_v1`, `l3_metadata_v1` |
 | L4 | model fitting, forecasts, benchmarks, ensembles, tuning | `l3_features_v1`, `l3_metadata_v1`, optional regimes | `l4_forecasts_v1`, `l4_model_artifacts_v1`, `l4_training_metadata_v1` |
 | L5 | evaluation metrics and ranking | L4 forecasts/artifacts, L1 data/regimes, L3 metadata | `l5_evaluation_v1` |
 | L6 | statistical tests | L4, L5, L1 metadata | `l6_tests_v1` |

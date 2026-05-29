@@ -903,7 +903,7 @@ def adaptive_ma_rf(inputs, params):
 
 @register_op(
     name="asymmetric_trim",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": Panel},
     output_type=Panel,
     params_schema={
@@ -934,7 +934,7 @@ def asymmetric_trim(inputs, params):
 
 @register_op(
     name="chow_lin_disaggregation",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": Panel},
     output_type=Panel,
     status="operational",

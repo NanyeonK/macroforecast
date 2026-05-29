@@ -88,8 +88,8 @@ error at recipe parse time when a stale key is present.
 |--------------------------|-------------------|-------|---------|
 | `custom_source_policy` | `panel_composition` | L1.A (`1_data.fixed_axes`) | Recipe YAML |
 | `forecast_strategy` | `forecast_policy` | L4 node `params:` | Recipe YAML |
-| `quarterly_to_monthly_rule` | `quarterly_to_monthly_policy` | L2.A (`2_preprocessing.fixed_axes`) | Recipe YAML |
-| `monthly_to_quarterly_rule` | `monthly_to_quarterly_policy` | L2.A (`2_preprocessing.fixed_axes`) | Recipe YAML |
+| `quarterly_to_monthly_rule` | `quarterly_to_monthly_policy` | preprocessing frequency alignment (`preprocessing.fixed_axes`) | Recipe YAML |
+| `monthly_to_quarterly_rule` | `monthly_to_quarterly_policy` | preprocessing frequency alignment (`preprocessing.fixed_axes`) | Recipe YAML |
 | `reproducibility_mode` | `reproducibility_policy` | L0 (`0_meta.fixed_axes`) | Recipe YAML |
 | `fit_model` | `fit` | L4 node `id:` (user-chosen) | Recipe YAML node id (node ids are user-defined; `op: fit` was always the correct op name) |
 
@@ -141,7 +141,7 @@ No value changes are required — only key names changed.
 | Navigator pages (`docs/reference/navigator*`) | v0.6.2 docs reorg | See `docs/reference/` index |
 | Audience-tree doc paths (`getting_started/`, `user_guide/`, `fred_dataset/`, `simple/`, `detail/`, `dev/`) | v0.6.2 docs reorg | See `docs/tutorial/`, `docs/how_to/`, `docs/reference/` |
 | `scripts/v01_smoke_check.py` | v0.9.5 (deep-audit) | Run `python -m pytest tests/ -x -q` for smoke validation |
-| `examples/recipes/l2_fred_sd_alignment.yaml` | v0.9.5 (deep-audit PR4) | Renamed to `preprocessing_minimal.yaml` -- functionally identical |
+| `examples/recipes/preprocessing_minimal.yaml` | v0.9.5 (deep-audit PR4) | Renamed to `preprocessing_minimal.yaml` -- functionally identical |
 
 ---
 

@@ -45,8 +45,8 @@ preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:
@@ -94,7 +94,7 @@ def test_manifest_carries_runtime_duration_per_layer(tmp_path):
     payload = _run(tmp_path)
     cell = payload["cells"][0]
     durations = cell["runtime_duration_per_layer"]
-    assert {"l1", "l2", "l3", "l4", "l5"}.issubset(durations.keys())
+    assert {"l1", "preprocessing", "l3", "l4", "l5"}.issubset(durations.keys())
     for k, v in durations.items():
         assert isinstance(v, (int, float))
         assert v >= 0.0
@@ -111,7 +111,7 @@ def test_manifest_carries_cell_resolved_axes(tmp_path):
     payload = _run(tmp_path)
     axes = payload["cells"][0]["cell_resolved_axes"]
     assert isinstance(axes, dict)
-    assert "l1" in axes and "l2" in axes and "l5" in axes
+    assert "l1" in axes and "preprocessing" in axes and "l5" in axes
 
 
 def test_manifest_carries_dependency_lockfile_content(tmp_path):

@@ -176,7 +176,7 @@ def execute_layer(layer: dict[str, Any] | str):
     from macroforecast.core.runtime import (
         materialize_l4_minimal,
         materialize_l1,
-        materialize_l2,
+        materialize_preprocessing,
         materialize_l3_minimal,
     )
 
@@ -189,8 +189,8 @@ def execute_layer(layer: dict[str, Any] | str):
     else:
         root = {"4_forecasting_model": layer}
     l1_artifact, _, _ = materialize_l1(root)
-    l2_artifact, _ = materialize_l2(root, l1_artifact)
-    l3_features, _ = materialize_l3_minimal(root, l1_artifact, l2_artifact)
+    preprocessed_artifact, _ = materialize_preprocessing(root, l1_artifact)
+    l3_features, _ = materialize_l3_minimal(root, l1_artifact, preprocessed_artifact)
     return materialize_l4_minimal(root, l3_features)
 
 

@@ -1,7 +1,7 @@
 """Tests for the v0.8.0 ``mf.forecast(...)`` one-shot helper.
 
 We exercise the wiring of the default recipe (L1 dataset/target,
-L2/L3/L4/L5 defaults) by inspecting the recipe ``Experiment`` would
+default preprocessing/L3/L4/L5 defaults) by inspecting the recipe ``Experiment`` would
 produce for the same args; the actual ``execute_recipe`` path is covered
 in test_experiment.py via the offline custom-panel substitution.
 """

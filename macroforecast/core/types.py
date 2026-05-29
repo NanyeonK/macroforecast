@@ -114,7 +114,7 @@ class Panel(DataType):
 
 
 @dataclass(frozen=True)
-class L2CleanPanelArtifact(Panel):
+class PreprocessedPanelArtifact(Panel):
     panel: Panel = field(default_factory=Panel)
     column_metadata: dict[str, Any] = field(default_factory=dict)
     cleaning_log: dict[str, Any] = field(default_factory=dict)

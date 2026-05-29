@@ -129,7 +129,7 @@ def normalize_to_dag_form(layer: dict[str, Any] | L3_5Layer, layer_id: Literal["
         return DAG("l3_5", {}, sinks={}, layer_globals={"resolved_axes": resolved})
     nodes: dict[str, Node] = {
         "src_l1_data": Node("src_l1_data", "source", "l3_5", "source", selector=SourceSelector("l1", "l1_data_definition_v1")),
-        "src_l2_clean": Node("src_l2_clean", "source", "l3_5", "source", selector=SourceSelector("l2", "l2_clean_panel_v1")),
+        "src_preprocessed_panel": Node("src_preprocessed_panel", "source", "l3_5", "source", selector=SourceSelector("preprocessing", "preprocessed_panel_v1")),
         "src_l3_features": Node("src_l3_features", "source", "l3_5", "source", selector=SourceSelector("l3", "l3_features_v1")),
         "src_l3_metadata": Node("src_l3_metadata", "source", "l3_5", "source", selector=SourceSelector("l3", "l3_metadata_v1")),
     }
@@ -142,7 +142,7 @@ def normalize_to_dag_form(layer: dict[str, Any] | L3_5Layer, layer_id: Literal["
         "step",
         "l3_5",
         "diagnostic_collect_l3",
-        inputs=(NodeRef("src_l1_data"), NodeRef("src_l2_clean"), NodeRef("src_l3_features"), NodeRef("src_l3_metadata")),
+        inputs=(NodeRef("src_l1_data"), NodeRef("src_preprocessed_panel"), NodeRef("src_l3_features"), NodeRef("src_l3_metadata")),
     )
     for step in ("comparison_axis", "factor_block_inspection", "feature_correlation", "lag_block_inspection", "selected_features", "diagnostic_export"):
         node_id = f"step:{step}"
@@ -334,7 +334,7 @@ L3_5_LAYER_SPEC = _LayerImplSpec(
     layer_id="l3_5",
     name="Feature diagnostics",
     category="diagnostic",
-    expected_inputs=("l1_data_definition_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1"),
+    expected_inputs=("l1_data_definition_v1", "preprocessed_panel_v1", "l3_features_v1", "l3_metadata_v1"),
     produces=("l3_5_diagnostic_v1",),
     ui_mode="list",
     layer_globals=("enabled",),

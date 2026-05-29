@@ -30,7 +30,7 @@ Target payload:
 - `horizons`: required forecast horizons.
 - `sample_start_date` / `sample_end_date`: optional sample-period bounds.
 
-L2 boundary:
+preprocessing boundary:
 
 - `horizon_target_construction` decides whether y is level, difference,
   log-difference, direct average, path-average growth, or another supported

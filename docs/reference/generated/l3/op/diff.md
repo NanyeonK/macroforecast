@@ -27,15 +27,15 @@ mf.functions.diff_transform(
 
 ## Behavior
 
-Computes the simple first difference on the input column. The first observation becomes NaN. Combine with ``lag`` to recover level features when the L2 layer already differenced the panel.
+Computes the simple first difference on the input column. The first observation becomes NaN. Combine with ``lag`` to recover level features when the preprocessing layer already differenced the panel.
 
 **When to use**
 
-I(1) variables that need a stationary representation in addition to the L2-applied tcode.
+I(1) variables that need a stationary representation in addition to the preprocessing-applied tcode.
 
 **When NOT to use**
 
-When the panel is already differenced by L2.B (avoids double-differencing).
+When the panel is already differenced by preprocessing transform (avoids double-differencing).
 
 ## In recipe context
 

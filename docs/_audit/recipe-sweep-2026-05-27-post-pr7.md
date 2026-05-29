@@ -28,8 +28,8 @@
 | `examples/recipes/l1_estimated_markov_switching.yaml` | PASS | 1 | True |
 | `examples/recipes/l1_minimal.yaml` | PASS | 1 | True |
 | `examples/recipes/l1_with_regime.yaml` | PASS | 1 | True |
-| `examples/recipes/l2_fred_sd_alignment.yaml` | PASS | 1 | True |
-| `examples/recipes/l2_minimal.yaml` | PASS | 1 | True |
+| `examples/recipes/preprocessing_minimal.yaml` | PASS | 1 | True |
+| `examples/recipes/data_preprocessing_minimal.yaml` | PASS | 1 | True |
 | `examples/recipes/l4_bagging.yaml` | PASS | 1 | True |
 | `examples/recipes/l4_ensemble_ridge_xgb_vs_ar1.yaml` | PASS | 1 | True |
 | `examples/recipes/l4_minimal_ridge.yaml` | PASS | 1 | True |
@@ -48,8 +48,8 @@ The five recipes that previously failed with `"L3 uses a step graph (nodes/sinks
 | `l1_minimal.yaml` | FAIL_SCHEMA | PASS |
 | `l1_with_regime.yaml` | FAIL_SCHEMA | PASS |
 | `l1_estimated_markov_switching.yaml` | FAIL_SCHEMA | PASS |
-| `l2_minimal.yaml` | FAIL_SCHEMA | PASS |
-| `l2_fred_sd_alignment.yaml` | FAIL_SCHEMA | PASS |
+| `data_preprocessing_minimal.yaml` | FAIL_SCHEMA | PASS |
+| `preprocessing_minimal.yaml` | FAIL_SCHEMA | PASS |
 
 ### Migration approach
 

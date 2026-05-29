@@ -11,12 +11,12 @@ contracts before authoring recipes, extending the runtime, or auditing manifests
 ## Canonical layer flow
 
 ```text
-L0 -> L1 -> L2 -> L3(graph) -> L4(graph) -> L5 -> L6 -> L7(graph) -> L8
+L0 -> L1 -> preprocessing -> L3(graph) -> L4(graph) -> L5 -> L6 -> L7(graph) -> L8
               |      |       |
-             L1.5   L2.5   L3.5    L4.5 diagnostics
+             L1.5   Data diagnostic   L3.5    L4.5 diagnostics
 ```
 
-- L0-L2 and L5-L8 are list-style layers.
+- Meta, data, preprocessing, and L5-L8 are list-style stages.
 - L3, L4, and L7 are graph-style layers.
 - L6 and L7 are default off.
 - L8 is always the external export boundary.
@@ -25,15 +25,15 @@ L0 -> L1 -> L2 -> L3(graph) -> L4(graph) -> L5 -> L6 -> L7(graph) -> L8
 
 ```text
 L1.5 <- L1
-L2.5 <- L1 + L2
-L3.5 <- L1 + L2 + L3
+Data diagnostic <- L1 + preprocessing
+L3.5 <- L1 + preprocessing + L3
 L4.5 <- L4 + L3
 ```
 
 Diagnostics are default off. With `enabled: false`, they create no graph
 nodes and no sink. With `enabled: true`, they emit diagnostic artifacts
-that L8 can include through `diagnostics_l1_5`, `diagnostics_l2_5`,
-`diagnostics_l3_5`, `diagnostics_l4_5`, or `diagnostics_all`.
+that L8 can include through `diagnostics_l1_5`, `diagnostics_l3_5`,
+`diagnostics_l4_5`, or `diagnostics_all`.
 
 ## Foundation and philosophy
 

@@ -540,10 +540,10 @@ def test_validator_accepts_new_ops_in_l3_recipe(op_name: str, extra_params: str)
   nodes:
     - id: src_x
       type: source
-      selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: predictors}}}}
+      selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: predictors}}}}
     - id: src_y
       type: source
-      selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: target}}}}
+      selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: target}}}}
     - id: x_final
       type: step
       op: {op_name}
@@ -579,10 +579,10 @@ def test_l3_boruta_no_longer_rejected_as_future() -> None:
   nodes:
     - id: src_x
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}
     - id: src_y
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}
     - id: x_final
       type: step
       op: boruta_selection

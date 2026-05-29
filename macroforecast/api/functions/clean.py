@@ -1,6 +1,6 @@
-"""Standalone L2 clean-panel function-op namespace.
+"""Standalone preprocessing clean-panel function-op namespace.
 
-L2 clean panel ops standalone-ization (v0.8.0, 14 ops).
+Preprocessing clean-panel ops standalone-ization (v0.8.0, 14 ops).
 
 Each callable wraps the corresponding runtime primitive from
 ``macroforecast.core.runtime`` to preserve bit-exact results with
@@ -12,15 +12,15 @@ Import pattern follows the lazy-runtime-import convention (see linear.py):
 each function body to avoid circular imports).
 
 14 ops across 5 clusters:
-    L2.A freq-align (2):  freq_align_quarterly_to_monthly_clean,
+    Preprocessing frequency alignment (2):  freq_align_quarterly_to_monthly_clean,
                           freq_align_monthly_to_quarterly_clean
-    L2.B tcode (1):       apply_tcode_transform
-    L2.C outlier (3):     iqr_outlier_clean, zscore_outlier_clean,
+    Preprocessing tcode (1):       apply_tcode_transform
+    Preprocessing outlier (3):     iqr_outlier_clean, zscore_outlier_clean,
                           winsorize_clean
-    L2.D imputation (5):  em_factor_impute_clean, em_multivariate_impute_clean,
+    Preprocessing imputation (5):  em_factor_impute_clean, em_multivariate_impute_clean,
                           mean_impute_clean, forward_fill_clean,
                           linear_interpolate_clean
-    L2.E frame edge (3):  truncate_to_balanced_clean,
+    Preprocessing frame edge (3):  truncate_to_balanced_clean,
                           drop_unbalanced_series_clean,
                           zero_fill_leading_clean
 """
@@ -43,7 +43,7 @@ def _require_non_empty(panel: pd.DataFrame, *, name: str = "panel") -> None:
 
 
 # ============================================================================
-# L2.C Outlier ops
+# Preprocessing outlier ops
 # ============================================================================
 
 
@@ -67,7 +67,7 @@ def iqr_outlier_clean(
         What to do with flagged values. One of:
 
         * ``"flag_as_nan"`` -- replace flagged cells with NaN (default;
-          pairs with L2.D imputation to recover values).
+          pairs with Preprocessing imputation to recover values).
         * ``"replace_with_median"`` -- replace flagged cells with the
           per-column full-sample median.
         * ``"replace_with_cap_value"`` -- cap flagged cells at the
@@ -90,7 +90,7 @@ def iqr_outlier_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           outlier_policy: mccracken_ng_iqr
           outlier_action: flag_as_nan
           leaf_config:
@@ -186,7 +186,7 @@ def zscore_outlier_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           outlier_policy: zscore_threshold
           outlier_action: flag_as_nan
           leaf_config:
@@ -277,7 +277,7 @@ def winsorize_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           outlier_policy: winsorize
           leaf_config:
             winsorize_quantiles: [0.01, 0.99]
@@ -318,7 +318,7 @@ def winsorize_clean(
 
 
 # ============================================================================
-# L2.D Imputation ops
+# Preprocessing imputation ops
 # ============================================================================
 
 
@@ -372,7 +372,7 @@ def em_factor_impute_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           imputation_policy: em_factor
           leaf_config:
             em_n_factors: 8
@@ -616,7 +616,7 @@ def em_multivariate_impute_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           imputation_policy: em_multivariate
 
     Examples
@@ -671,7 +671,7 @@ def mean_impute_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           imputation_policy: mean
 
     Examples
@@ -717,7 +717,7 @@ def forward_fill_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           imputation_policy: forward_fill
 
     Examples
@@ -765,7 +765,7 @@ def linear_interpolate_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           imputation_policy: linear_interpolation
 
     Examples
@@ -790,7 +790,7 @@ def linear_interpolate_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
 
 # ============================================================================
-# L2.E Frame-edge ops
+# Preprocessing frame-edge ops
 # ============================================================================
 
 
@@ -817,7 +817,7 @@ def truncate_to_balanced_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           frame_edge_policy: truncate_to_balanced
 
     Examples
@@ -860,7 +860,7 @@ def drop_unbalanced_series_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           frame_edge_policy: drop_unbalanced_series
 
     Examples
@@ -909,7 +909,7 @@ def zero_fill_leading_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           frame_edge_policy: zero_fill_leading
 
     Examples
@@ -933,7 +933,7 @@ def zero_fill_leading_clean(panel: pd.DataFrame) -> pd.DataFrame:
 
 
 # ============================================================================
-# L2.B Tcode op
+# Preprocessing tcode op
 # ============================================================================
 
 
@@ -979,7 +979,7 @@ def apply_tcode_transform(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           transform_policy: apply_official_tcode
           # or:
           transform_policy: custom_tcode
@@ -1027,7 +1027,7 @@ def apply_tcode_transform(
 
 
 # ============================================================================
-# L2.A Frequency-alignment ops
+# Preprocessing frequency-alignment ops
 # ============================================================================
 
 
@@ -1077,7 +1077,7 @@ def freq_align_quarterly_to_monthly_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           quarterly_to_monthly_policy: step_backward
           # (within _apply_fred_sd_frequency_alignment)
 
@@ -1173,7 +1173,7 @@ def freq_align_monthly_to_quarterly_clean(
 
     Equivalent recipe configuration::
 
-        l2:
+        preprocessing:
           monthly_to_quarterly_policy: quarterly_average
           # (within _apply_fred_sd_frequency_alignment)
 

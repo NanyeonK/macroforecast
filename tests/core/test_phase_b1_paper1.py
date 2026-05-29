@@ -122,7 +122,7 @@ def test_scaled_pca_no_future_leakage_via_per_origin_l3(tmp_path):
     from macroforecast.models.paper_methods import scaled_pca
     from macroforecast.core.runtime import (
         materialize_l1,
-        materialize_l2,
+        materialize_preprocessing,
         materialize_l3_minimal,
     )
 
@@ -131,7 +131,7 @@ def test_scaled_pca_no_future_leakage_via_per_origin_l3(tmp_path):
     )
     recipe = scaled_pca(target="y", horizon=1, n_components=2, panel=panel)
     l1, _regime, _axes = materialize_l1(recipe)
-    l2, _l2_axes = materialize_l2(recipe, l1)
+    l2, _l2_axes = materialize_preprocessing(recipe, l1)
     l3, _l3_meta = materialize_l3_minimal(recipe, l1, l2)
 
     closure = l3.X_final.metadata.values.get("l3_per_origin_callable")
@@ -286,8 +286,8 @@ def test_temporal_rule_full_sample_executes_once(tmp_path):
                 "id": "src_X",
                 "type": "source",
                 "selector": {
-                    "layer_ref": "l2",
-                    "sink_name": "l2_clean_panel_v1",
+                    "layer_ref": "preprocessing",
+                    "sink_name": "preprocessed_panel_v1",
                     "subset": {"role": "predictors"},
                 },
             },
@@ -295,8 +295,8 @@ def test_temporal_rule_full_sample_executes_once(tmp_path):
                 "id": "src_y",
                 "type": "source",
                 "selector": {
-                    "layer_ref": "l2",
-                    "sink_name": "l2_clean_panel_v1",
+                    "layer_ref": "preprocessing",
+                    "sink_name": "preprocessed_panel_v1",
                     "subset": {"role": "target"},
                 },
             },
@@ -326,12 +326,12 @@ def test_temporal_rule_full_sample_executes_once(tmp_path):
     # Verify the per-origin closure is NOT attached.
     from macroforecast.core.runtime import (
         materialize_l1,
-        materialize_l2,
+        materialize_preprocessing,
         materialize_l3_minimal,
     )
 
     l1, _r, _a = materialize_l1(recipe)
-    l2, _l2a = materialize_l2(recipe, l1)
+    l2, _l2a = materialize_preprocessing(recipe, l1)
     l3, _l3m = materialize_l3_minimal(recipe, l1, l2)
     assert "l3_per_origin_callable" not in l3.X_final.metadata.values, (
         "no node declares temporal_rule=expanding_window_per_origin, "

@@ -1,6 +1,6 @@
 # Data Policies
 
-Data-policy axes live in L1 and L2.
+Data-policy axes live in data and preprocessing.
 
 L1 policies decide what the recipe means before preprocessing:
 
@@ -12,4 +12,4 @@ L1 policies decide what the recipe means before preprocessing:
 
 The current default for same-period predictors is `allow_same_period_predictors`.
 
-L2 applies cleaning after L1: transform, outlier handling, imputation, and frame-edge trimming.
+preprocessing applies cleaning after L1: transform, outlier handling, imputation, and frame-edge trimming.

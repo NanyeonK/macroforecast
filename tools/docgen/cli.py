@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
     scaffold.add_argument(
         "--include-diagnostics",
         action="store_true",
-        help="Also walk the L1.5/L2.5/L3.5/L4.5 diagnostic layers.",
+        help="Also walk diagnostic layers.",
     )
     scaffold.set_defaults(func=_cmd_scaffold)
 

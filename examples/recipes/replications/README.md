@@ -31,7 +31,7 @@ existing primitives rather than inflating the registry.
 | 7 | OLS as Attention (Coulombe 2026) | `ols_attention_demo.yaml` | TBD | conceptual paper -- demo with `ols` + `transformer` |
 | 8 | Anatomy of OOS Forecasting (Borup et al. 2022) | `anatomy_oos.yaml` | pre-promotion | `oshapley_vi` + `pbsv` L7 ops (future, anatomy package) |
 | 9 | Dual Interpretation of ML Forecasts (Coulombe et al. 2024) | `dual_interpretation.yaml` | pre-promotion | `dual_decomposition` L7 op (future); op output carries inline HHI / short / turnover / leverage |
-| 10 | Maximally Forward-Looking Core Inflation (Coulombe et al. 2024) | `maximally_forward_looking.yaml` | pre-promotion | `asymmetric_trim` L2 + `ridge(coefficient_constraint=nonneg)` (future) |
+| 10 | Maximally Forward-Looking Core Inflation (Coulombe et al. 2024) | `maximally_forward_looking.yaml` | pre-promotion | `asymmetric_trim` preprocessing + `ridge(coefficient_constraint=nonneg)` (future) |
 | 11 | Sparse Macro Factors (Zhou) | `sparse_macro_factors.yaml` | TBD | `sparse_pca` + `var` |
 | 12 | Macroeconomic Data Transformations Matter (Coulombe 2021) | `macroeconomic_data_transformations.yaml` | TBD | `ma_increasing_order` (MARX) + `pca` (rotation) + `cumulative_average` (path-avg) |
 | 13 | How is ML Useful for Macro Forecasting (Coulombe et al. 2022 JAE) | `ml_useful_macro.yaml` | TBD | sweep machinery over `family` × `regularization` × `cv` × `loss` |

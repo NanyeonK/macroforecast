@@ -33,8 +33,8 @@ preprocessing:
   sweep_groups:
     - id: pipeline_lag1
       nodes:
-        - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-        - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+        - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+        - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
         - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
         - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
       sinks:
@@ -42,8 +42,8 @@ preprocessing:
         l3_metadata_v1: auto
     - id: pipeline_lag2
       nodes:
-        - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-        - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+        - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+        - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
         - {id: lag_x, type: step, op: lag, params: {n_lag: 2}, inputs: [src_X]}
         - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
       sinks:
@@ -104,8 +104,8 @@ preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:

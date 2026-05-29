@@ -70,8 +70,8 @@ recipes must update axis names manually.
 |-------------------|-------------------|-------|
 | `custom_source_policy` | `panel_composition` | L1.A |
 | `forecast_strategy` | `forecast_policy` | L4 |
-| `quarterly_to_monthly_rule` | `quarterly_to_monthly_policy` | L2.A |
-| `monthly_to_quarterly_rule` | `monthly_to_quarterly_policy` | L2.A |
+| `quarterly_to_monthly_rule` | `quarterly_to_monthly_policy` | preprocessing frequency alignment |
+| `monthly_to_quarterly_rule` | `monthly_to_quarterly_policy` | preprocessing frequency alignment |
 
 These are intentional hard changes. Silent acceptance of deprecated axis
 names in recipes could hide bugs and misroute configuration. Users receive

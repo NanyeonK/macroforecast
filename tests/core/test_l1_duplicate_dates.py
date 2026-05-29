@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from macroforecast.core import execute_l1_l2
+from macroforecast.core import execute_data_preprocessing
 
 
 _BASE_YAML = """
@@ -61,7 +61,7 @@ def test_duplicate_dates_raise_runtime_error():
     }
     yaml_text = _recipe_with_inline(rows)
     with pytest.raises(RuntimeError, match="duplicate dates"):
-        execute_l1_l2(yaml_text)
+        execute_data_preprocessing(yaml_text)
 
 
 def test_no_duplicate_dates_passes():
@@ -72,7 +72,7 @@ def test_no_duplicate_dates_passes():
         "x1": [10.0, 20.0, 30.0],
     }
     yaml_text = _recipe_with_inline(rows)
-    result = execute_l1_l2(yaml_text)
+    result = execute_data_preprocessing(yaml_text)
     l1_artifact = result.sink("l1_data_definition_v1")
     assert l1_artifact.raw_panel.shape == (3, 2)  # y + x1
 
@@ -85,4 +85,4 @@ def test_duplicate_dates_error_lists_offending_date():
     }
     yaml_text = _recipe_with_inline(rows)
     with pytest.raises(RuntimeError, match="2020-03"):
-        execute_l1_l2(yaml_text)
+        execute_data_preprocessing(yaml_text)

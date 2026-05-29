@@ -3,7 +3,7 @@
 Locks in the L1 dispatch added in v0.2 / refined in v0.8.5: when the
 caller passes ``dataset='fred_md+fred_sd'`` (or ``fred_qd+fred_sd``)
 the loader fetches both the national FRED-MD/QD panel and the regional
-FRED-SD panel and joins them on the date index, so L2 sees one merged
+FRED-SD panel and joins them on the date index, so preprocessing sees one merged
 panel with both national series (e.g. ``INDPRO``) and state-level
 series (e.g. ``UR_CA``, ``UR_TX``).
 
@@ -71,7 +71,7 @@ def test_fred_md_plus_fred_sd_loader_dispatches_combined(tmp_path):
 
 
 def test_fred_md_plus_fred_sd_l1_sink_carries_both_panels(tmp_path):
-    """End-to-end (L1 + L2 only): the L1 sink must carry both
+    """End-to-end (L1 + preprocessing only): the L1 sink must carry both
     fred_md columns and fred_sd state columns.
 
     We invoke ``materialize_l1`` directly so we sidestep the L4 fit

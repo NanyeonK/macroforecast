@@ -32,6 +32,8 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.preprocessing.preprocess(...)` | Backward-compatible alias for `reprocess(...)`. |
 | `macroforecast.preprocessing.plan(...)` | Dry-run preprocessing choices without mutating the panel. |
 | `macroforecast.preprocessing.report(...)` | Summarize a completed `PreprocessedData` result. |
+| `macroforecast.data_summary.summarize_data(...)` | Summarize one canonical panel before or after preprocessing. |
+| `macroforecast.data_analysis.analyze_data(...)` | Compare raw and processed panels. |
 
 ## Submodule Surfaces
 
@@ -41,13 +43,15 @@ Curated reference for the importable macroforecast surface. The generated pages 
 | `macroforecast.meta` | Package-wide execution settings. |
 | `macroforecast.data` | Canonical panels, data metadata, FRED/custom loaders, run-level data specs, and vintage labels. |
 | `macroforecast.preprocessing` | Pandas preprocessing callables, transformations, and reports. |
+| `macroforecast.data_summary` | Single-panel coverage, missingness, descriptive statistics, and correlations. |
+| `macroforecast.data_analysis` | Raw-vs-clean panel comparison analysis. |
 | `macroforecast.features` | L3 feature engineering ops, transforms, and selectors. |
 | `macroforecast.models` | L4 model classes, model ops, paper helpers, and tuning. |
 | `macroforecast.evaluation` | L5 metrics and evaluation ops. |
 | `macroforecast.stat_tests` | L6 forecast-comparison statistical tests. |
 | `macroforecast.interpretation` | L7 interpretation schemas, ops, and methods. |
 | `macroforecast.output` | L8 artifact, provenance, and export ops. |
-| `macroforecast.diagnostics` | L1.5/L2.5/L3.5/L4.5 diagnostic packages. |
+| `macroforecast.diagnostics` | Legacy recipe diagnostics retained for runtime compatibility. |
 | `macroforecast.core` | Cross-layer runtime, registry, manifest, cache, validation, execution, and figures. |
 | `macroforecast.api.functions` | Canonical standalone callable namespace; also available as `macroforecast.functions`. |
 | `macroforecast.api.defaults` | Canonical default profile helpers; also available through top-level lazy exports and `macroforecast.defaults`. |
@@ -57,7 +61,7 @@ Curated reference for the importable macroforecast surface. The generated pages 
 
 ## Package Ownership
 
-Canonical implementation now lives in semantic packages: `meta`, `data`, `preprocessing`, `features`, `models`, `evaluation`, `stat_tests`, `interpretation`, `output`, and `diagnostics.*`.
+Canonical implementation now lives in semantic packages: `meta`, `data`, `preprocessing`, `data_summary`, `data_analysis`, `features`, `models`, `evaluation`, `stat_tests`, `interpretation`, and `output`.
 
 `macroforecast.layers.*` is compatibility-only. `macroforecast.core.layers` owns registry-facing compatibility modules and runtime glue, not the primary public implementation surface.
 
@@ -65,8 +69,8 @@ Canonical implementation now lives in semantic packages: `meta`, `data`, `prepro
 
 Runtime materialization helpers live in `macroforecast.core.runtime`:
 
-- `materialize_l1`, `materialize_l2`, `materialize_l3_minimal`, `materialize_l4_minimal`, `materialize_l5_minimal`, `materialize_l6_runtime`, `materialize_l7_runtime`, `materialize_l8_runtime`
-- `materialize_l1_5_diagnostic` through `materialize_l4_5_diagnostic`
+- `materialize_l1`, `materialize_preprocessing`, `materialize_l3_minimal`, `materialize_l4_minimal`, `materialize_l5_minimal`, `materialize_l6_runtime`, `materialize_l7_runtime`, `materialize_l8_runtime`
+- `materialize_l3_5_diagnostic`, `materialize_l4_5_diagnostic`
 - `execute_minimal_forecast(recipe)`
 
 Sweep execution and bit-exact replication live in `macroforecast.core.execution`: `execute_recipe`, `replicate_recipe`, `CellExecutionResult`, `ManifestExecutionResult`, and `ReplicationResult`.

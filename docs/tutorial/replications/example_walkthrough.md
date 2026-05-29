@@ -67,7 +67,7 @@ preprocessing:
     frame_edge_policy: keep_unbalanced
 ```
 
-The minimal recipe disables every L2 stage (panel is already clean). A
+The minimal recipe disables every preprocessing stage (panel is already clean). A
 realistic FRED-MD recipe would use:
 
 - `transform_policy: apply_official_tcode` — apply McCracken-Ng codes.
@@ -85,8 +85,8 @@ the callable preprocessing workflow in
 ```yaml
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:
@@ -94,7 +94,7 @@ the callable preprocessing workflow in
     l3_metadata_v1: auto
 ```
 
-- L3 uses a step graph. `src_X` / `src_y` pull predictors / target from the L2
+- L3 uses a step graph. `src_X` / `src_y` pull predictors / target from the preprocessing
   clean panel.
 - `lag_x` step: a single 1-period lag of every predictor column.
 - `y_h` step: build the L3 target as a direct h=1 forecast (no lead /

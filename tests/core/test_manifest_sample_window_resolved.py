@@ -1,11 +1,11 @@
 """Cycle 15 M-1 -- manifest sample_start_resolved / sample_end_resolved reflect post-L2 window.
 
 Bug (Cycle 14 K-3): sample_start_resolved / sample_end_resolved were read from
-_l1_art.raw_panel.data.index (pre-window) rather than the post-L2 clean panel.
+_l1_art.raw_panel.data.index (pre-window) rather than the post-preprocessing panel.
 A user with sample_start_rule=fixed_date, sample_start_date="2020-01-01" on a
 2018-2023 panel got manifest showing 2018-01-01, not 2020-01-01.
 
-Fix (Cycle 15 M-1): prefer l2_clean_panel_v1.panel.data.index; fallback to
+Fix (Cycle 15 M-1): prefer preprocessed_panel_v1.panel.data.index; fallback to
 raw_panel only when L2 artifact is absent.
 
 Tests:
@@ -81,10 +81,10 @@ preprocessing:
   nodes:
     - id: src_X
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}
     - id: src_y
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}
     - id: lag_x
       type: step
       op: lag

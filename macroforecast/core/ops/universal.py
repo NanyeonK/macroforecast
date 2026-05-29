@@ -49,7 +49,7 @@ def concat(inputs, params):
 
 @register_op(
     name="lag",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": (Panel, Series, Factor)},
     output_type=LaggedPanel,
     params_schema={
@@ -99,7 +99,7 @@ def lag(input_data, params):
 
 @register_op(
     name="level",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": (Panel, Series)},
     output_type=(Panel, Series),
 )
@@ -109,7 +109,7 @@ def level(input_data, params):
 
 @register_op(
     name="log",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": (Panel, Series, LaggedPanel, Factor)},
     output_type=(Panel, Series, LaggedPanel, Factor),
 )
@@ -122,7 +122,7 @@ def log(input_data, params):
 
 @register_op(
     name="diff",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": (Panel, Series)},
     output_type=(Panel, Series),
     params_schema={"n_diff": {"type": int, "default": 1, "sweepable": True}},
@@ -135,7 +135,7 @@ def diff(input_data, params):
 
 @register_op(
     name="log_diff",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": (Panel, Series)},
     output_type=(Panel, Series),
     params_schema={"n_diff": {"type": int, "default": 1, "sweepable": True}},
@@ -150,7 +150,7 @@ def log_diff(input_data, params):
 
 @register_op(
     name="pct_change",
-    layer_scope=("l2", "l3"),
+    layer_scope=("preprocessing", "l3"),
     input_types={"default": (Panel, Series)},
     output_type=(Panel, Series),
     params_schema={"n_periods": {"type": int, "default": 1, "sweepable": True}},

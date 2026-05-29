@@ -217,8 +217,8 @@ def build_metadata_artifact(recipe_or_yaml: dict[str, Any] | str) -> L3MetadataA
 
 def build_cascade_chain(depth: int) -> list[dict[str, Any]]:
     nodes: list[dict[str, Any]] = [
-        {"id": "src_x", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-        {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
+        {"id": "src_x", "type": "source", "selector": {"layer_ref": "preprocessing", "sink_name": "preprocessed_panel_v1", "subset": {"role": "predictors"}}},
+        {"id": "src_y", "type": "source", "selector": {"layer_ref": "preprocessing", "sink_name": "preprocessed_panel_v1", "subset": {"role": "target"}}},
         {"id": "p0", "type": "step", "op": "lag", "params": {"n_lag": 1}, "pipeline_id": "p0", "inputs": ["src_x"]},
     ]
     for idx in range(1, depth + 1):
@@ -509,7 +509,7 @@ L3_LAYER_SPEC = _LayerImplSpec(
     layer_id="l3",
     name="Feature engineering",
     category="construction",
-    expected_inputs=("l2_clean_panel_v1", "l1_data_definition_v1"),
+    expected_inputs=("preprocessed_panel_v1", "l1_data_definition_v1"),
     produces=("l3_features_v1", "l3_metadata_v1"),
     ui_mode="graph",
     layer_globals=(),

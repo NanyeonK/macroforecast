@@ -10,7 +10,7 @@ Usage::
 
     b = mf.scaffold.RecipeBuilder()
     b.l1.fred_md(target="CPIAUCSL", horizon_set="standard_md")
-    b.l2.standard()
+    b.preprocessing.standard()
     b.l3.lag_only(n_lag=12)
     b.l4.fit("ridge", alpha=1.0).is_benchmark()
     b.l4.fit("random_forest", n_estimators=200)
@@ -134,13 +134,13 @@ class _L1(_LayerNamespace):
         return self
 
 
-class _L2(_LayerNamespace):
+class _Preprocessing(_LayerNamespace):
     layer_key = "preprocessing"
 
-    def __call__(self, **axes: Any) -> "_L2":
+    def __call__(self, **axes: Any) -> "_Preprocessing":
         return self.set_axis(**axes)
 
-    def standard(self) -> "_L2":
+    def standard(self) -> "_Preprocessing":
         """Preset: McCracken-Ng default pipeline (apply_official_tcode +
         IQR outliers + EM-factor imputation + truncate-to-balanced edges)."""
 
@@ -152,7 +152,7 @@ class _L2(_LayerNamespace):
             frame_edge_policy="truncate_to_balanced",
         )
 
-    def no_op(self) -> "_L2":
+    def no_op(self) -> "_Preprocessing":
         """Preset: pass-through (custom panels with already-clean data)."""
 
         return self(
@@ -172,8 +172,8 @@ class _L3(_LayerNamespace):
         block = self.block
         block.setdefault("nodes", [])
         block["nodes"] = [
-            {"id": "src_X", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "predictors"}}},
-            {"id": "src_y", "type": "source", "selector": {"layer_ref": "l2", "sink_name": "l2_clean_panel_v1", "subset": {"role": "target"}}},
+            {"id": "src_X", "type": "source", "selector": {"layer_ref": "preprocessing", "sink_name": "preprocessed_panel_v1", "subset": {"role": "predictors"}}},
+            {"id": "src_y", "type": "source", "selector": {"layer_ref": "preprocessing", "sink_name": "preprocessed_panel_v1", "subset": {"role": "target"}}},
             {"id": "lag_x", "type": "step", "op": "lag", "params": {"n_lag": int(n_lag)}, "inputs": ["src_X"]},
             {"id": "y_h", "type": "step", "op": "target_construction", "params": {"mode": "point_forecast", "method": "direct", "horizon": 1}, "inputs": ["src_y"]},
         ]
@@ -303,7 +303,7 @@ class RecipeBuilder:
 
         b = RecipeBuilder()
         b.l1.fred_md(target="INDPRO", target_horizons=[1, 3, 6])
-        b.l2.standard()
+        b.preprocessing.standard()
         b.l3.lag_only(n_lag=4)
         b.l4.fit(family="ridge", alpha=1.0).is_benchmark()
         b.l5.standard(primary_metric="mse_reduction")
@@ -316,7 +316,7 @@ class RecipeBuilder:
     def __init__(self) -> None:
         self._recipe: dict[str, Any] = {}
         self.l1 = _L1(self._recipe)
-        self.l2 = _L2(self._recipe)
+        self.preprocessing = _Preprocessing(self._recipe)
         self.l3 = _L3(self._recipe)
         self.l4 = _L4(self._recipe)
         self.l5 = _L5(self._recipe)

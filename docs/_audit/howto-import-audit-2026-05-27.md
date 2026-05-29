@@ -34,10 +34,10 @@ Execution environment: `python3` in the installed editable package at
 | `docs/how_to/forecast_volatility_realized_garch.md` | 15 | `from macroforecast.models import RealizedGARCH` | PASS |
 | `docs/how_to/irf_pesaran_shin_girf.md` | 16 | `from macroforecast.models import VAR` | PASS |
 | `docs/how_to/irf_pesaran_shin_girf.md` | 17 | `from macroforecast.interpretation import GIRF` | PASS |
-| `docs/how_to/partial_layer_execution.md` | 34 | `from macroforecast.core import (materialize_l1, materialize_l2, materialize_l3_minimal, materialize_l4_minimal, materialize_l5_minimal, execute_l1_l2, execute_minimal_forecast, execute_node,)` | PASS |
+| `docs/how_to/partial_layer_execution.md` | 34 | `from macroforecast.core import (materialize_l1, materialize_preprocessing, materialize_l3_minimal, materialize_l4_minimal, materialize_l5_minimal, execute_data_preprocessing, execute_minimal_forecast, execute_node,)` | PASS |
 | `docs/how_to/partial_layer_execution.md` | 70 | `import macroforecast as mf` | PASS |
-| `docs/how_to/partial_layer_execution.md` | 135 | `from macroforecast.core import execute_l1_l2, execute_minimal_forecast` | PASS |
-| `docs/how_to/partial_layer_execution.md` | 274 | `from macroforecast.core import materialize_l1, materialize_l2` | PASS |
+| `docs/how_to/partial_layer_execution.md` | 135 | `from macroforecast.core import execute_data_preprocessing, execute_minimal_forecast` | PASS |
+| `docs/how_to/partial_layer_execution.md` | 274 | `from macroforecast.core import materialize_l1, materialize_preprocessing` | PASS |
 | `docs/how_to/replicate_a_study.md` | 33 | `import macroforecast as mf` | PASS |
 | `docs/how_to/replicate_a_study.md` | 59 | `import macroforecast` | PASS |
 | `docs/how_to/reproducibility_policy.md` | 17 | `import macroforecast` | PASS |
@@ -50,7 +50,7 @@ Execution environment: `python3` in the installed editable package at
 | `docs/how_to/simple_api/run_experiment.md` | 6 | `import macroforecast as mf` | PASS |
 | `docs/how_to/sweep_over_models.md` | 14 | `import macroforecast as mf` | PASS |
 | `docs/how_to/troubleshooting.md` | 116 | `import macroforecast as mf` | PASS |
-| `docs/how_to/troubleshooting.md` | 186 | `from macroforecast.core import materialize_l1, materialize_l2, materialize_l3_minimal` | PASS |
+| `docs/how_to/troubleshooting.md` | 186 | `from macroforecast.core import materialize_l1, materialize_preprocessing, materialize_l3_minimal` | PASS |
 | `docs/how_to/troubleshooting.md` | 187 | `from macroforecast.core.yaml import parse_recipe_yaml` | PASS |
 | `docs/how_to/use_extension_points.md` | 25 | `import macroforecast as mf` | PASS |
 | `docs/tutorial/00_install.md` | 41 | `import macroforecast` | PASS |

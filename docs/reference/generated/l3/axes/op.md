@@ -185,7 +185,7 @@ See [lasso_path_selection function page](../op/lasso_path_selection.md) for full
 
 Pass-through: keep the series at its original level.
 
-No-op transform; the column flows through unchanged. Used as an explicit anchor in the pipeline so downstream ops can reference the level form even when the L2 transform_policy converted to log-differences. Useful when you want both ``level`` and ``diff`` branches in the same recipe.
+No-op transform; the column flows through unchanged. Used as an explicit anchor in the pipeline so downstream ops can reference the level form even when the preprocessing transform_policy converted to log-differences. Useful when you want both ``level`` and ``diff`` branches in the same recipe.
 
 **When to use**
 

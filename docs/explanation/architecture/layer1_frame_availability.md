@@ -11,9 +11,9 @@ Runtime order:
 
 1. Load FRED data, custom data, or FRED-plus-custom data.
 2. Apply `missing_availability` to the resulting L1 source frame.
-3. Hand the source frame to L2 representation and research preprocessing.
+3. Hand the source frame to preprocessing representation and research preprocessing.
 
-L2 `transform_policy` applies official FRED transform codes. Raw-source
+preprocessing `transform_policy` applies official FRED transform codes. Raw-source
 cleaning (missing/outlier handling before transforms) is now also an L2
 decision via `imputation_policy` and `outlier_policy`.
 
@@ -33,11 +33,11 @@ decision via `imputation_policy` and `outlier_policy`.
 Boundary rule:
 
 - Raw missing values already present in loaded source files are handled by
-  L2 `imputation_policy` and `outlier_policy`.
+  preprocessing `imputation_policy` and `outlier_policy`.
 - Publication timing belongs to
   [4.1.2 Forecast-Time Information](availability_timing.md).
 - Researcher-chosen missing-data strategies after representation construction
-  belong to L2.
+  belong to preprocessing.
 - Target y imputation is not done by this axis. Missing target values remain a
   supervised-learning contract issue.
 

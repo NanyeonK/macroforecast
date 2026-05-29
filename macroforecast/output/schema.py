@@ -64,7 +64,7 @@ GRANULARITY = {"per_cell", "per_target", "per_horizon", "per_target_horizon", "f
 NAMING = {"cell_id", "descriptive", "recipe_hash", "custom"}
 SAVED_OBJECTS = {
     "forecasts", "forecast_intervals", "metrics", "ranking", "decomposition", "regime_metrics", "state_metrics", "model_artifacts",
-    "combination_weights", "feature_metadata", "clean_panel", "raw_panel", "diagnostics_l1_5", "diagnostics_l2_5", "diagnostics_l3_5",
+    "combination_weights", "feature_metadata", "clean_panel", "raw_panel", "diagnostics_l3_5",
     "diagnostics_l4_5", "diagnostics_all", "tests", "importance", "transformation_attribution",
 }
 PROVENANCE_FIELDS = (
@@ -119,7 +119,7 @@ def normalize_to_dag_form(layer: dict[str, Any] | L8Layer, layer_id: Literal["l8
     nodes: dict[str, Node] = {
         "src_l1_data": Node("src_l1_data", "source", "l8", "source", selector=SourceSelector("l1", "l1_data_definition_v1")),
         "src_l1_regime": Node("src_l1_regime", "source", "l8", "source", selector=SourceSelector("l1", "l1_regime_metadata_v1")),
-        "src_l2_clean": Node("src_l2_clean", "source", "l8", "source", selector=SourceSelector("l2", "l2_clean_panel_v1")),
+        "src_preprocessed_panel": Node("src_preprocessed_panel", "source", "l8", "source", selector=SourceSelector("preprocessing", "preprocessed_panel_v1")),
         "src_l3_features": Node("src_l3_features", "source", "l8", "source", selector=SourceSelector("l3", "l3_features_v1")),
         "src_l3_metadata": Node("src_l3_metadata", "source", "l8", "source", selector=SourceSelector("l3", "l3_metadata_v1")),
         "src_l4_forecasts": Node("src_l4_forecasts", "source", "l8", "source", selector=SourceSelector("l4", "l4_forecasts_v1")),
@@ -255,7 +255,7 @@ def _expand_saved_objects(objects: list[str]) -> list[str]:
     expanded: list[str] = []
     for obj in objects:
         if obj == "diagnostics_all":
-            expanded.extend(["diagnostics_l1_5", "diagnostics_l2_5", "diagnostics_l3_5", "diagnostics_l4_5"])
+            expanded.extend(["diagnostics_l3_5", "diagnostics_l4_5"])
         else:
             expanded.append(obj)
     return expanded
@@ -307,8 +307,6 @@ def _recipe_context(root: dict[str, Any]) -> dict[str, Any]:
     l5_fixed = l5.get("fixed_axes", {}) or {}
     l7 = root.get("7_interpretation", {}) or {}
     diagnostic_layers = {
-        "l1_5": "1_5_data_summary",
-        "l2_5": "2_5_pre_post_preprocessing",
         "l3_5": "3_5_feature_diagnostics",
         "l4_5": "4_5_generator_diagnostics",
     }
@@ -404,7 +402,7 @@ L8_LAYER_SPEC = _LayerImplSpec(
     category="consumption",
     expected_inputs=(
         "l1_data_definition_v1",
-        "l2_clean_panel_v1",
+        "preprocessed_panel_v1",
         "l3_features_v1",
         "l3_metadata_v1",
         "l4_forecasts_v1",

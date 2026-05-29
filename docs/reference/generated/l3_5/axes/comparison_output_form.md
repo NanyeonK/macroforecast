@@ -91,7 +91,7 @@ This option configures the ``comparison_output_form`` axis on the ``L3_5_A_compa
 
 **When to use**
 
-Default multi-stage view; matches L2.5.A output style for consistency.
+Default multi-stage view; matches data diagnostic.A output style for consistency.
 
 **References**
 

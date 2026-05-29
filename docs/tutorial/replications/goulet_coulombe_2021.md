@@ -34,7 +34,7 @@ are paper-faithful.
 |---|---|
 | L0 | `failure_policy=fail_fast`, `reproducibility_policy=seeded_reproducible`, `random_seed=42` |
 | L1 | `target=INDPRO`, `target_horizons=[1, 3, 6, 12]`, `information_set_type=final_revised_data`, custom_panel_inline (smoke; see below) |
-| L2 | McCracken-Ng official tcodes (`apply_official_tcode`) |
+| preprocessing | McCracken-Ng official tcodes (`apply_official_tcode`) |
 | L3 | Lag features + `target_construction(direct, h)` |
 | L4 | Ridge (`alpha=1.0`) + AR(BIC) benchmark, expanding-window walk-forward, `refit_policy=every_origin`, `forecast_policy=direct` |
 | L5 | MSE primary + relative metrics (vs AR benchmark) |
@@ -57,7 +57,7 @@ replicate:  recipe_match=True, sink_hashes_match=True (content sinks only)
 cell sink hashes — deterministic across runs (as of v0.9.1):
   l1_data_definition_v1:   ef0097be59701c39  ← changed (J-3 path-dep fix)
   l1_regime_metadata_v1:   41cb7c29ec77d7c1
-  l2_clean_panel_v1:       4d1b3b68fc69bcdd  ← changed
+  preprocessed_panel_v1:       4d1b3b68fc69bcdd  ← changed
   l3_features_v1:          c331480b8e77ec35  ← changed
   l3_metadata_v1:          7c2368d756c4a66a
   l4_forecasts_v1:         395df3d0f5979dac
@@ -113,7 +113,7 @@ list.
 
 ## What this page proves vs. what is still TBD
 
-- ✅ Recipe shape is paper-faithful at the schema level (L0/L1/L2/L3/L4/L5/L6 axes match the paper's experimental design).
+- ✅ Recipe shape is paper-faithful at the schema level (L0/L1/default preprocessing/L3/L4/L5/L6 axes match the paper's experimental design).
 - ✅ End-to-end runtime is wired: every layer materialises, every sink hashes deterministically, replicate bit-exact succeeds.
 - ✅ Stock-install runnable: no extras (`pip install macroforecast` is enough).
 - ⏳ Full paper figures from real FRED-MD: requires the one-line swap above plus a real vintage configured. Not gated by this page; the user runs it.

@@ -43,7 +43,7 @@ When `saved_objects` is omitted, L8 derives it from the active recipe:
 - active regimes: `regime_metrics`;
 - FRED-SD geography: `state_metrics`;
 - L4 ensemble: `combination_weights`;
-- active diagnostics: `diagnostics_l1_5`, `diagnostics_l2_5`, `diagnostics_l3_5`, `diagnostics_l4_5`;
+- active diagnostics: `diagnostics_l1_5`, `diagnostics_l3_5`, `diagnostics_l4_5`;
 - L6: `tests`;
 - L7: `importance`;
 - L7 transformation attribution: `transformation_attribution`.

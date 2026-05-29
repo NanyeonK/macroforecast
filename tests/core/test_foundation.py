@@ -40,7 +40,7 @@ def test_minimal_valid_dag() -> None:
                 type="source",
                 layer_id="l3",
                 op="source",
-                selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1", subset={"predictors": True}),
+                selector=SourceSelector(layer_ref="preprocessing", sink_name="preprocessed_panel_v1", subset={"predictors": True}),
             ),
             "lag_x": Node(
                 id="lag_x",
@@ -153,12 +153,12 @@ def test_axis_starts_with_gate_propagation() -> None:
 
 def test_combined_gate_propagation() -> None:
     dag = DAG(
-        layer_id="l2",
+        layer_id="preprocessing",
         nodes={
             "alignment_rule": Node(
                 id="alignment_rule",
                 type="axis",
-                layer_id="l2",
+                layer_id="preprocessing",
                 op="quarterly_to_monthly_policy",
                 params={"value": "step_backward"},
                 gates=(
@@ -175,7 +175,7 @@ def test_combined_gate_propagation() -> None:
             "filter": Node(
                 id="filter",
                 type="axis",
-                layer_id="l2",
+                layer_id="preprocessing",
                 op="sd_series_frequency_filter",
                 params={"value": "both"},
             ),
@@ -215,7 +215,7 @@ def test_layer_and_op_registries_expose_foundation_contracts() -> None:
     layers = list_layers()
 
     assert layers["l3"].category == "construction"
-    assert layers["l3"].expected_inputs == ("l2_clean_panel_v1", "l1_data_definition_v1", "l1_regime_metadata_v1")
+    assert layers["l3"].expected_inputs == ("preprocessed_panel_v1", "l1_data_definition_v1", "l1_regime_metadata_v1")
     assert layers["l3"].produces == ("l3_features_v1", "l3_metadata_v1")
     assert get_layer("l7").category == "consumption"
     assert get_op("lag").output_type is LaggedPanel
@@ -239,7 +239,7 @@ def test_node_order_does_not_affect_type_resolution() -> None:
                 type="source",
                 layer_id="l3",
                 op="source",
-                selector=SourceSelector(layer_ref="l2", sink_name="l2_clean_panel_v1"),
+                selector=SourceSelector(layer_ref="preprocessing", sink_name="preprocessed_panel_v1"),
             ),
         },
         sinks={"lagged_x": "lag_x"},

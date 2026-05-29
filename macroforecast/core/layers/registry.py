@@ -13,7 +13,7 @@ from ..types import (
     ForecastArtifact,
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
-    L2CleanPanelArtifact,
+    PreprocessedPanelArtifact,
     L3FeaturesArtifact,
     L3MetadataArtifact,
     L4ForecastsArtifact,
@@ -111,8 +111,8 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
         "l1_data_definition_v1": L1DataDefinitionArtifact,
         "l1_regime_metadata_v1": L1RegimeMetadataArtifact,
     },
-    "l2": {
-        "l2_clean_panel_v1": L2CleanPanelArtifact,
+    "preprocessing": {
+        "preprocessed_panel_v1": PreprocessedPanelArtifact,
     },
     "l3": {
         "l3_features_v1": L3FeaturesArtifact,
@@ -136,8 +136,6 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
     "l8": {
         "l8_artifacts_v1": L8ArtifactsArtifact,
     },
-    "l1_5": {"l1_5_diagnostic_v1": DiagnosticArtifact},
-    "l2_5": {"l2_5_diagnostic_v1": DiagnosticArtifact},
     "l3_5": {"l3_5_diagnostic_v1": DiagnosticArtifact},
     "l4_5": {"l4_5_diagnostic_v1": DiagnosticArtifact},
 }
@@ -145,9 +143,7 @@ LAYER_SINKS: dict[LayerId, dict[str, TypeSpec]] = {
 
 LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
     "l1": (),
-    "l1_5": ("enabled",),
-    "l2": (),
-    "l2_5": ("enabled",),
+    "preprocessing": (),
     "l3": (),
     "l3_5": ("enabled",),
     "l4": (),
@@ -157,4 +153,3 @@ LAYER_GLOBALS: dict[LayerId, tuple[str, ...]] = {
     "l7": (),
     "l8": (),
 }
-

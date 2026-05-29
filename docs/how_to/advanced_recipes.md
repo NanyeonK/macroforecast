@@ -76,11 +76,11 @@ The recipe references the registered name verbatim.
 
 Confirm the registration before `mf.run` by calling
 `mf.list_custom_models()`. The same pattern applies to the four related
-registries. `mf.register_preprocessor` registers an L2 matrix
+registries. `mf.register_preprocessor` registers a preprocessing matrix
 post-processor. `mf.register_target_transformer` registers a wrapper
 that fits at the L5 boundary. The call
 `mf.register_feature_block(name, fn, block_kind='temporal')` registers
-an L2 feature block, with valid `block_kind` values of `temporal`,
+a preprocessing feature block, with valid `block_kind` values of `temporal`,
 `rotation`, and `factor`. The call `mf.register_feature_combiner`
 registers an L3 feature combiner. Registration lives in the current
 Python process only, since YAML does not import Python modules. The

@@ -94,7 +94,7 @@ def test_use_mixed_frequency_representation_rejects_unknown():
 # .use_sd_inferred_tcodes
 # ---------------------------------------------------------------------------
 
-def test_use_sd_inferred_tcodes_sets_l2_axis():
+def test_use_sd_inferred_tcodes_sets_preprocessing_axis():
     exp = mf.Experiment(dataset="fred_md+fred_sd", target="INDPRO", horizons=[1])
     exp.use_sd_inferred_tcodes()
     recipe = exp.to_recipe_dict()
@@ -147,20 +147,20 @@ def test_use_sd_empirical_tcodes_rejects_unknown_unit():
 # .use_preprocessor
 # ---------------------------------------------------------------------------
 
-def test_use_preprocessor_sets_l2_leaf():
+def test_use_preprocessor_sets_preprocessing_leaf():
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
     exp.use_preprocessor("custom_x_demean")
     recipe = exp.to_recipe_dict()
     assert recipe["preprocessing"]["leaf_config"]["custom_postprocessor"] == "custom_x_demean"
 
 
-def test_use_preprocessor_l2_writes_pre_pipeline_leaf():
-    """v0.8.6 Gap 1 -- ``applied_at='l2'`` writes
+def test_use_preprocessor_preprocessing_writes_pre_pipeline_leaf():
+    """v0.8.6 Gap 1 -- ``applied_at='preprocessing'`` writes
     ``leaf_config.custom_preprocessor`` (pre-pipeline hook), distinct
     from the post-pipeline ``custom_postprocessor`` slot."""
 
     exp = mf.Experiment(dataset="fred_md", target="y", horizons=[1])
-    exp.use_preprocessor("custom_x_demean", applied_at="l2")
+    exp.use_preprocessor("custom_x_demean", applied_at="preprocessing")
     leaf = exp.to_recipe_dict()["preprocessing"]["leaf_config"]
     assert leaf["custom_preprocessor"] == "custom_x_demean"
     # The post-pipeline slot stays empty unless the user opts in too.
@@ -173,13 +173,13 @@ def test_use_preprocessor_rejects_unknown_applied_at():
         exp.use_preprocessor("foo", applied_at="l4")
 
 
-def test_use_preprocessor_l2_e2e_doubles_a_column(tmp_path):
+def test_use_preprocessor_preprocessing_e2e_doubles_a_column(tmp_path):
     """End-to-end: a registered preprocessor that doubles ``x1`` runs
-    via the pre-pipeline hook, and the L2 clean panel reflects the
+    via the pre-pipeline hook, and the preprocessed panel reflects the
     doubled values."""
 
     import macroforecast as _mf
-    from macroforecast.core.runtime import materialize_l1, materialize_l2
+    from macroforecast.core.runtime import materialize_l1, materialize_preprocessing
 
     # Register a tiny preprocessor that doubles every numeric column.
     @_mf.custom_preprocessor("v086_double_columns")
@@ -193,21 +193,21 @@ def test_use_preprocessor_l2_e2e_doubles_a_column(tmp_path):
     try:
         exp = _mf.Experiment(dataset="fred_md", target="y", horizons=[1])
         install_custom_panel(exp)
-        exp.use_preprocessor("v086_double_columns", applied_at="l2")
+        exp.use_preprocessor("v086_double_columns", applied_at="preprocessing")
 
         recipe = exp.to_recipe_dict()
         l1_artifact, _regime, _axes = materialize_l1(recipe)
         # Snapshot the raw L1 value at the first index.
         raw_x1_first = float(l1_artifact.raw_panel.data["x1"].iloc[0])
-        l2_artifact, _ = materialize_l2(recipe, l1_artifact)
+        preprocessed_artifact, _ = materialize_preprocessing(recipe, l1_artifact)
         # The pre-pipeline hook doubled every column before the
         # transform / outlier / impute / frame_edge stages saw it. With
-        # the no_op L2 preset (no transform, keep_unbalanced) the
-        # doubled values flow through to the L2 sink unchanged.
-        l2_x1_first = float(l2_artifact.panel.data["x1"].iloc[0])
-        assert l2_x1_first == pytest.approx(raw_x1_first * 2.0)
+        # the no_op preprocessing preset (no transform, keep_unbalanced) the
+        # doubled values flow through to the preprocessing sink unchanged.
+        preprocessed_x1_first = float(preprocessed_artifact.panel.data["x1"].iloc[0])
+        assert preprocessed_x1_first == pytest.approx(raw_x1_first * 2.0)
         # cleaning_log records the hook firing.
-        steps = l2_artifact.cleaning_log.get("steps", [])
+        steps = preprocessed_artifact.cleaning_log.get("steps", [])
         assert any(
             isinstance(s, dict) and s.get("custom_preprocessor") == "v086_double_columns"
             for s in steps

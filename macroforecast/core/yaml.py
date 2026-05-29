@@ -11,9 +11,7 @@ from .layers import list_layers
 
 LAYER_YAML_KEYS: dict[LayerId, str] = {
     "l1": "data",
-    "l1_5": "1_5_data_summary",
-    "l2": "preprocessing",
-    "l2_5": "2_5_pre_post_preprocessing",
+    "preprocessing": "preprocessing",
     "l3": "3_feature_engineering",
     "l3_5": "3_5_feature_diagnostics",
     "l4": "4_forecasting_model",

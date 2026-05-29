@@ -23,13 +23,15 @@ Horse race research benchmarking package for macro forecasting.
 - ``macroforecast.meta`` -- package-wide execution settings.
 - ``macroforecast.data`` -- canonical panels, metadata, FRED/custom loaders, and data specs.
 - ``macroforecast.preprocessing`` -- pandas preprocessing callables and reports.
+- ``macroforecast.data_summary`` -- pandas single-panel summary callables.
+- ``macroforecast.data_analysis`` -- pandas raw-vs-clean panel analysis callables.
 - ``macroforecast.features`` -- feature engineering ops, transforms, selectors.
 - ``macroforecast.models`` -- public model classes, model ops, paper helpers, tuning.
 - ``macroforecast.evaluation`` -- forecast metric schema and ops.
 - ``macroforecast.stat_tests`` -- forecast-comparison statistical tests.
 - ``macroforecast.interpretation`` -- interpretation schemas, ops, and methods.
 - ``macroforecast.output`` -- output/provenance schema and export ops.
-- ``macroforecast.diagnostics`` -- data/preprocessing/features/generator diagnostics.
+- ``macroforecast.diagnostics`` -- legacy recipe diagnostics kept for runtime compatibility.
 - ``macroforecast.core`` -- cross-layer runtime, registry, manifest, cache, and execution.
 """
 
@@ -121,6 +123,8 @@ _LAZY_MODULES: tuple[str, ...] = (
     "meta",
     "data",
     "preprocessing",
+    "data_summary",
+    "data_analysis",
     "features",
     "models",
     "evaluation",

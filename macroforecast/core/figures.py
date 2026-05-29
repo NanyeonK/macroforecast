@@ -1,4 +1,4 @@
-"""Figure rendering for L7 importance and L4.5/L3.5/L1.5 diagnostics.
+"""Figure rendering for L7 importance and L4.5/L3.5 diagnostics.
 
 This module is intentionally lightweight: matplotlib is the only required
 dependency, and the US choropleth uses a stylized 50-state grid (no GIS

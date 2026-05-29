@@ -43,7 +43,7 @@ from .option_docs.types import REQUIRED
 
 
 def _layer_display(layer_id: str) -> str:
-    """``l1_5`` -> ``L1.5``, ``l4`` -> ``L4``."""
+    """``l4_5`` -> ``L4.5``, ``l4`` -> ``L4``."""
 
     return layer_id.upper().replace("_", ".")
 
@@ -794,7 +794,7 @@ Curated reference for the importable macroforecast surface. The generated layer 
 | `macroforecast.stat_tests` | L6 forecast-comparison statistical tests. |
 | `macroforecast.interpretation` | L7 interpretation schemas, ops, and methods. |
 | `macroforecast.output` | L8 artifact, provenance, and export ops. |
-| `macroforecast.diagnostics` | L1.5/L2.5/L3.5/L4.5 diagnostic packages. |
+| `macroforecast.diagnostics` | Legacy recipe diagnostics retained for L3.5/L4.5 runtime compatibility. |
 | `macroforecast.core` | Cross-layer runtime, registry, manifest, cache, validation, execution, and figures. |
 | `macroforecast.api.functions` | Canonical standalone callable namespace; also available as `macroforecast.functions`. |
 | `macroforecast.api.defaults` | Canonical default profile helpers; also available through top-level lazy exports and `macroforecast.defaults`. |
@@ -812,8 +812,8 @@ Canonical implementation now lives in semantic packages: `meta`, `data`, `prepro
 
 Runtime materialization helpers live in `macroforecast.core.runtime`:
 
-- `materialize_l1`, `materialize_l2`, `materialize_l3_minimal`, `materialize_l4_minimal`, `materialize_l5_minimal`, `materialize_l6_runtime`, `materialize_l7_runtime`, `materialize_l8_runtime`
-- `materialize_l1_5_diagnostic` through `materialize_l4_5_diagnostic`
+- `materialize_l1`, `materialize_preprocessing`, `materialize_l3_minimal`, `materialize_l4_minimal`, `materialize_l5_minimal`, `materialize_l6_runtime`, `materialize_l7_runtime`, `materialize_l8_runtime`
+- `materialize_l3_5_diagnostic`, `materialize_l4_5_diagnostic`
 - `execute_minimal_forecast(recipe)`
 
 Sweep execution and bit-exact replication live in `macroforecast.core.execution`: `execute_recipe`, `replicate_recipe`, `CellExecutionResult`, `ManifestExecutionResult`, and `ReplicationResult`.

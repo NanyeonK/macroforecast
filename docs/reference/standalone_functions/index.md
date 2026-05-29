@@ -35,7 +35,7 @@ u2     = mf.functions.theil_u2(y_true, y_pred, y_prev)
 
 | Layer | Purpose | Callables | Typical use |
 |---|---|---|---|
-| [L2 clean](l2_clean.md) | Transform, outlier, imputation, frame edge, tcode | 14 | Clean a panel before features |
+| [Preprocessing clean](preprocessing_clean.md) | Transform, outlier, imputation, frame edge, tcode | 14 | Clean a panel before features |
 | [L3 transforms](l3_transforms.md) | Lags, dimension reduction, filters, supervised transforms | 36 | Build predictor matrices |
 | [L4 fit](l4_fit.md) | Forecasting model families | 52 | Fit and predict |
 | [L5 metrics](l5_metrics.md) | Point, relative, density, direction, Theil | 15 | Evaluate accuracy |

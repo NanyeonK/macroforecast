@@ -16,16 +16,16 @@
 
 ## Operational status summary
 
-- Operational: 20 option(s)
+- Operational: 18 option(s)
 - Future: 0 option(s)
 
 ## Options
 
 ### `clean_panel`  --  operational
 
-Cleaned L2 panel (post tcode / outlier / imputation / frame edge).
+Preprocessed panel (post tcode / outlier / imputation / frame edge).
 
-The output of the L2 pipeline. Useful when downstream re-runs need to skip the (potentially expensive) cleaning stages.
+The output of the preprocessing pipeline. Useful when downstream re-runs need to skip the (potentially expensive) cleaning stages.
 
 **When to use**
 
@@ -84,44 +84,6 @@ Convenience flag: enables ``diagnostics_l{1..4}_5`` simultaneously when the corr
 **When to use**
 
 Default convenience option for full-diagnostic runs.
-
-**References**
-
-* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
-
-**Related options**: [`raw_panel`](#raw-panel), [`clean_panel`](#clean-panel), [`feature_metadata`](#feature-metadata), [`forecasts`](#forecasts)
-
-_Last reviewed 2026-05-05 by macroforecast author._
-
-### `diagnostics_l1_5`  --  operational
-
-L1.5 diagnostic outputs (sample coverage / stationarity / outlier audit).
-
-JSON + figures from the L1.5 sub-layer. Active when L1.5 is enabled in the recipe.
-
-**When to use**
-
-Active when L1.5 is enabled. Selecting ``diagnostics_l1_5`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
-
-**References**
-
-* macroforecast design Part 3, L8: 'reproducibility = manifest + provenance + bit-exact replicate.'
-
-**Related options**: [`raw_panel`](#raw-panel), [`clean_panel`](#clean-panel), [`feature_metadata`](#feature-metadata), [`forecasts`](#forecasts)
-
-_Last reviewed 2026-05-05 by macroforecast author._
-
-### `diagnostics_l2_5`  --  operational
-
-L2.5 diagnostic outputs (cleaning effect summaries).
-
-JSON + figures from the L2.5 sub-layer. Active when L2.5 is enabled.
-
-Configures the ``saved_objects`` axis on ``L8_B_saved_objects`` (layer ``l8``); the ``diagnostics_l2_5`` value is materialised in the recipe's ``fixed_axes`` block under that sub-layer.
-
-**When to use**
-
-Active when L2.5 is enabled. Selecting ``diagnostics_l2_5`` on ``l8.saved_objects`` activates this branch of the layer's runtime.
 
 **References**
 
@@ -299,7 +261,7 @@ _Last reviewed 2026-05-05 by macroforecast author._
 
 ### `raw_panel`  --  operational
 
-Raw L1 panel before any L2 cleaning.
+Raw L1 panel before any preprocessing.
 
 The original raw FRED-MD / -QD / -SD / custom panel. Default-off because raw FRED panels are large; enabling this makes the run fully self-contained -- a downstream user can re-run the entire pipeline from the manifest alone without internet access.
 

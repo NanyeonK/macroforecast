@@ -1,7 +1,7 @@
 # Layer L3: Feature Engineering
 
 - Parent: [Architecture](index.md)
-- Previous: [Layer L2](layer2.md)
+- Previous: [Preprocessing](layer2.md)
 - Current: L3
 - Next: [Layer L4](layer4.md)
 
@@ -11,7 +11,7 @@ L3 turns cleaned data into the feature and target artifacts consumed by forecast
 
 Inputs:
 
-- `l2_clean_panel_v1`;
+- `preprocessed_panel_v1`;
 - optional raw L1 access for level/raw-feature pipelines;
 - optional `l1_regime_metadata_v1`;
 - optional L3 pipeline outputs for cascade features.
@@ -59,8 +59,8 @@ Compatibility aliases remain available where older recipes used them: `varimax_r
 ```yaml
 3_feature_engineering:
   nodes:
-    - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_x, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: pca, type: step, op: pca, params: {n_components: 8, temporal_rule: expanding_window_per_origin}, inputs: [src_x]}
     - {id: lag_pca, type: step, op: lag, params: {n_lag: 4}, inputs: [pca]}
     - {id: y_h, type: step, op: target_construction, params: {mode: cumulative_average, horizon: 6}, inputs: [src_y]}

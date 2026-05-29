@@ -31,7 +31,7 @@ This option configures the ``comparison_stages`` axis on the ``L3_5_A_comparison
 
 **When to use**
 
-Isolating the L3 contribution when L2's cleaning is well-trusted.
+Isolating the L3 contribution when preprocessing cleaning is well-trusted.
 
 **References**
 

@@ -29,8 +29,8 @@ preprocessing:
     frame_edge_policy: keep_unbalanced
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:
@@ -128,10 +128,6 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
     yaml_text = (
         MINIMAL_RECIPE
         + """
-1_5_data_summary:
-  enabled: true
-2_5_pre_post_preprocessing:
-  enabled: true
 3_5_feature_diagnostics:
   enabled: true
 4_5_generator_diagnostics:
@@ -150,13 +146,9 @@ def test_execute_minimal_forecast_materializes_disabled_consumption_artifacts():
     assert result.sink("l6_tests_v1").l6_axis_resolved["enabled"] is False
     assert isinstance(result.sink("l7_importance_v1"), L7ImportanceArtifact)
     assert isinstance(result.sink("l8_artifacts_v1"), L8ArtifactsArtifact)
-    assert result.sink("l1_5_diagnostic_v1").enabled is True
-    assert result.sink("l2_5_diagnostic_v1").enabled is True
     assert result.sink("l3_5_diagnostic_v1").enabled is True
     assert result.sink("l4_5_diagnostic_v1").enabled is True
     assert result.sink("l8_artifacts_v1").output_directory.as_posix().startswith("macrocast_output/default_recipe/")
-    assert "l1_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
-    assert "l2_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert "l3_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert "l4_5_diagnostic_v1" in result.sink("l8_artifacts_v1").upstream_hashes
     assert "l6_tests_v1" in result.sink("l8_artifacts_v1").upstream_hashes
@@ -202,7 +194,7 @@ def test_execute_minimal_forecast_materializes_l3_5_diagnostic():
     diagnostic = result.sink("l3_5_diagnostic_v1")
 
     assert diagnostic.enabled is True
-    assert diagnostic.layer_hooked == "l1+l2+l3"
+    assert diagnostic.layer_hooked == "data+preprocessing+l3"
     assert diagnostic.metadata["comparison"]["feature_shape"] == (4, 2)
     assert diagnostic.metadata["feature_summary"]["n_features"] == 2
     assert diagnostic.metadata["lag_block"]["active"] is True

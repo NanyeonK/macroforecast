@@ -1,4 +1,4 @@
-"""Issue #251 -- L2 preprocessor + L3 feature_block / combiner dispatch."""
+"""Issue #251 -- preprocessing preprocessor + L3 feature_block / combiner dispatch."""
 from __future__ import annotations
 
 import numpy as np
@@ -37,8 +37,8 @@ preprocessing:
     custom_postprocessor: __PREP__
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:
@@ -65,7 +65,7 @@ preprocessing:
 
 def test_custom_preprocessor_dispatched_via_leaf_config(tmp_path):
     """Issue #251 -- ``leaf_config.custom_postprocessor`` routes a
-    user-registered preprocessor at the end of L2."""
+    user-registered preprocessor at the end of preprocessing."""
 
     @custom.register_preprocessor("clip_x1_at_2")
     def _clip(X_train, _y_train, X_test, _context):
@@ -80,7 +80,7 @@ def test_custom_preprocessor_dispatched_via_leaf_config(tmp_path):
     recipe = _BASE_RECIPE.replace("__PREP__", "clip_x1_at_2")
     result = macroforecast.run(recipe, output_directory=tmp_path)
     cell = result.cells[0]
-    panel = cell.runtime_result.artifacts["l2_clean_panel_v1"].panel.data
+    panel = cell.runtime_result.artifacts["preprocessed_panel_v1"].panel.data
     # x1 originally ranges 0.5 -> 5.0; after clipping at 2.0 the max is 2.0.
     assert panel["x1"].max() == 2.0
 

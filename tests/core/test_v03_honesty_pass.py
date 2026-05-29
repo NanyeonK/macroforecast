@@ -10,9 +10,8 @@ from macroforecast.core.runtime import (
     _density_interval_battery,
     _fit_target_transformer,
     _l5_predictor_block_decomposition,
-    _mackinnon_pp_pvalue,
-    _phillips_perron_native,
 )
+from macroforecast.data_summary import mackinnon_pp_pvalue, phillips_perron_test
 
 
 # ---------------------------------------------------------------------------
@@ -22,13 +21,13 @@ from macroforecast.core.runtime import (
 def test_mackinnon_pp_pvalue_calibrates_against_published_critical_values():
     # At the 5% critical value (~ -2.89 for n=100), the empirical p-value
     # should be approximately 0.05.
-    p = _mackinnon_pp_pvalue(-2.89, n=100, regression="c")
+    p = mackinnon_pp_pvalue(-2.89, n=100, regression="c")
     assert 0.04 <= p <= 0.06
     # Beyond the 1% critical value (~ -3.51 for n=100) -> p < 0.01.
-    p_strong = _mackinnon_pp_pvalue(-4.0, n=100, regression="c")
+    p_strong = mackinnon_pp_pvalue(-4.0, n=100, regression="c")
     assert p_strong < 0.01
     # Above the 10% critical value (~ -2.58 for n=100) -> p > 0.10.
-    p_weak = _mackinnon_pp_pvalue(-1.0, n=100, regression="c")
+    p_weak = mackinnon_pp_pvalue(-1.0, n=100, regression="c")
     assert p_weak > 0.10
 
 
@@ -36,7 +35,7 @@ def test_pp_native_uses_mackinnon_for_pvalue():
     """Random walk -> PP p-value should be > 0.05 (do not reject unit root)."""
     rng = np.random.default_rng(0)
     rw = np.cumsum(rng.normal(size=200))
-    res = _phillips_perron_native(rw, alpha=0.05)
+    res = phillips_perron_test(rw, alpha=0.05)
     assert res["p_value"] > 0.05
 
 
@@ -133,8 +132,8 @@ preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:
@@ -192,8 +191,8 @@ preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:
@@ -251,8 +250,8 @@ preprocessing:
   fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
 3_feature_engineering:
   nodes:
-    - {id: src_X, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_X, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
   sinks:

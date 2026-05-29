@@ -156,10 +156,8 @@ def test_saved_objects_includes_regime_when_active():
 
 def test_saved_objects_includes_diagnostic_layer_entries():
     recipe = {
-        "1_5_data_summary": {},
-        "2_5_pre_post_preprocessing": {},
         "3_5_feature_diagnostics": {},
         "4_5_generator_diagnostics": {},
     }
     derived = _derive_saved_objects(recipe, upstream_artifacts={})
-    assert {"diagnostics_l1_5", "diagnostics_l2_5", "diagnostics_l3_5", "diagnostics_l4_5"} <= derived
+    assert {"diagnostics_l3_5", "diagnostics_l4_5"} <= derived

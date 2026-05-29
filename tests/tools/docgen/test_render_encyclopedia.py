@@ -120,7 +120,7 @@ def test_browse_by_axis_lists_every_axis(tmp_path: Path) -> None:
 
 def test_diagnostic_layers_have_pages(tmp_path: Path) -> None:
     render_encyclopedia.write_all(tmp_path)
-    for layer_id in ("l1_5", "l2_5", "l3_5", "l4_5"):
+    for layer_id in ("l3_5", "l4_5"):
         assert (tmp_path / layer_id / "index.md").exists(), layer_id
         # Each diagnostic layer carries at least one axis (selection / scope).
         axis_files = list((tmp_path / layer_id / "axes").glob("*.md"))

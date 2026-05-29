@@ -25,7 +25,7 @@ Decomposition into the macroforecast vocabulary:
 | `||Dw||₂²` fused-ridge penalty over rank weights | future sub-axis on `ridge` (`penalty=fused_difference`); v0.9.x |
 | Albacore_comps target | recipe pattern: nonneg ridge on components Π_t against forward inflation |
 | Albacore_ranks target | recipe pattern: `asymmetric_trim` (L2 op) → nonneg ridge on order statistics |
-| `asymmetric_trim` rank-space transformation | new L2 op (this doc) |
+| `asymmetric_trim` rank-space transformation | new preprocessing op (this doc) |
 
 ## asymmetric_trim algorithm (B-6 spec)
 
@@ -72,7 +72,7 @@ where `D` is the difference operator and `O_t = sort(Π_t)`.
 
 ## Status
 
-Implemented in v0.8.9 (B-6) as an L2 op. The downstream
+Implemented in v0.8.9 (B-6) as an preprocessing op. The downstream
 `ridge(coefficient_constraint=nonneg)` is also in v0.8.9 (B-1), so the
 Albacore_ranks recipe runs end-to-end after sorting. The fused-ridge
 penalty (`||Dw||₂²`) on the weight differences across ranks is *not*

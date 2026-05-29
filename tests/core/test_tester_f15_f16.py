@@ -237,8 +237,8 @@ class TestF16MafPerVariablePca:
                         "id": "src_X",
                         "type": "source",
                         "selector": {
-                            "layer_ref": "l2",
-                            "sink_name": "l2_clean_panel_v1",
+                            "layer_ref": "preprocessing",
+                            "sink_name": "preprocessed_panel_v1",
                             "subset": {"role": "predictors"},
                         },
                     },
@@ -246,8 +246,8 @@ class TestF16MafPerVariablePca:
                         "id": "src_y",
                         "type": "source",
                         "selector": {
-                            "layer_ref": "l2",
-                            "sink_name": "l2_clean_panel_v1",
+                            "layer_ref": "preprocessing",
+                            "sink_name": "preprocessed_panel_v1",
                             "subset": {"role": "target"},
                         },
                     },

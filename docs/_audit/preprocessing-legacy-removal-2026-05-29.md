@@ -26,7 +26,7 @@ current public surface is the direct pandas API:
 
 ## Runtime Replacement
 
-`macroforecast.core.runtime.materialize_l2` no longer imports
+`macroforecast.core.runtime.materialize_preprocessing` no longer imports
 `macroforecast.preprocessing.schema`. It resolves the old `preprocessing`
 recipe block through a small local direct-default map so existing recipe
 execution can continue while the future YAML wrapper is designed around

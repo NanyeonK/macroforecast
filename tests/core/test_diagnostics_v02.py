@@ -47,37 +47,26 @@ def test_rolling_loss_writes_pdf(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# #213 L2.5 enrichments
+# #213 Data analysis enrichments
 # ---------------------------------------------------------------------------
 
-def test_l2_5_delta_matrix_when_axis_set():
-    import macroforecast
+def test_data_analysis_delta_matrix_when_axis_set():
+    from macroforecast.data_analysis import correlation_shift
 
-    recipe = """
-    0_meta:
-      fixed_axes:
-        failure_policy: fail_fast
-    data:
-      fixed_axes:
-        panel_composition: custom_panel_only
-        frequency: monthly
-        horizon_set: custom_list
-      leaf_config:
-        target: y
-        target_horizons: [1]
-        custom_panel_inline:
-          date: [2018-01-01, 2018-02-01, 2018-03-01, 2018-04-01, 2018-05-01, 2018-06-01, 2018-07-01, 2018-08-01]
-          y: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-          x1: [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
-    preprocessing:
-      fixed_axes: {transform_policy: no_transform, outlier_policy: none, imputation_policy: none_propagate, frame_edge_policy: keep_unbalanced}
-    2_5_pre_post_preprocessing:
-      enabled: true
-      fixed_axes:
-        correlation_shift: delta_matrix
-    """
-    result = macroforecast.core.runtime.execute_l1_l2(recipe)
-    diag = result.artifacts.get("l2_5_diagnostic_v1")
-    assert diag is not None
-    assert diag.enabled
-    assert "delta_matrix" in diag.metadata
+    frame = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, 4.0],
+            "x1": [1.0, 2.0, 1.0, 2.0],
+        }
+    )
+    cleaned = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, 4.0],
+            "x1": [1.0, 1.0, 2.0, 2.0],
+        }
+    )
+
+    delta = correlation_shift(frame, cleaned, fill_value=0.0)
+
+    assert delta.shape == (2, 2)
+    assert "x1" in delta.columns

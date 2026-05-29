@@ -1,7 +1,6 @@
 from .preprocess import (
     FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES,
     FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES,
-    PreprocessedData,
     apply_transform_codes,
     expand_fred_sd_transform_codes,
     fred_sd_transform_codes,
@@ -15,6 +14,7 @@ from .preprocess import (
     reprocess,
     report,
 )
+from .types import PreprocessedData, PreprocessInput
 from macroforecast.api.functions.clean import (
     apply_tcode_transform,
     drop_unbalanced_series_clean,
@@ -55,6 +55,7 @@ __all__ = [
     "plan",
     "report",
     "PreprocessedData",
+    "PreprocessInput",
     "apply_transform_codes",
     "fred_sd_transform_codes",
     "expand_fred_sd_transform_codes",

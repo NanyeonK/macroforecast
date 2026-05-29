@@ -6,7 +6,7 @@ This matrix describes current runtime behavior. When option docs and runtime dif
 | --- | --- |
 | L0 | `fail_fast` / `continue_on_failure`, seeded/exploratory, serial/parallel schema. |
 | L1 | FRED-MD, FRED-QD, FRED-SD, custom inline/path panels, current vintage. |
-| L2 | Mixed-frequency alignment, transform, outlier, imputation, frame-edge policies. |
+| preprocessing | Mixed-frequency alignment, transform, outlier, imputation, frame-edge policies. |
 | L3 | Feature pipelines and `target_construction`; `lag` is a universal op now enumerated in `option_docs/l3.py`. |
 | L4 | Model pipeline nodes; 42 documented model options; `ar_p` is the default model constant. |
 | L5 | Metrics include `mse`, `rmse`, `mae`, `medae`, `theil_u1`, `theil_u2`, direction, relative, and density metrics. |

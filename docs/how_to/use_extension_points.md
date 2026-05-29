@@ -10,7 +10,7 @@ re-exported from `macroforecast.custom` at the top-level `mf` namespace.
 | Extension point | What it changes | Decorator | Signature summary |
 |---|---|---|---|
 | `custom_model` | The forecasting estimator | `@mf.register_model(name)` | `fn(X_train, y_train, X_test, context) -> float` |
-| `custom_preprocessor` | The feature matrix after L2 construction | `@mf.custom_preprocessor(name)` | `fn(X_train, y_train, X_test, context) -> (X_train, X_test)` |
+| `custom_preprocessor` | The feature matrix after preprocessing construction | `@mf.custom_preprocessor(name)` | `fn(X_train, y_train, X_test, context) -> (X_train, X_test)` |
 | `target_transformer` | The training target (fit + inverse) | `@mf.target_transformer(name)` | class with `fit`, `transform`, `inverse_transform_prediction` |
 | `custom_feature_block` | An L3 pipeline step | `@mf.custom_feature_block(name, block_kind=...)` | `fn(frame, params) -> pd.DataFrame` |
 | `custom_feature_combiner` | How L3 blocks are merged | `@mf.custom_feature_combiner(name)` | `fn(inputs, params) -> pd.DataFrame` |
@@ -42,7 +42,7 @@ def demean_x(X_train, y_train, X_test, context):
     return X_train - col_means, X_test - col_means
 ```
 
-Wire in recipe L2 leaf_config: `custom_postprocessor: demean_x`
+Wire in recipe preprocessing leaf_config: `custom_postprocessor: demean_x`
 
 ### target_transformer
 
@@ -97,7 +97,7 @@ Before comparing a custom extension point against built-in baselines:
 
 - Keep L0 task axes (failure_policy, seed) identical across variants.
 - Keep L1 raw-data treatment (same panel, same horizons) identical.
-- Put representation changes in L2/L3, not inside a model closure.
+- Put representation changes in preprocessing/L3, not inside a model closure.
 - Put estimator changes in L4 (via `custom_model`), not inside a feature block.
 - Use identical split, horizon, benchmark, and evaluation settings across all cells.
 - Record all fitted choices in `fit_state` or `context` so the manifest is auditable.

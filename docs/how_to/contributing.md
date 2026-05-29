@@ -30,7 +30,7 @@ macroforecast/
   stat_tests/             # L6 forecast-comparison tests
   interpretation/         # L7 importance, attribution, IRF, interpretation methods
   output/                 # L8 artifact/provenance/export ops
-  diagnostics/            # L1.5/L2.5/L3.5/L4.5 diagnostic schemas
+  diagnostics/            # L1.5/Data diagnostic/L3.5/L4.5 diagnostic schemas
   core/                   # runtime, pipeline.py execution, registry, cache, manifest, validator
   layers/                 # compatibility aliases only; do not add new implementation here
   functions/              # backward-compatible shim to api/functions

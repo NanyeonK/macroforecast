@@ -49,7 +49,7 @@ L1 output:
 - source sheets and series metadata;
 - native-frequency report for selected FRED-SD series.
 
-L2 boundary:
+preprocessing boundary:
 
 - `fred_sd_mixed_frequency_representation` chooses calendar alignment,
   dropping policies, native-frequency block payloads, or mixed-frequency model

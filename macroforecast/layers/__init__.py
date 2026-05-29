@@ -9,6 +9,6 @@ from __future__ import annotations
 __all__ = [
     "l1_data", "l3_features",
     "l4_models", "l5_evaluation", "l6_tests", "l7_interpretation",
-    "l8_output", "l1_5_diagnostic", "l2_5_diagnostic",
-    "l3_5_diagnostic", "l4_5_diagnostic",
+    "l8_output", "l3_5_diagnostic",
+    "l4_5_diagnostic",
 ]

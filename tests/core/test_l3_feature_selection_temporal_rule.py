@@ -24,10 +24,10 @@ def _make_l3_yaml_with_feature_selection(temporal_rule=None):
   nodes:
     - id: src_x
       type: source
-      selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: predictors}}}}
+      selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: predictors}}}}
     - id: src_y
       type: source
-      selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: target}}}}
+      selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: target}}}}
     - id: x_final
       type: step
       op: feature_selection

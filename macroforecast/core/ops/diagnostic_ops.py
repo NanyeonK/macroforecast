@@ -9,9 +9,8 @@ from ..types import DataType, DiagnosticArtifact
 def _passthrough(name: str):
     """Diagnostic ops collect upstream payloads into a DiagnosticArtifact.
 
-    The actual diagnostic computations live in
-    :mod:`macroforecast.core.runtime` (e.g. ``materialize_l1_5_diagnostic``); this
-    op is the no-op DAG entry that records inputs + params so the cache can
+    The actual diagnostic computations live in :mod:`macroforecast.core.runtime`;
+    this op is the no-op DAG entry that records inputs + params so the cache can
     materialize the sink without raising.
     """
 
@@ -28,19 +27,6 @@ def _passthrough(name: str):
 
 
 for _name, _scope in (
-    ("diagnostic_collect_l1", ("l1_5",)),
-    ("l1_5_sample_coverage", ("l1_5",)),
-    ("l1_5_univariate_summary", ("l1_5",)),
-    ("l1_5_stationarity_tests", ("l1_5",)),
-    ("l1_5_missing_outlier_audit", ("l1_5",)),
-    ("l1_5_correlation_pre_cleaning", ("l1_5",)),
-    ("l1_5_diagnostic_export", ("l1_5",)),
-    ("diagnostic_collect_l2", ("l2_5",)),
-    ("l2_5_comparison_axis", ("l2_5",)),
-    ("l2_5_distribution_shift", ("l2_5",)),
-    ("l2_5_correlation_shift", ("l2_5",)),
-    ("l2_5_cleaning_effect_summary", ("l2_5",)),
-    ("l2_5_diagnostic_export", ("l2_5",)),
     ("diagnostic_collect_l3", ("l3_5",)),
     ("l3_5_comparison_axis", ("l3_5",)),
     ("l3_5_factor_block_inspection", ("l3_5",)),

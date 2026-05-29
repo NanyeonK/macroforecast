@@ -32,7 +32,7 @@ merged with the adjacent layer?"
 ## Design: 9 Main Layers Plus 4 Diagnostic Slots (13 Slots Total)
 
 The full canonical flow has 13 named slots: 9 main layers (L0 through L8)
-plus 4 diagnostic half-layers (L1.5, L2.5, L3.5, L4.5). These 13 slots
+plus 4 diagnostic half-layers (L1.5, Data diagnostic, L3.5, L4.5). These 13 slots
 are not 13 equally important compartments.
 The diagnostic half-layers are a different kind of thing from the main
 sequence. Separating them from the main flow is itself a design decision,
@@ -73,16 +73,16 @@ regime interactions), L5 (evaluation aggregation by regime), and L6
 (conditional DM tests). This cross-layer propagation is only clean if regimes
 are defined once, at the data boundary, before any layer reads them.
 
-### L2: The Preprocessing Boundary
+### Preprocessing Boundary
 
-L2 (`2_preprocessing`) separates *cleaning* from *feature engineering*. It
+`preprocessing` separates *cleaning* from *feature engineering*. It
 owns transformations applied to the raw panel: outlier treatment, imputation,
 frequency alignment, and frame-edge handling.
 
-Without L2 as a distinct boundary, a model's built-in scaler or
+Without preprocessing as a distinct boundary, a model's built-in scaler or
 missing-value imputer is part of the comparison but is not tracked anywhere.
 Two models that appear to use the same features may have received differently
-scaled inputs because their internal preprocessing differed. L2 ensures that
+scaled inputs because their internal preprocessing differed. Preprocessing ensures that
 every cleaning operation is declared in the recipe, is applied uniformly to
 all downstream layers, and is recorded in the manifest.
 
@@ -180,7 +180,7 @@ Every completed run produces a manifest that describes exactly what was
 written and when. The manifest is always consistent with the artifacts because
 L8 runs last.
 
-### L1.5 / L2.5 / L3.5 / L4.5: Diagnostic Hooks
+### L1.5 / Data diagnostic / L3.5 / L4.5: Diagnostic Hooks
 
 The four diagnostic half-layers are default off for a specific reason: they
 must not mutate the construction sinks of the main sequence. A diagnostic
@@ -199,10 +199,10 @@ in it.
 ```text
 flowchart LR
     L0([L0: setup]) --> L1
-    L1([L1: data]) --> L2
+    L1([L1: data]) --> PRE([preprocessing])
     L1 --> L1_5([L1.5 diag])
-    L2([L2: preproc]) --> L3
-    L2 --> L2_5([L2.5 diag])
+    PRE --> L3
+    PRE --> PRE_DIAG([pre/post preprocessing diag])
     L3([L3: features pipeline]) --> L4
     L3 --> L3_5([L3.5 diag])
     L4([L4: model pipeline]) --> L5
@@ -211,7 +211,7 @@ flowchart LR
     L6([L6: tests]) --> L7
     L7([L7: interp pipeline]) --> L8([L8: output])
     style L1_5 stroke-dasharray: 5 5
-    style L2_5 stroke-dasharray: 5 5
+    style PRE_DIAG stroke-dasharray: 5 5
     style L3_5 stroke-dasharray: 5 5
     style L4_5 stroke-dasharray: 5 5
     style L6 stroke-dasharray: 5 5
@@ -292,7 +292,7 @@ across all the layers that use them.
 ## Custom Extensions Are First-Class
 
 The layer contract is a specification, not a closed list of built-in
-implementations. A custom L2 preprocessor registered via
+implementations. A custom preprocessing preprocessor registered via
 `macroforecast.custom.register_preprocessor`, or a custom L3 feature
 callable registered via `macroforecast.custom.register_op`, is treated
 identically to a built-in operation. It goes through the same boundary check,

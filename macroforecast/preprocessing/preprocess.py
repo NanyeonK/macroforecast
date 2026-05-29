@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field, replace
+from dataclasses import replace
 from typing import Any
 import warnings
 
@@ -29,31 +29,8 @@ from macroforecast.data import (
     panel_info,
     validate_panel,
 )
+from macroforecast.preprocessing.types import PreprocessedData, PreprocessInput, _InputBundle
 
-
-@dataclass(frozen=True)
-class PreprocessedData:
-    """Cleaned macroforecast panel plus metadata and data-spec choices."""
-
-    panel: pd.DataFrame
-    metadata: dict[str, Any] = field(default_factory=dict)
-    target: str | None = None
-    targets: tuple[str, ...] = ()
-    horizons: tuple[int, ...] = ()
-    start: str | None = None
-    end: str | None = None
-    predictors: Any = "all"
-    steps: tuple[dict[str, Any], ...] = ()
-
-    def __iter__(self):
-        yield self.panel
-        yield self.metadata
-
-    def attach(self, stage: str, values: Mapping[str, Any]) -> PreprocessedData:
-        return replace(self, metadata=attach_metadata(self.metadata, stage, values))
-
-
-PreprocessInput = PreprocessedData | DataSpec | DataBundle | tuple[pd.DataFrame, Mapping[str, Any]] | pd.DataFrame
 
 FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES: dict[str, int] = {
     "CONS": 5,
@@ -595,18 +572,6 @@ def handle_frame_edges(panel: pd.DataFrame, *, method: str = "keep") -> pd.DataF
     raise ValueError(f"unknown frame method {method!r}")
 
 
-@dataclass(frozen=True)
-class _InputBundle:
-    panel: pd.DataFrame
-    metadata: dict[str, Any]
-    target: str | None = None
-    targets: tuple[str, ...] = ()
-    horizons: tuple[int, ...] = ()
-    start: str | None = None
-    end: str | None = None
-    predictors: Any = "all"
-
-
 def _coerce_input(data: PreprocessInput, *, metadata: Mapping[str, Any] | None = None) -> _InputBundle:
     if isinstance(data, PreprocessedData):
         base = _InputBundle(
@@ -1097,6 +1062,7 @@ def _aggregate_resample(series: pd.Series, rule: str, *, frequency: str, aliases
 
 __all__ = [
     "PreprocessedData",
+    "PreprocessInput",
     "reprocess",
     "preprocess",
     "plan",

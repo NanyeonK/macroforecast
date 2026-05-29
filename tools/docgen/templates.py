@@ -33,7 +33,7 @@ def ridge_baseline(*, target: str = "y") -> RecipeBuilder:
     }
     b = RecipeBuilder()
     b.l1.custom_panel(target=target, panel=panel)
-    b.l2.no_op()
+    b.preprocessing.no_op()
     b.l3.lag_only(n_lag=1)
     b.l4.fit("ridge", alpha=0.1, min_train_size=4)
     b.l5.standard()
@@ -46,7 +46,7 @@ def horse_race_md(*, target: str = "CPIAUCSL") -> RecipeBuilder:
 
     b = RecipeBuilder()
     b.l1.fred_md(target=target)
-    b.l2.standard()
+    b.preprocessing.standard()
     b.l3.lag_only(n_lag=6)
     b.l4.fit("ridge", alpha=1.0).is_benchmark()
     b.l4.fit("random_forest", n_estimators=100, max_depth=6)
@@ -67,7 +67,7 @@ def regime_conditional(*, target: str = "INDPRO") -> RecipeBuilder:
         regime_estimation_temporal_rule="expanding_window_per_origin",
         n_regimes=2,
     )
-    b.l2.standard()
+    b.preprocessing.standard()
     b.l3.lag_only(n_lag=6)
     b.l4.fit("ridge", alpha=1.0)
     b.l5.standard()
@@ -85,7 +85,7 @@ def fred_md_replication(*, target: str = "CPIAUCSL", horizon_set: str = "standar
 
     b = RecipeBuilder()
     b.l1.fred_md(target=target, horizon_set=horizon_set)
-    b.l2.standard()
+    b.preprocessing.standard()
     b.l3.lag_only(n_lag=12)
     b.l4.fit("ridge", alpha=1.0).is_benchmark()
     b.l4.fit("ar_p", n_lag=12)
@@ -110,7 +110,7 @@ def fred_sd_geographic(*, target: str = "PAYEMS") -> RecipeBuilder:
         predictor_geography_policy="all_states",
         fred_sd_state_group="all_states",
     )
-    b.l2.standard()
+    b.preprocessing.standard()
     b.l3.lag_only(n_lag=6)
     b.l4.fit("ridge", alpha=1.0)
     b.l5.standard()

@@ -30,7 +30,7 @@ metadata:
   nodes:
     - id: src_clean
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1}
     - id: lag_x
       type: step
       op: lag
@@ -99,7 +99,7 @@ def test_layer_spec_dataclasses_and_checklist() -> None:
 
     assert axis.sweepable is True
     assert LAYER_SPEC_CHECKLIST[0] == "Layer ID, name, category"
-    assert PHASE1_IMPLEMENTATION_ORDER[:3] == ("l0", "l1", "l2")
+    assert PHASE1_IMPLEMENTATION_ORDER[:3] == ("l0", "l1", "preprocessing")
 
 
 def test_test_scaffolding_fixtures(mock_fred_md, mock_clean_panel, mock_model_artifact_xgboost) -> None:

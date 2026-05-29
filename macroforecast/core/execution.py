@@ -34,9 +34,7 @@ L0_KEY = "0_meta"
 _KNOWN_RECIPE_TOP_LEVEL_KEYS: frozenset[str] = frozenset({
     "0_meta",
     "data",
-    "1_5_data_summary",
     "preprocessing",
-    "2_5_pre_post_preprocessing",
     "3_feature_engineering",
     "3_5_feature_diagnostics",
     "4_forecasting_model",
@@ -742,14 +740,14 @@ class ManifestExecutionResult:
         _sample_start_resolved = None
         _sample_end_resolved = None
         _l1_art = None
-        _l2_art = None
+        _preprocessed_art = None
         for _cell in self.cells:
             if _cell.runtime_result is not None:
                 _arts = getattr(_cell.runtime_result, "artifacts", None) or {}
                 _l1_cand = _arts.get("l1_data_definition_v1")
                 if _l1_cand is not None:
                     _l1_art = _l1_cand
-                    _l2_art = _arts.get("l2_clean_panel_v1")
+                    _preprocessed_art = _arts.get("preprocessed_panel_v1")
                     break
         if _l1_art is not None:
             # FRED data_through → auto-populate data_revision_tag when not already set
@@ -765,16 +763,16 @@ class ManifestExecutionResult:
                     _data_revision_tag = f"fred-md@{_dt}"
                 else:
                     _data_revision_tag = f"current@{_dt}"
-            # Post-L2 sample window
-            # Prefer l2_clean_panel_v1.panel.data (post-window) over raw_panel
+            # Post-preprocessing sample window
+            # Prefer preprocessed_panel_v1.panel.data (post-window) over raw_panel
             import pandas as _pd_k3
             _post_window_idx = None
-            if _l2_art is not None and hasattr(_l2_art, "panel") and _l2_art.panel is not None:
-                _l2_panel_data = getattr(_l2_art.panel, "data", None)
-                if _l2_panel_data is not None and hasattr(_l2_panel_data, "index") and len(_l2_panel_data.index):
-                    _post_window_idx = _l2_panel_data.index
+            if _preprocessed_art is not None and hasattr(_preprocessed_art, "panel") and _preprocessed_art.panel is not None:
+                _preprocessed_panel_data = getattr(_preprocessed_art.panel, "data", None)
+                if _preprocessed_panel_data is not None and hasattr(_preprocessed_panel_data, "index") and len(_preprocessed_panel_data.index):
+                    _post_window_idx = _preprocessed_panel_data.index
             if _post_window_idx is None and hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
-                # fallback to raw_panel if no L2 artifact
+                # fallback to raw_panel if no preprocessed artifact
                 _idx_data = getattr(_l1_art.raw_panel, "data", None)
                 if _idx_data is not None and hasattr(_idx_data, "index") and len(_idx_data.index):
                     _post_window_idx = _idx_data.index

@@ -86,8 +86,8 @@ def test_l3_cascade_max_depth_unit_level():
             self.inputs = inputs
             self.params = params or {}
             self.selector = SimpleNamespace(
-                layer_ref="l2",
-                sink_name="l2_clean_panel_v1",
+                layer_ref="preprocessing",
+                sink_name="preprocessed_panel_v1",
                 subset={"role": "predictors"},
             )
 
@@ -130,7 +130,7 @@ def test_l3_cascade_pipeline_id_propagates_through_steps():
             self.inputs = inputs
             self.params = params or {}
             self.selector = SimpleNamespace(
-                layer_ref="l2", sink_name="l2_clean_panel_v1", subset={"role": "predictors"}
+                layer_ref="preprocessing", sink_name="preprocessed_panel_v1", subset={"role": "predictors"}
             )
 
     nodes_dict = {

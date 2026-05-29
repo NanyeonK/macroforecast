@@ -26,7 +26,7 @@ pytestmark = pytest.mark.slow
 
 def _custom_panel_recipe(target: str, n_lag: int = 4, family: str = "ridge") -> str:
     """Build a recipe that loads the realistic FRED-MD CSV via custom_panel,
-    runs L2 cleaning + L3 lag + L4 fit + L5 metrics."""
+    runs preprocessing + L3 lag + L4 fit + L5 metrics."""
 
     return f"""
 0_meta:
@@ -54,8 +54,8 @@ preprocessing:
     frame_edge_policy: truncate_to_balanced
 3_feature_engineering:
   nodes:
-    - {{id: src_X, type: source, selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: predictors}}}}}}
-    - {{id: src_y, type: source, selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: target}}}}}}
+    - {{id: src_X, type: source, selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: predictors}}}}}}
+    - {{id: src_y, type: source, selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: target}}}}}}
     - {{id: lag_x, type: step, op: lag, params: {{n_lag: {n_lag}}}, inputs: [src_X]}}
     - {{id: y_h, type: step, op: target_construction, params: {{mode: point_forecast, method: direct, horizon: 1}}, inputs: [src_y]}}
   sinks:

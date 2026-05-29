@@ -39,8 +39,6 @@ from sklearn.tree import DecisionTreeRegressor
 import macroforecast.stat_tests.schema as l6_layer
 import macroforecast.interpretation.schema as l7_layer
 import macroforecast.output.schema as l8_layer
-import macroforecast.diagnostics.data_summary.schema as l1_5_layer
-import macroforecast.diagnostics.preprocessing.schema as l2_5_layer
 import macroforecast.diagnostics.features.schema as l3_5_layer
 import macroforecast.diagnostics.generator.schema as l4_5_layer
 import macroforecast.features.schema as l3_layer
@@ -59,7 +57,7 @@ from .types import (
     DiagnosticArtifact,
     L1DataDefinitionArtifact,
     L1RegimeMetadataArtifact,
-    L2CleanPanelArtifact,
+    PreprocessedPanelArtifact,
     L3FeaturesArtifact,
     L3MetadataArtifact,
     L4ForecastsArtifact,
@@ -94,12 +92,11 @@ class RuntimeResult:
         return self.artifacts[name]
 
 
-def execute_l1_l2(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
-    """Materialize L1 and L2 sinks for custom-panel recipes.
+def execute_data_preprocessing(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
+    """Materialize data and preprocessing sinks for custom-panel recipes.
 
-    This is the first runtime bridge behind the schema contracts. It is
-    intentionally narrow: official FRED loading, real-time vintages, EM
-    imputation, and advanced frequency alignment stay in later runtime PRs.
+    This direct pandas path resolves the data block, applies the preprocessing
+    block, and returns the artifacts downstream feature code consumes.
     """
 
     root = (
@@ -108,23 +105,16 @@ def execute_l1_l2(recipe_yaml_or_root: str | dict[str, Any]) -> RuntimeResult:
         else recipe_yaml_or_root
     )
     l1_artifact, regime_artifact, l1_axes = materialize_l1(root)
-    l2_artifact, l2_axes = materialize_l2(root, l1_artifact)
+    preprocessed_artifact, preprocessing_axes = materialize_preprocessing(root, l1_artifact)
     artifacts: dict[str, Any] = {
         "l1_data_definition_v1": l1_artifact,
         "l1_regime_metadata_v1": regime_artifact,
-        "l2_clean_panel_v1": l2_artifact,
+        "preprocessed_panel_v1": preprocessed_artifact,
     }
-    resolved_axes: dict[str, dict[str, Any]] = {"l1": l1_axes, "l2": dict(l2_axes)}
-    if "1_5_data_summary" in root:
-        l1_5_artifact, l1_5_axes = materialize_l1_5_diagnostic(root, l1_artifact)
-        artifacts["l1_5_diagnostic_v1"] = l1_5_artifact
-        resolved_axes["l1_5"] = l1_5_axes
-    if "2_5_pre_post_preprocessing" in root:
-        l2_5_artifact, l2_5_axes = materialize_l2_5_diagnostic(
-            root, l1_artifact, l2_artifact
-        )
-        artifacts["l2_5_diagnostic_v1"] = l2_5_artifact
-        resolved_axes["l2_5"] = l2_5_axes
+    resolved_axes: dict[str, dict[str, Any]] = {
+        "l1": l1_axes,
+        "preprocessing": dict(preprocessing_axes),
+    }
     return RuntimeResult(
         artifacts=artifacts,
         resolved_axes=resolved_axes,
@@ -152,9 +142,17 @@ def execute_minimal_forecast(
         return result
 
     l1_artifact, regime_artifact, l1_axes = _timed("l1", lambda: materialize_l1(root))
-    l2_artifact, l2_axes = _timed("l2", lambda: materialize_l2(root, l1_artifact))
+    preprocessed_artifact, preprocessing_axes = _timed(
+        "preprocessing", lambda: materialize_preprocessing(root, l1_artifact)
+    )
     l3_features, l3_metadata = _timed(
-        "l3", lambda: materialize_l3_minimal(root, l1_artifact, l2_artifact, l2_resolved=l2_axes)
+        "l3",
+        lambda: materialize_l3_minimal(
+            root,
+            l1_artifact,
+            preprocessed_artifact,
+            preprocessing_resolved=preprocessing_axes,
+        ),
     )
     l4_forecasts, l4_models, l4_training = _timed(
         "l4", lambda: materialize_l4_minimal(root, l3_features)
@@ -168,7 +166,7 @@ def execute_minimal_forecast(
     artifacts: dict[str, Any] = {
         "l1_data_definition_v1": l1_artifact,
         "l1_regime_metadata_v1": regime_artifact,
-        "l2_clean_panel_v1": l2_artifact,
+        "preprocessed_panel_v1": preprocessed_artifact,
         "l3_features_v1": l3_features,
         "l3_metadata_v1": l3_metadata,
         "l4_forecasts_v1": l4_forecasts,
@@ -178,26 +176,14 @@ def execute_minimal_forecast(
     }
     resolved_axes: dict[str, dict[str, Any]] = {
         "l1": l1_axes,
-        "l2": dict(l2_axes),
+        "preprocessing": dict(preprocessing_axes),
         "l5": dict(l5_eval.l5_axis_resolved),
     }
-    if "1_5_data_summary" in root:
-        l1_5_artifact, l1_5_axes = _timed(
-            "l1_5", lambda: materialize_l1_5_diagnostic(root, l1_artifact)
-        )
-        artifacts["l1_5_diagnostic_v1"] = l1_5_artifact
-        resolved_axes["l1_5"] = l1_5_axes
-    if "2_5_pre_post_preprocessing" in root:
-        l2_5_artifact, l2_5_axes = _timed(
-            "l2_5", lambda: materialize_l2_5_diagnostic(root, l1_artifact, l2_artifact)
-        )
-        artifacts["l2_5_diagnostic_v1"] = l2_5_artifact
-        resolved_axes["l2_5"] = l2_5_axes
     if "3_5_feature_diagnostics" in root:
         l3_5_artifact, l3_5_axes = _timed(
             "l3_5",
             lambda: materialize_l3_5_diagnostic(
-                root, l1_artifact, l2_artifact, l3_features, l3_metadata
+                root, l1_artifact, preprocessed_artifact, l3_features, l3_metadata
             ),
         )
         artifacts["l3_5_diagnostic_v1"] = l3_5_artifact
@@ -677,7 +663,7 @@ def _apply_release_lag(
                 result[col] = result[col].shift(int(lag))
     return result
 
-_L2_DIRECT_DEFAULTS: dict[str, Any] = {
+_PREPROCESSING_DIRECT_DEFAULTS: dict[str, Any] = {
     "sd_series_frequency_filter": "both",
     "mixed_frequency_representation": "calendar_aligned_frame",
     "quarterly_to_monthly_policy": "step_backward",
@@ -691,7 +677,7 @@ _L2_DIRECT_DEFAULTS: dict[str, Any] = {
     "frame_edge_policy": "truncate_to_balanced",
 }
 
-_L2_ALLOWED_DIRECT_VALUES: dict[str, set[str]] = {
+_PREPROCESSING_ALLOWED_DIRECT_VALUES: dict[str, set[str]] = {
     "sd_series_frequency_filter": {"monthly_only", "quarterly_only", "both"},
     "mixed_frequency_representation": {
         "calendar_aligned_frame",
@@ -719,43 +705,43 @@ _L2_ALLOWED_DIRECT_VALUES: dict[str, set[str]] = {
 }
 
 
-def _resolve_l2_direct_axes(raw: dict[str, Any]) -> dict[str, Any]:
+def _resolve_preprocessing_direct_axes(raw: dict[str, Any]) -> dict[str, Any]:
     fixed_axes = raw.get("fixed_axes", {}) or {}
     if not isinstance(fixed_axes, dict):
         raise ValueError("preprocessing.fixed_axes must be a mapping")
-    resolved = dict(_L2_DIRECT_DEFAULTS)
-    unknown = sorted(set(fixed_axes) - set(_L2_DIRECT_DEFAULTS))
+    resolved = dict(_PREPROCESSING_DIRECT_DEFAULTS)
+    unknown = sorted(set(fixed_axes) - set(_PREPROCESSING_DIRECT_DEFAULTS))
     if unknown:
         raise ValueError(f"preprocessing.fixed_axes contains unknown keys: {unknown}")
     for key, value in fixed_axes.items():
         if isinstance(value, dict) and "sweep" in value:
             raise ValueError(f"preprocessing.fixed_axes.{key} must be materialized before runtime; got sweep")
         text = str(value)
-        allowed = _L2_ALLOWED_DIRECT_VALUES[key]
+        allowed = _PREPROCESSING_ALLOWED_DIRECT_VALUES[key]
         if text not in allowed:
             raise ValueError(f"preprocessing.fixed_axes.{key} must be one of {sorted(allowed)}; got {value!r}")
         resolved[key] = text
     return resolved
 
 
-def materialize_l2(
+def materialize_preprocessing(
     recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact
-) -> tuple[L2CleanPanelArtifact, dict[str, Any]]:
+) -> tuple[PreprocessedPanelArtifact, dict[str, Any]]:
     raw = recipe_root.get("preprocessing", {}) or {}
     leaf_config = raw.get("leaf_config", {}) or {}
-    resolved = _resolve_l2_direct_axes(raw)
+    resolved = _resolve_preprocessing_direct_axes(raw)
     df = l1_artifact.raw_panel.data.copy()
     if df.empty:
         raise ValueError(
-            "L1 raw_panel is empty; L2 materialization requires custom panel data"
+            "data raw_panel is empty; preprocessing requires panel data"
         )
 
     cleaning_log: dict[str, Any] = {
-        "runtime": "core_l1_l2_materialization",
+        "runtime": "core_data_preprocessing_materialization",
         "steps": [],
     }
 
-    # v0.8.6 Gap 1 -- pre-pipeline custom L2 preprocessor hook.
+    # v0.8.6 Gap 1 -- pre-pipeline custom preprocessing hook.
     # ``leaf_config.custom_preprocessor`` accepts a name registered via
     # ``macroforecast.custom.register_preprocessor``. Runs *before* the
     # transform / outlier / impute / frame_edge stages so users can
@@ -766,7 +752,7 @@ def materialize_l2(
     # panel and produces the L3-ready clean panel.
     pre_name = leaf_config.get("custom_preprocessor")
     if pre_name:
-        pre_result = _try_custom_l2_preprocessor(str(pre_name), df, leaf_config)
+        pre_result = _try_custom_preprocessor(str(pre_name), df, leaf_config)
         if pre_result is not None:
             df = pre_result
             cleaning_log["steps"].append(
@@ -795,19 +781,21 @@ def materialize_l2(
     # is per-origin; the per-origin helpers are called inside the L3
     # _per_origin_callable closure so stats are computed on data up to each
     # origin only (no lookahead leakage).
-    _l2_imputation_temporal = resolved.get("imputation_temporal_rule", "expanding_window_per_origin")
+    _preprocessing_imputation_temporal = resolved.get(
+        "imputation_temporal_rule", "expanding_window_per_origin"
+    )
     # v0.9.3: NaN-dropping frame_edge policies must also be deferred when
     # imputation is deferred, because dropping NaNs before per-origin imputation
     # silently discards rows that would be filled later (forward_fill / mean).
     # Non-NaN-dropping policies (keep_unbalanced, zero_fill_leading) are
-    # independent of imputation order and can still run at L2 bulk level.
+    # independent of imputation order and can still run at preprocessing bulk level.
     _nan_dropping_frame_policies = {"truncate_to_balanced", "drop_unbalanced_series"}
     _frame_edge_policy = resolved.get("frame_edge_policy", "keep_unbalanced")
     _defer_frame_edge = (
-        _l2_imputation_temporal == "expanding_window_per_origin"
+        _preprocessing_imputation_temporal == "expanding_window_per_origin"
         and _frame_edge_policy in _nan_dropping_frame_policies
     )
-    if _l2_imputation_temporal == "expanding_window_per_origin":
+    if _preprocessing_imputation_temporal == "expanding_window_per_origin":
         # Deferred to per-origin closure in materialize_l3_minimal.
         n_outliers = 0
         n_imputed = 0
@@ -822,13 +810,13 @@ def materialize_l2(
     else:
         df, n_truncated = _apply_frame_edge(df, resolved, cleaning_log)
 
-    # Issue #251 -- post-pipeline custom L2 preprocessor hook.
+    # Issue #251 -- post-pipeline custom preprocessing hook.
     # ``leaf_config.custom_postprocessor`` accepts a name registered via
     # ``macroforecast.custom.register_preprocessor``. Runs *after* the
-    # builtin pipeline so its output is the L2 clean panel.
+    # builtin pipeline so its output is the preprocessed panel.
     custom_name = leaf_config.get("custom_postprocessor")
     if custom_name:
-        post_result = _try_custom_l2_preprocessor(str(custom_name), df, leaf_config)
+        post_result = _try_custom_preprocessor(str(custom_name), df, leaf_config)
         if post_result is not None:
             df = post_result
             cleaning_log["steps"].append(
@@ -836,9 +824,9 @@ def materialize_l2(
             )
 
     panel = _panel_from_frame(
-        df, metadata={"stage": "l2_clean", "source": "l1_raw_panel"}
+        df, metadata={"stage": "preprocessed", "source": "data_raw_panel"}
     )
-    artifact = L2CleanPanelArtifact(
+    artifact = PreprocessedPanelArtifact(
         panel=panel,
         shape=panel.shape,
         column_names=panel.column_names,
@@ -860,377 +848,11 @@ def materialize_l2(
     return artifact, resolved
 
 
-def materialize_l1_5_diagnostic(
-    recipe_root: dict[str, Any], l1_artifact: L1DataDefinitionArtifact
-) -> tuple[DiagnosticArtifact, dict[str, Any]]:
-    raw = recipe_root.get("1_5_data_summary", {}) or {}
-    context = {"regime_active": l1_artifact.regime_definition != "none"}
-    report = l1_5_layer.validate_layer(raw, context=context)
-    if report.has_hard_errors:
-        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-    resolved = l1_5_layer.resolve_axes_from_raw(raw, context=context)
-    axes = _plain_axes(resolved)
-    if not resolved.get("enabled", False):
-        return _disabled_diagnostic("l1", axes), axes
-    frame = l1_artifact.raw_panel.data.copy()
-    metadata = {
-        "runtime": "core_l1_5_diagnostic",
-        "axis_resolved": axes,
-        "sample_coverage": _diagnostic_sample_coverage(frame),
-        "univariate_summary": _diagnostic_univariate_summary(
-            frame, axes.get("summary_metrics", [])
-        ),
-        "missing_outlier_audit": _diagnostic_missing_outlier_audit(
-            frame, axes.get("leaf_config", {})
-        ),
-    }
-    if axes.get("correlation_view") != "none":
-        metadata["correlation"] = frame.corr(
-            method=axes.get("correlation_method", "pearson"), numeric_only=True
-        )
-    stationarity_test = axes.get("stationarity_test", "none")
-    if stationarity_test != "none":
-        metadata["stationarity_tests"] = _diagnostic_stationarity_tests(
-            frame=frame,
-            test=stationarity_test,
-            scope=axes.get("stationarity_test_scope", "target_and_predictors"),
-            target=l1_artifact.target,
-            targets=l1_artifact.targets,
-            alpha=float(
-                (axes.get("leaf_config") or {}).get("stationarity_alpha", 0.05)
-            ),
-        )
-    return (
-        DiagnosticArtifact(
-            layer_hooked="l1",
-            artifact_type="json",
-            metadata=metadata,
-            enabled=True,
-        ),
-        axes,
-    )
-
-
-def _diagnostic_stationarity_tests(
-    frame: pd.DataFrame,
-    test: str,
-    scope: str,
-    target: str | None,
-    targets: tuple[str, ...],
-    alpha: float = 0.05,
-) -> dict[str, Any]:
-    """Run ADF / Phillips-Perron / KPSS on each in-scope series.
-
-    ``test``: ``"adf" | "pp" | "kpss" | "multi"``. ``"multi"`` runs all
-    three. Phillips-Perron is dispatched via ``arch.unitroot.PhillipsPerron``
-    when available, otherwise it is reported as ``unavailable`` (the design
-    table notes the dependency)."""
-
-    target_names = set(filter(None, list(targets) + ([target] if target else [])))
-    if scope == "target_only":
-        cols = [c for c in frame.columns if c in target_names]
-    elif scope == "predictors_only":
-        cols = [c for c in frame.columns if c not in target_names]
-    else:
-        cols = list(frame.columns)
-
-    tests = ("adf", "pp", "kpss") if test == "multi" else (test,)
-    results: dict[str, dict[str, Any]] = {}
-    for col in cols:
-        series = pd.to_numeric(frame[col], errors="coerce").dropna()
-        if series.size < 12 or series.std(ddof=0) == 0:
-            results[col] = {"status": "insufficient_data", "n_obs": int(series.size)}
-            continue
-        col_result: dict[str, Any] = {"n_obs": int(series.size)}
-        for name in tests:
-            try:
-                col_result[name] = _run_stationarity(name, series, alpha)
-            except Exception as exc:  # pragma: no cover - defensive
-                col_result[name] = {"status": "error", "error": str(exc)}
-        results[col] = col_result
-    return {
-        "test": test,
-        "scope": scope,
-        "alpha": alpha,
-        "n_series": len(cols),
-        "by_series": results,
-    }
-
-
-def _run_stationarity(name: str, series: pd.Series, alpha: float) -> dict[str, Any]:
-    if name == "adf":
-        from statsmodels.tsa.stattools import adfuller
-
-        stat, pvalue, *_ = adfuller(series.values, autolag="AIC")
-        return {
-            "statistic": float(stat),
-            "p_value": float(pvalue),
-            "reject_unit_root": bool(pvalue < alpha),
-        }
-    if name == "kpss":
-        from statsmodels.tsa.stattools import kpss as _kpss
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            stat, pvalue, *_ = _kpss(series.values, regression="c", nlags="auto")
-        # KPSS null = stationarity; "reject_stationarity" when p < alpha.
-        return {
-            "statistic": float(stat),
-            "p_value": float(pvalue),
-            "reject_stationarity": bool(pvalue < alpha),
-        }
-    if name == "pp":
-        # Phillips-Perron (1988): regress y_t on (constant, y_{t-1}); compute the
-        # Newey-West HAC variance of the residuals to correct the t-statistic for
-        # rho - 1. Native implementation -- no ``arch`` dependency required. The
-        # ``arch`` fast path is preserved when installed for cross-validation.
-        try:
-            from arch.unitroot import PhillipsPerron  # type: ignore
-
-            pp = PhillipsPerron(series.values, trend="c")
-            return {
-                "statistic": float(pp.stat),
-                "p_value": float(pp.pvalue),
-                "reject_unit_root": bool(pp.pvalue < alpha),
-                "implementation": "arch",
-            }
-        except ImportError:
-            pass
-        result = _phillips_perron_native(series.values, alpha=alpha)
-        result["implementation"] = "native"
-        return result
-    return {"status": "unknown_test", "test": name}
-
-
-def _phillips_perron_native(y: np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
-    """Phillips-Perron (1988) Z_tau test, native numpy/scipy implementation.
-
-    Regress ``y_t = alpha + rho * y_{t-1} + eps_t`` by OLS, then compute the
-    Newey-West HAC variance of the residuals and adjust the t-statistic on
-    ``rho - 1``. Critical values are MacKinnon (2010) one-sided 5% / 1% / 10%
-    for the constant-only specification.
-    """
-
-    y = np.asarray(y, dtype=float)
-    n = y.size
-    if n < 8:
-        return {"status": "insufficient_data", "n_obs": int(n)}
-    y_t = y[1:]
-    y_lag = y[:-1]
-    # OLS: y_t = a + rho * y_{t-1} + eps_t
-    X = np.column_stack([np.ones(n - 1), y_lag])
-    XtX = X.T @ X
-    try:
-        XtX_inv = np.linalg.inv(XtX)
-    except np.linalg.LinAlgError:
-        return {"status": "singular_design", "n_obs": int(n)}
-    coef = XtX_inv @ X.T @ y_t
-    rho = float(coef[1])
-    resid = y_t - X @ coef
-    # OLS sigma_hat^2.
-    sigma2 = float((resid @ resid) / max(n - 2 - 1, 1))
-    # Newey-West long-run variance of residuals.
-    bandwidth = max(1, int(np.floor(4 * (n / 100.0) ** (2.0 / 9.0))))
-    gamma0 = float(np.dot(resid, resid) / n)
-    lr_var = gamma0
-    for lag in range(1, bandwidth + 1):
-        weight = 1.0 - lag / (bandwidth + 1)
-        cov = float(np.dot(resid[lag:], resid[:-lag]) / n)
-        lr_var += 2.0 * weight * cov
-    # Phillips-Perron Z_tau adjustment to the OLS t-stat on (rho - 1):
-    se_rho = float(np.sqrt(sigma2 * XtX_inv[1, 1]))
-    t_rho = (rho - 1.0) / se_rho
-    z_tau = float(
-        np.sqrt(gamma0 / max(lr_var, 1e-12)) * t_rho
-        - 0.5
-        * (lr_var - gamma0)
-        * np.sqrt(n)
-        * np.sqrt(XtX_inv[1, 1])
-        / np.sqrt(max(lr_var, 1e-12))
-    )
-    # Issue #273 -- MacKinnon (2010) finite-sample p-value via the
-    # published response-surface coefficients (constant-only spec).
-    # The asymptotic distribution is non-standard; we interpolate the
-    # critical values from MacKinnon (2010) Table 2 and recover an
-    # empirical p-value by inverting the implied CDF.
-    p_value = _mackinnon_pp_pvalue(z_tau, n=n, regression="c")
-    return {
-        "statistic": z_tau,
-        "p_value": p_value,
-        "reject_unit_root": bool(p_value < alpha),
-        "n_obs": int(n),
-        "bandwidth_lags": bandwidth,
-    }
-
-
-# MacKinnon (2010) Table 2 finite-sample critical values for the
-# Phillips-Perron Z_tau test, constant-only spec (rows: alpha, cols:
-# sample size). Source: MacKinnon, J. G. (2010) "Critical Values for
-# Cointegration Tests", QED Working Paper 1227, Table 2.
-_MACKINNON_PP_C_TABLE = {
-    # alpha -> {n -> critical value (one-sided)}
-    0.01: {25: -3.75, 50: -3.58, 100: -3.51, 250: -3.46, 500: -3.44, 1000: -3.43},
-    0.05: {25: -3.00, 50: -2.93, 100: -2.89, 250: -2.88, 500: -2.87, 1000: -2.86},
-    0.10: {25: -2.63, 50: -2.60, 100: -2.58, 250: -2.57, 500: -2.57, 1000: -2.57},
-}
-
-
-def _mackinnon_pp_pvalue(z_tau: float, *, n: int, regression: str = "c") -> float:
-    """Issue #273 -- recover an empirical p-value from MacKinnon's Table 2.
-
-    For ``regression = c`` (constant only) interpolate the critical value
-    by sample size, then bracket ``z_tau`` between two adjacent quantiles
-    to estimate the p-value via linear interpolation in (alpha, cv) space.
-    Uses MacKinnon (2010) Table 2 (1% / 5% / 10% only). Outside the
-    bracket we extrapolate by saturation -- p < 0.01 or p > 0.10.
-    """
-
-    if regression != "c":
-        # Only the constant-only spec is tabulated here; trend variants
-        # would need MacKinnon Tables 3-4.
-        from scipy import stats as _stats
-
-        return float(_stats.norm.cdf(z_tau))
-    table = _MACKINNON_PP_C_TABLE
-    sizes = sorted(next(iter(table.values())).keys())
-    # Pick the closest tabulated sample size below and above n.
-    n_clamped = max(sizes[0], min(sizes[-1], int(n)))
-    lower_n = max((s for s in sizes if s <= n_clamped), default=sizes[0])
-    upper_n = min((s for s in sizes if s >= n_clamped), default=sizes[-1])
-    weight = 0.0 if lower_n == upper_n else (n_clamped - lower_n) / (upper_n - lower_n)
-
-    # Critical values at this n by linear interp.
-    cvs: dict[float, float] = {}
-    for alpha, by_n in table.items():
-        cv = by_n[lower_n] * (1 - weight) + by_n[upper_n] * weight
-        cvs[alpha] = cv
-    # alphas sorted ascending; CVs become less negative with larger alpha.
-    alphas = sorted(cvs)
-    cv_values = [cvs[a] for a in alphas]
-    if z_tau <= cv_values[0]:
-        # More negative than the 1% critical value -> p < 0.01.
-        return 0.005
-    if z_tau >= cv_values[-1]:
-        # Less negative than the 10% critical value -> p > 0.10.
-        return 0.50
-    # Bracket and interpolate in (cv, alpha) space.
-    for i in range(len(alphas) - 1):
-        if cv_values[i] <= z_tau <= cv_values[i + 1]:
-            span = cv_values[i + 1] - cv_values[i]
-            if span <= 0:
-                return float(alphas[i])
-            t = (z_tau - cv_values[i]) / span
-            return float(alphas[i] * (1 - t) + alphas[i + 1] * t)
-    return 0.50
-
-
-def materialize_l2_5_diagnostic(
-    recipe_root: dict[str, Any],
-    l1_artifact: L1DataDefinitionArtifact,
-    l2_artifact: L2CleanPanelArtifact,
-) -> tuple[DiagnosticArtifact, dict[str, Any]]:
-    raw = recipe_root.get("2_5_pre_post_preprocessing", {}) or {}
-    report = l2_5_layer.validate_layer(raw)
-    if report.has_hard_errors:
-        raise ValueError("; ".join(issue.message for issue in report.hard_errors))
-    resolved = l2_5_layer.resolve_axes_from_raw(raw)
-    axes = _plain_axes(resolved)
-    if not resolved.get("enabled", False):
-        return _disabled_diagnostic("l1+l2", axes), axes
-    raw_frame = l1_artifact.raw_panel.data.copy()
-    clean_frame = l2_artifact.panel.data.copy()
-    metadata = {
-        "runtime": "core_l2_5_diagnostic",
-        "axis_resolved": axes,
-        "comparison": _diagnostic_pre_post_comparison(raw_frame, clean_frame),
-        "distribution_shift": _diagnostic_distribution_shift(
-            raw_frame, clean_frame, axes.get("distribution_metric", [])
-        ),
-        "cleaning_effect_summary": {
-            "n_imputed_cells": l2_artifact.n_imputed_cells,
-            "n_outliers_flagged": l2_artifact.n_outliers_flagged,
-            "n_truncated_obs": l2_artifact.n_truncated_obs,
-            "transform_map_applied": dict(l2_artifact.transform_map_applied),
-            "cleaning_log": l2_artifact.cleaning_log,
-        },
-    }
-    if axes.get("correlation_shift") != "none":
-        metadata["correlation_shift"] = clean_frame.corr(
-            numeric_only=True
-        ) - raw_frame.corr(numeric_only=True)
-    # Issue #213: ``correlation_shift = delta_matrix`` -- explicit
-    # post-minus-pre matrix exposed as a separate field for downstream
-    # consumers.
-    if axes.get("correlation_shift") == "delta_matrix":
-        try:
-            metadata["delta_matrix"] = (
-                clean_frame.corr(numeric_only=True) - raw_frame.corr(numeric_only=True)
-            ).fillna(0.0)
-        except Exception:
-            pass
-    # ``summary_split = per_decade`` -- per-decade summary statistics on
-    # both the raw and cleaned panel, useful for visual comparison.
-    if axes.get("summary_split") == "per_decade":
-        metadata["per_decade_summary"] = _diagnostic_per_decade_summary(
-            raw_frame, clean_frame
-        )
-    # ``t_code_application_log = per_series_detail`` -- per-series record
-    # of which transform code was applied (from L2 transform_map).
-    if axes.get("t_code_application_log") == "per_series_detail":
-        metadata["t_code_log_per_series"] = {
-            str(series): int(code)
-            for series, code in l2_artifact.transform_map_applied.items()
-        }
-    return (
-        DiagnosticArtifact(
-            layer_hooked="l1+l2",
-            artifact_type="json",
-            metadata=metadata,
-            enabled=True,
-        ),
-        axes,
-    )
-
-
-def _diagnostic_per_decade_summary(
-    raw: pd.DataFrame, clean: pd.DataFrame
-) -> dict[str, Any]:
-    """Group rows by decade (when the index is datetime) and return per-decade
-    mean / std for raw vs cleaned panels."""
-
-    out: dict[str, Any] = {}
-    for label, frame in (("raw", raw), ("clean", clean)):
-        if not isinstance(frame.index, pd.DatetimeIndex) or frame.empty:
-            out[label] = {}
-            continue
-        decade = (frame.index.year // 10) * 10
-        grouped = frame.assign(__decade=decade).groupby("__decade")
-        out[label] = {
-            int(decade_value): {
-                "mean": float(
-                    group.drop(columns="__decade")
-                    .select_dtypes("number")
-                    .mean(numeric_only=True)
-                    .mean()
-                ),
-                "std": float(
-                    group.drop(columns="__decade")
-                    .select_dtypes("number")
-                    .std(ddof=0, numeric_only=True)
-                    .mean()
-                ),
-                "n_obs": int(len(group)),
-            }
-            for decade_value, group in grouped
-        }
-    return out
-
 
 def materialize_l3_5_diagnostic(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
-    l2_artifact: L2CleanPanelArtifact,
+    preprocessed_artifact: PreprocessedPanelArtifact,
     l3_features: L3FeaturesArtifact,
     l3_metadata: L3MetadataArtifact,
 ) -> tuple[DiagnosticArtifact, dict[str, Any]]:
@@ -1242,10 +864,10 @@ def materialize_l3_5_diagnostic(
     resolved = l3_5_layer.resolve_axes_from_raw(raw, context=context)
     axes = _plain_axes(resolved)
     if not resolved.get("enabled", False):
-        return _disabled_diagnostic("l1+l2+l3", axes), axes
+        return _disabled_diagnostic("data+preprocessing+l3", axes), axes
 
     raw_frame = l1_artifact.raw_panel.data.copy()
-    clean_frame = l2_artifact.panel.data.copy()
+    clean_frame = preprocessed_artifact.panel.data.copy()
     feature_frame = l3_features.X_final.data.copy()
     metadata = {
         "runtime": "core_l3_5_diagnostic",
@@ -1302,7 +924,7 @@ def materialize_l3_5_diagnostic(
             pass
     return (
         DiagnosticArtifact(
-            layer_hooked="l1+l2+l3",
+            layer_hooked="data+preprocessing+l3",
             artifact_type="json",
             metadata=metadata,
             enabled=True,
@@ -1471,111 +1093,6 @@ def _disabled_diagnostic(layer_hooked: str, axes: dict[str, Any]) -> DiagnosticA
         metadata={"runtime": "core_diagnostic_disabled", "axis_resolved": axes},
         enabled=False,
     )
-
-
-def _diagnostic_sample_coverage(frame: pd.DataFrame) -> dict[str, Any]:
-    return {
-        "start": {
-            column: _iso_or_none(frame[column].first_valid_index())
-            for column in frame.columns
-        },
-        "end": {
-            column: _iso_or_none(frame[column].last_valid_index())
-            for column in frame.columns
-        },
-        "n_obs": frame.notna().sum().astype(int).to_dict(),
-        "n_missing": frame.isna().sum().astype(int).to_dict(),
-        "panel_shape": frame.shape,
-    }
-
-
-def _diagnostic_univariate_summary(
-    frame: pd.DataFrame, metrics: list[str]
-) -> dict[str, dict[str, float | int | None]]:
-    numeric = frame.select_dtypes("number")
-    summary: dict[str, dict[str, float | int | None]] = {}
-    for column in numeric.columns:
-        series = numeric[column]
-        values: dict[str, float | int | None] = {}
-        for metric in metrics:
-            if metric == "mean":
-                values[metric] = _float_or_none(series.mean())
-            elif metric == "sd":
-                values[metric] = _float_or_none(series.std())
-            elif metric == "min":
-                values[metric] = _float_or_none(series.min())
-            elif metric == "max":
-                values[metric] = _float_or_none(series.max())
-            elif metric == "skew":
-                values[metric] = _float_or_none(series.skew())
-            elif metric == "kurtosis":
-                values[metric] = _float_or_none(series.kurtosis())
-            elif metric == "n_obs":
-                values[metric] = int(series.notna().sum())
-            elif metric == "n_missing":
-                values[metric] = int(series.isna().sum())
-        summary[column] = values
-    return summary
-
-
-def _diagnostic_missing_outlier_audit(
-    frame: pd.DataFrame, leaf_config: dict[str, Any]
-) -> dict[str, Any]:
-    numeric = frame.select_dtypes("number")
-    threshold = float(leaf_config.get("outlier_threshold_iqr", 10.0))
-    median = numeric.median()
-    iqr = numeric.quantile(0.75) - numeric.quantile(0.25)
-    outlier_mask = (numeric - median).abs() > threshold * iqr.replace(0, pd.NA)
-    return {
-        "missing_count": frame.isna().sum().astype(int).to_dict(),
-        "longest_gap": {
-            column: _longest_missing_gap(frame[column]) for column in frame.columns
-        },
-        "iqr_outlier_count": outlier_mask.fillna(False).sum().astype(int).to_dict(),
-    }
-
-
-def _diagnostic_pre_post_comparison(
-    raw_frame: pd.DataFrame, clean_frame: pd.DataFrame
-) -> dict[str, Any]:
-    return {
-        "raw_shape": raw_frame.shape,
-        "clean_shape": clean_frame.shape,
-        "raw_missing_total": int(raw_frame.isna().sum().sum()),
-        "clean_missing_total": int(clean_frame.isna().sum().sum()),
-        "common_columns": sorted(set(raw_frame.columns) & set(clean_frame.columns)),
-    }
-
-
-def _diagnostic_distribution_shift(
-    raw_frame: pd.DataFrame, clean_frame: pd.DataFrame, metrics: list[str]
-) -> dict[str, dict[str, float | None]]:
-    common = [
-        column
-        for column in raw_frame.select_dtypes("number").columns
-        if column in clean_frame.select_dtypes("number").columns
-    ]
-    shifts: dict[str, dict[str, float | None]] = {}
-    for column in common:
-        raw = raw_frame[column]
-        clean = clean_frame[column]
-        values: dict[str, float | None] = {}
-        for metric in metrics:
-            if metric == "mean_change":
-                values[metric] = _float_or_none(clean.mean() - raw.mean())
-            elif metric == "sd_change":
-                raw_sd = raw.std()
-                values[metric] = (
-                    _float_or_none(clean.std() / raw_sd) if raw_sd else None
-                )
-            elif metric == "skew_change":
-                values[metric] = _float_or_none(clean.skew() - raw.skew())
-            elif metric == "kurtosis_change":
-                values[metric] = _float_or_none(clean.kurtosis() - raw.kurtosis())
-            elif metric == "ks_statistic":
-                values[metric] = _ks_statistic(raw.dropna(), clean.dropna())
-        shifts[column] = values
-    return shifts
 
 
 def _diagnostic_l3_comparison(
@@ -1795,40 +1312,40 @@ def _apply_inverse_target_transform(
 def materialize_l3_minimal(
     recipe_root: dict[str, Any],
     l1_artifact: L1DataDefinitionArtifact,
-    l2_artifact: L2CleanPanelArtifact,
-    l2_resolved: dict[str, Any] | None = None,
+    preprocessed_artifact: PreprocessedPanelArtifact,
+    preprocessing_resolved: dict[str, Any] | None = None,
 ) -> tuple[L3FeaturesArtifact, L3MetadataArtifact]:
     raw = recipe_root.get("3_feature_engineering", {}) or {}
     report = l3_layer.validate_layer(raw, recipe_context=_l3_context(l1_artifact))
     if report.has_hard_errors:
         raise ValueError("; ".join(issue.message for issue in report.hard_errors))
     dag = l3_layer.normalize_to_dag_form(raw)
-    df = l2_artifact.panel.data.copy()
-    # v0.9.3: preserve the original un-imputed L2 data for use in the
+    df = preprocessed_artifact.panel.data.copy()
+    # v0.9.3: preserve the original un-imputed preprocessed data for use in the
     # per-origin closure (which applies imputation per-origin to avoid lookahead).
-    df_raw_l2 = df.copy()
+    df_raw_preprocessing = df.copy()
     target_name = l1_artifact.target or (
         l1_artifact.targets[0] if l1_artifact.targets else None
     )
     if not target_name or target_name not in df.columns:
-        raise ValueError("minimal L3 runtime requires target column in L2 clean panel")
+        raise ValueError("minimal L3 runtime requires target column in preprocessed panel")
 
-    # v0.9.3: when imputation is deferred to per-origin, the raw L2 df
+    # v0.9.3: when imputation is deferred to per-origin, the preprocessed df
     # contains NaN cells that imputation would have filled. Running the
     # full-sample L3 DAG on un-imputed data produces a near-empty aligned_index
     # (because the post-DAG dropna drops almost every row). Pre-impute df with
-    # the L2 imputation policy (full-sample, no per-origin stats) ONLY for the
+    # the preprocessing imputation policy (full-sample, no per-origin stats) ONLY for the
     # purpose of computing aligned_index and the full-sample X/y arrays. The
     # actual per-origin data cleaning is still done correctly inside the
-    # _per_origin_callable closure (which uses df_raw_l2), preserving the
+    # _per_origin_callable closure (which uses df_raw_preprocessing), preserving the
     # no-lookahead guarantee.
-    _l3_l2_imputation_temporal_for_dag = (
-        (l2_resolved or {}).get("imputation_temporal_rule", "expanding_window_per_origin")
-        if l2_resolved is not None
+    _l3_preprocessing_imputation_temporal_for_dag = (
+        (preprocessing_resolved or {}).get("imputation_temporal_rule", "expanding_window_per_origin")
+        if preprocessing_resolved is not None
         else "expanding_window_per_origin"
     )
-    if _l3_l2_imputation_temporal_for_dag == "expanding_window_per_origin" and l2_resolved is not None:
-        df, _ = _apply_imputation(df, l2_resolved, {"steps": []})
+    if _l3_preprocessing_imputation_temporal_for_dag == "expanding_window_per_origin" and preprocessing_resolved is not None:
+        df, _ = _apply_imputation(df, preprocessing_resolved, {"steps": []})
 
     node_values = _execute_l3_dag(dag, df, target_name)
     sink_node = dag.nodes.get(dag.sinks.get("l3_features_v1", ""))
@@ -1890,11 +1407,11 @@ def materialize_l3_minimal(
         affected_node_ids = _l3_per_origin_affected_nodes(dag, expanding_node_ids)
         x_sink_id = sink_node.inputs[0].node_id
         # Dataset reference for the closure -- use the original un-imputed
-        # L2 data (df_raw_l2) so per-origin cleaning starts from raw NaN-laden
+        # preprocessed data (df_raw_preprocessing) so per-origin cleaning starts from raw NaN-laden
         # data and applies imputation only up to each origin (no lookahead).
-        # v0.9.3: df_raw_l2 is preserved before the full-sample pre-imputation
+        # v0.9.3: df_raw_preprocessing is preserved before the full-sample pre-imputation
         # step that computes aligned_index above.
-        df_for_origin = df_raw_l2.copy()
+        df_for_origin = df_raw_preprocessing.copy()
         target_name_for_closure = target_name
         # Map the post-dropna aligned index (the index L4 sees) into df row
         # positions so the L4 walk-forward can pass an origin *date* and
@@ -1902,13 +1419,13 @@ def materialize_l3_minimal(
         df_index = pd.Index(df_for_origin.index)
         aligned_index_snapshot = pd.Index(aligned_index)
 
-        # F-P1-2/F-P1-3 fix: capture l2 resolved axes for per-origin
+        # F-P1-2/F-P1-3 fix: capture preprocessing axes for per-origin
         # imputation/outlier application inside the closure.
-        _l3_l2_resolved_ref = l2_resolved
-        _l3_l2_leaf_config_ref = dict(l1_artifact.leaf_config or {})
-        _l3_l2_imputation_temporal = (
-            (l2_resolved or {}).get("imputation_temporal_rule", "expanding_window_per_origin")
-            if l2_resolved is not None
+        _l3_preprocessing_resolved_ref = preprocessing_resolved
+        _l3_preprocessing_leaf_config_ref = dict(l1_artifact.leaf_config or {})
+        _l3_preprocessing_imputation_temporal = (
+            (preprocessing_resolved or {}).get("imputation_temporal_rule", "expanding_window_per_origin")
+            if preprocessing_resolved is not None
             else "expanding_window_per_origin"
         )
 
@@ -1926,21 +1443,21 @@ def materialize_l3_minimal(
             # F-P1-2/F-P1-3 fix: apply per-origin outlier/imputation on the
             # expanding window slice so L3 DAG receives leak-free data.
             df_origin_input = df_for_origin
-            if _l3_l2_imputation_temporal == "expanding_window_per_origin" and _l3_l2_resolved_ref is not None:
+            if _l3_preprocessing_imputation_temporal == "expanding_window_per_origin" and _l3_preprocessing_resolved_ref is not None:
                 origin_ts = df_for_origin.index[origin_index]
                 df_origin_input = _apply_outlier_policy_per_origin(
-                    df_for_origin, _l3_l2_resolved_ref, _l3_l2_leaf_config_ref, origin_ts
+                    df_for_origin, _l3_preprocessing_resolved_ref, _l3_preprocessing_leaf_config_ref, origin_ts
                 )
                 df_origin_input = _apply_imputation_per_origin(
-                    df_origin_input, _l3_l2_resolved_ref, origin_ts
+                    df_origin_input, _l3_preprocessing_resolved_ref, origin_ts
                 )
                 # v0.9.3: apply deferred frame_edge after per-origin imputation
                 # so NaN-dropping policies (truncate_to_balanced, drop_unbalanced_series)
                 # operate on imputed data, not raw data with future NaN cells.
-                _fe_policy = (_l3_l2_resolved_ref or {}).get("frame_edge_policy", "keep_unbalanced")
+                _fe_policy = (_l3_preprocessing_resolved_ref or {}).get("frame_edge_policy", "keep_unbalanced")
                 if _fe_policy in {"truncate_to_balanced", "drop_unbalanced_series"}:
                     df_origin_input, _ = _apply_frame_edge(
-                        df_origin_input, _l3_l2_resolved_ref, {"steps": []}
+                        df_origin_input, _l3_preprocessing_resolved_ref, {"steps": []}
                     )
             X_origin_full = materialize_l3_per_origin(
                 dag,
@@ -2088,7 +1605,7 @@ def materialize_l3_per_origin(
     dag : DAG
         The L3 DAG built by ``l3_layer.normalize_to_dag_form``.
     df : pd.DataFrame
-        The full L2 clean panel (target column included).
+        The full preprocessed panel (target column included).
     target_name : str
         The target column name in ``df``.
     origin_index : int
@@ -14311,19 +13828,19 @@ def materialize_l8_runtime(
                 _fred_data_revision = f"current@{_dt}"
     if _fred_data_revision and not data_revision:
         data_revision = _fred_data_revision
-    # post-L2 sample window (v0.8.x)
-    # Prefer l2_clean_panel_v1.panel.data (post-window) over raw_panel
+    # post-preprocessing sample window (v0.8.x)
+    # Prefer preprocessed_panel_v1.panel.data (post-window) over raw_panel
     _sample_start_resolved = None
     _sample_end_resolved = None
     import pandas as _pd_k3
-    _l2_art = upstream_artifacts.get("l2_clean_panel_v1") if upstream_artifacts else None
+    _preprocessed_art = upstream_artifacts.get("preprocessed_panel_v1") if upstream_artifacts else None
     _post_window_idx = None
-    if _l2_art is not None and hasattr(_l2_art, "panel") and _l2_art.panel is not None:
-        _l2_panel_data = getattr(_l2_art.panel, "data", None)
-        if _l2_panel_data is not None and hasattr(_l2_panel_data, "index") and len(_l2_panel_data.index):
-            _post_window_idx = _l2_panel_data.index
+    if _preprocessed_art is not None and hasattr(_preprocessed_art, "panel") and _preprocessed_art.panel is not None:
+        _preprocessed_panel_data = getattr(_preprocessed_art.panel, "data", None)
+        if _preprocessed_panel_data is not None and hasattr(_preprocessed_panel_data, "index") and len(_preprocessed_panel_data.index):
+            _post_window_idx = _preprocessed_panel_data.index
     if _post_window_idx is None and _l1_art is not None and hasattr(_l1_art, "raw_panel") and _l1_art.raw_panel is not None:
-        # fallback to raw_panel if no L2 artifact
+        # fallback to raw_panel if no preprocessed artifact
         _idx_data = getattr(_l1_art.raw_panel, "data", None)
         if _idx_data is not None and hasattr(_idx_data, "index") and len(_idx_data.index):
             _post_window_idx = _idx_data.index
@@ -14460,8 +13977,6 @@ def _derive_saved_objects(
     if "7_interpretation" in recipe_root:
         derived.update({"importance", "figures"})
     for diag_layer, suffix in (
-        ("1_5_data_summary", "diagnostics_l1_5"),
-        ("2_5_pre_post_preprocessing", "diagnostics_l2_5"),
         ("3_5_feature_diagnostics", "diagnostics_l3_5"),
         ("4_5_generator_diagnostics", "diagnostics_l4_5"),
     ):
@@ -14716,11 +14231,11 @@ def _l8_export_artifacts(
             upstream_artifacts["l3_metadata_v1"],
             "l3_metadata_v1",
         )
-    if "clean_panel" in saved and "l2_clean_panel_v1" in upstream_artifacts:
+    if "clean_panel" in saved and "preprocessed_panel_v1" in upstream_artifacts:
         add_dataframe(
             cell_dir / "clean_panel",
-            upstream_artifacts["l2_clean_panel_v1"].panel.data,
-            "l2_clean_panel_v1",
+            upstream_artifacts["preprocessed_panel_v1"].panel.data,
+            "preprocessed_panel_v1",
         )
     if "raw_panel" in saved and "l1_data_definition_v1" in upstream_artifacts:
         add_dataframe(
@@ -15563,7 +15078,7 @@ def _apply_fred_sd_frequency_alignment(
     """Issue #202 -- align mixed-frequency FRED-SD panels.
 
     Reads ``sd_series_frequency_filter``, ``quarterly_to_monthly_policy``
-    and ``monthly_to_quarterly_policy`` from the L2 resolved axes and the
+    and ``monthly_to_quarterly_policy`` from the preprocessing resolved axes and the
     per-series frequency map from the L1 raw_panel metadata.
     """
 
@@ -15725,7 +15240,7 @@ def _apply_fred_sd_frequency_alignment(
 def _apply_transform(
     frame: pd.DataFrame,
     resolved: dict[str, Any],
-    l2_leaf: dict[str, Any],
+    preprocessing_leaf: dict[str, Any],
     l1_leaf: dict[str, Any],
     cleaning_log: dict[str, Any],
 ) -> tuple[pd.DataFrame, dict[str, int]]:
@@ -15735,7 +15250,7 @@ def _apply_transform(
         return frame, {}
     tcode_map = dict(l1_leaf.get("official_tcode_map", {}))
     tcode_map.update(l1_leaf.get("custom_tcode_map", {}))
-    tcode_map.update(l2_leaf.get("custom_tcode_map", {}))
+    tcode_map.update(preprocessing_leaf.get("custom_tcode_map", {}))
     if policy == "apply_official_tcode" and not tcode_map:
         cleaning_log["steps"].append(
             {"transform": "apply_official_tcode", "fallback": "no_tcode_map_available"}
@@ -15746,7 +15261,7 @@ def _apply_transform(
     # F-P1-14 fix: honour transform scope (BREAKING)
     # transform_scope axis removed in Phase 1; scope is inlined from transform_policy
     scope = "not_applicable" if resolved.get("transform_policy") == "no_transform" else "target_and_predictors"
-    target_col = l1_leaf.get("target") or l2_leaf.get("target")
+    target_col = l1_leaf.get("target") or preprocessing_leaf.get("target")
     transformed = frame.copy()
     applied: dict[str, int] = {}
     if scope in ("none", "not_applicable"):
@@ -15797,7 +15312,7 @@ def _fred_md_log(series: pd.Series, *, require_strictly_positive: bool) -> pd.Se
     return numeric.map(lambda value: pd.NA if pd.isna(value) else __import__("math").log(value))
 
 
-def _try_custom_l2_preprocessor(
+def _try_custom_preprocessor(
     name: str, frame: pd.DataFrame, leaf_config: dict[str, Any]
 ) -> pd.DataFrame | None:
     """Issue #251 -- dispatch to a user-registered preprocessor when ``name``
@@ -15813,7 +15328,7 @@ def _try_custom_l2_preprocessor(
 
     Contract: ``fn(X_train, y_train, X_test, context) -> (X_train, X_test)``
     or ``-> pd.DataFrame``. The runtime substitutes ``X_train = X_test =
-    frame`` for the single-pass L2 hook."""
+    frame`` for the single-pass preprocessing hook."""
 
     try:
         from .. import custom as _custom_mod
@@ -15856,7 +15371,7 @@ def _try_custom_l2_preprocessor(
         pass  # fall through to direct call for builtins/C callables
     # Documented contract: ``fn(X_train, y_train, X_test, context) ->
     # (X_train, X_test)``.  For the runtime hook we substitute
-    # ``X_train = X_test = frame`` (single-pass L2 panel clean).
+    # ``X_train = X_test = frame`` (single-pass preprocessing panel clean).
     # Body TypeErrors propagate naturally (no wrapping).
     result = spec.function(frame, None, frame, dict(leaf_config))
     if isinstance(result, tuple) and result:
@@ -16282,9 +15797,9 @@ def _execute_l3_source(
 ) -> pd.DataFrame | pd.Series:
     if selector is None:
         raise ValueError("L3 source node requires a selector")
-    if selector.layer_ref != "l2" or selector.sink_name != "l2_clean_panel_v1":
+    if selector.layer_ref != "preprocessing" or selector.sink_name != "preprocessed_panel_v1":
         raise NotImplementedError(
-            "minimal L3 runtime currently supports L2 clean panel sources only"
+            "minimal L3 runtime currently supports preprocessing panel sources only"
         )
     subset = selector.subset or {}
     role = subset.get("role")
@@ -16366,7 +15881,7 @@ def _execute_l3_op(
     # context object and returns a ``FeatureBlockCallableResult``. For
     # a thin promotion we accept both that protocol and the simpler
     # callable-on-frame signature ``fn(frame, params) -> frame`` so
-    # registered ops are usable in unit tests without the full L2
+    # registered ops are usable in unit tests without the full preprocessing
     # context plumbing.
     custom_result = _try_custom_l3_dispatch(op, inputs, params)
     if custom_result is not None:

@@ -82,7 +82,7 @@ LAYER_SPEC_CHECKLIST: tuple[str, ...] = (
 PHASE1_IMPLEMENTATION_ORDER: tuple[LayerId | str, ...] = (
     "l0",
     "l1",
-    "l2",
+    "preprocessing",
     "l3",
     "l4",
     "l5",

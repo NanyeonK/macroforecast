@@ -69,9 +69,7 @@ def _bootstrap_ops() -> None:
 LAYER_CLI_TO_INTERNAL: dict[str, str] = {
     "L0": "l0",
     "L1": "l1",
-    "L1.5": "l1_5",
     "L2": "l2",
-    "L2.5": "l2_5",
     "L3": "l3",
     "L3.5": "l3_5",
     "L4": "l4",
@@ -83,14 +81,14 @@ LAYER_CLI_TO_INTERNAL: dict[str, str] = {
 }
 
 ALL_LAYERS: tuple[str, ...] = (
-    "l0", "l1", "l1_5", "l2", "l2_5", "l3", "l3_5",
+    "l0", "l1", "l2", "l3", "l3_5",
     "l4", "l4_5", "l5", "l6", "l7", "l8",
 )
 
 # Human-readable layer labels used in page content
 LAYER_LABEL: dict[str, str] = {
-    "l0": "L0", "l1": "L1", "l1_5": "L1.5",
-    "l2": "L2", "l2_5": "L2.5", "l3": "L3", "l3_5": "L3.5",
+    "l0": "L0", "l1": "L1",
+    "l2": "L2", "l3": "L3", "l3_5": "L3.5",
     "l4": "L4", "l4_5": "L4.5", "l5": "L5",
     "l6": "L6", "l7": "L7", "l8": "L8",
 }
@@ -118,8 +116,6 @@ LAYER_OUTPUT_MAP: dict[str, str | None] = {
     "l5": "__virtual__",  # L5 metrics are virtual ops not in registry
     "l6": "__virtual__",  # L6 tests are virtual ops not in registry
     # Half-layers: diagnostic ops go into diagnostic_ops/
-    "l1_5": "diagnostic_ops",
-    "l2_5": "diagnostic_ops",
     "l3_5": "diagnostic_ops",
     "l4_5": "diagnostic_ops",
 }
@@ -374,7 +370,6 @@ EXCLUSION_LIST: set[str] = {
     "l8_saved_objects",
     # Diagnostic collect ops (internal aggregators):
     "diagnostic_collect_l1",
-    "diagnostic_collect_l2",
     "diagnostic_collect_l3",
     "diagnostic_collect_l4",
     # L4 future families with no standalone callable:
@@ -520,8 +515,6 @@ L3_SUBLAYER = "L3_A_step_op"
 
 # Sub-layer labels for diagnostic half-layer ops
 HALF_LAYER_SUBLABEL: dict[str, str] = {
-    "l1_5": "L1.5_diagnostic",
-    "l2_5": "L2.5_diagnostic",
     "l3_5": "L3.5_diagnostic",
     "l4_5": "L4.5_diagnostic",
 }
@@ -812,7 +805,7 @@ def render_page(
 
     # --- Back-links ---
     # For ops with an axis subdir, link back to axes/<subdir>.md and index.md
-    is_half_layer = layer_id in ("l1_5", "l2_5", "l3_5", "l4_5")
+    is_half_layer = layer_id in ("l3_5", "l4_5")
 
     if is_half_layer:
         # Half-layers: no axis link
@@ -992,7 +985,7 @@ def collect_work_items(
       names that serve as recipe axis values, not registry op names.
     - L6: virtual test ops from L6_VIRTUAL_OPS. Same rationale as L5.
     - L7: registry ops with l7 in layer_scope that have a standalone callable.
-    - Half-layers (l1_5, l2_5, l3_5, l4_5): registry ops for those layers,
+    - Half-layers (l3_5, l4_5): registry ops for those layers,
       excluding EXCLUSION_LIST (the diagnostic_collect ops).
     """
     work: list[tuple[str, str, str, str, str, str | None]] = []
@@ -1063,7 +1056,7 @@ def collect_work_items(
                 callable_name = OP_TO_STANDALONE.get(op_name)
                 work.append((layer_id, op_name, subdir, status, sublayer, callable_name))
 
-        elif layer_id in ("l1_5", "l2_5", "l3_5", "l4_5"):
+        elif layer_id in ("l3_5", "l4_5"):
             # Half-layers: enumerate registry ops for this layer
             # EXCLUDE the diagnostic_collect ops (they are internal aggregators)
             for op_name, op_spec in sorted(ops.items()):
@@ -1141,7 +1134,7 @@ def main() -> int:
     parser.add_argument(
         "--layer",
         default="all",
-        choices=["all", "L0", "L1", "L1.5", "L2", "L2.5",
+        choices=["all", "L0", "L1", "L2", "Data diagnostic",
                  "L3", "L3.5", "L4", "L4.5", "L5", "L6", "L7", "L8"],
         help="Layer(s) to generate. Default: all.",
     )

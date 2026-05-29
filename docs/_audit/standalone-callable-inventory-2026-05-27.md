@@ -7,7 +7,7 @@ macroforecast version: **0.9.5a0**
 
 | Layer | Count |
 |---|---|
-| L2 clean | 14 |
+| preprocessing clean | 14 |
 | L3 transforms | 36 |
 | L4 fit | 52 |
 | L5 metrics | 15 |
@@ -17,7 +17,7 @@ macroforecast version: **0.9.5a0**
 **Total function callables**: 132
 **Result dataclasses**: 61
 
-## L2 clean (14)
+## preprocessing clean (14)
 
 - `apply_tcode_transform`
 - `drop_unbalanced_series_clean`

@@ -16,9 +16,7 @@ from .status import ItemStatus
 
 LayerId = Literal[
     "l1",
-    "l1_5",
-    "l2",
-    "l2_5",
+    "preprocessing",
     "l3",
     "l3_5",
     "l4",

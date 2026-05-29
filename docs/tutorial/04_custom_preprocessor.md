@@ -1,6 +1,6 @@
 # Bring your own preprocessor
 
-In this tutorial you will register a custom L2 preprocessor, verify that it
+In this tutorial you will register a custom preprocessing preprocessor, verify that it
 receives the data you expect, and integrate it into the benchmarking study
 from {doc}`02_full_study`. By the end you will have a working
 feature-selection preprocessor that filters columns by variance before any
@@ -15,11 +15,11 @@ matrices instead of one scalar.
 
 ## Why a custom preprocessor?
 
-L2 is macroforecast's cleaning boundary. It applies transforms,
+preprocessing is macroforecast's cleaning boundary. It applies transforms,
 outlier treatment, imputation, and frame-edge handling to the raw panel. After
-L2 finishes, every downstream layer receives an identically processed dataset.
+preprocessing finishes, every downstream layer receives an identically processed dataset.
 
-Sometimes the built-in L2 operations are not enough. You might want to:
+Sometimes the built-in preprocessing operations are not enough. You might want to:
 
 - Drop columns whose in-sample variance falls below a threshold, so
   low-variance macroeconomic series do not dominate a ridge regression.
@@ -27,9 +27,9 @@ Sometimes the built-in L2 operations are not enough. You might want to:
 - Apply a rolling z-score normalization that respects the expanding-window
   split at each forecast origin.
 
-The `register_preprocessor` API lets you plug these operations into the L2
+The `register_preprocessor` API lets you plug these operations into the preprocessing
 boundary without modifying the package. The runtime calls your function at
-each forecast origin, after all built-in L2 operations have run, and passes
+each forecast origin, after all built-in preprocessing operations have run, and passes
 you the train and test splits as separate matrices. You return the
 transformed pair. Everything else — provenance recording, manifest entries,
 replication hashing — happens automatically.
@@ -66,7 +66,7 @@ adaptive preprocessors. The fields available to a preprocessor are:
 
 | Field | Type | Description |
 |---|---|---|
-| `feature_names` | `list[str]` | Column names of the L2 panel before your function runs. |
+| `feature_names` | `list[str]` | Column names of the preprocessed panel before your function runs. |
 | `alignment` | `str` | Frequency alignment label, e.g. `"monthly"`. |
 | `leakage_contract` | `str` | Leakage policy declared in the recipe. |
 | `mode` | `str` | Either `"fit"` (training pass) or `"predict"` (test pass). When mode is `"predict"`, the runtime passes a 1-row `X_test`; your function still receives both matrices. |
@@ -182,9 +182,9 @@ filtering.
 Now put the preprocessor into a minimal benchmarking recipe. The recipe
 uses a synthetic inline panel so you do not need FRED credentials.
 
-The preprocessor is activated by setting `custom_preprocessor` in the L2
+The preprocessor is activated by setting `custom_preprocessor` in the preprocessing
 `leaf_config`. The runtime dispatches the registered callable by name at
-each forecast origin, after all built-in L2 operations finish.
+each forecast origin, after all built-in preprocessing operations finish.
 
 ```python
 import macroforecast as mf
@@ -244,10 +244,10 @@ preprocessing:
   nodes:
     - id: src_X
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}
     - id: src_y
       type: source
-      selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}
+      selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}
     - id: lag_x
       type: step
       op: lag
@@ -301,7 +301,7 @@ print(f"Cells: {len(result.cells)}")   # 1
 print("sink_hashes_match test run completed")
 ```
 
-The `custom_preprocessor: variance_filter` entry under L2 `leaf_config` is
+The `custom_preprocessor: variance_filter` entry under preprocessing `leaf_config` is
 the only change relative to a standard recipe. The constant series
 `const_series` will be dropped at each forecast origin before features reach
 L3.
@@ -334,7 +334,7 @@ def logged_variance_filter(
     dropped = [c for c in X_train.columns if c not in keep_cols]
 
     if dropped:
-        # context["feature_names"] lists all column names from the L2 panel.
+        # context["feature_names"] lists all column names from the preprocessed panel.
         # Use it to build a human-readable report.
         known_names = context.get("feature_names", [])
         dropped_known = [c for c in dropped if c in known_names]
@@ -351,7 +351,7 @@ print(mf.list_custom_preprocessors())
 ```
 
 The context field `feature_names` contains the column names as they exist in
-the L2 panel at the time your function is called. Using it here lets you
+the preprocessed panel at the time your function is called. Using it here lets you
 cross-check that the column names you see in `X_train.columns` match the
 names the runtime knows about.
 

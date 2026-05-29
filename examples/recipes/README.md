@@ -32,7 +32,7 @@ be migrated to the nodes/sinks DAG pattern in PR7b.
 - `l1_minimal.yaml`
 - `l1_with_regime.yaml`
 - `preprocessing_minimal.yaml`
-- `l2_minimal.yaml`
+- `data_preprocessing_minimal.yaml`
 - `goulet_coulombe_2021_replication.yaml` (stale axis name `custom_source_policy`)
 
 ## Replication scripts

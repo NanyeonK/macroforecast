@@ -39,8 +39,6 @@ Runnable examples (pass `mf.run()` smoke tests):
 | `l0_minimal.yaml` | L0 study setup |
 | `l1_5_full.yaml` | L1.5 stationarity diagnostics (full) |
 | `l1_5_minimal.yaml` | L1.5 stationarity diagnostics (minimal) |
-| `l2_5_full.yaml` | L2.5 cleaning diagnostics (full) |
-| `l2_5_minimal.yaml` | L2.5 cleaning diagnostics (minimal) |
 | `l3_5_full.yaml` | L3.5 feature diagnostics (full) |
 | `l3_5_minimal.yaml` | L3.5 feature diagnostics (minimal) |
 | `l3_cascade_pca_on_marx.yaml` | L3 DAG: MARX lag cascade into PCA |

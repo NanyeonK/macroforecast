@@ -15,8 +15,6 @@ from macroforecast.evaluation.schema import L5Evaluation
 from macroforecast.stat_tests.schema import L6StatisticalTests
 from macroforecast.interpretation.schema import L7Interpretation
 from macroforecast.output.schema import L8Output
-from macroforecast.diagnostics.data_summary.schema import L1_5DataSummary
-from macroforecast.diagnostics.preprocessing.schema import L2_5PrePostPreprocessing
 from macroforecast.diagnostics.features.schema import L3_5FeatureDiagnostics
 from macroforecast.diagnostics.generator.schema import L4_5GeneratorDiagnostics
 
@@ -35,11 +33,11 @@ register_layer(
 
 
 register_layer(
-    id="l2",
+    id="preprocessing",
     name="Preprocessing",
     category="construction",
     expected_inputs=("l1_data_definition_v1",),
-    produces=("l2_clean_panel_v1",),
+    produces=("preprocessed_panel_v1",),
     ui_mode="list",
 )(DirectPreprocessing)
 
@@ -48,7 +46,7 @@ register_layer(
     id="l3",
     name="Feature engineering",
     category="construction",
-    expected_inputs=("l2_clean_panel_v1", "l1_data_definition_v1", "l1_regime_metadata_v1"),
+    expected_inputs=("preprocessed_panel_v1", "l1_data_definition_v1", "l1_regime_metadata_v1"),
     produces=("l3_features_v1", "l3_metadata_v1"),
     ui_mode="graph",
 )(L3FeatureEngineering)
@@ -65,30 +63,10 @@ register_layer(
 
 
 register_layer(
-    id="l1_5",
-    name="Data summary",
-    category="diagnostic",
-    expected_inputs=("l1_data_definition_v1",),
-    produces=("l1_5_diagnostic_v1",),
-    ui_mode="list",
-)(L1_5DataSummary)
-
-
-register_layer(
-    id="l2_5",
-    name="Pre vs post preprocessing",
-    category="diagnostic",
-    expected_inputs=("l1_data_definition_v1", "l2_clean_panel_v1"),
-    produces=("l2_5_diagnostic_v1",),
-    ui_mode="list",
-)(L2_5PrePostPreprocessing)
-
-
-register_layer(
     id="l3_5",
     name="Feature diagnostics",
     category="diagnostic",
-    expected_inputs=("l1_data_definition_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1"),
+    expected_inputs=("l1_data_definition_v1", "preprocessed_panel_v1", "l3_features_v1", "l3_metadata_v1"),
     produces=("l3_5_diagnostic_v1",),
     ui_mode="list",
 )(L3_5FeatureDiagnostics)
@@ -139,7 +117,7 @@ register_layer(
     name="Output / provenance",
     category="consumption",
     expected_inputs=(
-        "l1_data_definition_v1", "l1_regime_metadata_v1", "l2_clean_panel_v1", "l3_features_v1", "l3_metadata_v1",
+        "l1_data_definition_v1", "l1_regime_metadata_v1", "preprocessed_panel_v1", "l3_features_v1", "l3_metadata_v1",
         "l4_forecasts_v1", "l4_model_artifacts_v1", "l4_training_metadata_v1", "l5_evaluation_v1", "l6_tests_v1",
         "l7_importance_v1", "l7_transformation_attribution_v1",
     ),

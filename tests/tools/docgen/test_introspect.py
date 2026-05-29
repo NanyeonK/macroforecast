@@ -14,7 +14,7 @@ from tools.docgen import introspect
 
 def test_list_layers_returns_direct_callable_reference_layers():
     layers = introspect.list_layers()
-    expected = ("l1_5", "l2_5", "l3", "l3_5", "l4", "l4_5", "l5", "l6", "l7", "l8")
+    expected = ("l3", "l3_5", "l4", "l4_5", "l5", "l6", "l7", "l8")
     assert layers == expected
 
 

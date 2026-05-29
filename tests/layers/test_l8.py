@@ -47,10 +47,6 @@ def test_l8_default_saved_objects_active_components():
 def test_l8_default_saved_objects_active_diagnostics():
     resolved = resolve_axes(
         parse_recipe_yaml(
-            "1_5_data_summary:\n"
-            "  enabled: true\n"
-            "2_5_pre_post_preprocessing:\n"
-            "  enabled: true\n"
             "3_5_feature_diagnostics:\n"
             "  enabled: true\n"
             "4_5_generator_diagnostics:\n"
@@ -60,8 +56,6 @@ def test_l8_default_saved_objects_active_diagnostics():
         ).layers["l8"].dag
     )
     assert {
-        "diagnostics_l1_5",
-        "diagnostics_l2_5",
         "diagnostics_l3_5",
         "diagnostics_l4_5",
     } <= set(resolved["saved_objects"])
@@ -145,7 +139,7 @@ def test_l8_manifest_format_json_lines():
 
 def test_l8_diagnostics_all_shortcut():
     layer = parse_layer_yaml("8_output:\n  fixed_axes:\n    saved_objects: [forecasts, diagnostics_all]\n", "l8")
-    assert {"forecasts", "diagnostics_l1_5", "diagnostics_l2_5", "diagnostics_l3_5", "diagnostics_l4_5"} <= set(resolve_axes(normalize_to_dag_form(layer, "l8"))["saved_objects"])
+    assert {"forecasts", "diagnostics_l3_5", "diagnostics_l4_5"} <= set(resolve_axes(normalize_to_dag_form(layer, "l8"))["saved_objects"])
 
 
 def test_l8_paper_replication_mode_yaml_parses():

@@ -47,9 +47,9 @@ preprocessing:
 3_feature_engineering:
   nodes:
     - {id: src_X, type: source,
-       selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+       selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
     - {id: src_y, type: source,
-       selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+       selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_x, type: step, op: lag, params: {n_lag: 1}, inputs: [src_X]}
     - {id: y_h, type: step, op: target_construction,
        params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
@@ -151,7 +151,7 @@ def test_custom_preprocessor_manifest_truth(tmp_path):
     found_applied = False
     for cell in result.cells:
         cleaning_log = getattr(
-            cell.runtime_result.artifacts.get("l2_clean_panel_v1", None),
+            cell.runtime_result.artifacts.get("preprocessed_panel_v1", None),
             "cleaning_log",
             None,
         )
@@ -159,7 +159,7 @@ def test_custom_preprocessor_manifest_truth(tmp_path):
             # Try via runtime_result directly
             rr = cell.runtime_result
             cleaning_log = getattr(rr, "cleaning_log", None) or (
-                rr.artifacts.get("l2_cleaning_log_v1", {}) if hasattr(rr, "artifacts") else {}
+                {} if hasattr(rr, "artifacts") else {}
             )
         # Walk steps for custom_postprocessor entry
         steps = cleaning_log.get("steps", []) if isinstance(cleaning_log, dict) else []

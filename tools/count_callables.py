@@ -31,7 +31,7 @@ import macroforecast as mf
 
 
 _LAYER_MODULE_MAP: dict[str, str] = {
-    "macroforecast.api.functions.clean": "L2",
+    "macroforecast.api.functions.clean": "Preprocessing",
     "macroforecast.api.functions.transforms": "L3",
     "macroforecast.api.functions.timeseries": "L4",
     "macroforecast.api.functions.linear": "L4",
@@ -48,7 +48,7 @@ _LAYER_MODULE_MAP: dict[str, str] = {
 }
 
 _LAYER_LABELS: dict[str, str] = {
-    "L2": "L2 clean",
+    "Preprocessing": "Preprocessing clean",
     "L3": "L3 transforms",
     "L4": "L4 fit",
     "L5": "L5 metrics",
@@ -108,7 +108,7 @@ def build_audit_md(
         "| Layer | Count |",
         "|---|---|",
     ]
-    for layer_key in ("L2", "L3", "L4", "L5", "L6", "L7"):
+    for layer_key in ("Preprocessing", "L3", "L4", "L5", "L6", "L7"):
         label = _LAYER_LABELS.get(layer_key, layer_key)
         count = len(by_layer.get(layer_key, []))
         lines.append(f"| {label} | {count} |")
@@ -121,7 +121,7 @@ def build_audit_md(
         f"**Result dataclasses**: {len(classes)}",
         "",
     ]
-    for layer_key in ("L2", "L3", "L4", "L5", "L6", "L7", "other"):
+    for layer_key in ("Preprocessing", "L3", "L4", "L5", "L6", "L7", "other"):
         names = sorted(by_layer.get(layer_key, []))
         if not names:
             continue
@@ -155,7 +155,7 @@ def main() -> None:
     print(f"macroforecast.functions callable inventory")
     print(f"Version: {version}")
     print()
-    for layer_key in ("L2", "L3", "L4", "L5", "L6", "L7"):
+    for layer_key in ("Preprocessing", "L3", "L4", "L5", "L6", "L7"):
         label = _LAYER_LABELS.get(layer_key, layer_key)
         count = len(by_layer.get(layer_key, []))
         print(f"  {label}: {count} callables")

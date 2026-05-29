@@ -209,7 +209,7 @@ register(
 
 _SAVED_DOCS: dict[str, tuple[str, str, str]] = {
     "raw_panel": (
-        "Raw L1 panel before any L2 cleaning.",
+        "Raw L1 panel before any preprocessing.",
         (
             "The original raw FRED-MD / -QD / -SD / custom panel. "
             "Default-off because raw FRED panels are large; enabling "
@@ -220,9 +220,9 @@ _SAVED_DOCS: dict[str, tuple[str, str, str]] = {
         "Default-off for size; enable for fully self-contained runs.",
     ),
     "clean_panel": (
-        "Cleaned L2 panel (post tcode / outlier / imputation / frame edge).",
+        "Preprocessed panel (post tcode / outlier / imputation / frame edge).",
         (
-            "The output of the L2 pipeline. Useful when downstream "
+            "The output of the preprocessing pipeline. Useful when downstream "
             "re-runs need to skip the (potentially expensive) "
             "cleaning stages."
         ),
@@ -334,22 +334,6 @@ _SAVED_DOCS: dict[str, tuple[str, str, str]] = {
             "Active when ensemble combine ops are in the L4 pipeline."
         ),
         "Active when ensemble combine ops are in the L4 pipeline.",
-    ),
-    "diagnostics_l1_5": (
-        "L1.5 diagnostic outputs (sample coverage / stationarity / outlier audit).",
-        (
-            "JSON + figures from the L1.5 sub-layer. Active when L1.5 "
-            "is enabled in the recipe."
-        ),
-        "Active when L1.5 is enabled.",
-    ),
-    "diagnostics_l2_5": (
-        "L2.5 diagnostic outputs (cleaning effect summaries).",
-        (
-            "JSON + figures from the L2.5 sub-layer. Active when L2.5 "
-            "is enabled."
-        ),
-        "Active when L2.5 is enabled.",
     ),
     "diagnostics_l3_5": (
         "L3.5 diagnostic outputs (factor / lag / selection inspection).",

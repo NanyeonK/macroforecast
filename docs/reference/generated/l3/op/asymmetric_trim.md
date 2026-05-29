@@ -29,7 +29,7 @@ Per-period sort: panel ``Π`` of shape ``(T, K)`` is mapped to ``O`` where ``O[t
 
 Optional ``smooth_window > 0`` applies a centred moving average to each rank-position time series (paper §3 mentions 3-month MA for noisy components; users can chain ``ma_window`` explicitly when they want a different window).
 
-Operational from v0.8.9 (B-6). Layer scope ``(l2, l3)`` so the L3 pipeline can dispatch it at recipe time. Algorithm spec: ``docs/replications/maximally_forward_looking_algorithm_notes.md``.
+Operational from v0.8.9 (B-6). Layer scope ``(preprocessing, l3)`` so the L3 pipeline can dispatch it at recipe time. Algorithm spec: ``docs/replications/maximally_forward_looking_algorithm_notes.md``.
 
 **When to use**
 

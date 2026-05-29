@@ -31,10 +31,10 @@ def _base_nodes(extra_x, y_params=None):
   nodes:
     - id: src_x
       type: source
-      selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: predictors}}}}
+      selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: predictors}}}}
     - id: src_y
       type: source
-      selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: target}}}}
+      selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: target}}}}
 {extra_x}
     - id: y_h
       type: step
@@ -98,8 +98,8 @@ def test_l3_target_construction_only_in_l3_a():
     yaml_text = """
 3_feature_engineering:
   nodes:
-    - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_x, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - id: misuse
       type: step
       op: target_construction
@@ -142,7 +142,7 @@ def test_l3_cascade_cycle_rejected():
     yaml_text = """
 3_feature_engineering:
   nodes:
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - id: pipeline_A
       type: step
       op: lag
@@ -206,8 +206,8 @@ def test_l3_lag_before_log_warns_soft():
     yaml_text = """
 3_feature_engineering:
   nodes:
-    - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
+    - {id: src_x, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
     - {id: lag_first, type: step, op: lag, params: {n_lag: 2}, inputs: [src_x]}
     - {id: x_final, type: step, op: log, inputs: [lag_first]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}
@@ -259,8 +259,8 @@ data:
 3_feature_engineering:
   nodes:
     - {id: src_regime, type: source, selector: {layer_ref: l1, sink_name: l1_regime_metadata_v1}}
-    - {id: src_y, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: target}}}
-    - {id: src_x, type: source, selector: {layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {role: predictors}}}
+    - {id: src_y, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: target}}}
+    - {id: src_x, type: source, selector: {layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {role: predictors}}}
     - {id: regime_dummy, type: step, op: regime_indicator, params: {definition_ref: l1_regime_metadata_v1}, inputs: [src_regime]}
     - {id: x_final, type: combine, op: concat, inputs: [src_x, regime_dummy]}
     - {id: y_h, type: step, op: target_construction, params: {mode: point_forecast, method: direct, horizon: 1}, inputs: [src_y]}

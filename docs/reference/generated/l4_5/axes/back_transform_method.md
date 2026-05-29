@@ -23,7 +23,7 @@
 
 ### `auto`  --  operational
 
-Use the inverse of L2.B / L3 transforms automatically.
+Use the inverse of preprocessing transform / L3 transforms automatically.
 
 L4.5.B back-transform method ``auto``.
 

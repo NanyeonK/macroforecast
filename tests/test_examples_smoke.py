@@ -36,8 +36,6 @@ _NEW_LAYER_KEYS = {
     "7_interpretation", "8_output",
     # Diagnostic layers (canonical recipe keys -- match the runtime's
     # ``root.get(...)`` calls in macroforecast.core.layers.l{1,2,3,4}_5).
-    "1_5_data_summary",
-    "2_5_pre_post_preprocessing",
     "3_5_feature_diagnostics",
     "4_5_generator_diagnostics",
 }

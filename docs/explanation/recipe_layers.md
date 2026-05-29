@@ -16,7 +16,6 @@ Current layer-contract recipes use numeric YAML keys that map directly to layer 
 | `l7` | `7_interpretation` | no; default off |
 | `l8` | `8_output` | yes |
 | `l1_5` | `1_5_data_summary` | no; default off |
-| `l2_5` | `2_5_pre_post_preprocessing` | no; default off |
 | `l3_5` | `3_5_feature_diagnostics` | no; default off |
 | `l4_5` | `4_5_generator_diagnostics` | no; default off |
 

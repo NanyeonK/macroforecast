@@ -97,8 +97,8 @@ preprocessing:
     frame_edge_policy: keep_unbalanced
 3_feature_engineering:
   nodes:
-    - {{id: src_X, type: source, selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: predictors}}}}}}
-    - {{id: src_y, type: source, selector: {{layer_ref: l2, sink_name: l2_clean_panel_v1, subset: {{role: target}}}}}}
+    - {{id: src_X, type: source, selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: predictors}}}}}}
+    - {{id: src_y, type: source, selector: {{layer_ref: preprocessing, sink_name: preprocessed_panel_v1, subset: {{role: target}}}}}}
     - {{id: lag_x, type: step, op: lag, params: {{n_lag: {n_lag_marker}}}, inputs: [src_X]}}
 {l3_extra_node}
     - {{id: y_h, type: step, op: target_construction, params: {{mode: point_forecast, method: direct, horizon: 1}}, inputs: [src_y]}}
@@ -181,7 +181,7 @@ def test_dim2_l2_winsorize_and_zscore_outlier_paths(tmp_path):
             "imputation_policy: none_propagate\n    imputation_temporal_rule: block_recompute",
         )
         result = execute_recipe(recipe)
-        log = result.cells[0].runtime_result.artifacts["l2_clean_panel_v1"].cleaning_log
+        log = result.cells[0].runtime_result.artifacts["preprocessed_panel_v1"].cleaning_log
         assert any(step.get("outlier") == policy for step in log["steps"])
 
 
@@ -191,7 +191,7 @@ def test_dim2_l2_em_factor_imputation_runs():
         "imputation_policy: em_factor\n    imputation_temporal_rule: block_recompute",
     )
     result = execute_recipe(recipe)
-    log = result.cells[0].runtime_result.artifacts["l2_clean_panel_v1"].cleaning_log
+    log = result.cells[0].runtime_result.artifacts["preprocessed_panel_v1"].cleaning_log
     assert any(step.get("imputation") == "em_factor" for step in log["steps"])
 
 

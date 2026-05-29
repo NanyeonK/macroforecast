@@ -67,8 +67,8 @@ Contracts:
   that axis is a FRED-MD/QD metadata control. FRED-SD uses the dedicated state
   and series scope controls in
   [4.1.4 FRED-SD Predictor Scope](fred_sd_source_selection.md).
-- Official FRED-MD/QD transform codes are applied by L2 `transform_policy`.
-  L1 no longer exposes transform decisions; they belong to L2
+- Official FRED-MD/QD transform codes are applied by preprocessing `transform_policy`.
+  L1 no longer exposes transform decisions; they belong to preprocessing
   representation and research preprocessing.
 
 > **Warning:** Custom files are user-supplied source data. The Navigator can

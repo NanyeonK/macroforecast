@@ -1,5 +1,5 @@
-"""Diagnostic layer packages for data, preprocessing, features, and generator checks."""
+"""Legacy recipe diagnostic packages kept for runtime compatibility."""
 
 from __future__ import annotations
 
-__all__ = ["data_summary", "preprocessing", "features", "generator"]
+__all__ = ["features", "generator"]

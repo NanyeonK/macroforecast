@@ -33,10 +33,10 @@
 | `l1_estimated_markov_switching.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
 | `l1_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
 | `l1_with_regime.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
-| `l2_5_full.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
-| `l2_5_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
-| `l2_fred_sd_alignment.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
-| `l2_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
+| `data_diagnostic_full.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
+| `data_diagnostic_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
+| `preprocessing_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
+| `data_preprocessing_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: L3 uses a step graph (nodes/sinks); fixed_axes sugar is not supported |
 | `l3_5_full.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
 | `l3_5_minimal.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
 | `l3_cascade_pca_on_marx.yaml` | FAIL_SCHEMA | RuntimeError | cell cell_001 failed: single_target requires leaf_config.target string |
@@ -87,7 +87,7 @@ The `RuntimeError` wrapping is a presentation artifact of the cell execution loo
 
 These recipes are partial-layer documentation examples. They demonstrate a single layer's syntax (e.g., `3_feature_engineering:`, `5_evaluation:`, `8_output:`) without providing a full runnable recipe. The runtime needs a `1_data` block with `leaf_config.target` set to a string to resolve the `single_target` constraint. Because the `1_data` section is absent (or present but without `target`), schema validation rejects the recipe.
 
-Affected recipes: `l0_minimal.yaml`, `l1_5_full.yaml`, `l1_5_minimal.yaml`, `l2_5_full.yaml`, `l2_5_minimal.yaml`, `l3_5_full.yaml`, `l3_5_minimal.yaml`, `l3_cascade_pca_on_marx.yaml`, `l3_mccracken_ng_baseline.yaml`, `l3_minimal_lag_only.yaml`, `l3_multi_pipeline_F_MARX.yaml`, `l4_5_full.yaml`, `l4_5_minimal.yaml`, `l4_mrf_placeholder.yaml`, `l4_regime_separate_fit.yaml`, `l5_full_reporting.yaml`, `l5_latex_export.yaml`, `l5_minimal.yaml`, `l7_coulombe_groups.yaml`, `l7_minimal_shap.yaml`, `l7_multi_method.yaml`, `l7_temporal.yaml`, `l7_transformation_attribution.yaml`, `l8_compact_mode.yaml`, `l8_latex_paper.yaml`, `l8_paper_replication.yaml`.
+Affected recipes: `l0_minimal.yaml`, `l1_5_full.yaml`, `l1_5_minimal.yaml`, `data_diagnostic_full.yaml`, `data_diagnostic_minimal.yaml`, `l3_5_full.yaml`, `l3_5_minimal.yaml`, `l3_cascade_pca_on_marx.yaml`, `l3_mccracken_ng_baseline.yaml`, `l3_minimal_lag_only.yaml`, `l3_multi_pipeline_F_MARX.yaml`, `l4_5_full.yaml`, `l4_5_minimal.yaml`, `l4_mrf_placeholder.yaml`, `l4_regime_separate_fit.yaml`, `l5_full_reporting.yaml`, `l5_latex_export.yaml`, `l5_minimal.yaml`, `l7_coulombe_groups.yaml`, `l7_minimal_shap.yaml`, `l7_multi_method.yaml`, `l7_temporal.yaml`, `l7_transformation_attribution.yaml`, `l8_compact_mode.yaml`, `l8_latex_paper.yaml`, `l8_paper_replication.yaml`.
 
 Note: `l4_regime_separate_fit.yaml` also falls into this group. It provides `1_data` with `target: CPIAUCSL` inside `fixed_axes` (an axis-level key) rather than `leaf_config`, and it uses `panel_composition` logic implicitly, triggering both `"unknown L1 axis 'target'"` and `"single_target requires leaf_config.target string"`.
 
@@ -95,7 +95,7 @@ Note: `l4_regime_separate_fit.yaml` also falls into this group. It provides `1_d
 
 These recipes include a `3_feature_engineering:` block using the `fixed_axes` syntax, but the L3 schema has been migrated to a node/sinks DAG model that rejects `fixed_axes` sugar. The L3 validator fires before execution.
 
-Affected recipes: `l1_estimated_markov_switching.yaml`, `l1_minimal.yaml`, `l1_with_regime.yaml`, `l2_fred_sd_alignment.yaml`, `l2_minimal.yaml`.
+Affected recipes: `l1_estimated_markov_switching.yaml`, `l1_minimal.yaml`, `l1_with_regime.yaml`, `preprocessing_minimal.yaml`, `data_preprocessing_minimal.yaml`.
 
 Note: these recipes show L1 or L2 layer configuration, but they also contain a `3_feature_engineering:` section (likely included for documentation of a multi-layer pattern) whose `fixed_axes` usage is stale.
 
@@ -155,6 +155,6 @@ Based on this audit, PR7 remediation shape:
 - Estimated PR count: 1 to 3 (depending on whether partial-layer recipes are converted to full runnables or annotated as snippets)
 - Scope:
   - 1 axis rename (`custom_source_policy` → `panel_composition`): 1 recipe
-  - 5 `fixed_axes` → `nodes/sinks` migrations: 5 recipes (l1_minimal, l1_with_regime, l1_estimated_markov_switching, l2_minimal, l2_fred_sd_alignment)
+  - 5 `fixed_axes` → `nodes/sinks` migrations: 5 recipes (l1_minimal, l1_with_regime, l1_estimated_markov_switching, data_preprocessing_minimal, preprocessing_minimal)
   - 26 partial-layer recipes: either full-recipe conversion (Option A) or snippet annotation (Option B) — this is the major decision gate for PR7 planning
 - No source-code changes required for any of these fixes; all repairs are in YAML recipe files under `examples/recipes/`

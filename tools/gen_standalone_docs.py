@@ -4,7 +4,7 @@ Produces verified signatures and result attributes for every callable in
 ``macroforecast.functions.__all__``, layered by module.
 
 Used by v0.9.2b1 docs rewrite — outputs ground truth that
-``docs/standalone_functions/{l2..l7}.md`` MUST verbatim-transcribe.
+``docs/standalone_functions/`` MUST verbatim-transcribe.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ import macroforecast.functions as f
 
 # Module-to-layer mapping (updated for macroforecast.api.functions.* layout)
 LAYER_MAP = {
-    "macroforecast.api.functions.clean": "L2",
+    "macroforecast.api.functions.clean": "Preprocessing",
     "macroforecast.api.functions.transforms": "L3",
     "macroforecast.api.functions.linear": "L4",
     "macroforecast.api.functions.ridge": "L4",
