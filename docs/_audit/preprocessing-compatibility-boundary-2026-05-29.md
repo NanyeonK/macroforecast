@@ -57,3 +57,26 @@ These modules can be deleted after:
    `reprocess()`, `plan()`, and `report()`.
 4. Compatibility shims under `macroforecast.layers.*` and
    `macroforecast.core.layers.*` are removed or replaced by the new wrapper.
+
+## Next rewrite sequence
+
+1. Replace `macroforecast.core.runtime` imports of
+   `macroforecast.preprocessing.schema` with direct calls to
+   `macroforecast.preprocessing.reprocess`, plus a small wrapper that maps old
+   recipe/YAML keys to the direct-call arguments.
+2. Replace `tools/docgen` use of `L2_LAYER_SPEC` with function-reference pages
+   generated from semantic modules, or remove generated option docs entirely
+   for preprocessing.
+3. Rewrite `tests/test_preprocess_contract.py` into public API tests covering
+   `reprocess`, `plan`, `report`, and the step helpers.
+4. Delete `macroforecast.preprocessing.schema`, `build`, and `types` only after
+   the runtime and docgen imports above are gone.
+
+## Frequency alignment note
+
+`macroforecast.data.combine(...)` remains the correct place to combine
+FRED-MD/FRED-QD with FRED-SD. `preprocessing.handle_mixed_frequency(...)` is a
+direct helper for already-formed panels. Its quarterly-to-monthly compatibility
+alias `step_backward` now accepts the same in-quarter repeat semantics as
+`data.combine(..., quarterly_to_monthly="repeat_within_quarter")`; the clearer
+new spelling for direct calls is `repeat_within_quarter`.

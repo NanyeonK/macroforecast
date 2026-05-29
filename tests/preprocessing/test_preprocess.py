@@ -190,6 +190,93 @@ def test_handle_mixed_frequency_can_align_weekly_and_monthly_to_monthly():
     assert aligned["monthly"].tolist() == [100.0, 200.0]
 
 
+def test_handle_mixed_frequency_quarterly_to_monthly_matches_data_combine():
+    metadata = {"dataset": "fred_sd", "source_family": "fred-sd", "frequency": "state_monthly"}
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=6, freq="MS"),
+                "M_CA": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+                "Q_CA": [np.nan, np.nan, 10.0, np.nan, np.nan, 20.0],
+            }
+        ),
+        date="date",
+        metadata=metadata,
+    )
+    panel.attrs["macrocast_reports"] = {
+        "fred_sd_series_metadata": {
+            "series": [
+                {"column": "M_CA", "native_frequency": "monthly"},
+                {"column": "Q_CA", "native_frequency": "quarterly"},
+            ]
+        }
+    }
+
+    aligned = mf.preprocessing.handle_mixed_frequency(
+        panel,
+        method="monthly",
+        quarterly_to_monthly="repeat_within_quarter",
+    )
+    legacy_alias = mf.preprocessing.handle_mixed_frequency(
+        panel,
+        method="monthly",
+        quarterly_to_monthly="step_backward",
+    )
+
+    national = mf.data.DataBundle(
+        panel[["M_CA"]],
+        {"dataset": "monthly_source", "source_family": "test", "frequency": "monthly"},
+    )
+    regional = mf.data.DataBundle(panel[["Q_CA"]], metadata)
+    regional.panel.attrs["macrocast_reports"] = panel.attrs["macrocast_reports"]
+    with pytest.warns(UserWarning, match="quarterly variables were aligned to monthly"):
+        combined = mf.data.combine(national, regional, dataset="combo", frequency="monthly")
+
+    assert aligned["Q_CA"].tolist() == [10.0, 10.0, 10.0, 20.0, 20.0, 20.0]
+    pd.testing.assert_series_equal(aligned["Q_CA"], legacy_alias["Q_CA"])
+    pd.testing.assert_series_equal(aligned["Q_CA"], combined.panel["Q_CA"])
+
+
+def test_reprocess_default_pipeline_matches_fred_md_order():
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=6, freq="MS"),
+                "level": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+                "diff": [10.0, 11.0, 13.0, 16.0, 20.0, 25.0],
+                "diff2": [1.0, 4.0, 9.0, 16.0, 25.0, 36.0],
+                "logdiff": [1.0, 2.0, 4.0, 8.0, 16.0, 32.0],
+            }
+        ),
+        date="date",
+    )
+    metadata = {
+        "dataset": "fred_md",
+        "source_family": "fred-md",
+        "frequency": "monthly",
+        "transform_codes": {"level": 1, "diff": 2, "diff2": 3, "logdiff": 5},
+    }
+    bundle = mf.data.DataBundle(panel, metadata)
+
+    result = mf.preprocessing.reprocess(bundle)
+
+    assert [step["step"] for step in result.steps] == [
+        "frequency",
+        "transform",
+        "tcode_lag",
+        "outliers",
+        "impute",
+        "frame",
+    ]
+    assert result.steps[2]["rows_removed"] == 2
+    assert result.panel.index[0] == pd.Timestamp("2020-03-01")
+    assert result.metadata["preprocessing"]["transform"] == "official"
+    assert result.metadata["preprocessing"]["outliers"] == "iqr"
+    assert result.metadata["preprocessing"]["impute"] == "em_factor"
+    assert result.metadata["preprocessing"]["frame"] == "keep"
+    assert result.panel.isna().sum().sum() == 0
+
+
 def test_tcode_seven_matches_fred_md_first_difference_of_percent_change():
     panel = mf.data.as_panel(
         pd.DataFrame(

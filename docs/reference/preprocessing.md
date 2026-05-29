@@ -103,7 +103,7 @@ macroforecast.preprocessing.reprocess(
 | `data` | `DataSpec`, `DataBundle`, `(panel, metadata)`, or `DataFrame` | required | Canonical data input. |
 | `metadata` | mapping or `None` | `None` | Extra metadata to merge before preprocessing. |
 | `frequency` | `str` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"`. |
-| `quarterly_to_monthly` | `str` | `"step_backward"` | `"step_backward"`, `"step_forward"`, `"linear_interpolation"`. |
+| `quarterly_to_monthly` | `str` | `"step_backward"` | `"step_backward"`, `"repeat_within_quarter"`, `"step_forward"`, `"quarter_end_ffill"`, `"linear_interpolation"`. |
 | `weekly_to_monthly` | `str` | `"mean"` | `"mean"`, `"last"`, `"sum"`. |
 | `monthly_to_quarterly` | `str` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"`. |
 | `weekly_to_quarterly` | `str` | `"mean"` | `"mean"`, `"last"`, `"sum"`. |
@@ -263,7 +263,7 @@ macroforecast.preprocessing.handle_mixed_frequency(
 | Name | Default | Choices |
 | --- | --- | --- |
 | `method` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"` |
-| `quarterly_to_monthly` | `"step_backward"` | `"step_backward"`, `"step_forward"`, `"linear_interpolation"` |
+| `quarterly_to_monthly` | `"step_backward"` | `"step_backward"`, `"repeat_within_quarter"`, `"step_forward"`, `"quarter_end_ffill"`, `"linear_interpolation"` |
 | `weekly_to_monthly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
 | `monthly_to_quarterly` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"` |
 | `weekly_to_quarterly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
@@ -275,6 +275,12 @@ Returns a new `pandas.DataFrame`. Frequency detection uses
 date spacing only as fallback. Dataset composition such as FRED-MD+FRED-SD or
 FRED-QD+FRED-SD should still be handled in `macroforecast.data`; this helper is
 for direct preprocessing of an already-formed panel.
+
+For quarterly-to-monthly alignment, `step_backward` is kept as a compatibility
+alias for the package's current direct-call meaning: assign each quarterly
+observation to every month in its own quarter. The clearer new spelling is
+`repeat_within_quarter`, matching `macroforecast.data.combine(...)`.
+`quarter_end_ffill` holds values forward from the quarter-end month.
 
 ## handle_tcode_lag
 

@@ -1041,16 +1041,25 @@ def _align_to_quarterly(
 
 def _quarterly_to_monthly(series: pd.Series, rule: str, *, index: pd.DatetimeIndex) -> pd.Series:
     key = rule.lower()
-    monthly = series.copy()
-    monthly.index = pd.DatetimeIndex(monthly.index).to_period("M").to_timestamp()
-    monthly = monthly.resample("MS").last().reindex(index)
-    if key == "step_backward":
-        return monthly.ffill()
-    if key == "step_forward":
-        return monthly.bfill()
-    if key == "linear_interpolation":
-        return monthly.interpolate(method="linear", limit_direction="both")
-    raise ValueError("quarterly_to_monthly must be one of ['step_backward', 'step_forward', 'linear_interpolation']")
+    quarterly = series.copy()
+    quarterly.index = pd.DatetimeIndex(quarterly.index).to_period("Q").to_timestamp()
+    quarterly = quarterly.groupby(level=0).last().sort_index()
+    if key in {"step_backward", "repeat_within_quarter", "repeat", "spread"}:
+        by_quarter = dict(zip(pd.DatetimeIndex(quarterly.index).to_period("Q"), quarterly.to_numpy(), strict=False))
+        values = [by_quarter.get(period) for period in pd.DatetimeIndex(index).to_period("Q")]
+        return pd.Series(values, index=index, dtype="float64")
+    if key in {"step_forward", "quarter_end_ffill", "ffill_from_quarter_end"}:
+        observed = quarterly.copy()
+        observed.index = pd.DatetimeIndex(observed.index).to_period("Q").asfreq("M", how="end").to_timestamp()
+        return observed.reindex(index).ffill()
+    if key in {"linear_interpolation", "linear"}:
+        observed = quarterly.copy()
+        observed.index = pd.DatetimeIndex(observed.index).to_period("Q").asfreq("M", how="end").to_timestamp()
+        return observed.reindex(index.union(observed.index)).sort_index().interpolate(method="time").reindex(index)
+    raise ValueError(
+        "quarterly_to_monthly must be one of "
+        "['step_backward', 'repeat_within_quarter', 'step_forward', 'quarter_end_ffill', 'linear_interpolation']"
+    )
 
 
 def _aggregate_to_monthly(series: pd.Series, rule: str) -> pd.Series:
