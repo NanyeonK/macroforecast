@@ -9,6 +9,11 @@ use case is raw data versus the panel returned by
 Use `macroforecast.data_summary` for a one-panel summary. Use
 `macroforecast.preprocessing.report()` for the preprocessing execution log.
 
+Both inputs must satisfy the same canonical panel contract used by
+`macroforecast.data`: `pandas.DataFrame`, `DatetimeIndex` named `"date"`,
+ascending dates, no duplicate dates, no duplicate columns, numeric values or
+`NaN`, no infinite values, and non-empty shape.
+
 ## Public Flow
 
 ```python
@@ -102,7 +107,8 @@ The snapshots are intentionally compact. Full comparison tables remain in
 
 `distribution_shift` and `correlation_shift` default to `sample="common_index"`.
 This avoids mixing distribution changes with rows that only exist before or
-after preprocessing. Set `sample="full"` when you deliberately want each panel's
+after preprocessing. With `sample="common_index"`, the two panels must share at
+least one date. Set `sample="full"` when you deliberately want each panel's
 full available sample.
 
 `ks_statistic` is the two-sample KS statistic only; it does not compute a p-value.
@@ -116,6 +122,10 @@ full available sample.
 | `distribution_shift(raw, clean, metrics=..., sample=...)` | two DataFrames | `DataFrame` | Mean, variance, tail-shape, and KS-style distribution changes. |
 | `correlation_shift(raw, clean, method=..., sample=...)` | two DataFrames | `DataFrame` | Cleaned-minus-raw correlation matrix. |
 | `cleaning_effect_summary(...)` | metadata/counters | `dict` | Normalize preprocessing effects into one compact object. |
+
+Helper inputs follow the same canonical panel contract as `analyze_data(...)`.
+`compare_panels(...)` preserves specific errors for duplicate index and
+duplicate column labels, because those make cell-level comparison ambiguous.
 
 ## Boundary
 

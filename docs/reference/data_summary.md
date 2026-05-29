@@ -11,6 +11,11 @@ Use `macroforecast.data_analysis` when comparing two panels, such as raw data
 versus a processed panel. Use `macroforecast.preprocessing.report()` when the
 question is which preprocessing choices ran.
 
+The module is intentionally read-only. It validates the canonical panel
+contract, computes summaries, and returns report objects. It does not impute,
+transform, align frequencies, compare raw and processed panels, or mutate input
+metadata.
+
 ## Public Flow
 
 ```python
@@ -90,7 +95,13 @@ summary.metadata["data_summary"]
 | `include_outliers`, `outlier_method` | Outlier option state. |
 | `include_stationarity`, `stationarity_test`, `stationarity_scope` | Stationarity option state. |
 | `panel` | Compact panel snapshot: rows, columns, start, end, missing count, inferred frequency. |
+| `input` | Source metadata snapshot: dataset, source family, frequency, whether panel/preprocessing metadata exists, and metadata keys. |
 | `outputs` | Boolean flags for fields included in the report. |
+
+`input["has_preprocessing"]` is `True` when the input is a
+`PreprocessedData` object or another panel carrying a `preprocessing` metadata
+stage. This helps distinguish "summary of raw data" from "summary of processed
+data" without turning `data_summary` into a before/after comparison tool.
 
 ## Helper Functions
 
@@ -132,6 +143,33 @@ Returns one row per numeric series. Columns include `n_obs`,
 `iqr_outlier_count`, `iqr_outlier_rate`, `zscore_outlier_count`, and
 `zscore_outlier_rate`, depending on `method`.
 
+The z-score path uses population standard deviation (`ddof=0`) to match
+`macroforecast.preprocessing.zscore_outlier_clean(...)`. Non-positive
+thresholds raise `ValueError`.
+
+## correlation_matrix
+
+```python
+macroforecast.data_summary.correlation_matrix(
+    data,
+    *,
+    method: str = "pearson",
+    min_periods: int = 1,
+) -> pandas.DataFrame
+```
+
+### Input
+
+| Name | Default | Choices |
+| --- | --- | --- |
+| `method` | `"pearson"` | `"pearson"`, `"spearman"`, `"kendall"` |
+| `min_periods` | `1` | Positive integer. |
+
+### Output
+
+Returns the pairwise numeric correlation matrix. Invalid methods and
+`min_periods < 1` raise `ValueError`.
+
 ## stationarity_tests
 
 ```python
@@ -155,6 +193,11 @@ macroforecast.data_summary.stationarity_tests(
 | `target`, `targets` | `None` | Optional target names. If `data` is a `DataSpec`, these default from the spec. |
 | `alpha` | `0.05` | Significance level for rejection booleans. |
 
+`alpha` must be strictly between `0` and `1`. For `scope="target_only"` and
+`scope="predictors_only"`, target names must be known either from arguments or
+from a `DataSpec`. If supplied targets are not columns in the panel, the
+function raises `ValueError`.
+
 ### Output
 
 Returns a dictionary with `test`, `scope`, `alpha`, `n_series`, and
@@ -169,6 +212,24 @@ more of:
 
 `pp` uses `arch.unitroot.PhillipsPerron` when available and otherwise falls
 back to macroforecast's native Newey-West/MacKinnon implementation.
+
+## Phillips-Perron Helpers
+
+```python
+macroforecast.data_summary.phillips_perron_test(values, *, alpha=0.05) -> dict
+macroforecast.data_summary.mackinnon_pp_pvalue(z_tau, *, n, regression="c") -> float
+```
+
+`phillips_perron_test(...)` is the native fallback implementation used by
+`stationarity_tests(..., test="pp")` when `arch` is not installed. It drops
+non-finite values, requires at least eight finite observations, and returns
+`status="insufficient_data"` or `status="singular_design"` instead of raising
+for those data conditions.
+
+`mackinnon_pp_pvalue(...)` approximates the MacKinnon p-value for the constant
+case (`regression="c"`) using the internal critical-value table. For other
+regression labels it falls back to a normal CDF approximation. Non-finite
+statistics and non-positive sample sizes raise `ValueError`.
 
 ## Boundary
 

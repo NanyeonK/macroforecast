@@ -17,6 +17,7 @@ from macroforecast.data_analysis import (
 
 def _panels() -> tuple[pd.DataFrame, pd.DataFrame]:
     index = pd.date_range("2020-01-01", periods=4, freq="MS")
+    index.name = "date"
     raw = pd.DataFrame(
         {
             "y": [1.0, 2.0, 3.0, 4.0],
@@ -85,6 +86,7 @@ def test_distribution_shift_computes_requested_metrics():
 
 def test_distribution_shift_uses_common_index_by_default():
     index = pd.date_range("2020-01-01", periods=3, freq="MS")
+    index.name = "date"
     raw = pd.DataFrame({"x": [1.0, 100.0, 200.0]}, index=index)
     clean = pd.DataFrame({"x": [110.0, 210.0]}, index=index[1:])
 
@@ -105,8 +107,9 @@ def test_distribution_shift_rejects_unknown_metric():
 
 
 def test_distribution_shift_ks_statistic_matches_scipy():
-    raw = pd.DataFrame({"x": [1.0, 2.0, 3.0, 5.0]})
-    clean = pd.DataFrame({"x": [1.5, 2.5, 4.0, 6.0]})
+    index = pd.date_range("2020-01-01", periods=4, freq="MS", name="date")
+    raw = pd.DataFrame({"x": [1.0, 2.0, 3.0, 5.0]}, index=index)
+    clean = pd.DataFrame({"x": [1.5, 2.5, 4.0, 6.0]}, index=index)
 
     out = distribution_shift(raw, clean, metrics=("ks_statistic",))
 
@@ -127,6 +130,7 @@ def test_correlation_shift_returns_clean_minus_raw_matrix():
 
 def test_correlation_shift_uses_common_index_by_default():
     index = pd.date_range("2020-01-01", periods=4, freq="MS")
+    index.name = "date"
     raw = pd.DataFrame({"a": [100.0, 1.0, 2.0, 3.0], "b": [0.0, 3.0, 2.0, 1.0]}, index=index)
     clean = pd.DataFrame({"a": [1.0, 2.0, 3.0], "b": [1.0, 2.0, 3.0]}, index=index[1:])
 
@@ -223,8 +227,28 @@ def test_functions_reject_duplicate_index_and_negative_tolerance():
     raw, clean = _panels()
     duplicated = raw.copy()
     duplicated.index = [raw.index[0], *raw.index[:3]]
+    duplicated.index.name = "date"
 
     with pytest.raises(ValueError, match="duplicate index"):
         compare_panels(duplicated, clean)
     with pytest.raises(ValueError, match="non-negative"):
         compare_panels(raw, clean, tolerance=-1.0)
+
+
+def test_functions_reject_noncanonical_panel_contract():
+    raw, clean = _panels()
+    raw_bad = raw.copy()
+    raw_bad.index.name = None
+
+    with pytest.raises(ValueError, match="canonical panel contract"):
+        compare_panels(raw_bad, clean)
+
+
+def test_distribution_shift_common_index_requires_overlap():
+    raw_index = pd.date_range("2020-01-01", periods=2, freq="MS", name="date")
+    clean_index = pd.date_range("2021-01-01", periods=2, freq="MS", name="date")
+    raw = pd.DataFrame({"x": [1.0, 2.0]}, index=raw_index)
+    clean = pd.DataFrame({"x": [3.0, 4.0]}, index=clean_index)
+
+    with pytest.raises(ValueError, match="common date"):
+        distribution_shift(raw, clean)

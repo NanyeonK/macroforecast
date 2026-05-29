@@ -160,8 +160,10 @@ def correlation_matrix(
 
     if method not in {"pearson", "spearman", "kendall"}:
         raise ValueError("method must be one of 'pearson', 'spearman', or 'kendall'")
+    if int(min_periods) < 1:
+        raise ValueError("min_periods must be a positive integer")
     panel, _metadata = _coerce_panel(data)
-    return panel.select_dtypes("number").corr(method=method, min_periods=min_periods)
+    return panel.select_dtypes("number").corr(method=method, min_periods=int(min_periods))
 
 
 def outlier_summary(
@@ -175,6 +177,8 @@ def outlier_summary(
 
     if method not in {"iqr", "zscore", "multi", "both"}:
         raise ValueError("method must be one of 'iqr', 'zscore', 'multi', or 'both'")
+    _validate_positive(iqr_threshold, "iqr_threshold")
+    _validate_positive(zscore_threshold, "zscore_threshold")
     panel, _metadata = _coerce_panel(data)
     numeric = panel.select_dtypes("number")
     rows: list[dict[str, Any]] = []
@@ -187,7 +191,10 @@ def outlier_summary(
     else:
         iqr_mask = pd.DataFrame(False, index=numeric.index, columns=numeric.columns)
     if include_zscore:
-        sd = numeric.std().replace(0, pd.NA)
+        # Match preprocessing.zscore_outlier_clean: population standard
+        # deviation with ddof=0. data_summary should describe the same outlier
+        # rule that preprocessing would apply, not a sample-std variant.
+        sd = numeric.std(ddof=0).replace(0, pd.NA)
         zscore_mask = ((numeric - numeric.mean()).abs() / sd) > float(zscore_threshold)
     else:
         zscore_mask = pd.DataFrame(False, index=numeric.index, columns=numeric.columns)
@@ -221,14 +228,9 @@ def stationarity_tests(
         raise ValueError("test must be one of 'adf', 'pp', 'kpss', 'multi', or 'none'")
     if scope not in {"all", "target_and_predictors", "target_only", "predictors_only"}:
         raise ValueError("scope must be one of 'all', 'target_and_predictors', 'target_only', or 'predictors_only'")
+    _validate_alpha(alpha)
     panel, _metadata = _coerce_panel(data)
-    target_names = _target_names(data, target=target, targets=targets)
-    if scope == "target_only":
-        columns = [column for column in panel.columns if str(column) in target_names]
-    elif scope == "predictors_only":
-        columns = [column for column in panel.columns if str(column) not in target_names]
-    else:
-        columns = list(panel.columns)
+    columns = _scope_columns(panel, data, scope=scope, target=target, targets=targets)
     if test == "none":
         return {
             "test": "none",
@@ -264,6 +266,7 @@ def stationarity_tests(
 def phillips_perron_test(values: Sequence[float] | np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
     """Run the native Phillips-Perron Z_tau unit-root test."""
 
+    _validate_alpha(alpha)
     y = np.asarray(values, dtype=float)
     y = y[np.isfinite(y)]
     n = y.size
@@ -318,6 +321,10 @@ _MACKINNON_PP_C_TABLE = {
 def mackinnon_pp_pvalue(z_tau: float, *, n: int, regression: str = "c") -> float:
     """Approximate MacKinnon p-value for the Phillips-Perron Z_tau statistic."""
 
+    if not np.isfinite(float(z_tau)):
+        raise ValueError("z_tau must be finite")
+    if int(n) < 1:
+        raise ValueError("n must be a positive integer")
     if regression != "c":
         from scipy import stats as _stats
 
@@ -378,6 +385,7 @@ def summarize_data(
             "stationarity_test": stationarity_test if include_stationarity else None,
             "stationarity_scope": stationarity_scope if include_stationarity else None,
             "panel": _compact_panel_info(bundle),
+            "input": _metadata_input_summary(metadata),
             "outputs": {
                 "coverage": True,
                 "univariate": True,
@@ -464,6 +472,41 @@ def _target_names(data: Any, *, target: str | None, targets: Sequence[str] | Non
     return names
 
 
+def _scope_columns(
+    panel: pd.DataFrame,
+    data: Any,
+    *,
+    scope: StationarityScope,
+    target: str | None,
+    targets: Sequence[str] | None,
+) -> list[str]:
+    if scope == "all":
+        return list(panel.columns)
+    target_names = _target_names(data, target=target, targets=targets)
+    if scope in {"target_only", "predictors_only"} and not target_names:
+        raise ValueError(f"scope={scope!r} requires target or targets")
+    panel_names = {str(column) for column in panel.columns}
+    missing_targets = sorted(target_names - panel_names)
+    if missing_targets:
+        raise ValueError(f"target columns are not in the panel: {missing_targets}")
+    if scope == "target_only":
+        return [column for column in panel.columns if str(column) in target_names]
+    if scope == "predictors_only":
+        return [column for column in panel.columns if str(column) not in target_names]
+    return list(panel.columns)
+
+
+def _metadata_input_summary(metadata: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "dataset": metadata.get("dataset"),
+        "source_family": metadata.get("source_family"),
+        "frequency": metadata.get("frequency"),
+        "has_panel_report": "panel" in metadata,
+        "has_preprocessing": "preprocessing" in metadata,
+        "metadata_keys": sorted(str(key) for key in metadata),
+    }
+
+
 def _run_stationarity(name: str, series: pd.Series, alpha: float) -> dict[str, Any]:
     if name == "adf":
         from statsmodels.tsa.stattools import adfuller
@@ -511,6 +554,17 @@ def _date_string(value: Any) -> str:
 
 def _safe_ratio(numerator: int, denominator: int) -> float:
     return float(numerator / denominator) if denominator else 0.0
+
+
+def _validate_positive(value: float, name: str) -> None:
+    if float(value) <= 0:
+        raise ValueError(f"{name} must be > 0")
+
+
+def _validate_alpha(value: float) -> None:
+    alpha = float(value)
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be between 0 and 1")
 
 
 def _float_or_none(value: Any) -> float | None:

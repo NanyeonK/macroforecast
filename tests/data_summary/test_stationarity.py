@@ -123,3 +123,14 @@ def test_phillips_perron_public_callable_runs_without_arch():
     y_rw = np.cumsum(rng.normal(size=200))
     res_rw = mf.data_summary.phillips_perron_test(y_rw, alpha=0.05)
     assert res_rw["p_value"] > 0.05
+
+
+def test_phillips_perron_validates_alpha_and_pvalue_inputs():
+    with pytest.raises(ValueError, match="alpha"):
+        mf.data_summary.phillips_perron_test([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], alpha=0.0)
+
+    with pytest.raises(ValueError, match="z_tau"):
+        mf.data_summary.mackinnon_pp_pvalue(np.inf, n=100)
+
+    with pytest.raises(ValueError, match="n"):
+        mf.data_summary.mackinnon_pp_pvalue(-3.0, n=0)

@@ -49,8 +49,10 @@ def test_data_summary_accepts_preprocessed_data() -> None:
     )
 
     coverage = mf.data_summary.sample_coverage(processed)
+    report = mf.data_summary.summarize_data(processed)
 
     assert coverage.loc["y", "n_missing"] == 0
+    assert report.metadata["data_summary"]["input"]["has_preprocessing"] is True
 
 
 def test_summary_metric_and_correlation_validation() -> None:
@@ -59,6 +61,9 @@ def test_summary_metric_and_correlation_validation() -> None:
 
     with pytest.raises(ValueError, match="method must be one of"):
         mf.data_summary.correlation_matrix(_panel(), method="bad")  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match="min_periods"):
+        mf.data_summary.correlation_matrix(_panel(), min_periods=0)
 
 
 def test_outlier_summary_flags_iqr_and_zscore() -> None:
@@ -76,6 +81,27 @@ def test_outlier_summary_flags_iqr_and_zscore() -> None:
 
     assert outliers.loc["x", "iqr_outlier_count"] == 1
     assert outliers.loc["x", "zscore_outlier_count"] == 1
+
+
+def test_outlier_summary_validates_thresholds_and_matches_preprocessing_zscore() -> None:
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=3, freq="MS"),
+                "x": [1.0, 1.0, 10.0],
+            }
+        ),
+        date="date",
+    )
+
+    with pytest.raises(ValueError, match="iqr_threshold"):
+        mf.data_summary.outlier_summary(panel, iqr_threshold=0)
+    with pytest.raises(ValueError, match="zscore_threshold"):
+        mf.data_summary.outlier_summary(panel, method="zscore", zscore_threshold=-1)
+
+    summary = mf.data_summary.outlier_summary(panel, method="zscore", zscore_threshold=1.3)
+
+    assert summary.loc["x", "zscore_outlier_count"] == 1
 
 
 def test_summarize_data_can_include_outliers_and_stationarity() -> None:
@@ -121,3 +147,23 @@ def test_stationarity_scope_uses_data_spec_targets() -> None:
     results = mf.data_summary.stationarity_tests(spec, test="adf", scope="target_only")
 
     assert set(results["by_series"]) == {"y"}
+
+
+def test_stationarity_scope_requires_valid_targets_for_target_scopes() -> None:
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2010-01-01", periods=20, freq="MS"),
+                "y": np.arange(20, dtype=float),
+                "x": np.arange(20, dtype=float),
+            }
+        ),
+        date="date",
+    )
+
+    with pytest.raises(ValueError, match="requires target"):
+        mf.data_summary.stationarity_tests(panel, test="adf", scope="target_only")
+    with pytest.raises(ValueError, match="not in the panel"):
+        mf.data_summary.stationarity_tests(panel, test="adf", scope="target_only", target="missing")
+    with pytest.raises(ValueError, match="alpha"):
+        mf.data_summary.stationarity_tests(panel, test="adf", alpha=1.0)

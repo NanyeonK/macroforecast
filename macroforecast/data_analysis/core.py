@@ -6,7 +6,7 @@ from typing import Any, Literal, Mapping, Sequence
 import numpy as np
 import pandas as pd
 
-from macroforecast.data import attach_metadata
+from macroforecast.data import attach_metadata, validate_panel
 
 
 DistributionMetric = Literal[
@@ -319,6 +319,10 @@ def _validate_panel(frame: pd.DataFrame, name: str) -> pd.DataFrame:
         raise ValueError(f"{name} must not have duplicate column names")
     if frame.index.has_duplicates:
         raise ValueError(f"{name} must not have duplicate index values")
+    try:
+        validate_panel(frame)
+    except Exception as exc:
+        raise ValueError(f"{name} must satisfy the macroforecast canonical panel contract") from exc
     return frame
 
 
@@ -425,6 +429,8 @@ def _analysis_frames(
 ) -> tuple[pd.DataFrame, pd.DataFrame, int]:
     if sample == "common_index":
         index = raw.index.intersection(clean.index)
+        if len(index) == 0:
+            raise ValueError("sample='common_index' requires at least one common date")
         return raw.loc[index, list(columns)], clean.loc[index, list(columns)], int(len(index))
     if sample == "full":
         return raw.loc[:, list(columns)], clean.loc[:, list(columns)], int(max(len(raw.index), len(clean.index)))
