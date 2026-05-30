@@ -234,9 +234,9 @@ def _marx_ladder(
     )
     result = pd.DataFrame(index=panel.index)
     for column in columns:
-        for lag in lag_values:
-            lag_columns = [f"{column}_lag{step}" for step in range(1, lag + 1)]
-            result[f"{column}_ma{lag}_lag1"] = scaled_lags.loc[:, lag_columns].mean(axis=1, skipna=False)
+        for lag_order in lag_values:
+            lag_columns = [f"{column}_lag{step}" for step in range(1, lag_order + 1)]
+            result[f"{column}_ma{lag_order}_lag1"] = scaled_lags.loc[:, lag_columns].mean(axis=1, skipna=False)
     result.index.name = "date"
     result.attrs["macroforecast_metadata"] = attach_metadata(
         dict(panel.attrs.get("macroforecast_metadata", {})),

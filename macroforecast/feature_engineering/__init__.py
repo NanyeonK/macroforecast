@@ -27,15 +27,19 @@ from .core import (
     time_features,
 )
 from .types import FeatureInput, FeatureSet
+from .specs import FeatureSpec, FittedFeatureBuilder, feature_spec
 
 __all__ = [
     "FeatureInput",
+    "FeatureSpec",
     "FeatureSet",
+    "FittedFeatureBuilder",
     "average_target",
     "build_features",
     "compose_features",
     "direct_target",
     "feature_matrix",
+    "feature_spec",
     "group_pca",
     "group_pca_step",
     "lag",

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -53,6 +55,24 @@ def test_model_spec_can_fit_like_model_callable() -> None:
 
     assert isinstance(fit, mf.models.ModelFit)
     assert fit.metadata["alpha"] == 0.5
+
+
+def test_model_fit_and_spec_export_metadata() -> None:
+    X, y = _xy()
+    spec = mf.models.get_model("ridge", preset="small", params={"alpha": 0.5})
+    fit = spec(X, y)
+
+    fit_dict = fit.to_dict()
+    spec_dict = spec.to_dict()
+    spec_metadata = spec.to_metadata()
+
+    assert fit_dict["model"] == "ridge"
+    assert fit_dict["feature_names"] == ["x1", "x2"]
+    assert fit.to_metadata()["fit"]["n_features"] == 2
+    assert spec_dict["parameters"][0]["name"] == "alpha"
+    assert spec_metadata["model"] == "ridge"
+    assert spec_metadata["search_space"]["alpha"] == [0.01, 0.1, 1.0]
+    json.dumps({"fit": fit_dict, "spec": spec_dict, "metadata": spec_metadata})
 
 
 def test_pcr_and_far_fit() -> None:

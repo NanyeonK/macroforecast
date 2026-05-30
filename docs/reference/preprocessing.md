@@ -43,7 +43,8 @@ metadata = processed.metadata
 | 3. T-code lag | `tcode_lag="drop"` | Remove leading rows implied by the largest t-code lag. This is two rows for full FRED-MD. |
 | 4. Outliers | `outliers="iqr"`, `outlier_action="flag_as_nan"`, `iqr_threshold=10.0` | Flag observations with `abs(x - median) > 10 * IQR` and set them to missing. |
 | 5. Imputation | `impute="em_factor"` | Run FRED-MD style PCA-EM with Bai-Ng `PC_p2`, `kmax=8`, `DEMEAN=2`, `max_iter=50`, `tol=1e-6`. |
-| 6. Frame | `frame="keep"` | Keep the post-EM frame. No final balanced-panel truncation is applied by default. |
+| 6. Standardize | `standardize="none"` | Optional column-wise scaling after imputation. Choices are `"zscore"`, `"robust"`, and `"minmax"`. |
+| 7. Frame | `frame="keep"` | Keep the post-EM frame. No final balanced-panel truncation is applied by default. |
 
 Set `transform_order="before_frequency"` when a mixed-frequency panel should be
 transformed in each native frequency before monthly or quarterly alignment. The
@@ -65,8 +66,44 @@ The official FRED-MD/FRED-QD t-code map uses these formulas for a raw series
 | `6` | `(log(x_t) - log(x_{t-1})) - (log(x_{t-1}) - log(x_{t-2}))` | `2` | requires `min(x) > 1e-6`; otherwise all missing |
 | `7` | `(x_t / x_{t-1} - 1) - (x_{t-1} / x_{t-2} - 1)` | `2` | none |
 
-`mf.preprocessing.preprocess(...)` is kept as a backward-compatible alias for
-`reprocess(...)`.
+There is no `preprocess(...)` compatibility alias in the clean public API. Use
+`reprocess(...)` for full-sample preprocessing and `preprocess_spec(...)` for a
+runner-fitted preprocessing contract.
+
+Most empirical macro papers preprocess the full panel once before fitting
+models. That is supported by `reprocess(...)`. For a real-time forecast design,
+where each origin should only use information available at that origin, use
+`preprocess_spec(...)` inside `macroforecast.forecasting.run(...)`.
+`preprocess_spec(...)` only stores what preprocessing should do; the runner
+receives `preprocessing_policy=mf.window.stage_policy(...)` and decides where
+the spec may fit.
+
+Common runner policies:
+
+| Policy scope | Meaning |
+| --- | --- |
+| `"full_panel"` | Fit preprocessing once on the full panel. This is useful for retrospective replication designs. |
+| `"origin_available"` | Re-run preprocessing on observations available at each origin plus requested test rows. This supports EM imputation on variables observed by that origin. |
+| `"fit_window"` | Fit outlier, imputation, and standardization state on the model fit window, then apply that state to validation/test rows. It currently supports `impute="none"`, `"mean"`, and `"forward_fill"`; use `"origin_available"` for EM or linear imputation. |
+| `"fixed_reference"` | Fit supported preprocessing state on a fixed reference period, then apply that state to later windows. |
+
+```python
+pre = macroforecast.preprocessing.preprocess_spec(
+    transform="official",
+    outliers="iqr",
+    impute="em_factor",
+    frame="keep",
+)
+
+result = macroforecast.forecasting.run(
+    panel,
+    "ridge",
+    preprocessing=pre,
+    preprocessing_policy=macroforecast.window.stage_policy("origin_available"),
+    features=features,
+    window=window,
+)
+```
 
 ## reprocess
 
@@ -96,7 +133,11 @@ macroforecast.preprocessing.reprocess(
     em_demean: int = 2,
     em_max_iter: int = 50,
     em_tolerance: float = 1e-6,
+    standardize: str = "none",
+    standardize_columns: str | Sequence[str] = "all",
+    standardize_ddof: int = 0,
     frame: str = "keep",
+    warn_metadata: bool = True,
 ) -> PreprocessedData
 ```
 
@@ -121,7 +162,11 @@ macroforecast.preprocessing.reprocess(
 | `impute` | `str` | `"em_factor"` | `"em_factor"`, `"em_multivariate"`, `"mean"`, `"forward_fill"`, `"linear"`, `"none"`. |
 | `em_factor_selection` | `str` | `"baing_p2"` | `"baing_p1"`, `"baing_p2"`, `"baing_p3"`, `"fixed"`. |
 | `em_demean` | `int` | `2` | `0`, `1`, `2`, `3`, matching `factors_em.m`. |
+| `standardize` | `str` | `"none"` | `"none"`, `"zscore"`, `"robust"`, `"minmax"`. Aliases include `"standard"` and `"standardize"` for z-score. |
+| `standardize_columns` | `str` or sequence | `"all"` | `"all"`, `"predictors"`, `"targets"`, or explicit column names. `"predictors"` and `"targets"` use `DataSpec` choices when available. |
+| `standardize_ddof` | `int` | `0` | Degrees of freedom used by z-score scaling. |
 | `frame` | `str` | `"keep"` | `"keep"`, `"truncate"`, `"drop_unbalanced_series"`, `"zero_fill"`. |
+| `warn_metadata` | `bool` | `True` | Warn when plain panels lack metadata from `macroforecast.data`. `preprocess_spec(...)` defaults this to `False` unless explicitly overridden. |
 
 ### Output
 
@@ -137,6 +182,8 @@ Returns `PreprocessedData`.
 `metadata["preprocessing"]["transform_state"]` stores inverse-transform support
 metadata for every transformed series: t-code, log-domain requirement, lag
 count, and the last observed raw values/dates available before transformation.
+`metadata["preprocessing"]["standardization_state"]` stores the fitted center
+and scale values when `standardize != "none"`.
 
 When transforms are applied, the final post-override t-code map is also stored
 in `metadata["transform_codes_applied"]` and
@@ -154,12 +201,43 @@ actually ran, not just the raw loader metadata.
 | FRED-SD with default `transform="official"` | `ValueError`; choose `transform="none"` or custom FRED-SD codes. |
 | Frequency inference finds sparse unknown columns during alignment | `UserWarning`; supply data metadata when the source frequency is known. |
 | EM imputation sees an all-missing row or column | `ValueError`. |
+| Standardization sees a zero-variance numeric column | `ValueError`. |
 
 `PreprocessedData` supports tuple unpacking:
 
 ```python
 panel, metadata = processed
 ```
+
+## preprocess_spec
+
+`preprocess_spec(...)` stores the same preprocessing options accepted by
+`reprocess(...)`, excluding input-only arguments such as `data` and `metadata`.
+It rejects unknown options immediately, so stage timing options must be passed
+to `forecasting.run(..., preprocessing_policy=...)`, not hidden inside the
+preprocessing spec.
+
+```python
+pre = mf.preprocessing.preprocess_spec(
+    transform="official",
+    outliers="iqr",
+    impute="em_factor",
+    standardize="zscore",
+    frame="keep",
+)
+```
+
+For direct advanced use:
+
+```python
+fitted = pre.fit(train_panel, policy="origin_available")
+processed_test = fitted.transform(test_panel, history=train_panel)
+```
+
+The fitted and transformed metadata records `fit_period`, `history_period`,
+`transform_period`, and `output_period`. `policy="fit_window"` applies
+fit-window outlier, imputation, and standardization state; it currently supports
+`impute="none"`, `"mean"`, and `"forward_fill"`.
 
 ## Step Helpers
 
@@ -172,10 +250,10 @@ These helpers return `pandas.DataFrame` unless noted.
 | `handle_mixed_frequency(panel, method=...)` | DataFrame | DataFrame | Keep, filter, or align mixed monthly/quarterly/weekly panels. |
 | `apply_transform_codes(panel, codes)` | DataFrame, t-code map | DataFrame | Apply McCracken-Ng t-code formulas. |
 | `fred_sd_transform_codes(data, ...)` | FRED-SD panel/bundle/spec | `dict[str, int]`, or `(dict, DataFrame)` with `return_table=True` | Build FRED-SD state-series t-codes from user choices and optional national-analog suggestions. |
-| `expand_fred_sd_transform_codes(data, ...)` | FRED-SD panel/bundle/spec | same as `fred_sd_transform_codes` | Backward-compatible alias. Prefer `fred_sd_transform_codes`. |
 | `handle_tcode_lag(panel, method=..., codes=...)` | DataFrame | DataFrame | Handle missing rows introduced by t-code transforms. |
 | `handle_outliers(panel, method=...)` | DataFrame | DataFrame | Apply one outlier policy. |
 | `impute_missing(panel, method=...)` | DataFrame | DataFrame | Fill missing values. |
+| `standardize_panel(panel, method=...)` | DataFrame | DataFrame | Apply one full-panel standardization policy. |
 | `handle_frame_edges(panel, method=...)` | DataFrame | DataFrame | Keep/drop/truncate/fill remaining unbalanced edges. |
 
 ## plan
@@ -193,6 +271,9 @@ macroforecast.preprocessing.plan(
     tcode_lag: str = "drop",
     outliers: str = "iqr",
     impute: str = "em_factor",
+    standardize: str = "none",
+    standardize_columns: str | Sequence[str] = "all",
+    standardize_ddof: int = 0,
     frame: str = "keep",
 ) -> dict
 ```
@@ -212,7 +293,7 @@ normalizes choices, but it does not transform, impute, or mutate the panel.
 | `frequency` | Requested frequency policy plus native-frequency map and metadata source. |
 | `frequency["issues"]` | Native-frequency inference concerns such as sparse `unknown`, `irregular`, or `annual` columns. |
 | `transform` | Transform method, applied t-code map, ignored metadata-only codes, and any no-code/no-match error note. |
-| `tcode_lag`, `outliers`, `impute`, `frame` | Normalized choice values. |
+| `tcode_lag`, `outliers`, `impute`, `standardize`, `frame` | Normalized choice values. |
 
 ## report
 
@@ -233,6 +314,7 @@ macroforecast.preprocessing.report(processed: PreprocessedData) -> dict
 | `steps` | Ordered execution log with input/output shapes where relevant. |
 | `choices` | Final normalized preprocessing choices. |
 | `transform_state` | Inverse-transform support metadata saved during the transform step. |
+| `standardization_state` | Fitted scaling metadata saved during the standardization step. |
 
 ## apply_transform_codes
 
@@ -400,6 +482,40 @@ edges usually encode unavailable source observations.
 `method="em_multivariate"` uses the same all-missing row/column guard as
 `em_factor`.
 
+## standardize_panel
+
+```python
+macroforecast.preprocessing.standardize_panel(
+    panel: pandas.DataFrame,
+    *,
+    method: str = "zscore",
+    ddof: int = 0,
+) -> pandas.DataFrame
+```
+
+### Input
+
+| Name | Default | Choices |
+| --- | --- | --- |
+| `method` | `"zscore"` | `"zscore"`, `"robust"`, `"minmax"` |
+| `ddof` | `0` | Non-negative integer used only for z-score standardization. |
+
+### Output
+
+Returns a new `pandas.DataFrame` with numeric columns scaled. `zscore` uses
+column means and standard deviations, `robust` uses median and IQR, and
+`minmax` uses minimum and range. The helper fits scaling parameters on the full
+panel supplied to it.
+
+For forecasting experiments that require origin-by-origin information sets,
+prefer `preprocess_spec(standardize=...)` through the forecasting runner. In
+that path, scaling parameters are fitted on the train window and reused for the
+test rows.
+
+Inside `reprocess(...)`, use `standardize_columns="predictors"` when a
+`DataSpec` should scale predictor columns while leaving the target in its
+post-transform units.
+
 ## handle_frame_edges
 
 ```python
@@ -465,9 +581,6 @@ are `column`, `sd_variable`, `state`, `tcode`, `source`, and
 whether the t-code came from a user state-series override, user variable-level
 choice, high-confidence package suggestion, medium-confidence package
 suggestion, or no assignment.
-
-`expand_fred_sd_transform_codes(...)` is a backward-compatible alias. Prefer
-`fred_sd_transform_codes(...)` in new code.
 
 No transform:
 

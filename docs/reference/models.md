@@ -35,6 +35,32 @@ macroforecast.models.ModelFit(
 `ModelFit.predict(X)` returns a `pandas.Series` named `"prediction"` and keeps
 the index of the provided `X` when `X` is a DataFrame.
 
+`ModelFit.to_dict()` returns JSON-ready fit metadata. It records the canonical
+model name, the underlying estimator class name, the fitted feature names, the
+target name, `n_features`, and the fit `metadata`. It does not serialize the
+fitted estimator itself.
+
+```python
+fit = macroforecast.models.ridge(X, y, alpha=0.5)
+fit.to_dict()
+```
+
+Output shape:
+
+```python
+{
+    "model": "ridge",
+    "estimator": "sklearn.linear_model._ridge.Ridge",
+    "feature_names": ["x1", "x2"],
+    "target_name": "y",
+    "n_features": 2,
+    "metadata": {"n_obs": 120, "alpha": 0.5},
+}
+```
+
+`ModelFit.to_metadata()` wraps the same block under `{"model": ..., "fit": ...}`
+for downstream forecasting and result records.
+
 Volatility functions return `VolatilityFit`, which extends `ModelFit` with
 `predict_variance(horizon=1)` and `conditional_volatility`.
 
@@ -93,6 +119,23 @@ macroforecast.models.ModelSpec(
 ```python
 model = macroforecast.models.get_model("ridge", params={"alpha": 0.5})
 fit = model(X, y)
+```
+
+`ModelSpec.to_dict()` returns a detailed JSON-ready specification including
+defaults, fixed params, parameter descriptions, and all preset search spaces.
+`ModelSpec.to_metadata()` returns the compact runner-facing block:
+
+```python
+{
+    "model": "ridge",
+    "model_family": "linear",
+    "model_preset": "small",
+    "input_kind": "supervised",
+    "default_search_method": "cv_path",
+    "default_params": {"alpha": 1.0},
+    "params": {"alpha": 0.5},
+    "search_space": {"alpha": [0.01, 0.1, 1.0]},
+}
 ```
 
 ### get_model
@@ -194,7 +237,7 @@ return `VolatilityFit`.
 | `bayesian_ridge` | linear | supervised | `grid` | none |
 | `huber` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `glmboost` | linear | supervised | `grid` | `small`, `standard`, `wide` |
-| `pcr` | factor | supervised | `grid` | `small`, `standard`, `wide` |
+| `pcr` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `ar` | timeseries | target | `grid` | `small`, `standard`, `wide` |
 | `var` | timeseries | panel | `grid` | `small`, `standard`, `wide` |
 | `far` | factor | supervised | `grid` | `small`, `standard`, `wide` |
@@ -365,8 +408,23 @@ Fits componentwise L2 boosting with linear base learners.
 macroforecast.models.pcr(X, y, *, n_components=3, random_state=0)
 ```
 
-Fits principal component regression: PCA on `X`, then OLS on the component
-scores.
+Fits principal component regression as a convenience composite model: PCA on
+`X`, then OLS on the component scores. In a forecasting runner that refits
+feature engineering inside each window, this is equivalent to:
+
+```python
+features = macroforecast.feature_engineering.feature_spec(
+    target="y",
+    horizon=1,
+    pca_components=3,
+)
+result = macroforecast.forecasting.run(panel, "ols", features=features, window=window)
+```
+
+The difference is responsibility. `pcr()` keeps PCA fitting and OLS fitting
+inside one model callable. `feature_spec(pca_components=...) + ols()` keeps
+factor construction in the feature-engineering layer, where the same factors
+can be reused by other models and have richer feature metadata.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |

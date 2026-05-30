@@ -7,7 +7,7 @@ windows or scoring metrics.
 
 Use:
 
-- `macroforecast.window` to define train/validation splits.
+- `macroforecast.window` to define train/val splits.
 - `macroforecast.evaluation` to define the score.
 - `macroforecast.selection` to evaluate parameter candidates and return the best
   parameter set.
@@ -268,6 +268,7 @@ macroforecast.selection.select_params(
     search=None,
     *,
     window=None,
+    splits=None,
     metric="mse",
     maximize=False,
     fixed_params=None,
@@ -289,7 +290,8 @@ Input:
 | `X` | pandas object | required | Predictors, panel, or target series depending on model input kind. |
 | `y` | pandas Series or `None` | `None` | Supervised target when separate from `X`. |
 | `search` | `SearchSpec` or `None` | `None` | Explicit search spec. If absent, model-owned search space is used. |
-| `window` | `WindowSpec`, str, or `None` | `None` | Temporal window. `None` means `mf.window.expanding()`. |
+| `window` | `WindowSpec`, str, or `None` | `None` | Temporal window used to create validation splits. Do not pass with `splits`. |
+| `splits` | sequence of `(train_pos, validation_pos)` or `None` | `None` | Explicit integer-position validation splits, usually produced by `macroforecast.window`. Do not pass with `window`. |
 | `metric` | str or callable | `"mse"` | Metric from `macroforecast.evaluation` or custom callable. |
 | `maximize` | bool | `False` | Whether larger metric values are better. |
 | `fixed_params` | dict or `None` | `None` | Parameters passed to every candidate fit. |
@@ -317,3 +319,32 @@ result = mf.selection.select_params(
 
 For loss metrics such as `mse`, `rmse`, and `mae`, keep `maximize=False`.
 For custom reward metrics, set `maximize=True`.
+
+When a forecasting runner already has a complete temporal plan, pass explicit
+splits instead of another `window`:
+
+```python
+splits = [
+    (range(0, 120), range(120, 132)),
+    (range(0, 132), range(132, 144)),
+]
+
+result = mf.selection.select_params(
+    "ridge",
+    X,
+    y,
+    search=mf.selection.grid({"alpha": [0.01, 0.1, 1.0]}),
+    splits=splits,
+)
+```
+
+`select_params()` validates explicit splits before fitting:
+
+- each split must contain non-empty train and validation integer positions
+- positions must be inside `X`/`y`
+- train and validation positions cannot overlap
+- boolean masks are allowed only when mask length equals the aligned sample
+
+`SearchResult.window` is `"explicit_splits"` when `splits` is used. Metadata
+stores `split_source`, `n_splits`, and a compact `split_summary` with counts and
+position bounds for each split.

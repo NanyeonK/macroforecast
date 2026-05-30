@@ -8,6 +8,8 @@ from typing import Any, Iterator, Literal, TypedDict, cast
 
 OnError = Literal["raise", "continue"]
 NJobs = int | Literal["auto"]
+StageDefaultScope = Literal["full_panel", "origin_available", "fit_window"]
+MetadataLevel = Literal["minimal", "standard", "full"]
 
 DEFAULT_RANDOM_SEED: int = 42
 
@@ -17,6 +19,10 @@ class MetaConfig(TypedDict):
     n_jobs: NJobs
     on_error: OnError
     verbose: int
+    default_preprocessing_scope: StageDefaultScope
+    default_feature_scope: StageDefaultScope
+    default_selection_scope: StageDefaultScope
+    metadata_level: MetadataLevel
 
 
 _DEFAULT_CONFIG: MetaConfig = {
@@ -24,9 +30,13 @@ _DEFAULT_CONFIG: MetaConfig = {
     "n_jobs": 1,
     "on_error": "raise",
     "verbose": 0,
+    "default_preprocessing_scope": "origin_available",
+    "default_feature_scope": "fit_window",
+    "default_selection_scope": "fit_window",
+    "metadata_level": "standard",
 }
 
-_CONFIG: MetaConfig = dict(_DEFAULT_CONFIG)  # type: ignore[assignment]
+_CONFIG: dict[str, Any] = dict(_DEFAULT_CONFIG)
 _LOCK = RLock()
 _MISSING = object()
 
@@ -37,6 +47,10 @@ def configure(
     n_jobs: NJobs | object = _MISSING,
     on_error: OnError | object = _MISSING,
     verbose: int | object = _MISSING,
+    default_preprocessing_scope: StageDefaultScope | object = _MISSING,
+    default_feature_scope: StageDefaultScope | object = _MISSING,
+    default_selection_scope: StageDefaultScope | object = _MISSING,
+    metadata_level: MetadataLevel | object = _MISSING,
 ) -> MetaConfig:
     """Update package-wide execution defaults and return the active config."""
 
@@ -49,17 +63,34 @@ def configure(
         updates["on_error"] = _normalize_on_error(on_error)
     if verbose is not _MISSING:
         updates["verbose"] = _normalize_verbose(verbose)
+    if default_preprocessing_scope is not _MISSING:
+        updates["default_preprocessing_scope"] = _normalize_stage_default_scope(
+            default_preprocessing_scope,
+            name="default_preprocessing_scope",
+        )
+    if default_feature_scope is not _MISSING:
+        updates["default_feature_scope"] = _normalize_stage_default_scope(
+            default_feature_scope,
+            name="default_feature_scope",
+        )
+    if default_selection_scope is not _MISSING:
+        updates["default_selection_scope"] = _normalize_stage_default_scope(
+            default_selection_scope,
+            name="default_selection_scope",
+        )
+    if metadata_level is not _MISSING:
+        updates["metadata_level"] = _normalize_metadata_level(metadata_level)
 
     with _LOCK:
-        _CONFIG.update(cast(MetaConfig, updates))
-        return dict(_CONFIG)  # type: ignore[return-value]
+        _CONFIG.update(updates)
+        return cast(MetaConfig, dict(_CONFIG))
 
 
 def get_config() -> MetaConfig:
     """Return a copy of the current package-wide execution defaults."""
 
     with _LOCK:
-        return dict(_CONFIG)  # type: ignore[return-value]
+        return cast(MetaConfig, dict(_CONFIG))
 
 
 def get_option(name: str) -> Any:
@@ -69,7 +100,7 @@ def get_option(name: str) -> Any:
         if name not in _CONFIG:
             valid = ", ".join(_DEFAULT_CONFIG)
             raise KeyError(f"unknown meta option {name!r}; expected one of: {valid}")
-        return _CONFIG[name]  # type: ignore[literal-required]
+        return _CONFIG[name]
 
 
 def reset_config() -> MetaConfig:
@@ -78,7 +109,7 @@ def reset_config() -> MetaConfig:
     with _LOCK:
         _CONFIG.clear()
         _CONFIG.update(_DEFAULT_CONFIG)
-        return dict(_CONFIG)  # type: ignore[return-value]
+        return cast(MetaConfig, dict(_CONFIG))
 
 
 @contextmanager
@@ -88,17 +119,25 @@ def use_config(
     n_jobs: NJobs | object = _MISSING,
     on_error: OnError | object = _MISSING,
     verbose: int | object = _MISSING,
+    default_preprocessing_scope: StageDefaultScope | object = _MISSING,
+    default_feature_scope: StageDefaultScope | object = _MISSING,
+    default_selection_scope: StageDefaultScope | object = _MISSING,
+    metadata_level: MetadataLevel | object = _MISSING,
 ) -> Iterator[MetaConfig]:
     """Temporarily update package-wide execution defaults inside a context."""
 
     with _LOCK:
-        previous: MetaConfig = dict(_CONFIG)  # type: ignore[assignment]
+        previous = cast(MetaConfig, dict(_CONFIG))
     try:
         active = configure(
             random_seed=random_seed,
             n_jobs=n_jobs,
             on_error=on_error,
             verbose=verbose,
+            default_preprocessing_scope=default_preprocessing_scope,
+            default_feature_scope=default_feature_scope,
+            default_selection_scope=default_selection_scope,
+            metadata_level=metadata_level,
         )
         yield active
     finally:
@@ -139,3 +178,29 @@ def _normalize_verbose(value: object) -> int:
     if value < 0:
         raise ValueError("verbose must be a non-negative int")
     return int(value)
+
+
+def _normalize_stage_default_scope(value: object, *, name: str) -> StageDefaultScope:
+    aliases = {
+        "full": "full_panel",
+        "full_panel": "full_panel",
+        "global": "full_panel",
+        "origin": "origin_available",
+        "origin_available": "origin_available",
+        "available": "origin_available",
+        "fit": "fit_window",
+        "fit_window": "fit_window",
+        "train": "fit_window",
+        "train_window": "fit_window",
+    }
+    key = str(value).lower().replace("-", "_")
+    if key not in aliases:
+        raise ValueError(f"{name} must be 'full_panel', 'origin_available', or 'fit_window'")
+    return cast(StageDefaultScope, aliases[key])
+
+
+def _normalize_metadata_level(value: object) -> MetadataLevel:
+    key = str(value).lower().replace("-", "_")
+    if key not in {"minimal", "standard", "full"}:
+        raise ValueError("metadata_level must be 'minimal', 'standard', or 'full'")
+    return cast(MetadataLevel, key)

@@ -376,7 +376,7 @@ class QuantileRegressionForestRegressor:
         self.min_samples_leaf = int(min_samples_leaf)
         self.random_state = int(random_state)
         self.quantile_levels = tuple(float(q) for q in quantile_levels)
-        self._forest = None
+        self._forest: Any = None
         self._leaf_targets: list[dict[int, np.ndarray]] = []
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "QuantileRegressionForestRegressor":
@@ -411,7 +411,7 @@ class QuantileRegressionForestRegressor:
         if self._forest is None or not self._leaf_targets:
             return {q: np.zeros(len(X), dtype=float) for q in levels}
         leaves = self._forest.apply(X.fillna(0.0))
-        out = {q: np.empty(len(X), dtype=float) for q in levels}
+        out: dict[float, np.ndarray] = {q: np.empty(len(X), dtype=float) for q in levels}
         for i in range(len(X)):
             samples: list[float] = []
             for tree_idx in range(leaves.shape[1]):
@@ -594,7 +594,7 @@ class BoogingRegressor:
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
         rng = np.random.default_rng(self.random_state + 9999)
         augmented = self._augment(frame.fillna(0.0).to_numpy(dtype=float), rng)
-        preds = np.zeros(len(X), dtype=float)
+        preds: np.ndarray = np.zeros(len(X), dtype=float)
         for model, col_idx in self._models:
             preds += model.predict(augmented[:, col_idx])
         return preds / len(self._models)

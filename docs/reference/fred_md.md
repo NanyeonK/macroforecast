@@ -73,7 +73,7 @@ FRED-MD provides official transformation codes in the raw CSV. The loader does
 not manually maintain a separate package table. It parses the CSV transform row
 and stores the result in `metadata["transform_codes"]`.
 
-`mf.preprocessing.preprocess(..., transform="official")` uses that map.
+`mf.preprocessing.reprocess(..., transform="official")` uses that map.
 
 ## Frequency Contract
 
@@ -111,5 +111,5 @@ import macroforecast as mf
 
 bundle = mf.data.load_fred_md()
 spec = mf.data.spec(bundle, target="INDPRO", horizons=[1, 3, 6, 12])
-processed = mf.preprocessing.preprocess(spec)
+processed = mf.preprocessing.reprocess(spec)
 ```

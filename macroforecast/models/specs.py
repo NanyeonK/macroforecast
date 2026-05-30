@@ -35,6 +35,8 @@ from macroforecast.models.tree import (
 from macroforecast.models.volatility import egarch, garch11, realized_garch
 
 InputKind = Literal["supervised", "target", "panel", "volatility"]
+SearchSpace = dict[str, tuple[Any, ...]]
+SearchSpaces = dict[str, SearchSpace]
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,17 @@ class ModelParameter:
     description: str
     tunable: bool = True
 
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-ready parameter description."""
+
+        return {
+            "name": self.name,
+            "default": _json_ready(self.default),
+            "kind": self.kind,
+            "description": self.description,
+            "tunable": self.tunable,
+        }
+
 
 @dataclass(frozen=True)
 class ModelSpec:
@@ -57,7 +70,7 @@ class ModelSpec:
     fit_func: Callable[..., Any]
     default_params: dict[str, Any] = field(default_factory=dict)
     parameters: tuple[ModelParameter, ...] = ()
-    search_spaces: dict[str, dict[str, tuple[Any, ...]]] = field(default_factory=dict)
+    search_spaces: SearchSpaces = field(default_factory=dict)
     default_search_method: str = "grid"
     default_preset: str = "standard"
     input_kind: InputKind = "supervised"
@@ -138,6 +151,38 @@ class ModelSpec:
             rows.append(row)
         return pd.DataFrame(rows)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-ready model specification."""
+
+        return {
+            "name": self.name,
+            "family": self.family,
+            "fit_func": _callable_name(self.fit_func),
+            "default_params": _json_ready(self.default_params),
+            "parameters": [parameter.to_dict() for parameter in self.parameters],
+            "search_spaces": _json_ready(self.search_spaces),
+            "default_search_method": self.default_search_method,
+            "default_preset": self.default_preset,
+            "input_kind": self.input_kind,
+            "preset": self.preset,
+            "params": _json_ready(self.params),
+            "description": self.description,
+        }
+
+    def to_metadata(self) -> dict[str, Any]:
+        """Return compact model metadata for selection and forecasting runners."""
+
+        return {
+            "model": self.name,
+            "model_family": self.family,
+            "model_preset": self.preset,
+            "input_kind": self.input_kind,
+            "default_search_method": self.default_search_method,
+            "default_params": _json_ready(self.default_params),
+            "params": _json_ready(self.params),
+            "search_space": _json_ready(self.search_space()),
+        }
+
 
 def get_model(
     model: str | Callable[..., Any] | ModelSpec,
@@ -156,10 +201,11 @@ def get_model(
             raise ValueError(f"Unknown model {model!r}. Available models: {allowed}.")
         spec = MODEL_SPECS[key]
     elif callable(model):
-        spec = _MODEL_SPECS_BY_CALLABLE.get(model)
-        if spec is None:
+        callable_spec = _MODEL_SPECS_BY_CALLABLE.get(model)
+        if callable_spec is None:
             name = getattr(model, "__name__", repr(model))
             raise ValueError(f"No registered ModelSpec for callable {name!r}")
+        spec = callable_spec
     else:
         raise TypeError("model must be a model name, callable, or ModelSpec")
     if preset is not None:
@@ -209,6 +255,22 @@ def _p(name: str, default: Any, kind: str, description: str, tunable: bool = Tru
     return ModelParameter(name, default, kind, description, tunable)
 
 
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
+def _json_ready(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    return value
+
+
 def _spec(
     name: str,
     family: str,
@@ -216,7 +278,7 @@ def _spec(
     *,
     default_params: dict[str, Any] | None = None,
     parameters: tuple[ModelParameter, ...] = (),
-    spaces: dict[str, dict[str, tuple[Any, ...]]] | None = None,
+    spaces: SearchSpaces | None = None,
     method: str = "grid",
     input_kind: InputKind = "supervised",
     description: str = "",
@@ -234,37 +296,37 @@ def _spec(
     )
 
 
-_ALPHA_SPACES = {
+_ALPHA_SPACES: SearchSpaces = {
     "small": {"alpha": (0.01, 0.1, 1.0)},
     "standard": {"alpha": (0.001, 0.01, 0.1, 1.0, 10.0)},
     "wide": {"alpha": (0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0)},
 }
 
-_TREE_SPACES = {
+_TREE_SPACES: SearchSpaces = {
     "small": {"max_depth": (3, 5, None), "min_samples_leaf": (1, 3)},
     "standard": {"max_depth": (3, 5, 10, None), "min_samples_leaf": (1, 3, 5)},
     "wide": {"max_depth": (2, 3, 5, 10, 20, None), "min_samples_leaf": (1, 2, 3, 5, 10)},
 }
 
-_FOREST_SPACES = {
+_FOREST_SPACES: SearchSpaces = {
     "small": {"n_estimators": (50, 100), "max_depth": (3, 5, None), "min_samples_leaf": (1, 3)},
     "standard": {"n_estimators": (100, 200, 500), "max_depth": (3, 5, 10, None), "min_samples_leaf": (1, 3, 5)},
     "wide": {"n_estimators": (100, 200, 500, 1000), "max_depth": (3, 5, 10, 20, None), "min_samples_leaf": (1, 2, 3, 5, 10)},
 }
 
-_BOOSTING_SPACES = {
+_BOOSTING_SPACES: SearchSpaces = {
     "small": {"n_estimators": (50, 100), "learning_rate": (0.05, 0.1), "max_depth": (2, 3)},
     "standard": {"n_estimators": (100, 200, 500), "learning_rate": (0.03, 0.05, 0.1), "max_depth": (2, 3, 5)},
     "wide": {"n_estimators": (100, 200, 500, 1000), "learning_rate": (0.01, 0.03, 0.05, 0.1), "max_depth": (2, 3, 5, 8)},
 }
 
-_FACTOR_SPACES = {
+_FACTOR_SPACES: SearchSpaces = {
     "small": {"n_factors": (1, 2, 3)},
     "standard": {"n_factors": (1, 2, 3, 5, 8)},
     "wide": {"n_factors": (1, 2, 3, 5, 8, 10, 12)},
 }
 
-_AR_SPACES = {
+_AR_SPACES: SearchSpaces = {
     "small": {"n_lag": (1, 2, 4)},
     "standard": {"n_lag": (1, 2, 4, 6, 12)},
     "wide": {"n_lag": (1, 2, 3, 4, 6, 9, 12, 18, 24)},
@@ -347,7 +409,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
     ),
     "pcr": _spec(
         "pcr",
-        "factor",
+        "composite",
         pcr,
         default_params={"n_components": 3, "random_state": 0},
         parameters=(
@@ -359,7 +421,10 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "standard": {"n_components": (1, 2, 3, 5, 8)},
             "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
         },
-        description="Principal component regression.",
+        description=(
+            "Convenience composite model equivalent to window-local "
+            "feature_spec(pca_components=...) plus OLS."
+        ),
     ),
     "ar": _spec(
         "ar",

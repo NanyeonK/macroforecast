@@ -72,7 +72,7 @@ FRED-QD provides official transformation codes in the raw CSV. The loader does
 not maintain a separate hand-coded table. It parses the CSV transform row and
 stores the result in `metadata["transform_codes"]`.
 
-`mf.preprocessing.preprocess(..., transform="official")` uses that map.
+`mf.preprocessing.reprocess(..., transform="official")` uses that map.
 
 The current official CSV was manually checked during this implementation pass:
 the raw `transform` row, `_parse_fred_csv()` output, and
@@ -117,5 +117,5 @@ import macroforecast as mf
 
 bundle = mf.data.load_fred_qd()
 spec = mf.data.spec(bundle, target="GDPC1", horizons=[1, 2, 4, 8])
-processed = mf.preprocessing.preprocess(spec)
+processed = mf.preprocessing.reprocess(spec)
 ```

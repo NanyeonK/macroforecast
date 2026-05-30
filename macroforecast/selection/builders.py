@@ -170,23 +170,24 @@ def _search_from_model(
     if model_spec is None:
         return fixed(random_state=random_state)
     space = model_spec.search_space()
+    search_space: dict[str, Any] = dict(space)
     method_name = _normalize_method(method or model_spec.default_search_method)
-    if not space:
+    if not search_space:
         spec = fixed(random_state=random_state)
     elif method_name == "cv_path":
-        if len(space) != 1:
+        if len(search_space) != 1:
             raise ValueError("cv_path requires exactly one tunable parameter in the model search space")
-        param, values = next(iter(space.items()))
+        param, values = next(iter(search_space.items()))
         spec = cv_path(param=param, values=values)
     elif method_name == "grid":
-        spec = grid(space)
+        spec = grid(search_space)
     elif method_name == "random":
-        spec = random_search(space, n_iter=20 if n_iter is None else n_iter, random_state=random_state)
+        spec = random_search(search_space, n_iter=20 if n_iter is None else n_iter, random_state=random_state)
     elif method_name == "bayesian":
-        spec = bayesian_search(space, n_iter=20 if n_iter is None else n_iter, random_state=random_state)
+        spec = bayesian_search(search_space, n_iter=20 if n_iter is None else n_iter, random_state=random_state)
     elif method_name == "genetic":
         spec = genetic_search(
-            space,
+            search_space,
             population_size=12 if population_size is None else population_size,
             generations=4 if generations is None else generations,
             mutation_rate=0.2 if mutation_rate is None else mutation_rate,

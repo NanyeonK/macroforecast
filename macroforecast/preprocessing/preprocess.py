@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 import warnings
@@ -8,14 +8,17 @@ import warnings
 import pandas as pd
 
 from macroforecast.preprocessing.clean import (
+    apply_standardization_state,
     apply_tcode_transform,
     drop_unbalanced_series_clean,
     em_factor_impute_clean,
     em_multivariate_impute_clean,
+    fit_standardization_state,
     forward_fill_clean,
     iqr_outlier_clean,
     linear_interpolate_clean,
     mean_impute_clean,
+    standardize_clean,
     truncate_to_balanced_clean,
     winsorize_clean,
     zero_fill_leading_clean,
@@ -92,7 +95,11 @@ def reprocess(
     em_demean: int = 2,
     em_max_iter: int = 50,
     em_tolerance: float = 1e-6,
+    standardize: str = "none",
+    standardize_columns: str | Sequence[str] = "all",
+    standardize_ddof: int = 0,
     frame: str = "keep",
+    warn_metadata: bool = True,
 ) -> PreprocessedData:
     """Preprocess a canonical macroforecast panel.
 
@@ -102,7 +109,8 @@ def reprocess(
     """
 
     base = _coerce_input(data, metadata=metadata)
-    _warn_if_no_data_metadata(base.metadata)
+    if warn_metadata:
+        _warn_if_no_data_metadata(base.metadata)
     panel = base.panel.copy()
     validate_panel(panel)
     input_info = panel_info(DataBundle(panel, base.metadata))
@@ -114,7 +122,7 @@ def reprocess(
     if transform_method == "official" and _is_fred_sd_metadata(base.metadata):
         raise ValueError(
             "FRED-SD has no official t-code map. Use transform='none' or "
-            "transform='custom' with expand_fred_sd_transform_codes(...)."
+            "transform='custom' with fred_sd_transform_codes(...)."
         )
     tcode_lag_method = _normalize_tcode_lag(tcode_lag)
     applied_codes: dict[str, int] = {}
@@ -197,6 +205,32 @@ def reprocess(
         }
     )
 
+    standardize_method = _normalize_standardize(standardize)
+    standardize_ddof_value = _normalize_standardize_ddof(standardize_ddof)
+    standardization_state: dict[str, Any] = {}
+    before_shape = tuple(int(value) for value in panel.shape)
+    if standardize_method == "none":
+        standardized_panel = panel.copy()
+    else:
+        columns_to_standardize = _resolve_standardize_columns(panel, base, standardize_columns)
+        standardization_state = fit_standardization_state(
+            panel.loc[:, columns_to_standardize],
+            method=standardize_method,
+            ddof=standardize_ddof_value,
+        )
+        standardized_panel = apply_standardization_state(panel, standardization_state)
+    panel = standardized_panel
+    steps.append(
+        {
+            "step": "standardize",
+            "method": standardize_method,
+            "columns": list(standardization_state.get("columns", ())),
+            "ddof": standardize_ddof_value,
+            "input_shape": before_shape,
+            "output_shape": tuple(int(value) for value in panel.shape),
+        }
+    )
+
     frame_method = _normalize_frame(frame)
     before_shape = tuple(int(value) for value in panel.shape)
     panel = handle_frame_edges(panel, method=frame_method)
@@ -221,6 +255,9 @@ def reprocess(
         "tcode_lag": tcode_lag_method,
         "outliers": outlier_method,
         "impute": impute_method,
+        "standardize": standardize_method,
+        "standardize_columns": list(standardization_state.get("columns", ())),
+        "standardization_state": standardization_state,
         "frame": frame_method,
         "steps": steps,
         "input_panel": input_info,
@@ -249,15 +286,26 @@ def reprocess(
     )
 
 
-preprocess = reprocess
-
-
 def apply_transform_codes(panel: pd.DataFrame, codes: Mapping[str, int]) -> pd.DataFrame:
     """Apply McCracken-Ng transform codes to matching panel columns."""
 
     if not codes:
         return panel.copy()
     return apply_tcode_transform(panel, dict(codes))
+
+
+def standardize_panel(
+    panel: pd.DataFrame,
+    *,
+    method: str = "zscore",
+    ddof: int = 0,
+) -> pd.DataFrame:
+    """Standardize numeric columns with full-panel fitted parameters."""
+
+    method_value = _normalize_standardize(method)
+    if method_value == "none":
+        return panel.copy()
+    return standardize_clean(panel, method=method_value, ddof=ddof)
 
 
 def fred_sd_transform_codes(
@@ -331,27 +379,6 @@ def fred_sd_transform_codes(
     return expanded
 
 
-def expand_fred_sd_transform_codes(
-    data: PreprocessInput,
-    *,
-    variable_codes: Mapping[str, int] | None = None,
-    state_series_codes: Mapping[str, int] | None = None,
-    use_national_analog_suggestions: bool = True,
-    include_medium_confidence: bool = False,
-    return_table: bool = False,
-) -> dict[str, int] | tuple[dict[str, int], pd.DataFrame]:
-    """Alias for :func:`fred_sd_transform_codes`."""
-
-    return fred_sd_transform_codes(
-        data,
-        variable_codes=variable_codes,
-        state_series_codes=state_series_codes,
-        use_national_analog_suggestions=use_national_analog_suggestions,
-        include_medium_confidence=include_medium_confidence,
-        return_table=return_table,
-    )
-
-
 def plan(
     data: PreprocessInput,
     *,
@@ -364,6 +391,9 @@ def plan(
     tcode_lag: str = "drop",
     outliers: str = "iqr",
     impute: str = "em_factor",
+    standardize: str = "none",
+    standardize_columns: str | Sequence[str] = "all",
+    standardize_ddof: int = 0,
     frame: str = "keep",
 ) -> dict[str, Any]:
     """Return a dry-run summary of preprocessing choices and metadata provenance."""
@@ -397,6 +427,7 @@ def plan(
             transform_error = f"transform={transform_method!r} has no t-code keys matching panel columns"
     frequency_map, frequency_source = _column_frequency_map(base.panel)
     frequency_issues = _frequency_hardening_issues(frequency_map)
+    ddof_value = _normalize_standardize_ddof(standardize_ddof)
     return {
         "input_panel": panel_info(DataBundle(base.panel, base.metadata)),
         "metadata_warning": _data_metadata_warning_message(base.metadata),
@@ -416,6 +447,11 @@ def plan(
         "tcode_lag": _normalize_tcode_lag(tcode_lag),
         "outliers": _normalize_outliers(outliers),
         "impute": _normalize_impute(impute),
+        "standardize": _normalize_standardize(standardize),
+        "standardize_ddof": ddof_value,
+        "standardize_columns": _resolve_standardize_columns(base.panel, base, standardize_columns)
+        if _normalize_standardize(standardize) != "none"
+        else [],
         "frame": _normalize_frame(frame),
     }
 
@@ -437,9 +473,13 @@ def report(processed: PreprocessedData) -> dict[str, Any]:
             "tcode_lag": stage.get("tcode_lag"),
             "outliers": stage.get("outliers"),
             "impute": stage.get("impute"),
+            "standardize": stage.get("standardize"),
+            "standardize_columns": stage.get("standardize_columns"),
+            "standardize_ddof": _standardize_step_ddof(stage.get("steps", ())),
             "frame": stage.get("frame"),
         },
         "transform_state": stage.get("transform_state", {}),
+        "standardization_state": stage.get("standardization_state", {}),
     }
 
 
@@ -765,8 +805,8 @@ def _warn_if_no_data_metadata(metadata: Mapping[str, Any]) -> None:
 
 def _ordered_step_names(transform_order: str) -> tuple[str, ...]:
     if transform_order == "before_frequency":
-        return ("transform", "tcode_lag", "frequency", "outliers", "impute", "frame")
-    return ("frequency", "transform", "tcode_lag", "outliers", "impute", "frame")
+        return ("transform", "tcode_lag", "frequency", "outliers", "impute", "standardize", "frame")
+    return ("frequency", "transform", "tcode_lag", "outliers", "impute", "standardize", "frame")
 
 
 def _normalize_frequency(value: str) -> str:
@@ -857,6 +897,71 @@ def _normalize_impute(value: str) -> str:
     return _lookup(value, aliases, "impute")
 
 
+def _normalize_standardize(value: str) -> str:
+    aliases = {
+        "none": "none",
+        "no": "none",
+        "false": "none",
+        "zscore": "zscore",
+        "standard": "zscore",
+        "standardize": "zscore",
+        "standardized": "zscore",
+        "robust": "robust",
+        "iqr": "robust",
+        "minmax": "minmax",
+        "min_max": "minmax",
+    }
+    return _lookup(value, aliases, "standardize")
+
+
+def _normalize_standardize_ddof(value: int) -> int:
+    out = int(value)
+    if out < 0:
+        raise ValueError("standardize_ddof must be non-negative")
+    return out
+
+
+def _standardize_step_ddof(steps: Any) -> int | None:
+    if not isinstance(steps, (list, tuple)):
+        return None
+    for step in steps:
+        if isinstance(step, Mapping) and step.get("step") == "standardize":
+            ddof = step.get("ddof")
+            return int(ddof) if ddof is not None else None
+    return None
+
+
+def _resolve_standardize_columns(
+    panel: pd.DataFrame,
+    base: _InputBundle,
+    columns: str | Sequence[str],
+) -> list[str]:
+    if isinstance(columns, str):
+        key = columns.lower()
+        if key == "all":
+            selected = [str(column) for column in panel.columns]
+        elif key in {"predictors", "x"}:
+            if base.predictors == "all":
+                targets = set(base.targets or ((base.target,) if base.target else ()))
+                selected = [str(column) for column in panel.columns if str(column) not in targets]
+            else:
+                selected = [str(column) for column in base.predictors]
+        elif key in {"targets", "target", "y"}:
+            selected = [str(column) for column in (base.targets or ((base.target,) if base.target else ()))]
+        else:
+            raise ValueError(
+                "standardize_columns must be 'all', 'predictors', 'targets', or a sequence of column names"
+            )
+    else:
+        selected = [str(column) for column in columns]
+    if not selected:
+        raise ValueError("standardize_columns selects no columns")
+    missing = [column for column in selected if column not in panel.columns]
+    if missing:
+        raise ValueError(f"standardize_columns are not in the panel: {missing}")
+    return selected
+
+
 def _normalize_frame(value: str) -> str:
     aliases = {
         "keep": "keep",
@@ -906,6 +1011,7 @@ def _tcode_leading_loss(code: int) -> int:
         return 1
     if code in {3, 6, 7}:
         return 2
+    raise ValueError(f"t-code must be in 1..7; got {code!r}")
 
 
 def _build_transform_state(panel: pd.DataFrame, codes: Mapping[str, int]) -> dict[str, Any]:
@@ -1122,12 +1228,11 @@ __all__ = [
     "PreprocessedData",
     "PreprocessInput",
     "reprocess",
-    "preprocess",
     "plan",
     "report",
     "apply_transform_codes",
+    "standardize_panel",
     "fred_sd_transform_codes",
-    "expand_fred_sd_transform_codes",
     "handle_mixed_frequency",
     "handle_tcode_lag",
     "handle_outliers",

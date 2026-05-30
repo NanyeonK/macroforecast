@@ -149,7 +149,7 @@ observed-date inference only when needed.
 FRED-SD does not provide official stationarity transformation codes. Therefore:
 
 ```python
-mf.preprocessing.preprocess(fred_sd_bundle)
+mf.preprocessing.reprocess(fred_sd_bundle)
 ```
 
 raises unless the user explicitly chooses `transform="none"` or supplies custom
@@ -158,7 +158,7 @@ codes.
 Recommended explicit paths:
 
 ```python
-processed = mf.preprocessing.preprocess(fred_sd_bundle, transform="none")
+processed = mf.preprocessing.reprocess(fred_sd_bundle, transform="none")
 ```
 
 or:
@@ -170,7 +170,7 @@ codes, provenance = mf.preprocessing.fred_sd_transform_codes(
     return_table=True,
 )
 
-processed = mf.preprocessing.preprocess(
+processed = mf.preprocessing.reprocess(
     fred_sd_bundle,
     transform="custom",
     transform_codes=codes,
@@ -232,7 +232,7 @@ codes = mf.preprocessing.fred_sd_transform_codes(
     sd,
     variable_codes={"UR": 2, "ICLAIMS": 5},
 )
-processed = mf.preprocessing.preprocess(
+processed = mf.preprocessing.reprocess(
     sd,
     transform="custom",
     transform_codes=codes,

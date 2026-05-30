@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -36,6 +37,26 @@ class ModelFit:
             if isinstance(value, (str, int, float, bool, type(None))):
                 lines.append(f"{key}: {value}")
         return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return JSON-ready fit metadata without serializing the estimator."""
+
+        return {
+            "model": self.model,
+            "estimator": _estimator_name(self.estimator),
+            "feature_names": list(self.feature_names),
+            "target_name": self.target_name,
+            "n_features": len(self.feature_names),
+            "metadata": _json_ready(self.metadata),
+        }
+
+    def to_metadata(self) -> dict[str, Any]:
+        """Return a compact metadata block for downstream runners."""
+
+        return {
+            "model": self.model,
+            "fit": self.to_dict(),
+        }
 
     def __getattr__(self, name: str) -> Any:
         if hasattr(self.estimator, name):
@@ -75,6 +96,25 @@ def _prediction_frame(X: Any, feature_names: tuple[str, ...]) -> pd.DataFrame:
     if feature_names:
         frame = frame.reindex(columns=list(feature_names), fill_value=0.0)
     return frame
+
+
+def _estimator_name(estimator: Any) -> str:
+    cls = estimator.__class__
+    return f"{cls.__module__}.{cls.__qualname__}"
+
+
+def _json_ready(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    return value
 
 
 __all__ = ["ModelFit", "VolatilityFit"]

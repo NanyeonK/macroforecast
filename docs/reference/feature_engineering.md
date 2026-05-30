@@ -7,6 +7,12 @@ forecast targets and model-ready feature matrices. It accepts the same direct Py
 previous stages: `PreprocessedData`, `DataSpec`, `DataBundle`,
 `(panel, metadata)`, or a canonical `pandas.DataFrame`.
 
+For strict windowed forecasting, use `feature_spec(...)`. The spec is fitted by
+`macroforecast.forecasting.run(...)` inside each train window and then
+transformed for the matching test rows. Individual functions such as `lag()`,
+`rolling_mean()`, `pca_features()`, and `feature_matrix()` remain callable
+one-shot helpers; runner composition belongs in `macroforecast.forecasting`.
+
 The preferred flow is:
 
 ```python

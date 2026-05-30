@@ -7,7 +7,7 @@ import pandas as pd
 from scipy.optimize import minimize
 
 from macroforecast.models.types import VolatilityFit
-from macroforecast.models.utils import as_frame, as_series, optional_import, resolve_xy
+from macroforecast.models.utils import as_frame, as_series, optional_import
 
 
 class GARCHEstimator:
@@ -33,7 +33,7 @@ class GARCHEstimator:
         self.dist = dist
         self.rescale = bool(rescale)
         self.realized_variance = realized_variance
-        self._fitted = None
+        self._fitted: Any = None
         self._mu = 0.0
         self._last_variance = 1.0
 
@@ -244,7 +244,7 @@ class RealizedGARCHEstimator:
             return np.full(int(horizon), self._last_h, dtype=float)
         omega = self.params_["omega"]
         beta = self.params_["beta"]
-        out = np.empty(int(horizon), dtype=float)
+        out: np.ndarray = np.empty(int(horizon), dtype=float)
         log_h = np.log(max(self._last_h, 1e-12))
         for i in range(int(horizon)):
             log_h = omega + beta * log_h
@@ -271,6 +271,7 @@ def realized_garch(
     """Fit realized GARCH with a realized-measurement equation."""
 
     target = as_series(y)
+    realized_column: str | None
     if rv is not None:
         frame = pd.DataFrame({"rv": as_series(rv).reindex(target.index)})
         realized_column = "rv"

@@ -59,7 +59,7 @@ class _VAR:
     def __init__(self, *, n_lag: int = 1, target: str | None = None) -> None:
         self.n_lag = max(1, int(n_lag))
         self.target = target
-        self._results = None
+        self._results: Any = None
         self._target_name: str | None = None
         self._last_values: np.ndarray | None = None
         self._fallback: float = 0.0
@@ -116,8 +116,8 @@ class _FAR:
         self.n_factors = max(1, int(n_factors))
         self.n_lag = max(1, int(n_lag))
         self.random_state = int(random_state)
-        self._pca = None
-        self._regression = None
+        self._pca: Any = None
+        self._regression: Any = None
         self._x_mean: pd.Series | None = None
         self._y_history: np.ndarray | None = None
         self._fallback: float = 0.0

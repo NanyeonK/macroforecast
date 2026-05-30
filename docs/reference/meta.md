@@ -28,6 +28,10 @@ The current public surface is:
 | `n_jobs` | <code>int &#124; "auto"</code> | `1` | Default worker count. `1` means serial execution; `"auto"` lets the package choose a bounded worker count. |
 | `on_error` | <code>"raise" &#124; "continue"</code> | `"raise"` | Default cell failure behavior. `"raise"` stops on failure; `"continue"` records the failure and continues where supported. |
 | `verbose` | `int` | `0` | Default verbosity level for future logging surfaces. |
+| `default_preprocessing_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"origin_available"` | Default `forecasting.run(..., preprocessing_policy=...)` scope when preprocessing is supplied and no explicit policy is passed. |
+| `default_feature_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `feature_policy` scope. |
+| `default_selection_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `selection_policy` scope. |
+| `metadata_level` | `"minimal"`, `"standard"`, or `"full"` | `"standard"` | Runner metadata detail. `standard` records stage records; `minimal` suppresses per-origin stage records. |
 
 The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
 is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
@@ -40,6 +44,10 @@ Example output:
     "n_jobs": 1,
     "on_error": "raise",
     "verbose": 0,
+    "default_preprocessing_scope": "origin_available",
+    "default_feature_scope": "fit_window",
+    "default_selection_scope": "fit_window",
+    "metadata_level": "standard",
 }
 ```
 
@@ -56,6 +64,10 @@ macroforecast.meta.configure(
     n_jobs: int | "auto" = ...,
     on_error: "raise" | "continue" = ...,
     verbose: int = ...,
+    default_preprocessing_scope: "full_panel" | "origin_available" | "fit_window" = ...,
+    default_feature_scope: "full_panel" | "origin_available" | "fit_window" = ...,
+    default_selection_scope: "full_panel" | "origin_available" | "fit_window" = ...,
+    metadata_level: "minimal" | "standard" | "full" = ...,
 ) -> MetaConfig
 ```
 
@@ -69,6 +81,10 @@ All inputs are keyword-only. Omitted inputs keep their current values.
 | `n_jobs` | <code>int &#124; "auto"</code> | keep current value | positive integer or `"auto"` | Sets the default worker count. |
 | `on_error` | <code>"raise" &#124; "continue"</code> | keep current value | `"raise"`, `"continue"` | Sets default failure behavior. |
 | `verbose` | `int` | keep current value | non-negative integer | Sets default verbosity. |
+| `default_preprocessing_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default preprocessing stage scope for `forecasting.run(...)`. |
+| `default_feature_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default feature-engineering stage scope. |
+| `default_selection_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default model-selection stage scope. |
+| `metadata_level` | str | keep current value | `"minimal"`, `"standard"`, `"full"` | Sets the default runner metadata detail. |
 
 ### Output
 
@@ -92,6 +108,8 @@ Returns `MetaConfig`, a copy of the full active configuration after the update.
 | `n_jobs` is not a positive integer or `"auto"` | `TypeError` or `ValueError` |
 | `on_error` is not `"raise"` or `"continue"` | `ValueError` |
 | `verbose` is not a non-negative integer | `TypeError` or `ValueError` |
+| stage default scope is not one of the allowed scopes | `ValueError` |
+| `metadata_level` is not `"minimal"`, `"standard"`, or `"full"` | `ValueError` |
 
 ### Example
 
@@ -102,6 +120,8 @@ config = mf.meta.configure(
     random_seed=7,
     n_jobs="auto",
     on_error="continue",
+    default_feature_scope="origin_available",
+    metadata_level="standard",
     verbose=1,
 )
 
@@ -155,7 +175,7 @@ macroforecast.meta.get_option(name: str) -> object
 
 | Name | Type | Allowed Values | Meaning |
 | --- | --- | --- | --- |
-| `name` | `str` | `"random_seed"`, `"n_jobs"`, `"on_error"`, `"verbose"` | Configuration key to read. |
+| `name` | `str` | any `MetaConfig` key | Configuration key to read. |
 
 ### Output
 
@@ -167,6 +187,10 @@ Returns the value for `name`.
 | `"n_jobs"` | <code>int &#124; "auto"</code> |
 | `"on_error"` | <code>"raise" &#124; "continue"</code> |
 | `"verbose"` | `int` |
+| `"default_preprocessing_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
+| `"default_feature_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
+| `"default_selection_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
+| `"metadata_level"` | `"minimal"`, `"standard"`, or `"full"` |
 
 ### Errors
 
@@ -206,6 +230,10 @@ Returns `MetaConfig` after reset.
 | `n_jobs` | `1` |
 | `on_error` | `"raise"` |
 | `verbose` | `0` |
+| `default_preprocessing_scope` | `"origin_available"` |
+| `default_feature_scope` | `"fit_window"` |
+| `default_selection_scope` | `"fit_window"` |
+| `metadata_level` | `"standard"` |
 
 ### Side Effects
 
@@ -236,6 +264,10 @@ macroforecast.meta.use_config(
     n_jobs: int | "auto" = ...,
     on_error: "raise" | "continue" = ...,
     verbose: int = ...,
+    default_preprocessing_scope: "full_panel" | "origin_available" | "fit_window" = ...,
+    default_feature_scope: "full_panel" | "origin_available" | "fit_window" = ...,
+    default_selection_scope: "full_panel" | "origin_available" | "fit_window" = ...,
+    metadata_level: "minimal" | "standard" | "full" = ...,
 ) -> Iterator[MetaConfig]
 ```
 
@@ -249,6 +281,10 @@ The inputs match `configure`.
 | `n_jobs` | <code>int &#124; "auto"</code> | keep current value inside context | positive integer or `"auto"` | Temporary worker count. |
 | `on_error` | <code>"raise" &#124; "continue"</code> | keep current value inside context | `"raise"`, `"continue"` | Temporary failure behavior. |
 | `verbose` | `int` | keep current value inside context | non-negative integer | Temporary verbosity. |
+| `default_preprocessing_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary preprocessing default scope. |
+| `default_feature_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary feature default scope. |
+| `default_selection_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary selection default scope. |
+| `metadata_level` | str | keep current value inside context | `"minimal"`, `"standard"`, `"full"` | Temporary metadata detail. |
 
 ### Output
 
@@ -289,6 +325,10 @@ value is provided by the caller.
 | `n_jobs` | Used as the default worker count for run-level and selected model-level parallel work. |
 | `on_error` | Default failure handling: `"raise"` stops on failure, `"continue"` continues where supported. |
 | `verbose` | Reserved as the package-wide verbosity setting. |
+| `default_preprocessing_scope` | Used by `forecasting.run(...)` when `preprocessing` is supplied without `preprocessing_policy`. |
+| `default_feature_scope` | Used by `forecasting.run(...)` when `feature_policy` is omitted. |
+| `default_selection_scope` | Used by `forecasting.run(...)` when `selection_policy` is omitted. |
+| `metadata_level` | Controls how much run-level metadata is recorded. `standard` keeps stage records; `minimal` drops per-origin stage records. |
 
-Run manifests record the active `meta_config` so a completed run can be audited
-against the settings in force at execution time.
+Forecast results record the active config under `metadata["run"]["config"]` so
+a completed run can be audited against the settings in force at execution time.

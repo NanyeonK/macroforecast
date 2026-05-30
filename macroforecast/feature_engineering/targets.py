@@ -10,7 +10,6 @@ from macroforecast.data import attach_metadata, validate_panel
 from macroforecast.feature_engineering.types import FeatureInput
 from macroforecast.feature_engineering.shared import (
     PathTransform,
-    TargetMode,
     TargetTransform,
     _average_future_path,
     _coerce_input,

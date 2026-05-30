@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -254,3 +255,52 @@ def test_explicit_search_rejects_separate_search_overrides() -> None:
 
     with pytest.raises(ValueError, match="search was provided"):
         mf.selection.select_params("ridge", X, y, search, preset="small", population_size=4)
+
+
+def test_select_params_accepts_explicit_integer_splits() -> None:
+    X, y = xy()
+    search = mf.selection.grid({"alpha": [0.1, 1.0]})
+    splits = [
+        (np.arange(0, 24), np.arange(24, 30)),
+        (np.arange(0, 30), np.arange(30, 36)),
+    ]
+
+    result = mf.selection.select_params(mf.models.ridge, X, y, search, splits=splits)
+
+    assert result.window == "explicit_splits"
+    assert result.metadata["split_source"] == "explicit"
+    assert result.metadata["window"] is None
+    assert result.metadata["n_splits"] == 2
+    assert result.metadata["split_summary"][1]["validation_end_pos"] == 35
+    assert set(result.trials["n_splits"]) == {2}
+
+
+def test_select_params_rejects_ambiguous_or_invalid_splits() -> None:
+    X, y = xy()
+    search = mf.selection.grid({"alpha": [0.1]})
+
+    with pytest.raises(ValueError, match="either window or splits"):
+        mf.selection.select_params(
+            mf.models.ridge,
+            X,
+            y,
+            search,
+            window=mf.window.last_block(validation_size=6),
+            splits=[(np.arange(0, 24), np.arange(24, 30))],
+        )
+    with pytest.raises(ValueError, match="overlap"):
+        mf.selection.select_params(
+            mf.models.ridge,
+            X,
+            y,
+            search,
+            splits=[(np.arange(0, 24), np.arange(20, 30))],
+        )
+    with pytest.raises(TypeError, match="integer positions"):
+        mf.selection.select_params(
+            mf.models.ridge,
+            X,
+            y,
+            search,
+            splits=[(np.arange(0, 24), X.index[24:30])],
+        )

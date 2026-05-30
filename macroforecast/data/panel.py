@@ -392,7 +392,7 @@ def _normalize_horizons(values: Iterable[int] | int | None, *, metadata: Mapping
             return (1, 2, 4, 8)
         return (1,)
     if isinstance(values, int):
-        horizons = (values,)
+        horizons: tuple[int, ...] = (values,)
     else:
         horizons = tuple(int(value) for value in values)
     if not horizons:

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.models.types import ModelFit
-from macroforecast.models.utils import fit_estimator, resolve_xy
+from macroforecast.models.utils import fit_estimator
 
 
 def ols(X: Any, y: Any | None = None) -> ModelFit:
@@ -151,8 +151,8 @@ class _PCR:
         self.n_components = max(1, int(n_components))
         self.random_state = int(random_state)
         self._mean: pd.Series | None = None
-        self._pca = None
-        self._regression = None
+        self._pca: Any = None
+        self._regression: Any = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_PCR":
         from sklearn.decomposition import PCA

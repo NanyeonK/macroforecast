@@ -1447,7 +1447,8 @@ def _fred_sd_column_parts(column: object) -> tuple[str, str]:
     name = str(column)
     if "_" not in name:
         return name, ""
-    return name.rsplit("_", 1)
+    variable, state = name.rsplit("_", 1)
+    return variable, state
 
 
 def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, variables: list[str] | None, source_format: str) -> dict[str, object]:

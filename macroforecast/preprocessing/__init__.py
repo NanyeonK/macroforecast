@@ -2,7 +2,6 @@ from .preprocess import (
     FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES,
     FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES,
     apply_transform_codes,
-    expand_fred_sd_transform_codes,
     fred_sd_transform_codes,
     handle_frame_edges,
     handle_mixed_frequency,
@@ -10,22 +9,26 @@ from .preprocess import (
     handle_tcode_lag,
     impute_missing,
     plan,
-    preprocess,
     reprocess,
     report,
+    standardize_panel,
 )
 from .types import PreprocessedData, PreprocessInput
+from .specs import FittedPreprocessor, PreprocessSpec, preprocess_spec
 from .clean import (
     apply_tcode_transform,
     drop_unbalanced_series_clean,
     em_factor_impute_clean,
     em_multivariate_impute_clean,
+    fit_standardization_state,
     forward_fill_clean,
     freq_align_monthly_to_quarterly_clean,
     freq_align_quarterly_to_monthly_clean,
     iqr_outlier_clean,
     linear_interpolate_clean,
     mean_impute_clean,
+    apply_standardization_state,
+    standardize_clean,
     truncate_to_balanced_clean,
     winsorize_clean,
     zero_fill_leading_clean,
@@ -33,19 +36,21 @@ from .clean import (
 )
 
 __all__ = [
-    "preprocess",
     "reprocess",
     "plan",
     "report",
     "PreprocessedData",
     "PreprocessInput",
+    "PreprocessSpec",
+    "FittedPreprocessor",
+    "preprocess_spec",
     "apply_transform_codes",
     "fred_sd_transform_codes",
-    "expand_fred_sd_transform_codes",
     "handle_mixed_frequency",
     "handle_tcode_lag",
     "handle_outliers",
     "impute_missing",
+    "standardize_panel",
     "handle_frame_edges",
     "FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES",
     "FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES",
@@ -60,7 +65,15 @@ __all__ = [
     "truncate_to_balanced_clean",
     "drop_unbalanced_series_clean",
     "zero_fill_leading_clean",
+    "fit_standardization_state",
+    "apply_standardization_state",
+    "standardize_clean",
     "apply_tcode_transform",
     "freq_align_quarterly_to_monthly_clean",
     "freq_align_monthly_to_quarterly_clean",
 ]
+
+# Keep ``mf.preprocessing.preprocess`` from resolving to the implementation
+# submodule after importing symbols from ``preprocess.py``. The callable alias
+# was intentionally removed; users should call ``reprocess(...)``.
+globals().pop("preprocess", None)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import replace
 from typing import Any
 
@@ -35,7 +35,7 @@ from macroforecast.selection.types import (
 )
 from macroforecast.models.specs import ModelSpec, get_model
 from macroforecast.models.utils import align_xy, as_frame, as_series, resolve_xy
-from macroforecast.window import WindowSpec, resolve_window
+from macroforecast.window import Split, WindowSpec, resolve_window
 
 
 def select_params(
@@ -45,6 +45,7 @@ def select_params(
     search: SearchSpec | None = None,
     *,
     window: WindowSpec | str | None = None,
+    splits: Sequence[tuple[Any, Any]] | None = None,
     metric: MetricLike = "mse",
     maximize: bool = False,
     fixed_params: dict[str, Any] | None = None,
@@ -60,8 +61,10 @@ def select_params(
 
     ``model`` can be a model name, a ``ModelSpec``, or a callable such as
     ``macroforecast.models.ridge`` that returns an object with ``predict(X)``.
-    Registered models own their default parameters and hyperparameter spaces;
-    this function only applies the requested validation and search method.
+    Registered models own their default parameters and hyperparameter spaces.
+    This function evaluates parameter candidates. Validation timing can be
+    supplied either as a window spec or as explicit integer-position splits
+    produced by ``macroforecast.window``.
     """
 
     fit_model, model_spec = _resolve_model(model, preset=preset)
@@ -91,8 +94,11 @@ def select_params(
     )
     spec = _prepare_search_spec(spec)
     metric_fn = get_metric(metric)
-    window_spec = resolve_window(window)
-    splits = window_spec.split(len(frame))
+    validation_splits, split_name, split_metadata = _resolve_selection_splits(
+        len(frame),
+        window=window,
+        splits=splits,
+    )
     base_params = dict(fixed_params or {})
     rng = np.random.default_rng(spec.random_state)
     runtime_metadata: dict[str, Any] = {}
@@ -102,7 +108,7 @@ def select_params(
             fit_model,
             frame,
             target,
-            splits,
+            validation_splits,
             metric_fn,
             spec,
             base_params,
@@ -114,7 +120,7 @@ def select_params(
             fit_model,
             frame,
             target,
-            splits,
+            validation_splits,
             metric_fn,
             spec,
             base_params,
@@ -124,7 +130,16 @@ def select_params(
     else:
         candidates = _candidates(spec, rng)
         rows = [
-            evaluate_candidate(fit_model, frame, target, splits, metric_fn, base_params, params, i)
+            evaluate_candidate(
+                fit_model,
+                frame,
+                target,
+                validation_splits,
+                metric_fn,
+                base_params,
+                params,
+                i,
+            )
             for i, params in enumerate(candidates)
         ]
 
@@ -147,12 +162,12 @@ def select_params(
         trials=trials,
         metric=metric,
         method=spec.method,
-        window=window_spec.to_dict()["method"],
+        window=split_name,
         metadata={
             "n_obs": len(frame),
-            "n_splits": len(splits),
+            "n_splits": len(validation_splits),
             "maximize": maximize,
-            "window": window_spec.to_dict(),
+            **split_metadata,
             **_model_metadata(model_spec),
             **spec.metadata,
             **runtime_metadata,
@@ -252,6 +267,113 @@ def _model_metadata(model_spec: ModelSpec | None) -> dict[str, Any]:
         "model_family": model_spec.family,
         "model_preset": model_spec.preset,
     }
+
+
+def _resolve_selection_splits(
+    n_obs: int,
+    *,
+    window: WindowSpec | str | None,
+    splits: Sequence[tuple[Any, Any]] | None,
+) -> tuple[list[Split], str, dict[str, Any]]:
+    if splits is not None and window is not None:
+        raise ValueError("pass either window or splits, not both")
+    if splits is None:
+        window_spec = resolve_window(window)
+        resolved = window_spec.split(n_obs)
+        return (
+            resolved,
+            window_spec.to_dict()["method"],
+            {
+                "split_source": "window",
+                "window": window_spec.to_dict(),
+                "split_summary": _split_summary(resolved),
+            },
+        )
+    resolved = _normalize_splits(splits, n_obs)
+    return (
+        resolved,
+        "explicit_splits",
+        {
+            "split_source": "explicit",
+            "window": None,
+            "split_summary": _split_summary(resolved),
+        },
+    )
+
+
+def _normalize_splits(splits: Sequence[tuple[Any, Any]], n_obs: int) -> list[Split]:
+    if len(splits) == 0:
+        raise ValueError("splits must contain at least one train/validation pair")
+    resolved: list[Split] = []
+    for split_id, pair in enumerate(splits):
+        if len(pair) != 2:
+            raise ValueError("each split must contain train and validation positions")
+        train_idx = _normalize_split_positions(
+            pair[0],
+            n_obs=n_obs,
+            split_id=split_id,
+            side="train",
+        )
+        val_idx = _normalize_split_positions(
+            pair[1],
+            n_obs=n_obs,
+            split_id=split_id,
+            side="validation",
+        )
+        if np.intersect1d(train_idx, val_idx).size:
+            raise ValueError(f"split {split_id} train and validation positions overlap")
+        resolved.append((train_idx, val_idx))
+    return resolved
+
+
+def _normalize_split_positions(
+    values: Any,
+    *,
+    n_obs: int,
+    split_id: int,
+    side: str,
+) -> np.ndarray:
+    arr = np.asarray(values)
+    if arr.ndim != 1:
+        raise ValueError(f"split {split_id} {side} positions must be one-dimensional")
+    if arr.dtype == bool:
+        if len(arr) != n_obs:
+            raise ValueError(
+                f"split {split_id} {side} boolean mask length must match n_obs"
+            )
+        arr = np.flatnonzero(arr)
+    elif np.issubdtype(arr.dtype, np.integer):
+        arr = arr.astype(int, copy=False)
+    elif arr.dtype == object and all(_is_integer_position(value) for value in arr):
+        arr = arr.astype(int)
+    else:
+        raise TypeError(f"split {split_id} {side} positions must be integer positions")
+    if len(arr) == 0:
+        raise ValueError(f"split {split_id} {side} positions must not be empty")
+    if len(np.unique(arr)) != len(arr):
+        raise ValueError(f"split {split_id} {side} positions must not contain duplicates")
+    if int(arr.min()) < 0 or int(arr.max()) >= n_obs:
+        raise ValueError(f"split {split_id} {side} positions are outside X/y bounds")
+    return arr.astype(int, copy=False)
+
+
+def _is_integer_position(value: Any) -> bool:
+    return isinstance(value, (int, np.integer)) and not isinstance(value, bool)
+
+
+def _split_summary(splits: list[Split]) -> list[dict[str, int]]:
+    return [
+        {
+            "split": split_id,
+            "n_train": int(len(train_idx)),
+            "n_validation": int(len(val_idx)),
+            "train_start_pos": int(train_idx.min()),
+            "train_end_pos": int(train_idx.max()),
+            "validation_start_pos": int(val_idx.min()),
+            "validation_end_pos": int(val_idx.max()),
+        }
+        for split_id, (train_idx, val_idx) in enumerate(splits)
+    ]
 
 
 def _has_search_overrides(**values: Any) -> bool:

@@ -12,8 +12,6 @@ from macroforecast.data import (
     DataBundle,
     DataSpec,
     as_panel,
-    attach_metadata,
-    validate_panel,
 )
 from macroforecast.preprocessing import PreprocessedData
 from macroforecast.feature_engineering.types import FeatureInput, _InputBundle
@@ -335,6 +333,7 @@ def _resolve_columns(panel: pd.DataFrame, *, columns: Iterable[str] | None) -> t
 
 
 def _normalize_lags(values: Iterable[int] | int, *, allow_zero: bool) -> tuple[int, ...]:
+    normalized: tuple[int, ...]
     if isinstance(values, int):
         if values < 0:
             raise ValueError("lags must be non-negative")
@@ -367,6 +366,7 @@ def _normalize_maf_lags(*, max_lag: int, lags: Iterable[int] | None) -> tuple[in
 
 
 def _normalize_positive_ints(values: Iterable[int] | int, *, name: str) -> tuple[int, ...]:
+    normalized: tuple[int, ...]
     if isinstance(values, int):
         normalized = (int(values),)
     else:

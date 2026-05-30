@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -158,6 +159,94 @@ def zero_fill_leading_clean(panel: pd.DataFrame) -> pd.DataFrame:
     return _copy_attrs(panel, panel.fillna(0))
 
 
+def fit_standardization_state(
+    panel: pd.DataFrame,
+    *,
+    method: str = "zscore",
+    ddof: int = 0,
+) -> dict[str, object]:
+    """Fit column-wise scaling parameters on a numeric panel."""
+
+    _require_non_empty(panel)
+    method_value = _normalize_standardization_method(method)
+    if ddof < 0:
+        raise ValueError("ddof must be non-negative")
+    numeric = panel.select_dtypes("number")
+    if numeric.empty:
+        raise ValueError("standardization requires at least one numeric column")
+    if method_value == "zscore":
+        center = numeric.mean(axis=0)
+        scale = numeric.std(axis=0, ddof=ddof)
+    elif method_value == "robust":
+        center = numeric.median(axis=0)
+        scale = numeric.quantile(0.75, axis=0) - numeric.quantile(0.25, axis=0)
+    else:
+        center = numeric.min(axis=0)
+        scale = numeric.max(axis=0) - numeric.min(axis=0)
+    scale = scale.replace(0.0, np.nan)
+    if scale.isna().any():
+        bad = sorted(str(column) for column in scale.index[scale.isna()])
+        raise ValueError(f"standardization has zero or invalid scale for columns: {bad}")
+    return {
+        "method": method_value,
+        "ddof": int(ddof),
+        "columns": [str(column) for column in numeric.columns],
+        "center": {str(column): float(value) for column, value in center.items()},
+        "scale": {str(column): float(value) for column, value in scale.items()},
+    }
+
+
+def apply_standardization_state(panel: pd.DataFrame, state: Mapping[str, object]) -> pd.DataFrame:
+    """Apply fitted column-wise scaling parameters to a panel."""
+
+    _require_non_empty(panel)
+    raw_columns = state.get("columns", ())
+    if not isinstance(raw_columns, Sequence) or isinstance(raw_columns, (str, bytes)):
+        raise ValueError("standardization state columns must be a sequence")
+    columns = [str(column) for column in raw_columns]
+    if not columns:
+        raise ValueError("standardization state has no columns")
+    column_lookup = {str(column): column for column in panel.columns}
+    missing = [column for column in columns if column not in column_lookup]
+    if missing:
+        raise ValueError(f"standardization columns are not in the panel: {missing}")
+    raw_center = state.get("center", {})
+    raw_scale = state.get("scale", {})
+    if not isinstance(raw_center, Mapping) or not isinstance(raw_scale, Mapping):
+        raise ValueError("standardization state center and scale must be mappings")
+    center_map = cast(Mapping[str, Any], raw_center)
+    scale_map = cast(Mapping[str, Any], raw_scale)
+    missing_center = [column for column in columns if column not in center_map]
+    missing_scale = [column for column in columns if column not in scale_map]
+    if missing_center or missing_scale:
+        raise ValueError(
+            "standardization state is missing center/scale entries for columns: "
+            f"{sorted(set(missing_center + missing_scale))}"
+        )
+    actual_columns = [column_lookup[column] for column in columns]
+    center = pd.Series(
+        {column_lookup[column]: float(center_map[column]) for column in columns}
+    )
+    scale = pd.Series(
+        {column_lookup[column]: float(scale_map[column]) for column in columns}
+    )
+    result = panel.copy()
+    result.loc[:, actual_columns] = (result.loc[:, actual_columns].astype(float) - center) / scale
+    return _copy_attrs(panel, result)
+
+
+def standardize_clean(
+    panel: pd.DataFrame,
+    *,
+    method: str = "zscore",
+    ddof: int = 0,
+) -> pd.DataFrame:
+    """Standardize numeric columns with full-sample fitted parameters."""
+
+    state = fit_standardization_state(panel, method=method, ddof=ddof)
+    return apply_standardization_state(panel, state)
+
+
 def apply_tcode_transform(panel: pd.DataFrame, tcode_map: Mapping[str, int]) -> pd.DataFrame:
     """Apply McCracken-Ng transformation codes to matching columns."""
 
@@ -277,7 +366,21 @@ def _normalize_outlier_action(action: str) -> str:
         "cap": "replace_with_cap_value",
         "clip": "replace_with_cap_value",
     }
-    return _lookup(action, aliases, "action")
+    return str(_lookup(action, aliases, "action"))
+
+
+def _normalize_standardization_method(method: str) -> str:
+    aliases = {
+        "zscore": "zscore",
+        "standard": "zscore",
+        "standardize": "zscore",
+        "standardized": "zscore",
+        "robust": "robust",
+        "iqr": "robust",
+        "minmax": "minmax",
+        "min_max": "minmax",
+    }
+    return str(_lookup(method, aliases, "method"))
 
 
 def _apply_outlier_action(numeric: pd.DataFrame, mask: pd.DataFrame, action: str) -> pd.DataFrame:
@@ -529,6 +632,9 @@ __all__ = [
     "truncate_to_balanced_clean",
     "drop_unbalanced_series_clean",
     "zero_fill_leading_clean",
+    "fit_standardization_state",
+    "apply_standardization_state",
+    "standardize_clean",
     "apply_tcode_transform",
     "freq_align_quarterly_to_monthly_clean",
     "freq_align_monthly_to_quarterly_clean",
