@@ -24,6 +24,7 @@ class GARCHEstimator:
         dist: str = "normal",
         rescale: bool = False,
         realized_variance: str | None = None,
+        **kwargs: Any,
     ) -> None:
         self.variant = variant
         self.p = int(p)
@@ -33,6 +34,7 @@ class GARCHEstimator:
         self.dist = dist
         self.rescale = bool(rescale)
         self.realized_variance = realized_variance
+        self.kwargs = dict(kwargs)
         self._fitted: Any = None
         self._mu = 0.0
         self._last_variance = 1.0
@@ -47,6 +49,7 @@ class GARCHEstimator:
             "mean": self.mean_model,
             "dist": self.dist,
             "rescale": self.rescale,
+            **self.kwargs,
         }
         if self.variant == "garch11":
             model = arch_model(r, vol="GARCH", p=self.p, q=self.q, **kwargs)
@@ -92,14 +95,37 @@ def garch11(
     mean_model: str = "constant",
     dist: str = "normal",
     rescale: bool = False,
+    **kwargs: Any,
 ) -> VolatilityFit:
     """Fit GARCH(p, q), default GARCH(1, 1)."""
 
     target = as_series(y)
     frame = _vol_frame(X, target)
-    estimator = GARCHEstimator(variant="garch11", p=p, q=q, mean_model=mean_model, dist=dist, rescale=rescale)
+    estimator = GARCHEstimator(
+        variant="garch11",
+        p=p,
+        q=q,
+        mean_model=mean_model,
+        dist=dist,
+        rescale=rescale,
+        **kwargs,
+    )
     estimator.fit(frame, target)
-    return VolatilityFit(estimator=estimator, model="garch11", feature_names=tuple(frame.columns), target_name=str(target.name), metadata={"n_obs": int(target.dropna().shape[0]), "p": int(p), "q": int(q)})
+    return VolatilityFit(
+        estimator=estimator,
+        model="garch11",
+        feature_names=tuple(frame.columns),
+        target_name=str(target.name),
+        metadata={
+            "n_obs": int(target.dropna().shape[0]),
+            "p": int(p),
+            "q": int(q),
+            "mean_model": mean_model,
+            "dist": dist,
+            "rescale": bool(rescale),
+            **kwargs,
+        },
+    )
 
 
 def egarch(
@@ -112,14 +138,39 @@ def egarch(
     mean_model: str = "constant",
     dist: str = "normal",
     rescale: bool = False,
+    **kwargs: Any,
 ) -> VolatilityFit:
     """Fit EGARCH."""
 
     target = as_series(y)
     frame = _vol_frame(X, target)
-    estimator = GARCHEstimator(variant="egarch", p=p, o=o, q=q, mean_model=mean_model, dist=dist, rescale=rescale)
+    estimator = GARCHEstimator(
+        variant="egarch",
+        p=p,
+        o=o,
+        q=q,
+        mean_model=mean_model,
+        dist=dist,
+        rescale=rescale,
+        **kwargs,
+    )
     estimator.fit(frame, target)
-    return VolatilityFit(estimator=estimator, model="egarch", feature_names=tuple(frame.columns), target_name=str(target.name), metadata={"n_obs": int(target.dropna().shape[0]), "p": int(p), "o": int(o), "q": int(q)})
+    return VolatilityFit(
+        estimator=estimator,
+        model="egarch",
+        feature_names=tuple(frame.columns),
+        target_name=str(target.name),
+        metadata={
+            "n_obs": int(target.dropna().shape[0]),
+            "p": int(p),
+            "o": int(o),
+            "q": int(q),
+            "mean_model": mean_model,
+            "dist": dist,
+            "rescale": bool(rescale),
+            **kwargs,
+        },
+    )
 
 
 class RealizedGARCHEstimator:
@@ -285,7 +336,19 @@ def realized_garch(
         random_state=random_state,
     )
     estimator.fit(frame, target)
-    return VolatilityFit(estimator=estimator, model="realized_garch", feature_names=tuple(frame.columns), target_name=str(target.name), metadata={"n_obs": int(target.dropna().shape[0]), "realized_variance": realized_column})
+    return VolatilityFit(
+        estimator=estimator,
+        model="realized_garch",
+        feature_names=tuple(frame.columns),
+        target_name=str(target.name),
+        metadata={
+            "n_obs": int(target.dropna().shape[0]),
+            "realized_variance": realized_column,
+            "max_iter": int(max_iter),
+            "n_starts": int(n_starts),
+            "random_state": int(random_state),
+        },
+    )
 
 
 def _vol_frame(X: Any | None, y: pd.Series) -> pd.DataFrame:

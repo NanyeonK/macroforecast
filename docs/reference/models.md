@@ -237,7 +237,7 @@ return `VolatilityFit`.
 | `bayesian_ridge` | linear | supervised | `grid` | none |
 | `huber` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `glmboost` | linear | supervised | `grid` | `small`, `standard`, `wide` |
-| `pcr` | composite | supervised | `grid` | `small`, `standard`, `wide` |
+| `pls` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `ar` | timeseries | target | `grid` | `small`, `standard`, `wide` |
 | `var` | timeseries | panel | `grid` | `small`, `standard`, `wide` |
 | `far` | factor | supervised | `grid` | `small`, `standard`, `wide` |
@@ -254,7 +254,7 @@ return `VolatilityFit`.
 | `quantile_regression_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `bagging` | ensemble | supervised | `random` | `small`, `standard`, `wide` |
 | `booging` | ensemble | supervised | `random` | `small`, `standard`, `wide` |
-| `macro_random_forest` | tree | supervised | `grid` | none |
+| `macro_random_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `garch11` | volatility | volatility | `grid` | `small`, `standard`, `wide` |
 | `egarch` | volatility | volatility | `grid` | `small`, `standard`, `wide` |
 | `realized_garch` | volatility | volatility | `grid` | `small`, `standard`, `wide` |
@@ -402,34 +402,30 @@ Fits componentwise L2 boosting with linear base learners.
 
 ## Factor And Time-Series Models
 
-### pcr
+### pls
 
 ```python
-macroforecast.models.pcr(X, y, *, n_components=3, random_state=0)
-```
-
-Fits principal component regression as a convenience composite model: PCA on
-`X`, then OLS on the component scores. In a forecasting runner that refits
-feature engineering inside each window, this is equivalent to:
-
-```python
-features = macroforecast.feature_engineering.feature_spec(
-    target="y",
-    horizon=1,
-    pca_components=3,
+macroforecast.models.pls(
+    X,
+    y,
+    *,
+    n_components=3,
+    scale=True,
+    max_iter=500,
+    tol=1e-6,
 )
-result = macroforecast.forecasting.run(panel, "ols", features=features, window=window)
 ```
 
-The difference is responsibility. `pcr()` keeps PCA fitting and OLS fitting
-inside one model callable. `feature_spec(pca_components=...) + ols()` keeps
-factor construction in the feature-engineering layer, where the same factors
-can be reused by other models and have richer feature metadata.
+Fits partial least squares regression. Unlike unsupervised PCA, PLS uses the
+target while constructing latent components, so it belongs in `models` rather
+than `preprocessing` or `feature_engineering`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `n_components` | `3` | yes | Number of principal components. |
-| `random_state` | `0` | fixed by preset | PCA random seed. |
+| `n_components` | `3` | yes | Number of latent PLS components. |
+| `scale` | `True` | fixed by preset | Whether to scale predictors inside PLS. |
+| `max_iter` | `500` | fixed by preset | NIPALS iteration cap. |
+| `tol` | `1e-6` | fixed by preset | NIPALS convergence tolerance. |
 
 | Preset | `n_components` |
 | --- | --- |
@@ -779,15 +775,18 @@ membership rather than a hard single leaf.
 | --- | --- | --- | --- |
 | `eta` | `0.1` | yes | Soft split leakage parameter. |
 | `herfindahl_threshold` | `0.25` | yes | Node concentration threshold for stopping. |
+| `eta_depth_step` | `0.01` | fixed by preset | Per-depth increase in soft split leakage. |
+| `eta_max_plateau` | `0.5` | fixed by preset | Upper plateau for depth-adjusted leakage. |
+| `mtry_frac` | `1.0` | yes | Fraction of candidate features considered at each split. |
 | `max_depth` | `10` | yes | Maximum tree depth. |
 | `min_leaf_size` | `5` | yes | Minimum effective leaf size. |
 | `random_state` | `0` | fixed by preset | Tree random seed. |
 
-| Preset | `eta` | `herfindahl_threshold` | `max_depth` | `min_leaf_size` |
-| --- | --- | --- | --- | --- |
-| `small` | `(0.05, 0.1)` | `(0.2, 0.3)` | `(5, 10)` | `(3, 5)` |
-| `standard` | `(0.03, 0.05, 0.1)` | `(0.15, 0.25, 0.35)` | `(5, 10, None)` | `(3, 5, 10)` |
-| `wide` | `(0.01, 0.03, 0.05, 0.1, 0.2)` | `(0.1, 0.15, 0.25, 0.35, 0.5)` | `(3, 5, 10, 20, None)` | `(2, 3, 5, 10)` |
+| Preset | `eta` | `herfindahl_threshold` | `mtry_frac` | `max_depth` | `min_leaf_size` |
+| --- | --- | --- | --- | --- | --- |
+| `small` | `(0.05, 0.1)` | `(0.2, 0.3)` | `(0.75, 1.0)` | `(5, 10)` | `(3, 5)` |
+| `standard` | `(0.03, 0.05, 0.1)` | `(0.15, 0.25, 0.35)` | `(0.5, 0.75, 1.0)` | `(5, 10, None)` | `(3, 5, 10)` |
+| `wide` | `(0.01, 0.03, 0.05, 0.1, 0.2)` | `(0.1, 0.15, 0.25, 0.35, 0.5)` | `(0.33, 0.5, 0.75, 1.0)` | `(3, 5, 10, 20, None)` | `(2, 3, 5, 10)` |
 
 Default selection method: `random`.
 
@@ -836,15 +835,15 @@ uses moving-block bootstrap indices.
 | `base` | `"ridge"` | yes | Base estimator name. |
 | `n_estimators` | `50` | yes | Number of bootstrap models. |
 | `max_samples` | `0.8` | yes | Bootstrap sample fraction. |
-| `strategy` | `"standard"` | manual | Bootstrap strategy: `standard` or `block`. |
-| `block_length` | `4` | manual | Block length when `strategy="block"`. |
+| `strategy` | `"standard"` | yes | Bootstrap strategy: `standard` or `block`. |
+| `block_length` | `4` | yes | Block length when `strategy="block"`. |
 | `random_state` | `0` | fixed by preset | Ensemble random seed. |
 
-| Preset | `base` | `n_estimators` | `max_samples` |
-| --- | --- | --- | --- |
-| `small` | `("ridge", "lasso")` | `(10, 25)` | `(0.6, 0.8)` |
-| `standard` | `("ridge", "lasso", "decision_tree")` | `(25, 50, 100)` | `(0.5, 0.7, 0.9)` |
-| `wide` | `("ridge", "lasso", "elastic_net", "decision_tree", "random_forest")` | `(25, 50, 100, 200)` | `(0.4, 0.6, 0.8, 1.0)` |
+| Preset | `base` | `n_estimators` | `max_samples` | `strategy` | `block_length` |
+| --- | --- | --- | --- | --- | --- |
+| `small` | `("ridge", "lasso")` | `(10, 25)` | `(0.6, 0.8)` | `("standard",)` | `(4,)` |
+| `standard` | `("ridge", "lasso", "decision_tree")` | `(25, 50, 100)` | `(0.5, 0.7, 0.9)` | `("standard", "block")` | `(4, 8)` |
+| `wide` | `("ridge", "lasso", "elastic_net", "decision_tree", "random_forest")` | `(25, 50, 100, 200)` | `(0.4, 0.6, 0.8, 1.0)` | `("standard", "block")` | `(2, 4, 8, 12)` |
 
 Default selection method: `random`.
 
@@ -875,16 +874,15 @@ augmentation.
 | `B` | `100` | yes | Number of overfit boosting models. |
 | `sample_frac` | `0.75` | yes | Row sample fraction per model. |
 | `inner_n_estimators` | `1500` | yes | Boosting stages inside each model. |
-| `inner_learning_rate` | `0.1` | manual | Inner boosting learning rate. |
+| `inner_learning_rate` | `0.1` | yes | Inner boosting learning rate. |
 | `inner_max_depth` | `3` | yes | Inner boosting tree depth. |
-| `inner_subsample` | `0.5` | manual | Inner boosting subsample share. |
+| `inner_subsample` | `0.5` | yes | Inner boosting subsample share. |
+| `da_noise_frac` | `1/3` | yes | Scale of feature-noise augmentation. |
+| `da_drop_rate` | `0.2` | yes | Share of augmented columns dropped per model. |
 | `random_state` | `0` | fixed by preset | Ensemble random seed. |
 
-| Preset | `B` | `sample_frac` | `inner_n_estimators` | `inner_max_depth` |
-| --- | --- | --- | --- | --- |
-| `small` | `(5, 10)` | `(0.6, 0.8)` | `(100, 300)` | `(2, 3)` |
-| `standard` | `(10, 25, 50)` | `(0.5, 0.75, 0.9)` | `(300, 750, 1500)` | `(2, 3, 5)` |
-| `wide` | `(10, 25, 50, 100)` | `(0.4, 0.6, 0.75, 0.9)` | `(300, 750, 1500, 2500)` | `(2, 3, 5, 8)` |
+The presets tune all Booging parameters marked `yes`; use
+`describe_model("booging")` to inspect the exact candidate lists.
 
 Default selection method: `random`.
 
@@ -894,9 +892,141 @@ Default selection method: `random`.
 macroforecast.models.macro_random_forest(X, y, **kwargs)
 ```
 
-Reserved for Goulet Coulombe's Macroeconomic Random Forest reference backend.
-The callable exists in the clean API, but it raises a clear error until that
-backend is added to the clean package.
+Adapter for Ryan Lucas's `MacroRandomForest` reference backend. The reference
+implementation is vendored from `MacroRandomForest` 1.0.6 under the MIT
+license, with source attribution in
+`macroforecast.models._mrf_reference`. Install the optional runtime
+dependencies with `macroforecast[macro_random_forest]`. The adapter fits on
+the in-sample `X/y` and calls the reference `_ensemble_loop()` during
+`predict(X_test)`.
+
+By default all columns in `X` are used both as the time-varying linear equation
+variables (`x_columns`) and the forest state variables (`S_columns`). Pass
+`x_columns` and `S_columns` when those sets should differ.
+
+The reference backend distinguishes two predictor sets:
+
+| Argument | Role |
+| --- | --- |
+| `x_columns` | Columns in the local linear forecasting equation. These are the variables whose coefficients are allowed to vary over time. |
+| `S_columns` | State variables used by the forest to split the sample and estimate those local coefficients. |
+
+For example, a compact MRF can use a small local-linear equation but a wider
+state vector for the tree:
+
+```python
+fit = macroforecast.models.macro_random_forest(
+    X_train,
+    y_train,
+    x_columns=["INDPRO_lag0", "UNRATE_lag0"],
+    S_columns=[
+        "INDPRO_lag0",
+        "UNRATE_lag0",
+        "CPIAUCSL_lag0",
+        "FEDFUNDS_lag0",
+        "S&P500_lag0",
+    ],
+    B=50,
+    minsize=10,
+    mtry_frac=1.0,
+    ridge_lambda=0.1,
+    rw_regul=0.75,
+    parallelise=False,
+    print_b=False,
+)
+
+pred = fit.predict(X_test)
+```
+
+With the forecasting runner, pass model parameters through the model-keyed
+`params` mapping. If you want fixed parameters rather than model-owned tuning,
+also disable selection for this model:
+
+```python
+features = macroforecast.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors=["UNRATE", "CPIAUCSL", "FEDFUNDS", "S&P500"],
+    lags=(0, 1),
+)
+
+window = macroforecast.window.spec(
+    estimation=macroforecast.window.estimation_expanding(min_size=120),
+    val=macroforecast.window.val_last_block(size=24),
+    test=macroforecast.window.test_origins(horizon=1, step=1),
+)
+
+result = macroforecast.forecasting.run(
+    panel,
+    "macro_random_forest",
+    window=window,
+    features=features,
+    params={
+        "macro_random_forest": {
+            "x_columns": ["UNRATE_lag0", "FEDFUNDS_lag0"],
+            "S_columns": [
+                "UNRATE_lag0",
+                "UNRATE_lag1",
+                "CPIAUCSL_lag0",
+                "FEDFUNDS_lag0",
+                "S&P500_lag0",
+            ],
+            "B": 100,
+            "minsize": 10,
+            "mtry_frac": 1.0,
+            "parallelise": False,
+            "print_b": False,
+        }
+    },
+    selection={"macro_random_forest": None},
+)
+```
+
+The reference implementation is sensitive to panel shape. Use numeric,
+non-missing features after preprocessing and feature engineering. Keep at
+least one `x_columns` variable, and prefer at least five `S_columns` variables;
+with very small state sets, set `mtry_frac=1.0` so at least one state variable
+is considered at each split. Small training samples can also fail when
+`minsize` is too large relative to the number of local-linear variables.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `x_columns` | `None` | fixed by preset | Feature columns in the time-varying linear equation. |
+| `S_columns` | `None` | fixed by preset | Feature columns used as forest state variables. |
+| `x_pos` | `None` | fixed by preset | Reference-package predictor positions after the target column. |
+| `S_pos` | `None` | fixed by preset | Reference-package state positions after the target column. |
+| `y_pos` | `0` | fixed by preset | Reference-package target column position. |
+| `B` | `50` | yes | Number of MRF trees. |
+| `minsize` | `10` | yes | Minimum node size before split attempts. |
+| `mtry_frac` | `1/3` | yes | Fraction of state variables considered at each split. |
+| `min_leaf_frac_of_x` | `1.0` | yes | Minimum leaf-size multiplier relative to local x dimension. |
+| `VI` | `False` | fixed by preset | Enable variable-importance split search mode. |
+| `ERT` | `False` | fixed by preset | Enable extremely randomized tree split mode. |
+| `quantile_rate` | `None` | fixed by preset | Optional quantile rate for quantile-oriented output. |
+| `S_priority_vec` | `None` | fixed by preset | Optional priority weights over state variables. |
+| `random_x` | `False` | fixed by preset | Use random subsets of local-linear predictors. |
+| `trend_push` | `1` | fixed by preset | Reference-package trend-push option. |
+| `howmany_random_x` | `1` | fixed by preset | Number of random local-linear predictor draws. |
+| `howmany_keep_best_VI` | `20` | fixed by preset | Number of best VI candidates retained. |
+| `cheap_look_at_GTVPs` | `True` | fixed by preset | Use the reference package's cheaper GTVP inspection. |
+| `prior_var` | `None` | fixed by preset | Optional prior variances for local coefficients. |
+| `prior_mean` | `None` | fixed by preset | Optional prior means for local coefficients. |
+| `subsampling_rate` | `0.75` | yes | Subsample share used by each tree. |
+| `rw_regul` | `0.75` | yes | Random-walk shrinkage strength. |
+| `keep_forest` | `False` | fixed by preset | Keep full reference forest object in memory. |
+| `block_size` | `12` | fixed by preset | Reference-package block size for time-series resampling. |
+| `fast_rw` | `True` | fixed by preset | Use fast random-walk regularization path. |
+| `ridge_lambda` | `0.1` | yes | Ridge penalty for local linear fits. |
+| `HRW` | `0` | fixed by preset | Reference-package hierarchical random-walk option. |
+| `resampling_opt` | `2` | yes | Reference MRF resampling option. |
+| `parallelise` | `False` | fixed by preset | Whether to use reference-package parallel execution. |
+| `n_cores` | `1` | fixed by preset | Worker count for the reference package. |
+| `print_b` | `False` | fixed by preset | Reference-package progress printing. |
+
+The MRF presets tune `B`, `minsize`, `mtry_frac`,
+`min_leaf_frac_of_x`, `subsampling_rate`, `rw_regul`, `ridge_lambda`, and
+`resampling_opt`; inspect the exact candidate lists with
+`describe_model("macro_random_forest")`.
 
 ## Volatility Models
 
@@ -1000,5 +1130,6 @@ Fits a compact realized-GARCH joint likelihood. Provide `rv` directly or set
 | Legacy name | Decision |
 | --- | --- |
 | `lasso_path` | Removed. Use `get_model("lasso")` and `selection.select_params()`. |
+| `pcr` | Removed. Use `feature_engineering.feature_spec(pca_components=...)` with a regression model. |
 | `mlp`, `lstm`, `gru`, `transformer`, `hemisphere_nn` | Deferred because torch/deep is intentionally out of scope. |
 | `midas_almon`, `midas_beta`, `midas_step`, `unrestricted_midas` | Deferred as a specialized mixed-frequency block. |

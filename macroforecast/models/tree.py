@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import contextlib
+import io
+from collections.abc import Sequence
 from typing import Any
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -16,21 +20,24 @@ def decision_tree(
     max_depth: int | None = None,
     min_samples_leaf: int = 1,
     random_state: int = 0,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit a CART regression tree."""
 
     from sklearn.tree import DecisionTreeRegressor
 
+    params = {
+        "max_depth": max_depth,
+        "min_samples_leaf": int(min_samples_leaf),
+        "random_state": int(random_state),
+        **kwargs,
+    }
     return fit_estimator(
-        DecisionTreeRegressor(
-            max_depth=max_depth,
-            min_samples_leaf=int(min_samples_leaf),
-            random_state=int(random_state),
-        ),
+        DecisionTreeRegressor(**params),
         X,
         y,
         model="decision_tree",
-        metadata={"max_depth": max_depth, "min_samples_leaf": int(min_samples_leaf), "random_state": int(random_state)},
+        metadata=params,
     )
 
 
@@ -43,23 +50,26 @@ def random_forest(
     min_samples_leaf: int = 1,
     random_state: int = 0,
     n_jobs: int | None = 1,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit a random forest regressor."""
 
     from sklearn.ensemble import RandomForestRegressor
 
+    params = {
+        "n_estimators": int(n_estimators),
+        "max_depth": max_depth,
+        "min_samples_leaf": int(min_samples_leaf),
+        "random_state": int(random_state),
+        "n_jobs": n_jobs,
+        **kwargs,
+    }
     return fit_estimator(
-        RandomForestRegressor(
-            n_estimators=int(n_estimators),
-            max_depth=max_depth,
-            min_samples_leaf=int(min_samples_leaf),
-            random_state=int(random_state),
-            n_jobs=n_jobs,
-        ),
+        RandomForestRegressor(**params),
         X,
         y,
         model="random_forest",
-        metadata={"n_estimators": int(n_estimators), "max_depth": max_depth, "random_state": int(random_state)},
+        metadata=params,
     )
 
 
@@ -72,23 +82,26 @@ def extra_trees(
     min_samples_leaf: int = 1,
     random_state: int = 0,
     n_jobs: int | None = 1,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit an extremely randomized trees regressor."""
 
     from sklearn.ensemble import ExtraTreesRegressor
 
+    params = {
+        "n_estimators": int(n_estimators),
+        "max_depth": max_depth,
+        "min_samples_leaf": int(min_samples_leaf),
+        "random_state": int(random_state),
+        "n_jobs": n_jobs,
+        **kwargs,
+    }
     return fit_estimator(
-        ExtraTreesRegressor(
-            n_estimators=int(n_estimators),
-            max_depth=max_depth,
-            min_samples_leaf=int(min_samples_leaf),
-            random_state=int(random_state),
-            n_jobs=n_jobs,
-        ),
+        ExtraTreesRegressor(**params),
         X,
         y,
         model="extra_trees",
-        metadata={"n_estimators": int(n_estimators), "max_depth": max_depth, "random_state": int(random_state)},
+        metadata=params,
     )
 
 
@@ -100,22 +113,25 @@ def gradient_boosting(
     learning_rate: float = 0.1,
     max_depth: int = 3,
     random_state: int = 0,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit sklearn gradient-boosted regression trees."""
 
     from sklearn.ensemble import GradientBoostingRegressor
 
+    params = {
+        "n_estimators": int(n_estimators),
+        "learning_rate": float(learning_rate),
+        "max_depth": int(max_depth),
+        "random_state": int(random_state),
+        **kwargs,
+    }
     return fit_estimator(
-        GradientBoostingRegressor(
-            n_estimators=int(n_estimators),
-            learning_rate=float(learning_rate),
-            max_depth=int(max_depth),
-            random_state=int(random_state),
-        ),
+        GradientBoostingRegressor(**params),
         X,
         y,
         model="gradient_boosting",
-        metadata={"n_estimators": int(n_estimators), "learning_rate": float(learning_rate), "max_depth": int(max_depth)},
+        metadata=params,
     )
 
 
@@ -133,16 +149,19 @@ def xgboost(
     """Fit an XGBoost regressor. Requires the `xgboost` extra."""
 
     xgb = optional_import("xgboost", extra="xgboost")
-    estimator = xgb.XGBRegressor(
-        n_estimators=int(n_estimators),
-        learning_rate=float(learning_rate),
-        max_depth=int(max_depth),
-        subsample=float(subsample),
-        random_state=int(random_state),
-        objective="reg:squarederror",
+    params = {
+        "n_estimators": int(n_estimators),
+        "learning_rate": float(learning_rate),
+        "max_depth": int(max_depth),
+        "subsample": float(subsample),
+        "random_state": int(random_state),
+        "objective": "reg:squarederror",
         **kwargs,
+    }
+    estimator = xgb.XGBRegressor(
+        **params,
     )
-    return fit_estimator(estimator, X, y, model="xgboost")
+    return fit_estimator(estimator, X, y, model="xgboost", metadata=params)
 
 
 def lightgbm(
@@ -159,15 +178,18 @@ def lightgbm(
     """Fit a LightGBM regressor. Requires the `lightgbm` extra."""
 
     lgb = optional_import("lightgbm", extra="lightgbm")
-    estimator = lgb.LGBMRegressor(
-        n_estimators=int(n_estimators),
-        learning_rate=float(learning_rate),
-        max_depth=int(max_depth),
-        num_leaves=int(num_leaves),
-        random_state=int(random_state),
+    params = {
+        "n_estimators": int(n_estimators),
+        "learning_rate": float(learning_rate),
+        "max_depth": int(max_depth),
+        "num_leaves": int(num_leaves),
+        "random_state": int(random_state),
         **kwargs,
+    }
+    estimator = lgb.LGBMRegressor(
+        **params,
     )
-    return fit_estimator(estimator, X, y, model="lightgbm")
+    return fit_estimator(estimator, X, y, model="lightgbm", metadata=params)
 
 
 def catboost(
@@ -184,15 +206,26 @@ def catboost(
     """Fit a CatBoost regressor. Requires the `catboost` extra."""
 
     cb = optional_import("catboost", extra="catboost")
-    estimator = cb.CatBoostRegressor(
-        iterations=int(n_estimators),
-        learning_rate=float(learning_rate),
-        depth=int(max_depth),
-        random_seed=int(random_state),
-        verbose=verbose,
+    params = {
+        "iterations": int(n_estimators),
+        "learning_rate": float(learning_rate),
+        "depth": int(max_depth),
+        "random_seed": int(random_state),
+        "verbose": verbose,
         **kwargs,
+    }
+    metadata = {
+        "n_estimators": int(n_estimators),
+        "learning_rate": float(learning_rate),
+        "max_depth": int(max_depth),
+        "random_state": int(random_state),
+        "verbose": verbose,
+        **kwargs,
+    }
+    estimator = cb.CatBoostRegressor(
+        **params,
     )
-    return fit_estimator(estimator, X, y, model="catboost")
+    return fit_estimator(estimator, X, y, model="catboost", metadata=metadata)
 
 
 def mars(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
@@ -607,42 +640,195 @@ def booging(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
 
 
 class MacroRandomForestRegressor:
-    """Adapter for the external MacroRandomForest reference implementation."""
+    """Adapter for the vendored MacroRandomForest reference implementation."""
 
-    def __init__(self, **kwargs: Any) -> None:
-        self.kwargs = dict(kwargs)
+    def __init__(
+        self,
+        *,
+        x_columns: Sequence[str] | None = None,
+        S_columns: Sequence[str] | None = None,
+        x_pos: Sequence[int] | None = None,
+        S_pos: Sequence[int] | None = None,
+        y_pos: int = 0,
+        B: int = 50,
+        minsize: int = 10,
+        mtry_frac: float = 1.0 / 3.0,
+        min_leaf_frac_of_x: float = 1.0,
+        VI: bool = False,
+        ERT: bool = False,
+        quantile_rate: float | None = None,
+        S_priority_vec: Sequence[float] | None = None,
+        random_x: bool = False,
+        trend_push: int = 1,
+        howmany_random_x: int = 1,
+        howmany_keep_best_VI: int = 20,
+        cheap_look_at_GTVPs: bool = True,
+        prior_var: Sequence[float] | None = None,
+        prior_mean: Sequence[float] | None = None,
+        subsampling_rate: float = 0.75,
+        rw_regul: float = 0.75,
+        keep_forest: bool = False,
+        block_size: int = 12,
+        fast_rw: bool = True,
+        ridge_lambda: float = 0.1,
+        HRW: int = 0,
+        resampling_opt: int = 2,
+        print_b: bool = False,
+        parallelise: bool = False,
+        n_cores: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        self.x_columns = None if x_columns is None else tuple(str(column) for column in x_columns)
+        self.S_columns = None if S_columns is None else tuple(str(column) for column in S_columns)
+        self.x_pos = None if x_pos is None else tuple(int(pos) for pos in x_pos)
+        self.S_pos = None if S_pos is None else tuple(int(pos) for pos in S_pos)
+        self.y_pos = int(y_pos)
+        self.params: dict[str, Any] = {
+            "B": int(B),
+            "minsize": int(minsize),
+            "mtry_frac": float(mtry_frac),
+            "min_leaf_frac_of_x": float(min_leaf_frac_of_x),
+            "VI": bool(VI),
+            "ERT": bool(ERT),
+            "quantile_rate": quantile_rate,
+            "S_priority_vec": None if S_priority_vec is None else list(S_priority_vec),
+            "random_x": bool(random_x),
+            "trend_push": int(trend_push),
+            "howmany_random_x": int(howmany_random_x),
+            "howmany_keep_best_VI": int(howmany_keep_best_VI),
+            "cheap_look_at_GTVPs": bool(cheap_look_at_GTVPs),
+            "prior_var": [] if prior_var is None else list(prior_var),
+            "prior_mean": [] if prior_mean is None else list(prior_mean),
+            "subsampling_rate": float(subsampling_rate),
+            "rw_regul": float(rw_regul),
+            "keep_forest": bool(keep_forest),
+            "block_size": int(block_size),
+            "fast_rw": bool(fast_rw),
+            "ridge_lambda": float(ridge_lambda),
+            "HRW": int(HRW),
+            "resampling_opt": int(resampling_opt),
+            "print_b": bool(print_b),
+            "parallelise": bool(parallelise),
+            "n_cores": int(n_cores),
+            **kwargs,
+        }
         self._train_X: pd.DataFrame | None = None
         self._train_y: pd.Series | None = None
+        self._feature_names: tuple[str, ...] = ()
+        self.output_: dict[str, Any] | None = None
+        self.model_: Any = None
 
     @staticmethod
     def _import_external():
-        try:
-            from macroforecast._vendor.macro_random_forest import MacroRandomForest
+        optional_import("joblib", extra="macro_random_forest")
+        optional_import("matplotlib", extra="macro_random_forest")
+        from macroforecast.models._mrf_reference import MacroRandomForest
 
-            return MacroRandomForest
-        except ImportError as exc:
-            raise ImportError(
-                "macro_random_forest reference code is not bundled in this clean package yet. "
-                "`mf.models.macro_random_forest` is reserved for the Goulet Coulombe "
-                "Macroeconomic Random Forest implementation and will run once that "
-                "reference backend is added."
-            ) from exc
+        return MacroRandomForest
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "MacroRandomForestRegressor":
         self._import_external()
         self._train_X = X.copy()
         self._train_y = y.copy()
+        self._feature_names = tuple(str(column) for column in X.columns)
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        self._import_external()
-        raise NotImplementedError("macro_random_forest backend adapter is not wired in this clean package yet")
+        if self._train_X is None or self._train_y is None:
+            return np.zeros(len(X), dtype=float)
+        MacroRandomForest = self._import_external()
+        train_X = self._train_X.copy()
+        test_X = X.reindex(columns=list(self._feature_names), fill_value=0.0)
+        train_y = self._train_y.rename("__target__")
+        test_y = pd.Series(0.0, index=test_X.index, name="__target__")
+        data = pd.concat(
+            [
+                pd.concat([train_y, train_X], axis=1),
+                pd.concat([test_y, test_X], axis=1),
+            ],
+            axis=0,
+        ).reset_index(drop=True)
+        oos_pos = np.arange(len(train_X), len(train_X) + len(test_X))
+        x_pos = self._resolve_positions(self.x_columns, self.x_pos, train_X.columns)
+        S_pos = self._resolve_positions(self.S_columns, self.S_pos, train_X.columns)
+        with self._reference_output_context():
+            model = MacroRandomForest(
+                data=data,
+                y_pos=self.y_pos,
+                x_pos=np.asarray(x_pos, dtype=int),
+                S_pos=np.asarray(S_pos, dtype=int),
+                oos_pos=oos_pos,
+                **self.params,
+            )
+        self.model_ = model
+        try:
+            with self._reference_output_context(), warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    category=PendingDeprecationWarning,
+                    module=r"macroforecast\.models\._mrf_reference",
+                )
+                warnings.filterwarnings(
+                    "ignore",
+                    message=r"invalid value encountered in divide",
+                    category=RuntimeWarning,
+                    module=r"macroforecast\.models\._mrf_reference",
+                )
+                self.output_ = model._ensemble_loop()
+        except Exception as exc:  # noqa: BLE001 - external backend errors need package context.
+            raise RuntimeError(
+                "MacroRandomForest backend failed while running _ensemble_loop(). "
+                "Check x_columns/S_columns and sample size."
+            ) from exc
+        return self._prediction_values(self.output_, len(test_X))
+
+    def _reference_output_context(self):
+        if self.params.get("print_b"):
+            return contextlib.nullcontext()
+        return contextlib.redirect_stdout(io.StringIO())
+
+    @staticmethod
+    def _resolve_positions(
+        columns: Sequence[str] | None,
+        positions: Sequence[int] | None,
+        feature_index: pd.Index,
+    ) -> list[int]:
+        if positions is not None:
+            return [int(pos) for pos in positions]
+        if columns is None:
+            return list(range(1, len(feature_index) + 1))
+        missing = [column for column in columns if column not in feature_index]
+        if missing:
+            raise ValueError(f"macro_random_forest columns not found in X: {missing}")
+        return [int(feature_index.get_loc(column)) + 1 for column in columns]
+
+    @staticmethod
+    def _prediction_values(output: dict[str, Any], n: int) -> np.ndarray:
+        values = output.get("pred_ensemble")
+        if values is None:
+            values = output.get("pred")
+        if isinstance(values, (pd.Series, pd.DataFrame)):
+            arr = values.to_numpy(dtype=float)
+        else:
+            arr = np.asarray(values, dtype=float)
+        if arr.ndim == 2 and arr.shape[0] != n and arr.shape[1] == n:
+            arr = arr.mean(axis=0)
+        return np.asarray(arr, dtype=float).reshape(-1)[-n:]
 
 
 def macro_random_forest(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
-    """Fit Macroeconomic Random Forest when the reference backend is available."""
+    """Fit Macroeconomic Random Forest with the vendored reference backend."""
 
-    return fit_estimator(MacroRandomForestRegressor(**kwargs), X, y, model="macro_random_forest", metadata=kwargs)
+    estimator = MacroRandomForestRegressor(**kwargs)
+    metadata = {
+        "x_columns": estimator.x_columns,
+        "S_columns": estimator.S_columns,
+        "x_pos": estimator.x_pos,
+        "S_pos": estimator.S_pos,
+        "y_pos": estimator.y_pos,
+        **estimator.params,
+    }
+    return fit_estimator(estimator, X, y, model="macro_random_forest", metadata=metadata)
 
 
 __all__ = [

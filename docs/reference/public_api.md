@@ -21,7 +21,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `lag_step`, `rolling_step`, `moving_average_step`, `scale_step`, `pca_step`, `group_pca_step`, `maf_step` | `macroforecast.feature_engineering` | Reusable step dictionaries for `compose_features`. |
 | `pca_then_lags`, `lags_then_pca`, `moving_average_pca_lags` | `macroforecast.feature_engineering` | Convenience composed feature callables. |
 | `ModelFit`, `VolatilityFit` | `macroforecast.models` | Fitted model result wrappers. |
-| `ols`, `ridge`, `lasso`, `elastic_net`, `bayesian_ridge`, `huber`, `glmboost`, `pcr` | `macroforecast.models` | Linear and factor-regression models. |
+| `ols`, `ridge`, `lasso`, `elastic_net`, `bayesian_ridge`, `huber`, `glmboost`, `pls` | `macroforecast.models` | Linear and supervised dimension-reduction models. |
 | `ar`, `var`, `far`, `favar` | `macroforecast.models` | Time-series and factor-augmented forecasting models. |
 | `decision_tree`, `random_forest`, `extra_trees`, `gradient_boosting`, `xgboost`, `lightgbm`, `catboost`, `mars` | `macroforecast.models` | Tree and ML regressors. |
 | `slow_growing_tree`, `quantile_regression_forest`, `bagging`, `booging`, `macro_random_forest` | `macroforecast.models` | Macro-specific tree and ensemble models. |

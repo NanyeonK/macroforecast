@@ -9,20 +9,21 @@ from macroforecast.models.types import ModelFit
 from macroforecast.models.utils import fit_estimator
 
 
-def ols(X: Any, y: Any | None = None) -> ModelFit:
+def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
     """Fit ordinary least squares."""
 
     from sklearn.linear_model import LinearRegression
 
-    return fit_estimator(LinearRegression(), X, y, model="ols")
+    return fit_estimator(LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs))
 
 
-def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0) -> ModelFit:
+def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) -> ModelFit:
     """Fit ridge regression."""
 
     from sklearn.linear_model import Ridge
 
-    return fit_estimator(Ridge(alpha=float(alpha)), X, y, model="ridge", metadata={"alpha": float(alpha)})
+    params = {"alpha": float(alpha), **kwargs}
+    return fit_estimator(Ridge(**params), X, y, model="ridge", metadata=params)
 
 
 def lasso(
@@ -31,17 +32,19 @@ def lasso(
     *,
     alpha: float = 1.0,
     max_iter: int = 20000,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit lasso regression with a user-supplied alpha."""
 
     from sklearn.linear_model import Lasso
 
+    params = {"alpha": float(alpha), "max_iter": int(max_iter), **kwargs}
     return fit_estimator(
-        Lasso(alpha=float(alpha), max_iter=int(max_iter)),
+        Lasso(**params),
         X,
         y,
         model="lasso",
-        metadata={"alpha": float(alpha), "max_iter": int(max_iter)},
+        metadata=params,
     )
 
 
@@ -52,26 +55,28 @@ def elastic_net(
     alpha: float = 1.0,
     l1_ratio: float = 0.5,
     max_iter: int = 20000,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit elastic net regression."""
 
     from sklearn.linear_model import ElasticNet
 
+    params = {"alpha": float(alpha), "l1_ratio": float(l1_ratio), "max_iter": int(max_iter), **kwargs}
     return fit_estimator(
-        ElasticNet(alpha=float(alpha), l1_ratio=float(l1_ratio), max_iter=int(max_iter)),
+        ElasticNet(**params),
         X,
         y,
         model="elastic_net",
-        metadata={"alpha": float(alpha), "l1_ratio": float(l1_ratio), "max_iter": int(max_iter)},
+        metadata=params,
     )
 
 
-def bayesian_ridge(X: Any, y: Any | None = None) -> ModelFit:
+def bayesian_ridge(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
     """Fit empirical-Bayes Bayesian ridge regression."""
 
     from sklearn.linear_model import BayesianRidge
 
-    return fit_estimator(BayesianRidge(), X, y, model="bayesian_ridge")
+    return fit_estimator(BayesianRidge(**kwargs), X, y, model="bayesian_ridge", metadata=dict(kwargs))
 
 
 def huber(
@@ -80,17 +85,19 @@ def huber(
     *,
     epsilon: float = 1.35,
     max_iter: int = 1000,
+    **kwargs: Any,
 ) -> ModelFit:
     """Fit robust Huber regression."""
 
     from sklearn.linear_model import HuberRegressor
 
+    params = {"epsilon": float(epsilon), "max_iter": int(max_iter), **kwargs}
     return fit_estimator(
-        HuberRegressor(epsilon=float(epsilon), max_iter=int(max_iter)),
+        HuberRegressor(**params),
         X,
         y,
         model="huber",
-        metadata={"epsilon": float(epsilon), "max_iter": int(max_iter)},
+        metadata=params,
     )
 
 
@@ -146,49 +153,33 @@ def glmboost(
     )
 
 
-class _PCR:
-    def __init__(self, *, n_components: int = 3, random_state: int = 0) -> None:
-        self.n_components = max(1, int(n_components))
-        self.random_state = int(random_state)
-        self._mean: pd.Series | None = None
-        self._pca: Any = None
-        self._regression: Any = None
-
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_PCR":
-        from sklearn.decomposition import PCA
-        from sklearn.linear_model import LinearRegression
-
-        n_components = min(self.n_components, X.shape[1], max(1, X.shape[0] - 1))
-        self._mean = X.mean(axis=0)
-        centered = (X - self._mean).fillna(0.0)
-        self._pca = PCA(n_components=n_components, random_state=self.random_state)
-        scores = self._pca.fit_transform(centered)
-        self._regression = LinearRegression().fit(scores, np.asarray(y, dtype=float))
-        return self
-
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if self._mean is None or self._pca is None or self._regression is None:
-            return np.zeros(len(X), dtype=float)
-        frame = X.reindex(columns=self._mean.index, fill_value=0.0)
-        scores = self._pca.transform((frame - self._mean).fillna(0.0))
-        return np.asarray(self._regression.predict(scores), dtype=float)
-
-
-def pcr(
+def pls(
     X: Any,
     y: Any | None = None,
     *,
     n_components: int = 3,
-    random_state: int = 0,
+    scale: bool = True,
+    max_iter: int = 500,
+    tol: float = 1e-6,
+    **kwargs: Any,
 ) -> ModelFit:
-    """Fit principal component regression."""
+    """Fit partial least squares regression."""
 
+    from sklearn.cross_decomposition import PLSRegression
+
+    params = {
+        "n_components": int(n_components),
+        "scale": bool(scale),
+        "max_iter": int(max_iter),
+        "tol": float(tol),
+        **kwargs,
+    }
     return fit_estimator(
-        _PCR(n_components=n_components, random_state=random_state),
+        PLSRegression(**params),
         X,
         y,
-        model="pcr",
-        metadata={"n_components": int(n_components), "random_state": int(random_state)},
+        model="pls",
+        metadata=params,
     )
 
 
@@ -199,6 +190,6 @@ __all__ = [
     "huber",
     "lasso",
     "ols",
-    "pcr",
+    "pls",
     "ridge",
 ]

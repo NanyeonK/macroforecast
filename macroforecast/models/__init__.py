@@ -1,51 +1,47 @@
 from __future__ import annotations
 
-from .core import (
-    BaggingRegressor,
-    BoogingRegressor,
-    GARCHEstimator,
+from .linear import (
+    bayesian_ridge,
+    elastic_net,
+    glmboost,
+    huber,
+    lasso,
+    ols,
+    pls,
+    ridge,
+)
+from .specs import (
     MODEL_SPECS,
-    MacroRandomForestRegressor,
-    ModelFit,
     ModelParameter,
     ModelSpec,
+    describe_model,
+    get_model,
+    list_model_specs,
+    model_search_space,
+)
+from .timeseries import ar, far, favar, var
+from .tree import (
+    BaggingRegressor,
+    BoogingRegressor,
+    MacroRandomForestRegressor,
     QuantileRegressionForestRegressor,
-    RealizedGARCHEstimator,
     SlowGrowingTreeRegressor,
-    VolatilityFit,
-    ar,
     bagging,
-    bayesian_ridge,
     booging,
     catboost,
     decision_tree,
-    describe_model,
-    egarch,
-    elastic_net,
     extra_trees,
-    far,
-    favar,
-    garch11,
-    get_model,
-    glmboost,
     gradient_boosting,
-    huber,
-    lasso,
     lightgbm,
-    list_model_specs,
     macro_random_forest,
     mars,
-    model_search_space,
-    ols,
-    pcr,
     quantile_regression_forest,
     random_forest,
-    realized_garch,
-    ridge,
     slow_growing_tree,
-    var,
     xgboost,
 )
+from .types import ModelFit, VolatilityFit
+from .volatility import GARCHEstimator, RealizedGARCHEstimator, egarch, garch11, realized_garch
 
 __all__ = [
     "BaggingRegressor",
@@ -84,7 +80,7 @@ __all__ = [
     "mars",
     "model_search_space",
     "ols",
-    "pcr",
+    "pls",
     "quantile_regression_forest",
     "random_forest",
     "realized_garch",

@@ -43,6 +43,7 @@ lightgbm = ["lightgbm>=4.0"]
 catboost = ["catboost>=1.2"]
 arch = ["arch>=6.0"]
 mars = ["sklearn-contrib-py-earth>=0.1.0; python_version < '3.11'"]
+macro_random_forest = ["joblib>=1.5", "matplotlib>=3.8"]
 docs = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
@@ -52,7 +53,7 @@ docs = [
 ]
 typecheck = ["mypy>=1.13"]
 markdown = ["tabulate>=0.9"]
-all = ["macroforecast[parquet,markdown,xgboost,lightgbm,catboost,arch,mars]"]
+all = ["macroforecast[parquet,markdown,xgboost,lightgbm,catboost,arch,mars,macro_random_forest]"]
 ci = ["pytest>=8.0", "macroforecast[parquet,markdown]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
@@ -63,7 +64,7 @@ macroforecast = "macroforecast.__main__:main"
 include = ["macroforecast*"]
 
 [tool.setuptools.package-data]
-macroforecast = ["py.typed"]
+macroforecast = ["py.typed", "models/_mrf_reference.LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

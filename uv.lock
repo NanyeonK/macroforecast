@@ -930,7 +930,9 @@ dependencies = [
 all = [
     { name = "arch" },
     { name = "catboost" },
+    { name = "joblib" },
     { name = "lightgbm" },
+    { name = "matplotlib" },
     { name = "pyarrow" },
     { name = "sklearn-contrib-py-earth", marker = "python_full_version < '3.11'" },
     { name = "tabulate" },
@@ -950,7 +952,9 @@ ci = [
 dev = [
     { name = "arch" },
     { name = "catboost" },
+    { name = "joblib" },
     { name = "lightgbm" },
+    { name = "matplotlib" },
     { name = "pyarrow" },
     { name = "pytest" },
     { name = "sklearn-contrib-py-earth", marker = "python_full_version < '3.11'" },
@@ -970,6 +974,10 @@ docs = [
 ]
 lightgbm = [
     { name = "lightgbm" },
+]
+macro-random-forest = [
+    { name = "joblib" },
+    { name = "matplotlib" },
 ]
 markdown = [
     { name = "tabulate" },
@@ -996,10 +1004,12 @@ dev = [
 requires-dist = [
     { name = "arch", marker = "extra == 'arch'", specifier = ">=6.0" },
     { name = "catboost", marker = "extra == 'catboost'", specifier = ">=1.2" },
+    { name = "joblib", marker = "extra == 'macro-random-forest'", specifier = ">=1.5" },
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0" },
     { name = "macroforecast", extras = ["all"], marker = "extra == 'dev'" },
     { name = "macroforecast", extras = ["parquet", "markdown"], marker = "extra == 'ci'" },
-    { name = "macroforecast", extras = ["parquet", "markdown", "xgboost", "lightgbm", "catboost", "arch", "mars"], marker = "extra == 'all'" },
+    { name = "macroforecast", extras = ["parquet", "markdown", "xgboost", "lightgbm", "catboost", "arch", "mars", "macro-random-forest"], marker = "extra == 'all'" },
+    { name = "matplotlib", marker = "extra == 'macro-random-forest'", specifier = ">=3.8" },
     { name = "mypy", marker = "extra == 'typecheck'", specifier = ">=1.13" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0" },
     { name = "numpy", specifier = ">=2.0" },
@@ -1019,7 +1029,7 @@ requires-dist = [
     { name = "tabulate", marker = "extra == 'markdown'", specifier = ">=0.9" },
     { name = "xgboost", marker = "extra == 'xgboost'", specifier = ">=3.0,<3.1" },
 ]
-provides-extras = ["parquet", "xgboost", "lightgbm", "catboost", "arch", "mars", "docs", "typecheck", "markdown", "all", "ci", "dev"]
+provides-extras = ["parquet", "xgboost", "lightgbm", "catboost", "arch", "mars", "macro-random-forest", "docs", "typecheck", "markdown", "all", "ci", "dev"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest-timeout", specifier = ">=2.4.0" }]

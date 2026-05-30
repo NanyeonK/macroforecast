@@ -38,7 +38,7 @@ macroforecast.forecasting.run(
 | `preprocessing_policy` | `StagePolicy`, str, or `None` | `origin_available` when preprocessing is supplied | Where preprocessing may fit and apply: `full_panel`, `origin_available`, `fit_window`, or `fixed_reference`. |
 | `features` | `FeatureSpec` or `None` | `None` | Feature and target construction operations. |
 | `feature_policy` | `StagePolicy`, str, or `None` | `fit_window` | Where stateful feature engineering such as PCA may fit. |
-| `selection` | `SearchSpec`, model-keyed mapping, or `None` | `None` | Hyperparameter candidate generation and search method. |
+| `selection` | `SearchSpec`, model-keyed mapping, or `None` | `None` | Hyperparameter candidate generation and search method. `None` uses each model's owned default search space; a model-keyed value of `None` disables selection for that model. |
 | `selection_policy` | `StagePolicy`, str, or `None` | `fit_window` | Which feature rows are supplied to model selection. |
 | `selection_metric` | str or callable | `"mse"` | Objective used during model selection. |
 | `maximize_selection` | bool | `False` | Whether larger selection scores are better. |
@@ -85,6 +85,12 @@ result = mf.forecasting.run(
     preset="small",
 )
 ```
+
+`selection=None` means “use registered model defaults” when a model has a
+search space. To run fixed parameters with no tuning, pass a model-keyed
+mapping such as `selection={"ridge": None}`. To evaluate a single explicit
+candidate through the selection ledger, pass `selection={"ridge":
+mf.selection.fixed({"alpha": 0.1})}`.
 
 If the analysis intentionally follows the common full-sample empirical
 workflow, preprocess first and pass the processed panel to `run(...,

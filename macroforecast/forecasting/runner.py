@@ -312,8 +312,10 @@ def _fit_predict_origin(
     retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
-        selected = _select_for_model(selection, model_run)
-        should_select = selected is not None or bool(model_spec.search_spaces)
+        selected, use_model_default_selection = _selection_for_model(selection, model_run)
+        should_select = selected is not None or (
+            use_model_default_selection and bool(model_spec.search_spaces)
+        )
         selection_metadata: dict[str, Any] | None = None
         if should_select:
             if retune or model_run.alias not in param_cache:
@@ -524,10 +526,11 @@ def _resolve_model_runs(
             runs.append(_ModelRun(alias=alias, spec=spec))
     else:
         single_model = cast(str | Callable[..., Any] | ModelSpec, model)
+        base = get_model(single_model)
         spec = get_model(
             single_model,
-            preset=_preset_for_model(preset, None, None),
-            params=_params_for_model(params, None, None),
+            preset=_preset_for_model(preset, None, base.name),
+            params=_params_for_model(params, None, base.name),
         )
         runs = [_ModelRun(alias=spec.name, spec=spec)]
     if not runs:
@@ -569,17 +572,17 @@ def _params_for_model(
     return params
 
 
-def _select_for_model(
+def _selection_for_model(
     selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
     model_run: _ModelRun,
-) -> SearchSpec | None:
+) -> tuple[SearchSpec | None, bool]:
     if selection is None or isinstance(selection, SearchSpec):
-        return selection
+        return selection, True
     if model_run.alias in selection:
-        return selection[model_run.alias]
+        return selection[model_run.alias], selection[model_run.alias] is not None
     if model_run.spec.name in selection:
-        return selection[model_run.spec.name]
-    return None
+        return selection[model_run.spec.name], selection[model_run.spec.name] is not None
+    return None, True
 
 
 def _prediction_series(prediction: Any, *, index: pd.Index) -> pd.Series:

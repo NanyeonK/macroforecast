@@ -99,7 +99,7 @@ _LAZY_EXPORTS = {
     "mars": ".models",
     "model_search_space": ".models",
     "ols": ".models",
-    "pcr": ".models",
+    "pls": ".models",
     "quantile_regression_forest": ".models",
     "random_forest": ".models",
     "realized_garch": ".models",

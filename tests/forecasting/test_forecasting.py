@@ -109,6 +109,132 @@ def test_forecasting_runner_supports_multiple_models_and_stage_policies() -> Non
     assert ridge_selection["metadata"]["split_source"] == "explicit"
 
 
+def test_forecasting_runner_can_disable_model_owned_selection() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "ridge",
+        window=_window(),
+        features=features,
+        params={"ridge": {"alpha": 0.1}},
+        selection={"ridge": None},
+    )
+    table = result.to_frame()
+
+    assert table["selection"].isna().all()
+    assert result.metadata["models"][0]["spec"]["params"]["alpha"] == 0.1
+
+
+def test_forecasting_runner_supports_pls_model() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "pls",
+        window=_window(),
+        features=features,
+        params={"pls": {"n_components": 1}},
+        selection={"pls": None},
+    )
+    table = result.to_frame()
+
+    assert set(table["model"]) == {"pls"}
+    assert table["prediction"].notna().all()
+    assert result.metadata["models"][0]["spec"]["params"]["n_components"] == 1
+
+
+def test_forecasting_runner_supports_macro_random_forest_with_reference_backend(
+    monkeypatch,
+) -> None:
+    panel = _panel()
+    calls = {}
+
+    class FakeMRF:
+        def __init__(self, **kwargs):
+            calls.update(kwargs)
+
+        def _ensemble_loop(self):
+            return {"pred_ensemble": np.full(len(calls["oos_pos"]), 4.0)}
+
+    monkeypatch.setattr(
+        "macroforecast.models.tree.MacroRandomForestRegressor._import_external",
+        staticmethod(lambda: FakeMRF),
+    )
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0,),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "macro_random_forest",
+        window=_window(),
+        features=features,
+        params={"macro_random_forest": {"B": 2, "x_columns": ["x1_lag0"], "S_columns": ["x1_lag0", "x2_lag0"]}},
+        selection={"macro_random_forest": None},
+    )
+    table = result.to_frame()
+
+    assert set(table["model"]) == {"macro_random_forest"}
+    assert set(table["prediction"]) == {4.0}
+    assert calls["x_pos"].tolist() == [1]
+    assert calls["S_pos"].tolist() == [1, 2]
+    assert result.metadata["models"][0]["spec"]["params"]["B"] == 2
+
+
+def test_forecasting_runner_passes_target_and_exog_to_volatility_spec() -> None:
+    panel = _panel()
+    captured = {}
+
+    class FakeVolFit:
+        def __init__(self, target, X=None, scale=1.0):
+            captured["target_name"] = target.name
+            captured["exog_columns"] = tuple(X.columns)
+            self.scale = scale
+
+        def predict(self, X):
+            return np.full(len(X), self.scale)
+
+    def fake_volatility(y, *, X=None, scale=1.0):
+        return FakeVolFit(y, X=X, scale=scale)
+
+    spec = mf.models.ModelSpec(
+        name="fake_volatility",
+        family="volatility",
+        fit_func=fake_volatility,
+        input_kind="volatility",
+        params={"scale": 3.0},
+    )
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0,),
+    )
+
+    result = mf.forecasting.run(panel, spec, window=_window(), features=features)
+    table = result.to_frame()
+
+    assert set(table["prediction"]) == {3.0}
+    assert captured["target_name"] == "y_level_h1"
+    assert captured["exog_columns"] == ("x1_lag0", "x2_lag0")
+
+
 def test_forecasting_runner_reads_meta_stage_defaults_and_metadata_level() -> None:
     mf.meta.configure(default_feature_scope="origin_available", metadata_level="minimal")
     panel = _panel()
