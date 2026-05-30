@@ -156,6 +156,58 @@ def test_forecasting_runner_supports_pls_model() -> None:
     assert result.metadata["models"][0]["spec"]["params"]["n_components"] == 1
 
 
+def test_forecasting_runner_supports_supervised_pca_model() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "supervised_pca",
+        window=_window(),
+        features=features,
+        params={"supervised_pca": {"n_components": 1, "n_selected": 2, "alpha": 0.1}},
+        selection={"supervised_pca": None},
+    )
+    table = result.to_frame()
+
+    assert set(table["model"]) == {"supervised_pca"}
+    assert table["prediction"].notna().all()
+    assert result.metadata["models"][0]["spec"]["params"]["n_components"] == 1
+    assert result.metadata["models"][0]["spec"]["params"]["n_selected"] == 2
+
+
+def test_forecasting_runner_accepts_feature_set_input() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+        add_time=True,
+        time_month=True,
+    )
+    feature_set = features.fit_transform(panel)
+
+    result = mf.forecasting.run(
+        feature_set,
+        "ridge",
+        window=_window(),
+        params={"ridge": {"alpha": 0.1}},
+        selection={"ridge": None},
+    )
+    table = result.to_frame()
+
+    assert set(table["model"]) == {"ridge"}
+    assert table["prediction"].notna().all()
+    assert result.metadata["features"]["spec"]["target"] == "y"
+    assert result.metadata["features"]["output"]["n_features"] == feature_set.X.shape[1]
+
+
 def test_forecasting_runner_supports_macro_random_forest_with_reference_backend(
     monkeypatch,
 ) -> None:
@@ -197,6 +249,38 @@ def test_forecasting_runner_supports_macro_random_forest_with_reference_backend(
     assert result.metadata["models"][0]["spec"]["params"]["B"] == 2
 
 
+def test_forecasting_runner_records_calendar_step_and_retune_reuse() -> None:
+    panel = _panel(60)
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=24, retrain_every=2),
+        val=mf.window.val_last_block(size=8, retune_every=2),
+        test=mf.window.test_origins(horizon=1, step="2ME"),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "ridge",
+        window=window,
+        features=features,
+        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+    )
+    table = result.to_frame()
+
+    assert not table.empty
+    assert result.metadata["window"]["test"]["step"] == "2ME"
+    assert result.metadata["window"]["estimation"]["retrain_every"] == 2
+    assert {row["test_step"] for row in table["window"]} == {"2ME"}
+    assert {bool(row["retrain"]) for row in table["window"]} == {False, True}
+    assert {bool(row["retune"]) for row in table["window"]} == {False, True}
+    assert {selection["retuned"] for selection in table["selection"]} == {False, True}
+
+
 def test_forecasting_runner_passes_target_and_exog_to_volatility_spec() -> None:
     panel = _panel()
     captured = {}
@@ -209,6 +293,9 @@ def test_forecasting_runner_passes_target_and_exog_to_volatility_spec() -> None:
 
         def predict(self, X):
             return np.full(len(X), self.scale)
+
+        def predict_variance(self, horizon=1):
+            return pd.Series(np.full(int(horizon), self.scale + 1.0))
 
     def fake_volatility(y, *, X=None, scale=1.0):
         return FakeVolFit(y, X=X, scale=scale)
@@ -231,6 +318,7 @@ def test_forecasting_runner_passes_target_and_exog_to_volatility_spec() -> None:
     table = result.to_frame()
 
     assert set(table["prediction"]) == {3.0}
+    assert set(table["variance_prediction"]) == {4.0}
     assert captured["target_name"] == "y_level_h1"
     assert captured["exog_columns"] == ("x1_lag0", "x2_lag0")
 

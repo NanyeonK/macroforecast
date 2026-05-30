@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .linear import (
+    SupervisedPCARegressor,
     bayesian_ridge,
     elastic_net,
     glmboost,
@@ -9,6 +10,7 @@ from .linear import (
     ols,
     pls,
     ridge,
+    supervised_pca,
 )
 from .specs import (
     MODEL_SPECS,
@@ -55,6 +57,7 @@ __all__ = [
     "QuantileRegressionForestRegressor",
     "RealizedGARCHEstimator",
     "SlowGrowingTreeRegressor",
+    "SupervisedPCARegressor",
     "VolatilityFit",
     "ar",
     "bagging",
@@ -86,6 +89,7 @@ __all__ = [
     "realized_garch",
     "ridge",
     "slow_growing_tree",
+    "supervised_pca",
     "var",
     "xgboost",
 ]

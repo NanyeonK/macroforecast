@@ -15,6 +15,7 @@ from macroforecast.models.linear import (
     ols,
     pls,
     ridge,
+    supervised_pca,
 )
 from macroforecast.models.timeseries import ar, far, favar, var
 from macroforecast.models.tree import (
@@ -424,6 +425,33 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
         },
         description="Partial least squares regression as a supervised dimension-reduction model.",
+    ),
+    "supervised_pca": _spec(
+        "supervised_pca",
+        "composite",
+        supervised_pca,
+        default_params={
+            "n_components": 3,
+            "n_selected": 50,
+            "min_abs_corr": 0.0,
+            "scale": True,
+            "alpha": 0.0,
+            "random_state": 0,
+        },
+        parameters=(
+            _p("n_components", 3, "int", "Number of supervised principal components."),
+            _p("n_selected", 50, "int | None", "Number of predictors retained after target-correlation screening."),
+            _p("min_abs_corr", 0.0, "float", "Minimum absolute target correlation retained before PCA."),
+            _p("scale", True, "bool", "Whether to scale selected predictors before PCA.", False),
+            _p("alpha", 0.0, "float", "Ridge penalty on component regression; 0 uses OLS."),
+            _p("random_state", 0, "int", "PCA random seed.", False),
+        ),
+        spaces={
+            "small": {"n_components": (1, 2, 3), "n_selected": (10, 25, 50), "min_abs_corr": (0.0,), "alpha": (0.0, 0.1)},
+            "standard": {"n_components": (1, 2, 3, 5), "n_selected": (10, 25, 50, 100), "min_abs_corr": (0.0, 0.05, 0.1), "alpha": (0.0, 0.1, 1.0)},
+            "wide": {"n_components": (1, 2, 3, 5, 8), "n_selected": (10, 25, 50, 100, 200), "min_abs_corr": (0.0, 0.03, 0.05, 0.1, 0.2), "alpha": (0.0, 0.01, 0.1, 1.0, 10.0)},
+        },
+        description="Target-correlation-screened PCA followed by linear or ridge regression.",
     ),
     "ar": _spec(
         "ar",

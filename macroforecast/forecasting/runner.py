@@ -345,9 +345,14 @@ def _fit_predict_origin(
             best_params = {}
         fit = model_spec(X_fit, y_fit, **best_params)
         pred = _prediction_series(fit.predict(X_test), index=X_test.index)
+        variance_pred = _variance_series(fit, index=X_test.index)
         for date, value in pred.items():
             actual: Any = y_test.reindex([date]).iloc[0] if date in y_test.index else None
             actual_value = None if actual is None or pd.isna(actual) else float(actual)
+            variance_value = None
+            if variance_pred is not None and date in variance_pred.index:
+                variance_at_date = variance_pred.loc[date]
+                variance_value = None if pd.isna(variance_at_date) else float(variance_at_date)
             records.append(
                 {
                     "date": date,
@@ -357,6 +362,7 @@ def _fit_predict_origin(
                     "model": model_run.alias,
                     "model_spec": model_spec.name,
                     "prediction": float(value),
+                    "variance_prediction": variance_value,
                     "actual": actual_value,
                     "params": dict(best_params),
                     "selection": selection_metadata,
@@ -596,6 +602,31 @@ def _prediction_series(prediction: Any, *, index: pd.Index) -> pd.Series:
     if len(values) != len(index):
         raise ValueError("model prediction length does not match X_test")
     return pd.Series(values, index=index)
+
+
+def _variance_series(fit: Any, *, index: pd.Index) -> pd.Series | None:
+    if not hasattr(fit, "predict_variance"):
+        return None
+    try:
+        prediction = fit.predict_variance(horizon=len(index))
+    except TypeError:
+        prediction = fit.predict_variance(len(index))
+    values = _positional_prediction_values(prediction, expected_len=len(index))
+    return pd.Series(values, index=index, name="variance_prediction")
+
+
+def _positional_prediction_values(prediction: Any, *, expected_len: int) -> np.ndarray:
+    if isinstance(prediction, pd.DataFrame):
+        if prediction.shape[1] != 1:
+            raise ValueError("variance prediction DataFrame must have exactly one column")
+        values = prediction.iloc[:, 0].to_numpy(dtype=float)
+    elif isinstance(prediction, pd.Series):
+        values = prediction.to_numpy(dtype=float)
+    else:
+        values = np.asarray(prediction, dtype=float).reshape(-1)
+    if len(values) != expected_len:
+        raise ValueError("variance prediction length does not match X_test")
+    return values
 
 
 def _select_existing_features(item: dict[str, Any], prefix: str, policy: StagePolicy) -> Any:

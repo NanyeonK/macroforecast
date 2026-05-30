@@ -105,6 +105,7 @@ _LAZY_EXPORTS = {
     "realized_garch": ".models",
     "ridge": ".models",
     "slow_growing_tree": ".models",
+    "supervised_pca": ".models",
     "var": ".models",
     "xgboost": ".models",
     "ParamDistribution": ".selection",

@@ -98,6 +98,25 @@ def test_pls_and_far_fit() -> None:
     assert len(far_fit.predict(X.iloc[-3:])) == 3
 
 
+def test_supervised_pca_fit_records_selected_features() -> None:
+    X, y = _xy()
+
+    fit = mf.models.supervised_pca(
+        X,
+        y,
+        n_components=1,
+        n_selected=1,
+        min_abs_corr=0.0,
+        alpha=0.1,
+    )
+    pred = fit.predict(X.iloc[-3:])
+
+    assert len(pred) == 3
+    assert fit.metadata["n_components"] == 1
+    assert fit.estimator.selected_features_
+    assert set(fit.estimator.selected_features_).issubset(set(X.columns))
+
+
 def test_tree_models_include_custom_macro_callables() -> None:
     X, y = _xy()
 

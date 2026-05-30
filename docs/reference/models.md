@@ -238,6 +238,7 @@ return `VolatilityFit`.
 | `huber` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `glmboost` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `pls` | composite | supervised | `grid` | `small`, `standard`, `wide` |
+| `supervised_pca` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `ar` | timeseries | target | `grid` | `small`, `standard`, `wide` |
 | `var` | timeseries | panel | `grid` | `small`, `standard`, `wide` |
 | `far` | factor | supervised | `grid` | `small`, `standard`, `wide` |
@@ -432,6 +433,43 @@ than `preprocessing` or `feature_engineering`.
 | `small` | `(1, 2, 3)` |
 | `standard` | `(1, 2, 3, 5, 8)` |
 | `wide` | `(1, 2, 3, 5, 8, 10, 12, 20)` |
+
+### supervised_pca
+
+```python
+macroforecast.models.supervised_pca(
+    X,
+    y,
+    *,
+    n_components=3,
+    n_selected=50,
+    min_abs_corr=0.0,
+    scale=True,
+    alpha=0.0,
+    random_state=0,
+)
+```
+
+Fits a supervised PCA composite model. The model first screens predictors by
+absolute target correlation, then runs PCA on the selected predictors, then
+fits OLS or ridge regression on the component scores. This is different from
+`feature_engineering.pca_features()`, which is unsupervised and belongs in the
+feature-engineering layer.
+
+Use this model when the target is intentionally allowed to guide the component
+construction inside each model fit window.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_components` | `3` | yes | Number of supervised principal components. |
+| `n_selected` | `50` | yes | Number of predictors retained after target-correlation screening. |
+| `min_abs_corr` | `0.0` | yes | Minimum absolute target correlation retained before PCA. |
+| `scale` | `True` | fixed by preset | Whether to scale selected predictors before PCA. |
+| `alpha` | `0.0` | yes | Ridge penalty on component regression; `0.0` uses OLS. |
+| `random_state` | `0` | fixed by preset | PCA random seed. |
+
+The presets tune `n_components`, `n_selected`, `min_abs_corr`, and `alpha`.
+Inspect exact candidate lists with `describe_model("supervised_pca")`.
 
 ### ar
 

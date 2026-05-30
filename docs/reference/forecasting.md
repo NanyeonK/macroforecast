@@ -122,6 +122,10 @@ macroforecast.forecasting.ForecastResult(forecasts, metadata={})
 | `forecasts` | pandas DataFrame | One row per emitted forecast. |
 | `metadata` | dict | Window, preprocessing, feature, model, and selection metadata. |
 
+The forecast table always includes `prediction`. If the fitted model exposes
+`predict_variance(horizon=...)`, the runner also fills
+`variance_prediction`; otherwise that column is `None`.
+
 Methods:
 
 | Method | Output |
