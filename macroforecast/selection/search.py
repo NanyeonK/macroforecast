@@ -27,7 +27,11 @@ from macroforecast.selection.builders import (
     uniform,
 )
 from macroforecast.selection.optimizers import run_bayesian, run_genetic
-from macroforecast.selection.runner import evaluate_candidate, parameter_columns, trial_frame
+from macroforecast.selection.runner import (
+    evaluate_candidate,
+    parameter_columns,
+    trial_frame,
+)
 from macroforecast.selection.types import (
     SearchError,
     SearchResult,
@@ -78,7 +82,9 @@ def select_params(
         generations=generations,
         mutation_rate=mutation_rate,
     ):
-        raise ValueError("search was provided, so method/random search options must be set on that SearchSpec")
+        raise ValueError(
+            "search was provided, so method/random search options must be set on that SearchSpec"
+        )
     spec = search or (
         _search_from_model(
             model_spec,
@@ -146,7 +152,9 @@ def select_params(
     trials = trial_frame(rows)
     ok = trials.loc[trials["status"] == "ok"].copy()
     if ok.empty:
-        first_error = trials["error"].dropna().iloc[0] if "error" in trials else "unknown error"
+        first_error = (
+            trials["error"].dropna().iloc[0] if "error" in trials else "unknown error"
+        )
         raise SearchError(f"All parameter trials failed: {first_error}", trials=trials)
     best_idx = ok["score"].idxmax() if maximize else ok["score"].idxmin()
     best_row = ok.loc[best_idx]
@@ -209,7 +217,9 @@ def _resolve_selection_xy(
     if model_spec.input_kind == "panel":
         if y is None:
             frame = as_frame(X)
-            target_column = _panel_target_column(model_spec, frame, fixed_params=fixed_params)
+            target_column = _panel_target_column(
+                model_spec, frame, fixed_params=fixed_params
+            )
             temp_target = _temporary_target_name(frame.columns)
             target = frame[target_column].rename(temp_target)
             predictors = frame.drop(columns=[target_column])
@@ -228,7 +238,9 @@ def _selection_fit_callable(
     if model_spec is None or model_spec.input_kind != "panel":
         return fit_model
 
-    def fit_panel_with_internal_target(X: Any, y: Any | None = None, **params: Any) -> Any:
+    def fit_panel_with_internal_target(
+        X: Any, y: Any | None = None, **params: Any
+    ) -> Any:
         return model_spec.fit(X, y, **{**params, "target": None})
 
     return fit_panel_with_internal_target
@@ -266,6 +278,10 @@ def _model_metadata(model_spec: ModelSpec | None) -> dict[str, Any]:
         "model": model_spec.name,
         "model_family": model_spec.family,
         "model_preset": model_spec.preset,
+        "backend": model_spec.backend,
+        "requires_extra": model_spec.requires_extra,
+        "requires_scaling": model_spec.requires_scaling,
+        "recommended_preprocessing": model_spec.recommended_preprocessing,
     }
 
 
@@ -351,7 +367,9 @@ def _normalize_split_positions(
     if len(arr) == 0:
         raise ValueError(f"split {split_id} {side} positions must not be empty")
     if len(np.unique(arr)) != len(arr):
-        raise ValueError(f"split {split_id} {side} positions must not contain duplicates")
+        raise ValueError(
+            f"split {split_id} {side} positions must not contain duplicates"
+        )
     if int(arr.min()) < 0 or int(arr.max()) >= n_obs:
         raise ValueError(f"split {split_id} {side} positions are outside X/y bounds")
     return arr.astype(int, copy=False)
@@ -383,7 +401,9 @@ def _has_search_overrides(**values: Any) -> bool:
 def _prepare_search_spec(spec: SearchSpec) -> SearchSpec:
     prepared = replace(spec)
     prepared.method = _normalize_method(prepared.method)
-    prepared.param_grid = {key: _as_tuple(value) for key, value in prepared.param_grid.items()}
+    prepared.param_grid = {
+        key: _as_tuple(value) for key, value in prepared.param_grid.items()
+    }
     prepared.param_distributions = {}
     for key, value in spec.param_distributions.items():
         try:
@@ -405,8 +425,13 @@ def _validate_search_spec(spec: SearchSpec) -> None:
         raise ValueError("generations must be at least 1")
     if not 0 <= spec.mutation_rate <= 1:
         raise ValueError("mutation_rate must be between 0 and 1")
-    if spec.method in {"random", "bayesian", "genetic"} and not spec.param_distributions:
-        raise ValueError(f"{spec.method} search requires at least one parameter distribution")
+    if (
+        spec.method in {"random", "bayesian", "genetic"}
+        and not spec.param_distributions
+    ):
+        raise ValueError(
+            f"{spec.method} search requires at least one parameter distribution"
+        )
     for key, values in spec.param_grid.items():
         if not values:
             raise ValueError(f"parameter grid for {key!r} cannot be empty")

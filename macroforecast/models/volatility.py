@@ -125,6 +125,7 @@ def garch11(
             "rescale": bool(rescale),
             **kwargs,
         },
+        diagnostics=_volatility_diagnostics(estimator),
     )
 
 
@@ -170,12 +171,15 @@ def egarch(
             "rescale": bool(rescale),
             **kwargs,
         },
+        diagnostics=_volatility_diagnostics(estimator),
     )
 
 
 class RealizedGARCHEstimator:
     """Compact Hansen-Huang-Shek-style realized GARCH joint MLE."""
 
+    # Package-native compact likelihood implementation; full volatility runner
+    # contract is intentionally deferred.
     _bounds = [
         (None, None),
         (None, None),
@@ -348,6 +352,7 @@ def realized_garch(
             "n_starts": int(n_starts),
             "random_state": int(random_state),
         },
+        diagnostics=_volatility_diagnostics(estimator),
     )
 
 
@@ -363,6 +368,27 @@ def _realized_measure(X: pd.DataFrame, r: pd.Series, column: str | None) -> pd.S
     if "rv" in X.columns:
         return pd.to_numeric(X["rv"], errors="coerce").reindex(r.index)
     return (r**2).rename("rv_proxy")
+
+
+def _volatility_diagnostics(estimator: Any) -> dict[str, Any]:
+    diagnostics: dict[str, Any] = {}
+    params = getattr(estimator, "params_", None)
+    if params is None:
+        fitted = getattr(estimator, "_fitted", None)
+        if fitted is not None:
+            params = getattr(fitted, "params", None)
+    if params is not None:
+        if hasattr(params, "to_dict"):
+            diagnostics["params"] = params.to_dict()
+        else:
+            diagnostics["params"] = dict(params)
+    conditional = getattr(estimator, "conditional_volatility_", None)
+    if conditional is not None:
+        diagnostics["conditional_volatility"] = pd.Series(
+            np.asarray(conditional, dtype=float),
+            name="conditional_volatility",
+        )
+    return diagnostics
 
 
 __all__ = [

@@ -17,6 +17,7 @@ class ModelFit:
     feature_names: tuple[str, ...] = ()
     target_name: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def predict(self, X: Any) -> pd.Series:
         """Return point predictions as a pandas Series."""
@@ -48,6 +49,7 @@ class ModelFit:
             "target_name": self.target_name,
             "n_features": len(self.feature_names),
             "metadata": _json_ready(self.metadata),
+            "diagnostics": _json_ready(self.diagnostics),
         }
 
     def to_metadata(self) -> dict[str, Any]:
@@ -59,9 +61,12 @@ class ModelFit:
         }
 
     def __getattr__(self, name: str) -> Any:
-        if hasattr(self.estimator, name):
-            return getattr(self.estimator, name)
-        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+        estimator = self.__dict__.get("estimator")
+        if estimator is not None and hasattr(estimator, name):
+            return getattr(estimator, name)
+        raise AttributeError(
+            f"{type(self).__name__!r} object has no attribute {name!r}"
+        )
 
 
 @dataclass
@@ -70,8 +75,12 @@ class VolatilityFit(ModelFit):
 
     def predict_variance(self, horizon: int = 1) -> pd.Series:
         if not hasattr(self.estimator, "predict_variance"):
-            raise AttributeError(f"{self.model!r} estimator does not expose predict_variance()")
-        values = np.asarray(self.estimator.predict_variance(horizon), dtype=float).reshape(-1)
+            raise AttributeError(
+                f"{self.model!r} estimator does not expose predict_variance()"
+            )
+        values = np.asarray(
+            self.estimator.predict_variance(horizon), dtype=float
+        ).reshape(-1)
         return pd.Series(values, index=pd.RangeIndex(len(values)), name="variance")
 
     @property
@@ -89,9 +98,11 @@ def _prediction_frame(X: Any, feature_names: tuple[str, ...]) -> pd.DataFrame:
         arr = np.asarray(X, dtype=float)
         if arr.ndim == 1:
             arr = arr.reshape(-1, 1)
-        columns = list(feature_names) if feature_names and len(feature_names) == arr.shape[1] else [
-            f"x{i}" for i in range(arr.shape[1])
-        ]
+        columns = (
+            list(feature_names)
+            if feature_names and len(feature_names) == arr.shape[1]
+            else [f"x{i}" for i in range(arr.shape[1])]
+        )
         frame = pd.DataFrame(arr, columns=columns)
     if feature_names:
         frame = frame.reindex(columns=list(feature_names), fill_value=0.0)
@@ -106,6 +117,22 @@ def _estimator_name(estimator: Any) -> str:
 def _json_ready(value: Any) -> Any:
     if isinstance(value, Mapping):
         return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, pd.DataFrame):
+        return {
+            "columns": [str(column) for column in value.columns],
+            "index": [_json_ready(index) for index in value.index],
+            "data": _json_ready(value.to_dict(orient="list")),
+        }
+    if isinstance(value, pd.Series):
+        return {
+            "name": value.name,
+            "index": [_json_ready(index) for index in value.index],
+            "data": [_json_ready(item) for item in value.to_list()],
+        }
+    if isinstance(value, pd.Index):
+        return [_json_ready(item) for item in value.to_list()]
+    if isinstance(value, np.ndarray):
+        return _json_ready(value.tolist())
     if isinstance(value, tuple):
         return [_json_ready(item) for item in value]
     if isinstance(value, list):

@@ -2,8 +2,9 @@
 
 [Back to reference](index.md)
 
-`macroforecast.evaluation` contains scoring functions. Selection uses these
-metrics, and later forecast-evaluation code will build on the same namespace.
+`macroforecast.evaluation` contains scoring functions and forecast-result
+evaluation helpers. Selection uses the point metrics. Forecasting output can
+be evaluated directly with `evaluate_forecasts()`.
 
 ## Metrics
 
@@ -33,6 +34,74 @@ macroforecast.evaluation.mae(y_true, y_pred)
 ```
 
 Output: mean absolute error.
+
+### pinball_loss
+
+```python
+macroforecast.evaluation.pinball_loss(y_true, y_quantile, *, quantile)
+```
+
+Output: mean quantile pinball loss. `quantile` must be strictly between 0 and
+1.
+
+### gaussian_nll
+
+```python
+macroforecast.evaluation.gaussian_nll(y_true, y_pred, variance)
+```
+
+Output: Gaussian negative log likelihood using the supplied point forecast and
+predictive variance.
+
+### coverage_rate
+
+```python
+macroforecast.evaluation.coverage_rate(y_true, lower, upper)
+```
+
+Output: share of observations between lower and upper forecasts.
+
+### interval_width
+
+```python
+macroforecast.evaluation.interval_width(lower, upper)
+```
+
+Output: mean interval width.
+
+## Forecast Table Evaluation
+
+### evaluate_forecasts
+
+```python
+macroforecast.evaluation.evaluate_forecasts(
+    forecasts,
+    *,
+    by=("model", "horizon"),
+    metrics=("mse", "rmse", "mae"),
+    actual="actual",
+    prediction="prediction",
+    variance_prediction="variance_prediction",
+    quantile_predictions="quantile_predictions",
+)
+```
+
+Input: a `ForecastResult` or a forecast table with at least `actual` and
+`prediction`. If present, `variance_prediction` is scored with
+`gaussian_nll`. If present, `quantile_predictions` is expected to contain
+per-row dictionaries keyed by quantile level and is scored with pinball loss.
+Lower/upper quantile pairs such as `0.1` and `0.9` also produce coverage and
+interval width.
+
+Output: one DataFrame row per `by` group.
+
+Example:
+
+```python
+result = mf.forecasting.run(panel, "ridge", target="y")
+scores = mf.evaluation.evaluate_forecasts(result)
+scores2 = result.evaluate()
+```
 
 ### get_metric
 

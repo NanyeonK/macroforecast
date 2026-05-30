@@ -163,9 +163,20 @@ as `preprocessing_policy`, `feature_policy`, and `selection_policy` in
 | `fit_window` | Fit the stage only on the model fit window. |
 | `fixed_reference` | Fit the stage on a fixed reference period and reuse that state. |
 
-`update` records how often a stage may be refit. Current accepted values are
-`"every_origin"`, `"on_retrain"`, `"never"`, a positive integer cadence, or a
-pandas date offset string such as `"12ME"`.
+`update` controls how often a runner refits stateful preprocessing or feature
+engineering stages. Current accepted values are:
+
+| Update | Meaning |
+| --- | --- |
+| `"every_origin"` | Refit the stage at every test origin. |
+| `"on_retrain"` | Refit when the window row has `retrain=True`. |
+| `"never"` | Fit once at the first origin and reuse the fitted state. |
+| Positive integer | Refit every N origins. |
+| Pandas date offset string, such as `"12ME"` | Refit when the current origin is at least the offset after the last update. |
+
+Selection retuning follows the validation window's `retune_every` setting. The
+stage `update` field is mainly for fitted preprocessing state, fixed PCA
+loadings, and other feature-engineering states.
 
 `stage_index(index, item, policy)` and `stage_panel(panel, item, policy)` are
 the low-level handoff helpers used by runners. They resolve the exact rows

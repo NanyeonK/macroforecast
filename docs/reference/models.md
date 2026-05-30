@@ -21,6 +21,7 @@ macroforecast.models.ModelFit(
     feature_names=(),
     target_name=None,
     metadata={},
+    diagnostics={},
 )
 ```
 
@@ -31,14 +32,15 @@ macroforecast.models.ModelFit(
 | `feature_names` | tuple[str, ...] | Feature columns used at fit time. |
 | `target_name` | str or `None` | Target name when available. |
 | `metadata` | dict | Fit metadata such as `n_obs`, `alpha`, or tree budget. |
+| `diagnostics` | dict | Model-specific fitted diagnostics that can be collected safely. |
 
 `ModelFit.predict(X)` returns a `pandas.Series` named `"prediction"` and keeps
 the index of the provided `X` when `X` is a DataFrame.
 
 `ModelFit.to_dict()` returns JSON-ready fit metadata. It records the canonical
 model name, the underlying estimator class name, the fitted feature names, the
-target name, `n_features`, and the fit `metadata`. It does not serialize the
-fitted estimator itself.
+target name, `n_features`, the fit `metadata`, and JSON-ready `diagnostics`.
+It does not serialize the fitted estimator itself.
 
 ```python
 fit = macroforecast.models.ridge(X, y, alpha=0.5)
@@ -55,6 +57,13 @@ Output shape:
     "target_name": "y",
     "n_features": 2,
     "metadata": {"n_obs": 120, "alpha": 0.5},
+    "diagnostics": {
+        "fitted_values": {"name": "fitted", "index": [...], "data": [...]},
+        "residuals": {"name": "residual", "index": [...], "data": [...]},
+        "metrics": {"n": 120, "mae": 0.04, "mse": 0.003, "rmse": 0.055},
+        "coefficients": {"name": "coefficient", "index": ["x1", "x2"], "data": [...]},
+        "selected_features": ["x1", "x2"],
+    },
 }
 ```
 
@@ -63,6 +72,67 @@ for downstream forecasting and result records.
 
 Volatility functions return `VolatilityFit`, which extends `ModelFit` with
 `predict_variance(horizon=1)` and `conditional_volatility`.
+
+### Fit Persistence
+
+`models` owns the low-level persistence format for fitted model objects.
+Forecasting runners decide which fitted object should be saved and which
+window, selection, and parameter metadata should be attached.
+
+```python
+saved = macroforecast.models.save_fit(
+    fit,
+    "trained_model/ridge/origin_0_h1_20000131.pkl",
+    metadata={
+        "alias": "ridge",
+        "params": {"alpha": 0.1},
+        "selection": selection_metadata,
+    },
+)
+loaded = macroforecast.models.load_fit(saved.model_path)
+```
+
+| Function | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `save_fit(fit, model_path, metadata_path=None, metadata=None)` | Fitted model object and output paths. | `SavedModel` | Writes pickle plus JSON sidecar. |
+| `load_fit(model_path)` | Pickle path. | fitted object | Loads a saved fit. |
+
+`SavedModel.to_dict()` returns `model_path`, `metadata_path`, and
+`save_error`. If a custom/local model cannot be pickled, `model_path` is
+`None`, `save_error` records the failure, and the JSON sidecar is still
+written. The sidecar always includes the available `fit.to_metadata()` block
+when the fit exposes it.
+
+### Fit Diagnostics
+
+Diagnostics are collected on a best-effort basis. A model only records values
+that the fitted backend exposes and that can be computed without changing the
+fit. Missing keys mean the model does not expose that diagnostic, not that the
+fit failed.
+
+Common keys:
+
+| Key | Recorded when | Meaning |
+| --- | --- | --- |
+| `fitted_values` | Estimator exposes `predict()` on the training matrix. | In-sample fitted values indexed like the aligned target. |
+| `residuals` | `fitted_values` is available. | Training residuals, `y - fitted`. |
+| `metrics` | `residuals` is available. | Residual count, mean, standard deviation, MAE, MSE, and RMSE. |
+| `coefficients` | Estimator exposes `coef_`. | Coefficients indexed by feature name when possible. |
+| `intercept` | Estimator exposes `intercept_`. | Scalar or list intercept. |
+| `selected_features` | Nonzero coefficients or estimator selection metadata is available. | Selected feature names. |
+| `feature_importance` | Estimator exposes `feature_importances_`. | Tree-style importances sorted descending. |
+| `factor_loadings` | Estimator exposes factor loadings, loadings, or components. | Factor/PCA loading matrix when available. |
+| `component_selected_features` | Estimator exposes component-level selection metadata. | Selected source features for supervised PCA-style components. |
+| `training_history` | Estimator records iterative training history. | Epoch loss or backend-specific training trace. |
+| `conditional_volatility` | Volatility estimator exposes fitted conditional volatility. | In-sample conditional volatility path. |
+| `params` | Volatility estimator exposes fitted parameter estimates. | Fitted volatility-model parameters. |
+
+Example:
+
+```python
+fit = macroforecast.models.random_forest(X, y, n_estimators=200)
+fit.diagnostics["feature_importance"].head()
+```
 
 ## Model Specs And Hyperparameter Spaces
 
@@ -97,6 +167,10 @@ macroforecast.models.ModelSpec(
     input_kind="supervised",
     preset="standard",
     params={},
+    backend="internal",
+    requires_extra=None,
+    requires_scaling=False,
+    recommended_preprocessing=(),
 )
 ```
 
@@ -113,6 +187,10 @@ macroforecast.models.ModelSpec(
 | `input_kind` | str | Input convention: `supervised`, `target`, `panel`, or `volatility`. |
 | `preset` | str | Active search-space preset. |
 | `params` | dict | User-fixed model parameters. |
+| `backend` | str | Implementation backend, for example `sklearn.svm.SVR` or `torch.nn.LSTM`. |
+| `requires_extra` | str or `None` | Optional dependency extra required to fit the model. |
+| `requires_scaling` | bool | Whether the model is scale-sensitive and expects explicit preprocessing. |
+| `recommended_preprocessing` | tuple[str, ...] | Short preprocessing notes attached to metadata. |
 
 `ModelSpec` is callable:
 
@@ -131,6 +209,10 @@ defaults, fixed params, parameter descriptions, and all preset search spaces.
     "model_family": "linear",
     "model_preset": "small",
     "input_kind": "supervised",
+    "backend": "internal",
+    "requires_extra": None,
+    "requires_scaling": False,
+    "recommended_preprocessing": [],
     "default_search_method": "cv_path",
     "default_params": {"alpha": 1.0},
     "params": {"alpha": 0.5},
@@ -161,8 +243,9 @@ macroforecast.models.list_model_specs(family=None)
 ```
 
 Returns a DataFrame with one row per registered model: `name`, `family`,
-`input_kind`, `default_search_method`, `default_preset`, available `presets`,
-and `n_tunable`.
+`input_kind`, `backend`, `requires_extra`, `requires_scaling`,
+`recommended_preprocessing`, `default_search_method`, `default_preset`,
+available `presets`, and `n_tunable`.
 
 ### describe_model
 
@@ -226,6 +309,26 @@ is a `FeatureSet`, `y` can be omitted.
 All non-volatility model functions return `ModelFit`. Volatility functions
 return `VolatilityFit`.
 
+## Scaling Policy
+
+The clean model API does not silently standardize predictors for models that
+are traditionally scale-sensitive. Instead, those models advertise
+`requires_scaling=True` through `ModelSpec`, `list_model_specs()`,
+`search_spec()`, and `select_params()` metadata.
+
+Current scale-sensitive callable models:
+
+| Model | Backend | Scaling policy |
+| --- | --- | --- |
+| `svr` | `sklearn.svm.SVR` | Standardize predictors with `preprocessing.standardize_panel()` or a runner preprocessing spec before fitting. |
+| `linear_svr` | `sklearn.svm.LinearSVR` | Standardize predictors before fitting. |
+| `nu_svr` | `sklearn.svm.NuSVR` | Standardize predictors before fitting. |
+| `nn` | `torch.nn.Sequential` | Standardizes `X` and `y` inside each fit window and maps predictions back to target units. |
+
+`nn`, `lstm`, and `gru` standardize `X` and `y` inside each fit window and map
+predictions back to the target scale. Their metadata records
+`requires_extra="deep"` and `requires_scaling=False`.
+
 ## Registered Model Catalog
 
 | Model | Family | Input kind | Default search | Presets |
@@ -234,11 +337,23 @@ return `VolatilityFit`.
 | `ridge` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `lasso` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `elastic_net` | linear | supervised | `grid` | `small`, `standard`, `wide` |
+| `adaptive_lasso` | linear | supervised | `grid` | `small`, `standard`, `wide` |
+| `adaptive_elastic_net` | linear | supervised | `grid` | `small`, `standard`, `wide` |
+| `group_lasso` | linear | supervised | `grid` | `small`, `standard`, `wide` |
+| `sparse_group_lasso` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `bayesian_ridge` | linear | supervised | `grid` | none |
 | `huber` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `glmboost` | linear | supervised | `grid` | `small`, `standard`, `wide` |
+| `svr` | support_vector | supervised | `random` | `small`, `standard`, `wide` |
+| `linear_svr` | support_vector | supervised | `random` | `small`, `standard`, `wide` |
+| `nu_svr` | support_vector | supervised | `random` | `small`, `standard`, `wide` |
+| `nn` | neural | supervised | `random` | `small`, `standard`, `wide` |
+| `lstm` | neural | supervised | `random` | `small`, `standard`, `wide` |
+| `gru` | neural | supervised | `random` | `small`, `standard`, `wide` |
 | `pls` | composite | supervised | `grid` | `small`, `standard`, `wide` |
+| `scaled_pca` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `supervised_pca` | composite | supervised | `grid` | `small`, `standard`, `wide` |
+| `supervised_scaled_pca` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `ar` | timeseries | target | `grid` | `small`, `standard`, `wide` |
 | `var` | timeseries | panel | `grid` | `small`, `standard`, `wide` |
 | `far` | factor | supervised | `grid` | `small`, `standard`, `wide` |
@@ -250,7 +365,6 @@ return `VolatilityFit`.
 | `xgboost` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `lightgbm` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `catboost` | tree | supervised | `random` | `small`, `standard`, `wide` |
-| `mars` | spline | supervised | `grid` | none |
 | `slow_growing_tree` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `quantile_regression_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `bagging` | ensemble | supervised | `random` | `small`, `standard`, `wide` |
@@ -347,6 +461,158 @@ Fits elastic net regression.
 | `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.1, 0.25, 0.5, 0.75, 0.9)` |
 | `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0)` | `(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)` |
 
+### adaptive_lasso
+
+```python
+macroforecast.models.adaptive_lasso(
+    X,
+    y,
+    *,
+    alpha=1.0,
+    gamma=1.0,
+    initial="ridge",
+    initial_alpha=1.0,
+    eps=1e-4,
+    max_iter=20000,
+    tol=1e-4,
+    random_state=None,
+)
+```
+
+Fits adaptive lasso. The model first estimates initial coefficients with
+`initial="ridge"` or `initial="ols"`, builds feature weights
+`1 / (abs(beta_init) + eps) ** gamma`, and fits lasso on weighted standardized
+predictors. Predictions are mapped back to the original target scale.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `alpha` | `1.0` | yes | Final adaptive lasso penalty strength. |
+| `gamma` | `1.0` | yes | Exponent applied to initial coefficient weights. |
+| `initial` | `"ridge"` | manual | Initial model: `"ridge"` or `"ols"`. |
+| `initial_alpha` | `1.0` | fixed by preset | Initial ridge penalty. |
+| `eps` | `1e-4` | fixed by preset | Small denominator floor for adaptive weights. |
+| `max_iter` | `20000` | fixed by preset | Final solver iteration cap. |
+| `tol` | `1e-4` | fixed by preset | Final solver convergence tolerance. |
+| `random_state` | `None` | fixed by preset | Final solver random seed. |
+
+| Preset | `alpha` | `gamma` |
+| --- | --- | --- |
+| `small` | `(0.01, 0.1, 1.0)` | `(1.0,)` |
+| `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.5, 1.0, 2.0)` |
+| `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.5, 1.0, 1.5, 2.0)` |
+
+### adaptive_elastic_net
+
+```python
+macroforecast.models.adaptive_elastic_net(
+    X,
+    y,
+    *,
+    alpha=1.0,
+    l1_ratio=0.5,
+    gamma=1.0,
+    initial="ridge",
+    initial_alpha=1.0,
+    eps=1e-4,
+    max_iter=20000,
+    tol=1e-4,
+    random_state=None,
+)
+```
+
+Fits an adaptive elastic-net variant with the same initial coefficient weights
+as `adaptive_lasso`, followed by an elastic-net fit on weighted standardized
+predictors.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `alpha` | `1.0` | yes | Final adaptive elastic-net penalty strength. |
+| `l1_ratio` | `0.5` | yes | L1 share of the final elastic-net penalty. |
+| `gamma` | `1.0` | yes | Exponent applied to initial coefficient weights. |
+| `initial` | `"ridge"` | manual | Initial model: `"ridge"` or `"ols"`. |
+| `initial_alpha` | `1.0` | fixed by preset | Initial ridge penalty. |
+| `eps` | `1e-4` | fixed by preset | Small denominator floor for adaptive weights. |
+| `max_iter` | `20000` | fixed by preset | Final solver iteration cap. |
+| `tol` | `1e-4` | fixed by preset | Final solver convergence tolerance. |
+| `random_state` | `None` | fixed by preset | Final solver random seed. |
+
+| Preset | `alpha` | `l1_ratio` | `gamma` |
+| --- | --- | --- | --- |
+| `small` | `(0.01, 0.1, 1.0)` | `(0.25, 0.5, 0.75)` | `(1.0,)` |
+| `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.1, 0.25, 0.5, 0.75, 0.9)` | `(0.5, 1.0, 2.0)` |
+| `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.05, 0.1, 0.25, 0.5, 0.75, 0.9)` | `(0.5, 1.0, 1.5, 2.0)` |
+
+### group_lasso
+
+```python
+macroforecast.models.group_lasso(
+    X,
+    y,
+    *,
+    groups=None,
+    alpha=1.0,
+    group_weights=None,
+    max_iter=5000,
+    tol=1e-5,
+    scale=True,
+)
+```
+
+Fits group lasso with a package-native proximal-gradient solver. `groups`
+must contain one label per predictor column. If `groups=None`, each predictor
+is treated as its own group.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `groups` | `None` | manual | One group label per predictor. |
+| `alpha` | `1.0` | yes | Group penalty strength. |
+| `group_weights` | `None` | manual | Optional group penalty weights. |
+| `max_iter` | `5000` | fixed by preset | Proximal-gradient iteration cap. |
+| `tol` | `1e-5` | fixed by preset | Proximal-gradient convergence tolerance. |
+| `scale` | `True` | fixed by preset | Whether to standardize predictors inside the model. |
+
+| Preset | `alpha` |
+| --- | --- |
+| `small` | `(0.01, 0.1, 1.0)` |
+| `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` |
+| `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0)` |
+
+### sparse_group_lasso
+
+```python
+macroforecast.models.sparse_group_lasso(
+    X,
+    y,
+    *,
+    groups=None,
+    alpha=1.0,
+    l1_ratio=0.5,
+    group_weights=None,
+    max_iter=5000,
+    tol=1e-5,
+    scale=True,
+)
+```
+
+Fits sparse group lasso. `l1_ratio` controls the feature-level L1 share; the
+remaining penalty share is applied at the group level.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `groups` | `None` | manual | One group label per predictor. |
+| `alpha` | `1.0` | yes | Total sparse-group penalty strength. |
+| `l1_ratio` | `0.5` | yes | Feature-level L1 share. |
+| `group_weights` | `None` | manual | Optional group penalty weights. |
+| `max_iter` | `5000` | fixed by preset | Proximal-gradient iteration cap. |
+| `tol` | `1e-5` | fixed by preset | Proximal-gradient convergence tolerance. |
+| `scale` | `True` | fixed by preset | Whether to standardize predictors inside the model. |
+
+| Preset | `alpha` | `l1_ratio` |
+| --- | --- | --- |
+| `small` | `(0.01, 0.1, 1.0)` | `(0.25, 0.5, 0.75)` |
+| `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.1, 0.25, 0.5, 0.75, 0.9)` |
+| `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0)` | `(0.05, 0.1, 0.25, 0.5, 0.75, 0.9)` |
+
 ### bayesian_ridge
 
 ```python
@@ -401,6 +667,326 @@ Fits componentwise L2 boosting with linear base learners.
 | `standard` | `(50, 100, 200, 500)` | `(0.01, 0.05, 0.1)` |
 | `wide` | `(50, 100, 200, 500, 1000)` | `(0.005, 0.01, 0.05, 0.1, 0.2)` |
 
+## Support-Vector Models
+
+Support-vector models are sklearn-backed and live in the base dependency set.
+They are useful when nonlinear margins or robust epsilon-insensitive losses
+are preferred over a pure least-squares fit. The forecasting runner treats
+them as ordinary supervised models: call `model(X, y, **params)`, tune only
+model-owned hyperparameters through `selection`, and let `window` decide the
+train/validation/test dates.
+
+Forecasting-runner example:
+
+```python
+pre = macroforecast.preprocessing.preprocess_spec(
+    transform="none",
+    outliers="none",
+    impute="mean",
+    standardize="zscore",
+    standardize_columns="predictors",
+)
+features = macroforecast.feature_engineering.feature_spec(
+    target="y",
+    horizon=1,
+    predictors=["x1", "x2"],
+    lags=(0, 1),
+)
+result = macroforecast.forecasting.run(
+    panel,
+    "svr",
+    preprocessing=pre,
+    features=features,
+    window=macroforecast.window.last_block(validation_size=24),
+    selection=macroforecast.selection.grid({"C": [0.1, 1.0], "epsilon": [0.01, 0.1]}),
+)
+```
+
+### svr
+
+```python
+macroforecast.models.svr(
+    X,
+    y,
+    *,
+    kernel="rbf",
+    C=1.0,
+    epsilon=0.1,
+    gamma="scale",
+    degree=3,
+    coef0=0.0,
+    shrinking=True,
+    tol=1e-3,
+    cache_size=200.0,
+    max_iter=-1,
+)
+```
+
+Fits sklearn `SVR`.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `kernel` | `"rbf"` | fixed by preset | Kernel: `"linear"`, `"poly"`, `"rbf"`, `"sigmoid"`, or `"precomputed"`. |
+| `C` | `1.0` | yes | Inverse regularization strength. |
+| `epsilon` | `0.1` | yes | Epsilon-insensitive tube width. |
+| `gamma` | `"scale"` | yes | Kernel coefficient for RBF/poly/sigmoid kernels. |
+| `degree` | `3` | fixed by preset | Polynomial kernel degree. |
+| `coef0` | `0.0` | fixed by preset | Independent term for poly/sigmoid kernels. |
+| `shrinking` | `True` | fixed by preset | Whether to use the shrinking heuristic. |
+| `tol` | `1e-3` | fixed by preset | Optimization tolerance. |
+| `cache_size` | `200.0` | fixed by preset | Kernel cache size in MB. |
+| `max_iter` | `-1` | fixed by preset | Solver iteration cap; `-1` means no cap. |
+
+| Preset | `C` | `epsilon` | `gamma` |
+| --- | --- | --- | --- |
+| `small` | `(0.1, 1.0)` | `(0.01, 0.1)` | `("scale",)` |
+| `standard` | `(0.1, 1.0, 10.0)` | `(0.01, 0.1, 0.2)` | `("scale", "auto")` |
+| `wide` | `(0.01, 0.1, 1.0, 10.0, 100.0)` | `(0.001, 0.01, 0.1, 0.2)` | `("scale", "auto")` |
+
+### linear_svr
+
+```python
+macroforecast.models.linear_svr(
+    X,
+    y,
+    *,
+    C=1.0,
+    epsilon=0.0,
+    loss="epsilon_insensitive",
+    tol=1e-4,
+    max_iter=10000,
+    random_state=0,
+)
+```
+
+Fits sklearn `LinearSVR`. Use this when a linear support-vector loss is wanted
+without kernel overhead.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `C` | `1.0` | yes | Inverse regularization strength. |
+| `epsilon` | `0.0` | yes | Epsilon-insensitive tube width. |
+| `loss` | `"epsilon_insensitive"` | fixed by preset | LinearSVR loss function. |
+| `tol` | `1e-4` | fixed by preset | Optimization tolerance. |
+| `max_iter` | `10000` | fixed by preset | Solver iteration cap. |
+| `random_state` | `0` | fixed by preset | Random seed. |
+
+| Preset | `C` | `epsilon` |
+| --- | --- | --- |
+| `small` | `(0.1, 1.0)` | `(0.0, 0.1)` |
+| `standard` | `(0.01, 0.1, 1.0, 10.0)` | `(0.0, 0.01, 0.1)` |
+| `wide` | `(0.001, 0.01, 0.1, 1.0, 10.0, 100.0)` | `(0.0, 0.001, 0.01, 0.1, 0.2)` |
+
+### nu_svr
+
+```python
+macroforecast.models.nu_svr(
+    X,
+    y,
+    *,
+    kernel="rbf",
+    C=1.0,
+    nu=0.5,
+    gamma="scale",
+    degree=3,
+    coef0=0.0,
+    shrinking=True,
+    tol=1e-3,
+    cache_size=200.0,
+    max_iter=-1,
+)
+```
+
+Fits sklearn `NuSVR`, where `nu` controls the admissible training-error and
+support-vector fractions.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `kernel` | `"rbf"` | fixed by preset | Kernel: `"linear"`, `"poly"`, `"rbf"`, `"sigmoid"`, or `"precomputed"`. |
+| `C` | `1.0` | yes | Inverse regularization strength. |
+| `nu` | `0.5` | yes | Upper/lower control for training-error and support-vector fractions. |
+| `gamma` | `"scale"` | yes | Kernel coefficient for RBF/poly/sigmoid kernels. |
+| `degree` | `3` | fixed by preset | Polynomial kernel degree. |
+| `coef0` | `0.0` | fixed by preset | Independent term for poly/sigmoid kernels. |
+| `shrinking` | `True` | fixed by preset | Whether to use the shrinking heuristic. |
+| `tol` | `1e-3` | fixed by preset | Optimization tolerance. |
+| `cache_size` | `200.0` | fixed by preset | Kernel cache size in MB. |
+| `max_iter` | `-1` | fixed by preset | Solver iteration cap; `-1` means no cap. |
+
+| Preset | `C` | `nu` | `gamma` |
+| --- | --- | --- | --- |
+| `small` | `(0.1, 1.0)` | `(0.25, 0.5)` | `("scale",)` |
+| `standard` | `(0.1, 1.0, 10.0)` | `(0.25, 0.5, 0.75)` | `("scale", "auto")` |
+| `wide` | `(0.01, 0.1, 1.0, 10.0, 100.0)` | `(0.1, 0.25, 0.5, 0.75, 0.9)` | `("scale", "auto")` |
+
+## Neural Models
+
+`nn`, `lstm`, and `gru` are all torch-backed neural-network models and require
+`macroforecast[deep]`. `nn` is the feed-forward neural network for tabular
+feature matrices; `lstm` and `gru` are recurrent neural networks that consume
+trailing row sequences. The `deep` extra is intentionally separate from
+`macroforecast[all]` because torch is large and platform-sensitive.
+
+Torch recurrent example:
+
+```python
+result = macroforecast.forecasting.run(
+    panel,
+    "lstm",
+    features=features,
+    window=macroforecast.window.last_block(validation_size=24),
+    params={"lstm": {"sequence_length": 4, "hidden_size": 32, "device": "auto"}},
+    selection={"lstm": None},
+)
+```
+
+### nn
+
+```python
+macroforecast.models.nn(
+    X,
+    y,
+    *,
+    hidden_layer_sizes=(100,),
+    activation="relu",
+    dropout=0.0,
+    learning_rate=0.001,
+    max_epochs=100,
+    batch_size=32,
+    weight_decay=0.0,
+    optimizer="adam",
+    loss="mse",
+    random_state=0,
+    device="auto",
+)
+```
+
+Fits a torch-backed feed-forward neural-network regressor. The estimator
+standardizes `X` and `y` inside each fit window and maps predictions back to
+target units. Use feature engineering for lagged, rolling, PCA, or MARX-style
+inputs before fitting this model.
+
+Forecasting-runner example:
+
+```python
+result = macroforecast.forecasting.run(
+    panel,
+    "nn",
+    features=features,
+    window=macroforecast.window.last_block(validation_size=24),
+    params={"nn": {"max_epochs": 100, "device": "auto"}},
+    selection=macroforecast.selection.grid({
+        "hidden_layer_sizes": [(32,), (64,)],
+        "weight_decay": [0.0, 0.0001],
+    }),
+)
+```
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `hidden_layer_sizes` | `(100,)` | yes | Feed-forward hidden layer widths. |
+| `activation` | `"relu"` | fixed by preset | Activation: `"identity"`, `"logistic"`, `"tanh"`, or `"relu"`. |
+| `dropout` | `0.0` | yes | Dropout rate between hidden layers. |
+| `learning_rate` | `0.001` | yes | Optimizer learning rate. |
+| `max_epochs` | `100` | fixed by preset | Training epoch cap. |
+| `batch_size` | `32` | fixed by preset | Mini-batch size. |
+| `weight_decay` | `0.0` | yes | L2 weight decay. |
+| `optimizer` | `"adam"` | fixed by preset | Torch optimizer: `"adam"`, `"sgd"`, or `"rmsprop"`. |
+| `loss` | `"mse"` | fixed by preset | Torch loss: `"mse"` or `"huber"`. |
+| `random_state` | `0` | fixed by preset | Random seed. |
+| `device` | `"auto"` | fixed by preset | Torch device: `"auto"`, `"cpu"`, or `"cuda"`. |
+
+| Preset | `hidden_layer_sizes` | `dropout` | `learning_rate` | `weight_decay` |
+| --- | --- | --- | --- | --- |
+| `small` | `((32,), (64,))` | `(0.0,)` | `(0.001,)` | `(0.0, 0.0001)` |
+| `standard` | `((64,), (100,), (64, 32))` | `(0.0, 0.1)` | `(0.0005, 0.001)` | `(0.0, 0.0001, 0.001)` |
+| `wide` | `((32,), (64,), (100,), (128,), (100, 50), (128, 64))` | `(0.0, 0.1, 0.25)` | `(0.0001, 0.0005, 0.001, 0.005)` | `(0.0, 0.00001, 0.0001, 0.001, 0.01)` |
+
+### lstm
+
+```python
+macroforecast.models.lstm(
+    X,
+    y,
+    *,
+    sequence_length=4,
+    hidden_size=32,
+    num_layers=1,
+    dropout=0.0,
+    learning_rate=0.001,
+    max_epochs=100,
+    batch_size=32,
+    random_state=0,
+    device="auto",
+)
+```
+
+Fits a compact torch-backed LSTM regressor. `sequence_length` controls how
+many trailing rows are passed to the recurrent network for each target date.
+The fitted estimator stores the trailing training rows, so `predict(X_test)`
+can create the first test sequences without the caller manually prepending
+training history. The backend is a regular `torch.nn.Module`, switches to
+`train()` during fitting and `eval()` during prediction, and uses `device` to
+choose CPU or CUDA. The fit diagnostics include `sequence_context`, recording
+`sequence_length`, `fit_sample_size`, `train_tail_rows`, and the
+`test_sequence_prefix` policy. The prefix is always the last fitted rows only,
+so the forecasting runner can pass the test feature block directly without
+leaking future rows.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `sequence_length` | `4` | yes | Trailing rows per recurrent sequence. |
+| `hidden_size` | `32` | yes | Recurrent hidden-state width. |
+| `num_layers` | `1` | fixed by preset | Number of recurrent layers. |
+| `dropout` | `0.0` | fixed by preset | Dropout between recurrent layers. |
+| `learning_rate` | `0.001` | yes | Adam learning rate. |
+| `max_epochs` | `100` | fixed by preset | Training epoch cap. |
+| `batch_size` | `32` | fixed by preset | Mini-batch size. |
+| `random_state` | `0` | fixed by preset | Random seed. |
+| `device` | `"auto"` | fixed by preset | Torch device: `"auto"`, `"cpu"`, or `"cuda"`. |
+
+| Preset | `sequence_length` | `hidden_size` | `learning_rate` |
+| --- | --- | --- | --- |
+| `small` | `(2, 4)` | `(16, 32)` | `(0.001,)` |
+| `standard` | `(2, 4, 8)` | `(16, 32, 64)` | `(0.0005, 0.001)` |
+| `wide` | `(2, 4, 8, 12)` | `(16, 32, 64, 128)` | `(0.0001, 0.0005, 0.001, 0.005)` |
+
+### gru
+
+```python
+macroforecast.models.gru(
+    X,
+    y,
+    *,
+    sequence_length=4,
+    hidden_size=32,
+    num_layers=1,
+    dropout=0.0,
+    learning_rate=0.001,
+    max_epochs=100,
+    batch_size=32,
+    random_state=0,
+    device="auto",
+)
+```
+
+Fits a compact torch-backed GRU regressor with the same input/output contract
+as `lstm`.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `sequence_length` | `4` | yes | Trailing rows per recurrent sequence. |
+| `hidden_size` | `32` | yes | Recurrent hidden-state width. |
+| `num_layers` | `1` | fixed by preset | Number of recurrent layers. |
+| `dropout` | `0.0` | fixed by preset | Dropout between recurrent layers. |
+| `learning_rate` | `0.001` | yes | Adam learning rate. |
+| `max_epochs` | `100` | fixed by preset | Training epoch cap. |
+| `batch_size` | `32` | fixed by preset | Mini-batch size. |
+| `random_state` | `0` | fixed by preset | Random seed. |
+| `device` | `"auto"` | fixed by preset | Torch device: `"auto"`, `"cpu"`, or `"cuda"`. |
+
+The GRU presets match the LSTM presets.
+
 ## Factor And Time-Series Models
 
 ### pls
@@ -421,9 +1007,15 @@ Fits partial least squares regression. Unlike unsupervised PCA, PLS uses the
 target while constructing latent components, so it belongs in `models` rather
 than `preprocessing` or `feature_engineering`.
 
+`n_components` is treated as a requested upper bound. At fit time, the model
+resolves it to `min(requested, n_predictors, n_observations)` so the default is
+safe for small feature sets. Metadata records both `requested_n_components` and
+`resolved_n_components`; `n_components` stores the resolved value used by
+`sklearn.cross_decomposition.PLSRegression`.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `n_components` | `3` | yes | Number of latent PLS components. |
+| `n_components` | `3` | yes | Requested maximum number of latent PLS components. |
 | `scale` | `True` | fixed by preset | Whether to scale predictors inside PLS. |
 | `max_iter` | `500` | fixed by preset | NIPALS iteration cap. |
 | `tol` | `1e-6` | fixed by preset | NIPALS convergence tolerance. |
@@ -433,6 +1025,101 @@ than `preprocessing` or `feature_engineering`.
 | `small` | `(1, 2, 3)` |
 | `standard` | `(1, 2, 3, 5, 8)` |
 | `wide` | `(1, 2, 3, 5, 8, 10, 12, 20)` |
+
+### scaled_pca
+
+```python
+macroforecast.models.scaled_pca(
+    X,
+    y,
+    *,
+    n_components=3,
+    scale=True,
+    control_columns=None,
+    include_constant=True,
+    drop_control_columns=True,
+    winsorize_slopes=None,
+)
+```
+
+Fits Huang, Jiang, Li, Tong, and Zhou scaled PCA (sPCA) with a linear
+forecast head. The factor extraction step follows the original `spcaest.m`
+contract: standardize predictors, estimate one marginal predictive slope for
+each predictor, scale each standardized predictor by that slope, then run PCA
+on the scaled panel.
+
+Mathematical contract:
+
+Let $X \in \mathbb{R}^{T \times N}$ be the model-window predictor matrix and
+$y \in \mathbb{R}^{T}$ be the target. With `scale=True`, each predictor is
+standardized inside the active model window using MATLAB's default sample
+standard deviation convention:
+
+$$
+X^s_{tj} = \frac{X_{tj}-\bar X_j}{s_j}.
+$$
+
+For each predictor, estimate the marginal predictive slope from an intercept
+regression:
+
+$$
+\hat\beta_j =
+\frac{\sum_{t=1}^{T}(X^s_{tj}-\bar X^s_j)(y_t-\bar y)}
+{\sum_{t=1}^{T}(X^s_{tj}-\bar X^s_j)^2}.
+$$
+
+Build the scaled panel:
+
+$$
+X^{\mathrm{sPCA}}_{tj} = X^s_{tj}\hat\beta_j.
+$$
+
+Then compute principal components with Huang's normalization
+$\hat F'\hat F/T = I$:
+
+$$
+X^{\mathrm{sPCA}}X^{\mathrm{sPCA}\prime}
+= UDU',
+\qquad
+\hat F = \sqrt{T}\,U_{[:,1:K]}.
+$$
+
+For forecasting, `macroforecast` regresses the target residual after optional
+controls on these factors, then projects new scaled observations into the
+same factor space. This forecast head is the package wrapper; the factor
+extraction itself matches Huang's `spcaest.m` design.
+
+Original-code match:
+
+| Huang `spcaest.m` step | `macroforecast` implementation |
+| --- | --- |
+| `Xs = standard(X)` | model-window predictor standardization with `ddof=1` |
+| `xvar = [ones(T,1) Xs(:,j)]` | `_marginal_slopes(factor_values, y_values)` |
+| `parm = xvar\target` and `beta(j)=parm(2)` | closed-form marginal slope stored in `scaling_slopes_` |
+| `scaleXs(:,j)=Xs(:,j)*beta(j)` | `scaled_values = factor_values * slopes` |
+| `pc_T(scaleXs,nfac)` | `_huang_scaled_pca_state(...)` |
+| `fhat=Fhat0(:,1:nfac)*sqrt(T)` | `factor_scores_` with `F'F/T=I` |
+
+Scaling note: Huang's `spcaest.m` standardizes only `X` before estimating the
+marginal slopes, while the target stays in its raw units. Therefore
+`scaling_slopes_` in `scaled_pca` is in target-scale units. This differs from
+the Hounyo-Li macro SsPCA code below, where both `X` and the target are
+standardized before the slope step. The two slope vectors can differ by the
+target scale, but that is a global scalar difference for the factor/forecast
+structure; the practical scaling logic is the same once predictions are
+mapped back to the target units.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_components` | `3` | yes | Number of Huang scaled-PCA factors. |
+| `scale` | `True` | fixed by preset | Whether to standardize predictors inside the model. |
+| `control_columns` | `None` | fixed by preset | Optional X columns used as forecasting controls. |
+| `include_constant` | `True` | fixed by preset | Whether to include a constant in the control block. |
+| `drop_control_columns` | `True` | fixed by preset | Whether controls are excluded from the PCA block. |
+| `winsorize_slopes` | `None` | fixed by preset | Optional percentile winsorization for scaling slopes. |
+
+The presets tune `n_components`. Inspect exact candidate lists with
+`describe_model("scaled_pca")`.
 
 ### supervised_pca
 
@@ -445,31 +1132,221 @@ macroforecast.models.supervised_pca(
     n_selected=50,
     min_abs_corr=0.0,
     scale=True,
-    alpha=0.0,
+    control_columns=None,
+    include_constant=True,
+    drop_control_columns=True,
+    preselect="none",
+    t_threshold=1.28,
+    elastic_net_alpha=0.0002,
+    elastic_net_l1_ratio=0.5,
     random_state=0,
 )
 ```
 
-Fits a supervised PCA composite model. The model first screens predictors by
-absolute target correlation, then runs PCA on the selected predictors, then
-fits OLS or ridge regression on the component scores. This is different from
-`feature_engineering.pca_features()`, which is unsupervised and belongs in the
-feature-engineering layer.
+Fits original-style supervised PCA (SPCA). The implementation follows the
+MATLAB reproducibility code structure from Hounyo and Li's IJF weak-factor
+package: residualize the target on optional controls, rank the current
+predictors by absolute correlation with the current target residual, select
+`n_selected` predictors, extract one SVD factor, project both target and
+predictor residuals, then repeat for `n_components`.
 
-Use this model when the target is intentionally allowed to guide the component
-construction inside each model fit window.
+This is different from `feature_engineering.pca_features()`, which is
+unsupervised and belongs in the feature-engineering layer. Use this model when
+the target is intentionally allowed to guide component construction inside
+each model fit window.
+
+Mathematical contract:
+
+Let $X \in \mathbb{R}^{T \times N}$ be the model-window predictor matrix,
+$y \in \mathbb{R}^{T}$ be the target, and $W \in \mathbb{R}^{T \times c}$ be
+the optional control block. With `scale=True`, each predictor and the target
+are standardized inside the active model window using the same sample standard
+deviation convention as MATLAB `std(...,0,dim)`.
+
+First residualize the target on controls. The paper code writes this with an
+ordinary inverse; `macroforecast` uses the Moore-Penrose inverse for numerical
+stability when the control block is singular or nearly singular.
+
+$$
+\hat a_W = W^{+}y, \qquad r_y^{(0)} = y - W\hat a_W,
+\qquad R_X^{(0)} = X.
+$$
+
+For component $k = 1,\ldots,K$, compute residual correlations, select a
+subset $I_k$, extract one SVD loading, and project:
+
+$$
+c_j^{(k)} =
+\left|\operatorname{corr}\left(R_{X,j}^{(k-1)}, r_y^{(k-1)}\right)\right|,
+\qquad
+I_k = \operatorname{top}_{q}\{c_j^{(k)}\}_{j=1}^{N}.
+$$
+
+$$
+u_k =
+\operatorname{first\ left\ singular\ vector}
+\left(R_{X,I_k}^{(k-1)\prime}\right), \qquad
+\ell_{k,j}=0\ \text{for}\ j \notin I_k.
+$$
+
+$$
+f_k = R_X^{(k-1)}\ell_k,\qquad
+\hat\alpha_k = \frac{r_y^{(k-1)\prime}f_k}{f_k'f_k},\qquad
+\hat\lambda_k = \frac{R_X^{(k-1)\prime}f_k}{f_k'f_k}.
+$$
+
+$$
+r_y^{(k)} = r_y^{(k-1)}-\hat\alpha_k f_k,\qquad
+R_X^{(k)} = R_X^{(k-1)}-f_k\hat\lambda_k'.
+$$
+
+Prediction for a new row $x_*$ and controls $w_*$ is:
+
+$$
+\hat y_* =
+w_*\hat a_W
++ x_*\left(\sum_{k=1}^{K}\hat\alpha_k\ell_k'\right).
+$$
+
+Original-code match:
+
+| MATLAB variable / step | `macroforecast` implementation |
+| --- | --- |
+| `alphawhat = yt_insample*wt_insample'*inv(wt_insample*wt_insample')` | `_least_squares_coef(control_values, y_values)` |
+| `COR = abs(corr(xt0', ytplush0'))` | `_absolute_correlations(work_x, work_y)` |
+| `idx_sorted(1:N1)` | `_selected_indices(..., n_selected=q)` |
+| `[U,~,~] = svds(xt0(II,:),1)` | `np.linalg.svd(work_x[:, selected], ...)` and first right singular vector |
+| `Fhat = leftvector * xt0` | `factor = work_x @ loading` |
+| `alphahat = ytplush0*Fhat' / (Fhat*Fhat')` | `alpha = work_y @ factor / (factor @ factor)` |
+| `lambdahat = xt0*Fhat' / (Fhat*Fhat')` | `lambdas = work_x.T @ factor / (factor @ factor)` |
+| `ytplush0 = ytplush0 - alphahat*Fhat` | `work_y = work_y - alpha * factor` |
+| `xt0 = xt0 - lambdahat * Fhat` | `work_x = work_x - np.outer(factor, lambdas)` |
+
+Verification status: unit tests include a compact MATLAB-style reference
+recursion for both SPCA and SsPCA and compare generated predictions against
+`models.supervised_pca()` and `models.supervised_scaled_pca()`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `n_components` | `3` | yes | Number of supervised principal components. |
-| `n_selected` | `50` | yes | Number of predictors retained after target-correlation screening. |
-| `min_abs_corr` | `0.0` | yes | Minimum absolute target correlation retained before PCA. |
-| `scale` | `True` | fixed by preset | Whether to scale selected predictors before PCA. |
-| `alpha` | `0.0` | yes | Ridge penalty on component regression; `0.0` uses OLS. |
-| `random_state` | `0` | fixed by preset | PCA random seed. |
+| `n_components` | `3` | yes | Number of sequential supervised components. |
+| `n_selected` | `50` | yes | Predictors selected at each SPCA step. |
+| `min_abs_corr` | `0.0` | yes | Minimum absolute residual correlation retained before PCA. |
+| `scale` | `True` | fixed by preset | Whether to standardize predictors and target inside the model. |
+| `control_columns` | `None` | fixed by preset | Optional X columns used as forecasting controls. |
+| `include_constant` | `True` | fixed by preset | Whether to include a constant in the control block. |
+| `drop_control_columns` | `True` | fixed by preset | Whether controls are excluded from the PCA block. |
+| `preselect` | `"none"` | fixed by preset | Optional pre-selection: `"none"`, `"hard_tstat"`, or `"elastic_net"`. |
+| `t_threshold` | `1.28` | fixed by preset | Hard t-stat pre-selection threshold. |
+| `elastic_net_alpha` | `0.0002` | fixed by preset | Elastic-net pre-selection penalty. |
+| `elastic_net_l1_ratio` | `0.5` | fixed by preset | Elastic-net pre-selection L1 ratio. |
+| `random_state` | `0` | fixed by preset | Elastic-net pre-selection random seed. |
 
-The presets tune `n_components`, `n_selected`, `min_abs_corr`, and `alpha`.
+The presets tune `n_components`, `n_selected`, and `min_abs_corr`.
 Inspect exact candidate lists with `describe_model("supervised_pca")`.
+
+### supervised_scaled_pca
+
+```python
+macroforecast.models.supervised_scaled_pca(
+    X,
+    y,
+    *,
+    n_components=3,
+    n_selected=50,
+    min_abs_corr=0.0,
+    scale=True,
+    control_columns=None,
+    include_constant=True,
+    drop_control_columns=True,
+    preselect="none",
+    t_threshold=1.28,
+    elastic_net_alpha=0.0002,
+    elastic_net_l1_ratio=0.5,
+    random_state=0,
+)
+```
+
+Fits Hounyo-Li supervised scaled PCA (SsPCA). This adds the paper's
+predictive-slope scaling step before the SPCA loop: each standardized
+predictor is first multiplied by its marginal predictive slope for the target.
+The scaled panel is then passed through the same iterative supervised
+selection, SVD factor extraction, and projection loop as `supervised_pca`.
+
+Mathematical contract:
+
+After the within-window standardization used above, estimate one marginal
+predictive slope per predictor:
+
+$$
+\hat\gamma_j =
+\frac{\sum_{t=1}^{T}(x_{tj}-\bar x_j)(y_t-\bar y)}
+{\sum_{t=1}^{T}(x_{tj}-\bar x_j)^2}.
+$$
+
+Build the supervised-scaled panel
+
+$$
+X^{\mathrm{scaled}}_j = \hat\gamma_j X_j,
+\qquad j=1,\ldots,N.
+$$
+
+Then run the same SPCA recursion as `supervised_pca` with
+$R_X^{(0)} = X^{\mathrm{scaled}}$. The forecast is therefore
+
+$$
+\hat y_* =
+w_*\hat a_W
++ x_*^{\mathrm{scaled}}
+\left(\sum_{k=1}^{K}\hat\alpha_k\ell_k'\right).
+$$
+
+This corresponds to Hounyo-Li SsPCA as implemented in the local MATLAB
+package: `scaledPCA_emp002.m` supplies the predictive-slope scaling idea,
+`SPCA_emp002.m` supplies the supervised selection/projection recursion, and
+`SsPCA_emp002.m` combines the two by applying SPCA to `scaleXs`.
+
+Source checked: the local MATLAB reproducibility package for Hounyo and Li,
+`SsPCA_emp002.m`, `SsPCA_tune.m`, `SPCA_emp002.m`, `scaledPCA_emp002.m`, and
+`inflation_linear_tune.m`. The Python implementation is a clean port of the
+algorithmic contract, not copied MATLAB code.
+
+Original-code match for the scaling step:
+
+| MATLAB variable / step | `macroforecast` implementation |
+| --- | --- |
+| `xvar = [ones(1,T); xt_standardized(j,:)]` | `_marginal_slopes(factor_values, y_values)` uses an intercept-equivalent centered OLS slope |
+| `parm = ytplush*xvar'*inv(xvar*xvar')` | closed-form marginal slope |
+| `beta_scaled(j) = parm(2)` | `scaling_slopes_` |
+| `scaleXs(j,:) = xt_standardized(j,:) * beta_scaled(j)` | `factor_values = factor_values * slopes` |
+| `SsPCA_emp002(scaleXs, ytplush, wt, Khat, number)` | `SupervisedScaledPCARegressor` then calls the same SPCA extraction path |
+
+Target scaling note: the Hounyo-Li macro code standardizes the target and
+predictors before computing `beta_scaled`. Huang's `spcaest.m` standardizes
+only predictors and keeps the target raw. Consequently, `supervised_scaled_pca`
+stores standardized-target slopes when `scale=True`, while `scaled_pca` stores
+raw-target slopes. These stored slope magnitudes are not directly comparable
+without the target standard deviation. For factor construction and forecast
+generation, however, the difference is a global target-scale multiplier rather
+than a different screening or projection rule.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_components` | `3` | yes | Number of sequential SsPCA components. |
+| `n_selected` | `50` | yes | Predictors selected at each SPCA step after slope scaling. |
+| `min_abs_corr` | `0.0` | yes | Minimum absolute residual correlation retained before PCA. |
+| `scale` | `True` | fixed by preset | Whether to standardize predictors and target inside the model. |
+| `control_columns` | `None` | fixed by preset | Optional X columns used as forecasting controls. |
+| `include_constant` | `True` | fixed by preset | Whether to include a constant in the control block. |
+| `drop_control_columns` | `True` | fixed by preset | Whether controls are excluded from the PCA block. |
+| `preselect` | `"none"` | fixed by preset | Optional pre-selection: `"none"`, `"hard_tstat"`, or `"elastic_net"`. |
+| `t_threshold` | `1.28` | fixed by preset | Hard t-stat pre-selection threshold. |
+| `elastic_net_alpha` | `0.0002` | fixed by preset | Elastic-net pre-selection penalty. |
+| `elastic_net_l1_ratio` | `0.5` | fixed by preset | Elastic-net pre-selection L1 ratio. |
+| `random_state` | `0` | fixed by preset | Elastic-net pre-selection random seed. |
+
+The original empirical MATLAB code uses lagged target plus constant controls.
+In `macroforecast`, pass the lagged target as an X column and list it in
+`control_columns` when that exact control block is needed.
 
 ### ar
 
@@ -769,22 +1646,6 @@ Fits `catboost.CatBoostRegressor`. Requires `macroforecast[catboost]`.
 Preset spaces match `gradient_boosting`. Default selection method:
 `random`.
 
-### mars
-
-```python
-macroforecast.models.mars(X, y, **kwargs)
-```
-
-Fits `pyearth.Earth`. Requires `macroforecast[mars]`.
-
-| Item | Value |
-| --- | --- |
-| Input | `X`, `y` |
-| Output | `ModelFit` |
-| Default params | passed through to `pyearth.Earth` |
-| Tunable params | none in the clean preset catalog |
-| Preset search spaces | none |
-
 ## Macro-Specific Tree And Ensemble Models
 
 ### slow_growing_tree
@@ -844,7 +1705,17 @@ macroforecast.models.quantile_regression_forest(
 ```
 
 Fits a random forest and stores per-leaf training-target distributions. The
-underlying estimator exposes `predict_quantiles(X, levels=None)`.
+underlying estimator exposes `predict_quantiles(X, levels=None)`. The
+forecasting runner stores those outputs in the `quantile_predictions` column
+as per-row dictionaries keyed by quantile level.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_estimators` | `200` | yes | Number of trees. |
+| `max_depth` | `None` | yes | Maximum depth per tree. |
+| `min_samples_leaf` | `1` | yes | Minimum samples per terminal leaf. |
+| `random_state` | `0` | fixed by preset | Forest random seed. |
+| `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default levels returned by `predict_quantiles()`. |
 
 Preset spaces match `random_forest`. Default selection method: `random`.
 
@@ -873,6 +1744,7 @@ uses moving-block bootstrap indices.
 | `base` | `"ridge"` | yes | Base estimator name. |
 | `n_estimators` | `50` | yes | Number of bootstrap models. |
 | `max_samples` | `0.8` | yes | Bootstrap sample fraction. |
+| `base_params` | `{}` | fixed by preset | Parameters passed to each base estimator. |
 | `strategy` | `"standard"` | yes | Bootstrap strategy: `standard` or `block`. |
 | `block_length` | `4` | yes | Block length when `strategy="block"`. |
 | `random_state` | `0` | fixed by preset | Ensemble random seed. |
@@ -927,7 +1799,43 @@ Default selection method: `random`.
 ### macro_random_forest
 
 ```python
-macroforecast.models.macro_random_forest(X, y, **kwargs)
+macroforecast.models.macro_random_forest(
+    X,
+    y,
+    *,
+    x_columns=None,
+    S_columns=None,
+    x_pos=None,
+    S_pos=None,
+    y_pos=0,
+    B=50,
+    minsize=10,
+    mtry_frac=1/3,
+    min_leaf_frac_of_x=1.0,
+    VI=False,
+    ERT=False,
+    quantile_rate=None,
+    S_priority_vec=None,
+    random_x=False,
+    trend_push=1,
+    howmany_random_x=1,
+    howmany_keep_best_VI=20,
+    cheap_look_at_GTVPs=True,
+    prior_var=None,
+    prior_mean=None,
+    subsampling_rate=0.75,
+    rw_regul=0.75,
+    keep_forest=False,
+    block_size=12,
+    fast_rw=True,
+    ridge_lambda=0.1,
+    HRW=0,
+    resampling_opt=2,
+    print_b=False,
+    parallelise=False,
+    n_cores=1,
+    **kwargs,
+)
 ```
 
 Adapter for Ryan Lucas's `MacroRandomForest` reference backend. The reference
@@ -936,7 +1844,9 @@ license, with source attribution in
 `macroforecast.models._mrf_reference`. Install the optional runtime
 dependencies with `macroforecast[macro_random_forest]`. The adapter fits on
 the in-sample `X/y` and calls the reference `_ensemble_loop()` during
-`predict(X_test)`.
+`predict(X_test)`. Repeated calls to `predict()` with the same test matrix
+reuse the previous reference-backend output, so repeated result materialization
+does not rerun the expensive forest loop.
 
 By default all columns in `X` are used both as the time-varying linear equation
 variables (`x_columns`) and the forest state variables (`S_columns`). Pass
@@ -1068,6 +1978,11 @@ The MRF presets tune `B`, `minsize`, `mtry_frac`,
 
 ## Volatility Models
 
+Volatility model fits return `VolatilityFit`. In addition to
+`predict_variance(horizon=...)`, their diagnostics include fitted parameter
+estimates under `params` and the in-sample `conditional_volatility` path when
+the backend exposes it.
+
 ### garch11
 
 ```python
@@ -1169,5 +2084,6 @@ Fits a compact realized-GARCH joint likelihood. Provide `rv` directly or set
 | --- | --- |
 | `lasso_path` | Removed. Use `get_model("lasso")` and `selection.select_params()`. |
 | `pcr` | Removed. Use `feature_engineering.feature_spec(pca_components=...)` with a regression model. |
-| `mlp`, `lstm`, `gru`, `transformer`, `hemisphere_nn` | Deferred because torch/deep is intentionally out of scope. |
+| `mars` | Removed. The available `pyearth` backend is not compatible with the supported Python baseline. Revisit with adaptive, group-penalized, and spline-model validation if a maintained backend is selected. |
+| `transformer`, `hemisphere_nn` | Deferred until the forecasting runner needs sequence-to-sequence or architecture-specific deep-learning support. |
 | `midas_almon`, `midas_beta`, `midas_step`, `unrestricted_midas` | Deferred as a specialized mixed-frequency block. |

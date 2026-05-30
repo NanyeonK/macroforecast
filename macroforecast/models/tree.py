@@ -228,16 +228,10 @@ def catboost(
     return fit_estimator(estimator, X, y, model="catboost", metadata=metadata)
 
 
-def mars(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
-    """Fit multivariate adaptive regression splines. Requires pyearth."""
-
-    pyearth = optional_import("pyearth", extra="mars", package="sklearn-contrib-py-earth")
-    return fit_estimator(pyearth.Earth(**kwargs), X, y, model="mars")
-
-
 class SlowGrowingTreeRegressor:
     """Slow-Growing Tree with soft split propagation."""
 
+    # Package-native compact implementation; no exact paper-replication claim.
     def __init__(
         self,
         *,
@@ -386,10 +380,47 @@ class SlowGrowingTreeRegressor:
         return np.asarray([self._predict_one(row) for row in values], dtype=float)
 
 
-def slow_growing_tree(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
+def slow_growing_tree(
+    X: Any,
+    y: Any | None = None,
+    *,
+    eta: float = 0.1,
+    herfindahl_threshold: float = 0.25,
+    eta_depth_step: float = 0.01,
+    eta_max_plateau: float = 0.5,
+    mtry_frac: float = 1.0,
+    max_depth: int | None = 10,
+    random_state: int = 0,
+    min_leaf_size: int = 5,
+) -> ModelFit:
     """Fit a Slow-Growing Tree."""
 
-    return fit_estimator(SlowGrowingTreeRegressor(**kwargs), X, y, model="slow_growing_tree", metadata=kwargs)
+    params = {
+        "eta": float(eta),
+        "herfindahl_threshold": float(herfindahl_threshold),
+        "eta_depth_step": float(eta_depth_step),
+        "eta_max_plateau": float(eta_max_plateau),
+        "mtry_frac": float(mtry_frac),
+        "max_depth": max_depth,
+        "random_state": int(random_state),
+        "min_leaf_size": int(min_leaf_size),
+    }
+    return fit_estimator(
+        SlowGrowingTreeRegressor(
+            eta=float(eta),
+            herfindahl_threshold=float(herfindahl_threshold),
+            eta_depth_step=float(eta_depth_step),
+            eta_max_plateau=float(eta_max_plateau),
+            mtry_frac=float(mtry_frac),
+            max_depth=max_depth,
+            random_state=int(random_state),
+            min_leaf_size=int(min_leaf_size),
+        ),
+        X,
+        y,
+        model="slow_growing_tree",
+        metadata=params,
+    )
 
 
 class QuantileRegressionForestRegressor:
@@ -456,15 +487,37 @@ class QuantileRegressionForestRegressor:
         return out
 
 
-def quantile_regression_forest(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
+def quantile_regression_forest(
+    X: Any,
+    y: Any | None = None,
+    *,
+    n_estimators: int = 200,
+    max_depth: int | None = None,
+    min_samples_leaf: int = 1,
+    random_state: int = 0,
+    quantile_levels: tuple[float, ...] = (0.05, 0.5, 0.95),
+) -> ModelFit:
     """Fit a quantile regression forest."""
 
+    params = {
+        "n_estimators": int(n_estimators),
+        "max_depth": max_depth,
+        "min_samples_leaf": int(min_samples_leaf),
+        "random_state": int(random_state),
+        "quantile_levels": tuple(float(q) for q in quantile_levels),
+    }
     return fit_estimator(
-        QuantileRegressionForestRegressor(**kwargs),
+        QuantileRegressionForestRegressor(
+            n_estimators=int(n_estimators),
+            max_depth=max_depth,
+            min_samples_leaf=int(min_samples_leaf),
+            random_state=int(random_state),
+            quantile_levels=tuple(float(q) for q in quantile_levels),
+        ),
         X,
         y,
         model="quantile_regression_forest",
-        metadata=kwargs,
+        metadata=params,
     )
 
 
@@ -551,15 +604,50 @@ class BaggingRegressor:
         return {float(q): np.quantile(preds, float(q), axis=1) for q in levels}
 
 
-def bagging(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
+def bagging(
+    X: Any,
+    y: Any | None = None,
+    *,
+    base: str = "ridge",
+    n_estimators: int = 50,
+    max_samples: float = 0.8,
+    random_state: int = 0,
+    base_params: dict[str, Any] | None = None,
+    strategy: str = "standard",
+    block_length: int = 4,
+) -> ModelFit:
     """Fit a bootstrap-aggregated ensemble."""
 
-    return fit_estimator(BaggingRegressor(**kwargs), X, y, model="bagging", metadata=kwargs)
+    params = {
+        "base": str(base),
+        "n_estimators": int(n_estimators),
+        "max_samples": float(max_samples),
+        "random_state": int(random_state),
+        "base_params": dict(base_params or {}),
+        "strategy": str(strategy),
+        "block_length": int(block_length),
+    }
+    return fit_estimator(
+        BaggingRegressor(
+            base=str(base),
+            n_estimators=int(n_estimators),
+            max_samples=float(max_samples),
+            random_state=int(random_state),
+            base_params=dict(base_params or {}),
+            strategy=str(strategy),
+            block_length=int(block_length),
+        ),
+        X,
+        y,
+        model="bagging",
+        metadata=params,
+    )
 
 
 class BoogingRegressor:
     """Bagging of intentionally overfit stochastic gradient boosting models."""
 
+    # Package-native compact implementation of the Booging idea.
     def __init__(
         self,
         *,
@@ -633,15 +721,56 @@ class BoogingRegressor:
         return preds / len(self._models)
 
 
-def booging(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
+def booging(
+    X: Any,
+    y: Any | None = None,
+    *,
+    B: int = 100,
+    sample_frac: float = 0.75,
+    inner_n_estimators: int = 1500,
+    inner_learning_rate: float = 0.1,
+    inner_max_depth: int = 3,
+    inner_subsample: float = 0.5,
+    da_noise_frac: float = 1.0 / 3.0,
+    da_drop_rate: float = 0.2,
+    random_state: int = 0,
+) -> ModelFit:
     """Fit Booging: bagged overfit stochastic gradient boosting with augmentation."""
 
-    return fit_estimator(BoogingRegressor(**kwargs), X, y, model="booging", metadata=kwargs)
+    params = {
+        "B": int(B),
+        "sample_frac": float(sample_frac),
+        "inner_n_estimators": int(inner_n_estimators),
+        "inner_learning_rate": float(inner_learning_rate),
+        "inner_max_depth": int(inner_max_depth),
+        "inner_subsample": float(inner_subsample),
+        "da_noise_frac": float(da_noise_frac),
+        "da_drop_rate": float(da_drop_rate),
+        "random_state": int(random_state),
+    }
+    return fit_estimator(
+        BoogingRegressor(
+            B=int(B),
+            sample_frac=float(sample_frac),
+            inner_n_estimators=int(inner_n_estimators),
+            inner_learning_rate=float(inner_learning_rate),
+            inner_max_depth=int(inner_max_depth),
+            inner_subsample=float(inner_subsample),
+            da_noise_frac=float(da_noise_frac),
+            da_drop_rate=float(da_drop_rate),
+            random_state=int(random_state),
+        ),
+        X,
+        y,
+        model="booging",
+        metadata=params,
+    )
 
 
 class MacroRandomForestRegressor:
     """Adapter for the vendored MacroRandomForest reference implementation."""
 
+    # Reference backend is vendored from MacroRandomForest 1.0.6 and smoke-tested.
     def __init__(
         self,
         *,
@@ -717,6 +846,8 @@ class MacroRandomForestRegressor:
         self._feature_names: tuple[str, ...] = ()
         self.output_: dict[str, Any] | None = None
         self.model_: Any = None
+        self._prediction_cache_key: tuple[Any, ...] | None = None
+        self._prediction_cache_values: np.ndarray | None = None
 
     @staticmethod
     def _import_external():
@@ -736,6 +867,12 @@ class MacroRandomForestRegressor:
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self._train_X is None or self._train_y is None:
             return np.zeros(len(X), dtype=float)
+        cache_key = self._cache_key(X)
+        if (
+            self._prediction_cache_key == cache_key
+            and self._prediction_cache_values is not None
+        ):
+            return self._prediction_cache_values.copy()
         MacroRandomForest = self._import_external()
         train_X = self._train_X.copy()
         test_X = X.reindex(columns=list(self._feature_names), fill_value=0.0)
@@ -780,7 +917,10 @@ class MacroRandomForestRegressor:
                 "MacroRandomForest backend failed while running _ensemble_loop(). "
                 "Check x_columns/S_columns and sample size."
             ) from exc
-        return self._prediction_values(self.output_, len(test_X))
+        values = self._prediction_values(self.output_, len(test_X))
+        self._prediction_cache_key = cache_key
+        self._prediction_cache_values = values.copy()
+        return values
 
     def _reference_output_context(self):
         if self.params.get("print_b"):
@@ -815,11 +955,90 @@ class MacroRandomForestRegressor:
             arr = arr.mean(axis=0)
         return np.asarray(arr, dtype=float).reshape(-1)[-n:]
 
+    @staticmethod
+    def _cache_key(X: pd.DataFrame) -> tuple[Any, ...]:
+        try:
+            hashed = pd.util.hash_pandas_object(X, index=True).to_numpy(dtype=np.uint64)
+            value_hash = int(np.bitwise_xor.reduce(hashed)) if len(hashed) else 0
+        except Exception:  # noqa: BLE001 - cache keys must never block prediction.
+            value_hash = id(X)
+        return (tuple(X.index), tuple(str(column) for column in X.columns), X.shape, value_hash)
 
-def macro_random_forest(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
+
+def macro_random_forest(
+    X: Any,
+    y: Any | None = None,
+    *,
+    x_columns: Sequence[str] | None = None,
+    S_columns: Sequence[str] | None = None,
+    x_pos: Sequence[int] | None = None,
+    S_pos: Sequence[int] | None = None,
+    y_pos: int = 0,
+    B: int = 50,
+    minsize: int = 10,
+    mtry_frac: float = 1.0 / 3.0,
+    min_leaf_frac_of_x: float = 1.0,
+    VI: bool = False,
+    ERT: bool = False,
+    quantile_rate: float | None = None,
+    S_priority_vec: Sequence[float] | None = None,
+    random_x: bool = False,
+    trend_push: int = 1,
+    howmany_random_x: int = 1,
+    howmany_keep_best_VI: int = 20,
+    cheap_look_at_GTVPs: bool = True,
+    prior_var: Sequence[float] | None = None,
+    prior_mean: Sequence[float] | None = None,
+    subsampling_rate: float = 0.75,
+    rw_regul: float = 0.75,
+    keep_forest: bool = False,
+    block_size: int = 12,
+    fast_rw: bool = True,
+    ridge_lambda: float = 0.1,
+    HRW: int = 0,
+    resampling_opt: int = 2,
+    print_b: bool = False,
+    parallelise: bool = False,
+    n_cores: int = 1,
+    **kwargs: Any,
+) -> ModelFit:
     """Fit Macroeconomic Random Forest with the vendored reference backend."""
 
-    estimator = MacroRandomForestRegressor(**kwargs)
+    params = {
+        "x_columns": x_columns,
+        "S_columns": S_columns,
+        "x_pos": x_pos,
+        "S_pos": S_pos,
+        "y_pos": int(y_pos),
+        "B": int(B),
+        "minsize": int(minsize),
+        "mtry_frac": float(mtry_frac),
+        "min_leaf_frac_of_x": float(min_leaf_frac_of_x),
+        "VI": bool(VI),
+        "ERT": bool(ERT),
+        "quantile_rate": quantile_rate,
+        "S_priority_vec": S_priority_vec,
+        "random_x": bool(random_x),
+        "trend_push": int(trend_push),
+        "howmany_random_x": int(howmany_random_x),
+        "howmany_keep_best_VI": int(howmany_keep_best_VI),
+        "cheap_look_at_GTVPs": bool(cheap_look_at_GTVPs),
+        "prior_var": prior_var,
+        "prior_mean": prior_mean,
+        "subsampling_rate": float(subsampling_rate),
+        "rw_regul": float(rw_regul),
+        "keep_forest": bool(keep_forest),
+        "block_size": int(block_size),
+        "fast_rw": bool(fast_rw),
+        "ridge_lambda": float(ridge_lambda),
+        "HRW": int(HRW),
+        "resampling_opt": int(resampling_opt),
+        "print_b": bool(print_b),
+        "parallelise": bool(parallelise),
+        "n_cores": int(n_cores),
+        **kwargs,
+    }
+    estimator = MacroRandomForestRegressor(**params)
     metadata = {
         "x_columns": estimator.x_columns,
         "S_columns": estimator.S_columns,
@@ -828,7 +1047,14 @@ def macro_random_forest(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit
         "y_pos": estimator.y_pos,
         **estimator.params,
     }
-    return fit_estimator(estimator, X, y, model="macro_random_forest", metadata=metadata)
+    return fit_estimator(
+        estimator,
+        X,
+        y,
+        model="macro_random_forest",
+        metadata=metadata,
+        collect_diagnostics=False,
+    )
 
 
 __all__ = [
@@ -845,7 +1071,6 @@ __all__ = [
     "gradient_boosting",
     "lightgbm",
     "macro_random_forest",
-    "mars",
     "quantile_regression_forest",
     "random_forest",
     "slow_growing_tree",

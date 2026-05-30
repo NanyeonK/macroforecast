@@ -42,8 +42,8 @@ xgboost = ["xgboost>=3.0,<3.1"]
 lightgbm = ["lightgbm>=4.0"]
 catboost = ["catboost>=1.2"]
 arch = ["arch>=6.0"]
-mars = ["sklearn-contrib-py-earth>=0.1.0; python_version < '3.11'"]
 macro_random_forest = ["joblib>=1.5", "matplotlib>=3.8"]
+deep = ["torch>=2.2"]
 docs = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
@@ -53,7 +53,7 @@ docs = [
 ]
 typecheck = ["mypy>=1.13"]
 markdown = ["tabulate>=0.9"]
-all = ["macroforecast[parquet,markdown,xgboost,lightgbm,catboost,arch,mars,macro_random_forest]"]
+all = ["macroforecast[parquet,markdown,xgboost,lightgbm,catboost,arch,macro_random_forest]"]
 ci = ["pytest>=8.0", "macroforecast[parquet,markdown]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 

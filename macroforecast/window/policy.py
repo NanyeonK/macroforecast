@@ -50,11 +50,9 @@ _UPDATE_ALIASES = {
 class StagePolicy:
     """Fit/apply timing rule for one forecasting-run stage.
 
-    ``scope`` decides what sample a stateful stage may use. ``update`` records
-    how often a stage may be refit when the runner supports scheduled refits.
-    The first runner implementation applies the scope directly and records the
-    update rule in metadata; deeper update-specific caching can build on this
-    object without changing public signatures.
+    ``scope`` decides what sample a stateful stage may use. ``update`` decides
+    when a runner should refit or reuse that stage state across forecast
+    origins.
     """
 
     scope: StageScope = "fit_window"

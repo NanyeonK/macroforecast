@@ -1,17 +1,27 @@
 from __future__ import annotations
 
 from .linear import (
+    ScaledPCARegressor,
     SupervisedPCARegressor,
+    SupervisedScaledPCARegressor,
+    adaptive_elastic_net,
+    adaptive_lasso,
     bayesian_ridge,
     elastic_net,
     glmboost,
+    group_lasso,
     huber,
     lasso,
     ols,
     pls,
     ridge,
+    scaled_pca,
+    sparse_group_lasso,
     supervised_pca,
+    supervised_scaled_pca,
 )
+from .neural import gru, lstm, nn
+from .persistence import SavedModel, load_fit, save_fit
 from .specs import (
     MODEL_SPECS,
     ModelParameter,
@@ -21,6 +31,7 @@ from .specs import (
     list_model_specs,
     model_search_space,
 )
+from .svm import linear_svr, nu_svr, svr
 from .timeseries import ar, far, favar, var
 from .tree import (
     BaggingRegressor,
@@ -36,14 +47,19 @@ from .tree import (
     gradient_boosting,
     lightgbm,
     macro_random_forest,
-    mars,
     quantile_regression_forest,
     random_forest,
     slow_growing_tree,
     xgboost,
 )
 from .types import ModelFit, VolatilityFit
-from .volatility import GARCHEstimator, RealizedGARCHEstimator, egarch, garch11, realized_garch
+from .volatility import (
+    GARCHEstimator,
+    RealizedGARCHEstimator,
+    egarch,
+    garch11,
+    realized_garch,
+)
 
 __all__ = [
     "BaggingRegressor",
@@ -56,9 +72,14 @@ __all__ = [
     "ModelSpec",
     "QuantileRegressionForestRegressor",
     "RealizedGARCHEstimator",
+    "SavedModel",
+    "ScaledPCARegressor",
     "SlowGrowingTreeRegressor",
     "SupervisedPCARegressor",
+    "SupervisedScaledPCARegressor",
     "VolatilityFit",
+    "adaptive_elastic_net",
+    "adaptive_lasso",
     "ar",
     "bagging",
     "bayesian_ridge",
@@ -75,21 +96,32 @@ __all__ = [
     "get_model",
     "glmboost",
     "gradient_boosting",
+    "group_lasso",
+    "gru",
     "huber",
     "lasso",
     "lightgbm",
+    "linear_svr",
     "list_model_specs",
+    "load_fit",
+    "lstm",
     "macro_random_forest",
-    "mars",
+    "nn",
     "model_search_space",
+    "nu_svr",
     "ols",
     "pls",
     "quantile_regression_forest",
     "random_forest",
     "realized_garch",
     "ridge",
+    "save_fit",
+    "scaled_pca",
     "slow_growing_tree",
+    "sparse_group_lasso",
     "supervised_pca",
+    "supervised_scaled_pca",
+    "svr",
     "var",
     "xgboost",
 ]

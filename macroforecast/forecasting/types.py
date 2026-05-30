@@ -29,6 +29,13 @@ class ForecastResult:
             "metadata": _json_ready(self.metadata),
         }
 
+    def evaluate(self, **kwargs: Any) -> pd.DataFrame:
+        """Evaluate this forecast result with ``macroforecast.evaluation``."""
+
+        from macroforecast.evaluation import evaluate_forecasts
+
+        return evaluate_forecasts(self, **kwargs)
+
     def to_json(self, path: str | Path | None = None, *, indent: int | None = 2) -> str:
         """Return JSON text, and optionally write it to ``path``."""
 

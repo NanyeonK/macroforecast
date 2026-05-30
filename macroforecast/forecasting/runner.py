@@ -2,15 +2,23 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Any, cast
 
 import numpy as np
 import pandas as pd
+from pandas.tseries.offsets import DateOffset
 
-from macroforecast.data import DataBundle, as_panel, panel_info, spec as data_spec, validate_panel
+from macroforecast.data import (
+    DataBundle,
+    as_panel,
+    panel_info,
+    spec as data_spec,
+    validate_panel,
+)
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec, feature_spec
 from macroforecast.meta import get_config
-from macroforecast.models import ModelSpec, get_model
+from macroforecast.models import ModelSpec, get_model, save_fit
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
 from macroforecast.selection import SearchSpec, select_params
 from macroforecast.window import (
@@ -38,9 +46,19 @@ class _PreparedStage:
     metadata: dict[str, Any] | None
 
 
+@dataclass
+class _StageUpdateState:
+    updated_once: bool = False
+    last_origin: Any | None = None
+
+
 def run(
     data: Any,
-    model: str | Callable[..., Any] | ModelSpec | Sequence[str | Callable[..., Any] | ModelSpec] | Mapping[str, Any],
+    model: str
+    | Callable[..., Any]
+    | ModelSpec
+    | Sequence[str | Callable[..., Any] | ModelSpec]
+    | Mapping[str, Any],
     *,
     window: WindowSpec | str | None = None,
     preprocessing: PreprocessSpec | None = None,
@@ -55,6 +73,8 @@ def run(
     params: Mapping[str, Any] | None = None,
     target: str | None = None,
     horizon: int = 1,
+    save_models: bool = True,
+    model_store: str | Path = "trained_model",
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
 
@@ -100,6 +120,8 @@ def run(
             selection_metric=selection_metric,
             maximize_selection=maximize_selection,
             config=config,
+            save_models=save_models,
+            model_store=model_store,
         )
 
     panel = as_panel(pd.DataFrame(data).copy())
@@ -111,15 +133,23 @@ def run(
 
     full_stage: _PreparedStage | None = None
     fixed_feature_builder: Any | None = None
-    if preprocessing is not None and preprocessing_stage_policy is not None and preprocessing_stage_policy.scope == "full_panel":
-        fitted = preprocessing.fit(_preprocessor_fit_input(panel, features), policy="origin_available")
+    if (
+        preprocessing is not None
+        and preprocessing_stage_policy is not None
+        and preprocessing_stage_policy.scope == "full_panel"
+    ):
+        fitted = preprocessing.fit(
+            _preprocessor_fit_input(panel, features), policy="origin_available"
+        )
         full_stage = _PreparedStage(
             panel=fitted.processed_train.panel,
             fitted_preprocessing=fitted,
             metadata=fitted.to_metadata(),
         )
     elif preprocessing is None:
-        full_stage = _PreparedStage(panel=panel, fitted_preprocessing=None, metadata=None)
+        full_stage = _PreparedStage(
+            panel=panel, fitted_preprocessing=None, metadata=None
+        )
 
     if feature_stage_policy.scope in {"full_panel", "fixed_reference"}:
         if full_stage is None:
@@ -138,35 +168,73 @@ def run(
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, dict[str, Any] | None] = {}
     stage_records: list[dict[str, Any]] = []
+    preprocessing_state = _StageUpdateState()
+    feature_state = _StageUpdateState()
+    fitted_preprocessing_cache: FittedPreprocessor | None = None
+    fitted_feature_cache: Any | None = None
 
-    for item in window_spec.iter_origins(panel.index):
-        prepared = (
-            _prepare_origin_panel(
+    for origin_count, item in enumerate(window_spec.iter_origins(panel.index)):
+        preprocessing_updated = False
+        if full_stage is None:
+            preprocessing_updated = _stage_update_due(
+                preprocessing_stage_policy,
+                item,
+                origin_count=origin_count,
+                state=preprocessing_state,
+            )
+            prepared = _prepare_origin_panel(
                 panel,
                 features=features,
                 preprocessing=preprocessing,
                 preprocessing_policy=preprocessing_stage_policy,
                 item=item,
+                fitted_preprocessing=None
+                if preprocessing_updated
+                else fitted_preprocessing_cache,
             )
-            if full_stage is None
-            else full_stage
-        )
+            if preprocessing_updated:
+                fitted_preprocessing_cache = prepared.fitted_preprocessing
+                _mark_stage_updated(preprocessing_state, item)
+        else:
+            prepared = full_stage
         if prepared.metadata is not None:
-            stage_records.append(_origin_stage_record("preprocessing", item, prepared.metadata))
+            stage_records.append(
+                _origin_stage_record(
+                    "preprocessing",
+                    item,
+                    prepared.metadata,
+                    updated=preprocessing_updated,
+                )
+            )
 
         fit_labels = panel.index[item["fit_idx"]]
         test_labels = panel.index[item["test_idx"]]
         selection_labels = stage_index(panel.index, item, selection_stage_policy)
 
+        feature_updated = False
         if fixed_feature_builder is None:
-            feature_fit_labels = stage_index(panel.index, item, feature_stage_policy)
-            feature_fit_panel = prepared.panel.reindex(feature_fit_labels).dropna(how="all")
-            fitted_features = features.fit(feature_fit_panel)
+            feature_updated = _stage_update_due(
+                feature_stage_policy,
+                item,
+                origin_count=origin_count,
+                state=feature_state,
+            )
+            if feature_updated or fitted_feature_cache is None:
+                feature_fit_labels = stage_index(panel.index, item, feature_stage_policy)
+                feature_fit_panel = prepared.panel.reindex(feature_fit_labels).dropna(
+                    how="all"
+                )
+                fitted_feature_cache = features.fit(feature_fit_panel)
+                feature_updated = True
+                _mark_stage_updated(feature_state, item)
+            fitted_features = fitted_feature_cache
         else:
             fitted_features = fixed_feature_builder
 
         train_features = fitted_features.transform(prepared.panel, index=fit_labels)
-        test_features = _test_feature_builder(fitted_features).transform(prepared.panel, index=test_labels)
+        test_features = _test_feature_builder(fitted_features).transform(
+            prepared.panel, index=test_labels
+        )
         selection_features = _test_feature_builder(fitted_features).transform(
             prepared.panel,
             index=selection_labels,
@@ -180,7 +248,14 @@ def run(
             X_selection.index,
             panel.index,
         )
-        stage_records.append(_origin_stage_record("feature_engineering", item, fitted_features.to_metadata()))
+        stage_records.append(
+            _origin_stage_record(
+                "feature_engineering",
+                item,
+                fitted_features.to_metadata(),
+                updated=feature_updated,
+            )
+        )
 
         origin_item = {
             **item,
@@ -202,6 +277,8 @@ def run(
             param_cache=model_param_cache,
             selection_cache=selection_cache,
             selection_random_state=config["random_seed"],
+            save_models=save_models,
+            model_store=model_store,
         )
         for record in origin_records:
             record["preprocessed"] = preprocessing is not None
@@ -220,6 +297,8 @@ def run(
         stage_records=stage_records,
         n_forecasts=len(records),
         config=config,
+        save_models=save_models,
+        model_store=model_store,
     )
     return ForecastResult(pd.DataFrame.from_records(records), metadata=metadata)
 
@@ -234,6 +313,8 @@ def _run_feature_set(
     selection_metric: str | Callable[..., float],
     maximize_selection: bool,
     config: Mapping[str, Any],
+    save_models: bool,
+    model_store: str | Path,
 ) -> ForecastResult:
     X_all = data.X.copy()
     y_all = _single_target(data.y)
@@ -267,13 +348,16 @@ def _run_feature_set(
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
                 selection_random_state=config["random_seed"],
+                save_models=save_models,
+                model_store=model_store,
             )
         )
     metadata = _result_metadata(
         input_panel=X_all,
         window_spec=window_spec,
         model_runs=model_runs,
-        features=data.metadata.get("feature_spec") or data.metadata.get("feature_engineering"),
+        features=data.metadata.get("feature_spec")
+        or data.metadata.get("feature_engineering"),
         preprocessing=None,
         preprocessing_policy=None,
         feature_policy=None,
@@ -282,6 +366,8 @@ def _run_feature_set(
         stage_records=[],
         n_forecasts=len(records),
         config=config,
+        save_models=save_models,
+        model_store=model_store,
     )
     return ForecastResult(pd.DataFrame.from_records(records), metadata=metadata)
 
@@ -297,6 +383,8 @@ def _fit_predict_origin(
     param_cache: dict[str, dict[str, Any]],
     selection_cache: dict[str, dict[str, Any] | None],
     selection_random_state: int | None,
+    save_models: bool,
+    model_store: str | Path,
 ) -> list[dict[str, Any]]:
     X_fit = item["X_fit"]
     y_fit = item["y_fit"]
@@ -312,7 +400,9 @@ def _fit_predict_origin(
     retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
-        selected, use_model_default_selection = _selection_for_model(selection, model_run)
+        selected, use_model_default_selection = _selection_for_model(
+            selection, model_run
+        )
         should_select = selected is not None or (
             use_model_default_selection and bool(model_spec.search_spaces)
         )
@@ -344,15 +434,40 @@ def _fit_predict_origin(
         else:
             best_params = {}
         fit = model_spec(X_fit, y_fit, **best_params)
+        stored_model = (
+            _store_model_fit(
+                fit,
+                root=model_store,
+                alias=model_run.alias,
+                model_spec=model_spec,
+                row=row,
+                params=best_params,
+                selection_metadata=selection_metadata,
+            )
+            if save_models
+            else None
+        )
         pred = _prediction_series(fit.predict(X_test), index=X_test.index)
         variance_pred = _variance_series(fit, index=X_test.index)
+        quantile_pred = _quantile_frame(fit, X_test=X_test, index=X_test.index)
         for date, value in pred.items():
-            actual: Any = y_test.reindex([date]).iloc[0] if date in y_test.index else None
+            actual: Any = (
+                y_test.reindex([date]).iloc[0] if date in y_test.index else None
+            )
             actual_value = None if actual is None or pd.isna(actual) else float(actual)
             variance_value = None
             if variance_pred is not None and date in variance_pred.index:
                 variance_at_date = variance_pred.loc[date]
-                variance_value = None if pd.isna(variance_at_date) else float(variance_at_date)
+                variance_value = (
+                    None if pd.isna(variance_at_date) else float(variance_at_date)
+                )
+            quantile_value = None
+            if quantile_pred is not None and date in quantile_pred.index:
+                quantile_row = quantile_pred.loc[date].dropna()
+                quantile_value = {
+                    str(level): float(quantile)
+                    for level, quantile in quantile_row.items()
+                }
             records.append(
                 {
                     "date": date,
@@ -363,9 +478,11 @@ def _fit_predict_origin(
                     "model_spec": model_spec.name,
                     "prediction": float(value),
                     "variance_prediction": variance_value,
+                    "quantile_predictions": quantile_value,
                     "actual": actual_value,
                     "params": dict(best_params),
                     "selection": selection_metadata,
+                    "stored_model": stored_model,
                     "window": row,
                 }
             )
@@ -379,24 +496,35 @@ def _prepare_origin_panel(
     preprocessing: PreprocessSpec | None,
     preprocessing_policy: StagePolicy | None,
     item: dict[str, Any],
+    fitted_preprocessing: FittedPreprocessor | None = None,
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
         return _PreparedStage(panel=panel, fitted_preprocessing=None, metadata=None)
-    fit_panel = stage_panel(panel, item, preprocessing_policy)
-    fit_policy = "fit_window" if preprocessing_policy.scope in {"fit_window", "fixed_reference"} else "origin_available"
-    fitted = preprocessing.fit(
-        _preprocessor_fit_input(fit_panel, features),
-        policy=fit_policy,
-    )
+    if fitted_preprocessing is None:
+        fit_panel = stage_panel(panel, item, preprocessing_policy)
+        fit_policy = (
+            "fit_window"
+            if preprocessing_policy.scope in {"fit_window", "fixed_reference"}
+            else "origin_available"
+        )
+        fitted = preprocessing.fit(
+            _preprocessor_fit_input(fit_panel, features),
+            policy=fit_policy,
+        )
+    else:
+        fitted = fitted_preprocessing
     apply_labels = _origin_apply_labels(panel.index, item)
     apply_panel = panel.reindex(apply_labels).loc[:, fitted.fit_panel.columns]
-    if preprocessing_policy.scope in {"fit_window", "fixed_reference"}:
-        transformed = fitted.transform(apply_panel, history=fitted.fit_panel, policy="fit_window")
+    if fitted.preprocessing_scope == "fit_window":
+        transformed = fitted.transform(
+            apply_panel, history=fitted.fit_panel, policy="fit_window"
+        )
         prepared_panel = transformed.panel
     else:
-        test_panel = panel.iloc[item["test_idx"]].loc[:, fitted.fit_panel.columns]
-        transformed = fitted.transform(test_panel, history=fitted.fit_panel, policy="origin_available")
-        prepared_panel = _combine_processed_panels(fitted.processed_train.panel, transformed.panel)
+        transformed = fitted.transform(
+            apply_panel, history=fitted.fit_panel, policy="origin_available"
+        )
+        prepared_panel = transformed.panel
     return _PreparedStage(
         panel=prepared_panel,
         fitted_preprocessing=fitted,
@@ -405,7 +533,9 @@ def _prepare_origin_panel(
 
 
 def _origin_apply_labels(index: pd.Index, item: dict[str, Any]) -> pd.Index:
-    positions = np.unique(np.concatenate([item["estimation_idx"], item["fit_idx"], item["test_idx"]]))
+    positions = np.unique(
+        np.concatenate([item["estimation_idx"], item["fit_idx"], item["test_idx"]])
+    )
     return index[positions]
 
 
@@ -414,14 +544,10 @@ def _single_target(y: pd.Series | pd.DataFrame) -> pd.Series:
         return y
     frame = pd.DataFrame(y)
     if frame.shape[1] != 1:
-        raise ValueError("forecasting runner currently expects exactly one target column")
+        raise ValueError(
+            "forecasting runner currently expects exactly one target column"
+        )
     return frame.iloc[:, 0].rename(str(frame.columns[0]))
-
-
-def _combine_processed_panels(train_panel: pd.DataFrame, test_panel: pd.DataFrame) -> pd.DataFrame:
-    combined = pd.concat([train_panel, test_panel], axis=0)
-    combined = combined.loc[~combined.index.duplicated(keep="last")]
-    return combined.sort_index()
 
 
 def _test_feature_builder(builder: Any) -> Any:
@@ -496,7 +622,11 @@ def _preprocessor_fit_input(fit_panel: pd.DataFrame, features: FeatureSpec) -> A
 
 
 def _resolve_model_runs(
-    model: str | Callable[..., Any] | ModelSpec | Sequence[str | Callable[..., Any] | ModelSpec] | Mapping[str, Any],
+    model: str
+    | Callable[..., Any]
+    | ModelSpec
+    | Sequence[str | Callable[..., Any] | ModelSpec]
+    | Mapping[str, Any],
     *,
     preset: str | Mapping[str, str | None] | None,
     params: Mapping[str, Any] | None,
@@ -545,7 +675,9 @@ def _resolve_model_runs(
 
 
 def _is_model_sequence(value: Any) -> bool:
-    return isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray))
+    return isinstance(value, Sequence) and not isinstance(
+        value, (str, bytes, bytearray)
+    )
 
 
 def _preset_for_model(
@@ -587,7 +719,9 @@ def _selection_for_model(
     if model_run.alias in selection:
         return selection[model_run.alias], selection[model_run.alias] is not None
     if model_run.spec.name in selection:
-        return selection[model_run.spec.name], selection[model_run.spec.name] is not None
+        return selection[model_run.spec.name], selection[
+            model_run.spec.name
+        ] is not None
     return None, True
 
 
@@ -615,10 +749,84 @@ def _variance_series(fit: Any, *, index: pd.Index) -> pd.Series | None:
     return pd.Series(values, index=index, name="variance_prediction")
 
 
+def _quantile_frame(
+    fit: Any, *, X_test: pd.DataFrame, index: pd.Index
+) -> pd.DataFrame | None:
+    if not hasattr(fit, "predict_quantiles"):
+        return None
+    prediction = fit.predict_quantiles(X_test)
+    if isinstance(prediction, pd.DataFrame):
+        frame = prediction.copy()
+        if len(frame) != len(index):
+            raise ValueError("quantile prediction length does not match X_test")
+        frame.index = index
+        return frame
+    if isinstance(prediction, Mapping):
+        columns: dict[str, np.ndarray] = {}
+        for level, values in prediction.items():
+            arr = np.asarray(values, dtype=float).reshape(-1)
+            if len(arr) != len(index):
+                raise ValueError("quantile prediction length does not match X_test")
+            columns[str(level)] = arr
+        return pd.DataFrame(columns, index=index)
+    raise TypeError("quantile predictions must be a DataFrame or mapping")
+
+
+def _store_model_fit(
+    fit: Any,
+    *,
+    root: str | Path,
+    alias: str,
+    model_spec: ModelSpec,
+    row: Mapping[str, Any],
+    params: Mapping[str, Any],
+    selection_metadata: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    model_dir = Path(root) / _safe_path_part(alias)
+    model_dir.mkdir(parents=True, exist_ok=True)
+    stem = _model_store_stem(row)
+    pickle_path = model_dir / f"{stem}.pkl"
+    metadata_path = model_dir / f"{stem}.json"
+    metadata = {
+        "alias": alias,
+        "model": model_spec.name,
+        "model_spec": model_spec.to_metadata(),
+        "params": dict(params),
+        "selection": selection_metadata,
+        "window": dict(row),
+    }
+    return save_fit(
+        fit,
+        pickle_path,
+        metadata_path=metadata_path,
+        metadata=metadata,
+    ).to_dict()
+
+
+def _model_store_stem(row: Mapping[str, Any]) -> str:
+    origin_pos = row.get("origin_pos", "unknown")
+    horizon = row.get("horizon", "unknown")
+    origin = row.get("origin")
+    if isinstance(origin, pd.Timestamp):
+        origin_label = origin.strftime("%Y%m%d")
+    else:
+        origin_label = str(origin).replace(" ", "_").replace(":", "-")
+    return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}"
+
+
+def _safe_path_part(value: Any) -> str:
+    text = str(value)
+    keep = [char if char.isalnum() or char in {"-", "_", "."} else "_" for char in text]
+    out = "".join(keep).strip("._")
+    return out or "model"
+
+
 def _positional_prediction_values(prediction: Any, *, expected_len: int) -> np.ndarray:
     if isinstance(prediction, pd.DataFrame):
         if prediction.shape[1] != 1:
-            raise ValueError("variance prediction DataFrame must have exactly one column")
+            raise ValueError(
+                "variance prediction DataFrame must have exactly one column"
+            )
         values = prediction.iloc[:, 0].to_numpy(dtype=float)
     elif isinstance(prediction, pd.Series):
         values = prediction.to_numpy(dtype=float)
@@ -629,7 +837,9 @@ def _positional_prediction_values(prediction: Any, *, expected_len: int) -> np.n
     return values
 
 
-def _select_existing_features(item: dict[str, Any], prefix: str, policy: StagePolicy) -> Any:
+def _select_existing_features(
+    item: dict[str, Any], prefix: str, policy: StagePolicy
+) -> Any:
     if policy.scope == "origin_available":
         return item[f"{prefix}_estimation"]
     return item[f"{prefix}_fit"]
@@ -642,22 +852,94 @@ def _validate_runner_policies(
     feature_policy: StagePolicy,
     selection_policy: StagePolicy,
 ) -> None:
-    policies = [policy for policy in (preprocessing_policy, feature_policy, selection_policy) if policy is not None]
+    policies = [
+        policy
+        for policy in (preprocessing_policy, feature_policy, selection_policy)
+        if policy is not None
+    ]
     for policy in policies:
         if policy.scope == "custom":
-            raise ValueError("custom stage policies require callable hooks and are not implemented in forecasting.run yet")
+            raise ValueError(
+                "custom stage policies require callable hooks and are not implemented in forecasting.run yet"
+            )
     if preprocessing is None:
         return
     if preprocessing_policy is None:
         return
 
 
-def _origin_stage_record(stage: str, item: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+def _stage_update_due(
+    policy: StagePolicy | None,
+    item: dict[str, Any],
+    *,
+    origin_count: int,
+    state: _StageUpdateState,
+) -> bool:
+    """Return whether a stateful stage should fit new state at this origin."""
+
+    if policy is None:
+        return False
+    if not state.updated_once:
+        return True
+    update = policy.update
+    if update == "every_origin":
+        return True
+    if update == "never":
+        return False
+    if update == "on_retrain":
+        return bool(item["row"].get("retrain", True))
+    if isinstance(update, int):
+        return origin_count % update == 0
+    if isinstance(update, DateOffset):
+        origin = _origin_timestamp(item)
+        last_origin = _coerce_last_update_timestamp(state.last_origin)
+        return origin >= last_origin + update
+    raise TypeError(f"unsupported stage policy update {update!r}")
+
+
+def _mark_stage_updated(state: _StageUpdateState, item: dict[str, Any]) -> None:
+    state.updated_once = True
+    state.last_origin = item["row"].get("origin")
+
+
+def _origin_timestamp(item: dict[str, Any]) -> pd.Timestamp:
+    origin = item["row"].get("origin")
+    try:
+        timestamp = pd.Timestamp(origin)
+    except Exception as exc:
+        raise TypeError(
+            "date-offset stage update requires datetime-like window origins"
+        ) from exc
+    if pd.isna(timestamp):
+        raise TypeError("date-offset stage update requires datetime-like window origins")
+    return timestamp
+
+
+def _coerce_last_update_timestamp(origin: Any) -> pd.Timestamp:
+    try:
+        timestamp = pd.Timestamp(origin)
+    except Exception as exc:
+        raise TypeError(
+            "date-offset stage update requires datetime-like window origins"
+        ) from exc
+    if pd.isna(timestamp):
+        raise TypeError("date-offset stage update requires datetime-like window origins")
+    return timestamp
+
+
+def _origin_stage_record(
+    stage: str,
+    item: dict[str, Any],
+    metadata: dict[str, Any],
+    *,
+    updated: bool,
+) -> dict[str, Any]:
     row = item["row"]
     return {
         "stage": stage,
         "origin": row.get("origin"),
         "origin_pos": row.get("origin_pos"),
+        "updated": bool(updated),
         "fit_start": row.get("fit_start"),
         "fit_end": row.get("fit_end"),
         "test_start": row.get("test_start"),
@@ -680,6 +962,8 @@ def _result_metadata(
     stage_records: list[dict[str, Any]],
     n_forecasts: int,
     config: Mapping[str, Any],
+    save_models: bool,
+    model_store: str | Path,
 ) -> dict[str, Any]:
     metadata_level = str(config.get("metadata_level", "standard"))
     return {
@@ -687,12 +971,22 @@ def _result_metadata(
             "n_forecasts": int(n_forecasts),
             "n_models": len(model_runs),
             "config": dict(config),
+            "save_models": bool(save_models),
+            "model_store": str(model_store),
         },
-        "data": panel_info(DataBundle(input_panel, dict(input_panel.attrs.get("macroforecast_metadata", {})))),
+        "data": panel_info(
+            DataBundle(
+                input_panel, dict(input_panel.attrs.get("macroforecast_metadata", {}))
+            )
+        ),
         "window": window_spec.to_dict(),
         "stage_policies": {
-            "preprocessing": None if preprocessing_policy is None else preprocessing_policy.to_dict(),
-            "feature_engineering": None if feature_policy is None else feature_policy.to_dict(),
+            "preprocessing": None
+            if preprocessing_policy is None
+            else preprocessing_policy.to_dict(),
+            "feature_engineering": None
+            if feature_policy is None
+            else feature_policy.to_dict(),
             "selection": selection_policy.to_dict(),
         },
         "preprocessing": preprocessing,
@@ -706,7 +1000,9 @@ def _result_metadata(
     }
 
 
-def _selection_metadata(selection: SearchSpec | Mapping[str, SearchSpec | None] | None) -> Any:
+def _selection_metadata(
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+) -> Any:
     if selection is None:
         return None
     if isinstance(selection, SearchSpec):

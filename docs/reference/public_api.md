@@ -20,10 +20,12 @@ The importable surface is intentionally narrow and pandas-first.
 | `lag`, `rolling_mean`, `moving_average_ladder`, `scale_features`, `pca_features`, `group_pca`, `maf_features`, `time_features` | `macroforecast.feature_engineering` | Direct pandas feature transforms. |
 | `lag_step`, `rolling_step`, `moving_average_step`, `scale_step`, `pca_step`, `group_pca_step`, `maf_step` | `macroforecast.feature_engineering` | Reusable step dictionaries for `compose_features`. |
 | `pca_then_lags`, `lags_then_pca`, `moving_average_pca_lags` | `macroforecast.feature_engineering` | Convenience composed feature callables. |
-| `ModelFit`, `VolatilityFit` | `macroforecast.models` | Fitted model result wrappers. |
-| `ols`, `ridge`, `lasso`, `elastic_net`, `bayesian_ridge`, `huber`, `glmboost`, `pls`, `supervised_pca` | `macroforecast.models` | Linear and supervised dimension-reduction models. |
+| `ModelFit`, `VolatilityFit`, `SavedModel`, `save_fit`, `load_fit` | `macroforecast.models` | Fitted model result wrappers and low-level fit persistence. |
+| `ols`, `ridge`, `lasso`, `elastic_net`, `adaptive_lasso`, `adaptive_elastic_net`, `group_lasso`, `sparse_group_lasso`, `bayesian_ridge`, `huber`, `glmboost`, `pls`, `scaled_pca`, `supervised_pca`, `supervised_scaled_pca` | `macroforecast.models` | Linear, penalized, grouped, and supervised dimension-reduction models. |
+| `svr`, `linear_svr`, `nu_svr` | `macroforecast.models` | Support-vector regression models. |
+| `nn`, `lstm`, `gru` | `macroforecast.models` | Torch-backed neural-network regressors; require `macroforecast[deep]`. |
 | `ar`, `var`, `far`, `favar` | `macroforecast.models` | Time-series and factor-augmented forecasting models. |
-| `decision_tree`, `random_forest`, `extra_trees`, `gradient_boosting`, `xgboost`, `lightgbm`, `catboost`, `mars` | `macroforecast.models` | Tree and ML regressors. |
+| `decision_tree`, `random_forest`, `extra_trees`, `gradient_boosting`, `xgboost`, `lightgbm`, `catboost` | `macroforecast.models` | Tree and ML regressors. |
 | `slow_growing_tree`, `quantile_regression_forest`, `bagging`, `booging`, `macro_random_forest` | `macroforecast.models` | Macro-specific tree and ensemble models. |
 | `garch11`, `egarch`, `realized_garch` | `macroforecast.models` | Volatility models. |
 | `ModelSpec`, `ModelParameter`, `get_model`, `list_model_specs`, `describe_model`, `model_search_space` | `macroforecast.models` | Model-owned defaults and hyperparameter spaces. |
@@ -31,7 +33,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `from_cutoffs`, `estimation_expanding`, `estimation_rolling`, `estimation_fixed`, `val_last_block`, `val_poos`, `val_expanding`, `val_rolling_blocks`, `val_blocked_kfold`, `test_origins`, `alignment_drop_incomplete`, `alignment_keep_missing` | `macroforecast.window` | Component window builders. |
 | `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold` | `macroforecast.window` | Shortcut temporal window specs. |
 | `stage_policy`, `stage_index`, `stage_panel`, `last_block_split`, `poos_split`, `expanding_split`, `rolling_blocks_split`, `blocked_kfold_split`, `split_table`, `normalize_window_name` | `macroforecast.window` | Stage timing and train/val split inspection. |
-| `mse`, `rmse`, `mae`, `get_metric` | `macroforecast.evaluation` | Scoring metrics. |
+| `mse`, `rmse`, `mae`, `pinball_loss`, `gaussian_nll`, `coverage_rate`, `interval_width`, `evaluate_forecasts`, `get_metric` | `macroforecast.evaluation` | Point, variance, quantile, interval, and forecast-table scoring. |
 | `SearchSpec`, `SearchResult`, `SearchError`, `search_spec`, `select_params` | `macroforecast.selection` | Parameter selection over a supplied window and metric. |
 | `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search` | `macroforecast.selection` | Search specification builders. |
 | `ForecastResult`, `run`, `run_forecast` | `macroforecast.forecasting` | Windowed forecast runner. |

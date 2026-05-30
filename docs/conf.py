@@ -53,6 +53,7 @@ myst_enable_extensions = [
     "attrs_inline",
     "substitution",
     "smartquotes",
+    "dollarmath",
 ]
 
 myst_heading_anchors = 4

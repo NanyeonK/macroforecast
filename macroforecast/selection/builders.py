@@ -32,7 +32,9 @@ def randint(low: int, high: int) -> ParamDistribution:
 def choice(values: Iterable[Any]) -> ParamDistribution:
     """Categorical distribution over explicit values."""
 
-    return _validated_distribution(ParamDistribution("categorical", choices=tuple(values)))
+    return _validated_distribution(
+        ParamDistribution("categorical", choices=tuple(values))
+    )
 
 
 def fixed(
@@ -94,7 +96,8 @@ def random_search(
     return SearchSpec(
         method="random",
         param_distributions={
-            key: _coerce_distribution(value) for key, value in param_distributions.items()
+            key: _coerce_distribution(value)
+            for key, value in param_distributions.items()
         },
         n_iter=n_iter,
         random_state=random_state,
@@ -108,7 +111,9 @@ def cv_path(
 ) -> SearchSpec:
     """Evaluate an ordered one-parameter path, commonly lasso/ridge alpha values."""
 
-    path_values = tuple(values) if values is not None else (0.001, 0.01, 0.1, 1.0, 10.0, 100.0)
+    path_values = (
+        tuple(values) if values is not None else (0.001, 0.01, 0.1, 1.0, 10.0, 100.0)
+    )
     spec = grid({param: path_values})
     spec.method = "cv_path"
     spec.metadata["path_param"] = param
@@ -148,7 +153,8 @@ def genetic_search(
     return SearchSpec(
         method="genetic",
         param_distributions={
-            key: _coerce_distribution(value) for key, value in param_distributions.items()
+            key: _coerce_distribution(value)
+            for key, value in param_distributions.items()
         },
         random_state=random_state,
         population_size=population_size,
@@ -176,15 +182,25 @@ def _search_from_model(
         spec = fixed(random_state=random_state)
     elif method_name == "cv_path":
         if len(search_space) != 1:
-            raise ValueError("cv_path requires exactly one tunable parameter in the model search space")
+            raise ValueError(
+                "cv_path requires exactly one tunable parameter in the model search space"
+            )
         param, values = next(iter(search_space.items()))
         spec = cv_path(param=param, values=values)
     elif method_name == "grid":
         spec = grid(search_space)
     elif method_name == "random":
-        spec = random_search(search_space, n_iter=20 if n_iter is None else n_iter, random_state=random_state)
+        spec = random_search(
+            search_space,
+            n_iter=20 if n_iter is None else n_iter,
+            random_state=random_state,
+        )
     elif method_name == "bayesian":
-        spec = bayesian_search(search_space, n_iter=20 if n_iter is None else n_iter, random_state=random_state)
+        spec = bayesian_search(
+            search_space,
+            n_iter=20 if n_iter is None else n_iter,
+            random_state=random_state,
+        )
     elif method_name == "genetic":
         spec = genetic_search(
             search_space,
@@ -195,11 +211,17 @@ def _search_from_model(
         )
     else:
         raise ValueError(f"Unknown model search method {method_name!r}")
-    spec.metadata.update({
-        "model": model_spec.name,
-        "model_family": model_spec.family,
-        "model_preset": model_spec.preset,
-    })
+    spec.metadata.update(
+        {
+            "model": model_spec.name,
+            "model_family": model_spec.family,
+            "model_preset": model_spec.preset,
+            "backend": model_spec.backend,
+            "requires_extra": model_spec.requires_extra,
+            "requires_scaling": model_spec.requires_scaling,
+            "recommended_preprocessing": model_spec.recommended_preprocessing,
+        }
+    )
     return spec
 
 
@@ -232,7 +254,9 @@ def _as_tuple(value: Iterable[Any] | Any) -> tuple[Any, ...]:
     return values
 
 
-def _coerce_distribution(value: ParamDistribution | Iterable[Any] | Any) -> ParamDistribution:
+def _coerce_distribution(
+    value: ParamDistribution | Iterable[Any] | Any,
+) -> ParamDistribution:
     if isinstance(value, ParamDistribution):
         value.validate()
         return value
@@ -249,11 +273,16 @@ def _candidates(spec: SearchSpec, rng: np.random.Generator) -> list[dict[str, An
         if not spec.param_grid:
             return [{}]
         keys = list(spec.param_grid)
-        return [dict(zip(keys, values, strict=True)) for values in product(*(spec.param_grid[k] for k in keys))]
+        return [
+            dict(zip(keys, values, strict=True))
+            for values in product(*(spec.param_grid[k] for k in keys))
+        ]
     if spec.method == "random":
         if spec.n_iter < 1:
             raise ValueError("n_iter must be at least 1")
-        return [sample_params(spec.param_distributions, rng) for _ in range(spec.n_iter)]
+        return [
+            sample_params(spec.param_distributions, rng) for _ in range(spec.n_iter)
+        ]
     raise ValueError(f"Unknown search method {spec.method!r}")
 
 
