@@ -34,9 +34,6 @@ panel = processed.panel
 metadata = processed.metadata
 ```
 
-YAML wrappers are intentionally not the primary surface here. A future wrapper
-can map a file into the same direct-call functions.
-
 ## Default Order
 
 | Step | Default | Meaning |

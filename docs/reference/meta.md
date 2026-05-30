@@ -15,9 +15,6 @@ The current public surface is:
 | `reset_config` | Restore package defaults. |
 | `use_config` | Temporarily override settings inside a `with` block. |
 
-YAML loading is intentionally outside this page. A future YAML wrapper can map a
-file into the same `macroforecast.meta` functions.
-
 ## MetaConfig
 
 `MetaConfig` is the output schema returned by `configure`, `get_config`,
@@ -27,10 +24,10 @@ file into the same `macroforecast.meta` functions.
 
 | Key | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `random_seed` | <code>int &#124; None</code> | `42` | Seed used by stochastic runtime components when no run-specific seed is supplied. `None` leaves stochastic components unseeded. |
-| `n_jobs` | <code>int &#124; "auto"</code> | `1` | Default worker count. `1` means serial execution; `"auto"` lets the runtime choose a bounded worker count. |
+| `random_seed` | <code>int &#124; None</code> | `42` | Seed used by stochastic functions when no run-specific seed is supplied. `None` leaves stochastic components unseeded. |
+| `n_jobs` | <code>int &#124; "auto"</code> | `1` | Default worker count. `1` means serial execution; `"auto"` lets the package choose a bounded worker count. |
 | `on_error` | <code>"raise" &#124; "continue"</code> | `"raise"` | Default cell failure behavior. `"raise"` stops on failure; `"continue"` records the failure and continues where supported. |
-| `verbose` | `int` | `0` | Default verbosity level for future runtime logging surfaces. |
+| `verbose` | `int` | `0` | Default verbosity level for future logging surfaces. |
 
 The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
 is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
@@ -281,16 +278,16 @@ with mf.meta.use_config(random_seed=7, n_jobs=2) as config:
 assert mf.meta.get_option("random_seed") == 42
 ```
 
-## Runtime Behavior
+## Usage Behavior
 
-The execution runtime reads `macroforecast.meta` when no more specific value is
-provided by the caller.
+Direct package functions can read `macroforecast.meta` when no more specific
+value is provided by the caller.
 
-| Setting | Runtime Use |
+| Setting | Use |
 | --- | --- |
 | `random_seed` | Used as the default run seed and propagated to stochastic estimators where supported. |
 | `n_jobs` | Used as the default worker count for run-level and selected model-level parallel work. |
-| `on_error` | Mapped to runtime failure handling: `"raise"` stops on failure, `"continue"` continues where supported. |
+| `on_error` | Default failure handling: `"raise"` stops on failure, `"continue"` continues where supported. |
 | `verbose` | Reserved as the package-wide verbosity setting. |
 
 Run manifests record the active `meta_config` so a completed run can be audited

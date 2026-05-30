@@ -1,27 +1,72 @@
-# macroforecast.evaluation
+# Evaluation
 
 [Back to reference](index.md)
 
-`macroforecast.evaluation` is intentionally minimal in the current clean
-package. The legacy recipe evaluation schema was removed from the importable
-surface and is preserved only on the `legacy-runtime-reference` branch.
+`macroforecast.evaluation` contains scoring functions. Selection uses these
+metrics, and later forecast-evaluation code will build on the same namespace.
 
-## Current Status
+## Metrics
 
-| Item | Value |
+All metrics accept `y_true` and `y_pred`, align them as pandas Series, drop
+missing paired observations, and return a float.
+
+### mse
+
+```python
+macroforecast.evaluation.mse(y_true, y_pred)
+```
+
+Output: mean squared error.
+
+### rmse
+
+```python
+macroforecast.evaluation.rmse(y_true, y_pred)
+```
+
+Output: root mean squared error.
+
+### mae
+
+```python
+macroforecast.evaluation.mae(y_true, y_pred)
+```
+
+Output: mean absolute error.
+
+### get_metric
+
+```python
+macroforecast.evaluation.get_metric(metric)
+```
+
+Input:
+
+| Argument | Type | Meaning |
+| --- | --- | --- |
+| `metric` | str or callable | `"mse"`, `"rmse"`, `"mae"`, legacy validation aliases, or custom callable. |
+
+Output: callable metric.
+
+Supported names:
+
+| Name | Function |
 | --- | --- |
-| Import path | `macroforecast.evaluation` |
-| Callable functions | none yet |
-| Input contract | to be defined after model/result objects are rebuilt |
-| Output contract | to be defined after model/result objects are rebuilt |
+| `mse`, `validation_mse` | `mse()` |
+| `rmse`, `validation_rmse` | `rmse()` |
+| `mae`, `validation_mae` | `mae()` |
 
-## Planned Boundary
+Example:
 
-Evaluation should later accept direct pandas/result objects, not a YAML runtime
-artifact. Expected function families:
+```python
+score = mf.evaluation.rmse(y_true, y_pred)
 
-- point forecast metrics such as MSE, RMSE, MAE, and R2 OOS
-- benchmark-relative metrics
-- horizon and target aggregation
-- ranking tables
-- compact metadata attached to evaluation results
+result = mf.selection.select_params(
+    "ridge",
+    X,
+    y,
+    search=mf.selection.grid({"alpha": [0.1, 1.0]}),
+    window=mf.window.last_block(validation_size=24),
+    metric=mf.evaluation.rmse,
+)
+```

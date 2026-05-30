@@ -1,3 +1,5 @@
 from __future__ import annotations
 
-__all__: list[str] = []
+from macroforecast.evaluation.metrics import MetricLike, get_metric, mae, mse, rmse
+
+__all__ = ["MetricLike", "get_metric", "mae", "mse", "rmse"]
