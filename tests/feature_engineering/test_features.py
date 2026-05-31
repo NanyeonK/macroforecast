@@ -405,11 +405,10 @@ def test_legacy_gap_direct_feature_transforms_are_callable() -> None:
         n_factors=2,
         warn_full_sample=False,
     )
-    selected = mf.feature_engineering.feature_selection_features(
+    selected = mf.feature_engineering.correlation_selection(
         panel,
         target="target",
         columns=["x1", "x2"],
-        method="correlation",
         n_features=1,
         warn_full_sample=False,
     )
@@ -422,6 +421,82 @@ def test_legacy_gap_direct_feature_transforms_are_callable() -> None:
     assert list(dfm.columns) == ["dfm1", "dfm2"]
     assert selected.shape[1] == 1
     assert dfm.attrs["macroforecast_metadata"]["feature_engineering_dfm"]["n_factors"] == 2
+
+
+def test_individual_feature_selection_callables_cover_advanced_methods() -> None:
+    processed = _long_processed(periods=48)
+    panel = processed.panel.assign(
+        x3=np.linspace(3.0, 4.0, len(processed.panel)),
+        x4=np.sin(np.arange(len(processed.panel)) * 2.0),
+    )
+    calls = [
+        mf.feature_engineering.variance_selection(
+            panel,
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+        ),
+        mf.feature_engineering.correlation_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            warn_full_sample=False,
+        ),
+        mf.feature_engineering.lasso_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            alpha=0.001,
+            warn_full_sample=False,
+        ),
+        mf.feature_engineering.lasso_path_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            n_alphas=10,
+            warn_full_sample=False,
+        ),
+        mf.feature_engineering.rfe_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            use_cv=False,
+            warn_full_sample=False,
+        ),
+        mf.feature_engineering.boruta_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            n_estimators=10,
+            max_iter=5,
+            warn_full_sample=False,
+        ),
+        mf.feature_engineering.stability_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            n_subsamples=8,
+            warn_full_sample=False,
+        ),
+        mf.feature_engineering.genetic_selection(
+            panel,
+            target="target",
+            columns=["x1", "x2", "x3", "x4"],
+            n_features=2,
+            population_size=8,
+            n_generations=3,
+            warn_full_sample=False,
+        ),
+    ]
+
+    for frame in calls:
+        assert frame.shape[1] == 2
+        assert frame.attrs["macroforecast_feature_metadata"]["operation"].iloc[0].endswith("_selection")
 
 
 def test_hamilton_filter_features_are_expanding_by_default() -> None:
@@ -1127,13 +1202,13 @@ def test_feature_spec_supports_runner_safe_target_aware_steps() -> None:
                 n_slices=4,
                 min_train_size=5,
             ),
-            mf.feature_engineering.feature_selection_step(
-                name="picked",
-                input="scaled",
-                n_features=1,
-                method="correlation",
-                min_train_size=5,
-            ),
+            {
+                "name": "picked",
+                "method": "correlation_selection",
+                "input": "scaled",
+                "n_features": 1,
+                "min_train_size": 5,
+            },
         ],
         drop_missing=False,
     )
@@ -1148,13 +1223,13 @@ def test_feature_spec_supports_runner_safe_target_aware_steps() -> None:
     assert step_meta[1]["fit_state"]["target"] == "target_level_h1"
     assert step_meta[1]["fit_state"]["fit_policy"] == "fixed_fit_panel_target_aligned_rows"
     assert step_meta[2]["method"] == "sliced_inverse_regression"
-    assert step_meta[3]["fit_state"]["method"] == "correlation"
+    assert step_meta[3]["fit_state"]["method"] == "correlation_selection"
     feature_meta = features.feature_metadata.set_index("feature")
     assert feature_meta.loc["pls1", "operation"] == "partial_least_squares"
     assert feature_meta.loc["sir1", "operation"] == "sliced_inverse_regression"
     picked_feature = step_meta[3]["fit_state"]["selected_columns"][0]
     picked_rows = feature_meta.loc[[picked_feature]]
-    assert "feature_selection" in set(picked_rows["operation"])
+    assert "correlation_selection" in set(picked_rows["operation"])
 
 
 def test_target_aware_feature_spec_steps_do_not_refit_on_transform_panel() -> None:
@@ -1181,6 +1256,46 @@ def test_target_aware_feature_spec_steps_do_not_refit_on_transform_panel() -> No
     changed_future = fitted.transform(spiked, index=index)
 
     _assert_same_values(base.X, changed_future.X)
+
+
+def test_feature_spec_supports_individual_selection_methods() -> None:
+    processed = _long_processed(periods=48)
+    methods = [
+        ("variance_selection", {}),
+        ("correlation_selection", {}),
+        ("lasso_selection", {"alpha": 0.001}),
+        ("lasso_path_selection", {"n_alphas": 10}),
+        ("rfe_selection", {"use_cv": False}),
+        ("boruta_selection", {"n_estimators": 10, "max_iter": 5}),
+        ("stability_selection", {"n_subsamples": 8}),
+        ("genetic_selection", {"population_size": 8, "n_generations": 3}),
+    ]
+
+    for method, params in methods:
+        spec = mf.feature_engineering.feature_spec(
+            target="target",
+            horizon=1,
+            predictors=["x1", "x2"],
+            steps=[
+                {
+                    "name": method,
+                    "method": method,
+                    "n_features": 1,
+                    "min_train_size": 5,
+                    "random_state": 0,
+                    **params,
+                }
+            ],
+            drop_missing=False,
+        )
+        fitted = spec.fit(processed)
+        features = fitted.transform(processed)
+        step_meta = fitted.to_metadata()["feature_steps"][0]
+        assert features.X.shape[1] == 1
+        assert step_meta["method"] == method
+        assert step_meta["fit_state"]["method"] == method
+        assert step_meta["fit_state"]["fit_policy"].startswith("fixed_fit_panel")
+        assert features.feature_metadata["operation"].iloc[0] == method
 
 
 def test_target_aware_feature_spec_steps_require_single_resolved_target() -> None:
@@ -1860,8 +1975,14 @@ def test_top_level_exports_features() -> None:
     assert mf.compose_features is mf.feature_engineering.compose_features
     assert mf.direct_target is mf.feature_engineering.direct_target
     assert mf.dfm_features is mf.feature_engineering.dfm_features
-    assert mf.feature_selection_features is mf.feature_engineering.feature_selection_features
-    assert mf.feature_selection_step is mf.feature_engineering.feature_selection_step
+    assert mf.boruta_selection is mf.feature_engineering.boruta_selection
+    assert mf.correlation_selection is mf.feature_engineering.correlation_selection
+    assert mf.genetic_selection is mf.feature_engineering.genetic_selection
+    assert mf.lasso_path_selection is mf.feature_engineering.lasso_path_selection
+    assert mf.lasso_selection is mf.feature_engineering.lasso_selection
+    assert mf.rfe_selection is mf.feature_engineering.rfe_selection
+    assert mf.stability_selection is mf.feature_engineering.stability_selection
+    assert mf.variance_selection is mf.feature_engineering.variance_selection
     assert mf.feature_matrix is mf.feature_engineering.feature_matrix
     assert mf.group_pca is mf.feature_engineering.group_pca
     assert mf.hamilton_filter_features is mf.feature_engineering.hamilton_filter_features
@@ -1892,8 +2013,12 @@ def test_top_level_exports_features() -> None:
     assert mf.pca_then_lags is mf.feature_engineering.pca_then_lags
     assert not hasattr(mf.feature_engineering, "make_target")
     assert not hasattr(mf.feature_engineering, "make_feature_matrix")
+    assert not hasattr(mf.feature_engineering, "feature_selection_features")
+    assert not hasattr(mf.feature_engineering, "feature_selection_step")
     assert not hasattr(mf.feature_engineering, "group_pca_features")
     assert not hasattr(mf, "make_target")
+    assert not hasattr(mf, "feature_selection_features")
+    assert not hasattr(mf, "feature_selection_step")
     assert not hasattr(mf, "group_pca_features")
 
 
@@ -1921,7 +2046,16 @@ def test_feature_engineering_runner_safe_coverage_is_explicit() -> None:
         "nystroem_step",
         "partial_least_squares_step",
         "sliced_inverse_regression_step",
-        "feature_selection_step",
+    }
+    runner_safe_step_methods = {
+        "variance_selection",
+        "correlation_selection",
+        "lasso_selection",
+        "lasso_path_selection",
+        "rfe_selection",
+        "boruta_selection",
+        "stability_selection",
+        "genetic_selection",
     }
     direct_only = {
         "mixed_frequency_lags",
@@ -1931,6 +2065,16 @@ def test_feature_engineering_runner_safe_coverage_is_explicit() -> None:
 
     for name in runner_safe_steps:
         assert callable(getattr(mf.feature_engineering, name))
+    for method in runner_safe_step_methods:
+        assert isinstance(
+            mf.feature_engineering.feature_spec(
+                target="target",
+                horizon=1,
+                predictors=["x1"],
+                steps=[{"name": method, "method": method, "n_features": 1}],
+            ),
+            mf.feature_engineering.FeatureSpec,
+        )
     for name in direct_only:
         assert callable(getattr(mf.feature_engineering, name))
 

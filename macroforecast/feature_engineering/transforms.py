@@ -12,6 +12,7 @@ from sklearn.random_projection import GaussianRandomProjection
 from statsmodels.tsa.filters.hp_filter import hpfilter
 
 from macroforecast.data import attach_metadata, validate_panel
+from macroforecast.feature_engineering.selection import select_features
 from macroforecast.feature_engineering.types import FeatureInput
 from macroforecast.feature_engineering.shared import (
     FitPolicy,
@@ -1184,83 +1185,326 @@ def dfm_features(
     return result
 
 
-def feature_selection_features(
+def variance_selection(
+    data: FeatureInput,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float = 0.5,
+    min_train_size: int | None = None,
+) -> pd.DataFrame:
+    """Select columns with the largest sample variance."""
+
+    return _selection_features(
+        data,
+        None,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="variance_selection",
+        min_train_size=min_train_size,
+    )
+
+
+def correlation_selection(
     data: FeatureInput,
     target: str | pd.Series | None = None,
     *,
     metadata: Mapping[str, Any] | None = None,
     columns: Iterable[str] | None = None,
     n_features: int | float = 0.5,
-    method: str = "variance",
-    lasso_alpha: float = 0.001,
+    min_train_size: int | None = None,
     warn_full_sample: bool = True,
 ) -> pd.DataFrame:
-    """Return selected input columns by variance, target correlation, or lasso."""
+    """Select columns with the largest absolute target correlation."""
 
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="correlation_selection",
+        min_train_size=min_train_size,
+        warn_full_sample=warn_full_sample,
+    )
+
+
+def lasso_selection(
+    data: FeatureInput,
+    target: str | pd.Series | None = None,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float = 0.5,
+    alpha: float = 0.001,
+    min_train_size: int | None = None,
+    warn_full_sample: bool = True,
+) -> pd.DataFrame:
+    """Select columns by absolute lasso coefficient magnitude."""
+
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="lasso_selection",
+        min_train_size=min_train_size,
+        warn_full_sample=warn_full_sample,
+        alpha=alpha,
+    )
+
+
+def lasso_path_selection(
+    data: FeatureInput,
+    target: str | pd.Series | None = None,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float = 0.5,
+    eps: float = 1e-3,
+    n_alphas: int = 100,
+    normalize_features: bool = True,
+    positive: bool = False,
+    min_train_size: int | None = None,
+    warn_full_sample: bool = True,
+) -> pd.DataFrame:
+    """Select columns by lasso-path inclusion frequency."""
+
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="lasso_path_selection",
+        min_train_size=min_train_size,
+        warn_full_sample=warn_full_sample,
+        eps=eps,
+        n_alphas=n_alphas,
+        normalize_features=normalize_features,
+        positive=positive,
+    )
+
+
+def rfe_selection(
+    data: FeatureInput,
+    target: str | pd.Series | None = None,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float = 0.5,
+    estimator: str = "ridge",
+    step: int | float = 1,
+    use_cv: bool = False,
+    cv_folds: int = 5,
+    min_train_size: int | None = None,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+) -> pd.DataFrame:
+    """Select columns by recursive feature elimination."""
+
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="rfe_selection",
+        min_train_size=min_train_size,
+        random_state=random_state,
+        warn_full_sample=warn_full_sample,
+        estimator=estimator,
+        step=step,
+        use_cv=use_cv,
+        cv_folds=cv_folds,
+    )
+
+
+def boruta_selection(
+    data: FeatureInput,
+    target: str | pd.Series | None = None,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float = 0.5,
+    n_estimators: int = 100,
+    max_iter: int = 100,
+    alpha: float = 0.05,
+    include_tentative: bool = False,
+    max_depth: int | None = None,
+    min_train_size: int | None = None,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+) -> pd.DataFrame:
+    """Select columns using a Boruta-style shadow-feature test."""
+
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="boruta_selection",
+        min_train_size=min_train_size,
+        random_state=random_state,
+        warn_full_sample=warn_full_sample,
+        n_estimators=n_estimators,
+        max_iter=max_iter,
+        alpha=alpha,
+        include_tentative=include_tentative,
+        max_depth=max_depth,
+    )
+
+
+def stability_selection(
+    data: FeatureInput,
+    target: str | pd.Series | None = None,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float | None = 0.5,
+    n_subsamples: int = 100,
+    subsample_fraction: float = 0.5,
+    pi_threshold: float = 0.6,
+    base_estimator: str = "lasso",
+    alpha: float = 0.01,
+    l1_ratio: float = 0.5,
+    min_train_size: int | None = None,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+) -> pd.DataFrame:
+    """Select columns by repeated sparse-model subsampling frequency."""
+
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="stability_selection",
+        min_train_size=min_train_size,
+        random_state=random_state,
+        warn_full_sample=warn_full_sample,
+        n_subsamples=n_subsamples,
+        subsample_fraction=subsample_fraction,
+        pi_threshold=pi_threshold,
+        base_estimator=base_estimator,
+        alpha=alpha,
+        l1_ratio=l1_ratio,
+    )
+
+
+def genetic_selection(
+    data: FeatureInput,
+    target: str | pd.Series | None = None,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    n_features: int | float = 0.5,
+    population_size: int = 30,
+    n_generations: int = 50,
+    crossover_prob: float = 0.8,
+    mutation_prob: float | None = None,
+    fitness_estimator: str = "ridge",
+    cv_folds: int = 3,
+    min_train_size: int | None = None,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+) -> pd.DataFrame:
+    """Select columns using a small genetic subset search."""
+
+    params: dict[str, Any] = {
+        "population_size": population_size,
+        "n_generations": n_generations,
+        "crossover_prob": crossover_prob,
+        "fitness_estimator": fitness_estimator,
+        "cv_folds": cv_folds,
+    }
+    if mutation_prob is not None:
+        params["mutation_prob"] = mutation_prob
+    return _selection_features(
+        data,
+        target,
+        metadata=metadata,
+        columns=columns,
+        n_features=n_features,
+        method="genetic_selection",
+        min_train_size=min_train_size,
+        random_state=random_state,
+        warn_full_sample=warn_full_sample,
+        **params,
+    )
+
+
+def _selection_features(
+    data: FeatureInput,
+    target: str | pd.Series | None,
+    *,
+    metadata: Mapping[str, Any] | None,
+    columns: Iterable[str] | None,
+    n_features: int | float | None,
+    method: str,
+    min_train_size: int | None = None,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+    **params: Any,
+) -> pd.DataFrame:
     base = _coerce_input(data, metadata=metadata)
     panel = base.panel
     validate_panel(panel)
     selected = _resolve_columns(panel, columns=columns)
-    method_value = str(method).lower()
-    if method_value not in {"variance", "correlation", "lasso"}:
-        raise ValueError("method must be 'variance', 'correlation', or 'lasso'")
-    n_keep = _resolve_feature_keep_count(n_features, n_columns=len(selected))
     source = panel.loc[:, selected].astype(float)
     target_name = None
-    if method_value == "variance":
-        scores = source.var(axis=0, skipna=True).fillna(0.0).abs()
-        fit_policy = "full_input_columns"
-    else:
+    target_series = None
+    if method != "variance_selection":
         target_name, target_series = _resolve_target_argument(
             base,
             panel,
             target,
-            context="feature_selection_features()",
+            context=f"{method}()",
         )
-        joined = pd.concat([source, target_series.rename("__target__")], axis=1).dropna()
-        if joined.empty:
-            raise ValueError("feature_selection_features() has no target-aligned complete rows")
-        if method_value == "correlation":
-            scores = joined.loc[:, selected].corrwith(joined["__target__"]).abs().fillna(0.0)
-        else:
-            from sklearn.linear_model import Lasso
-
-            model = Lasso(alpha=float(lasso_alpha), max_iter=20000)
-            model.fit(joined.loc[:, selected].to_numpy(dtype=float), joined["__target__"].to_numpy(dtype=float))
-            scores = pd.Series(np.abs(model.coef_), index=selected, dtype=float)
-            if float(scores.sum()) <= 1e-12:
-                scores = joined.loc[:, selected].corrwith(joined["__target__"]).abs().fillna(0.0)
-        fit_policy = "full_input_target_aligned_rows"
-        _warn_if_full_sample_fit("full_sample", context="feature_selection_features()", enabled=warn_full_sample)
-    keep = tuple(str(column) for column in scores.sort_values(ascending=False).index[:n_keep])
-    result = source.loc[:, keep].copy()
+        _warn_if_full_sample_fit("full_sample", context=f"{method}()", enabled=warn_full_sample)
+    selection = select_features(
+        source,
+        target_series,
+        n_features=n_features,
+        method=method,
+        min_train_size=min_train_size,
+        random_state=random_state,
+        **params,
+    )
+    result = source.loc[:, selection.selected_columns].copy()
     result.index.name = "date"
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
-        "feature_engineering_feature_selection",
+        f"feature_engineering_{method}",
         {
             "target": None if target_name is None else str(target_name),
             "columns": list(selected),
-            "selected_columns": list(keep),
+            "selected_columns": list(selection.selected_columns),
             "n_features": n_features,
-            "resolved_n_features": int(n_keep),
-            "method": method_value,
-            "lasso_alpha": float(lasso_alpha),
-            "fit_policy": fit_policy,
+            "resolved_n_features": int(selection.resolved_n_features),
+            "method": method,
+            "selection_params": selection.metadata,
+            "fit_policy": selection.fit_policy.replace("fixed_fit_panel", "full_input"),
             "warn_full_sample": bool(warn_full_sample),
         },
     )
     result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
         {
             "feature": str(column),
-            "operation": "feature_selection",
+            "operation": method,
             "source": str(column),
-            "parameter": f"method={method_value};rank={rank}",
-            "fit_policy": fit_policy,
+            "parameter": f"rank={rank};score={selection.scores.get(column)}",
+            "fit_policy": selection.fit_policy.replace("fixed_fit_panel", "full_input"),
             "inputs": ",".join(selected),
             "included": True,
+            "target": target_name,
+            "score": selection.scores.get(column),
         }
-        for rank, column in enumerate(keep, start=1)
+        for rank, column in enumerate(selection.selected_columns, start=1)
     )
     return result
 

@@ -480,36 +480,6 @@ def sliced_inverse_regression_step(
     )
 
 
-def feature_selection_step(
-    *,
-    name: str = "select",
-    input: str = "panel",
-    columns: Iterable[str] | None = None,
-    n_features: int | float = 0.5,
-    method: str = "variance",
-    lasso_alpha: float = 0.001,
-    min_train_size: int | None = None,
-    include: bool = True,
-    drop_missing: bool = False,
-    warn_full_sample: bool = True,
-) -> dict[str, Any]:
-    """Return a runner-safe feature-selection step for ``feature_spec``."""
-
-    return _step(
-        name=name,
-        method="feature_selection",
-        input=input,
-        include=include,
-        columns=columns,
-        n_features=n_features,
-        selection_method=method,
-        lasso_alpha=lasso_alpha,
-        min_train_size=min_train_size,
-        drop_missing=drop_missing,
-        warn_full_sample=warn_full_sample,
-    )
-
-
 def sparse_pca_chen_rohe_step(
     *,
     name: str = "sca",
@@ -1295,10 +1265,21 @@ def _run_feature_step(
             drop_missing=drop_missing,
             warn_full_sample=warn_full_sample,
         )
-    if method in {"partial_least_squares", "sliced_inverse_regression", "feature_selection"}:
+    if method in {
+        "partial_least_squares",
+        "sliced_inverse_regression",
+        "variance_selection",
+        "correlation_selection",
+        "lasso_selection",
+        "lasso_path_selection",
+        "rfe_selection",
+        "boruta_selection",
+        "stability_selection",
+        "genetic_selection",
+    }:
         raise ValueError(
-            f"target-aware feature step {method!r} requires feature_spec(). "
-            "Use the direct *_features callable when fitting on a full panel manually."
+            f"fit-aware feature step {method!r} requires feature_spec(). "
+            "Use the direct callable when fitting on a full panel manually."
         )
     if method == "time":
         trend = bool(params.pop("trend", True))

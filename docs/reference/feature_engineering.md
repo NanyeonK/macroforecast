@@ -64,6 +64,7 @@ implementation is split by responsibility:
 | --- | --- |
 | `targets.py` | `direct_target()`, `average_target()`, and `path_targets()`. |
 | `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA, wavelet-style decomposition, and time features. |
+| `selection.py` | Shared fitted feature-selection algorithms used by direct selection callables and runner-safe `feature_spec()` method names. |
 | `compose.py` | Reusable step builders and sequential feature composition. |
 | `matrix.py` | Paper-style `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. |
 | `builder.py` | End-to-end `build_features()` alignment of `X`, `y`, and metadata. |
@@ -96,7 +97,7 @@ the same functions later.
 | `sliced_inverse_regression_features()` | Target-aware Sliced Inverse Regression factors. | Model fitting; runner-safe fitting should use `sliced_inverse_regression_step()` inside `feature_spec()`. |
 | `partial_least_squares_features()` | Target-aware PLS factor scores. | Model fitting; runner-safe fitting should use `partial_least_squares_step()` inside `feature_spec()`. |
 | `dfm_features()` | Static DFM approximation by standardized PCA. | State-space DFM estimation; use model callables for that. |
-| `feature_selection_features()` | Direct variance/correlation/lasso pre-screening. | Model fitting; runner-safe fitting should use `feature_selection_step()` inside `feature_spec()`. |
+| `variance_selection()`, `correlation_selection()`, `lasso_selection()`, `lasso_path_selection()`, `rfe_selection()`, `boruta_selection()`, `stability_selection()`, `genetic_selection()` | Direct column selection by one explicit algorithm. | Model fitting; runner-safe fitting uses the same method names inside `feature_spec(..., steps=[...])`. |
 | `asymmetric_trim_features()` | Per-period rank-space columns for asymmetric trimming weights. | Estimating the nonnegative rank weights. |
 | `wavelet_features()` | Causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
 | `adaptive_ma_rf_features()` | Random-forest adaptive moving-average smoothing over time. | Forecast model fitting. |
@@ -695,17 +696,38 @@ Target-aware steps require exactly one resolved target column. In practice that
 means one `target` and one `horizon` for the step pipeline. If multiple targets
 or horizons are requested, fit raises before any model is run.
 
-| Step builder | Direct callable | Main options | Output |
+| Step builder or method | Direct callable | Main options | Output |
 | --- | --- | --- | --- |
 | `partial_least_squares_step()` | `partial_least_squares_features()` | `n_components`, `columns`, `min_train_size`, `prefix` | `pls1`, `pls2`, ... |
 | `sliced_inverse_regression_step()` | `sliced_inverse_regression_features()` | `n_components`, `n_slices`, `scaling_policy`, `min_train_size`, `prefix` | `sir1`, `sir2`, ... |
-| `feature_selection_step()` | `feature_selection_features()` | `method`: `"variance"`, `"correlation"`, or `"lasso"`; `n_features`; `lasso_alpha` | Selected input columns. |
+| `"variance_selection"` | `variance_selection()` | `n_features`; `columns`; `min_train_size` | Selected input columns. |
+| `"correlation_selection"` | `correlation_selection()` | `n_features`; `columns`; `min_train_size` | Selected input columns. |
+| `"lasso_selection"` | `lasso_selection()` | `n_features`; `alpha`; `min_train_size` | Selected input columns. |
+| `"lasso_path_selection"` | `lasso_path_selection()` | `n_features`; `eps`; `n_alphas`; `normalize_features`; `positive` | Selected input columns. |
+| `"rfe_selection"` | `rfe_selection()` | `n_features`; `estimator`; `step`; `use_cv`; `cv_folds` | Selected input columns. |
+| `"boruta_selection"` | `boruta_selection()` | `n_features`; `n_estimators`; `max_iter`; `alpha`; `include_tentative` | Selected input columns. |
+| `"stability_selection"` | `stability_selection()` | `n_features`; `n_subsamples`; `subsample_fraction`; `pi_threshold`; `base_estimator` | Selected input columns. |
+| `"genetic_selection"` | `genetic_selection()` | `n_features`; `population_size`; `n_generations`; `crossover_prob`; `fitness_estimator` | Selected input columns. |
 
 Fit-state metadata records the resolved target column, selected source columns,
 requested/resolved component or feature count, fit row count, and
 `fit_policy="fixed_fit_panel_target_aligned_rows"` for target-dependent methods.
-For `feature_selection_step(method="variance")`, no target is used and the fit
-policy is `fixed_fit_panel_columns`.
+For `method="variance_selection"`, no target is used and the fit policy is
+`fixed_fit_panel_columns`.
+
+Feature selection deliberately has no generic wrapper step.
+Use each algorithm name directly inside `feature_spec()`:
+
+```python
+features = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors=["PAYEMS", "UNRATE", "HOUST"],
+    steps=[
+        {"name": "boruta", "method": "boruta_selection", "n_features": 2},
+    ],
+)
+```
 
 ## group_pca
 
@@ -1127,7 +1149,14 @@ canonical panel has already been cleaned.
 | `asymmetric_trim_features(data)` | Sorts each row's selected columns in ascending order. | `rank_1`, `rank_2`, ... |
 | `partial_least_squares_features(data, target=..., n_components=...)` | Target-aware PLSRegression scores; warns by default. | `pls1`, `pls2`, ... |
 | `dfm_features(data, n_factors=...)` | Static DFM approximation by standardized PCA; warns by default. | `dfm1`, `dfm2`, ... |
-| `feature_selection_features(data, method=...)` | `method`: `"variance"`, `"correlation"`, `"lasso"`; `n_features` as count or fraction. | Subset of original columns. |
+| `variance_selection(data, n_features=...)` | Select by sample variance; no target required. | Subset of original columns. |
+| `correlation_selection(data, target=..., n_features=...)` | Select by absolute target correlation. | Subset of original columns. |
+| `lasso_selection(data, target=..., alpha=...)` | Select by absolute lasso coefficient. | Subset of original columns. |
+| `lasso_path_selection(data, target=..., eps=..., n_alphas=...)` | Select by lasso-path inclusion frequency. | Subset of original columns. |
+| `rfe_selection(data, target=..., estimator=...)` | Select by recursive feature elimination. | Subset of original columns. |
+| `boruta_selection(data, target=..., n_estimators=..., max_iter=...)` | Select by Boruta-style shadow-feature tests. | Subset of original columns. |
+| `stability_selection(data, target=..., n_subsamples=..., pi_threshold=...)` | Select by repeated sparse-model subsampling frequency. | Subset of original columns. |
+| `genetic_selection(data, target=..., population_size=..., n_generations=...)` | Select by genetic subset search. | Subset of original columns. |
 | `random_projection_features(data, n_components=...)` | Gaussian random projection; `warn_full_sample=True` by default. | `rp1`, `rp2`, ... |
 | `nystroem_features(data, kernel="rbf", n_components=...)` | Kernel approximation settings; `warn_full_sample=True` by default. | `nys1`, `nys2`, ... |
 
@@ -1203,7 +1232,7 @@ training/reference panel and reused when transforming validation/test rows.
 | `pca_columns` | iterable or `None` | predictors | Columns used for PCA. |
 | `pca_scale` | bool | `True` | Standardize PCA inputs using the feature-fit panel. |
 | `pca_prefix` | string | `"pc"` | PCA output prefix. |
-| `steps`, `feature_steps` | iterable of step mappings or `None` | `None` | Fit-aware feature-step pipeline. Use the public step builders: `lag_step()`, `rolling_step()`, `moving_average_step()`, `marx_step()`, `transform_step()`, `seasonal_lag_step()`, `season_dummy_step()`, `fourier_step()`, `time_step()`, `polynomial_step()`, `interaction_step()`, `scale_step()`, `pca_step()`, `sparse_pca_chen_rohe_step()`, `varimax_step()`, `group_pca_step()`, `maf_step()`, `hamilton_step()`, `random_projection_step()`, `nystroem_step()`, `partial_least_squares_step()`, `sliced_inverse_regression_step()`, and `feature_selection_step()`. `steps` and `feature_steps` are aliases; provide only one. |
+| `steps`, `feature_steps` | iterable of step mappings or `None` | `None` | Fit-aware feature-step pipeline. Use public step builders for deterministic/fitted transforms: `lag_step()`, `rolling_step()`, `moving_average_step()`, `marx_step()`, `transform_step()`, `seasonal_lag_step()`, `season_dummy_step()`, `fourier_step()`, `time_step()`, `polynomial_step()`, `interaction_step()`, `scale_step()`, `pca_step()`, `sparse_pca_chen_rohe_step()`, `varimax_step()`, `group_pca_step()`, `maf_step()`, `hamilton_step()`, `random_projection_step()`, `nystroem_step()`, `partial_least_squares_step()`, and `sliced_inverse_regression_step()`. For selection, pass step mappings with `method` equal to one of `variance_selection`, `correlation_selection`, `lasso_selection`, `lasso_path_selection`, `rfe_selection`, `boruta_selection`, `stability_selection`, or `genetic_selection`. `steps` and `feature_steps` are aliases; provide only one. |
 | `include_original` | bool | `False` | Include the original predictor panel as part of `X` when using `steps`. |
 | `target_transform` | string | `"level"` | Same target choices as `direct_target()`. |
 | `target_mode` | string | `"direct"` | `"direct"` for horizon-level targets; `"path"` for step-level path targets. |
@@ -1285,7 +1314,7 @@ policy.
 | `nystroem_step()` | Fits Nystroem kernel-approximation landmarks on the feature-fit panel and applies fixed components. |
 | `partial_least_squares_step()` | Fits PLS components against the single resolved target on the feature-fit panel and applies fixed weights. |
 | `sliced_inverse_regression_step()` | Fits target-sliced directions on the feature-fit panel and applies fixed directions. |
-| `feature_selection_step()` | Selects columns by variance, target correlation, or lasso on the feature-fit panel and reuses the selected columns. |
+| `variance_selection`, `correlation_selection`, `lasso_selection`, `lasso_path_selection`, `rfe_selection`, `boruta_selection`, `stability_selection`, `genetic_selection` | Select columns on the feature-fit panel and reuse the selected columns. Use these as `method` strings in step mappings, not as step-builder functions. |
 
 In `feature_spec()` mode, `hamilton_step()` ignores the reusable step's
 `fit_policy` argument because the runner's `feature_policy` owns the allowed
@@ -1320,7 +1349,14 @@ Direct pandas functions and runner-safe step builders are intentionally paired:
 | `nystroem_features()` | `nystroem_step()` | Yes | Fit Nystroem kernel landmarks on allowed rows. |
 | `partial_least_squares_features()` | `partial_least_squares_step()` | Yes | Fit PLS scores against the resolved target on allowed rows. |
 | `sliced_inverse_regression_features()` | `sliced_inverse_regression_step()` | Yes | Fit SIR directions against the resolved target on allowed rows. |
-| `feature_selection_features()` | `feature_selection_step()` | Yes for target-dependent methods | Select columns by variance, target correlation, or lasso on allowed rows. |
+| `variance_selection()` | `{"method": "variance_selection", ...}` | Yes | Select columns by sample variance on allowed rows; no target required. |
+| `correlation_selection()` | `{"method": "correlation_selection", ...}` | Yes | Select columns by target correlation on allowed rows. |
+| `lasso_selection()` | `{"method": "lasso_selection", ...}` | Yes | Select columns by lasso coefficient magnitude on allowed rows. |
+| `lasso_path_selection()` | `{"method": "lasso_path_selection", ...}` | Yes | Select columns by lasso-path inclusion frequency on allowed rows. |
+| `rfe_selection()` | `{"method": "rfe_selection", ...}` | Yes | Select columns by recursive feature elimination on allowed rows. |
+| `boruta_selection()` | `{"method": "boruta_selection", ...}` | Yes | Select columns by Boruta-style shadow-feature tests on allowed rows. |
+| `stability_selection()` | `{"method": "stability_selection", ...}` | Yes | Select columns by sparse-model subsampling frequency on allowed rows. |
+| `genetic_selection()` | `{"method": "genetic_selection", ...}` | Yes | Select columns by genetic subset search on allowed rows. |
 
 The remaining helpers remain callable but are intentionally not accepted as
 `FeatureSpec` step methods yet:

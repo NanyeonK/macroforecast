@@ -41,6 +41,10 @@ from macroforecast.feature_engineering.shared import (
     _target_metadata_frame,
     _target_transform_to_path_transform,
 )
+from macroforecast.feature_engineering.selection import (
+    normalize_feature_selection_method,
+    select_features,
+)
 from macroforecast.feature_engineering.targets import direct_target, path_targets
 from macroforecast.feature_engineering.transforms import (
     fourier_features,
@@ -81,7 +85,14 @@ _FEATURE_SPEC_METHODS = frozenset(
         "nystroem",
         "partial_least_squares",
         "sliced_inverse_regression",
-        "feature_selection",
+        "variance_selection",
+        "correlation_selection",
+        "lasso_selection",
+        "lasso_path_selection",
+        "rfe_selection",
+        "boruta_selection",
+        "stability_selection",
+        "genetic_selection",
     }
 )
 
@@ -760,11 +771,12 @@ class _FeatureSelectionState:
     columns: tuple[str, ...]
     selected_columns: tuple[str, ...]
     target: str | None
-    n_features: int | float
+    n_features: int | float | None
     resolved_n_features: int
     method: str
     lasso_alpha: float
     scores: dict[str, float]
+    selection_params: dict[str, Any]
     min_train_size: int | None
     n_fit_rows: int
 
@@ -783,10 +795,11 @@ class _FeatureSelectionState:
             "method": self.method,
             "lasso_alpha": self.lasso_alpha,
             "scores": dict(self.scores),
+            "selection_params": dict(self.selection_params),
             "min_train_size": self.min_train_size,
             "fit_policy": (
                 "fixed_fit_panel_columns"
-                if self.method == "variance"
+                if self.method == "variance_selection"
                 else "fixed_fit_panel_target_aligned_rows"
             ),
             "n_fit_rows": self.n_fit_rows,
@@ -2077,63 +2090,58 @@ def _fit_feature_step(
             },
             state=state,
         )
-    if plan.method == "feature_selection":
+    if plan.method in {
+        "variance_selection",
+        "correlation_selection",
+        "lasso_selection",
+        "lasso_path_selection",
+        "rfe_selection",
+        "boruta_selection",
+        "stability_selection",
+        "genetic_selection",
+    }:
         selected = _resolve_columns(source, columns=columns)
         n_features = params.pop("n_features", 0.5)
-        n_keep = _resolve_feature_keep_count(n_features, n_columns=len(selected))
-        method = str(params.pop("selection_method", params.pop("method_name", params.pop("method", "variance")))).lower()
-        if method not in {"variance", "correlation", "lasso"}:
-            raise ValueError("method must be 'variance', 'correlation', or 'lasso'")
-        lasso_alpha = float(params.pop("lasso_alpha", 0.001))
+        method = normalize_feature_selection_method(plan.method)
+        lasso_alpha = float(params.pop("lasso_alpha", params.get("alpha", 0.001)))
+        if method == "lasso_selection" and "alpha" not in params:
+            params["lasso_alpha"] = lasso_alpha
         min_train_size = params.pop("min_train_size", None)
-        min_size = None if method == "variance" else _normalize_min_train_size(min_train_size, minimum=1)
         drop_missing = bool(params.pop("drop_missing", False))
+        random_state = params.pop("random_state", 0)
         params.pop("fit_policy", None)
         params.pop("warn_full_sample", None)
-        _reject_extra_params(params, plan.name)
         source_numeric = source.loc[:, selected].astype(float)
         target_name = None
-        n_fit_rows = int(len(source_numeric.dropna()))
-        if method == "variance":
-            scores = source_numeric.var(axis=0, skipna=True).fillna(0.0).abs()
-        else:
+        target_series = None
+        if method != "variance_selection":
             target_name, target_series = _single_feature_step_target(
                 target_frame,
                 step_name=plan.name,
                 method=plan.method,
             )
-            joined = pd.concat([source_numeric, target_series.rename("__target__")], axis=1).dropna()
-            if len(joined) < int(min_size):
-                raise ValueError(
-                    f"feature step {plan.name!r} has fewer than {min_size} target-aligned complete rows "
-                    f"to fit {method} feature selection"
-                )
-            n_fit_rows = int(len(joined))
-            if method == "correlation":
-                scores = joined.loc[:, selected].corrwith(joined["__target__"]).abs().fillna(0.0)
-            else:
-                from sklearn.linear_model import Lasso
-
-                model = Lasso(alpha=lasso_alpha, max_iter=20000)
-                model.fit(
-                    joined.loc[:, selected].to_numpy(dtype=float),
-                    joined["__target__"].to_numpy(dtype=float),
-                )
-                scores = pd.Series(np.abs(model.coef_), index=selected, dtype=float)
-                if float(scores.sum()) <= 1e-12:
-                    scores = joined.loc[:, selected].corrwith(joined["__target__"]).abs().fillna(0.0)
-        keep = tuple(str(column) for column in scores.sort_values(ascending=False).index[:n_keep])
+        selection = select_features(
+            source_numeric,
+            target_series,
+            n_features=n_features,
+            method=method,
+            min_train_size=min_train_size,
+            random_state=None if random_state is None else int(random_state),
+            **params,
+        )
+        keep = selection.selected_columns
         state = _FeatureSelectionState(
             columns=selected,
             selected_columns=keep,
             target=target_name,
             n_features=n_features,
-            resolved_n_features=n_keep,
+            resolved_n_features=selection.resolved_n_features,
             method=method,
             lasso_alpha=lasso_alpha,
-            scores={str(key): float(value) for key, value in scores.items()},
-            min_train_size=min_size,
-            n_fit_rows=n_fit_rows,
+            scores=selection.scores,
+            selection_params=selection.metadata,
+            min_train_size=min_train_size,
+            n_fit_rows=selection.n_fit_rows,
         )
         return _FittedFeatureStep(
             name=plan.name,
@@ -2145,16 +2153,14 @@ def _fit_feature_step(
                 "selected_columns": keep,
                 "target": target_name,
                 "n_features": n_features,
-                "resolved_n_features": n_keep,
+                "resolved_n_features": selection.resolved_n_features,
                 "method": method,
                 "lasso_alpha": lasso_alpha,
-                "min_train_size": min_size,
+                "selection_params": selection.metadata,
+                "min_train_size": min_train_size,
                 "drop_missing": drop_missing,
-                "fit_policy": (
-                    "fixed_fit_panel_columns"
-                    if method == "variance"
-                    else "fixed_fit_panel_target_aligned_rows"
-                ),
+                "random_state": None if random_state is None else int(random_state),
+                "fit_policy": selection.fit_policy,
             },
             state=state,
         )
@@ -2559,18 +2565,19 @@ def _feature_records_for_step(
             records.append(
                 {
                     "feature": column,
-                    "operation": "feature_selection",
+                    "operation": step.method,
                     "source": column,
                     "parameter": f"method={step.state.method};rank={rank}",
                     "fit_policy": (
                         "fixed_fit_panel_columns"
-                        if step.state.method == "variance"
+                        if step.state.method == "variance_selection"
                         else "fixed_fit_panel_target_aligned_rows"
                     ),
                     "inputs": ",".join(step.state.columns),
                     "included": step.include,
                     "target": step.state.target,
                     "score": step.state.scores.get(column),
+                    "selection_method": step.state.method,
                     "n_fit_rows": step.state.n_fit_rows,
                 }
             )
@@ -2739,7 +2746,14 @@ def _normalize_feature_steps(
             "nystroem",
             "partial_least_squares",
             "sliced_inverse_regression",
-            "feature_selection",
+            "variance_selection",
+            "correlation_selection",
+            "lasso_selection",
+            "lasso_path_selection",
+            "rfe_selection",
+            "boruta_selection",
+            "stability_selection",
+            "genetic_selection",
         }:
             raw.pop("fit_policy", None)
             raw.pop("warn_full_sample", None)
