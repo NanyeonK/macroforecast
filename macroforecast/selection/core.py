@@ -3,6 +3,7 @@ from __future__ import annotations
 from macroforecast.selection.builders import (
     bayesian_search,
     choice,
+    custom_search,
     cv_path,
     fixed,
     genetic_search,
@@ -28,6 +29,7 @@ __all__ = [
     "SearchSpec",
     "bayesian_search",
     "choice",
+    "custom_search",
     "cv_path",
     "fixed",
     "genetic_search",

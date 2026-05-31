@@ -42,7 +42,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, benchmark comparisons, and regime scoring. |
 | `evaluation` | `macroforecast.evaluation` | Evaluation namespace exposing report functions plus `metrics` and `tests`; raw metric/test functions are not re-exported directly from it. |
 | `SearchSpec`, `SearchResult`, `SearchError`, `search_spec`, `select_params` | `macroforecast.selection` | Parameter selection over a supplied window and metric. |
-| `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search` | `macroforecast.selection` | Search specification builders. |
+| `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search`, `custom_search` | `macroforecast.selection` | Search specification builders. |
 | `ForecastResult`, `run`, `run_forecast` | `macroforecast.forecasting` | Windowed forecast runner. |
 | `CombinationSpec`, `combination_spec`, `custom_combination`, `combine_mean`, `combine_median`, `combine_trimmed_mean`, `combine_winsorized_mean`, `combine_inverse_mspe`, `combine_dmspe`, `combine_best_n` | `macroforecast.forecasting` | Runner-integrated and direct forecast combination methods. |
 | `ForecastDiagnosticReport`, `diagnose_forecasts`, `forecast_overview`, `fitted_vs_actual`, `residual_report`, `rolling_loss`, `coefficient_trace`, `tuning_trace`, `ensemble_weights_over_time`, `stage_update_trace` | `macroforecast.forecast_diagnostic` | Forecast-result diagnostics for residuals, tuning, coefficients, combinations, and runner stage updates. |

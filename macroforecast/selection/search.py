@@ -16,6 +16,7 @@ from macroforecast.selection.builders import (
     _search_from_model,
     bayesian_search,
     choice,
+    custom_search,
     cv_path,
     fixed,
     genetic_search,
@@ -36,6 +37,7 @@ from macroforecast.selection.types import (
     SearchError,
     SearchResult,
     SearchSpec,
+    SearchTrial,
 )
 from macroforecast.models.specs import ModelSpec, get_model
 from macroforecast.models.utils import align_xy, as_frame, as_series, resolve_xy
@@ -123,6 +125,18 @@ def select_params(
         )
     elif spec.method == "bayesian":
         rows, runtime_metadata = run_bayesian(
+            fit_model,
+            frame,
+            target,
+            validation_splits,
+            metric_fn,
+            spec,
+            base_params,
+            rng,
+            maximize=maximize,
+        )
+    elif spec.method == "custom":
+        rows, runtime_metadata = _run_custom_search(
             fit_model,
             frame,
             target,
@@ -415,7 +429,15 @@ def _prepare_search_spec(spec: SearchSpec) -> SearchSpec:
 
 
 def _validate_search_spec(spec: SearchSpec) -> None:
-    if spec.method not in {"fixed", "grid", "cv_path", "random", "bayesian", "genetic"}:
+    if spec.method not in {
+        "fixed",
+        "grid",
+        "cv_path",
+        "random",
+        "bayesian",
+        "genetic",
+        "custom",
+    }:
         raise ValueError(f"Unknown search method {spec.method!r}")
     if spec.n_iter < 1:
         raise ValueError("n_iter must be at least 1")
@@ -425,6 +447,8 @@ def _validate_search_spec(spec: SearchSpec) -> None:
         raise ValueError("generations must be at least 1")
     if not 0 <= spec.mutation_rate <= 1:
         raise ValueError("mutation_rate must be between 0 and 1")
+    if spec.method == "custom" and spec.custom_func is None:
+        raise ValueError("custom search requires custom_func")
     if (
         spec.method in {"random", "bayesian", "genetic"}
         and not spec.param_distributions
@@ -442,9 +466,94 @@ def _validate_search_spec(spec: SearchSpec) -> None:
             raise ValueError(f"invalid distribution for {key!r}: {exc}") from exc
 
 
+def _run_custom_search(
+    model: Callable[..., Any],
+    X: pd.DataFrame,
+    y: pd.Series,
+    splits: list[Split],
+    metric_fn: Callable[[Any, Any], float],
+    spec: SearchSpec,
+    fixed_params: dict[str, Any],
+    rng: np.random.Generator,
+    *,
+    maximize: bool,
+) -> tuple[list[SearchTrial], dict[str, Any]]:
+    if spec.custom_func is None:
+        raise ValueError("custom search requires custom_func")
+    output = spec.custom_func(
+        model=model,
+        X=X,
+        y=y,
+        splits=splits,
+        metric=metric_fn,
+        fixed_params=fixed_params,
+        search=spec,
+        rng=rng,
+        maximize=maximize,
+        evaluate_candidate=evaluate_candidate,
+        **spec.custom_params,
+    )
+    runtime_metadata: dict[str, Any] = {}
+    if isinstance(output, tuple) and len(output) == 2:
+        output, metadata = output
+        if not isinstance(metadata, dict):
+            raise TypeError("custom search metadata must be a dict")
+        runtime_metadata.update(metadata)
+    custom_metadata = dict(spec.metadata.get("custom_search", {}))
+    custom_metadata.update(
+        {
+            "callable": _callable_name(spec.custom_func),
+            "params": dict(spec.custom_params),
+        }
+    )
+    runtime_metadata = {"custom_search": custom_metadata, **runtime_metadata}
+    return _coerce_custom_trials(output), runtime_metadata
+
+
+def _coerce_custom_trials(output: Any) -> list[SearchTrial]:
+    if isinstance(output, SearchResult):
+        output = output.trials
+    if isinstance(output, pd.DataFrame):
+        records = output.to_dict(orient="records")
+        return [_trial_from_record(record, idx) for idx, record in enumerate(records)]
+    if isinstance(output, SearchTrial):
+        return [output]
+    if isinstance(output, list) or isinstance(output, tuple):
+        if all(isinstance(row, SearchTrial) for row in output):
+            return list(output)
+        if all(isinstance(row, dict) for row in output):
+            return [_trial_from_record(record, idx) for idx, record in enumerate(output)]
+    raise TypeError(
+        "custom search callable must return SearchTrial records, a trial DataFrame, "
+        "a SearchResult, or (records, metadata)"
+    )
+
+
+def _trial_from_record(record: dict[str, Any], fallback_trial: int) -> SearchTrial:
+    reserved = {"trial", "score", "n_splits", "status", "error"}
+    params = {key: value for key, value in record.items() if key not in reserved}
+    score = record.get("score", np.nan)
+    status = str(record.get("status", "ok"))
+    return SearchTrial(
+        trial=int(record.get("trial", fallback_trial)),
+        params=params,
+        score=float(score),
+        n_splits=int(record.get("n_splits", 0)),
+        status=status,
+        error=None if pd.isna(record.get("error")) else str(record.get("error")),
+    )
+
+
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
 __all__ = [
     "bayesian_search",
     "choice",
+    "custom_search",
     "cv_path",
     "fixed",
     "genetic_search",

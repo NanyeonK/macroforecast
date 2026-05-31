@@ -246,6 +246,7 @@ _LAZY_EXPORTS = {
     "SearchSpec": ".selection",
     "bayesian_search": ".selection",
     "choice": ".selection",
+    "custom_search": ".selection",
     "cv_path": ".selection",
     "fixed": ".selection",
     "genetic_search": ".selection",

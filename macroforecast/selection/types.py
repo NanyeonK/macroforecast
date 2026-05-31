@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -94,6 +94,8 @@ class SearchSpec:
     population_size: int = 12
     generations: int = 4
     mutation_rate: float = 0.2
+    custom_func: Callable[..., Any] | None = None
+    custom_params: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_metadata(self) -> dict[str, Any]:
@@ -106,6 +108,12 @@ class SearchSpec:
             "population_size": self.population_size,
             "generations": self.generations,
             "mutation_rate": self.mutation_rate,
+            "custom_search": None
+            if self.custom_func is None
+            else {
+                "callable": _callable_name(self.custom_func),
+                "params": _json_ready(self.custom_params),
+            },
             "metadata": self.metadata,
         })
 
@@ -268,6 +276,12 @@ def _json_ready(value: Any) -> Any:
     except TypeError:
         return repr(value)
     return value
+
+
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
 
 
 __all__ = [

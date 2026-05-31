@@ -18,6 +18,7 @@ The package still enforces the same contracts around each custom hook:
 | Feature spec | `mf.feature_engineering.custom_step(...)` | Stateless or fitted feature callable for `feature_spec(steps=[...])`. | Step dictionary consumed by `FeatureSpec`. |
 | Models | `mf.models.custom_model(...)` | Fit callable with model metadata and optional search spaces. | `ModelSpec`. |
 | Window | `mf.window.custom_stage_policy(...)` | Selector callable for origin-specific sample labels. | `StagePolicy(scope="custom")`. |
+| Selection | `mf.selection.custom_search(...)` | User search callable over model, data, splits, metric, and candidate evaluation helper. | `SearchSpec(method="custom")`. |
 | Forecasting | `mf.forecasting.custom_combination(...)` | Callable over base forecast matrix. | `CombinationSpec`. |
 
 ## Data
@@ -239,6 +240,69 @@ The output must select at least one label. Use this for unusual validation or
 selection-sample definitions; standard expanding, rolling, fixed-reference, and
 origin-available designs should use `stage_policy(...)`.
 
+## Selection
+
+Use `custom_search()` when the hyperparameter search algorithm itself is
+project-specific.
+
+```python
+def ordered_alpha_search(
+    *,
+    model,
+    X,
+    y,
+    splits,
+    metric,
+    fixed_params,
+    evaluate_candidate,
+    values,
+    **_,
+):
+    return [
+        evaluate_candidate(
+            model,
+            X,
+            y,
+            splits,
+            metric,
+            fixed_params,
+            {"alpha": value},
+            trial,
+        )
+        for trial, value in enumerate(values)
+    ]
+
+search = mf.selection.custom_search(
+    "ordered_alpha",
+    ordered_alpha_search,
+    values=(0.01, 0.1, 1.0),
+)
+```
+
+Callable signature:
+
+```python
+func(
+    *,
+    model,
+    X,
+    y,
+    splits,
+    metric,
+    fixed_params,
+    search,
+    rng,
+    maximize,
+    evaluate_candidate,
+    **params,
+)
+```
+
+The callable returns trial records, a trial `DataFrame`, a `SearchResult`, or
+`(records, metadata)`. Use `evaluate_candidate` unless the custom algorithm has
+to fit models itself. Custom metrics do not need `custom_search()`; pass them
+directly as `select_params(..., metric=my_metric)`.
+
 ## Forecast Combination
 
 Use `custom_combination()` to append custom combined forecast rows after base
@@ -288,4 +352,5 @@ Custom extensions should remain stage-local:
 | New feature transform | `custom_features()` or `custom_step()`. |
 | New estimator | `custom_model()`. |
 | New sample policy | `custom_stage_policy()`. |
+| New hyperparameter-search algorithm | `custom_search()`. |
 | New forecast averaging or ensemble rule | `custom_combination()`. |

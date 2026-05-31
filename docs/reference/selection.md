@@ -30,7 +30,7 @@ result = mf.selection.select_params(
 
 | Task | Functions |
 | --- | --- |
-| Build a search spec | `fixed()`, `grid()`, `random_search()`, `cv_path()`, `bayesian_search()`, `genetic_search()`, `search_spec()` |
+| Build a search spec | `fixed()`, `grid()`, `random_search()`, `cv_path()`, `bayesian_search()`, `genetic_search()`, `custom_search()`, `search_spec()` |
 | Define stochastic distributions | `uniform()`, `log_uniform()`, `randint()`, `choice()` |
 | Run selection | `select_params()` |
 | Store results | `SearchSpec`, `SearchResult`, `SearchError`, `ParamDistribution` |
@@ -47,6 +47,8 @@ macroforecast.selection.SearchSpec(
     population_size=12,
     generations=4,
     mutation_rate=0.2,
+    custom_func=None,
+    custom_params={},
     metadata={},
 )
 ```
@@ -55,7 +57,7 @@ Input:
 
 | Argument | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `method` | str | required | `fixed`, `grid`, `cv_path`, `random`, `bayesian`, or `genetic`. |
+| `method` | str | required | `fixed`, `grid`, `cv_path`, `random`, `bayesian`, `genetic`, or `custom`. |
 | `param_grid` | dict | `{}` | Explicit finite candidates for `fixed`, `grid`, and `cv_path`. |
 | `param_distributions` | dict | `{}` | Sampling rules for `random`, `bayesian`, and `genetic`. |
 | `n_iter` | int | `20` | Candidate count for `random`; total sequential evaluations for `bayesian`. |
@@ -63,6 +65,8 @@ Input:
 | `population_size` | int | `12` | Population size for `genetic`. |
 | `generations` | int | `4` | Number of generations for `genetic`. |
 | `mutation_rate` | float | `0.2` | Per-parameter mutation probability for `genetic`. |
+| `custom_func` | callable or `None` | `None` | User search callable used only when `method="custom"`. |
+| `custom_params` | dict | `{}` | User parameters passed to `custom_func`. |
 | `metadata` | dict | `{}` | Search metadata, including model-owned search-space provenance. |
 
 Output:
@@ -208,6 +212,115 @@ macroforecast.selection.genetic_search(
 ```
 
 Output: `SearchSpec(method="genetic")`.
+
+## custom_search
+
+```python
+macroforecast.selection.custom_search(
+    name,
+    func,
+    *,
+    param_grid=None,
+    param_distributions=None,
+    n_iter=20,
+    random_state=None,
+    metadata=None,
+    **params,
+) -> SearchSpec
+```
+
+Builds a user-supplied search request. This is for custom parameter-search
+algorithms, not custom metrics. Custom metrics already belong in
+`select_params(..., metric=...)`.
+
+The callable receives keyword arguments:
+
+```python
+func(
+    *,
+    model,
+    X,
+    y,
+    splits,
+    metric,
+    fixed_params,
+    search,
+    rng,
+    maximize,
+    evaluate_candidate,
+    **params,
+)
+```
+
+| Argument | Meaning |
+| --- | --- |
+| `model` | Fit callable resolved from the model name, callable, or `ModelSpec`. |
+| `X`, `y` | Aligned selection sample. |
+| `splits` | List of temporal train/validation position splits. |
+| `metric` | Resolved metric callable. |
+| `fixed_params` | Parameters applied to every candidate. |
+| `search` | The prepared `SearchSpec`. |
+| `rng` | NumPy random generator seeded by the spec. |
+| `maximize` | Whether larger scores are better. |
+| `evaluate_candidate` | Package helper for evaluating one parameter dictionary across all splits. |
+| `**params` | User parameters supplied to `custom_search(...)`. |
+
+The custom callable must return one of:
+
+| Return type | Meaning |
+| --- | --- |
+| `list[SearchTrial]` | Already evaluated trial records. |
+| `pandas.DataFrame` | Trial table with `trial`, candidate parameter columns, `score`, `n_splits`, `status`, and `error`. |
+| `SearchResult` | Existing search result; its trial table is reused. |
+| `(records, metadata)` | Any accepted records plus runtime metadata merged into `SearchResult.metadata`. |
+
+The most common pattern is to use `evaluate_candidate` and return the resulting
+trial rows:
+
+```python
+def ordered_search(
+    *,
+    model,
+    X,
+    y,
+    splits,
+    metric,
+    fixed_params,
+    evaluate_candidate,
+    values,
+    **_,
+):
+    return [
+        evaluate_candidate(
+            model,
+            X,
+            y,
+            splits,
+            metric,
+            fixed_params,
+            {"alpha": value},
+            trial,
+        )
+        for trial, value in enumerate(values)
+    ]
+
+search = mf.selection.custom_search(
+    "ordered_alpha",
+    ordered_search,
+    values=(0.01, 0.1, 1.0),
+)
+
+result = mf.selection.select_params(
+    "ridge",
+    X,
+    y,
+    search=search,
+    window=window,
+)
+```
+
+`SearchSpec.to_dict()` and `SearchResult.to_metadata()` store the callable
+name and user parameters. The callable source code is not serialized.
 
 ## search_spec
 

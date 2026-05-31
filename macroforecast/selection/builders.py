@@ -163,6 +163,46 @@ def genetic_search(
     )
 
 
+def custom_search(
+    name: str,
+    func: Callable[..., Any],
+    *,
+    param_grid: dict[str, Iterable[Any] | Any] | None = None,
+    param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None,
+    n_iter: int = 20,
+    random_state: int | None = None,
+    metadata: dict[str, Any] | None = None,
+    **params: Any,
+) -> SearchSpec:
+    """Build a user-supplied parameter-search request."""
+
+    if not name:
+        raise ValueError("custom search name must be non-empty")
+    if not callable(func):
+        raise TypeError("custom search func must be callable")
+    custom_metadata = {
+        "custom_search": {
+            "name": str(name),
+            "callable": _callable_name(func),
+            "params": dict(params),
+        },
+        **dict(metadata or {}),
+    }
+    return SearchSpec(
+        method="custom",
+        param_grid={key: _as_tuple(value) for key, value in (param_grid or {}).items()},
+        param_distributions={
+            key: _coerce_distribution(value)
+            for key, value in (param_distributions or {}).items()
+        },
+        n_iter=n_iter,
+        random_state=random_state,
+        custom_func=func,
+        custom_params=dict(params),
+        metadata=custom_metadata,
+    )
+
+
 def _search_from_model(
     model_spec: ModelSpec | None,
     *,
@@ -232,6 +272,7 @@ def _normalize_method(method: str) -> str:
         "random_search": "random",
         "bayesian_search": "bayesian",
         "genetic_search": "genetic",
+        "custom_search": "custom",
         "cvpath": "cv_path",
         "path": "cv_path",
     }
@@ -268,6 +309,12 @@ def _validated_distribution(distribution: ParamDistribution) -> ParamDistributio
     return distribution
 
 
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
 def _candidates(spec: SearchSpec, rng: np.random.Generator) -> list[dict[str, Any]]:
     if spec.method in {"fixed", "grid", "cv_path"}:
         if not spec.param_grid:
@@ -289,6 +336,7 @@ def _candidates(spec: SearchSpec, rng: np.random.Generator) -> list[dict[str, An
 __all__ = [
     "bayesian_search",
     "choice",
+    "custom_search",
     "cv_path",
     "fixed",
     "genetic_search",

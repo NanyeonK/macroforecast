@@ -3,7 +3,37 @@ from __future__ import annotations
 import pytest
 
 import macroforecast as mf
-from tests.selection.helpers import xy
+from tests.selection.helpers import first_prediction, score_model, xy
+
+
+def custom_ordered_search(
+    *,
+    model,
+    X,
+    y,
+    splits,
+    metric,
+    fixed_params,
+    search,
+    rng,
+    maximize,
+    evaluate_candidate,
+    values,
+):
+    rows = [
+        evaluate_candidate(
+            model,
+            X,
+            y,
+            splits,
+            metric,
+            fixed_params,
+            {"score_value": value},
+            trial,
+        )
+        for trial, value in enumerate(values)
+    ]
+    return rows, {"custom_runtime": {"evaluated": len(rows), "maximize": maximize}}
 
 
 def test_search_spec_uses_model_owned_space_without_fitting() -> None:
@@ -88,6 +118,33 @@ def test_search_spec_and_result_export_json_ready(tmp_path) -> None:
     assert '"trials"' not in result.to_json(include_trials=False)
     assert '"trials"' in result_json
     assert result_path.read_text(encoding="utf-8").startswith("{")
+
+
+def test_custom_search_runs_user_supplied_search_callable() -> None:
+    X, y = xy()
+    search = mf.selection.custom_search(
+        "ordered_score",
+        custom_ordered_search,
+        values=(1.0, 3.0, 2.0),
+        random_state=123,
+    )
+
+    result = mf.selection.select_params(
+        score_model,
+        X,
+        y,
+        search,
+        window=mf.window.last_block(validation_size=6),
+        metric=first_prediction,
+        maximize=True,
+    )
+
+    assert result.method == "custom"
+    assert result.best_params == {"score_value": 3.0}
+    assert result.metadata["custom_search"]["name"] == "ordered_score"
+    assert result.metadata["custom_search"]["callable"].endswith("custom_ordered_search")
+    assert result.metadata["custom_runtime"] == {"evaluated": 3, "maximize": True}
+    assert search.to_dict()["custom_search"]["params"]["values"] == [1.0, 3.0, 2.0]
 
 
 def test_explicit_search_spec_is_normalized_and_coerced() -> None:
