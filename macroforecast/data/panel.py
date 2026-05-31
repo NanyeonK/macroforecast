@@ -233,6 +233,70 @@ def metadata(obj: PanelInput) -> dict[str, Any]:
     return dict(_coerce_bundle(obj).metadata)
 
 
+def custom_dataset(
+    frame: pd.DataFrame,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    source_family: str = "custom",
+    frequency: str = "unknown",
+    frequency_by_column: Mapping[str, str] | None = None,
+    transform_codes: Mapping[str, int] | None = None,
+    metadata: Mapping[str, Any] | None = None,
+    strict: bool = True,
+) -> DataBundle:
+    """Build a canonical custom ``DataBundle`` from an in-memory DataFrame."""
+
+    base_metadata = dict(metadata or {})
+    base_metadata.update(
+        {
+            "dataset": str(dataset),
+            "source_family": str(source_family),
+            "frequency": _normalize_frequency_label(frequency),
+        }
+    )
+    panel = as_panel(
+        frame,
+        date=date,
+        columns=columns,
+        rename=rename,
+        metadata=base_metadata,
+        strict=strict,
+    )
+    updated = dict(panel.attrs.get("macroforecast_metadata", base_metadata))
+    if transform_codes is not None:
+        code_map = {str(column): int(code) for column, code in transform_codes.items()}
+        missing = sorted(set(code_map) - {str(column) for column in panel.columns})
+        if missing:
+            raise ValueError(f"transform code keys are not in the panel: {missing}")
+        updated["transform_codes"] = dict(sorted(code_map.items()))
+    bundle = DataBundle(panel=panel, metadata=updated)
+    if frequency_by_column is not None:
+        bundle = set_frequencies(
+            bundle,
+            frequency_by_column,
+            default_frequency=frequency,
+            frequency=frequency,
+        )
+        updated = dict(bundle.metadata)
+    updated = attach_metadata(
+        updated,
+        "custom_dataset",
+        {
+            "dataset": str(dataset),
+            "source_family": str(source_family),
+            "frequency": updated.get("frequency"),
+            "columns": [str(column) for column in panel.columns],
+            "strict": bool(strict),
+        },
+    )
+    panel = bundle.panel.copy()
+    panel.attrs["macroforecast_metadata"] = updated
+    return DataBundle(panel=panel, metadata=updated)
+
+
 def set_frequencies(
     data: PanelInput,
     frequency_by_column: Mapping[str, str],

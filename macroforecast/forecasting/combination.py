@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -16,6 +16,7 @@ class CombinationSpec:
     name: str
     models: tuple[str, ...] | None = None
     params: dict[str, Any] = field(default_factory=dict)
+    func: Callable[..., Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -23,6 +24,7 @@ class CombinationSpec:
             "name": self.name,
             "models": list(self.models) if self.models is not None else None,
             "params": dict(self.params),
+            "callable": _callable_name(self.func),
         }
 
 
@@ -41,6 +43,28 @@ def combination_spec(
         name=name or f"combined_{canonical}",
         models=tuple(str(model) for model in models) if models is not None else None,
         params=dict(params),
+    )
+
+
+def custom_combination(
+    name: str,
+    func: Callable[..., Any],
+    *,
+    models: Sequence[str] | None = None,
+    **params: Any,
+) -> CombinationSpec:
+    """Build a custom forecast-combination spec for ``forecasting.run``."""
+
+    if not name:
+        raise ValueError("custom combination name must be non-empty")
+    if not callable(func):
+        raise TypeError("custom combination func must be callable")
+    return CombinationSpec(
+        method="custom",
+        name=str(name),
+        models=tuple(str(model) for model in models) if models is not None else None,
+        params=dict(params),
+        func=func,
     )
 
 
@@ -245,6 +269,9 @@ def _apply_combination_method(
 ) -> pd.Series:
     params = dict(spec.params)
     method = spec.method
+    if spec.func is not None:
+        output = spec.func(forecasts.copy(), actual=actual.copy(), **params)
+        return _coerce_combination_output(output, forecasts.index, name="combined")
     if method == "mean":
         return combine_mean(forecasts)
     if method == "median":
@@ -262,9 +289,19 @@ def _apply_combination_method(
 
 def _mapping_to_spec(value: Mapping[str, Any]) -> CombinationSpec:
     method = str(value["method"])
-    reserved = {"method", "name", "models", "params"}
+    reserved = {"method", "name", "models", "params", "func", "callable"}
     params = dict(value.get("params", {}))
     params.update({key: item for key, item in value.items() if key not in reserved})
+    func = value.get("func", value.get("callable"))
+    if _normalize_method(method) == "custom":
+        if not callable(func):
+            raise TypeError("custom combination mapping requires callable 'func'")
+        return custom_combination(
+            str(value.get("name") or "custom_combination"),
+            func,
+            models=value.get("models"),
+            **params,
+        )
     return combination_spec(
         method,
         name=None if value.get("name") is None else str(value["name"]),
@@ -285,6 +322,7 @@ def _mapping_value_to_spec(alias: Any, value: Any) -> CombinationSpec:
                 name=str(alias),
                 models=value.models,
                 params=dict(value.params),
+                func=value.func,
             )
         return value
     if isinstance(value, Mapping):
@@ -322,6 +360,7 @@ def _normalize_method(method: str) -> str:
         "inverse_mspe",
         "dmspe",
         "best_n",
+        "custom",
     }
     if key not in allowed:
         raise ValueError(f"unknown combination method {method!r}")
@@ -338,6 +377,27 @@ def _forecast_frame(forecasts: Any) -> pd.DataFrame:
     return frame.astype(float)
 
 
+def _coerce_combination_output(output: Any, index: pd.Index, *, name: str) -> pd.Series:
+    if isinstance(output, pd.Series):
+        series = output.copy()
+    else:
+        values = np.asarray(output, dtype=float).reshape(-1)
+        series = pd.Series(values)
+    if not series.index.equals(index):
+        if len(series) != len(index):
+            raise ValueError("custom combination output length does not match forecast rows")
+        series.index = index
+    return series.astype(float).rename(name)
+
+
+def _callable_name(func: Callable[..., Any] | None) -> str | None:
+    if func is None:
+        return None
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
 __all__ = [
     "CombinationSpec",
     "apply_combinations",
@@ -349,5 +409,6 @@ __all__ = [
     "combine_trimmed_mean",
     "combine_winsorized_mean",
     "combination_spec",
+    "custom_combination",
     "resolve_combinations",
 ]

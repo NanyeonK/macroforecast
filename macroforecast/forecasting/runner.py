@@ -811,9 +811,10 @@ def _run_feature_set(
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, dict[str, Any] | None] = {}
     for item in window_spec.iter_slices(X_all, y_all):
+        selection_labels = stage_index(X_all.index, item, selection_policy)
         X_selection, y_selection = _align_feature_xy(
-            _select_existing_features(item, "X", selection_policy),
-            _single_target(_select_existing_features(item, "y", selection_policy)),
+            X_all.reindex(selection_labels),
+            y_all.reindex(selection_labels),
         )
         item = {
             **item,
@@ -2163,9 +2164,9 @@ def _validate_runner_policies(
         if policy is not None
     ]
     for policy in policies:
-        if policy.scope == "custom":
+        if policy.scope == "custom" and policy.selector is None:
             raise ValueError(
-                "custom stage policies require callable hooks and are not implemented in forecasting.run yet"
+                "custom stage policies require callable selector hooks"
             )
     if preprocessing is None:
         return

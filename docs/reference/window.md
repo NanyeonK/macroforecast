@@ -133,7 +133,7 @@ window = mf.window.spec(
 | Configure val | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()` |
 | Configure test | `test_origins()` |
 | Configure alignment | `alignment_drop_incomplete()`, `alignment_keep_missing()` |
-| Configure runner stage timing | `stage_policy()`, `stage_index()`, `stage_panel()` |
+| Configure runner stage timing | `stage_policy()`, `custom_stage_policy()`, `stage_index()`, `stage_panel()` |
 | Shortcut windows | `last_block()`, `poos()`, `expanding()`, `rolling_blocks()`, `blocked_kfold()` |
 | Inspect windows | `WindowSpec.plan()`, `WindowSpec.origins()`, `WindowSpec.test_mask()`, `WindowSpec.align()`, `WindowSpec.to_table()` |
 | Runner handoff | `WindowSpec.val_splits_for_origin()`, `WindowSpec.iter_origins()`, `WindowSpec.iter_slices()` |
@@ -162,6 +162,7 @@ as `preprocessing_policy`, `feature_policy`, and `selection_policy` in
 | `origin_available` | Fit the stage on rows available by each origin. |
 | `fit_window` | Fit the stage only on the model fit window. |
 | `fixed_reference` | Fit the stage on a fixed reference period and reuse that state. |
+| `custom` | Use a user selector callable to choose the allowed labels. Build this with `custom_stage_policy(...)`. |
 
 `update` controls how often a runner refits stateful preprocessing or feature
 engineering stages. Current accepted values are:
@@ -190,6 +191,53 @@ feature_policy = mf.window.stage_policy(
     reference_start="2000-01-31",
     reference_end="2019-12-31",
     update="never",
+)
+```
+
+### custom_stage_policy
+
+Build a `StagePolicy` whose rows are selected by user code.
+
+```python
+macroforecast.window.custom_stage_policy(
+    selector,
+    *,
+    update="every_origin",
+    apply_to=("fit", "test"),
+    metadata=None,
+) -> StagePolicy
+```
+
+The selector receives the full index and the current origin item:
+
+```python
+selector(index: pandas.Index, *, item: dict, policy: StagePolicy)
+```
+
+It may return:
+
+| Return type | Meaning |
+| --- | --- |
+| Boolean `Series` or boolean `ndarray` | Mask over the full index. |
+| `slice` | Positional slice into the full index. |
+| Integer positions | Positional labels from the full index. |
+| Index labels | Labels to keep. |
+
+The selected labels must not be empty. The runner stores the policy under
+`ForecastResult.metadata["stage_policies"]`; the callable itself is recorded by
+name in metadata.
+
+```python
+def last_half_of_fit(index, *, item, policy):
+    fit_idx = item["fit_idx"]
+    return fit_idx[len(fit_idx) // 2 :]
+
+result = mf.forecasting.run(
+    panel,
+    "ridge",
+    window=window,
+    features=features,
+    selection_policy=mf.window.custom_stage_policy(last_half_of_fit),
 )
 ```
 

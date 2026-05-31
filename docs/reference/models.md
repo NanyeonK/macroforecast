@@ -244,6 +244,84 @@ macroforecast.models.get_model(model, *, preset=None, params=None)
 | --- | --- | --- |
 | return | `ModelSpec` | Callable model spec with model-owned defaults and spaces. |
 
+### custom_model
+
+Build a user-owned `ModelSpec` without registering a package model.
+
+```python
+macroforecast.models.custom_model(
+    name: str,
+    fit_func,
+    *,
+    family: str = "custom",
+    default_params: Mapping[str, object] | None = None,
+    parameters: tuple[ModelParameter, ...] = (),
+    search_spaces: dict[str, dict[str, tuple[object, ...]]] | None = None,
+    default_search_method: str = "grid",
+    default_preset: str = "standard",
+    input_kind: str = "supervised",
+    backend: str = "custom",
+    requires_extra: str | None = None,
+    requires_scaling: bool = False,
+    recommended_preprocessing: tuple[str, ...] = (),
+    description: str | None = None,
+) -> ModelSpec
+```
+
+### Callable Contract
+
+The default supervised contract is:
+
+```python
+fit_func(X: pandas.DataFrame, y: pandas.Series, **params) -> fitted_object
+```
+
+The fitted object must expose:
+
+```python
+fitted_object.predict(X_test)
+```
+
+`predict(X_test)` may return a pandas `Series`, a single-column `DataFrame`, or
+an array-like object with length `len(X_test)`. Pandas output must either use
+`X_test.index` or `RangeIndex(len(X_test))`; any other index is rejected by
+`forecasting.run(...)`.
+
+Set `input_kind` when the custom model follows another convention:
+
+| `input_kind` | Fit callable receives | Use case |
+| --- | --- | --- |
+| `"supervised"` | `fit_func(X, y, **params)` | Regression-style models. |
+| `"target"` | `fit_func(y, **params)` | Target-only time-series models. |
+| `"panel"` | `fit_func(panel, **params)` | Panel-input models. |
+| `"volatility"` | `fit_func(y, X=None, **params)` | Volatility or density models. |
+
+`search_spaces` uses the same model-owned preset contract as registered models:
+
+```python
+model = mf.models.custom_model(
+    "mean_model",
+    mean_model,
+    default_params={"offset": 0.0},
+    search_spaces={
+        "small": {"offset": (-0.1, 0.0, 0.1)},
+        "standard": {"offset": (-0.5, 0.0, 0.5)},
+    },
+)
+
+result = mf.forecasting.run(
+    panel,
+    {"mean": model},
+    window=window,
+    features=features,
+    preset={"mean": "small"},
+)
+```
+
+`custom_model()` does not mutate the global registry. Pass the returned
+`ModelSpec` directly to `forecasting.run(...)`, `selection.select_params(...)`,
+or `model_search_space(...)`.
+
 ### list_model_specs
 
 ```python

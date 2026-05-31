@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -93,6 +93,7 @@ _FEATURE_SPEC_METHODS = frozenset(
         "boruta_selection",
         "stability_selection",
         "genetic_selection",
+        "custom",
     }
 )
 
@@ -807,6 +808,70 @@ class _FeatureSelectionState:
 
 
 @dataclass(frozen=True)
+class _CustomFeatureState:
+    columns: tuple[str, ...]
+    func: Callable[..., Any] | None
+    fit_func: Callable[..., Any] | None
+    transform_func: Callable[..., Any] | None
+    fit_state: Any
+    requires_target: bool
+    target: str | None
+    params: dict[str, Any]
+    name: str
+    output_prefix: str
+    n_fit_rows: int
+
+    def transform(self, panel: pd.DataFrame) -> pd.DataFrame:
+        source = panel.loc[:, self.columns].copy()
+        if self.fit_state is not None:
+            if self.transform_func is not None:
+                output = self.transform_func(
+                    source,
+                    state=self.fit_state,
+                    metadata=dict(panel.attrs.get("macroforecast_metadata", {})),
+                    **self.params,
+                )
+            elif hasattr(self.fit_state, "transform"):
+                output = self.fit_state.transform(source)
+            elif callable(self.fit_state):
+                output = self.fit_state(source)
+            elif self.func is not None:
+                output = self.func(
+                    source,
+                    state=self.fit_state,
+                    metadata=dict(panel.attrs.get("macroforecast_metadata", {})),
+                    **self.params,
+                )
+            else:
+                raise TypeError("custom fitted feature step needs transform_func or fitted state with transform()")
+        elif self.func is not None:
+            output = self.func(
+                source,
+                metadata=dict(panel.attrs.get("macroforecast_metadata", {})),
+                **self.params,
+            )
+        else:
+            raise TypeError("custom feature step requires func or fit_func")
+        return _coerce_custom_step_output(output, index=source.index, prefix=self.output_prefix)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "columns": list(self.columns),
+            "callable": _callable_name(self.func),
+            "fit_callable": _callable_name(self.fit_func),
+            "transform_callable": _callable_name(self.transform_func),
+            "fit_state_type": None if self.fit_state is None else type(self.fit_state).__name__,
+            "requires_target": self.requires_target,
+            "target": self.target,
+            "params": _json_ready_step(self.params),
+            "fit_policy": "fixed_fit_panel_target_aligned_rows"
+            if self.requires_target
+            else "fixed_fit_panel",
+            "n_fit_rows": self.n_fit_rows,
+        }
+
+
+@dataclass(frozen=True)
 class _FeatureStepPlan:
     name: str
     method: str
@@ -847,6 +912,7 @@ class _FittedFeatureStep:
         | _PartialLeastSquaresState
         | _SlicedInverseRegressionState
         | _FeatureSelectionState
+        | _CustomFeatureState
         | None
     ) = None
 
@@ -1181,6 +1247,80 @@ def _fit_feature_step(
 ) -> _FittedFeatureStep:
     params = dict(plan.params)
     columns = params.pop("columns", None)
+    if plan.method == "custom":
+        selected = _resolve_columns(source, columns=columns)
+        func = params.pop("func", params.pop("callable", None))
+        fit_func = params.pop("fit_func", None)
+        transform_func = params.pop("transform_func", None)
+        requires_target = bool(params.pop("requires_target", False))
+        min_train_size = params.pop("min_train_size", None)
+        output_prefix = str(params.pop("prefix", plan.name))
+        drop_missing = bool(params.pop("drop_missing", False))
+        if func is not None and not callable(func):
+            raise TypeError("custom feature step func must be callable")
+        if fit_func is not None and not callable(fit_func):
+            raise TypeError("custom feature step fit_func must be callable")
+        if transform_func is not None and not callable(transform_func):
+            raise TypeError("custom feature step transform_func must be callable")
+        if func is None and fit_func is None:
+            raise TypeError("custom feature step requires func or fit_func")
+        source_selected = source.loc[:, selected].copy()
+        target_name = None
+        target_series = None
+        fit_source = source_selected.dropna()
+        if requires_target:
+            target_name, target_series = _single_feature_step_target(
+                target_frame,
+                step_name=plan.name,
+                method=plan.method,
+            )
+            joined = pd.concat([source_selected, target_series.rename("__target__")], axis=1).dropna()
+            fit_source = joined.loc[:, selected]
+            target_series = joined["__target__"]
+        min_size = _normalize_min_train_size(min_train_size, minimum=1) if min_train_size is not None else 1
+        if len(fit_source) < min_size:
+            raise ValueError(
+                f"feature step {plan.name!r} has fewer than {min_size} complete rows to fit custom step"
+            )
+        fit_state = None
+        if fit_func is not None:
+            fit_state = fit_func(
+                fit_source,
+                target=target_series,
+                metadata=dict(source.attrs.get("macroforecast_metadata", {})),
+                **params,
+            )
+        state = _CustomFeatureState(
+            columns=selected,
+            func=func,
+            fit_func=fit_func,
+            transform_func=transform_func,
+            fit_state=fit_state,
+            requires_target=requires_target,
+            target=target_name,
+            params=dict(params),
+            name=plan.name,
+            output_prefix=output_prefix,
+            n_fit_rows=int(len(fit_source)),
+        )
+        return _FittedFeatureStep(
+            name=plan.name,
+            method=plan.method,
+            input_name=plan.input_name,
+            include=plan.include,
+            params={
+                "columns": selected,
+                "func": func,
+                "fit_func": fit_func,
+                "transform_func": transform_func,
+                "requires_target": requires_target,
+                "min_train_size": min_train_size,
+                "prefix": output_prefix,
+                "drop_missing": drop_missing,
+                **params,
+            },
+            state=state,
+        )
     if plan.method == "lag":
         lag_values = _normalize_lags(params.pop("lags", params.pop("n_lag", (1,))), allow_zero=True)
         drop_missing = bool(params.pop("drop_missing", False))
@@ -2357,6 +2497,8 @@ def _transform_feature_step(step: _FittedFeatureStep, source: pd.DataFrame) -> p
         out = step.state.transform(source)
     elif isinstance(step.state, _FeatureSelectionState):
         out = step.state.transform(source)
+    elif isinstance(step.state, _CustomFeatureState):
+        out = step.state.transform(source)
     else:
         raise ValueError(f"feature step {step.name!r} has no fitted state for method {step.method!r}")
     if drop_missing:
@@ -2581,6 +2723,23 @@ def _feature_records_for_step(
                     "n_fit_rows": step.state.n_fit_rows,
                 }
             )
+    elif isinstance(step.state, _CustomFeatureState):
+        records = _records_for_columns(
+            out,
+            operation="custom",
+            sources=step.state.columns,
+            included=step.include,
+        )
+        for record in records:
+            record["parameter"] = f"name={step.state.name}"
+            record["fit_policy"] = (
+                "fixed_fit_panel_target_aligned_rows"
+                if step.state.requires_target
+                else "fixed_fit_panel"
+            )
+            record["target"] = step.state.target
+            record["n_fit_rows"] = step.state.n_fit_rows
+            record["callable"] = _callable_name(step.state.func)
     else:
         raw_metadata = out.attrs.get("macroforecast_feature_metadata")
         if isinstance(raw_metadata, pd.DataFrame) and not raw_metadata.empty:
@@ -2757,17 +2916,14 @@ def _normalize_feature_steps(
         }:
             raw.pop("fit_policy", None)
             raw.pop("warn_full_sample", None)
-        normalized.append(
-            _json_ready_step(
-                {
-                    "name": name,
-                    "method": method,
-                    "input": input_name,
-                    "include": include,
-                    **raw,
-                }
-            )
-        )
+        payload = {
+            "name": name,
+            "method": method,
+            "input": input_name,
+            "include": include,
+            **raw,
+        }
+        normalized.append(payload if method == "custom" else _json_ready_step(payload))
     return tuple(normalized)
 
 
@@ -2823,7 +2979,46 @@ def _json_ready_step(value: Any) -> Any:
         return [_json_ready_step(item) for item in value]
     if isinstance(value, np.generic):
         return value.item()
+    if callable(value):
+        return _callable_name(value)
     return value
+
+
+def _coerce_custom_step_output(output: Any, *, index: pd.Index, prefix: str) -> pd.DataFrame:
+    if isinstance(output, pd.Series):
+        frame = output.to_frame()
+    elif isinstance(output, pd.DataFrame):
+        frame = output.copy()
+    else:
+        values = np.asarray(output)
+        if values.ndim == 1:
+            values = values.reshape(-1, 1)
+        if values.ndim != 2:
+            raise TypeError("custom feature step output must be a Series, DataFrame, or 1D/2D array-like")
+        frame = pd.DataFrame(
+            values,
+            columns=[f"{prefix}{idx}" for idx in range(1, values.shape[1] + 1)],
+        )
+    if not isinstance(frame.index, pd.DatetimeIndex):
+        if len(frame.index) == len(index):
+            frame.index = index
+        else:
+            raise ValueError("custom feature step output must keep the input DatetimeIndex or have matching length")
+    frame.index = pd.DatetimeIndex(frame.index)
+    frame.index.name = "date"
+    frame.columns = [str(column) for column in frame.columns]
+    for column in frame.columns:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    validate_panel(frame)
+    return frame.sort_index()
+
+
+def _callable_name(func: Callable[..., Any] | None) -> str | None:
+    if func is None:
+        return None
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
 
 
 __all__ = ["FeatureSpec", "FittedFeatureBuilder", "feature_spec"]

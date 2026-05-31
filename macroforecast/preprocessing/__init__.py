@@ -2,6 +2,7 @@ from .preprocess import (
     FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES,
     FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES,
     apply_transform_codes,
+    custom_preprocess,
     fred_sd_transform_codes,
     handle_frame_edges,
     handle_outliers,
@@ -13,7 +14,7 @@ from .preprocess import (
     standardize_panel,
 )
 from .types import PreprocessedData, PreprocessInput
-from .specs import FittedPreprocessor, PreprocessSpec, preprocess_spec
+from .specs import FittedPreprocessor, PreprocessSpec, custom_preprocess_step, preprocess_spec
 from .clean import (
     apply_tcode_transform,
     drop_unbalanced_series_clean,
@@ -43,6 +44,8 @@ __all__ = [
     "PreprocessSpec",
     "FittedPreprocessor",
     "preprocess_spec",
+    "custom_preprocess",
+    "custom_preprocess_step",
     "apply_transform_codes",
     "fred_sd_transform_codes",
     "handle_tcode_lag",

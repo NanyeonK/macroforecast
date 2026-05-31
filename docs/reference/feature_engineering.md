@@ -63,7 +63,7 @@ implementation is split by responsibility:
 | File | Responsibility |
 | --- | --- |
 | `targets.py` | `direct_target()`, `average_target()`, and `path_targets()`. |
-| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA, wavelet-style decomposition, and time features. |
+| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA, wavelet-style decomposition, custom feature callables, and time features. |
 | `selection.py` | Shared fitted feature-selection algorithms used by direct selection callables and runner-safe `feature_spec()` method names. |
 | `compose.py` | Reusable step builders and sequential feature composition. |
 | `matrix.py` | Paper-style `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. |
@@ -102,6 +102,7 @@ the same functions later.
 | `wavelet_features()` | Causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
 | `adaptive_ma_rf_features()` | Random-forest adaptive moving-average smoothing over time. | Forecast model fitting. |
 | `group_pca()` | PCA factors within named column groups. | FAVAR-specific slow/fast construction, model estimation, or structural identification. |
+| `custom_features()` | One direct user-supplied pandas feature transform. | Window-safe fitted state. Use `custom_step()` inside `feature_spec()` for runner use. |
 | `compose_features()` | Sequential combinations such as `pca -> lag`, `lag -> pca`, `maf`, or `moving_average_ladder -> pca -> lag`. | Model fitting or evaluation. |
 | `time_features()` | Trend, month, quarter, and year columns. | Public-holiday or trading-day calendars; the package targets monthly and quarterly macro panels. |
 | `build_features()` | Aligned `X`, `y`, feature metadata, and feature-engineering metadata. | Model evaluation. |
@@ -725,6 +726,102 @@ features = mf.feature_engineering.feature_spec(
     predictors=["PAYEMS", "UNRATE", "HOUST"],
     steps=[
         {"name": "boruta", "method": "boruta_selection", "n_features": 2},
+    ],
+)
+```
+
+## Custom Feature Functions
+
+`custom_features()` applies one user feature transform directly. It is useful
+when the input has already been split or when the transform has no fitted state.
+
+```python
+macroforecast.feature_engineering.custom_features(
+    data,
+    func,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    columns: Iterable[str] | None = None,
+    name: str | None = None,
+    **params,
+) -> pandas.DataFrame
+```
+
+The callable receives:
+
+```python
+func(source: pandas.DataFrame, *, metadata: dict, **params)
+```
+
+`source` is the selected predictor block. The callable may return a
+`DataFrame`, `Series`, or 1-D/2-D array-like object. The output must have the
+same row count as `source` or keep a `DatetimeIndex`. All output columns are
+coerced to numeric and validated as a macroforecast panel.
+
+```python
+def spread_square(source, *, metadata=None, suffix="sq"):
+    column = source.columns[0]
+    return pd.DataFrame({f"{column}_{suffix}": source[column] ** 2}, index=source.index)
+
+X_custom = mf.feature_engineering.custom_features(
+    processed,
+    spread_square,
+    columns=["term_spread"],
+    name="spread_square",
+)
+```
+
+For strict runner use, prefer `custom_step()` inside `feature_spec(...)`.
+The runner fits the step on the rows allowed by `feature_policy` and applies it
+to validation/test rows without leaking future information.
+
+```python
+macroforecast.feature_engineering.custom_step(
+    name,
+    func=None,
+    *,
+    input="panel",
+    include=True,
+    columns=None,
+    fit_func=None,
+    transform_func=None,
+    requires_target=False,
+    min_train_size=None,
+    prefix=None,
+    drop_missing=False,
+    **params,
+) -> dict
+```
+
+### Custom Step Modes
+
+| Mode | Required callable | Fit-time call | Transform-time call |
+| --- | --- | --- | --- |
+| Stateless | `func` | none | `func(source, metadata=..., **params)` |
+| Fitted transformer object | `fit_func` returning object with `.transform()` | `fit_func(source, target=..., metadata=..., **params)` | `state.transform(source)` |
+| Separate fit/transform functions | `fit_func` and `transform_func` | `fit_func(source, target=..., metadata=..., **params)` | `transform_func(source, state=state, metadata=..., **params)` |
+| State-aware callable | `fit_func` and `func` | `fit_func(source, target=..., metadata=..., **params)` | `func(source, state=state, metadata=..., **params)` |
+
+Set `requires_target=True` when the fitting callable needs the resolved
+`feature_spec()` target. This requires exactly one target and one horizon. The
+fitted state metadata stores callable names, selected columns, whether the
+target was used, fit row count, and output columns.
+
+```python
+features = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors=["PAYEMS", "UNRATE", "HOUST"],
+    steps=[
+        mf.feature_engineering.custom_step(
+            "my_factor",
+            fit_func=my_factor_fit,
+            transform_func=my_factor_transform,
+            columns=["PAYEMS", "UNRATE", "HOUST"],
+            requires_target=True,
+            prefix="myf",
+            n_components=2,
+        ),
     ],
 )
 ```

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 import warnings
@@ -295,6 +295,49 @@ def apply_transform_codes(panel: pd.DataFrame, codes: Mapping[str, int]) -> pd.D
     if not codes:
         return panel.copy()
     return apply_tcode_transform(panel, dict(codes))
+
+
+def custom_preprocess(
+    data: PreprocessInput,
+    func: Callable[..., Any],
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    name: str | None = None,
+    **params: Any,
+) -> PreprocessedData:
+    """Apply a user supplied preprocessing callable to a canonical panel."""
+
+    if not callable(func):
+        raise TypeError("custom preprocessing func must be callable")
+    base = _coerce_input(data, metadata=metadata)
+    output = func(base.panel.copy(), metadata=dict(base.metadata), **params)
+    panel, output_metadata = _coerce_custom_preprocess_output(output, base.metadata)
+    validate_panel(panel)
+    step_name = name or _callable_name(func)
+    stage = {
+        "name": str(step_name),
+        "callable": _callable_name(func),
+        "params": _json_ready(params),
+        "input_panel": panel_info(DataBundle(base.panel, base.metadata)),
+        "output_panel": panel_info(DataBundle(panel, output_metadata)),
+    }
+    updated_metadata = attach_metadata(output_metadata, "custom_preprocess", stage)
+    panel = panel.copy()
+    panel.attrs["macroforecast_metadata"] = updated_metadata
+    return PreprocessedData(
+        panel=panel,
+        metadata=updated_metadata,
+        target=base.target,
+        targets=base.targets,
+        horizons=base.horizons,
+        start=base.start,
+        end=base.end,
+        predictors=base.predictors,
+        steps=(
+            *(data.steps if isinstance(data, PreprocessedData) else ()),
+            {"step": "custom_preprocess", "name": str(step_name)},
+        ),
+    )
 
 
 def standardize_panel(
@@ -985,10 +1028,53 @@ def _build_transform_state(panel: pd.DataFrame, codes: Mapping[str, int]) -> dic
     return state
 
 
+def _coerce_custom_preprocess_output(
+    output: Any,
+    base_metadata: Mapping[str, Any],
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    if isinstance(output, PreprocessedData):
+        return output.panel.copy(), dict(output.metadata)
+    if isinstance(output, DataBundle):
+        return output.panel.copy(), dict(output.metadata)
+    if isinstance(output, tuple) and len(output) == 2:
+        panel, metadata = output
+        if not isinstance(panel, pd.DataFrame):
+            raise TypeError("custom preprocessing tuple output must be (DataFrame, metadata)")
+        return as_panel(panel, metadata=metadata), dict(metadata)
+    if isinstance(output, pd.DataFrame):
+        existing = dict(output.attrs.get("macroforecast_metadata", {}))
+        merged = dict(base_metadata)
+        merged.update(existing)
+        return as_panel(output, metadata=merged), merged
+    raise TypeError(
+        "custom preprocessing callable must return a DataFrame, DataBundle, "
+        "PreprocessedData, or (DataFrame, metadata)"
+    )
+
+
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
+def _json_ready(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    if callable(value):
+        return _callable_name(value)
+    return value
+
+
 __all__ = [
     "PreprocessedData",
     "PreprocessInput",
     "reprocess",
+    "custom_preprocess",
     "plan",
     "report",
     "apply_transform_codes",

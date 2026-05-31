@@ -10,6 +10,7 @@ from macroforecast.forecasting.combination import (
     combine_trimmed_mean,
     combine_winsorized_mean,
     combination_spec,
+    custom_combination,
 )
 from macroforecast.forecasting.runner import run
 from macroforecast.forecasting.types import ForecastResult
@@ -27,6 +28,7 @@ __all__ = [
     "combine_trimmed_mean",
     "combine_winsorized_mean",
     "combination_spec",
+    "custom_combination",
     "run",
     "run_forecast",
 ]

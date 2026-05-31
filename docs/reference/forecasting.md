@@ -536,6 +536,38 @@ result = mf.forecasting.run(
 forming the current combined forecast. The current row's realized value is used
 only after that row's weight or best-model decision has already been made.
 
+Custom forecast combinations use the same runner hook:
+
+```python
+def blend(forecasts, *, actual, weight=0.5):
+    return weight * forecasts.iloc[:, 0] + (1.0 - weight) * forecasts.iloc[:, -1]
+
+result = mf.forecasting.run(
+    panel,
+    {"ridge": "ridge", "lasso": "lasso"},
+    window=window,
+    features=features,
+    combination=mf.forecasting.custom_combination(
+        "ridge_lasso_blend",
+        blend,
+        models=["ridge", "lasso"],
+        weight=0.25,
+    ),
+)
+```
+
+The callable receives a wide forecast matrix indexed by
+`(date, origin, origin_pos, horizon)` and an `actual` series aligned to the same
+index:
+
+```python
+func(forecasts: pandas.DataFrame, *, actual: pandas.Series, **params)
+```
+
+It must return a `Series` or one-dimensional array-like object with the same
+length. The runner appends the output as rows with `combined=True` and records
+the callable name in `metadata["combination"]`.
+
 ### Mixed-Frequency DFM In The Runner
 
 Use the panel-input path for native monthly/quarterly state-space models. The
@@ -740,3 +772,4 @@ forecast outputs, not model fits.
 | `combine_dmspe(forecasts, y_true, discount=1.0)` | Alias for inverse discounted MSPE. |
 | `combine_best_n(forecasts, y_true, n=3)` | Average historically best `n` models. |
 | `combination_spec(method, name=None, models=None, **params)` | Build a reusable runner combination spec. |
+| `custom_combination(name, func, models=None, **params)` | Build a runner combination spec from a user callable. |

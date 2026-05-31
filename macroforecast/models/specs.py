@@ -262,6 +262,48 @@ def get_model(
     return spec
 
 
+def custom_model(
+    name: str,
+    fit_func: Callable[..., Any],
+    *,
+    family: str = "custom",
+    default_params: Mapping[str, Any] | None = None,
+    parameters: tuple[ModelParameter, ...] = (),
+    search_spaces: SearchSpaces | None = None,
+    default_search_method: str = "grid",
+    default_preset: str = "standard",
+    input_kind: InputKind = "supervised",
+    backend: str = "custom",
+    requires_extra: str | None = None,
+    requires_scaling: bool = False,
+    recommended_preprocessing: tuple[str, ...] = (),
+    description: str | None = None,
+) -> ModelSpec:
+    """Build a user-owned ``ModelSpec`` without registering a package model."""
+
+    if not name:
+        raise ValueError("custom model name must be non-empty")
+    if not callable(fit_func):
+        raise TypeError("custom model fit_func must be callable")
+    return ModelSpec(
+        name=str(name),
+        family=str(family),
+        fit_func=fit_func,
+        default_params=dict(default_params or {}),
+        parameters=parameters,
+        search_spaces=dict(search_spaces or {}),
+        default_search_method=str(default_search_method),
+        default_preset=str(default_preset),
+        preset=str(default_preset),
+        input_kind=input_kind,
+        backend=str(backend),
+        requires_extra=requires_extra,
+        requires_scaling=bool(requires_scaling),
+        recommended_preprocessing=tuple(recommended_preprocessing),
+        description=description or f"User supplied model {_callable_name(fit_func)}.",
+    )
+
+
 def list_model_specs(*, family: str | None = None) -> pd.DataFrame:
     """List registered model specs."""
 
@@ -2666,6 +2708,7 @@ __all__ = [
     "InputKind",
     "ModelParameter",
     "ModelSpec",
+    "custom_model",
     "describe_model",
     "get_model",
     "list_model_specs",

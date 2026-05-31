@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
 import pandas as pd
@@ -680,6 +680,48 @@ def scale_step(
     )
 
 
+def custom_step(
+    name: str,
+    func: Callable[..., Any] | None = None,
+    *,
+    input: str = "panel",
+    include: bool = True,
+    columns: Iterable[str] | None = None,
+    fit_func: Callable[..., Any] | None = None,
+    transform_func: Callable[..., Any] | None = None,
+    requires_target: bool = False,
+    min_train_size: int | None = None,
+    prefix: str | None = None,
+    drop_missing: bool = False,
+    **params: Any,
+) -> dict[str, Any]:
+    """Return a user-supplied feature step for ``feature_spec``."""
+
+    if func is None and fit_func is None:
+        raise TypeError("custom_step requires func or fit_func")
+    if func is not None and not callable(func):
+        raise TypeError("custom_step func must be callable")
+    if fit_func is not None and not callable(fit_func):
+        raise TypeError("custom_step fit_func must be callable")
+    if transform_func is not None and not callable(transform_func):
+        raise TypeError("custom_step transform_func must be callable")
+    return _step(
+        name=name,
+        method="custom",
+        input=input,
+        include=include,
+        columns=columns,
+        func=func,
+        fit_func=fit_func,
+        transform_func=transform_func,
+        requires_target=requires_target,
+        min_train_size=min_train_size,
+        prefix=prefix,
+        drop_missing=drop_missing,
+        **params,
+    )
+
+
 def pca_then_lags(
     data: FeatureInput,
     *,
@@ -1276,6 +1318,7 @@ def _run_feature_step(
         "boruta_selection",
         "stability_selection",
         "genetic_selection",
+        "custom",
     }:
         raise ValueError(
             f"fit-aware feature step {method!r} requires feature_spec(). "

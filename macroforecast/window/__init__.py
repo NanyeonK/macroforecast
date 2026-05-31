@@ -35,7 +35,14 @@ from macroforecast.window.core import (
     val_poos,
     val_rolling_blocks,
 )
-from macroforecast.window.policy import StagePolicy, resolve_stage_policy, stage_index, stage_panel, stage_policy
+from macroforecast.window.policy import (
+    StagePolicy,
+    custom_stage_policy,
+    resolve_stage_policy,
+    stage_index,
+    stage_panel,
+    stage_policy,
+)
 
 __all__ = [
     "AlignmentWindow",
@@ -49,6 +56,7 @@ __all__ = [
     "alignment_keep_missing",
     "blocked_kfold",
     "blocked_kfold_split",
+    "custom_stage_policy",
     "estimation_expanding",
     "estimation_fixed",
     "estimation_rolling",

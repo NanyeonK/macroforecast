@@ -239,6 +239,88 @@ The fitted and transformed metadata records `fit_period`, `history_period`,
 fit-window outlier, imputation, and standardization state; it currently supports
 `impute="none"`, `"mean"`, and `"forward_fill"`.
 
+`preprocess_spec(...)` also accepts `custom_steps=[...]`. These steps run after
+the built-in preprocessing options. Inside `forecasting.run(...)`, the custom
+steps are fitted or applied inside the same stage policy as the rest of the
+preprocessing spec.
+
+```python
+def add_spread(panel, *, metadata=None, scale=1.0):
+    out = panel.copy()
+    out["spread"] = (out["long_rate"] - out["short_rate"]) * scale
+    return out
+
+pre = mf.preprocessing.preprocess_spec(
+    transform="none",
+    impute="mean",
+    custom_steps=[
+        mf.preprocessing.custom_preprocess_step("spread", add_spread, scale=100.0),
+    ],
+)
+```
+
+## custom_preprocess
+
+Apply one user-supplied preprocessing callable directly to a panel or bundle.
+
+```python
+macroforecast.preprocessing.custom_preprocess(
+    data,
+    func,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    name: str | None = None,
+    **params,
+) -> PreprocessedData
+```
+
+### Callable Contract
+
+The callable receives:
+
+```python
+func(panel: pandas.DataFrame, *, metadata: dict, **params)
+```
+
+It must return one of:
+
+| Return type | Meaning |
+| --- | --- |
+| `pandas.DataFrame` | New canonical or normalizable panel. Existing `attrs["macroforecast_metadata"]` is merged with input metadata. |
+| `DataBundle` | Panel plus metadata to continue with. |
+| `PreprocessedData` | Full preprocessing object to continue with. |
+| `(DataFrame, metadata)` | Explicit panel and metadata pair. |
+
+### Output
+
+Returns `PreprocessedData`. Metadata gains `metadata["custom_preprocess"]`,
+including callable name, parameters, input panel summary, and output panel
+summary. The output panel also carries
+`panel.attrs["macroforecast_metadata"]`.
+
+## custom_preprocess_step
+
+Create a runner-compatible preprocessing step for
+`preprocess_spec(custom_steps=[...])`.
+
+```python
+macroforecast.preprocessing.custom_preprocess_step(
+    name: str,
+    func,
+    **params,
+) -> dict
+```
+
+| Input | Meaning |
+| --- | --- |
+| `name` | Stable step name stored in metadata. |
+| `func` | Callable following the `custom_preprocess()` callable contract. |
+| `**params` | JSON-ready parameters passed to `func`. |
+
+The returned dictionary keeps the callable for Python execution, but
+`PreprocessSpec.to_dict()` records only the callable name so runner metadata is
+JSON-ready.
+
 ## Step Helpers
 
 These helpers return `pandas.DataFrame` unless noted.
@@ -247,6 +329,8 @@ These helpers return `pandas.DataFrame` unless noted.
 | --- | --- | --- | --- |
 | `plan(data, ...)` | DataFrame/bundle/spec | `dict` | Dry-run summary of configured choices, transform codes, metadata warning, and detected native frequencies. |
 | `report(processed)` | `PreprocessedData` | `dict` | Compact report from a completed preprocessing result. |
+| `custom_preprocess(data, func, ...)` | DataFrame/bundle/spec and callable | `PreprocessedData` | Apply one custom preprocessing function directly. |
+| `custom_preprocess_step(name, func, **params)` | name and callable | `dict` | Build a custom step for `preprocess_spec(custom_steps=[...])`. |
 | `apply_transform_codes(panel, codes)` | DataFrame, t-code map | DataFrame | Apply McCracken-Ng t-code formulas. |
 | `fred_sd_transform_codes(data, ...)` | FRED-SD panel/bundle/spec | `dict[str, int]`, or `(dict, DataFrame)` with `return_table=True` | Build FRED-SD state-series t-codes from user choices and optional national-analog suggestions. |
 | `handle_tcode_lag(panel, method=..., codes=...)` | DataFrame | DataFrame | Handle missing rows introduced by t-code transforms. |

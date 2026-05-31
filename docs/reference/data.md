@@ -538,6 +538,69 @@ macroforecast.data.load_custom_parquet(
 `date_col`, `series_columns`, `transform_codes`, and `strict` have the same
 meaning as in `load_custom_csv`.
 
+## custom_dataset
+
+Build a custom `DataBundle` from an in-memory pandas `DataFrame`.
+
+Use `custom_dataset()` when the data are already in Python memory and should
+enter the same contract as `load_fred_md()`, `load_fred_qd()`,
+`load_fred_sd()`, `load_custom_csv()`, and `load_custom_parquet()`.
+
+```python
+macroforecast.data.custom_dataset(
+    frame,
+    *,
+    date: str | None = None,
+    columns: Iterable[str] | None = None,
+    rename: Mapping[str, str] | None = None,
+    dataset: str = "custom",
+    source_family: str = "custom",
+    frequency: str = "unknown",
+    frequency_by_column: Mapping[str, str] | None = None,
+    transform_codes: Mapping[str, int] | None = None,
+    metadata: Mapping[str, object] | None = None,
+    strict: bool = True,
+) -> DataBundle
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `frame` | `pandas.DataFrame` | required | Raw or already canonical panel. |
+| `date` | `str` or `None` | `None` | Date column. If omitted, the input must have a `DatetimeIndex` or a parseable first column. |
+| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
+| `rename` | mapping or `None` | `None` | Rename retained columns after selection. |
+| `dataset` | `str` | `"custom"` | Dataset label stored in metadata. |
+| `source_family` | `str` | `"custom"` | Source-family label stored in metadata. |
+| `frequency` | `str` | `"unknown"` | Loader-level frequency label. |
+| `frequency_by_column` | mapping or `None` | `None` | Optional column-level frequency map for mixed-frequency panels. |
+| `transform_codes` | mapping or `None` | `None` | Optional t-code map. Keys must match final panel columns. |
+| `metadata` | mapping or `None` | `None` | User metadata merged before package metadata is attached. |
+| `strict` | `bool` | `True` | Reject lossy date or numeric coercion. |
+
+### Output
+
+Returns `DataBundle`. The panel is canonical and the metadata includes
+`dataset`, `source_family`, `frequency`, optional `transform_codes`, optional
+column-level frequency metadata, and a `custom_dataset` stage.
+
+```python
+bundle = mf.data.custom_dataset(
+    frame,
+    date="date",
+    dataset="bank_panel",
+    frequency="monthly",
+    transform_codes={"loan_growth": 1, "spread": 2},
+)
+
+processed = mf.preprocessing.reprocess(
+    bundle,
+    transform="custom",
+    impute="mean",
+)
+```
+
 ## as_panel
 
 Normalize an existing pandas `DataFrame`.

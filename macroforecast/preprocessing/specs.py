@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -10,6 +11,9 @@ from macroforecast.data import DataBundle, attach_metadata, panel_info
 from macroforecast.preprocessing.clean import apply_standardization_state
 from macroforecast.preprocessing.preprocess import (
     _coerce_input,
+    _callable_name,
+    _coerce_custom_preprocess_output,
+    _json_ready,
     _normalize_impute,
     _normalize_outliers,
     reprocess,
@@ -42,6 +46,7 @@ _REPROCESS_OPTIONS = {
     "standardize_columns",
     "standardize_ddof",
     "frame",
+    "custom_steps",
     "warn_metadata",
 }
 
@@ -65,9 +70,11 @@ class PreprocessSpec:
         scope = _normalize_preprocessing_scope(policy)
         if scope == "fit_window":
             _validate_fit_window_options(self.options)
-        fit_options = dict(self.options)
+        custom_steps = _normalize_custom_steps(self.options.get("custom_steps"))
+        fit_options = _reprocess_options(self.options)
         fit_options.setdefault("warn_metadata", False)
         processed = reprocess(data, metadata=metadata, **fit_options)
+        processed = _apply_custom_preprocess_steps(processed, custom_steps)
         state_panel: pd.DataFrame | None = None
         outlier_state: dict[str, Any] | None = None
         impute_state: dict[str, Any] | None = None
@@ -79,7 +86,7 @@ class PreprocessSpec:
             train_after_outlier = _apply_outlier_state(state_panel, outlier_state)
             impute_state = _fit_impute_state(train_after_outlier, self.options)
         stage = {
-            "options": dict(self.options),
+            "options": _metadata_options(self.options),
             "preprocessing_scope": scope,
             "fit_input": panel_info(DataBundle(base.panel, base.metadata)),
             "fit_output": panel_info(DataBundle(processed.panel, processed.metadata)),
@@ -127,7 +134,7 @@ class PreprocessSpec:
     def to_dict(self) -> dict[str, Any]:
         """Return JSON-ready preprocessing choices."""
 
-        return {"options": dict(self.options)}
+        return {"options": _metadata_options(self.options)}
 
     def to_metadata(self) -> dict[str, Any]:
         """Return compact metadata for runners."""
@@ -182,11 +189,13 @@ class FittedPreprocessor:
         combined = _combine_panels(source_history, base.panel)
         combined_metadata = dict(self.fit_metadata)
         combined_metadata.update(base.metadata)
-        transform_options = dict(self.spec.options)
+        custom_steps = _normalize_custom_steps(self.spec.options.get("custom_steps"))
+        transform_options = _reprocess_options(self.spec.options)
         transform_options.setdefault("warn_metadata", False)
         if self.standardization_state is not None:
             transform_options["standardize"] = "none"
         processed = reprocess((combined, combined_metadata), **transform_options)
+        processed = _apply_custom_preprocess_steps(processed, custom_steps)
         selected = processed.panel.reindex(base.panel.index)
         selected_metadata = dict(processed.metadata)
         if self.standardization_state is not None:
@@ -210,7 +219,7 @@ class FittedPreprocessor:
             selected_metadata,
             "preprocess_transform",
             {
-                "options": dict(self.spec.options),
+                "options": _metadata_options(self.spec.options),
                 "preprocessing_scope": "origin_available",
                 "fit_rows": int(self.fit_panel.shape[0]),
                 "transform_rows": int(base.panel.shape[0]),
@@ -263,6 +272,24 @@ class FittedPreprocessor:
         )
         if self.standardization_state is not None:
             selected = apply_standardization_state(selected, self.standardization_state)
+        custom_steps = _normalize_custom_steps(self.spec.options.get("custom_steps"))
+        if custom_steps:
+            custom_processed = _apply_custom_preprocess_steps(
+                PreprocessedData(
+                    panel=selected,
+                    metadata=processed_base.metadata,
+                    target=base.target or self.processed_train.target,
+                    targets=base.targets or self.processed_train.targets,
+                    horizons=base.horizons or self.processed_train.horizons,
+                    start=base.start or self.processed_train.start,
+                    end=base.end or self.processed_train.end,
+                    predictors=base.predictors,
+                    steps=tuple(processed_base.steps),
+                ),
+                custom_steps,
+            )
+            selected = custom_processed.panel
+            processed_base = custom_processed
         selected_metadata = _fit_window_metadata(
             processed_base.metadata,
             self,
@@ -316,6 +343,20 @@ def preprocess_spec(**options: Any) -> PreprocessSpec:
     return PreprocessSpec(options=dict(options))
 
 
+def custom_preprocess_step(
+    name: str,
+    func: Callable[..., Any],
+    **params: Any,
+) -> dict[str, Any]:
+    """Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``."""
+
+    if not callable(func):
+        raise TypeError("custom preprocessing step func must be callable")
+    if not name:
+        raise ValueError("custom preprocessing step name must be non-empty")
+    return {"name": str(name), "func": func, "params": dict(params)}
+
+
 def _combine_panels(history: pd.DataFrame, panel: pd.DataFrame) -> pd.DataFrame:
     combined = pd.concat([history, panel], axis=0)
     combined = combined.loc[~combined.index.duplicated(keep="last")]
@@ -355,7 +396,7 @@ def _normalize_preprocessing_scope(value: str) -> str:
 
 
 def _state_base_options(options: dict[str, Any]) -> dict[str, Any]:
-    out = dict(options)
+    out = _reprocess_options(options)
     out["outliers"] = "none"
     out["impute"] = "none"
     out["standardize"] = "none"
@@ -372,6 +413,81 @@ def _validate_fit_window_options(options: dict[str, Any]) -> None:
             "impute='mean', and impute='forward_fill'. Use "
             "policy='origin_available' for EM or linear imputation."
         )
+
+
+def _reprocess_options(options: Mapping[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in dict(options).items() if key != "custom_steps"}
+
+
+def _metadata_options(options: Mapping[str, Any]) -> dict[str, Any]:
+    return _json_ready(dict(options))
+
+
+def _normalize_custom_steps(value: Any) -> tuple[dict[str, Any], ...]:
+    if value is None:
+        return ()
+    if callable(value):
+        return (custom_preprocess_step(_callable_name(value), value),)
+    if isinstance(value, Mapping):
+        return (_normalize_custom_step(value),)
+    if isinstance(value, (list, tuple)):
+        return tuple(_normalize_custom_step(item) for item in value)
+    raise TypeError("custom_steps must be a callable, mapping, sequence, or None")
+
+
+def _normalize_custom_step(value: Any) -> dict[str, Any]:
+    if callable(value):
+        return custom_preprocess_step(_callable_name(value), value)
+    if not isinstance(value, Mapping):
+        raise TypeError("each custom preprocessing step must be a mapping or callable")
+    raw = dict(value)
+    func = raw.pop("func", raw.pop("callable", None))
+    if not callable(func):
+        raise TypeError("custom preprocessing step requires callable 'func'")
+    name = str(raw.pop("name", _callable_name(func)))
+    params = dict(raw.pop("params", {}))
+    params.update(raw)
+    return custom_preprocess_step(name, func, **params)
+
+
+def _apply_custom_preprocess_steps(
+    data: PreprocessedData,
+    steps: tuple[dict[str, Any], ...],
+) -> PreprocessedData:
+    if not steps:
+        return data
+    current = data
+    for step in steps:
+        func = step["func"]
+        params = dict(step.get("params", {}))
+        output = func(current.panel.copy(), metadata=dict(current.metadata), **params)
+        panel, metadata = _coerce_custom_preprocess_output(output, current.metadata)
+        record = {
+            "name": str(step["name"]),
+            "callable": _callable_name(func),
+            "params": _json_ready(params),
+            "input_panel": panel_info(DataBundle(current.panel, current.metadata)),
+            "output_panel": panel_info(DataBundle(panel, metadata)),
+        }
+        updated = dict(metadata)
+        updated["custom_preprocess_steps"] = [
+            *current.metadata.get("custom_preprocess_steps", []),
+            record,
+        ]
+        panel = panel.copy()
+        panel.attrs["macroforecast_metadata"] = updated
+        current = PreprocessedData(
+            panel=panel,
+            metadata=updated,
+            target=current.target,
+            targets=current.targets,
+            horizons=current.horizons,
+            start=current.start,
+            end=current.end,
+            predictors=current.predictors,
+            steps=(*current.steps, {"step": "custom_preprocess", "name": str(step["name"])}),
+        )
+    return current
 
 
 def _normalize_outlier_action(value: Any) -> str:
@@ -637,4 +753,4 @@ def _apply_outlier_action(values: pd.DataFrame, mask: pd.DataFrame, state: dict[
     return values.where(~mask, capped)
 
 
-__all__ = ["FittedPreprocessor", "PreprocessSpec", "preprocess_spec"]
+__all__ = ["FittedPreprocessor", "PreprocessSpec", "custom_preprocess_step", "preprocess_spec"]

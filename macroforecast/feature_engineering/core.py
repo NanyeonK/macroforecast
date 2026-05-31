@@ -3,6 +3,7 @@ from __future__ import annotations
 from macroforecast.feature_engineering.builder import build_features
 from macroforecast.feature_engineering.compose import (
     compose_features,
+    custom_step,
     fourier_step,
     group_pca_step,
     hamilton_step,
@@ -37,6 +38,7 @@ from macroforecast.feature_engineering.transforms import (
     boruta_selection,
     correlation_selection,
     cumsum_features,
+    custom_features,
     dfm_features,
     diff_features,
     genetic_selection,
@@ -84,6 +86,8 @@ __all__ = [
     "compose_features",
     "correlation_selection",
     "cumsum_features",
+    "custom_features",
+    "custom_step",
     "dfm_features",
     "diff_features",
     "direct_target",

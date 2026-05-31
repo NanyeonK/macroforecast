@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, TypeAlias
 
@@ -61,6 +61,7 @@ class StagePolicy:
     reference_end: Any | None = None
     apply_to: tuple[str, ...] = ("fit", "test")
     metadata: dict[str, Any] = field(default_factory=dict)
+    selector: Callable[..., Any] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "scope", _normalize_scope(self.scope))
@@ -68,6 +69,8 @@ class StagePolicy:
         object.__setattr__(self, "apply_to", tuple(str(value) for value in self.apply_to))
         if self.scope == "fixed_reference" and self.reference_start is None and self.reference_end is None:
             raise ValueError("fixed_reference stage policy requires reference_start or reference_end")
+        if self.scope == "custom" and self.selector is None:
+            raise ValueError("custom stage policy requires selector")
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-ready policy description."""
@@ -79,6 +82,7 @@ class StagePolicy:
             "reference_end": _json_ready(self.reference_end),
             "apply_to": list(self.apply_to),
             "metadata": _json_ready(self.metadata),
+            "selector": _callable_name(self.selector),
         }
 
 
@@ -90,6 +94,7 @@ def stage_policy(
     reference_end: Any | None = None,
     apply_to: tuple[str, ...] | list[str] = ("fit", "test"),
     metadata: Mapping[str, Any] | None = None,
+    selector: Callable[..., Any] | None = None,
 ) -> StagePolicy:
     """Create a reusable stage timing policy."""
 
@@ -100,6 +105,27 @@ def stage_policy(
         reference_end=reference_end,
         apply_to=tuple(apply_to),
         metadata=dict(metadata or {}),
+        selector=selector,
+    )
+
+
+def custom_stage_policy(
+    selector: Callable[..., Any],
+    *,
+    update: StageUpdate = "every_origin",
+    apply_to: tuple[str, ...] | list[str] = ("fit", "test"),
+    metadata: Mapping[str, Any] | None = None,
+) -> StagePolicy:
+    """Create a stage policy whose sample labels are supplied by a callable."""
+
+    if not callable(selector):
+        raise TypeError("custom stage selector must be callable")
+    return stage_policy(
+        "custom",
+        update=update,
+        apply_to=apply_to,
+        metadata=metadata,
+        selector=selector,
     )
 
 
@@ -133,6 +159,9 @@ def stage_index(
         return labels[start:end + 1]
     if item is None:
         raise ValueError(f"stage policy scope={resolved.scope!r} requires an origin item")
+    if resolved.scope == "custom":
+        output = resolved.selector(labels, item=item, policy=resolved)  # type: ignore[misc]
+        return _index_from_selector_output(labels, output)
     if resolved.scope == "origin_available":
         return labels[_positions_from_item(item, "estimation")]
     if resolved.scope == "fit_window":
@@ -170,6 +199,28 @@ def _positions_from_item(item: Mapping[str, Any], prefix: str) -> np.ndarray:
     if isinstance(row, Mapping):
         return _positions_from_item(row, prefix)
     raise ValueError(f"origin item does not contain {prefix!r} positions")
+
+
+def _index_from_selector_output(labels: pd.Index, output: Any) -> pd.Index:
+    if isinstance(output, pd.Series):
+        output = output.to_numpy()
+    if isinstance(output, np.ndarray) and output.dtype == bool:
+        if len(output) != len(labels):
+            raise ValueError("custom stage selector boolean mask length does not match index")
+        selected = labels[output]
+    elif isinstance(output, slice):
+        selected = labels[output]
+    else:
+        values = list(output) if not isinstance(output, pd.Index) else list(output)
+        if not values:
+            raise ValueError("custom stage selector returned no labels")
+        if all(isinstance(value, (int, np.integer)) for value in values):
+            selected = labels[np.asarray(values, dtype=int)]
+        else:
+            selected = labels.intersection(pd.Index(values), sort=False)
+    if len(selected) == 0:
+        raise ValueError("custom stage selector returned no labels")
+    return pd.Index(selected)
 
 
 def _reference_bounds(labels: pd.Index, policy: StagePolicy) -> tuple[int, int]:
@@ -232,7 +283,24 @@ def _json_ready(value: Any) -> Any:
         return [_json_ready(item) for item in value]
     if isinstance(value, list):
         return [_json_ready(item) for item in value]
+    if callable(value):
+        return _callable_name(value)
     return value
 
 
-__all__ = ["StagePolicy", "resolve_stage_policy", "stage_index", "stage_panel", "stage_policy"]
+def _callable_name(func: Callable[..., Any] | None) -> str | None:
+    if func is None:
+        return None
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
+__all__ = [
+    "StagePolicy",
+    "custom_stage_policy",
+    "resolve_stage_policy",
+    "stage_index",
+    "stage_panel",
+    "stage_policy",
+]

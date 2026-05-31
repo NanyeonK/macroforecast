@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from itertools import combinations, combinations_with_replacement
 from typing import Any
 
@@ -1180,6 +1180,50 @@ def dfm_features(
             source=",".join(selected),
             inputs=selected,
             fit_policy="full_input_complete_rows",
+        )
+    )
+    return result
+
+
+def custom_features(
+    data: FeatureInput,
+    func: Callable[..., Any],
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    columns: Iterable[str] | None = None,
+    name: str | None = None,
+    **params: Any,
+) -> pd.DataFrame:
+    """Apply a user supplied feature-engineering callable to a panel."""
+
+    if not callable(func):
+        raise TypeError("custom feature func must be callable")
+    base = _coerce_input(data, metadata=metadata)
+    panel = base.panel
+    validate_panel(panel)
+    selected = _resolve_columns(panel, columns=columns)
+    source = panel.loc[:, selected].copy()
+    output = func(source, metadata=dict(base.metadata), **params)
+    result = _coerce_custom_feature_output(output, index=source.index)
+    validate_panel(result)
+    step_name = name or _callable_name(func)
+    result.attrs["macroforecast_metadata"] = attach_metadata(
+        base.metadata,
+        "feature_engineering_custom",
+        {
+            "name": str(step_name),
+            "callable": _callable_name(func),
+            "columns": list(selected),
+            "params": _json_ready(params),
+            "output_columns": [str(column) for column in result.columns],
+        },
+    )
+    result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
+        _records_for_columns(
+            result,
+            operation="custom",
+            sources=selected,
+            included=True,
         )
     )
     return result
@@ -2820,6 +2864,54 @@ def _infer_frequency(series: pd.Series) -> str:
     if most_common == 12:
         return "annual"
     return "irregular"
+
+
+def _coerce_custom_feature_output(output: Any, *, index: pd.Index) -> pd.DataFrame:
+    if isinstance(output, pd.Series):
+        frame = output.to_frame()
+    elif isinstance(output, pd.DataFrame):
+        frame = output.copy()
+    else:
+        values = np.asarray(output)
+        if values.ndim == 1:
+            values = values.reshape(-1, 1)
+        if values.ndim != 2:
+            raise TypeError("custom feature output must be a Series, DataFrame, or 1D/2D array-like")
+        frame = pd.DataFrame(
+            values,
+            columns=[f"custom_{idx}" for idx in range(1, values.shape[1] + 1)],
+        )
+    if not isinstance(frame.index, pd.DatetimeIndex):
+        if len(frame.index) == len(index):
+            frame.index = index
+        else:
+            raise ValueError("custom feature output must keep the input DatetimeIndex or have matching length")
+    frame.index = pd.DatetimeIndex(frame.index)
+    frame.index.name = "date"
+    frame.columns = [str(column) for column in frame.columns]
+    for column in frame.columns:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    return frame.sort_index()
+
+
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
+def _json_ready(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, np.generic):
+        return value.item()
+    if callable(value):
+        return _callable_name(value)
+    return value
 
 
 def _normalize_simple_transform(transform: str) -> str:
