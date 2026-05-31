@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -11,6 +11,7 @@ from pandas.tseries.offsets import DateOffset
 
 from macroforecast.data import (
     DataBundle,
+    DataSpec,
     as_panel,
     panel_info,
     spec as data_spec,
@@ -30,7 +31,50 @@ from macroforecast.window import (
     stage_index,
     stage_panel,
 )
+from macroforecast.forecasting.combination import (
+    CombinationSpec,
+    apply_combinations,
+    resolve_combinations,
+)
 from macroforecast.forecasting.types import ForecastResult
+
+ForecastPolicy = Literal["direct", "direct_average", "path_average", "recursive"]
+FutureFeaturePolicy = Literal["target_lags", "observed_future"]
+
+
+_FORECAST_TABLE_COLUMNS = (
+    "date",
+    "origin",
+    "origin_pos",
+    "horizon",
+    "forecast_policy",
+    "target",
+    "model",
+    "model_spec",
+    "prediction",
+    "variance_prediction",
+    "quantile_predictions",
+    "actual",
+    "params",
+    "selection",
+    "stored_model",
+    "window",
+    "preprocessed",
+    "combined",
+    "combination",
+)
+
+_STAGE_RECORD_COLUMNS = (
+    "stage",
+    "origin",
+    "origin_pos",
+    "updated",
+    "fit_start",
+    "fit_end",
+    "test_start",
+    "test_end",
+    "metadata",
+)
 
 
 @dataclass(frozen=True)
@@ -73,6 +117,15 @@ def run(
     params: Mapping[str, Any] | None = None,
     target: str | None = None,
     horizon: int = 1,
+    horizons: Sequence[int] | int | None = None,
+    forecast_policy: str = "direct",
+    future_feature_policy: str | None = None,
+    target_transform: str | None = None,
+    combination: str
+    | CombinationSpec
+    | Sequence[str | CombinationSpec | Mapping[str, Any]]
+    | Mapping[str, Any]
+    | None = None,
     save_models: bool = True,
     model_store: str | Path = "trained_model",
 ) -> ForecastResult:
@@ -85,8 +138,45 @@ def run(
     """
 
     window_spec = resolve_window(window)
+    horizon_values = _resolve_runner_horizons(horizon=horizon, horizons=horizons)
+    policy = _normalize_forecast_policy(forecast_policy)
+    future_policy = _normalize_future_feature_policy(
+        future_feature_policy,
+        forecast_policy=policy,
+    )
+    if isinstance(data, FeatureSet) and len(horizon_values) > 1:
+        raise ValueError(
+            "FeatureSet input is already target-constructed; run each prebuilt "
+            "horizon-specific FeatureSet separately, or pass a panel with "
+            "horizons=..."
+        )
+    if len(horizon_values) > 1:
+        return _run_multiple_horizons(
+            data,
+            model,
+            window=window_spec,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_policy,
+            features=features,
+            feature_policy=feature_policy,
+            selection=selection,
+            selection_policy=selection_policy,
+            selection_metric=selection_metric,
+            maximize_selection=maximize_selection,
+            preset=preset,
+            params=params,
+            target=target,
+            horizons=horizon_values,
+            forecast_policy=policy,
+            future_feature_policy=future_policy,
+            target_transform=target_transform,
+            combination=combination,
+            save_models=save_models,
+            model_store=model_store,
+        )
     config = get_config()
     model_runs = _resolve_model_runs(model, preset=preset, params=params)
+    combination_specs = resolve_combinations(combination)
     preprocessing_stage_policy = (
         resolve_stage_policy(
             preprocessing_policy,
@@ -111,6 +201,13 @@ def run(
     )
 
     if isinstance(data, FeatureSet):
+        if policy != "direct":
+            raise ValueError(
+                "FeatureSet input is already target-constructed; use "
+                "forecast_policy='direct', or pass a panel plus FeatureSpec so "
+                "the runner can build direct-average, path-average, or recursive targets."
+            )
+        _validate_feature_model_runs(model_runs)
         return _run_feature_set(
             data,
             model_runs=model_runs,
@@ -120,16 +217,60 @@ def run(
             selection_metric=selection_metric,
             maximize_selection=maximize_selection,
             config=config,
+            combination_specs=combination_specs,
             save_models=save_models,
             model_store=model_store,
+            forecast_policy=policy,
+            future_feature_policy=future_policy,
         )
 
-    panel = as_panel(pd.DataFrame(data).copy())
+    panel = _coerce_runner_panel(data)
     validate_panel(panel)
-    if features is None:
-        if target is None:
-            raise ValueError("target is required when data is not a FeatureSet")
-        features = feature_spec(target=target, horizon=horizon)
+    if _all_panel_model_runs(model_runs):
+        if policy == "recursive":
+            raise ValueError(
+                "recursive forecasting is only defined for feature-matrix models; "
+                "panel-input models own their own multi-step prediction logic"
+            )
+        if features is not None:
+            raise ValueError(
+                "panel-input models consume the panel directly; pass features=None"
+            )
+        if preprocessing is not None:
+            raise ValueError(
+                "forecasting.run does not yet apply preprocessing policies to "
+                "panel-input models. Preprocess the panel first, then pass the "
+                "processed DataBundle or DataFrame."
+            )
+        panel_target = _panel_runner_target(target, model_runs)
+        return _run_panel_models(
+            panel,
+            target=panel_target,
+            model_runs=model_runs,
+            window_spec=_panel_window_for_horizon(window_spec, horizon_values[0]),
+            selection=selection,
+            selection_policy=selection_stage_policy,
+            combination_specs=combination_specs,
+            config=config,
+            save_models=save_models,
+            model_store=model_store,
+            forecast_policy=policy,
+            future_feature_policy=future_policy,
+        )
+    _validate_feature_model_runs(model_runs)
+    features = _feature_spec_for_policy(
+        features,
+        target=target,
+        horizon=horizon_values[0],
+        forecast_policy=policy,
+        future_feature_policy=future_policy,
+        target_transform=target_transform,
+    )
+    if policy == "recursive":
+        _validate_recursive_feature_contract(
+            features,
+            future_feature_policy=future_policy,
+        )
 
     full_stage: _PreparedStage | None = None
     fixed_feature_builder: Any | None = None
@@ -173,7 +314,8 @@ def run(
     fitted_preprocessing_cache: FittedPreprocessor | None = None
     fitted_feature_cache: Any | None = None
 
-    for origin_count, item in enumerate(window_spec.iter_origins(panel.index)):
+    execution_window = _feature_window_for_policy(window_spec, horizon_values[0])
+    for origin_count, item in enumerate(execution_window.iter_origins(panel.index)):
         preprocessing_updated = False
         if full_stage is None:
             preprocessing_updated = _stage_update_due(
@@ -197,6 +339,7 @@ def run(
                 _mark_stage_updated(preprocessing_state, item)
         else:
             prepared = full_stage
+            preprocessing_updated = preprocessing is not None and origin_count == 0
         if prepared.metadata is not None:
             stage_records.append(
                 _origin_stage_record(
@@ -208,7 +351,7 @@ def run(
             )
 
         fit_labels = panel.index[item["fit_idx"]]
-        test_labels = panel.index[item["test_idx"]]
+        test_labels = panel.index[[int(item["test_idx"][0])]]
         selection_labels = stage_index(panel.index, item, selection_stage_policy)
 
         feature_updated = False
@@ -230,6 +373,7 @@ def run(
             fitted_features = fitted_feature_cache
         else:
             fitted_features = fixed_feature_builder
+            feature_updated = origin_count == 0
 
         train_features = fitted_features.transform(prepared.panel, index=fit_labels)
         test_features = _test_feature_builder(fitted_features).transform(
@@ -239,15 +383,20 @@ def run(
             prepared.panel,
             index=selection_labels,
         )
-        X_selection, y_selection = _align_feature_xy(
-            selection_features.X,
-            _single_target(selection_features.y),
-        )
-        selection_splits = _relative_splits_for_index(
-            item.get("val_splits", []),
-            X_selection.index,
-            panel.index,
-        )
+        if policy == "path_average":
+            X_selection = selection_features.X
+            y_selection = selection_features.y
+            selection_splits = []
+        else:
+            X_selection, y_selection = _align_feature_xy(
+                selection_features.X,
+                _single_target(selection_features.y),
+            )
+            selection_splits = _relative_splits_for_index(
+                item.get("val_splits", []),
+                X_selection.index,
+                panel.index,
+            )
         stage_records.append(
             _origin_stage_record(
                 "feature_engineering",
@@ -259,13 +408,31 @@ def run(
 
         origin_item = {
             **item,
+            "base_index": panel.index,
+            "forecast_horizon": horizon_values[0],
+            "forecast_policy": policy,
+            "future_feature_policy": future_policy,
+            "target_transform": features.target_transform,
+            "target_name": _feature_target_name(features),
+            "target_key": f"{policy}_h{horizon_values[0]}",
             "X_fit": train_features.X,
-            "y_fit": _single_target(train_features.y),
+            "y_fit": train_features.y
+            if policy == "path_average"
+            else _single_target(train_features.y),
             "X_selection": X_selection,
-            "y_selection": y_selection,
+            "y_selection": selection_features.y
+            if policy == "path_average"
+            else y_selection,
             "selection_splits": selection_splits,
+            "absolute_val_splits": item.get("val_splits", []),
+            "recursive_panel": prepared.panel,
+            "actual_panel": prepared.panel,
+            "recursive_builder": fitted_features,
             "X_test": test_features.X,
-            "y_test": _single_target(test_features.y),
+            "y_test": test_features.y
+            if policy == "path_average"
+            else _single_target(test_features.y),
+            "preprocessed": preprocessing is not None,
         }
         origin_records = _fit_predict_origin(
             origin_item,
@@ -280,13 +447,18 @@ def run(
             save_models=save_models,
             model_store=model_store,
         )
-        for record in origin_records:
-            record["preprocessed"] = preprocessing is not None
         records.extend(origin_records)
 
+    forecast_table = _forecast_table(records)
+    combination_records = apply_combinations(forecast_table, combination_specs)
+    if combination_records:
+        records.extend(combination_records)
+        forecast_table = _forecast_table(records)
+
     metadata = _result_metadata(
+        input_path="panel_to_features",
         input_panel=panel,
-        window_spec=window_spec,
+        window_spec=execution_window,
         model_runs=model_runs,
         features=features.to_dict(),
         preprocessing=preprocessing.to_dict() if preprocessing is not None else None,
@@ -294,13 +466,326 @@ def run(
         feature_policy=feature_stage_policy,
         selection=selection,
         selection_policy=selection_stage_policy,
+        combination_specs=combination_specs,
+        n_combination_forecasts=len(combination_records),
         stage_records=stage_records,
         n_forecasts=len(records),
         config=config,
         save_models=save_models,
         model_store=model_store,
+        forecast_policy=policy,
+        future_feature_policy=future_policy,
+        horizons=horizon_values,
     )
-    return ForecastResult(pd.DataFrame.from_records(records), metadata=metadata)
+    return ForecastResult(forecast_table, metadata=metadata)
+
+
+def _run_multiple_horizons(
+    data: Any,
+    model: str
+    | Callable[..., Any]
+    | ModelSpec
+    | Sequence[str | Callable[..., Any] | ModelSpec]
+    | Mapping[str, Any],
+    *,
+    window: WindowSpec,
+    preprocessing: PreprocessSpec | None,
+    preprocessing_policy: StagePolicy | str | None,
+    features: FeatureSpec | None,
+    feature_policy: StagePolicy | str | None,
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    selection_policy: StagePolicy | str | None,
+    selection_metric: str | Callable[..., float],
+    maximize_selection: bool,
+    preset: str | Mapping[str, str | None] | None,
+    params: Mapping[str, Any] | None,
+    target: str | None,
+    horizons: tuple[int, ...],
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
+    target_transform: str | None,
+    combination: str
+    | CombinationSpec
+    | Sequence[str | CombinationSpec | Mapping[str, Any]]
+    | Mapping[str, Any]
+    | None,
+    save_models: bool,
+    model_store: str | Path,
+) -> ForecastResult:
+    results = [
+        run(
+            data,
+            model,
+            window=window,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_policy,
+            features=features,
+            feature_policy=feature_policy,
+            selection=selection,
+            selection_policy=selection_policy,
+            selection_metric=selection_metric,
+            maximize_selection=maximize_selection,
+            preset=preset,
+            params=params,
+            target=target,
+            horizon=horizon_value,
+            horizons=None,
+            forecast_policy=forecast_policy,
+            future_feature_policy=future_feature_policy,
+            target_transform=target_transform,
+            combination=combination,
+            save_models=save_models,
+            model_store=model_store,
+        )
+        for horizon_value in horizons
+    ]
+    table = pd.concat([result.forecasts for result in results], ignore_index=True)
+    first = results[0].metadata
+    metadata = {
+        **first,
+        "run": {
+            **first.get("run", {}),
+            "n_forecasts": int(table.shape[0]),
+            "horizons": list(horizons),
+            "multi_horizon": True,
+            "forecast_policy": forecast_policy,
+        },
+        "forecast_policy": {
+            "method": forecast_policy,
+            "horizons": list(horizons),
+            "future_feature_policy": future_feature_policy,
+            "target_transform": target_transform,
+        },
+        "per_horizon": {
+            str(horizon_value): result.metadata
+            for horizon_value, result in zip(horizons, results, strict=True)
+        },
+    }
+    return ForecastResult(_forecast_table(table.to_dict(orient="records")), metadata=metadata)
+
+
+def _resolve_runner_horizons(
+    *,
+    horizon: int,
+    horizons: Sequence[int] | int | None,
+) -> tuple[int, ...]:
+    if horizons is not None and int(horizon) != 1:
+        raise ValueError("provide either horizon or horizons, not both")
+    raw_values: Sequence[int]
+    if horizons is None:
+        raw_values = (horizon,)
+    elif isinstance(horizons, (int, np.integer)) and not isinstance(horizons, bool):
+        raw_values = (int(horizons),)
+    else:
+        raw_values = tuple(int(value) for value in horizons)
+    values = tuple(int(value) for value in raw_values)
+    if not values:
+        raise ValueError("horizons must contain at least one horizon")
+    if any(value < 1 for value in values):
+        raise ValueError("forecast horizons must be positive")
+    if len(set(values)) != len(values):
+        raise ValueError("forecast horizons must be unique")
+    return tuple(sorted(values))
+
+
+def _normalize_forecast_policy(value: str) -> ForecastPolicy:
+    aliases = {
+        "direct": "direct",
+        "single": "direct",
+        "direct_average": "direct_average",
+        "direct_avg": "direct_average",
+        "average": "direct_average",
+        "path_average": "path_average",
+        "path_avg": "path_average",
+        "path": "path_average",
+        "recursive": "recursive",
+        "iterated": "recursive",
+    }
+    if not isinstance(value, str):
+        raise TypeError("forecast_policy must be a string")
+    key = value.lower().replace("-", "_")
+    if key not in aliases:
+        raise ValueError(
+            "forecast_policy must be one of: direct, direct_average, "
+            "path_average, recursive"
+        )
+    return cast(ForecastPolicy, aliases[key])
+
+
+def _normalize_future_feature_policy(
+    value: str | None,
+    *,
+    forecast_policy: ForecastPolicy,
+) -> FutureFeaturePolicy | None:
+    if forecast_policy != "recursive":
+        if value is not None:
+            raise ValueError("future_feature_policy is only used with recursive forecasting")
+        return None
+    if value is None:
+        return "target_lags"
+    aliases = {
+        "target_lags": "target_lags",
+        "target_lag": "target_lags",
+        "target_only": "target_lags",
+        "ar": "target_lags",
+        "observed_future": "observed_future",
+        "oracle": "observed_future",
+        "actual_future": "observed_future",
+    }
+    if not isinstance(value, str):
+        raise TypeError("future_feature_policy must be a string")
+    key = value.lower().replace("-", "_")
+    if key not in aliases:
+        raise ValueError(
+            "future_feature_policy must be target_lags or observed_future"
+        )
+    return cast(FutureFeaturePolicy, aliases[key])
+
+
+def _feature_spec_for_policy(
+    features: FeatureSpec | None,
+    *,
+    target: str | None,
+    horizon: int,
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
+    target_transform: str | None,
+) -> FeatureSpec:
+    transform = _target_transform_for_policy(
+        forecast_policy,
+        feature_transform=None if features is None else features.target_transform,
+        explicit=target_transform,
+    )
+    target_mode = "path" if forecast_policy == "path_average" else "direct"
+    if features is None:
+        if target is None:
+            raise ValueError("target is required when data is not a FeatureSet")
+        if forecast_policy == "recursive":
+            return feature_spec(
+                target=target,
+                horizon=1,
+                predictors=[],
+                lags=None,
+                target_lags=(0, 1),
+                target_mode="direct",
+                target_transform=transform,
+                metadata={"future_feature_policy": future_feature_policy},
+            )
+        return feature_spec(
+            target=target,
+            horizon=horizon,
+            target_mode=target_mode,
+            target_transform=transform,
+        )
+    if target is not None and features.target is not None and target != features.target:
+        raise ValueError("target conflicts with the supplied FeatureSpec target")
+    if len(features.targets) > 1:
+        raise ValueError("forecasting.run currently supports one target per run")
+    if features.horizons and len(features.horizons) > 1:
+        raise ValueError(
+            "FeatureSpec with multiple horizons should be passed through "
+            "forecasting.run(..., horizons=...) so each horizon is fitted separately"
+        )
+    return replace(
+        features,
+        target=target or features.target,
+        horizon=1 if forecast_policy == "recursive" else horizon,
+        horizons=(),
+        target_mode=target_mode,
+        target_transform=transform,
+    )
+
+
+def _target_transform_for_policy(
+    forecast_policy: ForecastPolicy,
+    *,
+    feature_transform: str | None,
+    explicit: str | None,
+) -> str:
+    if forecast_policy == "direct_average":
+        if explicit is not None:
+            return explicit if explicit.startswith("average_") else f"average_{explicit}"
+        if feature_transform and str(feature_transform).startswith("average_"):
+            return feature_transform
+        return "average_change"
+    if forecast_policy == "path_average":
+        if explicit is not None:
+            return explicit
+        if feature_transform and feature_transform != "level":
+            return feature_transform
+        return "change"
+    if forecast_policy == "recursive":
+        if explicit is not None:
+            return explicit
+        if feature_transform and str(feature_transform).startswith("average_"):
+            raise ValueError("recursive forecasting does not support average_* target transforms")
+        return feature_transform or "level"
+    if explicit is not None:
+        return explicit
+    return feature_transform or "level"
+
+
+def _validate_recursive_feature_contract(
+    features: FeatureSpec,
+    *,
+    future_feature_policy: FutureFeaturePolicy | None,
+) -> None:
+    target = _feature_target_name(features)
+    if target is None:
+        raise ValueError("recursive forecasting requires exactly one target")
+    transform = str(features.target_transform)
+    if transform.startswith("average_"):
+        raise ValueError("recursive forecasting does not support average_* target transforms")
+    if future_feature_policy == "observed_future":
+        return
+    if features.predictors != ():
+        raise ValueError(
+            "recursive forecasting with future_feature_policy='target_lags' "
+            "requires FeatureSpec predictors to be empty and target_lags to "
+            "declare the autoregressive inputs. Use future_feature_policy="
+            "'observed_future' for an explicit oracle/scenario path with "
+            "exogenous future predictors."
+        )
+    if not features.target_lags:
+        raise ValueError(
+            "recursive forecasting with future_feature_policy='target_lags' "
+            "requires FeatureSpec target_lags"
+        )
+    if 0 not in features.target_lags:
+        raise ValueError(
+            "recursive forecasting with future_feature_policy='target_lags' "
+            "requires target_lags to include 0 so predicted target values can "
+            "feed the next step under macroforecast's row-date convention"
+        )
+    if features.feature_steps:
+        raise ValueError(
+            "recursive target_lags currently supports FeatureSpec shortcut lags "
+            "only; feature_steps need a future-step registry before they can be "
+            "updated recursively"
+        )
+    if features.rolling_windows or features.pca_components is not None:
+        raise ValueError(
+            "recursive target_lags currently supports target lag features and "
+            "optional deterministic time features only"
+        )
+
+
+def _feature_window_for_policy(window_spec: WindowSpec, horizon: int) -> WindowSpec:
+    """Use h for origin cutoff while fitting one feature row per origin."""
+
+    return replace(
+        window_spec,
+        test=replace(window_spec.test, horizon=int(horizon)),
+        horizon=int(horizon),
+    )
+
+
+def _panel_window_for_horizon(window_spec: WindowSpec, horizon: int) -> WindowSpec:
+    return replace(
+        window_spec,
+        test=replace(window_spec.test, horizon=int(horizon)),
+        horizon=int(horizon),
+    )
 
 
 def _run_feature_set(
@@ -313,8 +798,11 @@ def _run_feature_set(
     selection_metric: str | Callable[..., float],
     maximize_selection: bool,
     config: Mapping[str, Any],
+    combination_specs: Sequence[CombinationSpec],
     save_models: bool,
     model_store: str | Path,
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
 ) -> ForecastResult:
     X_all = data.X.copy()
     y_all = _single_target(data.y)
@@ -331,6 +819,11 @@ def _run_feature_set(
             **item,
             "X_selection": X_selection,
             "y_selection": y_selection,
+            "forecast_horizon": data.horizons[0] if data.horizons else item["row"].get("horizon", 1),
+            "forecast_policy": forecast_policy,
+            "future_feature_policy": future_feature_policy,
+            "target_name": data.target or (data.targets[0] if data.targets else None),
+            "target_key": f"{forecast_policy}_h{data.horizons[0] if data.horizons else item['row'].get('horizon', 1)}",
         }
         item["selection_splits"] = _relative_splits_for_index(
             item.get("val_splits", []),
@@ -352,7 +845,14 @@ def _run_feature_set(
                 model_store=model_store,
             )
         )
+    forecast_table = _forecast_table(records)
+    combination_records = apply_combinations(forecast_table, combination_specs)
+    if combination_records:
+        records.extend(combination_records)
+        forecast_table = _forecast_table(records)
+
     metadata = _result_metadata(
+        input_path="feature_set",
         input_panel=X_all,
         window_spec=window_spec,
         model_runs=model_runs,
@@ -363,13 +863,177 @@ def _run_feature_set(
         feature_policy=None,
         selection=selection,
         selection_policy=selection_policy,
+        combination_specs=combination_specs,
+        n_combination_forecasts=len(combination_records),
         stage_records=[],
         n_forecasts=len(records),
         config=config,
         save_models=save_models,
         model_store=model_store,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        horizons=data.horizons or (1,),
     )
-    return ForecastResult(pd.DataFrame.from_records(records), metadata=metadata)
+    return ForecastResult(forecast_table, metadata=metadata)
+
+
+def _run_panel_models(
+    panel: pd.DataFrame,
+    *,
+    target: str,
+    model_runs: list[_ModelRun],
+    window_spec: WindowSpec,
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    selection_policy: StagePolicy,
+    combination_specs: Sequence[CombinationSpec],
+    config: Mapping[str, Any],
+    save_models: bool,
+    model_store: str | Path,
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
+) -> ForecastResult:
+    """Run models that fit on the canonical panel rather than engineered X/y."""
+
+    _validate_panel_target(panel, target)
+    metadata = dict(panel.attrs.get("macroforecast_metadata", {}))
+    records: list[dict[str, Any]] = []
+    for item in window_spec.iter_origins(panel.index):
+        fit_panel = panel.iloc[item["fit_idx"]].copy()
+        test_panel = panel.iloc[item["test_idx"]].copy()
+        fit_panel.attrs["macroforecast_metadata"] = metadata
+        test_panel.attrs["macroforecast_metadata"] = metadata
+        records.extend(
+            _fit_predict_panel_origin(
+                item,
+                fit_panel=fit_panel,
+                test_panel=test_panel,
+                target=target,
+                metadata=metadata,
+                model_runs=model_runs,
+                selection=selection,
+                selection_policy=selection_policy,
+                save_models=save_models,
+                model_store=model_store,
+                forecast_policy=forecast_policy,
+            )
+        )
+
+    forecast_table = _forecast_table(records)
+    combination_records = apply_combinations(forecast_table, combination_specs)
+    if combination_records:
+        records.extend(combination_records)
+        forecast_table = _forecast_table(records)
+
+    result_metadata = _result_metadata(
+        input_path="panel_model",
+        input_panel=panel,
+        window_spec=window_spec,
+        model_runs=model_runs,
+        features=None,
+        preprocessing=None,
+        preprocessing_policy=None,
+        feature_policy=None,
+        selection=selection,
+        selection_policy=selection_policy,
+        combination_specs=combination_specs,
+        n_combination_forecasts=len(combination_records),
+        stage_records=[],
+        n_forecasts=len(records),
+        config=config,
+        save_models=save_models,
+        model_store=model_store,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        horizons=(int(window_spec.test.horizon),),
+    )
+    return ForecastResult(forecast_table, metadata=result_metadata)
+
+
+def _fit_predict_panel_origin(
+    item: dict[str, Any],
+    *,
+    fit_panel: pd.DataFrame,
+    test_panel: pd.DataFrame,
+    target: str,
+    metadata: Mapping[str, Any],
+    model_runs: list[_ModelRun],
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    selection_policy: StagePolicy,
+    save_models: bool,
+    model_store: str | Path,
+    forecast_policy: ForecastPolicy,
+) -> list[dict[str, Any]]:
+    if fit_panel.empty or test_panel.empty:
+        return []
+    row = item["row"]
+    records: list[dict[str, Any]] = []
+    for model_run in model_runs:
+        model_spec = model_run.spec
+        _validate_panel_selection(selection, model_run)
+        if model_spec.name == "dfm_unrestricted_midas":
+            raise ValueError(
+                "dfm_unrestricted_midas is callable as a panel model, but the "
+                "forecasting runner needs a future MIDAS design matrix for predict(). "
+                "Use dfm_mixed_mariano_murasawa in forecasting.run, or build "
+                "mixed_frequency_lags() plus unrestricted_midas explicitly."
+            )
+        best_params = _panel_fit_params(model_spec, target=target)
+        fit = model_spec(DataBundle(fit_panel, dict(metadata)), **best_params)
+        stored_model = (
+            _store_model_fit(
+                fit,
+                root=model_store,
+                alias=model_run.alias,
+                model_spec=model_spec,
+                row=row,
+                params=best_params,
+                selection_metadata=None,
+            )
+            if save_models
+            else None
+        )
+        pred = _prediction_series(fit.predict(test_panel), index=test_panel.index)
+        y_test = test_panel[target] if target in test_panel.columns else pd.Series(dtype=float)
+        for date, value in pred.items():
+            step_horizon = _panel_prediction_horizon(
+                date,
+                origin=row.get("origin"),
+                base_index=test_panel.index,
+                default=int(row.get("horizon", 1)),
+            )
+            actual: Any = (
+                y_test.reindex([date]).iloc[0] if date in y_test.index else None
+            )
+            records.append(
+                {
+                    "date": date,
+                    "origin": row.get("origin"),
+                    "origin_pos": row.get("origin_pos"),
+                    "horizon": step_horizon,
+                    "forecast_policy": forecast_policy,
+                    "target": target,
+                    "model": model_run.alias,
+                    "model_spec": model_spec.name,
+                    "prediction": float(value),
+                    "variance_prediction": None,
+                    "quantile_predictions": None,
+                    "actual": None if actual is None or pd.isna(actual) else float(actual),
+                    "params": best_params,
+                    "selection": {
+                        "policy": selection_policy.to_dict(),
+                        "retuned": False,
+                        "metadata": {
+                            "note": "panel-input runner does not tune model parameters yet"
+                        },
+                    },
+                    "stored_model": stored_model,
+                    "window": row,
+                    "preprocessed": False,
+                    "combined": False,
+                    "combination": None,
+                }
+            )
+    return records
 
 
 def _fit_predict_origin(
@@ -386,6 +1050,35 @@ def _fit_predict_origin(
     save_models: bool,
     model_store: str | Path,
 ) -> list[dict[str, Any]]:
+    if item.get("forecast_policy") == "path_average":
+        return _fit_predict_path_average_origin(
+            item,
+            model_runs=model_runs,
+            selection=selection,
+            selection_policy=selection_policy,
+            selection_metric=selection_metric,
+            maximize_selection=maximize_selection,
+            param_cache=param_cache,
+            selection_cache=selection_cache,
+            selection_random_state=selection_random_state,
+            save_models=save_models,
+            model_store=model_store,
+        )
+    if item.get("forecast_policy") == "recursive":
+        return _fit_predict_recursive_origin(
+            item,
+            model_runs=model_runs,
+            selection=selection,
+            selection_policy=selection_policy,
+            selection_metric=selection_metric,
+            maximize_selection=maximize_selection,
+            param_cache=param_cache,
+            selection_cache=selection_cache,
+            selection_random_state=selection_random_state,
+            save_models=save_models,
+            model_store=model_store,
+        )
+
     X_fit = item["X_fit"]
     y_fit = item["y_fit"]
     X_selection = item.get("X_selection", X_fit)
@@ -396,7 +1089,17 @@ def _fit_predict_origin(
         return []
 
     records: list[dict[str, Any]] = []
-    row = item["row"]
+    row = {
+        **item["row"],
+        "horizon": int(item.get("forecast_horizon", item["row"].get("horizon", 1))),
+        "forecast_policy": item.get("forecast_policy", "direct"),
+        "target_key": item.get("target_key"),
+    }
+    target_dates = _forecast_target_dates(
+        X_test.index,
+        base_index=item.get("base_index"),
+        horizon=int(row["horizon"]),
+    )
     retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
@@ -407,8 +1110,9 @@ def _fit_predict_origin(
             use_model_default_selection and bool(model_spec.search_spaces)
         )
         selection_metadata: dict[str, Any] | None = None
+        cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
         if should_select:
-            if retune or model_run.alias not in param_cache:
+            if retune or cache_key not in param_cache:
                 result = select_params(
                     model_spec,
                     X_selection,
@@ -419,18 +1123,18 @@ def _fit_predict_origin(
                     maximize=maximize_selection,
                     random_state=selection_random_state if selected is None else None,
                 )
-                param_cache[model_run.alias] = dict(result.best_params)
+                param_cache[cache_key] = dict(result.best_params)
                 selection_metadata = {
                     **result.to_metadata(),
                     "policy": selection_policy.to_dict(),
                     "retuned": True,
                 }
-                selection_cache[model_run.alias] = selection_metadata
+                selection_cache[cache_key] = selection_metadata
             else:
-                selection_metadata = selection_cache.get(model_run.alias)
+                selection_metadata = selection_cache.get(cache_key)
                 if selection_metadata is not None:
                     selection_metadata = {**selection_metadata, "retuned": False}
-            best_params = dict(param_cache.get(model_run.alias, {}))
+            best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
         fit = model_spec(X_fit, y_fit, **best_params)
@@ -448,9 +1152,10 @@ def _fit_predict_origin(
             else None
         )
         pred = _prediction_series(fit.predict(X_test), index=X_test.index)
-        variance_pred = _variance_series(fit, index=X_test.index)
+        variance_pred = _variance_series(fit, X_test=X_test, index=X_test.index)
         quantile_pred = _quantile_frame(fit, X_test=X_test, index=X_test.index)
         for date, value in pred.items():
+            target_date = target_dates.loc[date]
             actual: Any = (
                 y_test.reindex([date]).iloc[0] if date in y_test.index else None
             )
@@ -470,10 +1175,12 @@ def _fit_predict_origin(
                 }
             records.append(
                 {
-                    "date": date,
+                    "date": target_date,
                     "origin": row.get("origin"),
                     "origin_pos": row.get("origin_pos"),
                     "horizon": row.get("horizon"),
+                    "forecast_policy": row.get("forecast_policy"),
+                    "target": item.get("target_name") or y_fit.name,
                     "model": model_run.alias,
                     "model_spec": model_spec.name,
                     "prediction": float(value),
@@ -484,6 +1191,338 @@ def _fit_predict_origin(
                     "selection": selection_metadata,
                     "stored_model": stored_model,
                     "window": row,
+                    "preprocessed": bool(item.get("preprocessed", False)),
+                    "combined": False,
+                    "combination": None,
+                }
+            )
+    return records
+
+
+def _fit_predict_recursive_origin(
+    item: dict[str, Any],
+    *,
+    model_runs: list[_ModelRun],
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    selection_policy: StagePolicy,
+    selection_metric: str | Callable[..., float],
+    maximize_selection: bool,
+    param_cache: dict[str, dict[str, Any]],
+    selection_cache: dict[str, dict[str, Any] | None],
+    selection_random_state: int | None,
+    save_models: bool,
+    model_store: str | Path,
+) -> list[dict[str, Any]]:
+    X_fit = item["X_fit"]
+    y_fit = item["y_fit"]
+    X_selection = item.get("X_selection", X_fit)
+    y_selection = item.get("y_selection", y_fit)
+    if X_fit.empty:
+        return []
+
+    target = str(item.get("target_name") or getattr(y_fit, "name", "target"))
+    transform = str(item.get("target_transform", "level"))
+    horizon = int(item.get("forecast_horizon", item["row"].get("horizon", 1)))
+    base_index = pd.Index(item["base_index"])
+    origin_pos = int(item["row"]["origin_pos"])
+    target_pos = origin_pos + horizon
+    if target_pos >= len(base_index):
+        return []
+    origin_label = base_index[origin_pos]
+    target_label = base_index[target_pos]
+    recursive_panel = pd.DataFrame(item["recursive_panel"]).copy()
+    recursive_builder = item["recursive_builder"]
+    future_policy = cast(FutureFeaturePolicy, item.get("future_feature_policy") or "target_lags")
+    row = {
+        **item["row"],
+        "horizon": horizon,
+        "forecast_policy": "recursive",
+        "target_key": item.get("target_key"),
+        "future_feature_policy": future_policy,
+    }
+    origin_level = _target_level_at(recursive_panel, target, origin_label)
+    actual_level = _target_level_at(pd.DataFrame(item.get("actual_panel", recursive_panel)), target, target_label)
+    retune = bool(row.get("retune", True))
+    records: list[dict[str, Any]] = []
+
+    for model_run in model_runs:
+        model_spec = model_run.spec
+        selected, use_model_default_selection = _selection_for_model(selection, model_run)
+        should_select = selected is not None or (
+            use_model_default_selection and bool(model_spec.search_spaces)
+        )
+        selection_metadata: dict[str, Any] | None = None
+        cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
+        if should_select:
+            if retune or cache_key not in param_cache:
+                result = select_params(
+                    model_spec,
+                    X_selection,
+                    y_selection,
+                    search=selected,
+                    splits=item.get("selection_splits"),
+                    metric=selection_metric,
+                    maximize=maximize_selection,
+                    random_state=selection_random_state if selected is None else None,
+                )
+                param_cache[cache_key] = dict(result.best_params)
+                selection_metadata = {
+                    **result.to_metadata(),
+                    "policy": selection_policy.to_dict(),
+                    "retuned": True,
+                    "recursive": True,
+                    "future_feature_policy": future_policy,
+                }
+                selection_cache[cache_key] = selection_metadata
+            else:
+                selection_metadata = selection_cache.get(cache_key)
+                if selection_metadata is not None:
+                    selection_metadata = {**selection_metadata, "retuned": False}
+            best_params = dict(param_cache.get(cache_key, {}))
+        else:
+            best_params = {}
+        fit = model_spec(X_fit, y_fit, **best_params)
+        working_panel = recursive_panel.copy()
+        step_predictions: list[float] = []
+        step_levels: list[float] = []
+        current_level = origin_level
+        for step in range(1, horizon + 1):
+            feature_label = base_index[origin_pos + step - 1]
+            step_features = _test_feature_builder(recursive_builder).transform(
+                working_panel,
+                index=pd.Index([feature_label]),
+            )
+            X_step = step_features.X
+            pred = _prediction_series(fit.predict(X_step), index=X_step.index)
+            step_value = float(pred.iloc[0])
+            current_level = _recursive_next_level(
+                current_level,
+                step_value,
+                transform=transform,
+            )
+            step_predictions.append(step_value)
+            step_levels.append(current_level)
+            update_pos = origin_pos + step
+            if update_pos < len(base_index) and base_index[update_pos] in working_panel.index:
+                working_panel.loc[base_index[update_pos], target] = current_level
+        final_prediction = _recursive_output_value(
+            origin_level,
+            current_level,
+            transform=transform,
+        )
+        actual_value = _recursive_output_value(
+            origin_level,
+            actual_level,
+            transform=transform,
+        )
+        stored_model = (
+            _store_model_fit(
+                fit,
+                root=model_store,
+                alias=model_run.alias,
+                model_spec=model_spec,
+                row=row,
+                params=best_params,
+                selection_metadata=selection_metadata,
+            )
+            if save_models
+            else None
+        )
+        records.append(
+            {
+                "date": target_label,
+                "origin": row.get("origin"),
+                "origin_pos": row.get("origin_pos"),
+                "horizon": horizon,
+                "forecast_policy": "recursive",
+                "target": target,
+                "model": model_run.alias,
+                "model_spec": model_spec.name,
+                "prediction": float(final_prediction),
+                "variance_prediction": None,
+                "quantile_predictions": None,
+                "actual": float(actual_value),
+                "params": {
+                    **dict(best_params),
+                    "recursive": {
+                        "future_feature_policy": future_policy,
+                        "step_predictions": step_predictions,
+                        "step_levels": step_levels,
+                    },
+                },
+                "selection": selection_metadata,
+                "stored_model": stored_model,
+                "window": row,
+                "preprocessed": bool(item.get("preprocessed", False)),
+                "combined": False,
+                "combination": None,
+            }
+        )
+    return records
+
+
+def _fit_predict_path_average_origin(
+    item: dict[str, Any],
+    *,
+    model_runs: list[_ModelRun],
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    selection_policy: StagePolicy,
+    selection_metric: str | Callable[..., float],
+    maximize_selection: bool,
+    param_cache: dict[str, dict[str, Any]],
+    selection_cache: dict[str, dict[str, Any] | None],
+    selection_random_state: int | None,
+    save_models: bool,
+    model_store: str | Path,
+) -> list[dict[str, Any]]:
+    X_fit = pd.DataFrame(item["X_fit"])
+    X_selection_base = pd.DataFrame(item.get("X_selection", X_fit))
+    X_test = pd.DataFrame(item["X_test"])
+    y_fit = pd.DataFrame(item["y_fit"])
+    y_selection_base = pd.DataFrame(item.get("y_selection", y_fit))
+    y_test = pd.DataFrame(item["y_test"])
+    if X_fit.empty or X_test.empty:
+        return []
+
+    horizon = int(item.get("forecast_horizon", item["row"].get("horizon", 1)))
+    if horizon < 1:
+        raise ValueError("forecast horizon must be at least 1")
+    step_columns = _path_step_columns(y_fit, horizon=horizon)
+    row = {
+        **item["row"],
+        "horizon": horizon,
+        "forecast_policy": "path_average",
+        "target_key": item.get("target_key"),
+    }
+    target_dates = _forecast_target_dates(
+        X_test.index,
+        base_index=item.get("base_index"),
+        horizon=horizon,
+    )
+    retune = bool(row.get("retune", True))
+    records: list[dict[str, Any]] = []
+
+    for model_run in model_runs:
+        model_spec = model_run.spec
+        selected, use_model_default_selection = _selection_for_model(selection, model_run)
+        should_select = selected is not None or (
+            use_model_default_selection and bool(model_spec.search_spaces)
+        )
+        predictions_by_step: dict[int, pd.Series] = {}
+        stored_by_step: dict[str, Any] = {}
+        selection_by_step: dict[str, Any] = {}
+        params_by_step: dict[str, Any] = {}
+
+        for step, column in enumerate(step_columns, start=1):
+            y_fit_step = y_fit[column].rename(str(column))
+            y_selection_step = y_selection_base[column].rename(str(column))
+            X_fit_step, y_fit_aligned = _align_feature_xy(X_fit, y_fit_step)
+            X_selection_step, y_selection_aligned = _align_feature_xy(
+                X_selection_base,
+                y_selection_step,
+            )
+            selection_splits = _relative_splits_for_index(
+                item.get("absolute_val_splits", []),
+                X_selection_step.index,
+                item.get("base_index", X_selection_base.index),
+            )
+            step_key = _model_cache_key(
+                model_run.alias,
+                f"{item.get('target_key', 'path')}_step{step}",
+            )
+            selection_metadata: dict[str, Any] | None = None
+            if should_select:
+                if retune or step_key not in param_cache:
+                    result = select_params(
+                        model_spec,
+                        X_selection_step,
+                        y_selection_aligned,
+                        search=selected,
+                        splits=selection_splits,
+                        metric=selection_metric,
+                        maximize=maximize_selection,
+                        random_state=selection_random_state if selected is None else None,
+                    )
+                    param_cache[step_key] = dict(result.best_params)
+                    selection_metadata = {
+                        **result.to_metadata(),
+                        "policy": selection_policy.to_dict(),
+                        "retuned": True,
+                        "path_step": step,
+                    }
+                    selection_cache[step_key] = selection_metadata
+                else:
+                    selection_metadata = selection_cache.get(step_key)
+                    if selection_metadata is not None:
+                        selection_metadata = {
+                            **selection_metadata,
+                            "retuned": False,
+                            "path_step": step,
+                        }
+                best_params = dict(param_cache.get(step_key, {}))
+            else:
+                best_params = {}
+            fit = model_spec(X_fit_step, y_fit_aligned, **best_params)
+            step_row = {**row, "target_key": f"{row.get('target_key')}_step{step}"}
+            stored_by_step[str(step)] = (
+                _store_model_fit(
+                    fit,
+                    root=model_store,
+                    alias=model_run.alias,
+                    model_spec=model_spec,
+                    row=step_row,
+                    params=best_params,
+                    selection_metadata=selection_metadata,
+                )
+                if save_models
+                else None
+            )
+            predictions_by_step[step] = _prediction_series(
+                fit.predict(X_test),
+                index=X_test.index,
+            )
+            selection_by_step[str(step)] = selection_metadata
+            params_by_step[str(step)] = dict(best_params)
+
+        prediction_frame = pd.concat(predictions_by_step, axis=1)
+        actual_frame = y_test.reindex(columns=step_columns)
+        for origin_label, path_values in prediction_frame.iterrows():
+            actual_values = actual_frame.reindex([origin_label]).iloc[0]
+            actual_value = (
+                None
+                if actual_values.isna().any()
+                else float(actual_values.astype(float).mean())
+            )
+            records.append(
+                {
+                    "date": target_dates.loc[origin_label],
+                    "origin": row.get("origin"),
+                    "origin_pos": row.get("origin_pos"),
+                    "horizon": horizon,
+                    "forecast_policy": "path_average",
+                    "target": item.get("target_name"),
+                    "model": model_run.alias,
+                    "model_spec": model_spec.name,
+                    "prediction": float(path_values.astype(float).mean()),
+                    "variance_prediction": None,
+                    "quantile_predictions": None,
+                    "actual": actual_value,
+                    "params": {"steps": params_by_step},
+                    "selection": {
+                        "policy": selection_policy.to_dict(),
+                        "retuned": any(
+                            bool(value and value.get("retuned"))
+                            for value in selection_by_step.values()
+                        ),
+                        "steps": selection_by_step,
+                    }
+                    if should_select
+                    else None,
+                    "stored_model": {"steps": stored_by_step} if save_models else None,
+                    "window": row,
+                    "preprocessed": bool(item.get("preprocessed", False)),
+                    "combined": False,
+                    "combination": None,
                 }
             )
     return records
@@ -536,6 +1575,15 @@ def _origin_apply_labels(index: pd.Index, item: dict[str, Any]) -> pd.Index:
     positions = np.unique(
         np.concatenate([item["estimation_idx"], item["fit_idx"], item["test_idx"]])
     )
+    row = item.get("row", {})
+    try:
+        target_pos = int(row.get("test_start_pos", item["test_idx"][0])) + int(
+            row.get("horizon", 1)
+        )
+    except (TypeError, ValueError, IndexError):
+        target_pos = -1
+    if 0 <= target_pos < len(index):
+        positions = np.unique(np.concatenate([positions, np.asarray([target_pos])]))
     return index[positions]
 
 
@@ -619,6 +1667,94 @@ def _preprocessor_fit_input(fit_panel: pd.DataFrame, features: FeatureSpec) -> A
         horizons=horizons,
         predictors=predictors,
     )
+
+
+def _coerce_runner_panel(data: Any) -> pd.DataFrame:
+    if isinstance(data, DataSpec):
+        return as_panel(data.panel, metadata=data.metadata)
+    if isinstance(data, DataBundle):
+        return as_panel(data.panel, metadata=data.metadata)
+    if (
+        isinstance(data, tuple)
+        and len(data) == 2
+        and isinstance(data[0], pd.DataFrame)
+        and isinstance(data[1], Mapping)
+    ):
+        return as_panel(data[0], metadata=data[1])
+    if isinstance(data, pd.DataFrame):
+        metadata = dict(data.attrs.get("macroforecast_metadata", {}))
+        return as_panel(data, metadata=metadata)
+    return as_panel(pd.DataFrame(data).copy())
+
+
+def _all_panel_model_runs(model_runs: Sequence[_ModelRun]) -> bool:
+    return all(model_run.spec.input_kind == "panel" for model_run in model_runs)
+
+
+def _validate_feature_model_runs(model_runs: Sequence[_ModelRun]) -> None:
+    panel_models = [
+        model_run.alias
+        for model_run in model_runs
+        if model_run.spec.input_kind == "panel"
+    ]
+    if panel_models:
+        raise ValueError(
+            "panel-input models cannot be mixed with FeatureSet or feature-matrix "
+            f"runner inputs: {panel_models}. Pass a panel/DataBundle with features=None."
+        )
+
+
+def _panel_runner_target(target: str | None, model_runs: Sequence[_ModelRun]) -> str:
+    if target is not None:
+        resolved = str(target)
+        conflicts = [
+            model_run.alias
+            for model_run in model_runs
+            if model_run.spec.params.get("target") is not None
+            and str(model_run.spec.params["target"]) != resolved
+        ]
+        if conflicts:
+            raise ValueError(
+                "runner target conflicts with model-specific target parameters "
+                f"for: {conflicts}"
+            )
+        return resolved
+    model_targets = {
+        str(model_run.spec.params["target"])
+        for model_run in model_runs
+        if model_run.spec.params.get("target") is not None
+    }
+    if len(model_targets) == 1:
+        return next(iter(model_targets))
+    raise ValueError(
+        "target is required for panel-input forecasting unless every model spec "
+        "sets the same target parameter"
+    )
+
+
+def _panel_fit_params(model_spec: ModelSpec, *, target: str) -> dict[str, Any]:
+    params: dict[str, Any] = {}
+    if "target" in model_spec.default_params and model_spec.params.get("target") is None:
+        params["target"] = target
+    return params
+
+
+def _validate_panel_selection(
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    model_run: _ModelRun,
+) -> None:
+    selected, use_model_default_selection = _selection_for_model(selection, model_run)
+    if selected is not None:
+        raise ValueError(
+            "panel-input forecasting does not tune model parameters yet; pass "
+            f"selection={{'{model_run.alias}': None}} or selection=None"
+        )
+    if isinstance(selection, Mapping) and (
+        model_run.alias in selection or model_run.spec.name in selection
+    ):
+        return
+    if use_model_default_selection and model_run.spec.search_spaces:
+        return
 
 
 def _resolve_model_runs(
@@ -727,22 +1863,69 @@ def _selection_for_model(
 
 def _prediction_series(prediction: Any, *, index: pd.Index) -> pd.Series:
     if isinstance(prediction, pd.Series):
-        return prediction.reindex(index)
+        return _aligned_or_positional_series(
+            prediction,
+            index=index,
+            label="model prediction",
+        )
     if isinstance(prediction, pd.DataFrame):
         if prediction.shape[1] != 1:
             raise ValueError("model prediction DataFrame must have exactly one column")
-        return prediction.iloc[:, 0].reindex(index)
+        return _aligned_or_positional_series(
+            prediction.iloc[:, 0],
+            index=index,
+            label="model prediction",
+        )
     values = np.asarray(prediction).reshape(-1)
     if len(values) != len(index):
         raise ValueError("model prediction length does not match X_test")
     return pd.Series(values, index=index)
 
 
-def _variance_series(fit: Any, *, index: pd.Index) -> pd.Series | None:
+def _aligned_or_positional_series(
+    values: pd.Series,
+    *,
+    index: pd.Index,
+    label: str,
+) -> pd.Series:
+    if len(values) != len(index):
+        raise ValueError(f"{label} length does not match X_test")
+    if values.index.equals(index):
+        return values.copy()
+    if _is_default_position_index(values.index, len(index)):
+        return pd.Series(values.to_numpy(), index=index, name=values.name)
+    raise ValueError(
+        f"{label} index does not match X_test. Return an array-like object for "
+        "positional predictions, or return a pandas object indexed by X_test.index."
+    )
+
+
+def _is_default_position_index(index: pd.Index, n: int) -> bool:
+    if isinstance(index, pd.RangeIndex):
+        return index.equals(pd.RangeIndex(n))
+    try:
+        return bool(np.array_equal(index.to_numpy(dtype=int), np.arange(n)))
+    except (TypeError, ValueError):
+        return False
+
+
+def _variance_series(
+    fit: Any,
+    *,
+    X_test: pd.DataFrame | None = None,
+    index: pd.Index,
+) -> pd.Series | None:
     if not hasattr(fit, "predict_variance"):
         return None
+    prediction = None
+    if X_test is not None:
+        try:
+            prediction = fit.predict_variance(X_test)
+        except TypeError:
+            prediction = None
     try:
-        prediction = fit.predict_variance(horizon=len(index))
+        if prediction is None:
+            prediction = fit.predict_variance(horizon=len(index))
     except TypeError:
         prediction = fit.predict_variance(len(index))
     values = _positional_prediction_values(prediction, expected_len=len(index))
@@ -759,8 +1942,16 @@ def _quantile_frame(
         frame = prediction.copy()
         if len(frame) != len(index):
             raise ValueError("quantile prediction length does not match X_test")
-        frame.index = index
-        return frame
+        if frame.index.equals(index):
+            return frame
+        if _is_default_position_index(frame.index, len(index)):
+            frame.index = index
+            return frame
+        raise ValueError(
+            "quantile prediction index does not match X_test. Return a DataFrame "
+            "indexed by X_test.index, use RangeIndex(len(X_test)), or return a mapping "
+            "of array-like quantile predictions."
+        )
     if isinstance(prediction, Mapping):
         columns: dict[str, np.ndarray] = {}
         for level, values in prediction.items():
@@ -811,7 +2002,121 @@ def _model_store_stem(row: Mapping[str, Any]) -> str:
         origin_label = origin.strftime("%Y%m%d")
     else:
         origin_label = str(origin).replace(" ", "_").replace(":", "-")
-    return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}"
+    target_key = row.get("target_key")
+    suffix = "" if target_key is None else f"_{_safe_path_part(target_key)}"
+    return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}{suffix}"
+
+
+def _model_cache_key(alias: str, target_key: Any | None) -> str:
+    if target_key is None:
+        return str(alias)
+    return f"{alias}::{target_key}"
+
+
+def _forecast_target_dates(
+    index: pd.Index,
+    *,
+    base_index: pd.Index | None,
+    horizon: int,
+) -> pd.Series:
+    if base_index is None:
+        return pd.Series(index, index=index)
+    positions = base_index.get_indexer(index)
+    target_positions = positions + int(horizon)
+    if (positions < 0).any() or (target_positions >= len(base_index)).any():
+        return pd.Series(index, index=index)
+    return pd.Series(base_index[target_positions], index=index)
+
+
+def _target_level_at(panel: pd.DataFrame, target: str, label: Any) -> float:
+    if target not in panel.columns:
+        raise ValueError(f"recursive target {target!r} is not present in the panel")
+    if label not in panel.index:
+        raise ValueError(f"recursive target date {label!r} is not present in the panel")
+    value = panel.loc[label, target]
+    if pd.isna(value):
+        raise ValueError(f"recursive target {target!r} is missing at {label!r}")
+    return float(value)
+
+
+def _recursive_next_level(
+    current_level: float,
+    prediction: float,
+    *,
+    transform: str,
+) -> float:
+    if transform == "level":
+        return float(prediction)
+    if transform == "change":
+        return float(current_level + prediction)
+    if transform == "growth":
+        return float(current_level * (1.0 + prediction))
+    if transform == "log_growth":
+        return float(current_level * np.exp(prediction))
+    raise ValueError(
+        "recursive forecasting supports target_transform level, change, growth, or log_growth"
+    )
+
+
+def _recursive_output_value(
+    origin_level: float,
+    final_level: float,
+    *,
+    transform: str,
+) -> float:
+    if transform == "level":
+        return float(final_level)
+    if transform == "change":
+        return float(final_level - origin_level)
+    if transform == "growth":
+        if origin_level == 0:
+            return float("nan")
+        return float(final_level / origin_level - 1.0)
+    if transform == "log_growth":
+        if origin_level <= 0 or final_level <= 0:
+            return float("nan")
+        return float(np.log(final_level) - np.log(origin_level))
+    raise ValueError(
+        "recursive forecasting supports target_transform level, change, growth, or log_growth"
+    )
+
+
+def _path_step_columns(y: pd.DataFrame, *, horizon: int) -> list[str]:
+    frame = pd.DataFrame(y)
+    columns = [str(column) for column in frame.columns]
+    selected: list[str] = []
+    for step in range(1, int(horizon) + 1):
+        suffix = f"_step{step}"
+        matches = [column for column in columns if column.endswith(suffix)]
+        if len(matches) != 1:
+            raise ValueError(
+                "path_average forecasting requires exactly one path target "
+                f"column for step {step}; got {matches}"
+            )
+        selected.append(matches[0])
+    return selected
+
+
+def _feature_target_name(features: FeatureSpec) -> str | None:
+    if features.target is not None:
+        return features.target
+    if len(features.targets) == 1:
+        return features.targets[0]
+    return None
+
+
+def _panel_prediction_horizon(
+    date: Any,
+    *,
+    origin: Any,
+    base_index: pd.Index,
+    default: int,
+) -> int:
+    origin_index = base_index.insert(0, origin) if origin not in base_index else base_index
+    positions = origin_index.get_indexer(pd.Index([origin, date]))
+    if (positions < 0).any():
+        return int(default)
+    return max(1, int(positions[1] - positions[0] + 1))
 
 
 def _safe_path_part(value: Any) -> str:
@@ -866,6 +2171,25 @@ def _validate_runner_policies(
         return
     if preprocessing_policy is None:
         return
+
+
+def _forecast_table(records: list[dict[str, Any]]) -> pd.DataFrame:
+    frame = pd.DataFrame.from_records(records)
+    for column in _FORECAST_TABLE_COLUMNS:
+        if column not in frame.columns:
+            frame[column] = pd.Series(dtype=object)
+    extra_columns = [
+        str(column) for column in frame.columns if column not in _FORECAST_TABLE_COLUMNS
+    ]
+    return frame.loc[:, [*list(_FORECAST_TABLE_COLUMNS), *extra_columns]]
+
+
+def _validate_panel_target(panel: pd.DataFrame, target: str) -> None:
+    if target not in panel.columns:
+        raise ValueError(
+            f"target {target!r} is not present in panel columns; available columns: "
+            f"{[str(column) for column in panel.columns]}"
+        )
 
 
 def _stage_update_due(
@@ -950,6 +2274,7 @@ def _origin_stage_record(
 
 def _result_metadata(
     *,
+    input_path: str,
     input_panel: pd.DataFrame,
     window_spec: WindowSpec,
     model_runs: list[_ModelRun],
@@ -959,18 +2284,39 @@ def _result_metadata(
     feature_policy: StagePolicy | None,
     selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
     selection_policy: StagePolicy,
+    combination_specs: Sequence[CombinationSpec],
+    n_combination_forecasts: int,
     stage_records: list[dict[str, Any]],
     n_forecasts: int,
     config: Mapping[str, Any],
     save_models: bool,
     model_store: str | Path,
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
+    horizons: Sequence[int],
 ) -> dict[str, Any]:
     metadata_level = str(config.get("metadata_level", "standard"))
     return {
+        "metadata_schema": {
+            "kind": "forecast_result",
+            "version": 1,
+            "input_path": input_path,
+            "forecast_table_columns": list(_FORECAST_TABLE_COLUMNS),
+            "stage_record_columns": list(_STAGE_RECORD_COLUMNS),
+        },
         "run": {
             "n_forecasts": int(n_forecasts),
             "n_models": len(model_runs),
+            "n_combinations": len(combination_specs),
+            "n_combination_forecasts": int(n_combination_forecasts),
+            "input_path": input_path,
+            "panel_model_runner": input_path == "panel_model",
+            "forecast_policy": forecast_policy,
+            "future_feature_policy": future_feature_policy,
+            "horizons": [int(value) for value in horizons],
+            "multi_horizon": len(tuple(horizons)) > 1,
             "config": dict(config),
+            "metadata_level": metadata_level,
             "save_models": bool(save_models),
             "model_store": str(model_store),
         },
@@ -991,7 +2337,14 @@ def _result_metadata(
         },
         "preprocessing": preprocessing,
         "features": features,
+        "forecast_policy": {
+            "method": forecast_policy,
+            "future_feature_policy": future_feature_policy,
+            "uses_observed_future_predictors": future_feature_policy == "observed_future",
+            "horizons": [int(value) for value in horizons],
+        },
         "selection": _selection_metadata(selection),
+        "combination": [spec.to_dict() for spec in combination_specs],
         "models": [
             {"alias": model_run.alias, "spec": model_run.spec.to_metadata()}
             for model_run in model_runs

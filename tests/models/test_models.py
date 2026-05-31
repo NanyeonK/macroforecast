@@ -134,6 +134,37 @@ def test_linear_models_return_model_fit_with_series_predictions() -> None:
     assert fit.metadata["alpha"] == 0.5
 
 
+def test_ridge_variants_fit_and_record_constraints() -> None:
+    X, y = _xy()
+
+    nonneg = mf.models.nonneg_ridge(X, y, alpha=0.1)
+    shrink = mf.models.shrink_to_target_ridge(
+        X,
+        y,
+        alpha=0.1,
+        prior_target={"x1": 0.7, "x2": 0.3},
+        simplex=True,
+        nonneg=True,
+    )
+    fused = mf.models.fused_difference_ridge(
+        X,
+        y,
+        alpha=0.1,
+        difference_order=1,
+        nonneg=True,
+    )
+    random_walk = mf.models.random_walk_ridge(X, y, alpha=0.5, initial_alpha=0.1)
+
+    assert (nonneg.diagnostics["coefficients"] >= -1e-10).all()
+    assert abs(float(shrink.diagnostics["coefficients"].sum()) - 1.0) < 1e-6
+    assert (fused.diagnostics["coefficients"] >= -1e-10).all()
+    assert random_walk.estimator.coef_path_.shape == X.shape
+    for fit in (nonneg, shrink, fused, random_walk):
+        pred = fit.predict(X.iloc[:3])
+        assert pred.shape == (3,)
+        assert fit.metadata["alpha"] > 0.0
+
+
 def test_lasso_path_is_not_public_model_family() -> None:
     assert not hasattr(mf.models, "lasso_path")
     assert "lasso_path" not in mf.models.__all__
@@ -142,6 +173,10 @@ def test_lasso_path_is_not_public_model_family() -> None:
 def test_top_level_model_exports_include_new_model_families() -> None:
     assert mf.adaptive_lasso is mf.models.adaptive_lasso
     assert mf.adaptive_elastic_net is mf.models.adaptive_elastic_net
+    assert mf.nonneg_ridge is mf.models.nonneg_ridge
+    assert mf.shrink_to_target_ridge is mf.models.shrink_to_target_ridge
+    assert mf.fused_difference_ridge is mf.models.fused_difference_ridge
+    assert mf.random_walk_ridge is mf.models.random_walk_ridge
     assert mf.group_lasso is mf.models.group_lasso
     assert mf.sparse_group_lasso is mf.models.sparse_group_lasso
     assert mf.svr is mf.models.svr
@@ -150,6 +185,16 @@ def test_top_level_model_exports_include_new_model_families() -> None:
     assert mf.nn is mf.models.nn
     assert mf.lstm is mf.models.lstm
     assert mf.gru is mf.models.gru
+    assert mf.transformer is mf.models.transformer
+    assert mf.hemisphere_nn is mf.models.hemisphere_nn
+    assert mf.kernel_ridge is mf.models.kernel_ridge
+    assert mf.knn is mf.models.knn
+    assert mf.mars is mf.models.mars
+    assert mf.bvar_minnesota is mf.models.bvar_minnesota
+    assert mf.dfm_mixed_mariano_murasawa is mf.models.dfm_mixed_mariano_murasawa
+    assert mf.dfm_unrestricted_midas is mf.models.dfm_unrestricted_midas
+    assert mf.midas_almon is mf.models.midas_almon
+    assert mf.unrestricted_midas is mf.models.unrestricted_midas
     assert not hasattr(mf.models, "mlp")
     assert not hasattr(mf, "mlp")
 
@@ -196,6 +241,220 @@ def test_model_spec_can_fit_like_model_callable() -> None:
 
     assert isinstance(fit, mf.models.ModelFit)
     assert fit.metadata["alpha"] == 0.5
+
+
+def test_kernel_knn_and_mars_models_fit_and_predict() -> None:
+    X, y = _xy()
+    nonlinear_y = pd.Series(
+        1.0 + 3.0 * np.maximum(0.0, X["x1"] - 0.45) - 0.25 * X["x2"],
+        index=X.index,
+        name="y",
+    )
+
+    krr = mf.models.kernel_ridge(X, y, alpha=0.1, kernel="rbf")
+    knn = mf.models.knn(X, y, n_neighbors=3)
+    mars = mf.models.mars(X, nonlinear_y, max_terms=8, n_knots=6)
+
+    assert krr.predict(X.iloc[:4]).shape == (4,)
+    assert knn.predict(X.iloc[:4]).shape == (4,)
+    assert mars.predict(X.iloc[:4]).shape == (4,)
+    assert mars.estimator.n_terms_ > 1
+    assert "Package-native" in mars.metadata["implementation_note"]
+
+
+def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
+    X, y = _xy(80)
+    panel = pd.concat([y.rename("y"), X], axis=1)
+    future = pd.DataFrame(index=pd.date_range(panel.index[-1] + pd.offsets.MonthEnd(), periods=3, freq="ME"))
+
+    bvar = mf.models.bvar_minnesota(panel, target="y", n_lag=2)
+    niw = mf.models.bvar_normal_inverse_wishart(panel, target="y", n_lag=2)
+    ets = mf.models.ets(y, trend="add")
+    hw = mf.models.holt_winters(y, trend="add")
+    theta = mf.models.theta_method(y, deseasonalize=False)
+
+    for fit in (bvar, niw, ets, hw, theta):
+        pred = fit.predict(future)
+        assert len(pred) == 3
+        assert np.isfinite(pred).all()
+
+
+def test_midas_variants_group_lagged_predictors() -> None:
+    X, y = _xy(70)
+    lagged = pd.DataFrame(
+        {
+            "x_lag0": X["x1"],
+            "x_lag1": X["x1"].shift(1),
+            "x_lag2": X["x1"].shift(2),
+            "z_lag0": X["x2"],
+            "z_lag1": X["x2"].shift(1),
+        },
+        index=X.index,
+    )
+    target = y.shift(-1)
+
+    almon = mf.models.midas_almon(lagged, target, alpha=0.1)
+    beta = mf.models.midas_beta(lagged, target, beta_params=(1.0, 2.0), alpha=0.1)
+    step = mf.models.midas_step(lagged, target, n_steps=2, alpha=0.1)
+    unrestricted = mf.models.unrestricted_midas(lagged, target, alpha=0.1)
+
+    assert set(almon.estimator.groups_) == {"x", "z"}
+    assert set(beta.estimator.weights_) == {"x", "z"}
+    assert step.predict(lagged.dropna().iloc[:5]).shape == (5,)
+    assert set(unrestricted.estimator.groups_) == {"x", "z"}
+    assert "x_lag2" in unrestricted.metadata["lag_groups"]["x"]
+    assert almon.metadata["lag_group_details"]["x"][2] == {
+        "column": "x_lag2",
+        "lag": 2,
+    }
+    assert almon.metadata["weighted_columns"] == ["x_midas", "z_midas"]
+    assert almon.diagnostics["coefficients"].index.tolist() == ["x_midas", "z_midas"]
+    assert set(almon.diagnostics["effective_lag_coefficients"].index) >= {
+        "x_lag0",
+        "x_lag1",
+        "x_lag2",
+    }
+
+
+def test_midas_weighted_design_requires_complete_lag_blocks() -> None:
+    X, y = _xy(20)
+    lagged = pd.DataFrame(
+        {
+            "x_lag0": X["x1"],
+            "x_lag1": X["x1"].shift(1),
+            "x_lag2": X["x1"].shift(2),
+        },
+        index=X.index,
+    )
+    fit = mf.models.midas_almon(lagged, y, polynomial_order=0)
+
+    with pytest.raises(ValueError, match="Input X contains NaN"):
+        fit.predict(lagged.iloc[:2])
+
+
+@pytest.mark.parametrize(
+    ("factory", "kwargs", "message"),
+    [
+        (mf.models.midas_almon, {"polynomial_order": -1}, "polynomial_order"),
+        (mf.models.midas_almon, {"polynomial_order": 2, "theta": (0.0, 0.1)}, "theta"),
+        (mf.models.midas_beta, {"beta_params": (1.0, 0.0)}, "beta_params"),
+        (mf.models.midas_step, {"n_steps": 0}, "n_steps"),
+        (mf.models.unrestricted_midas, {"alpha": -0.1}, "alpha"),
+    ],
+)
+def test_midas_variants_validate_parameters(factory, kwargs, message) -> None:
+    X, y = _xy(20)
+    lagged = pd.DataFrame({"x_lag0": X["x1"], "x_lag1": X["x1"].shift(1)}, index=X.index)
+
+    with pytest.raises(ValueError, match=message):
+        factory(lagged, y, **kwargs)
+
+
+def test_mixed_frequency_dfm_uses_native_frequency_metadata() -> None:
+    idx = pd.date_range("2000-01-01", periods=48, freq="MS")
+    factor = np.sin(np.arange(48) / 5.0)
+    monthly = mf.data.DataBundle(
+        mf.data.as_panel(
+            pd.DataFrame(
+                {
+                    "date": idx,
+                    "m1": factor + 0.05 * np.cos(np.arange(48)),
+                    "m2": 0.5 * factor + 0.03 * np.sin(np.arange(48)),
+                }
+            ),
+            date="date",
+            metadata={"dataset": "monthly", "frequency": "monthly"},
+        ),
+        {"dataset": "monthly", "frequency": "monthly"},
+    )
+    quarterly_idx = idx[2::3]
+    quarterly = mf.data.DataBundle(
+        mf.data.as_panel(
+            pd.DataFrame(
+                {
+                    "date": quarterly_idx,
+                    "q_target": [factor[max(0, i - 2) : i + 1].mean() for i in range(2, 48, 3)],
+                }
+            ),
+            date="date",
+            metadata={"dataset": "quarterly", "frequency": "quarterly"},
+        ),
+        {"dataset": "quarterly", "frequency": "quarterly"},
+    )
+    mixed = mf.data.combine(monthly, quarterly, dataset="mixed", frequency="native")
+
+    fit = mf.models.dfm_mixed_mariano_murasawa(
+        mixed,
+        target="q_target",
+        n_factors=1,
+        factor_order=1,
+        maxiter=20,
+        tolerance=1e-3,
+    )
+    future = pd.DataFrame(index=pd.date_range(idx[-1] + pd.offsets.MonthBegin(), periods=3, freq="MS"))
+
+    pred = fit.predict(future)
+
+    assert len(pred) == 3
+    assert np.isfinite(pred.to_numpy(dtype=float)).all()
+    assert fit.metadata["monthly_columns"] == ["m1", "m2"]
+    assert fit.metadata["quarterly_columns"] == ["q_target"]
+    assert "Mariano-Murasawa" in fit.metadata["implementation_note"]
+    assert "factors_filtered" in fit.diagnostics
+
+
+def test_dfm_unrestricted_midas_builds_composite_design() -> None:
+    idx = pd.date_range("2000-01-01", periods=60, freq="MS")
+    factor = np.sin(np.arange(60) / 5.0)
+    monthly = mf.data.DataBundle(
+        mf.data.as_panel(
+            pd.DataFrame(
+                {
+                    "date": idx,
+                    "m1": factor + 0.05 * np.cos(np.arange(60)),
+                    "m2": 0.5 * factor + 0.03 * np.sin(np.arange(60)),
+                }
+            ),
+            date="date",
+            metadata={"dataset": "monthly", "frequency": "monthly"},
+        ),
+        {"dataset": "monthly", "frequency": "monthly"},
+    )
+    quarterly_idx = idx[2::3]
+    quarterly = mf.data.DataBundle(
+        mf.data.as_panel(
+            pd.DataFrame(
+                {
+                    "date": quarterly_idx,
+                    "q_target": [factor[max(0, i - 2) : i + 1].mean() for i in range(2, 60, 3)],
+                }
+            ),
+            date="date",
+            metadata={"dataset": "quarterly", "frequency": "quarterly"},
+        ),
+        {"dataset": "quarterly", "frequency": "quarterly"},
+    )
+    mixed = mf.data.combine(monthly, quarterly, dataset="mixed", frequency="native")
+
+    fit = mf.models.dfm_unrestricted_midas(
+        mixed,
+        target="q_target",
+        lag_columns=["m1"],
+        lags=(0, 1, 2),
+        factor_lags=(0,),
+        maxiter=20,
+        tolerance=1e-3,
+        alpha=0.1,
+    )
+    design = fit.estimator.design_
+
+    assert isinstance(design, pd.DataFrame)
+    assert "dfm_factor1_lag0" in design.columns
+    assert "m1_lag2" in design.columns
+    assert fit.metadata["prediction_contract"].startswith("predict() expects")
+    pred = fit.predict(design.iloc[-2:])
+    assert len(pred) == 2
+    assert np.isfinite(pred.to_numpy(dtype=float)).all()
 
 
 def test_model_fit_and_spec_export_metadata() -> None:
@@ -263,6 +522,8 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     svr_spec = mf.models.get_model("svr")
     nn_spec = mf.models.get_model("nn")
     lstm_spec = mf.models.get_model("lstm")
+    transformer_spec = mf.models.get_model("transformer")
+    hnn_spec = mf.models.get_model("hemisphere_nn")
     xgb_spec = mf.models.get_model("xgboost")
     lightgbm_spec = mf.models.get_model("lightgbm")
     catboost_spec = mf.models.get_model("catboost")
@@ -285,6 +546,10 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert lstm_spec.to_dict()["recommended_preprocessing"] == [
         "handled internally: X and y are standardized inside each fit"
     ]
+    assert transformer_spec.backend == "torch.nn.TransformerEncoder"
+    assert transformer_spec.requires_extra == "deep"
+    assert hnn_spec.requires_extra == "deep"
+    assert hnn_spec.default_params["B"] is None
 
     table = mf.models.list_model_specs(family="neural")
     row = table.loc[table["name"] == "lstm"].iloc[0]
@@ -542,17 +807,57 @@ def test_recurrent_neural_models_fit_when_torch_is_available() -> None:
         batch_size=8,
         device="cpu",
     )
+    transformer = mf.models.transformer(
+        X,
+        y,
+        sequence_length=3,
+        hidden_size=8,
+        max_epochs=1,
+        batch_size=8,
+        device="cpu",
+    )
 
     assert len(lstm.predict(X.iloc[-2:])) == 2
     assert len(gru.predict(X.iloc[-2:])) == 2
+    assert len(transformer.predict(X.iloc[-2:])) == 2
     assert lstm.estimator.device_ == "cpu"
     assert gru.estimator.device_ == "cpu"
+    assert transformer.estimator.device_ == "cpu"
     assert lstm.diagnostics["sequence_context"]["sequence_length"] == 3
     assert lstm.diagnostics["sequence_context"]["train_tail_rows"] == 2
     assert (
         lstm.diagnostics["sequence_context"]["test_sequence_prefix"]
         == "last fitted rows only"
     )
+
+
+def test_hemisphere_nn_fit_when_torch_is_available() -> None:
+    pytest.importorskip("torch")
+    X, y = _xy(24)
+
+    fit = mf.models.hemisphere_nn(
+        X,
+        y,
+        neurons=4,
+        max_epochs=1,
+        n_estimators=2,
+        patience=1,
+        device="cpu",
+        quantile_levels=(0.1, 0.5, 0.9),
+    )
+    pred = fit.predict(X.iloc[-3:])
+    variance = fit.predict_variance(X.iloc[-3:])
+    quantiles = fit.predict_quantiles(X.iloc[-3:])
+
+    assert len(pred) == 3
+    assert variance.shape == (3,)
+    assert np.isfinite(variance).all()
+    assert (variance > 0).all()
+    assert set(quantiles) == {0.1, 0.5, 0.9}
+    assert all(values.shape == (3,) for values in quantiles.values())
+    assert fit.metadata["n_estimators"] == 2
+    assert fit.metadata["quantile_levels"] == (0.1, 0.5, 0.9)
+    assert fit.estimator.device_ == "cpu"
 
 
 def test_supervised_pca_fit_records_selected_features() -> None:
@@ -739,6 +1044,12 @@ def test_bagging_and_booging_are_callable_with_small_budgets() -> None:
         ("torch", "deep", lambda X, y: mf.models.nn(X, y, max_epochs=1)),
         ("torch", "deep", lambda X, y: mf.models.lstm(X, y, max_epochs=1)),
         ("torch", "deep", lambda X, y: mf.models.gru(X, y, max_epochs=1)),
+        ("torch", "deep", lambda X, y: mf.models.transformer(X, y, max_epochs=1)),
+        (
+            "torch",
+            "deep",
+            lambda X, y: mf.models.hemisphere_nn(X, y, max_epochs=1, n_estimators=1),
+        ),
     ],
 )
 def test_optional_external_models_fail_lazily_when_missing(
@@ -766,11 +1077,10 @@ def test_pcr_is_not_public_model_family() -> None:
     assert "pcr" not in mf.models.MODEL_SPECS
 
 
-def test_mars_is_not_public_model_family() -> None:
-    assert not hasattr(mf, "mars")
-    assert not hasattr(mf.models, "mars")
-    assert "mars" not in mf.models.__all__
-    assert "mars" not in mf.models.MODEL_SPECS
+def test_mars_is_public_package_native_model_family() -> None:
+    assert mf.mars is mf.models.mars
+    assert "mars" in mf.models.__all__
+    assert "mars" in mf.models.MODEL_SPECS
 
 
 def test_macro_random_forest_adapter_wires_reference_backend(

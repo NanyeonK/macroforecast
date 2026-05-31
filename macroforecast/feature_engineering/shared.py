@@ -191,6 +191,189 @@ def _fit_transform_pca(
     return transformed
 
 
+def _fit_sparse_pca_chen_rohe(
+    train: pd.DataFrame,
+    *,
+    n_components: int,
+    zeta: float,
+    max_iter: int,
+    random_state: int | None,
+) -> tuple[pd.Series, np.ndarray, float, int, float]:
+    """Fit Chen-Rohe sparse component loading matrix on complete rows.
+
+    This is not sklearn SparsePCA. ``zeta`` is the Chen-Rohe L1 loading-budget
+    parameter, and ``zeta <= 0`` follows the legacy package default by using the
+    resolved number of components as the budget.
+    """
+
+    complete = train.dropna().astype(float)
+    if complete.empty:
+        raise ValueError("sparse_pca_chen_rohe requires at least one complete row")
+    n_value = int(n_components)
+    if n_value <= 0:
+        raise ValueError("n_components must be positive")
+    iter_value = int(max_iter)
+    if iter_value <= 0:
+        raise ValueError("max_iter must be positive")
+    zeta_value = float(zeta)
+    if zeta_value < 0:
+        raise ValueError("zeta must be non-negative")
+
+    center = complete.mean(axis=0)
+    x_values = complete.to_numpy(dtype=float) - center.to_numpy(dtype=float, copy=False)
+    n_rows, n_columns = x_values.shape
+    n_resolved = max(1, min(n_value, n_rows, n_columns))
+    zeta_resolved = zeta_value if zeta_value > 0 else float(n_resolved)
+
+    rng = np.random.default_rng(random_state)
+    z_scores = np.linalg.qr(rng.standard_normal((n_rows, n_resolved)))[0]
+    theta = np.linalg.qr(rng.standard_normal((n_columns, n_resolved)))[0]
+    previous_objective = -np.inf
+    objective = np.nan
+    n_iter = 0
+    for n_iter in range(1, iter_value + 1):
+        u, _, vt = np.linalg.svd(x_values @ theta, full_matrices=False)
+        z_scores = u @ vt
+        gradient = x_values.T @ z_scores
+        u_theta, _, vt_theta = np.linalg.svd(gradient, full_matrices=False)
+        theta_unconstrained = u_theta @ vt_theta
+        if np.sum(np.abs(theta_unconstrained)) <= zeta_resolved:
+            theta = theta_unconstrained
+        else:
+            high = float(np.max(np.abs(theta_unconstrained)))
+            if high <= 0.0:
+                theta = np.zeros_like(theta_unconstrained)
+            else:
+                low = 0.0
+                for _ in range(50):
+                    threshold = 0.5 * (low + high)
+                    theta_soft = np.sign(theta_unconstrained) * np.maximum(
+                        np.abs(theta_unconstrained) - threshold,
+                        0.0,
+                    )
+                    if np.sum(np.abs(theta_soft)) > zeta_resolved:
+                        low = threshold
+                    else:
+                        high = threshold
+                theta = np.sign(theta_unconstrained) * np.maximum(
+                    np.abs(theta_unconstrained) - high,
+                    0.0,
+                )
+        objective = float(np.linalg.norm(z_scores.T @ x_values @ theta, "fro"))
+        if abs(objective - previous_objective) < 1e-9:
+            break
+        previous_objective = objective
+    return center, theta, zeta_resolved, n_iter, objective
+
+
+def _fit_sparse_factor_var1(scores: np.ndarray) -> np.ndarray | None:
+    """Fit VAR(1) coefficients for sparse macro-finance factor innovations."""
+
+    values = np.asarray(scores, dtype=float)
+    if values.shape[0] <= 2:
+        return None
+    lagged = values[:-1]
+    current = values[1:]
+    gram = lagged.T @ lagged
+    rhs = lagged.T @ current
+    try:
+        coefficients = np.linalg.solve(gram, rhs)
+    except np.linalg.LinAlgError:
+        coefficients = np.linalg.lstsq(gram, rhs, rcond=None)[0]
+    return np.asarray(coefficients, dtype=float)
+
+
+def _apply_sparse_pca_chen_rohe(
+    frame: pd.DataFrame,
+    *,
+    columns: tuple[str, ...],
+    center: pd.Series,
+    theta: np.ndarray,
+    prefix: str,
+    var_coef: np.ndarray | None = None,
+) -> pd.DataFrame:
+    selected = frame.loc[:, columns].astype(float)
+    valid = selected.dropna()
+    output_columns = [f"{prefix}{index}" for index in range(1, theta.shape[1] + 1)]
+    result = pd.DataFrame(index=frame.index, columns=output_columns, dtype=float)
+    if valid.empty:
+        return result
+    values = valid - center.reindex(columns)
+    scores = values.to_numpy(dtype=float) @ theta
+    if var_coef is not None and scores.shape[0] > 1:
+        innovations = np.full_like(scores, np.nan, dtype=float)
+        innovations[0] = 0.0
+        innovations[1:] = scores[1:] - scores[:-1] @ var_coef
+        scores = innovations
+    transformed = pd.DataFrame(scores, index=valid.index, columns=output_columns)
+    result.loc[transformed.index, :] = transformed
+    result.index.name = "date"
+    return result
+
+
+def _fit_varimax_rotation(
+    train: pd.DataFrame,
+    *,
+    max_iter: int,
+    tol: float,
+) -> tuple[np.ndarray, int]:
+    """Fit the orthogonal varimax rotation used by the legacy runtime.
+
+    The routine rotates an already-created factor-score panel. It deliberately
+    does not standardize or center inputs because PCA/factor functions own that
+    choice before this rotation step is called.
+    """
+
+    complete = train.dropna().astype(float)
+    if complete.empty:
+        raise ValueError("varimax requires at least one complete row")
+    iter_value = int(max_iter)
+    if iter_value <= 0:
+        raise ValueError("max_iter must be positive")
+    tol_value = float(tol)
+    if tol_value < 0:
+        raise ValueError("tol must be non-negative")
+    matrix = complete.to_numpy(dtype=float)
+    n_features = matrix.shape[1]
+    rotation = np.eye(n_features)
+    rotated = matrix.copy()
+    previous_objective = -np.inf
+    n_iter = 0
+    for n_iter in range(1, iter_value + 1):
+        loadings = rotated.T @ (
+            rotated**3 - rotated * (np.diag(rotated.T @ rotated) / max(1, rotated.shape[0]))
+        )
+        u, _, vh = np.linalg.svd(loadings)
+        step_rotation = u @ vh
+        rotation = rotation @ step_rotation
+        rotated = matrix @ rotation
+        objective = float(np.sum(np.var(rotated**2, axis=0)))
+        if abs(objective - previous_objective) <= tol_value:
+            break
+        previous_objective = objective
+    return rotation, n_iter
+
+
+def _apply_varimax_rotation(
+    frame: pd.DataFrame,
+    *,
+    columns: tuple[str, ...],
+    rotation: np.ndarray,
+    prefix: str,
+) -> pd.DataFrame:
+    selected = frame.loc[:, columns].astype(float)
+    valid = selected.dropna()
+    output_columns = [f"{prefix}{index}" for index in range(1, rotation.shape[1] + 1)]
+    result = pd.DataFrame(index=frame.index, columns=output_columns, dtype=float)
+    if valid.empty:
+        return result
+    rotated = valid.to_numpy(dtype=float) @ rotation
+    transformed = pd.DataFrame(rotated, index=valid.index, columns=output_columns)
+    result.loc[transformed.index, :] = transformed
+    result.index.name = "date"
+    return result
+
+
 def _reject_extra_params(params: Mapping[str, Any], step_name: str) -> None:
     if params:
         raise ValueError(f"unknown parameters for feature step {step_name!r}: {sorted(params)}")
@@ -663,7 +846,33 @@ def _normalize_feature_method(value: str) -> str:
         "moving_average": "rolling_mean",
         "moving_average_ladder": "moving_average_ladder",
         "ma_ladder": "moving_average_ladder",
-        "marx_ladder": "moving_average_ladder",
+        "marx": "marx",
+        "marx_step": "marx",
+        "marx_ladder": "marx",
+        "transform": "transform",
+        "transform_features": "transform",
+        "feature_transform": "transform",
+        "log": "transform",
+        "diff": "transform",
+        "log_diff": "transform",
+        "logdiff": "transform",
+        "pct_change": "transform",
+        "growth": "transform",
+        "cumsum": "transform",
+        "cum_sum": "transform",
+        "seasonal_lag": "seasonal_lag",
+        "season_lag": "seasonal_lag",
+        "seasonal": "seasonal_lag",
+        "season_dummy": "season_dummy",
+        "seasonal_dummy": "season_dummy",
+        "dummy_season": "season_dummy",
+        "fourier": "fourier",
+        "fourier_features": "fourier",
+        "polynomial": "polynomial",
+        "polynomial_features": "polynomial",
+        "poly": "polynomial",
+        "interaction": "interaction",
+        "interaction_features": "interaction",
         "scale": "scale",
         "standardize": "scale",
         "maf": "maf",
@@ -672,6 +881,33 @@ def _normalize_feature_method(value: str) -> str:
         "grouped_pca": "group_pca",
         "pca": "pca",
         "principal_components": "pca",
+        "partial_least_squares": "partial_least_squares",
+        "partial_least_squares_features": "partial_least_squares",
+        "pls": "partial_least_squares",
+        "pls_features": "partial_least_squares",
+        "sparse_pca_chen_rohe": "sparse_pca_chen_rohe",
+        "sparse_pca_chen_rohe_features": "sparse_pca_chen_rohe",
+        "chen_rohe_sparse_pca": "sparse_pca_chen_rohe",
+        "sparse_component_analysis": "sparse_pca_chen_rohe",
+        "sca": "sparse_pca_chen_rohe",
+        "varimax": "varimax",
+        "varimax_features": "varimax",
+        "varimax_rotation": "varimax",
+        "sliced_inverse_regression": "sliced_inverse_regression",
+        "sliced_inverse_regression_features": "sliced_inverse_regression",
+        "sir": "sliced_inverse_regression",
+        "feature_selection": "feature_selection",
+        "feature_selection_features": "feature_selection",
+        "select_features": "feature_selection",
+        "hamilton": "hamilton_filter",
+        "hamilton_filter": "hamilton_filter",
+        "hamilton_filter_features": "hamilton_filter",
+        "random_projection": "random_projection",
+        "random_projection_features": "random_projection",
+        "rp": "random_projection",
+        "nystroem": "nystroem",
+        "nystroem_features": "nystroem",
+        "kernel_nystroem": "nystroem",
         "time": "time",
         "time_features": "time",
     }
@@ -735,12 +971,21 @@ def _records_for_columns(
     included: bool | None = None,
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
+    component_ops = {
+        "pca",
+        "group_pca",
+        "maf",
+        "factor_lag",
+        "sparse_pca_chen_rohe",
+        "varimax",
+        "sliced_inverse_regression",
+    }
     for column in frame.columns:
         name = str(column)
         source = _source_for_feature(name, sources)
         lag = _parse_lag(name)
         window = _parse_window(name)
-        component = _parse_component(name) if operation in {"pca", "group_pca", "maf", "factor_lag"} else None
+        component = _parse_component(name) if operation in component_ops else None
         records.append(
             {
                 "feature": name,
@@ -768,7 +1013,15 @@ def _feature_parameter(name: str, *, operation: str) -> str | None:
         parts.append(f"lag={lag}")
     if window is not None:
         parts.append(f"window={window}")
-    if component is not None and operation in {"pca", "group_pca", "maf", "factor_lag"}:
+    if component is not None and operation in {
+        "pca",
+        "group_pca",
+        "maf",
+        "factor_lag",
+        "sparse_pca_chen_rohe",
+        "varimax",
+        "sliced_inverse_regression",
+    }:
         parts.append(f"component={component}")
     if operation in {"scale"}:
         parts.append("method=scale")
@@ -838,12 +1091,77 @@ def _target_metadata_frame(records: Iterable[Mapping[str, Any]]) -> pd.DataFrame
 
 
 def _metadata_frame(records: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
-    frame = pd.DataFrame.from_records(list(records))
+    frame = pd.DataFrame.from_records([dict(record) for record in records])
     for column in _FEATURE_METADATA_COLUMNS:
         if column not in frame.columns:
             frame[column] = None
     extra_columns = [column for column in frame.columns if column not in _FEATURE_METADATA_COLUMNS]
-    return frame.loc[:, list(_FEATURE_METADATA_COLUMNS) + extra_columns]
+    frame = frame.loc[:, list(_FEATURE_METADATA_COLUMNS) + extra_columns].copy()
+    if not frame.empty:
+        for column in ("feature", "step", "block", "operation", "source", "parameter", "fit_policy", "inputs"):
+            frame[column] = frame[column].map(_metadata_str_or_none).astype("object")
+        for column in ("lag", "window", "component"):
+            frame[column] = frame[column].map(_metadata_int_or_none).astype("object")
+        frame["included"] = frame["included"].map(_metadata_bool_or_true).astype("object")
+        frame = _fill_feature_metadata_defaults(frame)
+    frame.attrs["macroforecast_metadata_schema"] = {
+        "kind": "feature_metadata",
+        "version": 1,
+        "columns": list(_FEATURE_METADATA_COLUMNS),
+    }
+    return frame
+
+
+def _fill_feature_metadata_defaults(frame: pd.DataFrame) -> pd.DataFrame:
+    result = frame.copy()
+    date_operations = {"time", "season_dummy", "fourier"}
+    for idx, row in result.iterrows():
+        operation = row.get("operation")
+        source = row.get("source")
+        inputs = row.get("inputs")
+        if _metadata_is_missing(source):
+            if operation in date_operations:
+                source = "date"
+            elif isinstance(inputs, str) and inputs and "," not in inputs:
+                source = inputs
+            else:
+                source = None
+            result.at[idx, "source"] = source
+        if _metadata_is_missing(inputs):
+            if source:
+                result.at[idx, "inputs"] = source
+            elif operation in date_operations:
+                result.at[idx, "inputs"] = "date"
+    return result
+
+
+def _metadata_is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value == ""
+    try:
+        return bool(pd.isna(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def _metadata_str_or_none(value: Any) -> str | None:
+    if _metadata_is_missing(value):
+        return None
+    return str(value)
+
+
+def _metadata_int_or_none(value: Any) -> int | None:
+    if _metadata_is_missing(value):
+        return None
+    return int(value)
+
+
+def _metadata_bool_or_true(value: Any) -> bool:
+    if _metadata_is_missing(value):
+        return True
+    return bool(value)
 
 
 def _source_for_feature(name: str, sources: tuple[str, ...]) -> str | None:

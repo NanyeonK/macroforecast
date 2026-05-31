@@ -63,7 +63,7 @@ implementation is split by responsibility:
 | File | Responsibility |
 | --- | --- |
 | `targets.py` | `direct_target()`, `average_target()`, and `path_targets()`. |
-| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, grouped PCA, MAF, and time features. |
+| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA, wavelet-style decomposition, and time features. |
 | `compose.py` | Reusable step builders and sequential feature composition. |
 | `matrix.py` | Paper-style `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. |
 | `builder.py` | End-to-end `build_features()` alignment of `X`, `y`, and metadata. |
@@ -83,15 +83,26 @@ the same functions later.
 | `average_target()` | Explicit wrapper for direct average change/growth targets. | Model fitting. |
 | `path_targets()` | Step-level targets for path-average forecasting. | Model-stage step fit/forecast and evaluation-stage forecast averaging. |
 | `lag()` | Current and lagged predictor columns. | Model-specific lag search. |
+| `mixed_frequency_lags()` | Exact-date lag blocks for native mixed-frequency panels. | Frequency conversion or model estimation. |
 | `rolling_mean()` | Rolling-window means. | Fit-based filters or learned smoothers. |
 | `moving_average_ladder()` | Multi-scale trailing moving-average block used before optional factor/PCA steps. | PCA/factor extraction itself. |
 | `maf_features()` | Moving Average Factors from variable-specific lag panels. | Model fitting or choosing final feature combinations. |
+| `hamilton_filter_features()` | Hamilton-filter trend/cycle columns with explicit expanding or full-sample policy. | Model fitting, test windows, or choosing filter horizons. |
 | `feature_matrix()` | Named `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. | Loading or preprocessing the raw/level panel. |
 | `scale_features()` | Fit-policy-aware z-score, min-max, or robust scaling. | Model fitting. |
 | `pca_features()` | Fit-policy-aware PCA factors. | Forecast model fitting. |
+| `sparse_pca_chen_rohe_features()` | Chen-Rohe sparse component analysis factors using an L1 loading budget. | Model fitting; runner-safe fitting should use `sparse_pca_chen_rohe_step()` inside `feature_spec()`. |
+| `varimax_features()` | Orthogonal varimax rotation of already-created factor-score columns. | Factor extraction itself; usually call after `pca_features()` or a factor step. |
+| `sliced_inverse_regression_features()` | Target-aware Sliced Inverse Regression factors. | Model fitting; runner-safe fitting should use `sliced_inverse_regression_step()` inside `feature_spec()`. |
+| `partial_least_squares_features()` | Target-aware PLS factor scores. | Model fitting; runner-safe fitting should use `partial_least_squares_step()` inside `feature_spec()`. |
+| `dfm_features()` | Static DFM approximation by standardized PCA. | State-space DFM estimation; use model callables for that. |
+| `feature_selection_features()` | Direct variance/correlation/lasso pre-screening. | Model fitting; runner-safe fitting should use `feature_selection_step()` inside `feature_spec()`. |
+| `asymmetric_trim_features()` | Per-period rank-space columns for asymmetric trimming weights. | Estimating the nonnegative rank weights. |
+| `wavelet_features()` | Causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
+| `adaptive_ma_rf_features()` | Random-forest adaptive moving-average smoothing over time. | Forecast model fitting. |
 | `group_pca()` | PCA factors within named column groups. | FAVAR-specific slow/fast construction, model estimation, or structural identification. |
 | `compose_features()` | Sequential combinations such as `pca -> lag`, `lag -> pca`, `maf`, or `moving_average_ladder -> pca -> lag`. | Model fitting or evaluation. |
-| `time_features()` | Trend, month, quarter, and year columns. | Holiday calendars. |
+| `time_features()` | Trend, month, quarter, and year columns. | Public-holiday or trading-day calendars; the package targets monthly and quarterly macro panels. |
 | `build_features()` | Aligned `X`, `y`, feature metadata, and feature-engineering metadata. | Model evaluation. |
 
 Fit-based transformations require a declared `fit_policy`. The default is
@@ -247,6 +258,74 @@ macroforecast.feature_engineering.lag(
 
 Returns a `pandas.DataFrame` with columns named `{column}_lag{lag}`.
 
+## mixed_frequency_lags
+
+```python
+macroforecast.feature_engineering.mixed_frequency_lags(
+    data,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    target: str | None = None,
+    anchor_dates: Iterable[object] | None = None,
+    columns: Iterable[str] | None = None,
+    lags: Iterable[int] | int = (0, 1, 2),
+    frequency_by_column: Mapping[str, str] | None = None,
+    target_frequency: str | None = None,
+    anchor_position: str = "date",
+    drop_missing: bool = False,
+) -> pandas.DataFrame
+```
+
+Builds a lag matrix for MIDAS-style and other mixed-frequency regressions.
+Unlike `lag()`, lags are measured in each source column's native frequency,
+using `metadata["native_frequency_by_column"]` from `mf.data.set_frequencies()`
+or `mf.data.combine(..., frequency="native")`.
+
+Lookup is period based, not timestamp-string based. A monthly source dated
+`2020-03-01` and the same source dated `2020-03-31` both map to the March 2020
+source period. This prevents month-start/month-end conventions from silently
+breaking MIDAS lag construction.
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `data` | feature input | required | Panel or bundle with a mixed-frequency contract. |
+| `target` | `str` or `None` | input target if available | Column whose non-missing dates define anchors when `anchor_dates` is not supplied. |
+| `anchor_dates` | iterable or `None` | target non-missing dates | Explicit rows to build features for. |
+| `columns` | iterable or `None` | all non-target columns | Source columns to lag. |
+| `lags` | int or iterable | `(0, 1, 2)` | Native-frequency lags. Pass an iterable for exact lags. |
+| `frequency_by_column` | mapping or `None` | metadata map | Override native frequency by source column. |
+| `target_frequency` | `str` or `None` | target metadata/inference | Frequency used when positioning anchor dates. |
+| `anchor_position` | `str` | `"date"` | `"date"`, `"period_start"`, or `"period_end"`. |
+| `drop_missing` | `bool` | `False` | Drop rows with missing lag values. |
+
+For FRED-QD-style quarterly targets dated at the first month of the quarter,
+use `target_frequency="quarterly", anchor_position="period_end"` to construct
+monthly lag blocks at the quarter-end month:
+
+```python
+X_midas = mf.feature_engineering.mixed_frequency_lags(
+    bundle,
+    target="GDPC1",
+    columns=["PAYEMS", "INDPRO"],
+    lags=range(0, 12),
+    target_frequency="quarterly",
+    anchor_position="period_end",
+)
+```
+
+The output columns are named `{column}_lag{lag}`, which is the grouping format
+expected by `mf.models.midas_almon`, `mf.models.midas_beta`, and
+`mf.models.midas_step`.
+
+The returned DataFrame records metadata in two places:
+
+| Location | Meaning |
+| --- | --- |
+| `attrs["macroforecast_metadata"]["feature_engineering_mixed_frequency_lags"]` | Target, anchor dates, selected columns, exact lags, frequency map, anchor positioning, lookup calendar, and row counts before/after `drop_missing`. |
+| `attrs["macroforecast_feature_metadata"]` | One row per generated lag feature, including source column, lag, native source frequency, anchor position, and lookup start/end dates. |
+
 ## rolling_mean
 
 ```python
@@ -303,8 +382,8 @@ when the endpoint should be included.
 ### MARX in macroforecast
 
 Some papers describe this step as `marx_features(P)` or Moving Average Rotation
-of `X` (MARX). In `macroforecast`, MARX is not a separate wrapper function. It
-is the following explicit call:
+of `X` (MARX). In `macroforecast`, the direct pandas form is the following
+explicit moving-average-ladder call:
 
 ```python
 MARX = mf.feature_engineering.moving_average_ladder(
@@ -320,13 +399,21 @@ moving averages of lagged `X`: one-period lag, two-period average ending at
 `shift=1` part is important because the MARX block uses lagged predictors, not
 the contemporaneous realization at the forecast date.
 
+The runner-safe shorthand is `marx_step(max_lag=P)`, used inside
+`feature_spec(..., steps=[...])`. It emits the same columns as the direct call,
+but lets `forecasting.run()` decide which rows are available for any fitted
+state through `feature_policy`.
+
 The original author R snippet builds a VAR lag matrix ordered as lag 1 for all
 variables, lag 2 for all variables, and so on. Then each lag-`l` slot for a
 variable is replaced by the row average of that variable's lag 1 through lag
-`l` columns. The call above matches that unscaled calculation. Through
-`feature_matrix(..., specification="MARX", scale_marx=True)`, macroforecast also
-supports the optional R-code scaling step: z-score the full lag matrix first
-using sample standard deviations, then apply the same increasing-lag averages.
+`l` columns. The direct call and `marx_step(scale_lags=False)` match that
+unscaled calculation. Through `feature_matrix(..., specification="MARX",
+scale_marx=True)` or `marx_step(scale_lags=True)`, macroforecast also supports
+the optional R-code scaling step: z-score the lag matrix first using sample
+standard deviations, then apply the same increasing-lag averages. In
+`feature_spec()` mode, `scale_lags=True` fits those lag-matrix center/scale
+values only on the feature-fit panel and reuses them for validation/test rows.
 
 This function is not PCA. It is the moving-average block used before optional
 factor extraction. Moving-average PCA should be represented as:
@@ -405,6 +492,221 @@ The default `fit_policy="expanding"` avoids full-sample leakage. Use
 or for exploratory diagnostics. `warn_full_sample=True` emits a warning for
 that choice.
 
+## sparse_pca_chen_rohe_features
+
+```python
+macroforecast.feature_engineering.sparse_pca_chen_rohe_features(
+    data,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    columns: Iterable[str] | None = None,
+    n_components: int = 4,
+    zeta: float = 0.0,
+    max_iter: int = 200,
+    var_innovations: bool = False,
+    prefix: str | None = None,
+    min_train_size: int | None = None,
+    drop_missing: bool = False,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+) -> pandas.DataFrame
+```
+
+`sparse_pca_chen_rohe_features()` implements the legacy package's
+Chen-Rohe-style Sparse Component Analysis (SCA) routine directly with NumPy. It
+is not `sklearn.decomposition.SparsePCA`. The transform centers the selected
+predictor panel, alternates over the score and loading matrices, and constrains
+the loading matrix with an L1 budget `zeta`.
+
+The direct callable fits on all complete rows of the supplied input. It warns by
+default because that is a full-input fitted transform. For strict walk-forward
+forecasting, use `sparse_pca_chen_rohe_step()` inside `feature_spec(...)`; the
+runner will fit the sparse loading matrix on the feature-fit panel and reuse the
+fixed loading matrix on validation/test rows.
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `columns` | iterable or `None` | all columns | Predictor columns used to fit sparse components. |
+| `n_components` | positive int | `4` | Requested number of sparse components. The resolved number is `min(n_components, complete_rows, selected_columns)`. |
+| `zeta` | non-negative float | `0.0` | L1 loading-budget parameter. `zeta <= 0` uses the resolved component count, matching the legacy default. Smaller values create sparser loadings. |
+| `max_iter` | positive int | `200` | Maximum alternating updates. |
+| `var_innovations` | bool | `False` | If `True`, fit a VAR(1) on the sparse factor scores and return residual sparse macro-finance factors. |
+| `prefix` | string or `None` | `"sca"` or `"scaf"` | Output prefix. Default is `"sca"`; with `var_innovations=True`, default is `"scaf"`. |
+| `min_train_size` | positive int or `None` | `1`, or `3` when `var_innovations=True` | Minimum complete rows before emitting factors. |
+| `drop_missing` | bool | `False` | Drop rows where sparse factors are unavailable. |
+| `random_state` | int or `None` | `0` | Initialization seed for the alternating algorithm. |
+| `warn_full_sample` | bool | `True` | Warn because the direct callable fits on all complete input rows. |
+
+### Output
+
+Returns a `pandas.DataFrame` indexed by `date`, with columns such as `sca1`,
+`sca2`, or `scaf1`. Metadata is stored under
+`attrs["macroforecast_metadata"]["feature_engineering_sparse_pca_chen_rohe"]`.
+The stage records selected columns, requested/resolved components, `zeta`,
+resolved `zeta`, iteration count, final objective, VAR-innovation use, fit rows,
+and `fit_policy="full_input_complete_rows"`.
+
+`macroforecast_feature_metadata` records one row per factor with
+`operation="sparse_pca_chen_rohe"`, the source columns, component index, and fit
+policy.
+
+## varimax_features
+
+```python
+macroforecast.feature_engineering.varimax_features(
+    data,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    columns: Iterable[str] | None = None,
+    max_iter: int = 50,
+    tol: float = 1e-7,
+    prefix: str = "varimax",
+    min_train_size: int | None = None,
+    drop_missing: bool = False,
+    warn_full_sample: bool = True,
+) -> pandas.DataFrame
+```
+
+`varimax_features()` rotates a factor-score panel with an orthogonal varimax
+rotation. It should be applied to factor columns, not raw macro variables. A
+typical direct use is:
+
+```python
+factors = mf.feature_engineering.pca_features(
+    processed,
+    columns=["INDPRO", "PAYEMS", "UNRATE"],
+    n_components=3,
+    fit_policy="full_sample",
+    warn_full_sample=False,
+)
+rotated = mf.feature_engineering.varimax_features(factors, warn_full_sample=False)
+```
+
+The direct callable fits the rotation on all complete rows and warns by default.
+For strict walk-forward forecasting, use:
+
+```python
+spec = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors=["PAYEMS", "UNRATE", "HOUST"],
+    steps=[
+        mf.feature_engineering.pca_step(name="pc", n_components=3, include=False),
+        mf.feature_engineering.varimax_step(name="rot", input="pc"),
+    ],
+)
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `columns` | iterable or `None` | all columns | Factor-score columns to rotate. |
+| `max_iter` | positive int | `50` | Maximum varimax iterations. |
+| `tol` | non-negative float | `1e-7` | Convergence tolerance for the rotation objective. |
+| `prefix` | string | `"varimax"` | Output prefix. |
+| `min_train_size` | positive int or `None` | `1` | Minimum complete rows before emitting rotated factors. |
+| `drop_missing` | bool | `False` | Drop rows where rotated factors are unavailable. |
+| `warn_full_sample` | bool | `True` | Warn because the direct callable fits on all complete input rows. |
+
+### Output
+
+Returns a `pandas.DataFrame` with columns such as `varimax1`, `varimax2`, and so
+on. Metadata is stored under `metadata["feature_engineering_varimax"]`, and
+`macroforecast_feature_metadata` records `operation="varimax"`, component index,
+source factor columns, and fit policy.
+
+## sliced_inverse_regression_features
+
+```python
+macroforecast.feature_engineering.sliced_inverse_regression_features(
+    data,
+    target: str | pandas.Series | None = None,
+    *,
+    metadata: Mapping[str, object] | None = None,
+    columns: Iterable[str] | None = None,
+    n_components: int = 3,
+    n_slices: int = 10,
+    scaling_policy: str = "scaled_pca",
+    prefix: str = "sir",
+    drop_missing: bool = False,
+    warn_full_sample: bool = True,
+) -> pandas.DataFrame
+```
+
+`sliced_inverse_regression_features()` implements a target-aware SIR factor
+transform. It aligns the predictor panel with a target series, standardizes
+predictors, optionally applies predictive column scaling, slices observations by
+the target distribution, and projects the full panel onto the leading
+between-slice directions.
+
+The direct callable fits on all target-aligned complete rows in the supplied
+input. For strict walk-forward forecasting, use
+`sliced_inverse_regression_step()` inside `feature_spec(...)`; the runner then
+fits SIR directions only on the feature-fit panel and applies the fixed
+directions to validation/test rows.
+
+### Input
+
+| Name | Type | Default | Choices |
+| --- | --- | --- | --- |
+| `target` | string, `Series`, or `None` | input target metadata | Target signal used for SIR slicing and optional predictive scaling. |
+| `columns` | iterable or `None` | all non-target columns | Predictor columns. |
+| `n_components` | positive int | `3` | Number of SIR factors to return. If the effective rank is smaller, remaining columns are zero-padded for stable shape. |
+| `n_slices` | int | `10` | Target-distribution slices. Must be at least `2`; internally capped by aligned row count. |
+| `scaling_policy` | string | `"scaled_pca"` | `"scaled_pca"`, `"marginal_R2"`, or `"none"`. |
+| `prefix` | string | `"sir"` | Output prefix. Use `prefix="factor_"` for legacy-style names `factor_1`, `factor_2`, ... |
+| `drop_missing` | bool | `False` | Drop rows with missing predictor values after projection. |
+| `warn_full_sample` | bool | `True` | Warn because the direct callable fits on all target-aligned complete rows. |
+
+### Output
+
+Returns columns such as `sir1`, `sir2`, and so on. Metadata is stored under
+`metadata["feature_engineering_sliced_inverse_regression"]` and records the
+target, predictor columns, requested/resolved components, slices, scaling policy,
+fit row count, and `fit_policy="full_input_target_aligned_rows"`.
+
+## Target-Aware Feature Steps
+
+`feature_spec(..., steps=[...])` also supports target-aware fitted transforms.
+These steps use the resolved `feature_spec()` target during `.fit(...)`, store a
+fixed fit state, and do not look at target values during `.transform(...)`.
+
+```python
+features = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors=["PAYEMS", "UNRATE", "HOUST"],
+    steps=[
+        mf.feature_engineering.scale_step(name="scaled", include=False),
+        mf.feature_engineering.partial_least_squares_step(
+            name="pls",
+            input="scaled",
+            n_components=2,
+            min_train_size=60,
+        ),
+    ],
+)
+```
+
+Target-aware steps require exactly one resolved target column. In practice that
+means one `target` and one `horizon` for the step pipeline. If multiple targets
+or horizons are requested, fit raises before any model is run.
+
+| Step builder | Direct callable | Main options | Output |
+| --- | --- | --- | --- |
+| `partial_least_squares_step()` | `partial_least_squares_features()` | `n_components`, `columns`, `min_train_size`, `prefix` | `pls1`, `pls2`, ... |
+| `sliced_inverse_regression_step()` | `sliced_inverse_regression_features()` | `n_components`, `n_slices`, `scaling_policy`, `min_train_size`, `prefix` | `sir1`, `sir2`, ... |
+| `feature_selection_step()` | `feature_selection_features()` | `method`: `"variance"`, `"correlation"`, or `"lasso"`; `n_features`; `lasso_alpha` | Selected input columns. |
+
+Fit-state metadata records the resolved target column, selected source columns,
+requested/resolved component or feature count, fit row count, and
+`fit_policy="fixed_fit_panel_target_aligned_rows"` for target-dependent methods.
+For `feature_selection_step(method="variance")`, no target is used and the fit
+policy is `fixed_fit_panel_columns`.
+
 ## group_pca
 
 ```python
@@ -449,15 +751,15 @@ real_activity1, real_activity2, real_activity3, prices1, prices2
 
 `group_pca_step()` provides the same operation inside `compose_features()`.
 
-### Supervised And Sparse PCA Boundary
+### Supervised And Sparse Component Boundary
 
 Unsupervised group PCA belongs in `feature_engineering` because it only uses
-the predictor panel. Supervised PCA uses the target `y`, so it should be fit
-inside the model pipeline or a target-aware feature-selection step to avoid
-leakage. Sparse PCA is also kept out of the current feature-engineering surface:
-it is model-specification-dependent in practice and should be added with model
-selection, cross-validation, and reporting rules rather than as a default
-pre-model transform.
+the predictor panel. PLS and SIR are target-aware and are available as
+runner-safe feature steps when the resolved `feature_spec()` target is single.
+Supervised PCA variants that fit a full predictive model still belong in
+`macroforecast.models`. Chen-Rohe sparse component analysis is unsupervised and
+is available as `sparse_pca_chen_rohe_features()` /
+`sparse_pca_chen_rohe_step()`.
 
 ## maf_features
 
@@ -571,7 +873,7 @@ papers without requiring the user to hand-write `compose_features()` steps.
 | --- | --- |
 | `X` | `lag(data, lags=...)` on the supplied, usually preprocessed, panel. |
 | `F` | PCA factors from the supplied panel, then lags of those factors. |
-| `MARX` | `moving_average_ladder(data, windows=range(1, max_lag + 1), shift=1)`; with `scale_marx=True`, first z-score the full lag matrix with sample standard deviations and then average lag 1 through lag `l`. |
+| `MARX` | `moving_average_ladder(data, windows=range(1, max_lag + 1), shift=1)`; use `marx_step()` for runner-safe windowed construction. With `scale_marx=True`, first z-score the full lag matrix with sample standard deviations and then average lag 1 through lag `l`. |
 | `MAF` | `maf_features(data, max_lag=max_lag, n_components=n_maf_components)`. |
 | `LEVEL` / `H` | `lag(level_data, lags=...)`; requires a separate `level_data` input. |
 
@@ -716,7 +1018,7 @@ macroforecast.feature_engineering.compose_features(
 | Key | Meaning |
 | --- | --- |
 | `name` | Step name. Later steps can reference this name. |
-| `method` | One of `"lag"`, `"rolling_mean"`, `"moving_average_ladder"`, `"maf"`, `"scale"`, `"pca"`, `"group_pca"`, `"time"`. |
+| `method` | One of `"lag"`, `"rolling_mean"`, `"moving_average_ladder"`, `"marx"`, `"transform"`, `"seasonal_lag"`, `"season_dummy"`, `"fourier"`, `"polynomial"`, `"interaction"`, `"maf"`, `"scale"`, `"pca"`, `"sparse_pca_chen_rohe"`, `"varimax"`, `"group_pca"`, `"time"`. |
 | `input` | `"panel"` by default, or a previous step name. |
 | `include` | Whether this step's output is included in final `X`; default `True`. |
 | other keys | Method-specific parameters such as `lags`, `windows`, `n_components`, `fit_policy`, `warn_full_sample`, or `columns`. |
@@ -759,6 +1061,24 @@ X = mf.feature_engineering.compose_features(
         {"name": "maf", "method": "maf", "max_lag": 12, "n_components": 2},
     ],
 )
+
+# MARX shorthand: increasing averages of lagged predictors.
+X = mf.feature_engineering.compose_features(
+    processed,
+    [
+        mf.feature_engineering.marx_step(max_lag=12, scale_lags=False),
+    ],
+)
+
+# Extra deterministic transforms can be composed the same way.
+X = mf.feature_engineering.compose_features(
+    processed,
+    [
+        mf.feature_engineering.transform_step(name="log_ip", transform="log", columns=["INDPRO"], include=False),
+        mf.feature_engineering.lag_step(name="log_ip_lag", input="log_ip", lags=[1, 2, 3]),
+        mf.feature_engineering.interaction_step(name="cross", columns=["PAYEMS", "HOUST"]),
+    ],
+)
 ```
 
 ## time_features
@@ -783,6 +1103,239 @@ macroforecast.feature_engineering.time_features(
 | `month=True` | `month_01` through `month_12`. |
 | `quarter=True` | `quarter_1` through `quarter_4`. |
 | `year=True` | `year`. |
+
+## Additional Transform Helpers
+
+These helpers are feature-engineering transforms, not preprocessing t-codes.
+Use them when the model feature set needs extra ML-oriented columns after the
+canonical panel has already been cleaned.
+
+| Function | Main options | Output |
+| --- | --- | --- |
+| `transform_features(data, transform=...)` | `transform`: `"log"`, `"diff"`, `"log_diff"`, `"pct_change"`, `"cumsum"`; `periods`; `columns`; `drop_missing` | `{column}_{transform}` columns. |
+| `log_features`, `diff_features`, `log_diff_features`, `pct_change_features`, `cumsum_features` | Thin named wrappers around `transform_features`. | Same as above. |
+| `seasonal_lag(data, season_length=12, lags=...)` | Seasonal step length and seasonal lag count. | `{column}_seasonlag{actual_lag}`. |
+| `season_dummy(data, frequency="auto")` | `"month"` or `"quarter"`, optional `drop_first`. | Month or quarter dummies. |
+| `fourier_features(data, period=12, order=2)` | Seasonal period and harmonic order. | Sine/cosine seasonal terms. |
+| `polynomial_features(data, degree=2)` | `degree`, `include_bias`, `interaction_only`. | Named polynomial expansion columns. |
+| `interaction_features(data, order=2)` | Exact-order pure interaction expansion without lower-order terms or powers. | `interaction_{col1}__{col2}` style columns. |
+| `hp_filter_features(data, lamb=129600.0)` | HP `lambda`, `component`: `"cycle"`, `"trend"`, or `"both"`; `warn_full_sample=True`. | HP cycle/trend columns. |
+| `hamilton_filter_features(data, h=8, p=4)` | Hamilton horizon `h`, regressor count `p`, `component`, `fit_policy`: `"expanding"` or `"full_sample"`, and missing policy. | `{column}_hamilton_cycle` and/or `{column}_hamilton_trend`. |
+| `savitzky_golay_features(data, window_length=5, polyorder=2)` | Centered filter window, polynomial order, derivative; `warn_full_sample=True`. | Smoothed columns. |
+| `wavelet_features(data, n_levels=3)` | Causal rolling approximation/detail levels; `wavelet` name is recorded for compatibility. | `{column}_wA{level}`, `{column}_wD{level}`. |
+| `adaptive_ma_rf_features(data, sided="two")` | Random forest smoother over time; `sided="two"` warns, `sided="one"` uses expanding one-sided fits. | `{column}_albama`. |
+| `asymmetric_trim_features(data)` | Sorts each row's selected columns in ascending order. | `rank_1`, `rank_2`, ... |
+| `partial_least_squares_features(data, target=..., n_components=...)` | Target-aware PLSRegression scores; warns by default. | `pls1`, `pls2`, ... |
+| `dfm_features(data, n_factors=...)` | Static DFM approximation by standardized PCA; warns by default. | `dfm1`, `dfm2`, ... |
+| `feature_selection_features(data, method=...)` | `method`: `"variance"`, `"correlation"`, `"lasso"`; `n_features` as count or fraction. | Subset of original columns. |
+| `random_projection_features(data, n_components=...)` | Gaussian random projection; `warn_full_sample=True` by default. | `rp1`, `rp2`, ... |
+| `nystroem_features(data, kernel="rbf", n_components=...)` | Kernel approximation settings; `warn_full_sample=True` by default. | `nys1`, `nys2`, ... |
+
+`random_projection_features()` and `nystroem_features()` fit on complete rows
+of the provided input and warn by default because the direct helpers are
+full-input fitted helpers. For strict origin-by-origin forecasting, use
+`random_projection_step()` and `nystroem_step()` inside `feature_spec()`; the
+runner fits the projection/kernel state on the feature-fit panel and reuses the
+fixed state for validation/test rows.
+
+`hamilton_filter_features()` follows Hamilton's regression form:
+`y[t+h] = a + b_0 y[t] + ... + b_{p-1} y[t-p+1] + e[t+h]`.
+The fitted value is stored as the trend and the residual as the cycle, both
+labeled at `t+h`. Defaults `h=8, p=4` match the common quarterly setting; for
+monthly panels, `h=24, p=12` is the usual analogue. The default
+`fit_policy="expanding"` estimates each row with only earlier completed
+Hamilton-regression rows. `fit_policy="full_sample"` reproduces the ordinary
+in-sample filter style and warns by default because it can use future
+information relative to a forecasting origin.
+
+## feature_spec
+
+```python
+macroforecast.feature_engineering.feature_spec(
+    *,
+    target: str | None = None,
+    targets: Iterable[str] | None = None,
+    horizon: int | None = None,
+    horizons: Iterable[int] | int | None = None,
+    predictors: Literal["all"] | Iterable[str] | None = None,
+    lags: Iterable[int] | int | None = (0, 1),
+    target_lags: Iterable[int] | int | None = None,
+    rolling_windows: Iterable[int] | int | None = None,
+    rolling_min_periods: int | None = None,
+    add_time: bool = False,
+    time_trend: bool = True,
+    time_month: bool = False,
+    time_quarter: bool = False,
+    time_year: bool = False,
+    pca_components: int | None = None,
+    pca_columns: Iterable[str] | None = None,
+    pca_scale: bool = True,
+    pca_prefix: str = "pc",
+    steps: Iterable[Mapping[str, object]] | None = None,
+    feature_steps: Iterable[Mapping[str, object]] | None = None,
+    include_original: bool = False,
+    target_transform: str = "level",
+    target_mode: str = "direct",
+    drop_missing: bool = True,
+    metadata: Mapping[str, object] | None = None,
+) -> FeatureSpec
+```
+
+`feature_spec()` is the runner-safe feature contract. It is fitted by
+`forecasting.run()` according to `feature_policy`, so stateful choices such as
+scaling, PCA, grouped PCA, and MAF are estimated on the allowed
+training/reference panel and reused when transforming validation/test rows.
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `target`, `targets` | string/iterable or `None` | from input metadata | Target column or target columns. |
+| `horizon`, `horizons` | positive int/iterable or `None` | from input, then `(1,)` | Forecast horizon choices. |
+| `predictors` | `"all"`, iterable, or `None` | from input, then all non-target columns | Predictor columns. |
+| `lags` | int, iterable, or `None` | `(0, 1)` | Predictor lags. `0` includes the current predictor value at the forecast origin. `None` disables ordinary predictor lags. |
+| `target_lags` | int, iterable, or `None` | `None` | Explicit autoregressive target lags added to `X` while keeping target columns out of `predictors`. Use this for AR-X and recursive runner designs. |
+| `rolling_windows` | positive int/iterable or `None` | `None` | Optional rolling means. |
+| `rolling_min_periods` | positive int or `None` | window length | Minimum observations for rolling means. |
+| `add_time` | bool | `False` | Add deterministic date features. |
+| `time_trend`, `time_month`, `time_quarter`, `time_year` | bool | see signature | Which deterministic date features to add. |
+| `pca_components` | positive int or `None` | `None` | Fit PCA on the allowed feature-fit panel and append fixed-loadings components. |
+| `pca_columns` | iterable or `None` | predictors | Columns used for PCA. |
+| `pca_scale` | bool | `True` | Standardize PCA inputs using the feature-fit panel. |
+| `pca_prefix` | string | `"pc"` | PCA output prefix. |
+| `steps`, `feature_steps` | iterable of step mappings or `None` | `None` | Fit-aware feature-step pipeline. Use the public step builders: `lag_step()`, `rolling_step()`, `moving_average_step()`, `marx_step()`, `transform_step()`, `seasonal_lag_step()`, `season_dummy_step()`, `fourier_step()`, `time_step()`, `polynomial_step()`, `interaction_step()`, `scale_step()`, `pca_step()`, `sparse_pca_chen_rohe_step()`, `varimax_step()`, `group_pca_step()`, `maf_step()`, `hamilton_step()`, `random_projection_step()`, `nystroem_step()`, `partial_least_squares_step()`, `sliced_inverse_regression_step()`, and `feature_selection_step()`. `steps` and `feature_steps` are aliases; provide only one. |
+| `include_original` | bool | `False` | Include the original predictor panel as part of `X` when using `steps`. |
+| `target_transform` | string | `"level"` | Same target choices as `direct_target()`. |
+| `target_mode` | string | `"direct"` | `"direct"` for horizon-level targets; `"path"` for step-level path targets. |
+| `drop_missing` | bool | `True` | Drop rows with missing selected `X` or `y` during fit rows. Test rows are transformed without dropping by the runner. |
+| `metadata` | mapping or `None` | `None` | User metadata stored inside the feature spec record. |
+
+When `steps` are supplied, they replace the shortcut predictor options
+`rolling_windows`, `add_time`, and `pca_components`; use the corresponding step
+builders instead. The default `lags=(0, 1)` shortcut is also not used in step
+mode unless you explicitly add a `lag_step()`.
+
+### Output
+
+Returns `FeatureSpec`. Important methods:
+
+| Method | Output | Meaning |
+| --- | --- | --- |
+| `.fit(data)` | `FittedFeatureBuilder` | Fits reusable feature state for PCA/scaling/grouped PCA/MAF steps on the supplied panel. |
+| `.fit_transform(data)` | `FeatureSet` | Fits and transforms the same panel. |
+| `.to_dict()` | `dict` | JSON-ready feature choices for result metadata. |
+| `.to_metadata()` | `dict` | Compact runner metadata. |
+
+### Fit-Aware Step Pipeline
+
+Step pipelines let the runner refit feature transformations inside each
+forecasting window:
+
+```python
+features = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors=["PAYEMS", "HOUST", "S&P 500"],
+    steps=[
+        mf.feature_engineering.scale_step(name="scaled", include=False),
+        mf.feature_engineering.pca_step(
+            name="pc",
+            input="scaled",
+            n_components=3,
+            min_train_size=60,
+            include=False,
+        ),
+        mf.feature_engineering.lag_step(name="pc_lag", input="pc", lags=range(0, 13)),
+    ],
+)
+```
+
+Each step has a `name`, `method`, `input`, and `include` flag. `input="panel"`
+reads the original predictor panel; `input="<step name>"` reads a prior step.
+If `include=False`, the step is an intermediate fitted transformation and its
+output is not included in the final `X`, but its metadata is still recorded.
+
+Stateful step builders are interpreted as fixed-fit transformations inside
+`FeatureSpec`: the runner's `feature_policy` determines which rows are used to
+fit the step. Any `fit_policy` value inherited from reusable step builders is
+ignored in `feature_spec()` mode because the runner owns the temporal fit
+policy.
+
+| Step builder | Runner-safe behavior |
+| --- | --- |
+| `lag_step()` | Deterministic lag transform. |
+| `rolling_step()` | Deterministic rolling mean transform. |
+| `moving_average_step()` | Deterministic moving-average ladder. |
+| `marx_step()` | MARX increasing lag averages; with `scale_lags=True`, fits lag-matrix center/scale on the feature-fit panel and reuses fixed parameters. |
+| `transform_step()` | Deterministic column transform: `log`, `diff`, `log_diff`, `pct_change`, or `cumsum`. |
+| `seasonal_lag_step()` | Deterministic seasonal lag such as 12-month or 4-quarter lag blocks. |
+| `season_dummy_step()` | Deterministic month or quarter date dummies from the index. |
+| `fourier_step()` | Deterministic Fourier seasonal terms from the index. |
+| `time_step()` | Deterministic trend, month, quarter, and year columns from the index. |
+| `polynomial_step()` | Deterministic polynomial expansion. |
+| `interaction_step()` | Deterministic pure interaction terms. |
+| `scale_step()` | Fits center/scale on the feature-fit panel, then applies fixed parameters. |
+| `pca_step()` | Fits PCA loadings on the feature-fit panel, then applies fixed loadings. |
+| `sparse_pca_chen_rohe_step()` | Fits Chen-Rohe sparse loadings on the feature-fit panel, then applies fixed loadings; optional `var_innovations=True` fits the VAR(1) residual mapping on the same feature-fit panel. |
+| `varimax_step()` | Fits an orthogonal rotation on factor-score columns from the feature-fit panel, then applies the fixed rotation. |
+| `group_pca_step()` | Fits separate PCA states inside named groups. |
+| `maf_step()` | Fits variable-specific lag-panel PCA states for Moving Average Factors. |
+| `hamilton_step()` | Fits Hamilton-regression beta on the feature-fit panel, then applies fixed beta to train/validation/test rows. |
+| `random_projection_step()` | Fits a Gaussian random-projection transformer on the feature-fit panel and applies fixed components. |
+| `nystroem_step()` | Fits Nystroem kernel-approximation landmarks on the feature-fit panel and applies fixed components. |
+| `partial_least_squares_step()` | Fits PLS components against the single resolved target on the feature-fit panel and applies fixed weights. |
+| `sliced_inverse_regression_step()` | Fits target-sliced directions on the feature-fit panel and applies fixed directions. |
+| `feature_selection_step()` | Selects columns by variance, target correlation, or lasso on the feature-fit panel and reuses the selected columns. |
+
+In `feature_spec()` mode, `hamilton_step()` ignores the reusable step's
+`fit_policy` argument because the runner's `feature_policy` owns the allowed
+fit rows. The fitted state records `fit_policy="fixed_fit_panel"`. Runner-safe
+Hamilton currently requires `missing="drop"`; impute missing values in
+preprocessing before using it. The direct helper and `compose_features()` still
+support `missing="interpolate"` for one-shot exploratory construction.
+
+Direct pandas functions and runner-safe step builders are intentionally paired:
+
+| Direct function | Runner-safe step | Fit state? | Typical use |
+| --- | --- | --- | --- |
+| `lag()` | `lag_step()` | No | Add current/lagged predictors. |
+| `rolling_mean()` | `rolling_step()` | No | Add trailing rolling means. |
+| `moving_average_ladder()` | `moving_average_step()` | No | Add multi-scale moving-average blocks. |
+| `moving_average_ladder(..., shift=1)` / `feature_matrix(..., "MARX")` | `marx_step()` | Only when `scale_lags=True` | Add MARX increasing lag averages. |
+| `transform_features()` and wrappers such as `log_features()` / `diff_features()` | `transform_step()` | No | Add ML-side transforms after preprocessing. |
+| `seasonal_lag()` | `seasonal_lag_step()` | No | Add seasonal lag blocks. |
+| `season_dummy()` | `season_dummy_step()` | No | Add calendar dummies. |
+| `fourier_features()` | `fourier_step()` | No | Add deterministic seasonal Fourier terms. |
+| `time_features()` | `time_step()` or `feature_spec(add_time=True, ...)` | No | Add deterministic trend/month/quarter/year terms. |
+| `polynomial_features()` | `polynomial_step()` | No | Add nonlinear expansions. |
+| `interaction_features()` | `interaction_step()` | No | Add cross-products. |
+| `scale_features()` | `scale_step()` | Yes | Fit center/scale on allowed rows. |
+| `pca_features()` | `pca_step()` | Yes | Fit PCA loadings on allowed rows. |
+| `sparse_pca_chen_rohe_features()` | `sparse_pca_chen_rohe_step()` | Yes | Fit Chen-Rohe sparse component loadings on allowed rows. |
+| `varimax_features()` | `varimax_step()` | Yes | Fit orthogonal factor rotation on allowed rows. |
+| `group_pca()` | `group_pca_step()` | Yes | Fit separate PCA states by group. |
+| `maf_features()` | `maf_step()` | Yes | Fit variable-specific lag-panel PCA states. |
+| `hamilton_filter_features()` | `hamilton_step()` | Yes | Fit Hamilton-regression beta on allowed rows, then apply fixed beta. |
+| `random_projection_features()` | `random_projection_step()` | Yes | Fit Gaussian random-projection state on allowed rows. |
+| `nystroem_features()` | `nystroem_step()` | Yes | Fit Nystroem kernel landmarks on allowed rows. |
+| `partial_least_squares_features()` | `partial_least_squares_step()` | Yes | Fit PLS scores against the resolved target on allowed rows. |
+| `sliced_inverse_regression_features()` | `sliced_inverse_regression_step()` | Yes | Fit SIR directions against the resolved target on allowed rows. |
+| `feature_selection_features()` | `feature_selection_step()` | Yes for target-dependent methods | Select columns by variance, target correlation, or lasso on allowed rows. |
+
+The remaining helpers remain callable but are intentionally not accepted as
+`FeatureSpec` step methods yet:
+
+| Helper | Why not a runner-safe step yet |
+| --- | --- |
+| `mixed_frequency_lags()` | It changes the date anchor and native-frequency lookup calendar. This belongs with mixed-frequency data/model design, not ordinary same-index feature steps. |
+| `hp_filter_features()` | HP filtering is two-sided on the supplied sample. It remains direct-only and warns by default; use `hamilton_step()` for a runner-safe trend/cycle filter. |
+| `savitzky_golay_features()` | The smoother uses a centered local window over the supplied sample. It remains direct-only and warns by default; use trailing `rolling_step()` when a past-only smoother is needed. |
+
+`build_features()` remains broader for one-shot construction, including
+`feature_specification="F-X-MARX"` and `feature_specification="F-X-MAF"`.
+Use it when you want to materialize a complete `FeatureSet` first. Use
+`feature_spec(..., steps=...)` when the feature transformations themselves must
+be refit inside `forecasting.run()` according to the window design.
 
 ## build_features
 
@@ -890,7 +1443,7 @@ X, y, metadata = features
 | `target_transform` | Target formula choice. |
 | `target_mode` | `"direct"` or `"path"`. |
 | `path_target_columns_by_horizon` | Step columns to average later when `target_mode="path"`. |
-| `lags`, `rolling_windows`, `rolling_min_periods` | Predictor construction choices. |
+| `lags`, `target_lags`, `rolling_windows`, `rolling_min_periods` | Predictor and autoregressive target-lag construction choices. |
 | `feature_specification` | `feature_matrix()` block specification when used. |
 | `feature_matrix` | `feature_matrix()` options when block-based features are used. |
 | `feature_steps` | Ordered composition steps when `compose_features()` is used through `build_features()`. |
@@ -903,6 +1456,27 @@ X, y, metadata = features
 Each feature-producing function attaches `macroforecast_feature_metadata` to
 the returned `DataFrame`. `build_features()` exposes the same table as
 `FeatureSet.feature_metadata`.
+
+The table is normalized through a single schema helper. The first columns are
+always:
+
+| Column | Meaning |
+| --- | --- |
+| `feature` | Generated feature column name. |
+| `step` | Producing step name when created through `compose_features()` or `feature_spec(..., steps=...)`; otherwise empty. |
+| `block` | Paper-style block such as `X`, `F`, `MARX`, `MAF`, or `LEVEL` when created by `feature_matrix()`. |
+| `operation` | Operation family, for example `lag`, `rolling_mean`, `marx`, `pca`, `pct_change`, `season_dummy`, or `interaction`. |
+| `source` | Main source column, source group, or `date` for calendar features. |
+| `parameter` | Compact parameter string such as `lag=1`, `window=3`, `component=1`, or `periods=1`. |
+| `lag`, `window`, `component` | Parsed numeric fields when the feature name/operation carries them. |
+| `fit_policy` | Fitting policy for stateful transforms. In `feature_spec()` this is `fixed_fit_panel` for fit-aware steps. |
+| `inputs` | Comma-separated source columns used by the feature. |
+| `included` | `True` when the feature is included in final `X`; `False` for intermediate pipeline steps. |
+
+Extra columns are preserved after the standard columns. For example,
+`mixed_frequency_lags()` adds source-frequency and lookup-calendar fields.
+The metadata frame also carries
+`attrs["macroforecast_metadata_schema"] = {"kind": "feature_metadata", "version": 1, ...}`.
 
 ```python
 features = mf.feature_engineering.build_features(
