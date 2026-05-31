@@ -29,8 +29,9 @@ def evaluate_candidate(
             fit = model(X.iloc[train_idx], y.iloc[train_idx], **trial_params)
             if not hasattr(fit, "predict"):
                 raise TypeError("model callable must return an object with predict(X)")
-            pred = fit.predict(X.iloc[val_idx])
-            scores.append(float(metric_fn(y.iloc[val_idx], pred)))
+            y_val = y.iloc[val_idx]
+            pred = _prediction_series(fit.predict(X.iloc[val_idx]), index=y_val.index)
+            scores.append(float(metric_fn(y_val, pred)))
     except Exception as exc:  # noqa: BLE001 - failed trials are part of search output.
         return SearchTrial(
             trial=trial,
@@ -48,6 +49,19 @@ def evaluate_candidate(
         status="ok",
         error=None,
     )
+
+
+def _prediction_series(value: Any, *, index: pd.Index) -> pd.Series:
+    if isinstance(value, pd.Series):
+        if len(value) != len(index):
+            raise ValueError("prediction length must match validation rows")
+        if value.index.equals(index):
+            return value.astype(float).rename("prediction")
+        return pd.Series(value.to_numpy(dtype=float), index=index, name="prediction")
+    arr = np.asarray(value, dtype=float).reshape(-1)
+    if len(arr) != len(index):
+        raise ValueError("prediction length must match validation rows")
+    return pd.Series(arr, index=index, name="prediction")
 
 
 def trial_frame(rows: list[SearchTrial]) -> pd.DataFrame:

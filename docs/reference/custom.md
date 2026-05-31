@@ -28,6 +28,110 @@ The package still enforces the same contracts around each custom hook:
 | Forecast diagnostic | `mf.forecast_diagnostic.custom_forecast_diagnostic(...)` | Forecast table or `ForecastResult` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
 | Output | `mf.output.write_artifacts({...})` | Mapping of named custom artifacts. | Files plus `ArtifactManifest`. |
 
+## End-To-End Flow
+
+The full custom path is still one ordinary callable workflow. Each custom
+piece stays at the module that owns the behavior:
+
+```python
+bundle = mf.data.custom_dataset(
+    frame,
+    date="date",
+    dataset="local_panel",
+    frequency="monthly",
+    transform_codes={"target": 1, "x": 1, "z": 1},
+)
+
+pre = mf.preprocessing.preprocess_spec(
+    transform="none",
+    outliers="none",
+    impute="none",
+    standardize="none",
+    custom_steps=[
+        mf.preprocessing.custom_preprocess_step("spread", add_spread, scale=1.0),
+    ],
+)
+
+features = mf.feature_engineering.feature_spec(
+    target="target",
+    horizon=1,
+    predictors=["x", "z", "spread"],
+    lags=(0,),
+    steps=[
+        mf.feature_engineering.custom_step(
+            "x_square",
+            square_feature,
+            columns=["x"],
+        ),
+    ],
+)
+
+model = mf.models.custom_model(
+    "mean_tuned",
+    mean_model,
+    default_params={"offset": 0.0},
+)
+
+search = mf.selection.custom_search(
+    "ordered_offset",
+    ordered_offset_search,
+    values=(-0.1, 0.0, 0.1),
+)
+
+result = mf.forecasting.run(
+    bundle,
+    {"ols": "ols", "mean_tuned": model},
+    window=window,
+    preprocessing=pre,
+    features=features,
+    selection={"ols": None, "mean_tuned": search},
+    selection_policy=mf.window.custom_stage_policy(last_fit_half),
+    combination=mf.forecasting.custom_combination("blend", blend),
+)
+```
+
+After the runner returns, custom scoring, testing, interpretation, diagnostics,
+and output are separate callable steps:
+
+```python
+scores = result.evaluate(metrics=("mse", mean_bias))
+test = mf.tests.custom_test("bias_test", bias_test, loss_a, loss_b)
+
+interpretation = mf.interpretation.custom_interpretation(
+    fit,
+    X_test,
+    local_interpretation,
+    name="local_interpretation",
+)
+
+feature_diag = mf.feature_diagnostic.custom_feature_diagnostic(
+    feature_set,
+    feature_check,
+    name="feature_check",
+)
+
+forecast_diag = mf.forecast_diagnostic.custom_forecast_diagnostic(
+    result,
+    forecast_check,
+    name="forecast_check",
+)
+
+manifest = mf.output.write_artifacts(
+    {
+        "forecast_result": result,
+        "scores": scores,
+        "custom_test": test.to_dict(),
+        "custom_interpretation": interpretation,
+        "custom_feature_diagnostic": feature_diag,
+        "custom_forecast_diagnostic": forecast_diag,
+    },
+    "results/custom_flow",
+)
+```
+
+This flow is executed by the package test
+`tests/test_custom_extensions.py::test_custom_extension_flow_runs_from_data_to_output`.
+
 ## Data
 
 Use `custom_dataset()` when the input data are already in memory.

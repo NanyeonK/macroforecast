@@ -1660,13 +1660,15 @@ def _preprocessor_fit_input(fit_panel: pd.DataFrame, features: FeatureSpec) -> A
         horizons = features.horizon
     else:
         horizons = None
-    predictors: Any = "all" if features.predictors is None else features.predictors
+    # Preprocessing may create columns that the downstream FeatureSpec uses.
+    # Validate target/horizon metadata here, but defer predictor validation until
+    # after preprocessing has produced the panel consumed by feature engineering.
     return data_spec(
         DataBundle(fit_panel, metadata),
         target=target,
         targets=targets,
         horizons=horizons,
-        predictors=predictors,
+        predictors="all",
     )
 
 

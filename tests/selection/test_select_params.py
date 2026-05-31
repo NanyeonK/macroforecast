@@ -187,6 +187,31 @@ def test_select_params_supports_custom_metric_and_maximize() -> None:
     assert result.trials["score"].max() == 3.0
 
 
+def test_select_params_aligns_array_predictions_to_validation_index() -> None:
+    X, y = xy()
+
+    class ArrayFit:
+        def __init__(self, value: float) -> None:
+            self.value = float(value)
+
+        def predict(self, X: pd.DataFrame) -> np.ndarray:
+            return np.full(len(X), self.value)
+
+    def array_model(X: pd.DataFrame, y: pd.Series, *, value: float = 0.0) -> ArrayFit:
+        return ArrayFit(value)
+
+    result = mf.selection.select_params(
+        array_model,
+        X,
+        y,
+        mf.selection.grid({"value": [0.0, 1.0]}),
+        window=mf.window.last_block(validation_size=6),
+    )
+
+    assert set(result.trials["status"]) == {"ok"}
+    assert result.best_params == {"value": 1.0}
+
+
 def test_random_search_is_reproducible() -> None:
     X, y = xy()
     search = mf.selection.random_search(
