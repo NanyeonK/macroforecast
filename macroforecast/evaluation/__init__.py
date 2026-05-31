@@ -1,27 +1,30 @@
 from __future__ import annotations
 
-from macroforecast.evaluation.metrics import (
-    MetricLike,
-    coverage_rate,
-    evaluate_forecasts,
-    gaussian_nll,
-    get_metric,
-    interval_width,
-    mae,
-    mse,
-    pinball_loss,
-    rmse,
+from importlib import import_module
+
+from .report import (
+    BENCHMARK_METRICS,
+    DEFAULT_METRICS,
+    DEFAULT_SCORE_BY,
+    EvaluationReport,
+    aggregate_scores,
+    benchmark_comparison,
+    evaluate_report,
+    regime_scores,
 )
 
+metrics = import_module("macroforecast.metrics")
+tests = import_module("macroforecast.tests")
+
 __all__ = [
-    "MetricLike",
-    "coverage_rate",
-    "evaluate_forecasts",
-    "gaussian_nll",
-    "get_metric",
-    "interval_width",
-    "mae",
-    "mse",
-    "pinball_loss",
-    "rmse",
+    "BENCHMARK_METRICS",
+    "DEFAULT_METRICS",
+    "DEFAULT_SCORE_BY",
+    "EvaluationReport",
+    "aggregate_scores",
+    "benchmark_comparison",
+    "evaluate_report",
+    "metrics",
+    "regime_scores",
+    "tests",
 ]

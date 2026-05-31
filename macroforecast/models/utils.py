@@ -190,20 +190,25 @@ def _coefficient_diagnostics(
     if values.ndim == 0:
         return pd.Series([float(values)], index=["coef"], name="coefficient")
     if values.ndim == 1:
-        index = (
-            [str(column) for column in columns]
-            if len(columns) == len(values)
-            else [f"x{i}" for i in range(len(values))]
-        )
+        index = _coefficient_feature_names(estimator, columns, len(values))
         return pd.Series(values, index=index, name="coefficient")
     if values.ndim == 2:
-        feature_index = (
-            [str(column) for column in columns]
-            if len(columns) == values.shape[1]
-            else [f"x{i}" for i in range(values.shape[1])]
-        )
+        feature_index = _coefficient_feature_names(estimator, columns, values.shape[1])
         return pd.DataFrame(values, columns=feature_index)
     return None
+
+
+def _coefficient_feature_names(
+    estimator: Any,
+    columns: pd.Index,
+    n_values: int,
+) -> list[str]:
+    diagnostic_names = getattr(estimator, "diagnostic_feature_names_", None)
+    if diagnostic_names is not None and len(diagnostic_names) == n_values:
+        return [str(column) for column in diagnostic_names]
+    if len(columns) == n_values:
+        return [str(column) for column in columns]
+    return [f"x{i}" for i in range(n_values)]
 
 
 def _nonzero_coefficient_features(

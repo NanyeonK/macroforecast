@@ -247,7 +247,6 @@ These helpers return `pandas.DataFrame` unless noted.
 | --- | --- | --- | --- |
 | `plan(data, ...)` | DataFrame/bundle/spec | `dict` | Dry-run summary of configured choices, transform codes, metadata warning, and detected native frequencies. |
 | `report(processed)` | `PreprocessedData` | `dict` | Compact report from a completed preprocessing result. |
-| `handle_mixed_frequency(panel, method=...)` | DataFrame | DataFrame | Keep, filter, or align mixed monthly/quarterly/weekly panels. |
 | `apply_transform_codes(panel, codes)` | DataFrame, t-code map | DataFrame | Apply McCracken-Ng t-code formulas. |
 | `fred_sd_transform_codes(data, ...)` | FRED-SD panel/bundle/spec | `dict[str, int]`, or `(dict, DataFrame)` with `return_table=True` | Build FRED-SD state-series t-codes from user choices and optional national-analog suggestions. |
 | `handle_tcode_lag(panel, method=..., codes=...)` | DataFrame | DataFrame | Handle missing rows introduced by t-code transforms. |
@@ -344,49 +343,6 @@ Note the distinction between this low-level helper and `reprocess()`.
 interactively. `reprocess()` is stricter: explicit transform-code keys must
 match panel columns so a production run cannot silently miss a requested
 series.
-
-## handle_mixed_frequency
-
-```python
-macroforecast.preprocessing.handle_mixed_frequency(
-    panel: pandas.DataFrame,
-    *,
-    method: str = "keep",
-    quarterly_to_monthly: str = "step_backward",
-    weekly_to_monthly: str = "mean",
-    monthly_to_quarterly: str = "quarterly_average",
-    weekly_to_quarterly: str = "mean",
-) -> pandas.DataFrame
-```
-
-### Input
-
-| Name | Default | Choices |
-| --- | --- | --- |
-| `method` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"` |
-| `quarterly_to_monthly` | `"step_backward"` | `"step_backward"`, `"repeat_within_quarter"`, `"step_forward"`, `"quarter_end_ffill"`, `"linear_interpolation"` |
-| `weekly_to_monthly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
-| `monthly_to_quarterly` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"` |
-| `weekly_to_quarterly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
-
-### Output
-
-Returns a new `pandas.DataFrame`. Frequency detection uses
-`panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]` first and observed
-date spacing only as fallback. Dataset composition such as FRED-MD+FRED-SD or
-FRED-QD+FRED-SD should still be handled in `macroforecast.data`; this helper is
-for direct preprocessing of an already-formed panel.
-
-If observed-date inference cannot classify a sparse column and alignment is
-requested, the helper emits `UserWarning`. The operation still proceeds because
-custom panels may intentionally have short series, but the warning means the
-caller should prefer loader-generated metadata when possible.
-
-For quarterly-to-monthly alignment, `step_backward` is kept as a compatibility
-alias for the package's current direct-call meaning: assign each quarterly
-observation to every month in its own quarter. The clearer new spelling is
-`repeat_within_quarter`, matching `macroforecast.data.combine(...)`.
-`quarter_end_ffill` holds values forward from the quarter-end month.
 
 ## handle_tcode_lag
 

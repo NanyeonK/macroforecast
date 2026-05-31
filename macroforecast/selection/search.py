@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from macroforecast.evaluation import MetricLike, get_metric
+from macroforecast.metrics import MetricLike, get_metric
 from macroforecast.selection.builders import (
     _as_tuple,
     _candidates,

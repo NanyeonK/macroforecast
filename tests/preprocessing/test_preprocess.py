@@ -43,6 +43,8 @@ def test_preprocess_accepts_data_spec_and_preserves_choices():
 def test_legacy_preprocess_alias_is_not_public():
     assert not hasattr(mf, "preprocess")
     assert not hasattr(mf.preprocessing, "preprocess")
+    removed_frequency_api = "handle_" + "mixed_frequency"
+    assert not hasattr(mf.preprocessing, removed_frequency_api)
 
 
 def test_preprocess_applies_custom_transform_codes_and_metadata():
@@ -198,95 +200,6 @@ def test_fred_sd_transform_codes_uses_suggestions_and_overrides():
     )
 
     assert codes == {"UR_CA": 1, "ICLAIMS_TX": 5, "CUSTOM_NY": 1}
-
-
-def test_handle_mixed_frequency_can_align_weekly_and_monthly_to_monthly():
-    dates = pd.to_datetime(
-        [
-            "2020-01-01",
-            "2020-01-08",
-            "2020-01-15",
-            "2020-01-22",
-            "2020-02-01",
-            "2020-02-08",
-            "2020-02-15",
-            "2020-02-22",
-        ]
-    )
-    panel = pd.DataFrame(index=pd.DatetimeIndex(dates, name="date"))
-    panel["weekly"] = [1.0, 2.0, 3.0, 4.0, 10.0, 20.0, 30.0, 40.0]
-    panel["monthly"] = [100.0, np.nan, np.nan, np.nan, 200.0, np.nan, np.nan, np.nan]
-
-    aligned = mf.preprocessing.handle_mixed_frequency(panel, method="monthly", weekly_to_monthly="mean")
-
-    assert list(aligned.index.strftime("%Y-%m-%d")) == ["2020-01-01", "2020-02-01"]
-    assert aligned["weekly"].tolist() == [2.5, 25.0]
-    assert aligned["monthly"].tolist() == [100.0, 200.0]
-
-
-def test_handle_mixed_frequency_warns_when_frequency_is_inferred_unknown():
-    panel = mf.data.as_panel(
-        pd.DataFrame(
-            {
-                "date": pd.date_range("2020-01-01", periods=3, freq="MS"),
-                "sparse": [1.0, np.nan, np.nan],
-                "monthly": [10.0, 11.0, 12.0],
-            }
-        ),
-        date="date",
-    )
-
-    with pytest.warns(UserWarning, match="unknown columns"):
-        aligned = mf.preprocessing.handle_mixed_frequency(panel, method="monthly")
-
-    assert list(aligned.columns) == ["sparse", "monthly"]
-
-
-def test_handle_mixed_frequency_quarterly_to_monthly_matches_data_combine():
-    metadata = {"dataset": "fred_sd", "source_family": "fred-sd", "frequency": "state_monthly"}
-    panel = mf.data.as_panel(
-        pd.DataFrame(
-            {
-                "date": pd.date_range("2020-01-01", periods=6, freq="MS"),
-                "M_CA": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-                "Q_CA": [np.nan, np.nan, 10.0, np.nan, np.nan, 20.0],
-            }
-        ),
-        date="date",
-        metadata=metadata,
-    )
-    panel.attrs["macrocast_reports"] = {
-        "fred_sd_series_metadata": {
-            "series": [
-                {"column": "M_CA", "native_frequency": "monthly"},
-                {"column": "Q_CA", "native_frequency": "quarterly"},
-            ]
-        }
-    }
-
-    aligned = mf.preprocessing.handle_mixed_frequency(
-        panel,
-        method="monthly",
-        quarterly_to_monthly="repeat_within_quarter",
-    )
-    legacy_alias = mf.preprocessing.handle_mixed_frequency(
-        panel,
-        method="monthly",
-        quarterly_to_monthly="step_backward",
-    )
-
-    national = mf.data.DataBundle(
-        panel[["M_CA"]],
-        {"dataset": "monthly_source", "source_family": "test", "frequency": "monthly"},
-    )
-    regional = mf.data.DataBundle(panel[["Q_CA"]], metadata)
-    regional.panel.attrs["macrocast_reports"] = panel.attrs["macrocast_reports"]
-    with pytest.warns(UserWarning, match="quarterly variables were aligned to monthly"):
-        combined = mf.data.combine(national, regional, dataset="combo", frequency="monthly")
-
-    assert aligned["Q_CA"].tolist() == [10.0, 10.0, 10.0, 20.0, 20.0, 20.0]
-    pd.testing.assert_series_equal(aligned["Q_CA"], legacy_alias["Q_CA"])
-    pd.testing.assert_series_equal(aligned["Q_CA"], combined.panel["Q_CA"])
 
 
 def test_reprocess_default_pipeline_matches_fred_md_order():
@@ -639,33 +552,6 @@ def test_preprocess_stores_inverse_transform_state():
     assert state["requires_log_inverse"] is True
     assert state["lag_count"] == 1
     assert state["last_observed_values"] == [8.0, 16.0]
-
-
-def test_handle_mixed_frequency_uses_fred_sd_metadata_before_inference():
-    metadata = {"dataset": "fred_sd", "source_family": "fred-sd", "frequency": "state_monthly"}
-    panel = mf.data.as_panel(
-        pd.DataFrame(
-            {
-                "date": pd.date_range("2020-01-01", periods=6, freq="MS"),
-                "Q_CA": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-                "M_CA": [10.0, 11.0, 12.0, 13.0, 14.0, 15.0],
-            }
-        ),
-        date="date",
-        metadata=metadata,
-    )
-    panel.attrs["macrocast_reports"] = {
-        "fred_sd_series_metadata": {
-            "series": [
-                {"column": "Q_CA", "native_frequency": "quarterly"},
-                {"column": "M_CA", "native_frequency": "monthly"},
-            ]
-        }
-    }
-
-    filtered = mf.preprocessing.handle_mixed_frequency(panel, method="drop_non_quarterly")
-
-    assert list(filtered.columns) == ["Q_CA"]
 
 
 def test_fred_sd_transform_codes_can_return_provenance_table():

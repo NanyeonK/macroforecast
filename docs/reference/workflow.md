@@ -16,11 +16,15 @@ composition in the forecasting runner.
 | `macroforecast.models` | Model callables and model-owned hyperparameter spaces. | Forecast loops or forecast combination. |
 | `macroforecast.selection` | Parameter search over supplied data and validation windows. | Global run orchestration. |
 | `macroforecast.forecasting` | Runner-level composition and forecast combination. | Low-level transformation formulas. |
-| `macroforecast.evaluation` | Metrics. | Data splits or model fitting. |
+| `macroforecast.metrics` | Forecast scoring, forecast ranking, and metric resolution. | Data splits, model fitting, or statistical tests. |
+| `macroforecast.tests` | Forecast-comparison statistical tests and residual diagnostics. | Forecast scoring or model fitting. |
+| `macroforecast.evaluation` | Namespace wrapper for `metrics` and `tests`. | Callable metric/test functions. |
+| `macroforecast.interpretation` | Post-fit importance and effect summaries. | Model fitting, feature construction, or forecast testing. |
+| `macroforecast.output` | Writing artifacts and schema-aware provenance manifests. | Deciding model/window/evaluation design. |
 
 ## Runner Loop
 
-The runner is the only layer that combines stages:
+The runner is the only module that combines stages:
 
 ```python
 for origin in window.iter_origins(panel.index):

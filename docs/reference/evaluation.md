@@ -1,141 +1,174 @@
-# Evaluation
+# macroforecast.evaluation
 
 [Back to reference](index.md)
 
-`macroforecast.evaluation` contains scoring functions and forecast-result
-evaluation helpers. Selection uses the point metrics. Forecasting output can
-be evaluated directly with `evaluate_forecasts()`.
-
-## Metrics
-
-All metrics accept `y_true` and `y_pred`, align them as pandas Series, drop
-missing paired observations, and return a float.
-
-### mse
+`macroforecast.evaluation` owns evaluation reports. Raw scoring functions still
+live in `macroforecast.metrics`, and forecast-comparison statistical tests still
+live in `macroforecast.tests`.
 
 ```python
-macroforecast.evaluation.mse(y_true, y_pred)
+import macroforecast as mf
+
+mf.evaluation.metrics is mf.metrics
+mf.evaluation.tests is mf.tests
 ```
 
-Output: mean squared error.
+The public API contract is:
 
-### rmse
+| Namespace | Owns | Does not own |
+| --- | --- | --- |
+| `macroforecast.metrics` | Forecast scoring, ranking, metric resolution. | Statistical comparison tests. |
+| `macroforecast.tests` | Forecast-comparison tests, density diagnostics, residual diagnostics. | General scoring tables. |
+| `macroforecast.evaluation` | Multi-slice evaluation reports, benchmark comparisons, and regime scoring. | Raw metric functions or statistical test functions. |
+
+## Public Flow
 
 ```python
-macroforecast.evaluation.rmse(y_true, y_pred)
+report = mf.evaluation.evaluate_report(
+    forecast_result,
+    metrics=("mse", "rmse", "mae", "relative_mse", "r2_oos"),
+    benchmark_model="historical_mean",
+    time_frequency="Q",
+)
+
+scores = report.scores
+ranking = report.ranking
+by_regime = report.regime
 ```
 
-Output: root mean squared error.
-
-### mae
+## evaluate_report
 
 ```python
-macroforecast.evaluation.mae(y_true, y_pred)
-```
-
-Output: mean absolute error.
-
-### pinball_loss
-
-```python
-macroforecast.evaluation.pinball_loss(y_true, y_quantile, *, quantile)
-```
-
-Output: mean quantile pinball loss. `quantile` must be strictly between 0 and
-1.
-
-### gaussian_nll
-
-```python
-macroforecast.evaluation.gaussian_nll(y_true, y_pred, variance)
-```
-
-Output: Gaussian negative log likelihood using the supplied point forecast and
-predictive variance.
-
-### coverage_rate
-
-```python
-macroforecast.evaluation.coverage_rate(y_true, lower, upper)
-```
-
-Output: share of observations between lower and upper forecasts.
-
-### interval_width
-
-```python
-macroforecast.evaluation.interval_width(lower, upper)
-```
-
-Output: mean interval width.
-
-## Forecast Table Evaluation
-
-### evaluate_forecasts
-
-```python
-macroforecast.evaluation.evaluate_forecasts(
+macroforecast.evaluation.evaluate_report(
     forecasts,
     *,
-    by=("model", "horizon"),
     metrics=("mse", "rmse", "mae"),
-    actual="actual",
-    prediction="prediction",
-    variance_prediction="variance_prediction",
-    quantile_predictions="quantile_predictions",
-)
+    score_by=("model", "horizon"),
+    aggregations=None,
+    rank_metric=None,
+    rank_by=None,
+    benchmark_model=None,
+    benchmark_metrics=("mse", "mae", "relative_mse", "relative_mae", "mse_reduction", "r2_oos"),
+    regimes=None,
+    regime_column="regime",
+    target_column="target",
+    state_column="state",
+    time_frequency=None,
+    time_column="date",
+    time_bucket_column="time_bucket",
+    include_combined=True,
+) -> EvaluationReport
 ```
 
-Input: a `ForecastResult` or a forecast table with at least `actual` and
-`prediction`. If present, `variance_prediction` is scored with
-`gaussian_nll`. If present, `quantile_predictions` is expected to contain
-per-row dictionaries keyed by quantile level and is scored with pinball loss.
-Lower/upper quantile pairs such as `0.1` and `0.9` also produce coverage and
-interval width.
+### Input
 
-Output: one DataFrame row per `by` group.
+| Name | Type | Default | Choices |
+| --- | --- | --- | --- |
+| `forecasts` | `ForecastResult` or `DataFrame` | required | Forecast runner output or forecast-like table. |
+| `metrics` | sequence | `("mse", "rmse", "mae")` | Metric names accepted by `mf.metrics.get_metric(...)` or callables. |
+| `score_by` | sequence | `("model", "horizon")` | Main score grouping. Columns must exist. |
+| `aggregations` | mapping, sequence, or `None` | auto | Extra groupings to evaluate. `None` creates model, horizon, model-horizon, and available target/state/regime/time slices. |
+| `rank_metric` | str or `None` | auto | Metric used for `ranking`. Auto preference is `rmse`, `mse`, `mae`, `r2_oos`, `relative_mse`. |
+| `rank_by` | sequence or `None` | `score_by` without `model` | Ranking groups. |
+| `benchmark_model` | str or `None` | `None` | Model name used for relative metrics and benchmark table. |
+| `benchmark_metrics` | sequence | default benchmark metrics | Metrics for `benchmark_comparison`. |
+| `regimes` | mapping, Series, str, or `None` | `None` | Date-to-regime labels, existing regime column name, or no extra regime attachment. |
+| `regime_column` | str | `"regime"` | Column used for regime scoring. |
+| `target_column`, `state_column` | str | `"target"`, `"state"` | Optional slice columns when present. |
+| `time_frequency` | str or `None` | `None` | Pandas period frequency such as `"M"`, `"Q"`, `"A"` for time-bucket aggregation. |
+| `include_combined` | bool | `True` | Include forecast-combination rows. |
 
-Example:
+### Output
 
-```python
-result = mf.forecasting.run(panel, "ridge", target="y")
-scores = mf.evaluation.evaluate_forecasts(result)
-scores2 = result.evaluate()
-```
+Returns `EvaluationReport`.
 
-### get_metric
-
-```python
-macroforecast.evaluation.get_metric(metric)
-```
-
-Input:
-
-| Argument | Type | Meaning |
+| Field | Type | Meaning |
 | --- | --- | --- |
-| `metric` | str or callable | `"mse"`, `"rmse"`, `"mae"`, legacy validation aliases, or custom callable. |
+| `scores` | `DataFrame` | Main metric table over `score_by`. |
+| `ranking` | `DataFrame` | Ranked `scores` table. |
+| `aggregations` | `dict[str, DataFrame]` | Extra metric tables by requested or auto-discovered slices. |
+| `benchmark` | `DataFrame` or `None` | Candidate rows relative to `benchmark_model`. |
+| `regime` | `DataFrame` or `None` | Regime-specific metric table when regime labels are available. |
+| `metadata` | `dict` | Input metadata plus compact `evaluation_report` stage. |
 
-Output: callable metric.
+`EvaluationReport.to_dict()` serializes all tables into JSON-ready records.
 
-Supported names:
-
-| Name | Function |
-| --- | --- |
-| `mse`, `validation_mse` | `mse()` |
-| `rmse`, `validation_rmse` | `rmse()` |
-| `mae`, `validation_mae` | `mae()` |
-
-Example:
+The metadata stage records options, table row counts, and forecast-table input
+shape:
 
 ```python
-score = mf.evaluation.rmse(y_true, y_pred)
+report.metadata["evaluation_report"]
+```
 
-result = mf.selection.select_params(
-    "ridge",
-    X,
-    y,
-    search=mf.selection.grid({"alpha": [0.1, 1.0]}),
-    window=mf.window.last_block(validation_size=24),
-    metric=mf.evaluation.rmse,
+## aggregate_scores
+
+```python
+macroforecast.evaluation.aggregate_scores(
+    forecasts,
+    *,
+    groupings,
+    metrics=("mse", "rmse", "mae"),
+    benchmark_model=None,
+) -> dict[str, pandas.DataFrame]
+```
+
+Evaluates one forecast table over multiple explicit groupings.
+
+```python
+tables = mf.evaluation.aggregate_scores(
+    result,
+    groupings={
+        "model": ("model",),
+        "model_horizon_target": ("model", "horizon", "target"),
+    },
 )
 ```
+
+All requested columns must exist. This function fails loudly instead of silently
+dropping unavailable dimensions.
+
+## benchmark_comparison
+
+```python
+macroforecast.evaluation.benchmark_comparison(
+    forecasts,
+    *,
+    benchmark_model,
+    by=("model", "horizon"),
+    metrics=("mse", "mae", "relative_mse", "relative_mae", "mse_reduction", "r2_oos"),
+) -> pandas.DataFrame
+```
+
+Returns candidate model rows with benchmark-relative scores. The benchmark row
+itself is removed from the output. `benchmark_model` must be present in the
+forecast table.
+
+## regime_scores
+
+```python
+macroforecast.evaluation.regime_scores(
+    forecasts,
+    *,
+    regimes=None,
+    regime_column="regime",
+    by=("model", "horizon", "regime"),
+    metrics=("mse", "rmse", "mae"),
+    benchmark_model=None,
+) -> pandas.DataFrame
+```
+
+`regimes` can be:
+
+| Form | Meaning |
+| --- | --- |
+| `None` | Use an existing `regime_column`. |
+| `str` | Use that existing column as the source and copy to `regime_column` when names differ. |
+| mapping or `Series` | Map forecast `date` values to regime labels. |
+
+## Boundary
+
+| Question | Use |
+| --- | --- |
+| One metric value or one metric table | `mf.metrics` |
+| Multi-slice report with ranking, benchmark, regime, target/state/time aggregation | `mf.evaluation` |
+| Diebold-Mariano, Clark-West, MCS, residual tests | `mf.tests` |

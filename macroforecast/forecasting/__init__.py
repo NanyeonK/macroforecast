@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from macroforecast.forecasting.combination import (
+    CombinationSpec,
     combine_best_n,
     combine_dmspe,
     combine_inverse_mspe,
@@ -8,6 +9,7 @@ from macroforecast.forecasting.combination import (
     combine_median,
     combine_trimmed_mean,
     combine_winsorized_mean,
+    combination_spec,
 )
 from macroforecast.forecasting.runner import run
 from macroforecast.forecasting.types import ForecastResult
@@ -16,6 +18,7 @@ run_forecast = run
 
 __all__ = [
     "ForecastResult",
+    "CombinationSpec",
     "combine_best_n",
     "combine_dmspe",
     "combine_inverse_mspe",
@@ -23,6 +26,7 @@ __all__ = [
     "combine_median",
     "combine_trimmed_mean",
     "combine_winsorized_mean",
+    "combination_spec",
     "run",
     "run_forecast",
 ]

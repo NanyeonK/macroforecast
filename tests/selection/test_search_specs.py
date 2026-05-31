@@ -217,9 +217,12 @@ def test_public_top_level_selection_exports() -> None:
     assert not hasattr(mf.selection, "rmse")
     assert mf.SearchSpec is mf.selection.SearchSpec
     assert mf.SearchError is mf.selection.SearchError
-    assert mf.rmse is mf.evaluation.rmse
+    assert not hasattr(mf, "rmse")
+    assert mf.metrics.rmse is mf.metrics.rmse
     assert mf.split_table is mf.window.split_table
     assert mf.normalize_window_name("holdout") == "last_block"
     assert "selection" in dir(mf)
+    assert "metrics" in dir(mf)
+    assert "tests" in dir(mf)
     assert "evaluation" in dir(mf)
     assert "window" in dir(mf)

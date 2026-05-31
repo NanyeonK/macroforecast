@@ -105,6 +105,10 @@ Combined bundles add:
 | --- | --- | --- |
 | `combined_sources` | `list[dict]` | Full metadata dictionaries from the source bundles. |
 | `source_by_column` | `dict[str, str]` | Source dataset for each output column. |
+| `native_frequency_by_column` | `dict[str, str]` | Original frequency for each output column before alignment. |
+| `native_frequency_counts` | `dict[str, int]` | Count of columns by original frequency. |
+| `output_frequency_by_column` | `dict[str, str]` | Frequency represented in the returned panel for each output column. |
+| `output_frequency_counts` | `dict[str, int]` | Count of columns by returned-panel frequency. |
 | `frequency_conversion_warnings` | `list[dict]` | Records of monthly-to-quarterly or quarterly-to-monthly conversions. |
 | `alignment` | `dict` | Chosen target frequency, alignment rules, and source-level alignment summaries. |
 
@@ -373,6 +377,14 @@ macroforecast.data.combine(
 | `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | `"repeat_within_quarter"`, `"quarter_end_ffill"`, `"linear_interpolation"`. |
 | `monthly_to_quarterly` | `str` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"`. |
 
+With `frequency="native"` or `frequency="mixed"`, no monthly/quarterly
+conversion is applied. The returned panel keeps each source column on its
+native observation dates and records `metadata["frequency"] == "mixed"`.
+Quarterly columns therefore appear as sparse columns on the union date index
+when they are combined with monthly columns. Downstream mixed-frequency models
+should read `metadata["native_frequency_by_column"]` rather than infer
+frequency from the overall index.
+
 ### Frequency Conversion Rules
 
 | Direction | Rule | Meaning |
@@ -391,6 +403,15 @@ contains a native weekly column, `combine()` raises `ValueError`.
 
 Returns `DataBundle`. The panel is a column-wise concatenation after frequency
 alignment. Duplicate output column names raise `ValueError`.
+
+For mixed outputs, the key metadata fields are:
+
+| Key | Meaning |
+| --- | --- |
+| `metadata["frequency"]` | `"mixed"`. |
+| `metadata["native_frequency_by_column"]` | Native source frequency for each column. |
+| `metadata["output_frequency_by_column"]` | Returned-panel frequency for each column; equal to native frequency in native mode. |
+| `metadata["alignment"]["frequency"]` | `"native"` when no conversion was applied. |
 
 ### Frequency Conversion Warnings
 
@@ -432,6 +453,8 @@ macroforecast.data.load_custom_csv(
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
+    frequency_by_column: Mapping[str, str] | None = None,
+    default_frequency: str | None = None,
     metadata: Mapping[str, object] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     strict: bool = True,
@@ -450,6 +473,8 @@ macroforecast.data.load_custom_csv(
 | `rename` | mapping or `None` | `None` | Column rename map. |
 | `dataset` | `str` | `"custom"` | Metadata dataset label. |
 | `frequency` | `str` | `"unknown"` | Metadata frequency label. |
+| `frequency_by_column` | mapping or `None` | `None` | Optional final-column frequency map, e.g. `{"PAYEMS": "monthly", "GDPC1": "quarterly"}`. |
+| `default_frequency` | `str` or `None` | `None` | Fill frequency for columns omitted from `frequency_by_column`. |
 | `metadata` | mapping or `None` | `None` | User metadata to attach. |
 | `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
 | `strict` | `bool` | `True` | Reject invalid date rows and non-numeric cells instead of silently coercing them. Set `False` only when you want a permissive load with a panel report. |
@@ -466,6 +491,11 @@ Custom loaders also store the strict-normalization report at
 `bundle.metadata["panel"]`. With `strict=True`, malformed dates or non-numeric
 cells raise `RawParseError` wrapping the underlying validation error. With
 `strict=False`, those lossy operations are allowed and counted.
+
+If `frequency_by_column` is provided, custom loaders call
+`set_frequencies(...)` internally and write the same mixed-frequency metadata
+contract used by official combined bundles. The keys must match final loaded
+column names after selection and renaming.
 
 Example:
 
@@ -497,6 +527,8 @@ macroforecast.data.load_custom_parquet(
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
+    frequency_by_column: Mapping[str, str] | None = None,
+    default_frequency: str | None = None,
     metadata: Mapping[str, object] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     strict: bool = True,
@@ -561,7 +593,54 @@ macroforecast.data.panel_info(bundle_or_panel) -> dict
 ```
 
 Output keys include `n_rows`, `n_columns`, `start`, `end`, `columns`,
-`missing_values`, and inferred `frequency`.
+`missing_values`, `frequency`, and `index_frequency`. If the input carries
+metadata, `frequency` uses the metadata label such as `"mixed"` while
+`index_frequency` reports the pandas-inferred date-index frequency. Combined
+data also include compact native/output frequency counts.
+
+## set_frequencies
+
+Attach a column-level frequency contract to an existing panel or bundle.
+
+```python
+macroforecast.data.set_frequencies(
+    data,
+    frequency_by_column,
+    *,
+    default_frequency: str | None = None,
+    output_frequency_by_column: Mapping[str, str] | None = None,
+    frequency: str | None = None,
+    metadata: Mapping[str, object] | None = None,
+) -> DataBundle
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `data` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | required | Canonical panel input. |
+| `frequency_by_column` | mapping | required | Native frequency for each final panel column. |
+| `default_frequency` | `str` or `None` | `None` | Fill omitted columns with one frequency. |
+| `output_frequency_by_column` | mapping or `None` | `None` | Returned-panel frequency for each column; defaults to native frequency. |
+| `frequency` | `str` or `None` | `None` | Overall metadata label. Defaults to the unique native frequency or `"mixed"`. |
+| `metadata` | mapping or `None` | `None` | Extra metadata to merge before writing frequency fields. |
+
+Allowed column frequencies are `monthly`, `quarterly`, `weekly`, `annual`,
+`irregular`, and `unknown`, with short aliases such as `m`, `q`, and `w`.
+For mixed-frequency DFM models, monthly and quarterly columns are the relevant
+contract.
+
+### Output
+
+Returns a `DataBundle` with:
+
+| Metadata key | Meaning |
+| --- | --- |
+| `frequency` | Overall label, usually `"mixed"` when multiple native frequencies are present. |
+| `native_frequency_by_column` | Native frequency for each column. |
+| `native_frequency_counts` | Counts by native frequency. |
+| `output_frequency_by_column` | Frequency represented in the returned panel for each column. |
+| `output_frequency_counts` | Counts by output frequency. |
 
 ## metadata
 
@@ -601,7 +680,7 @@ macroforecast.data.spec(
 | `horizons` | iterable, int, or `None` | derived | Forecast horizons. |
 | `start` | <code>str &#124; None</code> | `None` | Start date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
 | `end` | <code>str &#124; None</code> | `None` | End date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
-| `predictors` | <code>"all" &#124; iterable</code> | `"all"` | Predictor columns to keep. `"all"` expands to all non-target columns. Explicit predictor lists may not include target columns. |
+| `predictors` | <code>"all" &#124; iterable</code> | `"all"` | Predictor columns to keep. `"all"` expands to all non-target columns. Explicit predictor lists may be empty for target-only or autoregressive designs, and may not include target columns. |
 
 ### Default Horizons
 
@@ -618,6 +697,168 @@ target, targets, horizons, sample dates, expanded predictor list, and panel
 summary. This expansion is deliberate: downstream model stages should consume a
 concrete non-target predictor list, not infer from the full panel and risk
 target leakage.
+
+## Data Policy Helpers
+
+These functions are direct Python replacements for the old data-policy axes.
+They do not parse YAML and do not fit models.
+
+### align_frequency
+
+```python
+macroforecast.data.align_frequency(
+    data,
+    *,
+    method: str = "keep",
+    quarterly_to_monthly: str = "repeat_within_quarter",
+    weekly_to_monthly: str = "mean",
+    monthly_to_quarterly: str = "quarterly_average",
+    weekly_to_quarterly: str = "mean",
+    chow_lin_indicator: str | Mapping[str, str] | None = None,
+    chow_lin_aggregation: str = "mean",
+    chow_lin_rho: float | None = None,
+    chow_lin_rho_method: str = "fixed",
+) -> DataBundle
+```
+
+Keeps, filters, or aligns a panel to a common data frequency. This belongs in
+`macroforecast.data` because it changes the calendar and column-level frequency
+contract before preprocessing or feature engineering.
+
+| Input | Default | Choices |
+| --- | --- | --- |
+| `method` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"` |
+| `quarterly_to_monthly` | `"repeat_within_quarter"` | `"repeat_within_quarter"`, `"step_backward"`, `"step_forward"`, `"quarter_end_ffill"`, `"linear_interpolation"`, `"chow_lin"` |
+| `weekly_to_monthly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
+| `monthly_to_quarterly` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"` |
+| `weekly_to_quarterly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
+| `chow_lin_indicator` | `None` | Indicator column name, or mapping from quarterly column to indicator column, used only when `quarterly_to_monthly="chow_lin"`. |
+| `chow_lin_aggregation` | `"mean"` | `"mean"` or `"sum"`; the low-frequency aggregation to conserve. |
+| `chow_lin_rho` | `None` | Fixed AR(1) residual correlation. If supplied, must be inside `(-1, 1)`. |
+| `chow_lin_rho_method` | `"fixed"` | `"fixed"`, `"min_chi_squared"`, or `"max_likelihood"`. |
+
+Output is a `DataBundle`. Metadata records `data_frequency_alignment`,
+`native_frequency_by_column`, `output_frequency_by_column`, and frequency
+counts. Frequency detection uses `native_frequency_by_column` first, then
+FRED-SD series reports, then observed-date spacing.
+
+```python
+monthly = mf.data.align_frequency(
+    mixed_bundle,
+    method="monthly",
+    quarterly_to_monthly="repeat_within_quarter",
+)
+```
+
+For quarterly-to-monthly alignment, `step_backward` is accepted as an alias for
+`repeat_within_quarter`; the latter is the clearer spelling. Use
+`quarter_end_ffill` when values should only become available from the
+quarter-end month forward.
+
+Use `quarterly_to_monthly="chow_lin"` when a quarterly series should be
+regression-disaggregated with a monthly indicator:
+
+```python
+monthly = mf.data.align_frequency(
+    mixed_bundle,
+    method="monthly",
+    quarterly_to_monthly="chow_lin",
+    chow_lin_indicator={"GDPC1": "INDPRO"},
+    chow_lin_aggregation="mean",
+)
+```
+
+This preserves the supplied quarterly observations when the output is
+re-aggregated by the declared `chow_lin_aggregation`. The function records the
+indicator and rho choices in `metadata["data_frequency_alignment"]`.
+
+### chow_lin_disaggregate
+
+```python
+macroforecast.data.chow_lin_disaggregate(
+    low_frequency,
+    indicator,
+    *,
+    aggregation: str = "mean",
+    rho: float | None = None,
+    rho_method: str = "fixed",
+) -> pandas.Series
+```
+
+Direct Chow-Lin quarterly-to-monthly style disaggregation. `low_frequency` is a
+low-frequency `Series`, and `indicator` is a higher-frequency `Series` or a
+single/first-column `DataFrame`. The returned series is indexed like the
+indicator and conserves `low_frequency` under `aggregation="mean"` or
+`aggregation="sum"`.
+
+`rho_method="fixed"` uses `rho` when supplied and `0.0` otherwise.
+`"min_chi_squared"` and `"max_likelihood"` estimate `rho` over a bounded grid.
+
+### infer_frequencies
+
+```python
+macroforecast.data.infer_frequencies(data) -> tuple[dict[str, str], str]
+macroforecast.data.frequency_hardening_issues(frequencies) -> list[dict]
+```
+
+`infer_frequencies()` returns `(frequency_by_column, source)`. The source is
+`"native_frequency_by_column"`, `"fred_sd_series_metadata"`, or
+`"observed_dates"`. `frequency_hardening_issues()` reports columns classified
+as `unknown`, `irregular`, or `annual` before a caller aligns frequencies.
+
+### availability_lag
+
+```python
+macroforecast.data.availability_lag(
+    data,
+    *,
+    lags: int | Mapping[str, int] = 1,
+    columns: Iterable[str] | None = None,
+    drop_missing: bool = False,
+) -> DataBundle
+```
+
+Positive lags delay predictor availability. `lags=1` means the value dated
+`t-1` is the latest available value on row `t`. Pass a mapping for
+column-specific release lags.
+
+### same_period_predictors
+
+```python
+macroforecast.data.same_period_predictors(
+    data_spec,
+    *,
+    policy: "allow" | "lag" | "drop" | "forbid" = "allow",
+    lag: int = 1,
+    columns: Iterable[str] | None = None,
+    drop_missing: bool = False,
+) -> DataSpec
+```
+
+`allow` records the choice, `lag` shifts selected predictors, `drop` removes
+them from the active predictor set, and `forbid` raises if such predictors are
+present. Targets are never shifted by this helper.
+
+### define_regime
+
+```python
+macroforecast.data.define_regime(
+    data,
+    *,
+    name: str = "regime",
+    column: str | None = None,
+    threshold: float | None = None,
+    direction: "above" | "below" | "equal" | "not_equal" = "above",
+    dates: Iterable[str | pandas.Timestamp] | None = None,
+    values: Sequence[bool | int | float] | pandas.Series | None = None,
+    append: bool = False,
+    output_column: str | None = None,
+) -> DataBundle
+```
+
+Exactly one regime source is required: threshold rule, explicit dates, or an
+aligned vector/Series. The regime is stored in `metadata["regimes"]`; set
+`append=True` to also add a numeric indicator column to the panel.
 
 ## Vintage Helpers
 

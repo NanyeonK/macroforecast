@@ -47,6 +47,43 @@ def test_combine_aligns_quarterly_source_to_monthly_grid():
     assert warning["variables"] == ["q"]
 
 
+def test_combine_native_preserves_mixed_frequency_contract():
+    monthly = _bundle(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=4, freq="MS"),
+                "m": [1.0, 2.0, 3.0, 4.0],
+            }
+        ),
+        {"dataset": "monthly_source", "source_family": "test", "frequency": "monthly"},
+    )
+    quarterly = _bundle(
+        pd.DataFrame(
+            {
+                "date": pd.to_datetime(["2020-01-01", "2020-04-01"]),
+                "q": [10.0, 20.0],
+            }
+        ),
+        {"dataset": "quarterly_source", "source_family": "test", "frequency": "quarterly"},
+    )
+
+    combined = mf.data.combine(monthly, quarterly, dataset="custom_combo", frequency="native")
+
+    assert combined.metadata["frequency"] == "mixed"
+    assert combined.metadata["native_frequency_by_column"] == {"m": "monthly", "q": "quarterly"}
+    assert combined.metadata["native_frequency_counts"] == {"monthly": 1, "quarterly": 1}
+    assert combined.metadata["output_frequency_by_column"] == {"m": "monthly", "q": "quarterly"}
+    assert combined.metadata["frequency_conversion_warnings"] == []
+    assert combined.panel["q"].iloc[0] == 10.0
+    assert combined.panel["q"].iloc[1:3].isna().all()
+    assert combined.panel["q"].iloc[3] == 20.0
+
+    info = mf.data.panel_info(combined)
+    assert info["frequency"] == "mixed"
+    assert info["index_frequency"] == "MS"
+    assert info["native_frequency_counts"] == {"monthly": 1, "quarterly": 1}
+
+
 def test_load_fred_md_sd_combines_monthly_national_and_state_sources(tmp_path: Path):
     bundle = mf.data.load_fred_md_sd(
         cache_root=tmp_path,

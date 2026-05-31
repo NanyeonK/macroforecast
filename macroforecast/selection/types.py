@@ -9,7 +9,7 @@ from typing import Any, Literal
 import numpy as np
 import pandas as pd
 
-from macroforecast.evaluation import MetricLike
+from macroforecast.metrics import MetricLike
 
 DistributionKind = Literal["float", "log_float", "int", "categorical"]
 

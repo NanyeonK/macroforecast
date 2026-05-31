@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from datetime import date as date_type
 from calendar import monthrange
 import re
-from collections.abc import Iterable, Mapping
 from typing import Any, Literal, TypeAlias
 
 import numpy as np
@@ -203,21 +204,78 @@ def panel_info(panel: PanelInput) -> dict[str, Any]:
     bundle = _coerce_bundle(panel)
     frame = bundle.panel
     validate_panel(frame)
-    return {
+    index_frequency = pd.infer_freq(frame.index) if len(frame.index) >= 3 else None
+    metadata_frequency = bundle.metadata.get("frequency")
+    info = {
         "n_rows": int(frame.shape[0]),
         "n_columns": int(frame.shape[1]),
         "start": frame.index[0].strftime("%Y-%m-%d") if len(frame) else None,
         "end": frame.index[-1].strftime("%Y-%m-%d") if len(frame) else None,
         "columns": [str(column) for column in frame.columns],
         "missing_values": int(frame.isna().sum().sum()),
-        "frequency": pd.infer_freq(frame.index) if len(frame.index) >= 3 else None,
+        "frequency": metadata_frequency or index_frequency,
+        "index_frequency": index_frequency,
     }
+    if metadata_frequency is not None:
+        info["metadata_frequency"] = metadata_frequency
+    native_frequency_counts = bundle.metadata.get("native_frequency_counts")
+    if native_frequency_counts is not None:
+        info["native_frequency_counts"] = dict(native_frequency_counts)
+    output_frequency_counts = bundle.metadata.get("output_frequency_counts")
+    if output_frequency_counts is not None:
+        info["output_frequency_counts"] = dict(output_frequency_counts)
+    return info
 
 
 def metadata(obj: PanelInput) -> dict[str, Any]:
     """Return metadata from a bundle, spec, tuple, or DataFrame."""
 
     return dict(_coerce_bundle(obj).metadata)
+
+
+def set_frequencies(
+    data: PanelInput,
+    frequency_by_column: Mapping[str, str],
+    *,
+    default_frequency: str | None = None,
+    output_frequency_by_column: Mapping[str, str] | None = None,
+    frequency: str | None = None,
+    metadata: Mapping[str, Any] | None = None,
+) -> DataBundle:
+    """Attach a column-level frequency contract to a panel or bundle."""
+
+    bundle = _coerce_bundle(data, metadata=metadata)
+    panel = bundle.panel.copy()
+    validate_panel(panel)
+    native = _normalize_frequency_map(
+        frequency_by_column,
+        columns=panel.columns,
+        default_frequency=default_frequency,
+        label="frequency_by_column",
+    )
+    output = (
+        dict(native)
+        if output_frequency_by_column is None
+        else _normalize_frequency_map(
+            output_frequency_by_column,
+            columns=panel.columns,
+            default_frequency=default_frequency,
+            label="output_frequency_by_column",
+        )
+    )
+    frequency_label = _resolve_frequency_label(native, frequency=frequency)
+    updated = dict(bundle.metadata)
+    updated.update(
+        {
+            "frequency": frequency_label,
+            "native_frequency_by_column": dict(sorted(native.items())),
+            "native_frequency_counts": dict(sorted(Counter(native.values()).items())),
+            "output_frequency_by_column": dict(sorted(output.items())),
+            "output_frequency_counts": dict(sorted(Counter(output.values()).items())),
+        }
+    )
+    panel.attrs["macroforecast_metadata"] = updated
+    return DataBundle(panel=panel, metadata=updated)
 
 
 def spec(
@@ -255,8 +313,6 @@ def spec(
         predictor_values = tuple(str(column) for column in panel.columns if str(column) not in set(target_values))
     else:
         predictor_values = tuple(dict.fromkeys(str(value) for value in predictors))
-        if not predictor_values:
-            raise ValueError("predictors must not be empty")
         overlap = sorted(set(predictor_values).intersection(target_values))
         if overlap:
             raise ValueError(f"predictors must not include target columns: {overlap}")
@@ -368,6 +424,66 @@ def _coerce_bundle(data: PanelInput, *, metadata: Mapping[str, Any] | None = Non
         panel.attrs["macroforecast_metadata"] = merged
         return DataBundle(panel=panel, metadata=merged)
     return base
+
+
+def _normalize_frequency_map(
+    frequency_by_column: Mapping[str, str],
+    *,
+    columns: pd.Index,
+    default_frequency: str | None,
+    label: str,
+) -> dict[str, str]:
+    column_names = [str(column) for column in columns]
+    provided = {str(column): _normalize_frequency_label(value) for column, value in frequency_by_column.items()}
+    unknown = sorted(set(provided).difference(column_names))
+    if unknown:
+        raise ValueError(f"{label} includes unknown columns: {unknown}")
+    if default_frequency is not None:
+        default = _normalize_frequency_label(default_frequency)
+        for column in column_names:
+            provided.setdefault(column, default)
+    missing = [column for column in column_names if column not in provided]
+    if missing:
+        raise ValueError(f"{label} must include every panel column or default_frequency; missing={missing}")
+    return {column: provided[column] for column in column_names}
+
+
+def _normalize_frequency_label(value: Any) -> str:
+    key = str(value).strip().lower()
+    aliases = {
+        "m": "monthly",
+        "month": "monthly",
+        "monthly": "monthly",
+        "state_monthly": "monthly",
+        "q": "quarterly",
+        "quarter": "quarterly",
+        "quarterly": "quarterly",
+        "w": "weekly",
+        "week": "weekly",
+        "weekly": "weekly",
+        "a": "annual",
+        "annual": "annual",
+        "yearly": "annual",
+        "irregular": "irregular",
+        "unknown": "unknown",
+    }
+    if key not in aliases:
+        allowed = sorted(set(aliases.values()))
+        raise ValueError(f"frequency must be one of {allowed}; got {value!r}")
+    return aliases[key]
+
+
+def _resolve_frequency_label(native: Mapping[str, str], *, frequency: str | None) -> str:
+    if frequency is not None:
+        if str(frequency).strip().lower() == "mixed":
+            return "mixed"
+        explicit = _normalize_frequency_label(frequency)
+        if explicit == "unknown":
+            unique = set(native.values())
+            return unique.pop() if len(unique) == 1 else "mixed"
+        return explicit
+    unique = set(native.values())
+    return unique.pop() if len(unique) == 1 else "mixed"
 
 
 def _normalize_targets(*, target: str | None, targets: Iterable[str] | None) -> tuple[str | None, tuple[str, ...]]:

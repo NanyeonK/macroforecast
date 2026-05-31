@@ -22,7 +22,7 @@ import zipfile
 import pandas as pd
 
 from .errors import RawDownloadError, RawManifestError, RawParseError, RawVersionFormatError
-from .panel import DataBundle, as_panel
+from .panel import DataBundle, as_panel, set_frequencies
 
 DatasetId = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
 VersionMode = Literal["current", "vintage"]
@@ -525,6 +525,8 @@ def load_custom_csv(
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
+    frequency_by_column: Mapping[str, str] | None = None,
+    default_frequency: str | None = None,
     metadata: Mapping[str, Any] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
@@ -554,6 +556,8 @@ def load_custom_csv(
         file_format="csv",
         metadata=metadata,
         transform_codes=transform_codes,
+        frequency_by_column=frequency_by_column,
+        default_frequency=default_frequency,
         cache_root=cache_root,
     )
 
@@ -568,6 +572,8 @@ def load_custom_parquet(
     rename: Mapping[str, str] | None = None,
     dataset: str = "custom",
     frequency: str = "unknown",
+    frequency_by_column: Mapping[str, str] | None = None,
+    default_frequency: str | None = None,
     metadata: Mapping[str, Any] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
@@ -597,6 +603,8 @@ def load_custom_parquet(
         file_format="parquet",
         metadata=metadata,
         transform_codes=transform_codes,
+        frequency_by_column=frequency_by_column,
+        default_frequency=default_frequency,
         cache_root=cache_root,
     )
 
@@ -773,6 +781,8 @@ def _custom_bundle(
     file_format: str,
     metadata: Mapping[str, Any] | None,
     transform_codes: Mapping[str, int] | None,
+    frequency_by_column: Mapping[str, str] | None,
+    default_frequency: str | None,
     cache_root: str | Path | None,
 ) -> DataBundle:
     normalized_tcodes = _normalize_custom_transform_codes(transform_codes, columns=panel.columns)
@@ -797,8 +807,15 @@ def _custom_bundle(
     }
     merged = {**dict(metadata or {}), **source_metadata}
     bundle = _bundle(panel, merged)
+    if frequency_by_column is not None:
+        bundle = set_frequencies(
+            bundle,
+            frequency_by_column,
+            default_frequency=default_frequency,
+            frequency=frequency,
+        )
     if cache_root is not None:
-        _append_manifest_entry(merged, cache_root=cache_root)
+        _append_manifest_entry(bundle.metadata, cache_root=cache_root)
     return bundle
 
 
@@ -840,6 +857,8 @@ def combine(
     frequency_conversion_warnings: list[dict[str, Any]] = []
     transform_codes: dict[str, int] = {}
     source_by_column: dict[str, str] = {}
+    native_frequency_by_column: dict[str, str] = {}
+    output_frequency_by_column: dict[str, str] = {}
     seen_columns: set[str] = set()
     alignment_reports: list[dict[str, Any]] = []
 
@@ -862,6 +881,13 @@ def combine(
         aligned_panels.append(panel)
         alignment_reports.append({"dataset": source_dataset, **alignment})
         combined_sources.append(dict(bundle.metadata))
+        source_native_frequencies = dict(alignment.get("native_frequency_by_column", {}))
+        for column in panel.columns:
+            name = str(column)
+            native_frequency_by_column[name] = str(source_native_frequencies.get(name, "unknown"))
+            output_frequency_by_column[name] = (
+                native_frequency_by_column[name] if target_frequency == "native" else target_frequency
+            )
         source_codes = dict(bundle.metadata.get("transform_codes", {}))
         transform_codes.update({str(column): int(code) for column, code in source_codes.items() if str(column) in panel.columns})
         for column in panel.columns:
@@ -884,6 +910,10 @@ def combine(
         "transform_codes": transform_codes,
         "combined_sources": combined_sources,
         "source_by_column": source_by_column,
+        "native_frequency_by_column": dict(sorted(native_frequency_by_column.items())),
+        "native_frequency_counts": dict(sorted(Counter(native_frequency_by_column.values()).items())),
+        "output_frequency_by_column": dict(sorted(output_frequency_by_column.items())),
+        "output_frequency_counts": dict(sorted(Counter(output_frequency_by_column.values()).items())),
         "frequency_conversion_warnings": frequency_conversion_warnings,
         "alignment": {
             "frequency": target_frequency,
@@ -940,9 +970,18 @@ def _align_bundle_for_combination(
     monthly_to_quarterly: str,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     panel = bundle.panel.copy()
-    if frequency == "native":
-        return panel, {"method": "native", "source_frequency": bundle.metadata.get("frequency")}
     native_frequencies = _bundle_native_frequencies(bundle)
+    native_frequency_summary = {
+        "native_frequency_counts": dict(sorted(Counter(native_frequencies.values()).items())),
+        "native_frequency_by_column": dict(sorted(native_frequencies.items())),
+    }
+    if frequency == "native":
+        return panel, {
+            "method": "native",
+            "source_frequency": bundle.metadata.get("frequency"),
+            "frequency_conversions": [],
+            **native_frequency_summary,
+        }
     if any(value == "weekly" for value in native_frequencies.values()):
         weekly_columns = [column for column, value in native_frequencies.items() if value == "weekly"]
         raise ValueError(f"weekly columns are not supported in data combination: {weekly_columns[:5]}")
@@ -976,8 +1015,8 @@ def _align_bundle_for_combination(
     return aligned, {
         "method": f"align_to_{frequency}",
         "source_frequency": bundle.metadata.get("frequency"),
-        "native_frequency_counts": dict(sorted(Counter(native_frequencies.values()).items())),
         "frequency_conversions": conversions,
+        **native_frequency_summary,
     }
 
 

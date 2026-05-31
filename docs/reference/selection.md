@@ -8,7 +8,7 @@ windows or scoring metrics.
 Use:
 
 - `macroforecast.window` to define train/val splits.
-- `macroforecast.evaluation` to define the score.
+- `macroforecast.metrics` to define the score.
 - `macroforecast.selection` to evaluate parameter candidates and return the best
   parameter set.
 
@@ -22,7 +22,7 @@ result = mf.selection.select_params(
     y,
     search=search,
     window=window,
-    metric=mf.evaluation.rmse,
+    metric=mf.metrics.rmse,
 )
 ```
 
@@ -292,7 +292,7 @@ Input:
 | `search` | `SearchSpec` or `None` | `None` | Explicit search spec. If absent, model-owned search space is used. |
 | `window` | `WindowSpec`, str, or `None` | `None` | Temporal window used to create validation splits. Do not pass with `splits`. |
 | `splits` | sequence of `(train_pos, validation_pos)` or `None` | `None` | Explicit integer-position validation splits, usually produced by `macroforecast.window`. Do not pass with `window`. |
-| `metric` | str or callable | `"mse"` | Metric from `macroforecast.evaluation` or custom callable. |
+| `metric` | str or callable | `"mse"` | Metric from `macroforecast.metrics` or custom callable. |
 | `maximize` | bool | `False` | Whether larger metric values are better. |
 | `fixed_params` | dict or `None` | `None` | Parameters passed to every candidate fit. |
 | `preset` | str or `None` | `None` | Model preset when resolving a registered model. |
@@ -313,7 +313,7 @@ result = mf.selection.select_params(
     y,
     search=search,
     window=window,
-    metric=mf.evaluation.mae,
+    metric=mf.metrics.mae,
 )
 ```
 

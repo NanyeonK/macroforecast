@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -30,9 +31,9 @@ class ForecastResult:
         }
 
     def evaluate(self, **kwargs: Any) -> pd.DataFrame:
-        """Evaluate this forecast result with ``macroforecast.evaluation``."""
+        """Evaluate this forecast result with ``macroforecast.metrics``."""
 
-        from macroforecast.evaluation import evaluate_forecasts
+        from macroforecast.metrics import evaluate_forecasts
 
         return evaluate_forecasts(self, **kwargs)
 
@@ -48,9 +49,29 @@ class ForecastResult:
 def _json_ready(value: Any) -> Any:
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, np.ndarray):
+        return _json_ready(value.tolist())
+    if isinstance(value, pd.Series):
+        return {
+            "name": value.name,
+            "index": [_json_ready(item) for item in value.index],
+            "data": [_json_ready(item) for item in value.to_list()],
+        }
+    if isinstance(value, pd.DataFrame):
+        return {
+            "columns": [str(column) for column in value.columns],
+            "index": [_json_ready(item) for item in value.index],
+            "data": _json_ready(value.to_dict(orient="list")),
+        }
     if isinstance(value, np.generic):
-        return value.item()
-    if isinstance(value, dict):
+        return _json_ready(value.item())
+    if isinstance(value, float) and not np.isfinite(value):
+        return None
+    if value is pd.NaT or value is pd.NA:
+        return None
+    if isinstance(value, Mapping):
         return {str(key): _json_ready(item) for key, item in value.items()}
     if isinstance(value, tuple):
         return [_json_ready(item) for item in value]

@@ -27,6 +27,487 @@ def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) ->
     return fit_estimator(Ridge(**params), X, y, model="ridge", metadata=params)
 
 
+class _NonNegativeRidge:
+    """Ridge regression with non-negative coefficient constraints."""
+
+    def __init__(self, *, alpha: float = 1.0, fit_intercept: bool = True) -> None:
+        if float(alpha) < 0.0:
+            raise ValueError("alpha must be non-negative")
+        self.alpha = float(alpha)
+        self.fit_intercept = bool(fit_intercept)
+        self.feature_names_in_: np.ndarray | None = None
+        self.x_mean_: np.ndarray | None = None
+        self.y_mean_: float = 0.0
+        self.coef_: np.ndarray | None = None
+        self.intercept_: float = 0.0
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_NonNegativeRidge":
+        from scipy.optimize import nnls
+
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        self.feature_names_in_ = np.asarray(frame.columns, dtype=object)
+        values = _filled_float_values(frame)
+        y_values = target.to_numpy(dtype=float)
+        if self.fit_intercept:
+            self.x_mean_ = values.mean(axis=0)
+            self.y_mean_ = float(y_values.mean()) if y_values.size else 0.0
+            x_work = values - self.x_mean_
+            y_work = y_values - self.y_mean_
+        else:
+            self.x_mean_ = np.zeros(values.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            x_work = values
+            y_work = y_values
+        if self.alpha > 0.0:
+            penalty = np.sqrt(self.alpha) * np.eye(values.shape[1], dtype=float)
+            x_aug = np.vstack([x_work, penalty])
+            y_aug = np.concatenate([y_work, np.zeros(values.shape[1], dtype=float)])
+        else:
+            x_aug = x_work
+            y_aug = y_work
+        coef, _ = nnls(x_aug, y_aug)
+        self.coef_ = np.asarray(coef, dtype=float)
+        self.intercept_ = (
+            self.y_mean_ - float(self.x_mean_ @ self.coef_)
+            if self.fit_intercept
+            else 0.0
+        )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.coef_ is None or self.feature_names_in_ is None:
+            return np.zeros(len(X), dtype=float)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(float)
+        return _filled_float_values(frame) @ self.coef_ + self.intercept_
+
+
+def nonneg_ridge(
+    X: Any,
+    y: Any | None = None,
+    *,
+    alpha: float = 1.0,
+    fit_intercept: bool = True,
+) -> ModelFit:
+    """Fit ridge regression with non-negative coefficients."""
+
+    params = {"alpha": float(alpha), "fit_intercept": bool(fit_intercept)}
+    return fit_estimator(
+        _NonNegativeRidge(alpha=float(alpha), fit_intercept=bool(fit_intercept)),
+        X,
+        y,
+        model="nonneg_ridge",
+        metadata=params,
+    )
+
+
+class _ShrinkToTargetRidge:
+    """Ridge regression that shrinks coefficients toward a target vector."""
+
+    def __init__(
+        self,
+        *,
+        alpha: float = 1.0,
+        prior_target: float | Sequence[float] | dict[str, float] | None = None,
+        simplex: bool = False,
+        nonneg: bool = False,
+        fit_intercept: bool = True,
+        max_iter: int = 1000,
+        tol: float = 1e-9,
+    ) -> None:
+        if float(alpha) < 0.0:
+            raise ValueError("alpha must be non-negative")
+        self.alpha = float(alpha)
+        self.prior_target = prior_target
+        self.simplex = bool(simplex)
+        self.nonneg = bool(nonneg)
+        self.fit_intercept = bool(fit_intercept)
+        self.max_iter = int(max_iter)
+        self.tol = float(tol)
+        self.feature_names_in_: np.ndarray | None = None
+        self.prior_target_: np.ndarray | None = None
+        self.x_mean_: np.ndarray | None = None
+        self.y_mean_: float = 0.0
+        self.coef_: np.ndarray | None = None
+        self.intercept_: float = 0.0
+        self.solver_success_: bool = False
+        self.solver_message_: str = ""
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_ShrinkToTargetRidge":
+        from scipy.optimize import minimize
+
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        self.feature_names_in_ = np.asarray(frame.columns, dtype=object)
+        values = _filled_float_values(frame)
+        y_values = target.to_numpy(dtype=float)
+        self.prior_target_ = _resolve_prior_target(
+            self.prior_target,
+            columns=frame.columns,
+            n_features=values.shape[1],
+            default="uniform" if self.simplex else "zero",
+        )
+        if self.simplex:
+            self.x_mean_ = np.zeros(values.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            x_work = values
+            y_work = y_values
+        elif self.fit_intercept:
+            self.x_mean_ = values.mean(axis=0)
+            self.y_mean_ = float(y_values.mean()) if y_values.size else 0.0
+            x_work = values - self.x_mean_
+            y_work = y_values - self.y_mean_
+        else:
+            self.x_mean_ = np.zeros(values.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            x_work = values
+            y_work = y_values
+
+        def objective(coef: np.ndarray) -> float:
+            residual = y_work - x_work @ coef
+            shrink = coef - self.prior_target_
+            return float(residual @ residual + self.alpha * (shrink @ shrink))
+
+        constraints = []
+        if self.simplex:
+            constraints.append({"type": "eq", "fun": lambda coef: float(np.sum(coef) - 1.0)})
+        bounds = [(0.0, None) if self.nonneg else (None, None)] * values.shape[1]
+        start = _constrained_start(
+            self.prior_target_,
+            simplex=self.simplex,
+            nonneg=self.nonneg,
+        )
+        result = minimize(
+            objective,
+            start,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+            options={"maxiter": self.max_iter, "ftol": self.tol},
+        )
+        if not result.success:
+            raise RuntimeError(f"shrink_to_target_ridge solver failed: {result.message}")
+        self.coef_ = np.asarray(result.x, dtype=float)
+        self.intercept_ = (
+            self.y_mean_ - float(self.x_mean_ @ self.coef_)
+            if self.fit_intercept and not self.simplex
+            else 0.0
+        )
+        self.solver_success_ = bool(result.success)
+        self.solver_message_ = str(result.message)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.coef_ is None or self.feature_names_in_ is None:
+            return np.zeros(len(X), dtype=float)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(float)
+        return _filled_float_values(frame) @ self.coef_ + self.intercept_
+
+
+def shrink_to_target_ridge(
+    X: Any,
+    y: Any | None = None,
+    *,
+    alpha: float = 1.0,
+    prior_target: float | Sequence[float] | dict[str, float] | None = None,
+    simplex: bool = False,
+    nonneg: bool = False,
+    fit_intercept: bool = True,
+    max_iter: int = 1000,
+    tol: float = 1e-9,
+) -> ModelFit:
+    """Fit ridge regression with a coefficient prior target."""
+
+    params = {
+        "alpha": float(alpha),
+        "prior_target": prior_target,
+        "simplex": bool(simplex),
+        "nonneg": bool(nonneg),
+        "fit_intercept": bool(fit_intercept),
+        "max_iter": int(max_iter),
+        "tol": float(tol),
+    }
+    return fit_estimator(
+        _ShrinkToTargetRidge(
+            alpha=float(alpha),
+            prior_target=prior_target,
+            simplex=bool(simplex),
+            nonneg=bool(nonneg),
+            fit_intercept=bool(fit_intercept),
+            max_iter=int(max_iter),
+            tol=float(tol),
+        ),
+        X,
+        y,
+        model="shrink_to_target_ridge",
+        metadata=params,
+    )
+
+
+class _FusedDifferenceRidge:
+    """Ridge regression with a smoothness penalty on adjacent coefficients."""
+
+    def __init__(
+        self,
+        *,
+        alpha: float = 1.0,
+        difference_order: int = 1,
+        mean_equality: bool = False,
+        nonneg: bool = False,
+        fit_intercept: bool = True,
+        max_iter: int = 1000,
+        tol: float = 1e-9,
+    ) -> None:
+        if float(alpha) < 0.0:
+            raise ValueError("alpha must be non-negative")
+        if int(difference_order) < 1:
+            raise ValueError("difference_order must be at least 1")
+        self.alpha = float(alpha)
+        self.difference_order = int(difference_order)
+        self.mean_equality = bool(mean_equality)
+        self.nonneg = bool(nonneg)
+        self.fit_intercept = bool(fit_intercept)
+        self.max_iter = int(max_iter)
+        self.tol = float(tol)
+        self.feature_names_in_: np.ndarray | None = None
+        self.difference_matrix_: np.ndarray | None = None
+        self.x_mean_: np.ndarray | None = None
+        self.y_mean_: float = 0.0
+        self.coef_: np.ndarray | None = None
+        self.intercept_: float = 0.0
+        self.solver_success_: bool = False
+        self.solver_message_: str = ""
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FusedDifferenceRidge":
+        from scipy.optimize import minimize
+
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        self.feature_names_in_ = np.asarray(frame.columns, dtype=object)
+        values = _filled_float_values(frame)
+        y_values = target.to_numpy(dtype=float)
+        self.difference_matrix_ = _difference_matrix(values.shape[1], self.difference_order)
+        if self.mean_equality:
+            self.x_mean_ = np.zeros(values.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            x_work = values
+            y_work = y_values
+        elif self.fit_intercept:
+            self.x_mean_ = values.mean(axis=0)
+            self.y_mean_ = float(y_values.mean()) if y_values.size else 0.0
+            x_work = values - self.x_mean_
+            y_work = y_values - self.y_mean_
+        else:
+            self.x_mean_ = np.zeros(values.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            x_work = values
+            y_work = y_values
+
+        def objective(coef: np.ndarray) -> float:
+            residual = y_work - x_work @ coef
+            smooth = self.difference_matrix_ @ coef
+            return float(residual @ residual + self.alpha * (smooth @ smooth))
+
+        constraints = []
+        if self.mean_equality:
+            target_sum = float(np.sum(y_work))
+            constraints.append(
+                {"type": "eq", "fun": lambda coef: float(np.sum(x_work @ coef) - target_sum)}
+            )
+        bounds = [(0.0, None) if self.nonneg else (None, None)] * values.shape[1]
+        start = _ridge_start(x_work, y_work, alpha=max(self.alpha, 1e-12))
+        if self.nonneg:
+            start = np.maximum(start, 0.0)
+        result = minimize(
+            objective,
+            start,
+            method="SLSQP",
+            bounds=bounds,
+            constraints=constraints,
+            options={"maxiter": self.max_iter, "ftol": self.tol},
+        )
+        if not result.success:
+            raise RuntimeError(f"fused_difference_ridge solver failed: {result.message}")
+        self.coef_ = np.asarray(result.x, dtype=float)
+        self.intercept_ = (
+            self.y_mean_ - float(self.x_mean_ @ self.coef_)
+            if self.fit_intercept and not self.mean_equality
+            else 0.0
+        )
+        self.solver_success_ = bool(result.success)
+        self.solver_message_ = str(result.message)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.coef_ is None or self.feature_names_in_ is None:
+            return np.zeros(len(X), dtype=float)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(float)
+        return _filled_float_values(frame) @ self.coef_ + self.intercept_
+
+
+def fused_difference_ridge(
+    X: Any,
+    y: Any | None = None,
+    *,
+    alpha: float = 1.0,
+    difference_order: int = 1,
+    mean_equality: bool = False,
+    nonneg: bool = False,
+    fit_intercept: bool = True,
+    max_iter: int = 1000,
+    tol: float = 1e-9,
+) -> ModelFit:
+    """Fit ridge regression with adjacent-coefficient smoothness."""
+
+    params = {
+        "alpha": float(alpha),
+        "difference_order": int(difference_order),
+        "mean_equality": bool(mean_equality),
+        "nonneg": bool(nonneg),
+        "fit_intercept": bool(fit_intercept),
+        "max_iter": int(max_iter),
+        "tol": float(tol),
+    }
+    return fit_estimator(
+        _FusedDifferenceRidge(
+            alpha=float(alpha),
+            difference_order=int(difference_order),
+            mean_equality=bool(mean_equality),
+            nonneg=bool(nonneg),
+            fit_intercept=bool(fit_intercept),
+            max_iter=int(max_iter),
+            tol=float(tol),
+        ),
+        X,
+        y,
+        model="fused_difference_ridge",
+        metadata=params,
+    )
+
+
+class _RandomWalkRidge:
+    """Time-varying ridge where adjacent coefficient vectors follow a random walk."""
+
+    def __init__(
+        self,
+        *,
+        alpha: float = 1.0,
+        initial_alpha: float = 1.0,
+        fit_intercept: bool = True,
+    ) -> None:
+        if float(alpha) < 0.0:
+            raise ValueError("alpha must be non-negative")
+        if float(initial_alpha) < 0.0:
+            raise ValueError("initial_alpha must be non-negative")
+        self.alpha = float(alpha)
+        self.initial_alpha = float(initial_alpha)
+        self.fit_intercept = bool(fit_intercept)
+        self.feature_names_in_: np.ndarray | None = None
+        self.x_mean_: np.ndarray | None = None
+        self.y_mean_: float = 0.0
+        self.coef_: np.ndarray | None = None
+        self.coef_path_: pd.DataFrame | None = None
+        self.intercept_: float = 0.0
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_RandomWalkRidge":
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        self.feature_names_in_ = np.asarray(frame.columns, dtype=object)
+        values = _filled_float_values(frame)
+        y_values = target.to_numpy(dtype=float)
+        if self.fit_intercept:
+            self.x_mean_ = values.mean(axis=0)
+            self.y_mean_ = float(y_values.mean()) if y_values.size else 0.0
+            x_work = values - self.x_mean_
+            y_work = y_values - self.y_mean_
+        else:
+            self.x_mean_ = np.zeros(values.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            x_work = values
+            y_work = y_values
+        n_obs, n_features = x_work.shape
+        design = np.zeros((n_obs, n_obs * n_features), dtype=float)
+        for row in range(n_obs):
+            start = row * n_features
+            design[row, start : start + n_features] = x_work[row]
+        penalty_rows: list[np.ndarray] = []
+        penalty_targets: list[np.ndarray] = []
+        if self.initial_alpha > 0.0:
+            block = np.zeros((n_features, n_obs * n_features), dtype=float)
+            block[:, :n_features] = np.sqrt(self.initial_alpha) * np.eye(n_features)
+            penalty_rows.append(block)
+            penalty_targets.append(np.zeros(n_features, dtype=float))
+        if self.alpha > 0.0 and n_obs > 1:
+            scale = np.sqrt(self.alpha)
+            block = np.zeros(((n_obs - 1) * n_features, n_obs * n_features), dtype=float)
+            cursor = 0
+            for row in range(1, n_obs):
+                previous = (row - 1) * n_features
+                current = row * n_features
+                block[cursor : cursor + n_features, previous : previous + n_features] = (
+                    -scale * np.eye(n_features)
+                )
+                block[cursor : cursor + n_features, current : current + n_features] = (
+                    scale * np.eye(n_features)
+                )
+                cursor += n_features
+            penalty_rows.append(block)
+            penalty_targets.append(np.zeros((n_obs - 1) * n_features, dtype=float))
+        if penalty_rows:
+            design = np.vstack([design, *penalty_rows])
+            y_aug = np.concatenate([y_work, *penalty_targets])
+        else:
+            y_aug = y_work
+        coef_vector = np.linalg.lstsq(design, y_aug, rcond=None)[0]
+        coef_path = coef_vector.reshape(n_obs, n_features)
+        self.coef_path_ = pd.DataFrame(
+            coef_path,
+            index=frame.index,
+            columns=[str(column) for column in frame.columns],
+        )
+        self.coef_ = coef_path[-1].copy()
+        self.intercept_ = (
+            self.y_mean_ - float(self.x_mean_ @ self.coef_)
+            if self.fit_intercept
+            else 0.0
+        )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.coef_ is None or self.feature_names_in_ is None:
+            return np.zeros(len(X), dtype=float)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(float)
+        return _filled_float_values(frame) @ self.coef_ + self.intercept_
+
+
+def random_walk_ridge(
+    X: Any,
+    y: Any | None = None,
+    *,
+    alpha: float = 1.0,
+    initial_alpha: float = 1.0,
+    fit_intercept: bool = True,
+) -> ModelFit:
+    """Fit a random-walk coefficient ridge model and predict with the final coefficient."""
+
+    params = {
+        "alpha": float(alpha),
+        "initial_alpha": float(initial_alpha),
+        "fit_intercept": bool(fit_intercept),
+    }
+    return fit_estimator(
+        _RandomWalkRidge(
+            alpha=float(alpha),
+            initial_alpha=float(initial_alpha),
+            fit_intercept=bool(fit_intercept),
+        ),
+        X,
+        y,
+        model="random_walk_ridge",
+        metadata=params,
+    )
+
+
 def lasso(
     X: Any,
     y: Any | None = None,
@@ -450,6 +931,68 @@ def bayesian_ridge(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
     return fit_estimator(BayesianRidge(**kwargs), X, y, model="bayesian_ridge", metadata=dict(kwargs))
 
 
+def kernel_ridge(
+    X: Any,
+    y: Any | None = None,
+    *,
+    alpha: float = 1.0,
+    kernel: str = "linear",
+    gamma: float | None = None,
+    degree: int = 3,
+    coef0: float = 1.0,
+    **kwargs: Any,
+) -> ModelFit:
+    """Fit kernel ridge regression."""
+
+    from sklearn.kernel_ridge import KernelRidge
+
+    params = {
+        "alpha": float(alpha),
+        "kernel": str(kernel),
+        "gamma": gamma,
+        "degree": int(degree),
+        "coef0": float(coef0),
+        **kwargs,
+    }
+    return fit_estimator(
+        KernelRidge(**params),
+        X,
+        y,
+        model="kernel_ridge",
+        metadata=params,
+    )
+
+
+def knn(
+    X: Any,
+    y: Any | None = None,
+    *,
+    n_neighbors: int = 5,
+    weights: str = "uniform",
+    metric: str = "minkowski",
+    p: int = 2,
+    **kwargs: Any,
+) -> ModelFit:
+    """Fit k-nearest-neighbor regression."""
+
+    from sklearn.neighbors import KNeighborsRegressor
+
+    params = {
+        "n_neighbors": int(n_neighbors),
+        "weights": str(weights),
+        "metric": str(metric),
+        "p": int(p),
+        **kwargs,
+    }
+    return fit_estimator(
+        KNeighborsRegressor(**params),
+        X,
+        y,
+        model="knn",
+        metadata=params,
+    )
+
+
 def huber(
     X: Any,
     y: Any | None = None,
@@ -833,6 +1376,72 @@ class SupervisedScaledPCARegressor(SupervisedPCARegressor):
 
 def _safe_series_scale(scale: pd.Series) -> pd.Series:
     return scale.where(np.isfinite(scale) & (scale > 1e-12), 1.0)
+
+
+def _filled_float_values(frame: pd.DataFrame) -> np.ndarray:
+    return frame.fillna(frame.mean(axis=0)).fillna(0.0).to_numpy(dtype=float)
+
+
+def _resolve_prior_target(
+    prior_target: float | Sequence[float] | dict[str, float] | None,
+    *,
+    columns: pd.Index,
+    n_features: int,
+    default: str,
+) -> np.ndarray:
+    if prior_target is None:
+        if default == "uniform":
+            return np.full(n_features, 1.0 / max(n_features, 1), dtype=float)
+        return np.zeros(n_features, dtype=float)
+    if isinstance(prior_target, dict):
+        return np.asarray([float(prior_target.get(str(column), 0.0)) for column in columns], dtype=float)
+    if np.isscalar(prior_target):
+        return np.full(n_features, float(prior_target), dtype=float)
+    out = np.asarray(tuple(prior_target), dtype=float).reshape(-1)
+    if len(out) != n_features:
+        raise ValueError("prior_target must be scalar, mapping by column, or one value per X column")
+    return out
+
+
+def _constrained_start(values: np.ndarray, *, simplex: bool, nonneg: bool) -> np.ndarray:
+    start = np.asarray(values, dtype=float).copy()
+    if nonneg:
+        start = np.maximum(start, 0.0)
+    if simplex:
+        total = float(np.sum(start))
+        if not np.isfinite(total) or abs(total) <= 1e-12:
+            start = np.full(len(start), 1.0 / max(len(start), 1), dtype=float)
+        else:
+            start = start / total
+        if nonneg and np.any(start < 0.0):
+            start = np.maximum(start, 0.0)
+            total = float(np.sum(start))
+            start = (
+                start / total
+                if total > 1e-12
+                else np.full(len(start), 1.0 / max(len(start), 1), dtype=float)
+            )
+    start[~np.isfinite(start)] = 0.0
+    return start
+
+
+def _ridge_start(X: np.ndarray, y: np.ndarray, *, alpha: float) -> np.ndarray:
+    n_features = X.shape[1]
+    lhs = X.T @ X + float(alpha) * np.eye(n_features, dtype=float)
+    rhs = X.T @ y
+    try:
+        return np.linalg.solve(lhs, rhs)
+    except np.linalg.LinAlgError:
+        return np.linalg.pinv(lhs) @ rhs
+
+
+def _difference_matrix(n_features: int, order: int) -> np.ndarray:
+    if n_features <= int(order):
+        return np.zeros((0, n_features), dtype=float)
+    matrix = np.eye(n_features, dtype=float)
+    for _ in range(int(order)):
+        matrix = np.diff(matrix, axis=0)
+    return matrix
 
 
 def _safe_array_scale(scale: np.ndarray) -> np.ndarray:
@@ -1221,14 +1830,20 @@ __all__ = [
     "adaptive_lasso",
     "bayesian_ridge",
     "elastic_net",
+    "fused_difference_ridge",
     "glmboost",
     "group_lasso",
     "huber",
+    "kernel_ridge",
+    "knn",
     "lasso",
+    "nonneg_ridge",
     "ols",
     "pls",
+    "random_walk_ridge",
     "ridge",
     "scaled_pca",
+    "shrink_to_target_ridge",
     "sparse_group_lasso",
     "supervised_pca",
     "supervised_scaled_pca",

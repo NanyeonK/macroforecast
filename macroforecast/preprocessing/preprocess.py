@@ -27,8 +27,11 @@ from macroforecast.preprocessing.clean import (
 from macroforecast.data import (
     DataBundle,
     DataSpec,
+    align_frequency,
     as_panel,
     attach_metadata,
+    frequency_hardening_issues,
+    infer_frequencies,
     panel_info,
     validate_panel,
 )
@@ -425,8 +428,8 @@ def plan(
             transform_error = f"transform={transform_method!r} has no t-code map"
         elif transform_method in {"official", "custom"} and codes and not applied_codes:
             transform_error = f"transform={transform_method!r} has no t-code keys matching panel columns"
-    frequency_map, frequency_source = _column_frequency_map(base.panel)
-    frequency_issues = _frequency_hardening_issues(frequency_map)
+    frequency_map, frequency_source = infer_frequencies(base.panel)
+    frequency_issues = frequency_hardening_issues(frequency_map)
     ddof_value = _normalize_standardize_ddof(standardize_ddof)
     return {
         "input_panel": panel_info(DataBundle(base.panel, base.metadata)),
@@ -481,54 +484,6 @@ def report(processed: PreprocessedData) -> dict[str, Any]:
         "transform_state": stage.get("transform_state", {}),
         "standardization_state": stage.get("standardization_state", {}),
     }
-
-
-def handle_mixed_frequency(
-    panel: pd.DataFrame,
-    *,
-    method: str = "keep",
-    quarterly_to_monthly: str = "step_backward",
-    weekly_to_monthly: str = "mean",
-    monthly_to_quarterly: str = "quarterly_average",
-    weekly_to_quarterly: str = "mean",
-) -> pd.DataFrame:
-    """Keep, filter, or align a mixed-frequency panel."""
-
-    validate_panel(panel)
-    method = _normalize_frequency(method)
-    if method == "keep":
-        return panel.copy()
-
-    frequencies, _frequency_source = _column_frequency_map(panel)
-    _warn_frequency_hardening_issues(frequencies)
-    if method in {"drop_non_monthly", "drop_non_quarterly"}:
-        target_frequency = "monthly" if method == "drop_non_monthly" else "quarterly"
-        columns = [column for column, frequency in frequencies.items() if frequency == target_frequency]
-        if not columns:
-            raise ValueError(f"frequency={method!r} leaves no columns")
-        result = panel[columns].copy()
-        result.attrs.update(dict(getattr(panel, "attrs", {}) or {}))
-        return result
-
-    if method == "monthly":
-        result = _align_to_monthly(
-            panel,
-            frequencies=frequencies,
-            quarterly_to_monthly=quarterly_to_monthly,
-            weekly_to_monthly=weekly_to_monthly,
-        )
-    elif method == "quarterly":
-        result = _align_to_quarterly(
-            panel,
-            frequencies=frequencies,
-            monthly_to_quarterly=monthly_to_quarterly,
-            weekly_to_quarterly=weekly_to_quarterly,
-        )
-    else:  # pragma: no cover - guarded by _normalize_frequency
-        raise ValueError(f"unknown frequency method {method!r}")
-
-    result.attrs.update(dict(getattr(panel, "attrs", {}) or {}))
-    return result
 
 
 def handle_tcode_lag(
@@ -699,15 +654,15 @@ def _apply_frequency_step(
     steps: list[dict[str, Any]],
 ) -> pd.DataFrame:
     before_shape = tuple(int(value) for value in panel.shape)
-    _frequencies, frequency_source = _column_frequency_map(panel)
-    result = handle_mixed_frequency(
-        panel,
+    _frequencies, frequency_source = infer_frequencies(panel)
+    result = align_frequency(
+        DataBundle(panel, dict(panel.attrs.get("macroforecast_metadata", {}))),
         method=method,
         quarterly_to_monthly=quarterly_to_monthly,
         weekly_to_monthly=weekly_to_monthly,
         monthly_to_quarterly=monthly_to_quarterly,
         weekly_to_quarterly=weekly_to_quarterly,
-    )
+    ).panel
     steps.append(
         {
             "step": "frequency",
@@ -1030,200 +985,6 @@ def _build_transform_state(panel: pd.DataFrame, codes: Mapping[str, int]) -> dic
     return state
 
 
-def _column_frequency_map(panel: pd.DataFrame) -> tuple[dict[str, str], str]:
-    metadata_map = _frequency_map_from_metadata(panel)
-    if metadata_map:
-        return (
-            {
-                str(column): metadata_map.get(str(column), _infer_column_frequency(panel[column]))
-                for column in panel.columns
-            },
-            "fred_sd_series_metadata",
-        )
-    return ({str(column): _infer_column_frequency(panel[column]) for column in panel.columns}, "observed_dates")
-
-
-def _frequency_hardening_issues(frequencies: Mapping[str, str]) -> list[dict[str, Any]]:
-    issues: list[dict[str, Any]] = []
-    for frequency in ("unknown", "irregular", "annual"):
-        columns = sorted(column for column, value in frequencies.items() if value == frequency)
-        if columns:
-            issues.append({"frequency": frequency, "columns": columns, "n_columns": len(columns)})
-    return issues
-
-
-def _warn_frequency_hardening_issues(frequencies: Mapping[str, str]) -> None:
-    issues = _frequency_hardening_issues(frequencies)
-    for issue in issues:
-        if issue["frequency"] == "irregular":
-            continue
-        sample = ", ".join(issue["columns"][:5])
-        if issue["n_columns"] > 5:
-            sample = f"{sample}, ..."
-        warnings.warn(
-            "frequency inference found "
-            f"{issue['frequency']} columns before alignment: {sample}. "
-            "Use data metadata when the source frequency is known.",
-            UserWarning,
-            stacklevel=3,
-        )
-
-
-def _frequency_map_from_metadata(panel: pd.DataFrame) -> dict[str, str]:
-    reports = getattr(panel, "attrs", {}).get("macrocast_reports", {})
-    if not isinstance(reports, Mapping):
-        return {}
-    report = reports.get("fred_sd_series_metadata", {})
-    if not isinstance(report, Mapping):
-        return {}
-    rows = report.get("series", ())
-    if not isinstance(rows, (list, tuple)):
-        return {}
-    frequencies: dict[str, str] = {}
-    for row in rows:
-        if not isinstance(row, Mapping):
-            continue
-        column = row.get("column")
-        frequency = row.get("native_frequency")
-        if column is not None and frequency:
-            frequencies[str(column)] = str(frequency)
-    return frequencies
-
-
-def _infer_column_frequency(series: pd.Series) -> str:
-    observed = series.dropna()
-    if observed.shape[0] < 2:
-        return "unknown"
-    index = pd.DatetimeIndex(observed.index).sort_values()
-    day_deltas = [(right - left).days for left, right in zip(index[:-1], index[1:]) if right > left]
-    if not day_deltas:
-        return "unknown"
-    median_days = float(pd.Series(day_deltas).median())
-    if 5 <= median_days <= 10:
-        return "weekly"
-    if 25 <= median_days <= 35:
-        return "monthly"
-    if 80 <= median_days <= 100:
-        return "quarterly"
-    if 350 <= median_days <= 380:
-        return "annual"
-    return "irregular"
-
-
-def _monthly_index(panel: pd.DataFrame) -> pd.DatetimeIndex:
-    start = pd.DatetimeIndex(panel.index).min().to_period("M").to_timestamp()
-    end = pd.DatetimeIndex(panel.index).max().to_period("M").to_timestamp()
-    return pd.date_range(start, end, freq="MS", name="date")
-
-
-def _quarterly_index(panel: pd.DataFrame) -> pd.DatetimeIndex:
-    start = pd.DatetimeIndex(panel.index).min().to_period("Q").start_time
-    end = pd.DatetimeIndex(panel.index).max().to_period("Q").start_time
-    return pd.date_range(start, end, freq="QS", name="date")
-
-
-def _align_to_monthly(
-    panel: pd.DataFrame,
-    *,
-    frequencies: Mapping[str, str],
-    quarterly_to_monthly: str,
-    weekly_to_monthly: str,
-) -> pd.DataFrame:
-    index = _monthly_index(panel)
-    columns: dict[str, pd.Series] = {}
-    for column in panel.columns:
-        name = str(column)
-        series = panel[column].dropna()
-        frequency = frequencies.get(name, "unknown")
-        if frequency == "weekly":
-            aligned = _aggregate_to_monthly(series, weekly_to_monthly)
-        elif frequency == "quarterly":
-            aligned = _quarterly_to_monthly(series, quarterly_to_monthly, index=index)
-        else:
-            aligned = series.resample("MS").last()
-        columns[name] = aligned.reindex(index)
-    return pd.DataFrame(columns, index=index)
-
-
-def _align_to_quarterly(
-    panel: pd.DataFrame,
-    *,
-    frequencies: Mapping[str, str],
-    monthly_to_quarterly: str,
-    weekly_to_quarterly: str,
-) -> pd.DataFrame:
-    index = _quarterly_index(panel)
-    columns: dict[str, pd.Series] = {}
-    for column in panel.columns:
-        name = str(column)
-        series = panel[column].dropna()
-        frequency = frequencies.get(name, "unknown")
-        if frequency == "weekly":
-            aligned = _aggregate_to_quarterly(series, weekly_to_quarterly)
-        elif frequency == "monthly":
-            aligned = _aggregate_to_quarterly(series, monthly_to_quarterly)
-        else:
-            aligned = series.resample("QS").last()
-        columns[name] = aligned.reindex(index)
-    return pd.DataFrame(columns, index=index)
-
-
-def _quarterly_to_monthly(series: pd.Series, rule: str, *, index: pd.DatetimeIndex) -> pd.Series:
-    key = rule.lower()
-    quarterly = series.copy()
-    quarterly.index = pd.DatetimeIndex(quarterly.index).to_period("Q").to_timestamp()
-    quarterly = quarterly.groupby(level=0).last().sort_index()
-    if key in {"step_backward", "repeat_within_quarter", "repeat", "spread"}:
-        by_quarter = dict(zip(pd.DatetimeIndex(quarterly.index).to_period("Q"), quarterly.to_numpy(), strict=False))
-        values = [by_quarter.get(period) for period in pd.DatetimeIndex(index).to_period("Q")]
-        return pd.Series(values, index=index, dtype="float64")
-    if key in {"step_forward", "quarter_end_ffill", "ffill_from_quarter_end"}:
-        observed = quarterly.copy()
-        observed.index = pd.DatetimeIndex(observed.index).to_period("Q").asfreq("M", how="end").to_timestamp()
-        return observed.reindex(index).ffill()
-    if key in {"linear_interpolation", "linear"}:
-        observed = quarterly.copy()
-        observed.index = pd.DatetimeIndex(observed.index).to_period("Q").asfreq("M", how="end").to_timestamp()
-        return observed.reindex(index.union(observed.index)).sort_index().interpolate(method="time").reindex(index)
-    raise ValueError(
-        "quarterly_to_monthly must be one of "
-        "['step_backward', 'repeat_within_quarter', 'step_forward', 'quarter_end_ffill', 'linear_interpolation']"
-    )
-
-
-def _aggregate_to_monthly(series: pd.Series, rule: str) -> pd.Series:
-    return _aggregate_resample(series, rule, frequency="MS", aliases={"last": "last", "endpoint": "last", "mean": "mean", "average": "mean", "sum": "sum"})
-
-
-def _aggregate_to_quarterly(series: pd.Series, rule: str) -> pd.Series:
-    aliases = {
-        "quarterly_average": "mean",
-        "average": "mean",
-        "mean": "mean",
-        "quarterly_endpoint": "last",
-        "endpoint": "last",
-        "last": "last",
-        "quarterly_sum": "sum",
-        "sum": "sum",
-    }
-    return _aggregate_resample(series, rule, frequency="QS", aliases=aliases)
-
-
-def _aggregate_resample(series: pd.Series, rule: str, *, frequency: str, aliases: Mapping[str, str]) -> pd.Series:
-    key = rule.lower()
-    if key not in aliases:
-        raise ValueError(f"aggregation rule must be one of {sorted(aliases)}; got {rule!r}")
-    method = aliases[key]
-    if method == "mean":
-        return series.resample(frequency).mean()
-    if method == "last":
-        return series.resample(frequency).last()
-    if method == "sum":
-        return series.resample(frequency).sum(min_count=1)
-    raise ValueError(f"unknown aggregation method {method!r}")
-
-
-
 __all__ = [
     "PreprocessedData",
     "PreprocessInput",
@@ -1233,7 +994,6 @@ __all__ = [
     "apply_transform_codes",
     "standardize_panel",
     "fred_sd_transform_codes",
-    "handle_mixed_frequency",
     "handle_tcode_lag",
     "handle_outliers",
     "impute_missing",

@@ -8,7 +8,9 @@ package. The current public surface is intentionally small:
 - `macroforecast.preprocessing`: direct pandas preprocessing callables.
 - `macroforecast.data_summary`: one-panel summary tables.
 - `macroforecast.data_analysis`: before/after preprocessing analysis.
-- `macroforecast.evaluation`: reserved for the next callable evaluation pass.
+- `macroforecast.metrics`: scoring metrics and forecast-table ranking.
+- `macroforecast.tests`: forecast-comparison tests and diagnostics.
+- `macroforecast.evaluation`: namespace wrapper for `metrics` and `tests`.
 
 The old YAML/runtime implementation is no longer part of the clean importable
 package. A reference copy is preserved on the `legacy-runtime-reference` branch.
