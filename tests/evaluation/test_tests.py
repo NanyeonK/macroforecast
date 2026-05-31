@@ -27,6 +27,38 @@ def test_equal_predictive_accuracy_callables_return_test_results() -> None:
     assert dm_payload["metadata_schema"]["version"] == 1
 
 
+def custom_statistic(loss_a, loss_b, *, scale=1.0):
+    diff = pd.Series(loss_a).sub(pd.Series(loss_b)).dropna()
+    return {
+        "statistic": float(diff.mean() * scale),
+        "p_value": 0.04,
+        "n_obs": int(len(diff)),
+        "metadata": {"mean_difference": float(diff.mean())},
+    }
+
+
+def test_custom_test_wraps_user_callable_as_test_result() -> None:
+    loss_a = pd.Series([0.2, 0.3, 0.1, 0.4])
+    loss_b = pd.Series([0.4, 0.5, 0.2, 0.5])
+
+    result = mf.tests.custom_test(
+        "scaled_loss_difference",
+        custom_statistic,
+        loss_a,
+        loss_b,
+        scale=2.0,
+        alpha=0.05,
+    )
+
+    assert isinstance(result, mf.tests.TestResult)
+    assert result.decision is True
+    assert result.n_obs == 4
+    assert result.metadata["name"] == "scaled_loss_difference"
+    assert result.metadata["callable"].endswith("custom_statistic")
+    assert result.metadata["params"] == {"scale": 2.0}
+    assert result.to_dict()["metadata"]["custom"] is True
+
+
 def test_nested_and_encompassing_callables_return_one_sided_results() -> None:
     loss_small = pd.Series([0.5, 0.6, 0.4, 0.7, 0.5, 0.6])
     loss_large = pd.Series([0.3, 0.4, 0.2, 0.5, 0.4, 0.3])

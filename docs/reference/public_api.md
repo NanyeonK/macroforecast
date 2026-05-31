@@ -38,7 +38,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold` | `macroforecast.window` | Shortcut temporal window specs. |
 | `stage_policy`, `custom_stage_policy`, `stage_index`, `stage_panel`, `last_block_split`, `poos_split`, `expanding_split`, `rolling_blocks_split`, `blocked_kfold_split`, `split_table`, `normalize_window_name` | `macroforecast.window` | Stage timing and train/val split inspection. |
 | `metrics` | `macroforecast.metrics` | Forecast scoring namespace. Use `mf.metrics.rmse`, not `mf.rmse`. |
-| `tests` | `macroforecast.tests` | Forecast-comparison test namespace. Use `mf.tests.dm_test`, not `mf.dm_test`. |
+| `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`. Use `mf.tests.dm_test`, not `mf.dm_test`. |
 | `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, benchmark comparisons, and regime scoring. |
 | `evaluation` | `macroforecast.evaluation` | Evaluation namespace exposing report functions plus `metrics` and `tests`; raw metric/test functions are not re-exported directly from it. |
 | `SearchSpec`, `SearchResult`, `SearchError`, `search_spec`, `select_params` | `macroforecast.selection` | Parameter selection over a supplied window and metric. |

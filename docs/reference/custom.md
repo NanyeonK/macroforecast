@@ -20,6 +20,9 @@ The package still enforces the same contracts around each custom hook:
 | Window | `mf.window.custom_stage_policy(...)` | Selector callable for origin-specific sample labels. | `StagePolicy(scope="custom")`. |
 | Selection | `mf.selection.custom_search(...)` | User search callable over model, data, splits, metric, and candidate evaluation helper. | `SearchSpec(method="custom")`. |
 | Forecasting | `mf.forecasting.custom_combination(...)` | Callable over base forecast matrix. | `CombinationSpec`. |
+| Metrics | metric callable | Custom `(y_true, y_pred) -> float` scorer. | Metric column in score tables. |
+| Tests | `mf.tests.custom_test(...)` | User forecast-test callable. | `TestResult`. |
+| Evaluation | callable metrics and custom groupings | User metric functions and grouping tuples. | `EvaluationReport` tables. |
 
 ## Data
 
@@ -336,6 +339,50 @@ func(forecasts: pandas.DataFrame, *, actual: pandas.Series, **params)
 `(date, origin, origin_pos, horizon)`. The output must be a `Series` or
 one-dimensional array-like object aligned to those rows.
 
+## Metrics, Tests, And Evaluation
+
+Custom point metrics are plain callables:
+
+```python
+def mean_bias(y_true, y_pred):
+    return float(pd.Series(y_pred).sub(pd.Series(y_true)).mean())
+
+scores = mf.metrics.evaluate_forecasts(
+    forecast_table,
+    metrics=("mse", mean_bias),
+)
+```
+
+The callable must return one scalar `float`. Its output column uses the
+callable name.
+
+Custom statistical tests use `mf.tests.custom_test(...)`:
+
+```python
+def my_loss_test(loss_a, loss_b):
+    diff = pd.Series(loss_a).sub(pd.Series(loss_b)).dropna()
+    return {
+        "statistic": float(diff.mean()),
+        "p_value": 0.04,
+        "n_obs": len(diff),
+    }
+
+test = mf.tests.custom_test("my_loss_test", my_loss_test, loss_a, loss_b)
+```
+
+For multi-slice evaluation, pass custom metrics and custom grouping maps:
+
+```python
+report = mf.evaluation.evaluate_report(
+    forecast_result,
+    metrics=("mse", mean_bias),
+    aggregations={
+        "model_target": ("model", "target"),
+        "model_regime": ("model", "regime"),
+    },
+)
+```
+
 ## Metadata Rules
 
 Custom callables are stored by name, not serialized as code. Metadata records
@@ -354,3 +401,6 @@ Custom extensions should remain stage-local:
 | New sample policy | `custom_stage_policy()`. |
 | New hyperparameter-search algorithm | `custom_search()`. |
 | New forecast averaging or ensemble rule | `custom_combination()`. |
+| New scalar forecast metric | Pass a callable to `metrics=...`. |
+| New forecast-comparison test | `mf.tests.custom_test()`. |
+| New evaluation slice | Pass a grouping map to `evaluate_report(..., aggregations=...)`. |

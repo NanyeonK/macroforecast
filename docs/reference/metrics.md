@@ -90,6 +90,26 @@ Input: a metric name or callable.
 Output: the resolved callable. Name aliases include `msfe -> mse`,
 `validation_mse -> mse`, and `validation_rmse -> rmse`.
 
+Custom metrics do not need registration. Pass a callable directly anywhere a
+metric is accepted:
+
+```python
+def mean_bias(y_true, y_pred):
+    return float(pd.Series(y_pred).sub(pd.Series(y_true)).mean())
+
+scores = mf.metrics.evaluate_forecasts(
+    forecasts,
+    metrics=("mse", mean_bias),
+)
+```
+
+The metric callable should accept `(y_true, y_pred)` and return one scalar
+`float`. In evaluation tables, the output column name is the callable's
+`__name__`, or `"callable_metric"` when no name is available. Metrics requiring
+benchmark forecasts, variances, intervals, or previous actuals need one of the
+specialized built-in metric names because `evaluate_forecasts()` must know
+which forecast-table columns to pass.
+
 ## Point Metrics
 
 All point metrics align inputs as pandas Series, drop missing paired
@@ -141,4 +161,3 @@ for pinball and interval metrics.
 | --- | --- | --- |
 | `success_ratio` | `success_ratio(y_true, y_pred, y_prev)` | Directional hit rate relative to the previous realized value. |
 | `pesaran_timmermann_metric` | `pesaran_timmermann_metric(y_true, y_pred, *, threshold=0.0)` | Pesaran-Timmermann directional accuracy statistic. |
-

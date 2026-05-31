@@ -49,6 +49,54 @@ Methods:
 | `to_json(path=None)` | JSON text and optional file write. |
 | `summary()` | Compact string summary. |
 
+## Custom Tests
+
+### custom_test
+
+```python
+macroforecast.tests.custom_test(
+    name,
+    func,
+    *args,
+    alternative="two_sided",
+    alpha=0.05,
+    correction_policy=None,
+    metadata=None,
+    **params,
+) -> TestResult
+```
+
+Runs a user-supplied forecast test and coerces the result to `TestResult`.
+
+The callable receives `*args` and `**params`. It may return:
+
+| Return type | Meaning |
+| --- | --- |
+| `TestResult` | Used directly, with custom metadata merged. |
+| mapping | Must contain `statistic` or `stat`, and may contain `p_value`/`pvalue`, `decision`, `alternative`, `correction_policy`, `n_obs`, and `metadata`. |
+| `(statistic, p_value)` | Decision is `p_value < alpha`. |
+| `(statistic, p_value, n_obs)` | Same as above plus sample size. |
+
+```python
+def sign_test_stat(loss_a, loss_b):
+    diff = pd.Series(loss_a).sub(pd.Series(loss_b)).dropna()
+    return {
+        "statistic": float((diff < 0).mean()),
+        "p_value": 0.04,
+        "n_obs": len(diff),
+    }
+
+result = mf.tests.custom_test(
+    "sign_loss_test",
+    sign_test_stat,
+    loss_a,
+    loss_b,
+)
+```
+
+`custom_test()` records the callable name, parameters, `alpha`, and
+`custom=True` in `result.metadata`.
+
 ## Equal Predictive Accuracy
 
 ### dm_test
@@ -276,4 +324,3 @@ Supported tests:
 | `arch_lm` | Conditional heteroskedasticity diagnostic. |
 | `jarque_bera_normality` | Normality diagnostic. |
 | `durbin_watson` | Durbin-Watson statistic; p-value is not supplied. |
-

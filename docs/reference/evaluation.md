@@ -78,6 +78,26 @@ macroforecast.evaluation.evaluate_report(
 | `time_frequency` | str or `None` | `None` | Pandas period frequency such as `"M"`, `"Q"`, `"A"` for time-bucket aggregation. |
 | `include_combined` | bool | `True` | Include forecast-combination rows. |
 
+Custom scoring belongs in the `metrics` argument:
+
+```python
+def mean_bias(y_true, y_pred):
+    return float(pd.Series(y_pred).sub(pd.Series(y_true)).mean())
+
+report = mf.evaluation.evaluate_report(
+    forecast_result,
+    metrics=("mse", "rmse", mean_bias),
+    aggregations={
+        "model_target": ("model", "target"),
+        "model_regime": ("model", "regime"),
+    },
+)
+```
+
+Custom aggregation slices belong in `aggregations`. The value is a grouping
+tuple over existing forecast-table columns; evaluation still uses
+`mf.metrics.evaluate_forecasts()` to compute the metric table.
+
 ### Output
 
 Returns `EvaluationReport`.

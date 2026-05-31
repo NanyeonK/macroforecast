@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import math
 import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -225,6 +225,51 @@ def hn_test(*args: Any, **kwargs: Any) -> TestResult:
     """Alias for :func:`harvey_newbold_test`."""
 
     return harvey_newbold_test(*args, **kwargs)
+
+
+def custom_test(
+    name: str,
+    func: Callable[..., Any],
+    *args: Any,
+    alternative: str = "two_sided",
+    alpha: float = 0.05,
+    correction_policy: str | None = None,
+    metadata: Mapping[str, Any] | None = None,
+    **params: Any,
+) -> TestResult:
+    """Run a user-supplied forecast test and coerce it to ``TestResult``."""
+
+    if not name:
+        raise ValueError("custom test name must be non-empty")
+    if not callable(func):
+        raise TypeError("custom test func must be callable")
+    _validate_alpha(alpha)
+    output = func(*args, **params)
+    result = _coerce_custom_test_output(
+        output,
+        name=str(name),
+        alternative=alternative,
+        alpha=alpha,
+        correction_policy=correction_policy,
+    )
+    merged_metadata = {
+        **dict(result.metadata),
+        **dict(metadata or {}),
+        "name": str(name),
+        "callable": _callable_name(func),
+        "params": _json_ready(params),
+        "alpha": float(alpha),
+        "custom": True,
+    }
+    return TestResult(
+        result.statistic,
+        result.p_value,
+        result.decision,
+        result.alternative,
+        result.correction_policy,
+        result.n_obs,
+        merged_metadata,
+    )
 
 
 def clark_west_test(
@@ -757,6 +802,55 @@ def _replace_metadata(result: TestResult, **metadata: Any) -> TestResult:
     )
 
 
+def _coerce_custom_test_output(
+    output: Any,
+    *,
+    name: str,
+    alternative: str,
+    alpha: float,
+    correction_policy: str | None,
+) -> TestResult:
+    if isinstance(output, TestResult):
+        return output
+    if isinstance(output, Mapping):
+        statistic = output.get("statistic", output.get("stat"))
+        p_value = output.get("p_value", output.get("pvalue"))
+        decision = output.get("decision")
+        if decision is None:
+            decision = p_value is not None and float(p_value) < alpha
+        return TestResult(
+            None if statistic is None else float(statistic),
+            None if p_value is None else float(p_value),
+            bool(decision),
+            str(output.get("alternative", alternative)),
+            output.get("correction_policy", correction_policy),
+            None if output.get("n_obs") is None else int(output["n_obs"]),
+            dict(output.get("metadata", {})),
+        )
+    if isinstance(output, tuple) and len(output) in {2, 3}:
+        statistic, p_value = output[:2]
+        n_obs = output[2] if len(output) == 3 else None
+        return TestResult(
+            None if statistic is None else float(statistic),
+            None if p_value is None else float(p_value),
+            p_value is not None and float(p_value) < alpha,
+            alternative,
+            correction_policy,
+            None if n_obs is None else int(n_obs),
+            {"name": name},
+        )
+    raise TypeError(
+        "custom test callable must return TestResult, a mapping, or "
+        "(statistic, p_value[, n_obs])"
+    )
+
+
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
+
+
 def _diebold_mariano_stat(
     diff: pd.Series,
     *,
@@ -1204,6 +1298,7 @@ __all__ = [
     "TestResult",
     "clark_west_test",
     "conditional_predictive_ability_test",
+    "custom_test",
     "cw_test",
     "density_interval_tests",
     "directional_accuracy_test",
