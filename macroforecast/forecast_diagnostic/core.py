@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
@@ -601,6 +601,51 @@ def diagnose_forecasts(
     )
 
 
+def custom_forecast_diagnostic(
+    forecasts: Any,
+    func: Callable[..., Any],
+    *,
+    name: str | None = None,
+    metadata: Mapping[str, Any] | None = None,
+    **params: Any,
+) -> pd.DataFrame:
+    """Run a user-supplied forecast diagnostic and attach macroforecast metadata."""
+
+    table, base_metadata = _coerce_forecast_input(forecasts)
+    _validate_forecast_table(table)
+    resolved_name = str(name or _callable_name(func) or "custom_forecast_diagnostic")
+    call_metadata = dict(base_metadata)
+    call_metadata.update(dict(metadata or {}))
+    result = func(table.copy(), metadata=call_metadata, **params)
+    output = _coerce_custom_table(result)
+    overview = forecast_overview(ForecastResult(table, metadata=base_metadata))
+    stage = {
+        "name": resolved_name,
+        "callable": _callable_name(func),
+        "params": dict(params),
+        "input": {
+            "n_forecasts": int(overview["n_forecasts"]),
+            "n_models": int(overview["n_models"]),
+            "horizons": list(overview["horizons"]),
+        },
+        "output": {
+            "rows": int(output.shape[0]),
+            "columns": [str(column) for column in output.columns],
+        },
+        "user_metadata": dict(metadata or {}),
+    }
+    updated_metadata = attach_metadata(base_metadata, "custom_forecast_diagnostic", stage)
+    output.attrs["macroforecast_metadata_schema"] = {
+        "kind": "custom_forecast_diagnostic",
+        "version": 1,
+        "method": resolved_name,
+        "columns": [str(column) for column in output.columns],
+        "metadata": stage,
+    }
+    _attach_metadata(output, updated_metadata)
+    return output
+
+
 def _coerce_forecast_input(value: Any) -> tuple[pd.DataFrame, dict[str, Any]]:
     if isinstance(value, ForecastResult):
         return value.to_frame(), dict(value.metadata)
@@ -849,6 +894,23 @@ def _attach_metadata(frame: pd.DataFrame | None, metadata: Mapping[str, Any]) ->
         frame.attrs["macroforecast_metadata"] = dict(metadata)
 
 
+def _coerce_custom_table(value: Any) -> pd.DataFrame:
+    if isinstance(value, pd.DataFrame):
+        return value.copy()
+    if isinstance(value, pd.Series):
+        name = "value" if value.name is None else str(value.name)
+        return value.rename(name).to_frame()
+    if isinstance(value, Mapping):
+        return pd.DataFrame([dict(value)])
+    if isinstance(value, (list, tuple)):
+        return pd.DataFrame(value)
+    raise TypeError("custom forecast diagnostic must return a DataFrame, Series, mapping, or sequence")
+
+
+def _callable_name(func: Any) -> str:
+    return str(getattr(func, "__name__", func.__class__.__name__))
+
+
 def _bool_series(value: Any, n: int) -> pd.Series:
     if isinstance(value, pd.Series):
         series = value
@@ -915,6 +977,7 @@ def _json_scalar(value: Any) -> Any:
 __all__ = [
     "ForecastDiagnosticReport",
     "coefficient_trace",
+    "custom_forecast_diagnostic",
     "diagnose_forecasts",
     "ensemble_weights_over_time",
     "fitted_vs_actual",

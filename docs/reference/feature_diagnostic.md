@@ -261,6 +261,54 @@ The result is indexed by `feature` and includes `selected_count`,
 `selection_rate`, `n_origins`, `first_selected_origin`, and
 `last_selected_origin`.
 
+### custom_feature_diagnostic
+
+```python
+macroforecast.feature_diagnostic.custom_feature_diagnostic(
+    data,
+    func,
+    *,
+    name=None,
+    feature_metadata=None,
+    metadata=None,
+    **params,
+) -> pandas.DataFrame
+```
+
+Runs one user diagnostic on a feature matrix or `FeatureSet`. This is for
+inspection only; it does not create new predictors.
+
+Callable signature:
+
+```python
+func(X, *, feature_metadata=None, metadata=None, **params)
+```
+
+Accepted callable outputs are `DataFrame`, `Series`, mapping, or a sequence
+convertible to a `DataFrame`. The returned table carries:
+
+| Attr | Meaning |
+| --- | --- |
+| `macroforecast_metadata_schema.kind` | Always `custom_feature_diagnostic`. |
+| `macroforecast_metadata_schema.method` | `name` or callable name. |
+| `macroforecast_metadata` | Input metadata plus a `custom_feature_diagnostic` stage. |
+
+Example:
+
+```python
+def block_missingness(X, *, feature_metadata=None, metadata=None, block="all"):
+    return pd.DataFrame(
+        [{"block": block, "missing_rate": float(X.isna().mean().mean())}]
+    )
+
+diag = mf.feature_diagnostic.custom_feature_diagnostic(
+    features,
+    block_missingness,
+    name="block_missingness",
+    block="rates",
+)
+```
+
 ## Boundary
 
 | Question | Use |

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 import re
 from typing import Any, Literal
@@ -504,6 +504,54 @@ def diagnose_features(
     )
 
 
+def custom_feature_diagnostic(
+    data: Any,
+    func: Callable[..., Any],
+    *,
+    name: str | None = None,
+    feature_metadata: pd.DataFrame | None = None,
+    metadata: Mapping[str, Any] | None = None,
+    **params: Any,
+) -> pd.DataFrame:
+    """Run a user-supplied feature diagnostic and attach macroforecast metadata."""
+
+    bundle = _coerce_feature_input(data, feature_metadata=feature_metadata)
+    resolved_name = str(name or _callable_name(func) or "custom_feature_diagnostic")
+    call_metadata = dict(bundle.metadata)
+    call_metadata.update(dict(metadata or {}))
+    result = func(
+        bundle.X.copy(),
+        feature_metadata=bundle.feature_metadata,
+        metadata=call_metadata,
+        **params,
+    )
+    table = _coerce_custom_table(result)
+    stage = {
+        "name": resolved_name,
+        "callable": _callable_name(func),
+        "params": dict(params),
+        "input": {
+            "n_observations": int(bundle.X.shape[0]),
+            "n_features": int(bundle.X.shape[1]),
+        },
+        "output": {
+            "rows": int(table.shape[0]),
+            "columns": [str(column) for column in table.columns],
+        },
+        "user_metadata": dict(metadata or {}),
+    }
+    updated_metadata = attach_metadata(bundle.metadata, "custom_feature_diagnostic", stage)
+    table.attrs["macroforecast_metadata_schema"] = {
+        "kind": "custom_feature_diagnostic",
+        "version": 1,
+        "method": resolved_name,
+        "columns": [str(column) for column in table.columns],
+        "metadata": stage,
+    }
+    _attach_metadata(table, updated_metadata)
+    return table
+
+
 @dataclass(frozen=True)
 class _FeatureBundle:
     X: pd.DataFrame
@@ -684,6 +732,23 @@ def _attach_metadata(frame: pd.DataFrame | None, metadata: Mapping[str, Any]) ->
         frame.attrs["macroforecast_metadata"] = dict(metadata)
 
 
+def _coerce_custom_table(value: Any) -> pd.DataFrame:
+    if isinstance(value, pd.DataFrame):
+        return value.copy()
+    if isinstance(value, pd.Series):
+        name = "value" if value.name is None else str(value.name)
+        return value.rename(name).to_frame()
+    if isinstance(value, Mapping):
+        return pd.DataFrame([dict(value)])
+    if isinstance(value, (list, tuple)):
+        return pd.DataFrame(value)
+    raise TypeError("custom feature diagnostic must return a DataFrame, Series, mapping, or sequence")
+
+
+def _callable_name(func: Any) -> str:
+    return str(getattr(func, "__name__", func.__class__.__name__))
+
+
 def _value_counts(series: pd.Series) -> dict[str, int]:
     values = series.dropna().map(str)
     return {str(key): int(value) for key, value in values.value_counts().sort_index().items()}
@@ -831,6 +896,7 @@ def _index_value(value: Any) -> Any:
 __all__ = [
     "FeatureDiagnosticReport",
     "compare_feature_stages",
+    "custom_feature_diagnostic",
     "diagnose_features",
     "factor_diagnostics",
     "feature_correlation",

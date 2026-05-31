@@ -3,6 +3,7 @@ from __future__ import annotations
 from .core import (
     FeatureDiagnosticReport,
     compare_feature_stages,
+    custom_feature_diagnostic,
     diagnose_features,
     factor_diagnostics,
     feature_correlation,
@@ -15,6 +16,7 @@ from .core import (
 __all__ = [
     "FeatureDiagnosticReport",
     "compare_feature_stages",
+    "custom_feature_diagnostic",
     "diagnose_features",
     "factor_diagnostics",
     "feature_correlation",

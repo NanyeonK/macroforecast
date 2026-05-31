@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .core import (
     accumulated_local_effect,
+    custom_interpretation,
     linear_coefficients,
     partial_dependence,
     permutation_importance,
@@ -11,6 +12,7 @@ from .core import (
 
 __all__ = [
     "accumulated_local_effect",
+    "custom_interpretation",
     "linear_coefficients",
     "partial_dependence",
     "permutation_importance",

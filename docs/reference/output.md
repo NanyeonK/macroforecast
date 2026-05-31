@@ -99,6 +99,32 @@ the producing function and schema version. CSV and markdown are human-readable
 views; the manifest still records the DataFrame attrs so metadata is not lost
 silently.
 
+### Custom artifacts
+
+Custom outputs do not need a separate registry. Pass a mapping of names to
+objects:
+
+```python
+mf.output.write_artifacts(
+    {
+        "forecast_result": result,
+        "custom_diagnostic": diagnostic_table,
+        "run_notes": {"design": "local robustness check", "accepted": True},
+    },
+    "results/my_run",
+)
+```
+
+| Input object | Written as | Metadata behavior |
+| --- | --- | --- |
+| `DataFrame` | One file per requested `formats` entry. | `attrs` are stored in JSON and in the manifest record. |
+| `ForecastResult` | Forecast JSON plus forecast CSV. | Runner metadata and stored-model sidecars are recorded. |
+| Mapping/list/scalar | JSON. | Manifest records object type, mapping keys, or sequence length. |
+
+This is the preferred path for project-local custom diagnostics,
+interpretation tables, robustness notes, and manually curated metadata that do
+not belong in a model, feature, or evaluation contract.
+
 ## collect_provenance
 
 ```python

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from importlib import import_module
 from typing import Any
 
@@ -289,6 +289,45 @@ def shap_values(
     )
 
 
+def custom_interpretation(
+    model: Any,
+    X: pd.DataFrame,
+    func: Callable[..., Any],
+    *,
+    y: pd.Series | np.ndarray | None = None,
+    name: str | None = None,
+    metadata: Mapping[str, Any] | None = None,
+    **params: Any,
+) -> pd.DataFrame:
+    """Run a user-supplied interpretation callable and attach metadata."""
+
+    frame = _as_feature_frame(X)
+    resolved_name = str(name or _callable_name(func) or "custom_interpretation")
+    result = func(
+        model,
+        frame,
+        y=y,
+        metadata=dict(metadata or {}),
+        **params,
+    )
+    table = _coerce_custom_table(result)
+    return _attach_schema(
+        table,
+        kind="custom_interpretation",
+        model=model,
+        method=resolved_name,
+        n_features=frame.shape[1],
+        metadata={
+            "name": resolved_name,
+            "callable": _callable_name(func),
+            "params": dict(params),
+            "n_obs": int(len(frame)),
+            "has_target": y is not None,
+            "user_metadata": dict(metadata or {}),
+        },
+    )
+
+
 def _coerce_fit(model: Any) -> Any:
     return model
 
@@ -366,6 +405,25 @@ def _attach_schema(
         "metadata": dict(metadata or {}),
     }
     return table
+
+
+def _coerce_custom_table(value: Any) -> pd.DataFrame:
+    if isinstance(value, pd.DataFrame):
+        return value.copy()
+    if isinstance(value, pd.Series):
+        name = "value" if value.name is None else str(value.name)
+        return value.rename(name).to_frame()
+    if isinstance(value, Mapping):
+        return pd.DataFrame([dict(value)])
+    if isinstance(value, (list, tuple)):
+        return pd.DataFrame(value)
+    raise TypeError(
+        "custom interpretation callable must return a DataFrame, Series, mapping, or sequence"
+    )
+
+
+def _callable_name(func: Any) -> str:
+    return str(getattr(func, "__name__", func.__class__.__name__))
 
 
 def _model_label(model: Any) -> str:

@@ -59,6 +59,35 @@ def test_model_agnostic_interpretation_helpers() -> None:
     assert ale.attrs["macroforecast_metadata_schema"]["kind"] == "accumulated_local_effect"
 
 
+def test_custom_interpretation_wraps_user_callable() -> None:
+    X, y = _xy()
+    fit = mf.models.ridge(X, y, alpha=0.1)
+
+    def mean_prediction(model, X, *, y=None, metadata=None, scale=1.0):
+        return {
+            "mean_prediction": float(model.predict(X).mean() * scale),
+            "target_supplied": y is not None,
+            "metadata_keys": len(metadata or {}),
+        }
+
+    out = mf.custom_interpretation(
+        fit,
+        X.iloc[:5],
+        mean_prediction,
+        y=y.iloc[:5],
+        name="mean_prediction_check",
+        metadata={"sample": "test"},
+        scale=2.0,
+    )
+
+    schema = out.attrs["macroforecast_metadata_schema"]
+    assert schema["kind"] == "custom_interpretation"
+    assert schema["method"] == "mean_prediction_check"
+    assert schema["metadata"]["params"] == {"scale": 2.0}
+    assert bool(out.loc[0, "target_supplied"]) is True
+    assert out.loc[0, "metadata_keys"] == 1
+
+
 def test_shap_values_uses_optional_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.1)

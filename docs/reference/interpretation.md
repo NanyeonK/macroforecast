@@ -29,6 +29,7 @@ Every table returned by this module carries
 | `partial_dependence(model, X, features, grid_size=20)` | fitted predictor and feature frame | `DataFrame` | One-way manual partial-dependence curves. |
 | `accumulated_local_effect(model, X, feature, bins=10)` | fitted predictor and feature frame | `DataFrame` | First-order accumulated local effect curve. |
 | `shap_values(model, X, background=None, explainer="auto", check_additivity=True, **kwargs)` | fitted predictor and feature frame | long `DataFrame` | SHAP attribution values using optional `shap` backend. |
+| `custom_interpretation(model, X, func, y=None, name=None, **params)` | fitted predictor, feature frame, user callable | `DataFrame` | User-defined interpretation table with metadata attrs. |
 
 ## Native Model Interpretation
 
@@ -173,6 +174,56 @@ SHAP is optional:
 pip install "macroforecast[interpretation]"
 ```
 
+## Custom Interpretation
+
+```python
+macroforecast.interpretation.custom_interpretation(
+    model,
+    X,
+    func,
+    *,
+    y=None,
+    name=None,
+    metadata=None,
+    **params,
+)
+```
+
+Input: a fitted `ModelFit` or predictor, feature `DataFrame`, optional target,
+and a user callable.
+
+Callable signature:
+
+```python
+func(model, X, *, y=None, metadata=None, **params)
+```
+
+Accepted callable outputs are `DataFrame`, `Series`, mapping, or a sequence
+convertible to a `DataFrame`. The wrapper attaches:
+
+| Attr | Meaning |
+| --- | --- |
+| `macroforecast_metadata_schema.kind` | Always `custom_interpretation`. |
+| `macroforecast_metadata_schema.method` | `name` or callable name. |
+| `macroforecast_metadata_schema.metadata.params` | User parameters passed to the callable. |
+| `macroforecast_metadata_schema.metadata.user_metadata` | User-supplied metadata mapping. |
+
+Example:
+
+```python
+def signed_mean_effect(model, X, *, y=None, metadata=None, scale=1.0):
+    pred = model.predict(X)
+    return {"signed_mean_prediction": float(pred.mean() * scale)}
+
+custom = mf.interpretation.custom_interpretation(
+    fit,
+    X_test,
+    signed_mean_effect,
+    name="signed_mean_effect",
+    scale=100.0,
+)
+```
+
 ## Examples
 
 ```python
@@ -199,4 +250,3 @@ shap_table = mf.interpretation.shap_values(
     explainer="tree",
 )
 ```
-

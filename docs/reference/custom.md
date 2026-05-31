@@ -23,6 +23,10 @@ The package still enforces the same contracts around each custom hook:
 | Metrics | metric callable | Custom `(y_true, y_pred) -> float` scorer. | Metric column in score tables. |
 | Tests | `mf.tests.custom_test(...)` | User forecast-test callable. | `TestResult`. |
 | Evaluation | callable metrics and custom groupings | User metric functions and grouping tuples. | `EvaluationReport` tables. |
+| Interpretation | `mf.interpretation.custom_interpretation(...)` | Fitted model, feature frame, optional target, and user callable. | Interpretation `DataFrame` with macroforecast schema attrs. |
+| Feature diagnostic | `mf.feature_diagnostic.custom_feature_diagnostic(...)` | Feature matrix or `FeatureSet` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
+| Forecast diagnostic | `mf.forecast_diagnostic.custom_forecast_diagnostic(...)` | Forecast table or `ForecastResult` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
+| Output | `mf.output.write_artifacts({...})` | Mapping of named custom artifacts. | Files plus `ArtifactManifest`. |
 
 ## Data
 
@@ -383,6 +387,105 @@ report = mf.evaluation.evaluate_report(
 )
 ```
 
+## Interpretation And Diagnostics
+
+Custom interpretation is for one fitted model and one feature matrix:
+
+```python
+def coefficient_ratio(model, X, *, y=None, metadata=None, denominator="x1"):
+    coef = mf.interpretation.linear_coefficients(model)
+    base = float(coef.loc[coef["feature"] == denominator, "coefficient"].iloc[0])
+    out = coef.copy()
+    out["ratio_to_base"] = out["coefficient"] / base
+    return out
+
+table = mf.interpretation.custom_interpretation(
+    fit,
+    X_test,
+    coefficient_ratio,
+    name="coefficient_ratio",
+    denominator="PAYEMS_lag0",
+)
+```
+
+Callable signature:
+
+```python
+func(model, X, *, y=None, metadata=None, **params)
+```
+
+Accepted return types are `DataFrame`, `Series`, mapping, or a sequence that
+can be converted to a `DataFrame`. The returned table receives
+`attrs["macroforecast_metadata_schema"]["kind"] == "custom_interpretation"`.
+
+Custom feature diagnostics inspect constructed `X` without creating new
+features:
+
+```python
+def block_missingness(X, *, feature_metadata=None, metadata=None, block="all"):
+    return pd.DataFrame(
+        [{"block": block, "missing_rate": float(X.isna().mean().mean())}]
+    )
+
+diag = mf.feature_diagnostic.custom_feature_diagnostic(
+    features,
+    block_missingness,
+    name="block_missingness",
+    block="rates",
+)
+```
+
+Callable signature:
+
+```python
+func(X, *, feature_metadata=None, metadata=None, **params)
+```
+
+Custom forecast diagnostics inspect runner output:
+
+```python
+def horizon_bias(forecasts, *, metadata=None):
+    out = forecasts.copy()
+    out["residual"] = out["actual"] - out["prediction"]
+    return out.groupby("horizon", as_index=False)["residual"].mean()
+
+diag = mf.forecast_diagnostic.custom_forecast_diagnostic(
+    result,
+    horizon_bias,
+    name="horizon_bias",
+)
+```
+
+Callable signature:
+
+```python
+func(forecasts, *, metadata=None, **params)
+```
+
+The custom diagnostic wrappers do not refit models or rebuild features. They
+only coerce inputs, run the user callable, and attach metadata so the output can
+be exported and audited with the rest of the study.
+
+## Output Artifacts
+
+Use `write_artifacts()` for custom outputs that do not need a stage-specific
+wrapper:
+
+```python
+mf.output.write_artifacts(
+    {
+        "forecast_result": result,
+        "custom_interpretation": table,
+        "custom_notes": {"spec": "local robustness check", "accepted": True},
+    },
+    "results/my_run",
+)
+```
+
+`DataFrame` artifacts keep their `attrs` in JSON payloads and in the manifest
+record. Mapping/list/scalar artifacts are written as JSON and receive object
+metadata in the manifest.
+
 ## Metadata Rules
 
 Custom callables are stored by name, not serialized as code. Metadata records
@@ -404,3 +507,7 @@ Custom extensions should remain stage-local:
 | New scalar forecast metric | Pass a callable to `metrics=...`. |
 | New forecast-comparison test | `mf.tests.custom_test()`. |
 | New evaluation slice | Pass a grouping map to `evaluate_report(..., aggregations=...)`. |
+| New model-interpretation table | `mf.interpretation.custom_interpretation()`. |
+| New feature diagnostic table | `mf.feature_diagnostic.custom_feature_diagnostic()`. |
+| New forecast diagnostic table | `mf.forecast_diagnostic.custom_forecast_diagnostic()`. |
+| New saved artifact | Add it as a named mapping entry in `mf.output.write_artifacts(...)`. |

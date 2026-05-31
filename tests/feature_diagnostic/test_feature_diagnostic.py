@@ -48,6 +48,41 @@ def test_diagnose_features_accepts_feature_set_and_attaches_metadata() -> None:
     assert report.lags.attrs["macroforecast_metadata"] == report.metadata
 
 
+def test_custom_feature_diagnostic_wraps_user_callable() -> None:
+    features = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=("x1", "x2", "x3"),
+        lags=(0,),
+    ).fit_transform(_panel())
+
+    def missing_overview(X, *, feature_metadata=None, metadata=None, label="custom"):
+        return pd.DataFrame(
+            [
+                {
+                    "label": label,
+                    "n_features": X.shape[1],
+                    "metadata_keys": len(metadata or {}),
+                    "has_feature_metadata": feature_metadata is not None,
+                }
+            ]
+        )
+
+    out = mf.custom_feature_diagnostic(
+        features,
+        missing_overview,
+        name="missing_overview",
+        metadata={"owner": "test"},
+        label="demo",
+    )
+
+    assert out.loc[0, "label"] == "demo"
+    assert bool(out.loc[0, "has_feature_metadata"]) is True
+    assert out.attrs["macroforecast_metadata_schema"]["kind"] == "custom_feature_diagnostic"
+    assert out.attrs["macroforecast_metadata_schema"]["method"] == "missing_overview"
+    assert "custom_feature_diagnostic" in out.attrs["macroforecast_metadata"]
+
+
 def test_feature_correlation_returns_sorted_pairs_with_metadata() -> None:
     lagged = mf.feature_engineering.lag(_panel(), columns=["x1", "x2"], lags=(0,))
 

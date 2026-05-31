@@ -223,6 +223,56 @@ Returns preprocessing and feature-engineering stage update records stored in
 `ForecastResult.metadata["stages"]`. This is empty for direct `FeatureSet`
 inputs because the runner does not refit preprocessing/features in that path.
 
+### custom_forecast_diagnostic
+
+```python
+macroforecast.forecast_diagnostic.custom_forecast_diagnostic(
+    forecasts,
+    func,
+    *,
+    name=None,
+    metadata=None,
+    **params,
+) -> pandas.DataFrame
+```
+
+Runs one user diagnostic on a runner `ForecastResult` or forecast table. This
+is for inspection only; it does not refit models, recompute selection, or
+change forecast rows.
+
+Callable signature:
+
+```python
+func(forecasts, *, metadata=None, **params)
+```
+
+The `forecasts` argument passed to the callable is a copy of the forecast
+`DataFrame`. Accepted callable outputs are `DataFrame`, `Series`, mapping, or a
+sequence convertible to a `DataFrame`.
+
+The returned table carries:
+
+| Attr | Meaning |
+| --- | --- |
+| `macroforecast_metadata_schema.kind` | Always `custom_forecast_diagnostic`. |
+| `macroforecast_metadata_schema.method` | `name` or callable name. |
+| `macroforecast_metadata` | Input metadata plus a `custom_forecast_diagnostic` stage. |
+
+Example:
+
+```python
+def horizon_bias(forecasts, *, metadata=None):
+    out = forecasts.copy()
+    out["residual"] = out["actual"] - out["prediction"]
+    return out.groupby("horizon", as_index=False)["residual"].mean()
+
+diag = mf.forecast_diagnostic.custom_forecast_diagnostic(
+    result,
+    horizon_bias,
+    name="horizon_bias",
+)
+```
+
 ## Boundary
 
 | Question | Use |

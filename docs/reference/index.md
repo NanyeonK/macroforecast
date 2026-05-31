@@ -6,7 +6,7 @@ Function-level reference for the clean public Python API.
 | --- | --- | --- |
 | Meta | [Meta](meta.md) | Global package defaults. |
 | Data | [Data](data.md) | Panels, metadata, loaders, targets, horizons, and sample windows. |
-| Custom Extensions | [Custom Extensions](custom.md) | User-supplied datasets, preprocessing, features, models, stage policies, and forecast combinations. |
+| Custom Extensions | [Custom Extensions](custom.md) | User-supplied datasets, preprocessing, features, models, stage policies, forecast combinations, diagnostics, interpretation, and artifacts. |
 | Workflow | [Workflow Contract](workflow.md) | Which module owns callable functions, windows, and runner composition. |
 | Preprocessing | [Preprocessing](preprocessing.md) | Frequency alignment, t-codes, outliers, imputation, and frame rules. |
 | Feature Engineering | [Feature Engineering](feature_engineering.md) | Direct/path-average targets, MAF/MARX-style transforms, sparse components, lag/window predictors, and aligned `X`, `y`. |

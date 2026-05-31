@@ -3,6 +3,7 @@ from __future__ import annotations
 from .core import (
     ForecastDiagnosticReport,
     coefficient_trace,
+    custom_forecast_diagnostic,
     diagnose_forecasts,
     ensemble_weights_over_time,
     fitted_vs_actual,
@@ -16,6 +17,7 @@ from .core import (
 __all__ = [
     "ForecastDiagnosticReport",
     "coefficient_trace",
+    "custom_forecast_diagnostic",
     "diagnose_forecasts",
     "ensemble_weights_over_time",
     "fitted_vs_actual",

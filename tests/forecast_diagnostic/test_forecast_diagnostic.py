@@ -149,3 +149,37 @@ def test_stage_update_trace_is_empty_for_feature_set_input() -> None:
         "test_end",
         "metadata_keys",
     ]
+
+
+def test_custom_forecast_diagnostic_wraps_user_callable() -> None:
+    forecasts = pd.DataFrame(
+        {
+            "date": pd.date_range("2021-01-31", periods=4, freq="ME"),
+            "origin": pd.date_range("2020-12-31", periods=4, freq="ME"),
+            "origin_pos": [0, 1, 2, 3],
+            "horizon": [1, 1, 1, 1],
+            "model": ["ridge", "ridge", "lasso", "lasso"],
+            "prediction": [1.0, 2.0, 1.5, 2.5],
+            "actual": [1.2, 1.8, 1.4, 2.7],
+        }
+    )
+
+    def signed_bias(table, *, metadata=None, group="model"):
+        residual = table["actual"] - table["prediction"]
+        return (
+            pd.DataFrame({"model": table["model"], "residual": residual})
+            .groupby(group, as_index=False)
+            .agg(bias=("residual", "mean"))
+        )
+
+    out = mf.custom_forecast_diagnostic(
+        forecasts,
+        signed_bias,
+        name="signed_bias",
+        metadata={"sample": "toy"},
+    )
+
+    assert set(out["model"]) == {"ridge", "lasso"}
+    assert out.attrs["macroforecast_metadata_schema"]["kind"] == "custom_forecast_diagnostic"
+    assert out.attrs["macroforecast_metadata_schema"]["method"] == "signed_bias"
+    assert "custom_forecast_diagnostic" in out.attrs["macroforecast_metadata"]
