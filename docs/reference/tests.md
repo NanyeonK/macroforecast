@@ -393,6 +393,56 @@ Output: one row per candidate model and target/horizon group.
 The returned table carries
 `attrs["macroforecast_metadata_schema"]["kind"] = "blocked_oob_reality_check"`.
 
+### iterative_model_confidence_set
+
+```python
+macroforecast.tests.iterative_model_confidence_set(
+    loss_panel,
+    *,
+    loss="squared_error",
+    alpha=0.10,
+    n_boot=1000,
+    block_length="auto",
+    bootstrap_method="stationary_bootstrap",
+    statistic="range",
+    random_state=0,
+    target="target",
+    horizon="horizon",
+    origin="origin",
+    model="model_id",
+) -> dict
+```
+
+Sequential Hansen-Lunde-Nason-style model confidence set callable. This is the
+full iterative counterpart to `model_confidence_set()`, which remains a
+single-step approximation for backward-stable behavior.
+
+Inputs:
+
+| Form | Required columns |
+| --- | --- |
+| Long panel | `origin`, `model_id`, and the selected loss column. `target` and `horizon` are optional grouping columns. |
+| Wide matrix | Numeric model-loss columns. The target/horizon labels are set to `"all"`. |
+
+Options:
+
+| Option | Default | Choices | Meaning |
+| --- | --- | --- | --- |
+| `statistic` | `"range"` | `"range"`, `"max"` | Test statistic used for sequential elimination. `"range"` uses the max absolute pairwise loss-difference statistic; `"max"` uses the max centered mean-loss statistic. |
+| `bootstrap_method` | `"stationary_bootstrap"` | `"stationary_bootstrap"`, `"fixed_block_bootstrap"` | Serial-dependence-respecting bootstrap over forecast origins. |
+| `block_length` | `"auto"` | positive int or `"auto"` | Block length. `"auto"` uses the package's default rule. |
+
+Output: JSON-ready dictionary with
+`metadata_schema.kind="iterative_model_confidence_set"`.
+
+| Key | Meaning |
+| --- | --- |
+| `mcs_inclusion` | Included model records by target, horizon, and alpha after the iterative procedure stops. |
+| `mcs_rejections` | Eliminated model records by target, horizon, and alpha. |
+| `p_values` | Final stopping-test p-value by target and horizon. |
+| `iteration_path` | One record per elimination/stopping step, including active models, statistic, p-value, worst model, eliminated model, and mean losses. |
+| `block_lengths_used` | Block length used by target and horizon. |
+
 ### model_confidence_set
 
 ```python
@@ -425,6 +475,10 @@ The output stores record lists, not tuple-keyed dictionaries:
 | `reality_check_p_values` | Reality-check p-value records by target and horizon. |
 | `stepm_rejected` | StepM rejected-model records. |
 | `block_lengths_used` | Block length used by target and horizon. |
+
+`model_confidence_set()` is intentionally a single-step approximation with
+SPA/StepM fields. Use `iterative_model_confidence_set()` when the research
+design requires sequential MCS elimination.
 
 ## Residual Diagnostics
 

@@ -907,6 +907,103 @@ def model_confidence_set(
     })
 
 
+def iterative_model_confidence_set(
+    loss_panel: pd.DataFrame,
+    *,
+    loss: str = "squared_error",
+    alpha: float = 0.10,
+    n_boot: int = 1000,
+    block_length: int | str = "auto",
+    bootstrap_method: str = "stationary_bootstrap",
+    statistic: str = "range",
+    random_state: int = 0,
+    target: str = "target",
+    horizon: str = "horizon",
+    origin: str = "origin",
+    model: str = "model_id",
+) -> dict[str, Any]:
+    """Iterative Hansen-Lunde-Nason-style model confidence set.
+
+    The current ``model_confidence_set`` callable keeps the legacy single-step
+    approximation. This callable performs sequential elimination until the
+    equal-predictive-ability null is no longer rejected.
+    """
+
+    _validate_alpha(alpha)
+    n_boot = _validate_positive_int(n_boot, "n_boot")
+    bootstrap_method = _normalize_bootstrap_method(bootstrap_method)
+    statistic = _normalize_mcs_statistic(statistic)
+    panel = pd.DataFrame(loss_panel).copy()
+    groups = _loss_panel_groups(
+        panel,
+        loss=loss,
+        target=target,
+        horizon=horizon,
+        origin=origin,
+        model=model,
+    )
+    rng = np.random.default_rng(random_state)
+    included: dict[tuple[Any, ...], set[str]] = {}
+    rejected: dict[tuple[Any, ...], list[str]] = {}
+    p_values: dict[tuple[Any, ...], float] = {}
+    block_lengths_used: dict[tuple[Any, ...], int] = {}
+    iteration_rows: list[dict[str, Any]] = []
+    for target_value, horizon_value, wide in groups:
+        key = (target_value, horizon_value, alpha)
+        result = _iterative_mcs_wide(
+            wide,
+            alpha=alpha,
+            n_boot=n_boot,
+            block_length=block_length,
+            bootstrap_method=bootstrap_method,
+            statistic=statistic,
+            rng=rng,
+        )
+        included[key] = set(result["included_models"])
+        rejected[key] = list(result["rejected_models"])
+        p_values[(target_value, horizon_value)] = result["final_p_value"]
+        block_lengths_used[(target_value, horizon_value)] = result["block_length"]
+        for row in result["iterations"]:
+            iteration_rows.append(
+                {
+                    "target": target_value,
+                    "horizon": horizon_value,
+                    **row,
+                }
+            )
+    return _json_ready({
+        "metadata_schema": {
+            "kind": "iterative_model_confidence_set",
+            "version": 1,
+        },
+        "mcs_inclusion": _mapping_records(
+            included,
+            key_names=("target", "horizon", "alpha"),
+            value_name="models",
+        ),
+        "mcs_rejections": _mapping_records(
+            rejected,
+            key_names=("target", "horizon", "alpha"),
+            value_name="models",
+        ),
+        "p_values": _mapping_records(
+            p_values,
+            key_names=("target", "horizon"),
+            value_name="p_value",
+        ),
+        "iteration_path": iteration_rows,
+        "bootstrap_n_replications": int(n_boot),
+        "block_length": block_length,
+        "block_lengths_used": _mapping_records(
+            block_lengths_used,
+            key_names=("target", "horizon"),
+            value_name="block_length",
+        ),
+        "bootstrap_kind": bootstrap_method,
+        "statistic": statistic,
+    })
+
+
 def blocked_oob_reality_check(
     loss_panel: pd.DataFrame,
     *,
@@ -1075,6 +1172,180 @@ def _normalize_bootstrap_method(method: str) -> str:
     if key in {"fixed", "fixed_block", "fixed_block_bootstrap", "moving_block"}:
         return "fixed_block_bootstrap"
     raise ValueError("bootstrap_method must be 'stationary_bootstrap' or 'fixed_block_bootstrap'")
+
+
+def _normalize_mcs_statistic(statistic: str) -> str:
+    key = str(statistic).lower().replace("-", "_")
+    if key in {"range", "tr", "t_range"}:
+        return "range"
+    if key in {"max", "tmax", "t_max"}:
+        return "max"
+    raise ValueError("statistic must be 'range' or 'max'")
+
+
+def _loss_panel_groups(
+    panel: pd.DataFrame,
+    *,
+    loss: str,
+    target: str,
+    horizon: str,
+    origin: str,
+    model: str,
+) -> list[tuple[Any, Any, pd.DataFrame]]:
+    long_required = {origin, model, loss}
+    if long_required <= set(panel.columns):
+        working = panel.copy()
+        group_columns: list[str] = []
+        if target in working.columns:
+            group_columns.append(target)
+        else:
+            working[target] = "all"
+            group_columns.append(target)
+        if horizon in working.columns:
+            group_columns.append(horizon)
+        else:
+            working[horizon] = "all"
+            group_columns.append(horizon)
+        groups: list[tuple[Any, Any, pd.DataFrame]] = []
+        for key, group in working.groupby(group_columns, dropna=False):
+            key_tuple = key if isinstance(key, tuple) else (key,)
+            wide = (
+                group.pivot_table(
+                    index=origin,
+                    columns=model,
+                    values=loss,
+                    aggfunc="mean",
+                )
+                .sort_index()
+                .rename_axis(columns=None)
+            )
+            groups.append((key_tuple[0], key_tuple[1], wide))
+        return groups
+    numeric = panel.select_dtypes(include=[np.number]).copy()
+    if numeric.shape[1] < 2:
+        raise ValueError(
+            "loss_panel must be either a long panel with "
+            f"{sorted(long_required)!r} columns or a wide numeric loss matrix"
+        )
+    return [("all", "all", numeric)]
+
+
+def _iterative_mcs_wide(
+    wide: pd.DataFrame,
+    *,
+    alpha: float,
+    n_boot: int,
+    block_length: int | str,
+    bootstrap_method: str,
+    statistic: str,
+    rng: np.random.Generator,
+) -> dict[str, Any]:
+    numeric = wide.apply(pd.to_numeric, errors="coerce").dropna(axis=0, how="any")
+    active = [str(column) for column in numeric.columns]
+    if numeric.shape[0] < 4 or len(active) < 2:
+        return {
+            "included_models": active,
+            "rejected_models": [],
+            "final_p_value": 1.0,
+            "block_length": 1,
+            "iterations": [],
+        }
+    rejected: list[str] = []
+    iterations: list[dict[str, Any]] = []
+    final_p = 1.0
+    last_block = 1
+    step = 0
+    while len(active) >= 2:
+        active_frame = numeric.loc[:, active]
+        matrix = active_frame.to_numpy(dtype=float)
+        block = _resolve_block_length(matrix, block_length)
+        last_block = int(block)
+        observed, eliminate_pos, scores = _mcs_statistic(matrix, statistic)
+        boot_stats = _mcs_bootstrap_statistics(
+            matrix,
+            n_boot=n_boot,
+            block_length=block,
+            method=bootstrap_method,
+            statistic=statistic,
+            rng=rng,
+        )
+        p_value = float(np.mean(boot_stats >= observed))
+        eliminate_model = active[int(eliminate_pos)]
+        iterations.append(
+            {
+                "step": int(step),
+                "active_models": list(active),
+                "statistic": float(observed),
+                "p_value": p_value,
+                "eliminated_model": None if p_value > alpha else eliminate_model,
+                "worst_model": eliminate_model,
+                "worst_score": float(scores[int(eliminate_pos)]),
+                "mean_losses": {
+                    model_name: float(active_frame[model_name].mean())
+                    for model_name in active
+                },
+                "block_length": int(block),
+            }
+        )
+        final_p = p_value
+        if p_value > alpha:
+            break
+        rejected.append(eliminate_model)
+        active.pop(int(eliminate_pos))
+        step += 1
+    return {
+        "included_models": active,
+        "rejected_models": rejected,
+        "final_p_value": final_p,
+        "block_length": last_block,
+        "iterations": iterations,
+    }
+
+
+def _mcs_bootstrap_statistics(
+    matrix: np.ndarray,
+    *,
+    n_boot: int,
+    block_length: int,
+    method: str,
+    statistic: str,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    n_obs = matrix.shape[0]
+    centered = matrix - matrix.mean(axis=0, keepdims=True)
+    out = np.empty(n_boot)
+    for boot_id in range(n_boot):
+        indices = (
+            _stationary_bootstrap_indices(n_obs, block_length, rng)
+            if method == "stationary_bootstrap"
+            else _fixed_block_bootstrap_indices(n_obs, block_length, rng)
+        )
+        out[boot_id] = _mcs_statistic(centered[indices], statistic)[0]
+    return out
+
+
+def _mcs_statistic(matrix: np.ndarray, statistic: str) -> tuple[float, int, np.ndarray]:
+    if statistic == "range":
+        return _mcs_range_statistic(matrix)
+    return _mcs_max_statistic(matrix)
+
+
+def _mcs_range_statistic(matrix: np.ndarray) -> tuple[float, int, np.ndarray]:
+    diff = matrix[:, :, None] - matrix[:, None, :]
+    mean = diff.mean(axis=0)
+    se = diff.std(axis=0, ddof=1) / np.sqrt(max(1, matrix.shape[0]))
+    t_values = np.divide(mean, np.where(se <= 0.0, 1e-12, se))
+    np.fill_diagonal(t_values, 0.0)
+    scores = np.nanmax(t_values, axis=1)
+    return float(np.nanmax(np.abs(t_values))), int(np.nanargmax(scores)), scores
+
+
+def _mcs_max_statistic(matrix: np.ndarray) -> tuple[float, int, np.ndarray]:
+    centered = matrix - matrix.mean(axis=1, keepdims=True)
+    means = centered.mean(axis=0)
+    se = centered.std(axis=0, ddof=1) / np.sqrt(max(1, matrix.shape[0]))
+    scores = np.divide(means, np.where(se <= 0.0, 1e-12, se))
+    return float(np.nanmax(scores)), int(np.nanargmax(scores)), scores
 
 
 def _reality_check_groups(
@@ -1676,6 +1947,7 @@ __all__ = [
     "hn_test",
     "interval_coverage_test",
     "blocked_oob_reality_check",
+    "iterative_model_confidence_set",
     "model_confidence_set",
     "nested_tests",
     "pesaran_timmermann_test",

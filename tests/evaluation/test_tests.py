@@ -204,6 +204,61 @@ def test_conditional_predictive_ability_and_model_confidence_set() -> None:
     json.dumps(mcs)
 
 
+def test_iterative_model_confidence_set_sequentially_eliminates_models() -> None:
+    rng = np.random.default_rng(321)
+    rows = []
+    for origin in range(36):
+        common = 0.01 * np.sin(origin / 3.0)
+        for model, base in (("a", 0.8), ("b", 0.35), ("c", 0.38)):
+            rows.append(
+                {
+                    "target": "y",
+                    "horizon": 1,
+                    "origin": origin,
+                    "model_id": model,
+                    "squared_error": base + common + rng.normal(0.0, 0.015),
+                }
+            )
+    loss_panel = pd.DataFrame(rows)
+
+    result = mf.tests.iterative_model_confidence_set(
+        loss_panel,
+        alpha=0.1,
+        n_boot=30,
+        block_length=3,
+        random_state=123,
+    )
+    included = result["mcs_inclusion"][0]["models"]
+    rejected = result["mcs_rejections"][0]["models"]
+
+    assert result["metadata_schema"]["kind"] == "iterative_model_confidence_set"
+    assert "b" in included
+    assert "a" in rejected
+    assert result["iteration_path"][0]["eliminated_model"] == "a"
+    assert result["block_lengths_used"][0]["block_length"] == 3
+    json.dumps(result)
+
+
+def test_iterative_model_confidence_set_accepts_wide_loss_matrix() -> None:
+    wide = pd.DataFrame(
+        {
+            "a": [1.0, 2.0, 1.0, 2.0, 1.0, 2.0],
+            "b": [1.0, 2.0, 1.0, 2.0, 1.0, 2.0],
+        }
+    )
+
+    result = mf.tests.iterative_model_confidence_set(
+        wide,
+        n_boot=20,
+        random_state=123,
+    )
+
+    assert result["mcs_inclusion"][0]["target"] == "all"
+    assert result["mcs_inclusion"][0]["horizon"] == "all"
+    assert result["mcs_inclusion"][0]["models"] == ["a", "b"]
+    assert result["iteration_path"][0]["p_value"] == 1.0
+
+
 def test_statistical_test_callables_reject_invalid_options() -> None:
     with pytest.raises(ValueError, match="method"):
         mf.tests.directional_accuracy_test([1, -1], [1, -1], method="unknown")
@@ -221,6 +276,11 @@ def test_statistical_test_callables_reject_invalid_options() -> None:
                 }
             ),
             bootstrap_method="unknown",
+        )
+    with pytest.raises(ValueError, match="statistic"):
+        mf.tests.iterative_model_confidence_set(
+            pd.DataFrame({"a": [1, 2, 3, 4], "b": [1, 2, 3, 4]}),
+            statistic="unknown",
         )
     small = mf.tests.density_interval_tests([0.25, 0.75])
     assert small["berkowitz"]["df"] == 2

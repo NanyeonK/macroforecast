@@ -73,6 +73,7 @@ pythonpath = ["."]
 addopts = ["--import-mode=importlib"]
 markers = [
     "slow: realistic-shape integration tests (gated; opt in with `pytest -m slow`)",
+    "reference: reference-style anchors for paper/formula behavior and invariants",
 ]
 
 [tool.mypy]
