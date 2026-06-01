@@ -418,6 +418,12 @@ def test_legacy_gap_direct_feature_transforms_are_callable() -> None:
     assert trim.iloc[0].tolist() == [10.0, 20.0]
     assert list(albama.columns) == ["x1_albama"]
     assert list(pls.columns) == ["pls1", "pls2"]
+    assert (
+        pls.attrs["macroforecast_metadata"]["feature_engineering_partial_least_squares"][
+            "resolved_n_components"
+        ]
+        == 1
+    )
     assert list(dfm.columns) == ["dfm1", "dfm2"]
     assert selected.shape[1] == 1
     assert dfm.attrs["macroforecast_metadata"]["feature_engineering_dfm"]["n_factors"] == 2

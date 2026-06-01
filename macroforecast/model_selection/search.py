@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.metrics import MetricLike, get_metric
+from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.model_selection.builders import (
     _as_tuple,
     _candidates,
@@ -203,17 +204,31 @@ def _resolve_model(
     preset: str | None,
 ) -> tuple[Callable[..., Any], ModelSpec | None]:
     if isinstance(model, (str, ModelSpec)):
-        model_spec = get_model(model, preset=preset)
+        model_spec = _get_model_or_ensemble(model, preset=preset)
         return model_spec.fit, model_spec
     if callable(model):
         try:
-            model_spec = get_model(model, preset=preset)
+            model_spec = _get_model_or_ensemble(model, preset=preset)
         except ValueError:
             if preset is not None:
                 raise
             return model, None
         return model_spec.fit, model_spec
     raise TypeError("model must be a model name, callable, or ModelSpec")
+
+
+def _get_model_or_ensemble(
+    model: str | Callable[..., Any] | ModelSpec,
+    *,
+    preset: str | None = None,
+) -> ModelSpec:
+    try:
+        return get_model(model, preset=preset)
+    except ValueError as model_error:
+        try:
+            return get_model_ensemble(model, preset=preset)
+        except ValueError:
+            raise model_error from None
 
 
 def _resolve_selection_xy(
@@ -292,6 +307,7 @@ def _model_metadata(model_spec: ModelSpec | None) -> dict[str, Any]:
         "model": model_spec.name,
         "model_family": model_spec.family,
         "model_preset": model_spec.preset,
+        "fixed_model_params": dict(model_spec.params),
         "backend": model_spec.backend,
         "requires_extra": model_spec.requires_extra,
         "requires_scaling": model_spec.requires_scaling,

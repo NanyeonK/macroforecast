@@ -68,6 +68,28 @@ def test_select_params_can_use_model_name_and_search_method_override() -> None:
     assert result.metadata["model"] == "decision_tree"
 
 
+def test_select_params_can_use_model_ensemble_spec_with_fixed_params() -> None:
+    X, y = xy()
+    spec = mf.model_ensemble.get_model_ensemble(
+        "bagging",
+        params={"base": "ridge", "n_estimators": 2},
+    )
+
+    result = mf.model_selection.select_params(
+        spec,
+        X,
+        y,
+        search=mf.model_selection.grid({"max_samples": [0.5, 0.8]}),
+        window=mf.window.last_block(validation_size=6),
+    )
+
+    assert result.metadata["model"] == "bagging"
+    assert result.metadata["model_family"] == "model_ensemble"
+    assert result.metadata["fixed_model_params"] == {"base": "ridge", "n_estimators": 2}
+    assert set(result.best_params) == {"max_samples"}
+    assert set(result.trials["status"]) == {"ok"}
+
+
 def test_select_params_can_use_panel_model_with_separate_target() -> None:
     X, y = xy()
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 import numpy as np
@@ -57,95 +57,185 @@ def ar(y: Any, *, n_lag: int = 1) -> ModelFit:
 
 
 class _VAR:
-    def __init__(self, *, n_lag: int = 1, target: str | None = None) -> None:
-        self.n_lag = max(1, int(n_lag))
-        self.target = target
-        self._results: Any = None
-        self._target_name: str | None = None
-        self._last_values: np.ndarray | None = None
-        self._fallback: float = 0.0
-
-    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "_VAR":
-        if y is None:
-            data = X.dropna()
-            target_name = self.target or str(data.columns[0])
-        else:
-            data = pd.concat([pd.Series(y).rename("__target__"), X], axis=1).dropna()
-            target_name = "__target__"
-        if data.empty:
-            return self
-        self._target_name = target_name
-        self._fallback = float(pd.to_numeric(data[target_name], errors="coerce").mean())
-        if data.shape[0] <= self.n_lag + 1 or data.shape[1] < 2:
-            self._last_values = data.to_numpy(dtype=float)
-            return self
-        from statsmodels.tsa.api import VAR
-
-        try:
-            self._results = VAR(data).fit(self.n_lag)
-            self._last_values = self._results.endog[-self.n_lag :]
-        except Exception:
-            self._results = None
-            self._last_values = data.to_numpy(dtype=float)[-self.n_lag :]
-        return self
-
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if self._results is None or self._target_name is None:
-            return np.full(len(X), self._fallback, dtype=float)
-        forecast = self._results.forecast(self._results.endog[-self.n_lag :], steps=max(1, len(X)))
-        target_index = self._results.names.index(self._target_name)
-        return np.asarray(forecast[:, target_index], dtype=float)[: len(X)]
-
-
-def var(panel: Any, *, target: str | None = None, n_lag: int = 1) -> ModelFit:
-    """Fit a vector autoregression on a multivariate panel."""
-
-    frame = as_frame(panel)
-    estimator = _VAR(n_lag=n_lag, target=target)
-    estimator.fit(frame)
-    return ModelFit(
-        estimator=estimator,
-        model="var",
-        feature_names=tuple(str(c) for c in frame.columns),
-        target_name=target or str(frame.columns[0]),
-        metadata={"n_obs": len(frame.dropna()), "n_lag": int(n_lag)},
-    )
-
-
-class _BayesianVAR:
-    """Compact conjugate-prior VAR point-forecast estimator."""
+    # R source alignment, vars/R/VAR.R and vars/R/predict.varest.R:
+    # - build ylags with lag order 1..p, append deterministic terms according
+    #   to type in {"const", "trend", "both", "none"}, then fit one OLS
+    #   equation per endogenous variable with no extra intercept in the formula.
+    # - forecast recursion uses the last stacked endogenous lags and future
+    #   deterministic rows exactly as predict.varest does.
+    # - macroforecast does not reproduce the full S3 varest object, confidence
+    #   intervals, diagnostics, IRF, FEVD, or restriction machinery here. It
+    #   does reproduce the reduced-form equation and point-forecast recursion.
 
     def __init__(
         self,
         *,
         n_lag: int = 1,
         target: str | None = None,
-        prior: str = "minnesota",
-        shrinkage: float = 0.2,
-        intercept: bool = True,
-        random_walk_prior: bool = True,
+        type: str = "const",
+        season: int | None = None,
+    ) -> None:
+        self.n_lag = max(1, int(n_lag))
+        self.target = target
+        self.type = _normalize_vars_type(type)
+        self.season = None if season is None else max(2, int(season))
+        self.coef_: np.ndarray | None = None
+        self.names_: tuple[str, ...] = ()
+        self.rhs_names_: tuple[str, ...] = ()
+        self.datamat_: pd.DataFrame | None = None
+        self.y_values_: np.ndarray | None = None
+        self._target_name: str | None = None
+        self._fallback: float = 0.0
+
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "_VAR":
+        if y is None:
+            data = X.astype(float).copy()
+            target_name = self.target or str(data.columns[0])
+        else:
+            data = pd.concat([pd.Series(y).rename("__target__"), X], axis=1).astype(float)
+            target_name = "__target__"
+        if data.empty:
+            return self
+        if data.isna().any().any():
+            raise ValueError("vars::VAR-compatible fitting does not allow missing values")
+        if data.shape[1] < 2:
+            raise ValueError("VAR panel must contain at least two variables")
+        if target_name not in data.columns:
+            raise ValueError(f"target {target_name!r} is not in the VAR panel")
+        self._target_name = target_name
+        self.names_ = tuple(str(column) for column in data.columns)
+        self._fallback = float(pd.to_numeric(data[target_name], errors="coerce").mean())
+        if data.shape[0] <= self.n_lag + 1 or data.shape[1] < 2:
+            self.y_values_ = data.to_numpy(dtype=float)
+            return self
+        values = data.to_numpy(dtype=float)
+        yend, rhs, rhs_names = _vars_rhs(
+            values,
+            self.names_,
+            self.n_lag,
+            type=self.type,
+            season=self.season,
+        )
+        self.coef_ = np.linalg.lstsq(rhs, yend, rcond=None)[0].T
+        self.rhs_names_ = tuple(rhs_names)
+        self.y_values_ = values
+        self.datamat_ = pd.DataFrame(
+            np.column_stack([yend, rhs]),
+            index=data.index[self.n_lag :],
+            columns=[*self.names_, *self.rhs_names_],
+        )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.coef_ is None or self.y_values_ is None or self._target_name is None:
+            return np.full(len(X), self._fallback, dtype=float)
+        forecast = _vars_forecast(
+            self.coef_,
+            self.y_values_,
+            len(X),
+            self.n_lag,
+            type=self.type,
+            season=self.season,
+        )
+        target_index = self.names_.index(self._target_name)
+        return np.asarray(forecast[:, target_index], dtype=float)[: len(X)]
+
+
+def var(
+    panel: Any,
+    *,
+    target: str | None = None,
+    n_lag: int = 1,
+    type: str = "const",
+    season: int | None = None,
+) -> ModelFit:
+    """Fit a vector autoregression on a multivariate panel."""
+
+    frame = as_frame(panel)
+    estimator = _VAR(n_lag=n_lag, target=target, type=type, season=season)
+    estimator.fit(frame)
+    return ModelFit(
+        estimator=estimator,
+        model="var",
+        feature_names=tuple(str(c) for c in frame.columns),
+        target_name=target or str(frame.columns[0]),
+        metadata={
+            "n_obs": len(frame.dropna()),
+            "n_lag": int(n_lag),
+            "type": estimator.type,
+            "season": estimator.season,
+            "backend": "internal vars::VAR-aligned OLS",
+            "implementation_note": (
+                "R vars::VAR-aligned OLS design and predict.varest-style "
+                "recursive point forecasts."
+            ),
+        },
+    )
+
+
+class _BayesianVAR:
+    """FAVAR::BVAR-aligned Bayesian VAR posterior sampler."""
+
+    # R source alignment, FAVAR/R/BVAR.R plus bvartools::minnesota_prior:
+    # - construct VAR data with deterministic='none';
+    # - draw VAR coefficients from the conditional normal posterior;
+    # - draw Sigma^{-1} from a Wishart posterior and store Sigma draws;
+    # - summarize coefficients by posterior means, standard errors, and
+    #   2.5/97.5 percentiles.
+    # The Python RNG cannot be bit-identical to R's rWishart/MCMC stream, but
+    # the model, prior shapes, stored draw arrays, and point-forecast coefficient
+    # summary follow the R package logic rather than a compact ridge surrogate.
+
+    def __init__(
+        self,
+        *,
+        n_lag: int = 1,
+        target: str | None = None,
+        prior: str = "normal_inverse_wishart",
+        b0: float = 0.0,
+        vb0: float = 0.0,
+        nu0: float = 0.0,
+        s0: float | Sequence[Sequence[float]] | None = 0.0,
+        kappa0: float | None = None,
+        kappa1: float | None = None,
+        iter: int = 10000,
+        burnin: int = 5000,
+        random_state: int = 0,
     ) -> None:
         self.n_lag = max(1, int(n_lag))
         self.target = target
         self.prior = str(prior)
-        self.shrinkage = max(float(shrinkage), 1e-8)
-        self.intercept = bool(intercept)
-        self.random_walk_prior = bool(random_walk_prior)
+        self.b0 = float(b0)
+        self.vb0 = float(vb0)
+        self.nu0 = float(nu0)
+        self.s0 = s0
+        self.kappa0 = None if kappa0 is None else float(kappa0)
+        self.kappa1 = None if kappa1 is None else float(kappa1)
+        self.iter = max(1, int(iter))
+        self.burnin = max(0, int(burnin))
+        if self.burnin >= self.iter:
+            raise ValueError("burnin must be smaller than iter")
+        self.random_state = int(random_state)
         self.names_: tuple[str, ...] = ()
         self.target_name_: str | None = None
         self.coef_: np.ndarray | None = None
+        self.coef_draws_: np.ndarray | None = None
+        self.sigma_draws_: np.ndarray | None = None
+        self.summary_: dict[str, np.ndarray] = {}
         self.last_values_: np.ndarray | None = None
         self.fallback_: float = 0.0
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "_BayesianVAR":
         if y is None:
-            data = X.dropna()
+            data = X.astype(float).copy()
             target_name = self.target or str(data.columns[0])
         else:
-            data = pd.concat([pd.Series(y).rename("__target__"), X], axis=1).dropna()
+            data = pd.concat([pd.Series(y).rename("__target__"), X], axis=1).astype(float)
             target_name = "__target__"
         if data.empty:
             return self
+        if data.isna().any().any():
+            raise ValueError("FAVAR::BVAR-compatible fitting does not allow missing values")
         self.names_ = tuple(str(column) for column in data.columns)
         if target_name not in data.columns:
             raise ValueError(f"target {target_name!r} is not in the VAR panel")
@@ -155,33 +245,40 @@ class _BayesianVAR:
         if len(values) <= self.n_lag:
             self.last_values_ = values[-self.n_lag :]
             return self
-        design, response = _var_design(values, self.n_lag, intercept=self.intercept)
-        prior_mean = np.zeros((design.shape[1], response.shape[1]), dtype=float)
-        if self.prior == "minnesota" and self.random_walk_prior:
-            offset = 1 if self.intercept else 0
-            for eq in range(response.shape[1]):
-                prior_mean[offset + eq, eq] = 1.0
-        precision = np.eye(design.shape[1], dtype=float) / (self.shrinkage**2)
-        if self.intercept:
-            precision[0, 0] = 1e-8
-        lhs = design.T @ design + precision
-        rhs = design.T @ response + precision @ prior_mean
-        self.coef_ = np.linalg.pinv(lhs) @ rhs
+        draws = _favar_bvar_draws(
+            values,
+            self.n_lag,
+            prior=self.prior,
+            b0=self.b0,
+            vb0=self.vb0,
+            nu0=self.nu0,
+            s0=self.s0,
+            kappa0=self.kappa0,
+            kappa1=self.kappa1,
+            n_iter=self.iter,
+            burnin=self.burnin,
+            random_state=self.random_state,
+        )
+        self.coef_draws_ = draws["coef_draws"]
+        self.sigma_draws_ = draws["sigma_draws"]
+        self.summary_ = draws["summary"]
+        self.coef_ = self.summary_["mean"]
         self.last_values_ = values[-self.n_lag :]
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self.coef_ is None or self.last_values_ is None or self.target_name_ is None:
             return np.full(len(X), self.fallback_, dtype=float)
-        history = [row.copy() for row in np.asarray(self.last_values_, dtype=float)]
+        forecast = _vars_forecast(
+            self.coef_,
+            np.asarray(self.last_values_, dtype=float),
+            len(X),
+            self.n_lag,
+            type="none",
+            season=None,
+        )
         target_pos = self.names_.index(self.target_name_)
-        preds: list[float] = []
-        for _ in range(len(X)):
-            row = _var_forecast_row(history, self.n_lag, intercept=self.intercept)
-            forecast = row @ self.coef_
-            preds.append(float(forecast[target_pos]))
-            history.append(np.asarray(forecast, dtype=float))
-        return np.asarray(preds, dtype=float)
+        return np.asarray(forecast[:, target_pos], dtype=float)
 
 
 def bvar_minnesota(
@@ -189,20 +286,28 @@ def bvar_minnesota(
     *,
     target: str | None = None,
     n_lag: int = 1,
-    shrinkage: float = 0.2,
-    intercept: bool = True,
-    random_walk_prior: bool = True,
+    kappa0: float = 2.0,
+    kappa1: float = 0.5,
+    nu0: float = 0.0,
+    s0: float | Sequence[Sequence[float]] | None = 0.0,
+    iter: int = 10000,
+    burnin: int = 5000,
+    random_state: int = 0,
 ) -> ModelFit:
-    """Fit a compact Minnesota-prior Bayesian VAR for point forecasts."""
+    """Fit a FAVAR::BVAR-style Bayesian VAR with Minnesota prior variances."""
 
     frame = as_frame(panel)
     estimator = _BayesianVAR(
         n_lag=n_lag,
         target=target,
         prior="minnesota",
-        shrinkage=shrinkage,
-        intercept=intercept,
-        random_walk_prior=random_walk_prior,
+        nu0=nu0,
+        s0=s0,
+        kappa0=kappa0,
+        kappa1=kappa1,
+        iter=iter,
+        burnin=burnin,
+        random_state=random_state,
     )
     estimator.fit(frame)
     return ModelFit(
@@ -213,11 +318,21 @@ def bvar_minnesota(
         metadata={
             "n_obs": len(frame.dropna()),
             "n_lag": int(n_lag),
-            "shrinkage": float(shrinkage),
-            "intercept": bool(intercept),
-            "random_walk_prior": bool(random_walk_prior),
-            "implementation_note": "Conjugate-prior posterior mean VAR point forecast.",
+            "kappa0": float(kappa0),
+            "kappa1": float(kappa1),
+            "nu0": float(nu0),
+            "s0": _jsonable_prior_matrix(s0),
+            "iter": int(iter),
+            "burnin": int(burnin),
+            "n_saved": int(iter) - int(burnin),
+            "random_state": int(random_state),
+            "backend": "internal FAVAR::BVAR-aligned Gibbs sampler",
+            "implementation_note": (
+                "FAVAR::BVAR / bvartools::minnesota_prior-aligned posterior "
+                "draw sampler; point forecasts use posterior mean coefficients."
+            ),
         },
+        diagnostics=_bvar_diagnostics(estimator),
     )
 
 
@@ -226,19 +341,28 @@ def bvar_normal_inverse_wishart(
     *,
     target: str | None = None,
     n_lag: int = 1,
-    shrinkage: float = 1.0,
-    intercept: bool = True,
+    b0: float = 0.0,
+    vb0: float = 0.0,
+    nu0: float = 0.0,
+    s0: float | Sequence[Sequence[float]] | None = 0.0,
+    iter: int = 10000,
+    burnin: int = 5000,
+    random_state: int = 0,
 ) -> ModelFit:
-    """Fit a compact normal-inverse-Wishart-style Bayesian VAR."""
+    """Fit a FAVAR::BVAR-style Bayesian VAR with normal-Wishart priors."""
 
     frame = as_frame(panel)
     estimator = _BayesianVAR(
         n_lag=n_lag,
         target=target,
         prior="normal_inverse_wishart",
-        shrinkage=shrinkage,
-        intercept=intercept,
-        random_walk_prior=False,
+        b0=b0,
+        vb0=vb0,
+        nu0=nu0,
+        s0=s0,
+        iter=iter,
+        burnin=burnin,
+        random_state=random_state,
     )
     estimator.fit(frame)
     return ModelFit(
@@ -249,10 +373,21 @@ def bvar_normal_inverse_wishart(
         metadata={
             "n_obs": len(frame.dropna()),
             "n_lag": int(n_lag),
-            "shrinkage": float(shrinkage),
-            "intercept": bool(intercept),
-            "implementation_note": "Normal-prior posterior mean VAR point forecast; variance prior is metadata-only for point forecasts.",
+            "b0": float(b0),
+            "vb0": float(vb0),
+            "nu0": float(nu0),
+            "s0": _jsonable_prior_matrix(s0),
+            "iter": int(iter),
+            "burnin": int(burnin),
+            "n_saved": int(iter) - int(burnin),
+            "random_state": int(random_state),
+            "backend": "internal FAVAR::BVAR-aligned Gibbs sampler",
+            "implementation_note": (
+                "FAVAR::BVAR-aligned normal-Wishart posterior draw sampler; "
+                "point forecasts use posterior mean coefficients."
+            ),
         },
+        diagnostics=_bvar_diagnostics(estimator),
     )
 
 
@@ -328,42 +463,222 @@ def far(
     )
 
 
+class _FAVAR:
+    """FAVAR::FAVAR-aligned Bayesian FAVAR sampler."""
+
+    # R source alignment, FAVAR/R/FAVAR.R:
+    # - optionally standardize X and Y with R scale() semantics;
+    # - extract principal components with ExtrPC();
+    # - use BBE facrot() or BGM() to remove fast-variable information;
+    # - draw factor loading equations with the same conjugate regression logic
+    #   as MCMCpack::MCMCregress;
+    # - estimate the VAR block by the FAVAR::BVAR-aligned sampler above.
+    #
+    # BVAR forecasting itself is standard; for example CRAN BVAR exposes
+    # predict.bvar over posterior beta/sigma draws. CRAN FAVAR, however, exposes
+    # summary/coef/irf for favar objects and uses its internal BVAR() as a
+    # posterior state-draw engine rather than exposing predict.favar.
+    # macroforecast predict() is therefore only the ModelFit forecast wrapper
+    # over the FAVAR posterior VAR state, using posterior-mean coefficients.
+
+    def __init__(
+        self,
+        *,
+        n_factors: int = 2,
+        n_lag: int = 2,
+        fctmethod: str = "BBE",
+        slowcode: Sequence[bool] | None = None,
+        factorprior: Mapping[str, Any] | None = None,
+        varprior: Mapping[str, Any] | None = None,
+        nburn: int = 5000,
+        nrep: int = 15000,
+        standardize: bool = True,
+        random_state: int = 0,
+    ) -> None:
+        self.n_factors = max(1, int(n_factors))
+        self.n_lag = max(1, int(n_lag))
+        self.fctmethod = str(fctmethod).upper()
+        if self.fctmethod not in {"BBE", "BGM"}:
+            raise ValueError("fctmethod must be 'BBE' or 'BGM'")
+        self.slowcode = None if slowcode is None else tuple(bool(value) for value in slowcode)
+        self.factorprior = dict(factorprior or {})
+        self.varprior = dict(varprior or {})
+        self.nburn = max(0, int(nburn))
+        self.nrep = max(1, int(nrep))
+        self.standardize = bool(standardize)
+        self.random_state = int(random_state)
+        self.feature_names_in_: tuple[str, ...] = ()
+        self.target_name_: str | None = None
+        self.x_mean_: np.ndarray | None = None
+        self.x_scale_: np.ndarray | None = None
+        self.y_mean_: float = 0.0
+        self.y_scale_: float = 1.0
+        self.factorx_: pd.DataFrame | None = None
+        self.loading_draws_: np.ndarray | None = None
+        self.var_coef_draws_: np.ndarray | None = None
+        self.var_sigma_draws_: np.ndarray | None = None
+        self.var_summary_: dict[str, np.ndarray] = {}
+        self.coef_: np.ndarray | None = None
+        self.last_fy_: np.ndarray | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FAVAR":
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        if frame.isna().any().any() or target.isna().any():
+            raise ValueError("FAVAR::FAVAR-compatible fitting does not allow missing values")
+        self.feature_names_in_ = tuple(str(column) for column in frame.columns)
+        self.target_name_ = str(target.name) if target.name is not None else "y"
+        x_raw = frame.to_numpy(dtype=float)
+        y_raw = target.to_numpy(dtype=float).reshape(-1, 1)
+        if self.standardize:
+            self.x_mean_, self.x_scale_, x_work = _r_scale_matrix(x_raw)
+            y_mean, y_scale, y_work = _r_scale_matrix(y_raw)
+            self.y_mean_ = float(y_mean[0])
+            self.y_scale_ = float(y_scale[0])
+        else:
+            self.x_mean_ = np.zeros(x_raw.shape[1], dtype=float)
+            self.x_scale_ = np.ones(x_raw.shape[1], dtype=float)
+            self.y_mean_ = 0.0
+            self.y_scale_ = 1.0
+            x_work = x_raw
+            y_work = y_raw
+        factors0, loadings0 = _favar_extr_pc(x_work, self.n_factors)
+        if self.fctmethod == "BBE":
+            if self.slowcode is None:
+                raise ValueError("slowcode is required when fctmethod='BBE', matching FAVAR::FAVAR")
+            if len(self.slowcode) != x_work.shape[1]:
+                raise ValueError("slowcode must have one boolean value per X column")
+            slow_x = x_work[:, np.asarray(self.slowcode, dtype=bool)]
+            if slow_x.shape[1] < self.n_factors:
+                raise ValueError("slowcode must select at least n_factors slow variables")
+            slow_factors, _ = _favar_extr_pc(slow_x, self.n_factors)
+            factorx = _favar_facrot(factors0, y_work[:, [-1]], slow_factors)
+        else:
+            factorx = _favar_bgm(x_work, y_work[:, -1], self.n_factors)
+        fy = np.column_stack([factorx, y_work])
+        loading_matrix = _favar_olssvd(np.column_stack([x_work, y_work]), fy).T
+        self.loading_draws_ = _favar_loading_draws(
+            x_work,
+            fy,
+            loading_matrix,
+            self.n_factors,
+            self.factorprior,
+            self.nburn,
+            self.nrep,
+            self.random_state,
+        )
+        var_kwargs = _parse_favar_varprior(self.varprior)
+        draws = _favar_bvar_draws(
+            fy,
+            self.n_lag,
+            n_iter=self.nrep + self.nburn,
+            burnin=self.nburn,
+            random_state=self.random_state,
+            **var_kwargs,
+        )
+        self.var_coef_draws_ = draws["coef_draws"]
+        self.var_sigma_draws_ = draws["sigma_draws"]
+        self.var_summary_ = draws["summary"]
+        self.coef_ = self.var_summary_["mean"]
+        self.last_fy_ = fy[-self.n_lag :, :]
+        self.factorx_ = pd.DataFrame(
+            factorx,
+            index=frame.index,
+            columns=[f"factor_{i + 1}" for i in range(factorx.shape[1])],
+        )
+        # Keep loadings for diagnostics; future-X projection is not used by
+        # predict() because R FAVAR forecasts the VAR state, not new X rows.
+        self.pc_loadings_ = loadings0
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.coef_ is None or self.last_fy_ is None:
+            return np.zeros(len(X), dtype=float)
+        forecast = _vars_forecast(
+            self.coef_,
+            np.asarray(self.last_fy_, dtype=float),
+            len(X),
+            self.n_lag,
+            type="none",
+            season=None,
+        )
+        y_scaled = forecast[:, -1]
+        return y_scaled * self.y_scale_ + self.y_mean_
+
+
 def favar(
     X: Any,
     y: Any | None = None,
     *,
-    n_factors: int = 3,
-    n_lag: int = 1,
+    n_factors: int = 2,
+    n_lag: int = 2,
+    fctmethod: str = "BBE",
+    slowcode: Sequence[bool] | None = None,
+    factorprior: Mapping[str, Any] | None = None,
+    varprior: Mapping[str, Any] | None = None,
+    nburn: int = 5000,
+    nrep: int = 15000,
+    standardize: bool = True,
     random_state: int = 0,
 ) -> ModelFit:
-    """Fit PCA factors and a VAR on the target plus factors."""
-
-    from sklearn.decomposition import PCA
+    """Fit a FAVAR::FAVAR-aligned Bayesian factor-augmented VAR."""
 
     frame, target = resolve_xy(X, y)
-    n_factors_resolved = min(max(1, int(n_factors)), frame.shape[1], max(1, frame.shape[0] - 1))
-    pca = PCA(n_components=n_factors_resolved, random_state=random_state)
-    factors = pca.fit_transform(frame.fillna(0.0))
-    factor_frame = pd.DataFrame(
-        factors,
-        index=frame.index,
-        columns=[f"factor_{i + 1}" for i in range(n_factors_resolved)],
+    estimator = _FAVAR(
+        n_factors=n_factors,
+        n_lag=n_lag,
+        fctmethod=fctmethod,
+        slowcode=slowcode,
+        factorprior=factorprior,
+        varprior=varprior,
+        nburn=nburn,
+        nrep=nrep,
+        standardize=standardize,
+        random_state=random_state,
     )
-    estimator = _VAR(n_lag=n_lag, target="__target__")
-    estimator.fit(factor_frame, target)
-    fit = ModelFit(
+    estimator.fit(frame, target)
+    return ModelFit(
         estimator=estimator,
         model="favar",
-        feature_names=tuple(factor_frame.columns),
+        feature_names=tuple(str(column) for column in frame.columns),
         target_name=str(target.name) if target.name is not None else None,
-        metadata={"n_obs": len(factor_frame), "n_factors": n_factors_resolved, "n_lag": int(n_lag)},
+        metadata={
+            "n_obs": len(frame),
+            "n_factors": int(n_factors),
+            "n_lag": int(n_lag),
+            "fctmethod": estimator.fctmethod,
+            "slowcode": None if slowcode is None else [bool(value) for value in slowcode],
+            "nburn": int(nburn),
+            "nrep": int(nrep),
+            "standardize": bool(standardize),
+            "random_state": int(random_state),
+            "backend": "internal FAVAR::FAVAR-aligned Bayesian sampler",
+            "implementation_note": (
+                "FAVAR::FAVAR-aligned factor extraction, loading draws, and "
+                "BVAR posterior draws; predict() is the ModelFit forecast "
+                "wrapper over the FAVAR posterior VAR state. BVAR forecasting "
+                "itself is standard, but CRAN FAVAR does not expose predict.favar."
+            ),
+        },
+        diagnostics=_favar_diagnostics(estimator),
     )
-    fit.metadata["pca"] = pca
-    return fit
 
 
 class _MixedFrequencyDFM:
     """Statsmodels DynamicFactorMQ wrapper for monthly/quarterly panels."""
+
+    # Source alignment:
+    # - statsmodels DynamicFactorMQ implements the Banbura-Modugno /
+    #   Banbura-Giannone-Reichlin EM state-space DFM and explicitly supports
+    #   Mariano-Murasawa monthly/quarterly aggregation when monthly columns are
+    #   ordered first and quarterly columns afterwards with k_endog_monthly set.
+    # - R dfms::DFM(X, quarterly.vars=...) and archived R nowcasting::nowcast()
+    #   use the same high-level contract: monthly variables first, quarterly
+    #   variables last, missing quarterly observations at monthly dates, and
+    #   temporal aggregation weights [1, 2, 3, 2, 1] for quarterly growth/flow
+    #   variables.
+    # - This class is intentionally a backend wrapper, not a reimplementation of
+    #   dfms' R/C++ Kalman/EM code or nowcasting's block-DFM routines.
 
     def __init__(
         self,
@@ -517,9 +832,11 @@ def dfm_mixed_mariano_murasawa(
             "native_frequency_counts": dict(meta.get("native_frequency_counts", {})),
             "backend": "statsmodels.tsa.statespace.dynamic_factor_mq.DynamicFactorMQ",
             "implementation_note": (
-                "Uses statsmodels DynamicFactorMQ with monthly columns ordered before "
-                "quarterly columns and k_endog_monthly set, which applies the "
-                "Mariano-Murasawa monthly-to-quarterly aggregation in the state-space model."
+                "Backend wrapper around statsmodels DynamicFactorMQ. The input "
+                "contract follows R dfms::DFM(..., quarterly.vars=...) and archived "
+                "nowcasting::nowcast(method='EM'): monthly columns first, quarterly "
+                "columns last, and Mariano-Murasawa [1,2,3,2,1] aggregation handled "
+                "inside the state-space model."
             ),
         },
         diagnostics=diagnostics,
@@ -529,17 +846,81 @@ def dfm_mixed_mariano_murasawa(
 class _DFMUnrestrictedMIDAS:
     """Composite DFM-factor plus unrestricted-MIDAS forecast head."""
 
-    def __init__(self, *, midas_estimator: Any, feature_names: tuple[str, ...]) -> None:
+    # This is the callable analogue of a common two-stage workflow in the R
+    # ecosystem, not a single R package estimator: estimate a mixed-frequency DFM
+    # (dfms/nowcasting style), extract monthly filtered factors, align factor and
+    # observed lags to target anchors, then fit an unrestricted MIDAS head. The
+    # final head matches midasr::midas_u only when alpha=0; alpha>0 is a ridge
+    # extension for macroforecast model selection.
+
+    def __init__(
+        self,
+        *,
+        midas_estimator: Any,
+        feature_names: tuple[str, ...],
+        target: str,
+        metadata: Mapping[str, Any],
+        lag_columns: tuple[str, ...],
+        lags: tuple[int, ...],
+        factor_lags: tuple[int, ...],
+        target_frequency: str | None,
+        anchor_position: str,
+        dfm_params: Mapping[str, Any],
+        drop_missing: bool,
+    ) -> None:
         self.midas_estimator = midas_estimator
         self.feature_names_in_ = tuple(feature_names)
+        self.target = str(target)
+        self.metadata = dict(metadata)
+        self.lag_columns = tuple(lag_columns)
+        self.lags = tuple(lags)
+        self.factor_lags = tuple(factor_lags)
+        self.target_frequency = target_frequency
+        self.anchor_position = str(anchor_position)
+        self.dfm_params = dict(dfm_params)
+        self.drop_missing = bool(drop_missing)
         self.coef_ = getattr(midas_estimator, "coef_", None)
         self.intercept_ = getattr(midas_estimator, "intercept_", None)
         self.groups_ = getattr(midas_estimator, "groups_", {})
         self.design_: pd.DataFrame | None = None
+        self.last_prediction_design_: pd.DataFrame | None = None
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=np.nan).astype(float)
         return np.asarray(self.midas_estimator.predict(frame), dtype=float).reshape(-1)
+
+    def predict_from_panel(
+        self,
+        panel: Any,
+        *,
+        metadata: Mapping[str, Any] | None = None,
+        anchor_dates: Iterable[Any] | None = None,
+    ) -> np.ndarray:
+        """Rebuild the DFM-factor/MIDAS design from a native-frequency panel."""
+
+        frame, meta = _coerce_panel_with_metadata(panel, metadata=metadata or self.metadata)
+        design, _ = _dfm_unrestricted_midas_design(
+            frame,
+            metadata=meta,
+            target=self.target,
+            lag_columns=self.lag_columns,
+            lags=self.lags,
+            factor_lags=self.factor_lags,
+            target_frequency=self.target_frequency,
+            anchor_position=self.anchor_position,
+            anchor_dates=anchor_dates,
+            drop_missing=False,
+            **self.dfm_params,
+        )
+        design = design.reindex(columns=list(self.feature_names_in_), fill_value=np.nan)
+        self.last_prediction_design_ = design
+        if design.isna().any().any():
+            missing = sorted(str(column) for column in design.columns[design.isna().any()])
+            raise ValueError(
+                "DFM unrestricted MIDAS prediction design contains missing values; "
+                f"missing columns: {missing}"
+            )
+        return self.predict(design)
 
 
 def dfm_unrestricted_midas(
@@ -564,45 +945,37 @@ def dfm_unrestricted_midas(
 ) -> ModelFit:
     """Fit DFM factors plus unrestricted MIDAS lag coefficients."""
 
-    from macroforecast.feature_engineering import mixed_frequency_lags
-
     frame, meta = _coerce_panel_with_metadata(panel, metadata=metadata)
     if target not in frame.columns:
         raise ValueError(f"target {target!r} is not in the mixed-frequency panel")
-    dfm_fit = dfm_mixed_mariano_murasawa(
-        (frame, meta),
+    lag_values = _normalize_model_lags(lags)
+    factor_lag_values = _normalize_model_lags(factor_lags)
+    lag_column_values = tuple(str(column) for column in lag_columns or ())
+    dfm_params = {
+        "n_factors": int(n_factors),
+        "factor_order": int(factor_order),
+        "idiosyncratic_ar1": bool(idiosyncratic_ar1),
+        "standardize": bool(standardize),
+        "maxiter": int(maxiter),
+        "tolerance": float(tolerance),
+    }
+    design, dfm_fit = _dfm_unrestricted_midas_design(
+        frame,
+        metadata=meta,
         target=target,
-        n_factors=n_factors,
-        factor_order=factor_order,
-        idiosyncratic_ar1=idiosyncratic_ar1,
-        standardize=standardize,
-        maxiter=maxiter,
-        tolerance=tolerance,
+        lag_columns=lag_column_values,
+        lags=lag_values,
+        factor_lags=factor_lag_values,
+        target_frequency=target_frequency,
+        anchor_position=anchor_position,
+        drop_missing=False,
+        **dfm_params,
     )
-    factors = dfm_fit.diagnostics.get("factors_filtered")
-    if not isinstance(factors, pd.DataFrame) or factors.empty:
-        raise ValueError("DFM fit did not produce filtered factors")
     anchor_index = _position_target_dates(
         frame[target].dropna().index,
         frequency=target_frequency or meta.get("frequency") or "quarterly",
         anchor_position=anchor_position,
     )
-    design_parts: list[pd.DataFrame] = []
-    factor_design = _factor_lag_design(factors, anchor_index=anchor_index, lags=factor_lags)
-    design_parts.append(factor_design)
-    lag_column_values = tuple(str(column) for column in lag_columns or ())
-    if lag_column_values:
-        observed_lags = mixed_frequency_lags(
-            (frame, meta),
-            target=target,
-            columns=lag_column_values,
-            lags=lags,
-            target_frequency=target_frequency,
-            anchor_position=anchor_position,
-            drop_missing=False,
-        )
-        design_parts.append(observed_lags)
-    design = pd.concat(design_parts, axis=1)
     y = pd.Series(frame[target].dropna().to_numpy(dtype=float), index=anchor_index, name=target)
     joined = pd.concat([design, y.rename("__target__")], axis=1)
     if drop_missing:
@@ -620,6 +993,15 @@ def dfm_unrestricted_midas(
     estimator = _DFMUnrestrictedMIDAS(
         midas_estimator=midas_fit.estimator,
         feature_names=tuple(str(column) for column in X_fit.columns),
+        target=target,
+        metadata=meta,
+        lag_columns=lag_column_values,
+        lags=lag_values,
+        factor_lags=factor_lag_values,
+        target_frequency=target_frequency,
+        anchor_position=anchor_position,
+        dfm_params=dfm_params,
+        drop_missing=drop_missing,
     )
     estimator.design_ = X_fit
     return ModelFit(
@@ -631,8 +1013,8 @@ def dfm_unrestricted_midas(
             "n_obs": int(len(X_fit)),
             "target": str(target),
             "lag_columns": list(lag_column_values),
-            "lags": list(_normalize_model_lags(lags)),
-            "factor_lags": list(_normalize_model_lags(factor_lags)),
+            "lags": list(lag_values),
+            "factor_lags": list(factor_lag_values),
             "target_frequency": target_frequency,
             "anchor_position": str(anchor_position),
             "n_factors": int(n_factors),
@@ -643,7 +1025,10 @@ def dfm_unrestricted_midas(
                 "Composite model: fit DynamicFactorMQ factors from a native mixed-frequency "
                 "panel, append selected observed mixed-frequency lags, then fit unrestricted MIDAS."
             ),
-            "prediction_contract": "predict() expects a prepared feature matrix with the fitted feature columns",
+            "prediction_contract": (
+                "predict() accepts a prepared feature matrix with fitted feature columns; "
+                "predict_from_panel() rebuilds the composite design from a native panel."
+            ),
         },
         diagnostics={
             "design": X_fit,
@@ -653,8 +1038,90 @@ def dfm_unrestricted_midas(
     )
 
 
+def _dfm_unrestricted_midas_design(
+    frame: pd.DataFrame,
+    *,
+    metadata: Mapping[str, Any],
+    target: str,
+    lag_columns: Iterable[str],
+    lags: Iterable[int] | int,
+    factor_lags: Iterable[int] | int,
+    target_frequency: str | None,
+    anchor_position: str,
+    n_factors: int,
+    factor_order: int,
+    idiosyncratic_ar1: bool,
+    standardize: bool,
+    maxiter: int,
+    tolerance: float,
+    anchor_dates: Iterable[Any] | None = None,
+    drop_missing: bool = False,
+) -> tuple[pd.DataFrame, ModelFit]:
+    """Build the reusable composite DFM-factor plus observed-lag design."""
+
+    from macroforecast.feature_engineering import mixed_frequency_lags
+
+    dfm_fit = dfm_mixed_mariano_murasawa(
+        (frame, metadata),
+        target=target,
+        n_factors=n_factors,
+        factor_order=factor_order,
+        idiosyncratic_ar1=idiosyncratic_ar1,
+        standardize=standardize,
+        maxiter=maxiter,
+        tolerance=tolerance,
+    )
+    factors = dfm_fit.diagnostics.get("factors_filtered")
+    if not isinstance(factors, pd.DataFrame) or factors.empty:
+        raise ValueError("DFM fit did not produce filtered factors")
+    raw_anchor_dates = (
+        pd.DatetimeIndex(pd.to_datetime(list(anchor_dates)))
+        if anchor_dates is not None
+        else pd.DatetimeIndex(frame[target].dropna().index)
+    )
+    if raw_anchor_dates.empty:
+        raise ValueError("DFM unrestricted MIDAS design has no target anchor dates")
+    anchor_index = _position_target_dates(
+        raw_anchor_dates,
+        frequency=target_frequency or metadata.get("frequency") or "quarterly",
+        anchor_position=anchor_position,
+    )
+    design_parts: list[pd.DataFrame] = [
+        _factor_lag_design(factors, anchor_index=anchor_index, lags=factor_lags)
+    ]
+    lag_column_values = tuple(str(column) for column in lag_columns or ())
+    if lag_column_values:
+        observed_lags = mixed_frequency_lags(
+            (frame, metadata),
+            target=target,
+            anchor_dates=raw_anchor_dates,
+            columns=lag_column_values,
+            lags=lags,
+            target_frequency=target_frequency,
+            anchor_position=anchor_position,
+            drop_missing=False,
+        )
+        design_parts.append(observed_lags)
+    design = pd.concat(design_parts, axis=1)
+    if drop_missing:
+        design = design.dropna()
+    return design, dfm_fit
+
+
 class _MIDASRegressor:
     """Linear MIDAS-style regression over lag groups."""
+
+    # R source alignment, midasr/R/lagspec.R and midasr/R/midasreg.R:
+    # - midasr::midas_r jointly estimates restricted lag-weight parameters and
+    #   regression coefficients by nonlinear least squares.
+    # - macroforecast's restricted MIDAS callables are fixed-shape design
+    #   builders: the supplied or selected weight-shape hyperparameters compress
+    #   each lag block, then a linear/ridge forecast head estimates the aggregate
+    #   coefficient. This is equivalent to a midasr restricted design conditional
+    #   on fixed shape parameters, not to midasr's NLS optimizer.
+    # - midas_almon uses the scale-free part of midasr::nealmon, midas_beta uses
+    #   midasr::nbetaMT with p=(1, a, b, 0), and midas_step uses normalized
+    #   polystep-style piecewise-constant weights.
 
     def __init__(
         self,
@@ -664,6 +1131,8 @@ class _MIDASRegressor:
         theta: tuple[float, ...] | None = None,
         beta_params: tuple[float, float] = (1.0, 1.0),
         n_steps: int = 3,
+        step_bounds: tuple[int, ...] | None = None,
+        step_weights: tuple[float, ...] | None = None,
         alpha: float = 0.0,
         fit_intercept: bool = True,
     ) -> None:
@@ -672,6 +1141,8 @@ class _MIDASRegressor:
         self.theta = None if theta is None else tuple(float(value) for value in theta)
         self.beta_params = (float(beta_params[0]), float(beta_params[1]))
         self.n_steps = max(1, int(n_steps))
+        self.step_bounds = None if step_bounds is None else tuple(int(value) for value in step_bounds)
+        self.step_weights = None if step_weights is None else tuple(float(value) for value in step_weights)
         self.alpha = float(alpha)
         self.fit_intercept = bool(fit_intercept)
         self.feature_names_in_: tuple[str, ...] = ()
@@ -728,6 +1199,8 @@ class _MIDASRegressor:
                 theta=self.theta,
                 beta_params=self.beta_params,
                 n_steps=self.n_steps,
+                step_bounds=self.step_bounds,
+                step_weights=self.step_weights,
             )
             self.weights_[group] = weights.tolist()
             block = frame.loc[:, columns].astype(float)
@@ -736,6 +1209,255 @@ class _MIDASRegressor:
                 min_count=len(columns),
             )
         return pd.DataFrame(pieces, index=frame.index)
+
+
+class _RestrictedMIDASRegressor:
+    """Nonlinear restricted MIDAS regression over explicit lag groups."""
+
+    # R source alignment, midasr/R/midasreg.R and midasr/R/lagspec.R:
+    # - midasr::midas_r builds an explicit unrestricted lag matrix, maps each
+    #   restricted term's low-dimensional parameters into full lag
+    #   coefficients, then minimizes sum of squared residuals by nonlinear
+    #   least squares. Its default optimizer is optim(method="BFGS"), with nls
+    #   also supported.
+    # - This estimator follows the same objective and the same nealmon,
+    #   nbetaMT, and polystep coefficient maps for already-built lag columns.
+    #   SciPy least_squares replaces R's optimizer, so iterates are not
+    #   bit-identical, but the regression equation and coefficient restrictions
+    #   are the same.
+    # - Formula parsing, AR* common-factor terms, HAC covariance methods, model
+    #   tables, and forecast.midas_r S3 utilities remain outside this callable;
+    #   macroforecast receives X as an explicit lag matrix.
+
+    def __init__(
+        self,
+        *,
+        weighting: str = "almon",
+        polynomial_order: int = 2,
+        start_params: Mapping[str, Sequence[float]] | Sequence[float] | None = None,
+        n_steps: int = 3,
+        step_bounds: tuple[int, ...] | None = None,
+        fit_intercept: bool = True,
+        maxiter: int = 1000,
+        tolerance: float = 1e-8,
+    ) -> None:
+        self.weighting = str(weighting)
+        self.polynomial_order = int(polynomial_order)
+        self.start_params = start_params
+        self.n_steps = max(1, int(n_steps))
+        self.step_bounds = None if step_bounds is None else tuple(int(value) for value in step_bounds)
+        self.fit_intercept = bool(fit_intercept)
+        self.maxiter = max(1, int(maxiter))
+        self.tolerance = float(tolerance)
+        self.feature_names_in_: tuple[str, ...] = ()
+        self.groups_: dict[str, list[tuple[str, int]]] = {}
+        self.group_param_slices_: dict[str, tuple[int, int]] = {}
+        self.param_names_: tuple[str, ...] = ()
+        self.params_: np.ndarray | None = None
+        self.intercept_: float | None = None
+        self.coef_: np.ndarray | None = None
+        self.effective_lag_coefficients_: pd.Series | None = None
+        self.converged_: bool = False
+        self.n_iter_: int = 0
+        self.cost_: float | None = None
+        self.message_: str = ""
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_RestrictedMIDASRegressor":
+        from scipy.optimize import least_squares
+
+        self.feature_names_in_ = tuple(str(column) for column in X.columns)
+        self.groups_ = _midas_groups(pd.Index(self.feature_names_in_))
+        frame = X.astype(float)
+        target = y.astype(float)
+        start, names = self._start_vector(frame, target)
+        self.param_names_ = tuple(names)
+
+        def residual(params: np.ndarray) -> np.ndarray:
+            return target.to_numpy(dtype=float) - self._predict_array(frame, params)
+
+        opt = least_squares(
+            residual,
+            start,
+            max_nfev=self.maxiter,
+            xtol=self.tolerance,
+            ftol=self.tolerance,
+            gtol=self.tolerance,
+        )
+        self.params_ = np.asarray(opt.x, dtype=float)
+        self.converged_ = bool(opt.success)
+        self.n_iter_ = int(opt.nfev)
+        self.cost_ = float(2.0 * opt.cost)
+        self.message_ = str(opt.message)
+        self.intercept_ = float(self.params_[0]) if self.fit_intercept else 0.0
+        self.coef_ = self._full_coefficients(self.params_)
+        self.effective_lag_coefficients_ = pd.Series(
+            self.coef_,
+            index=list(self.feature_names_in_),
+            name="effective_lag_coefficient",
+        )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.params_ is None:
+            return np.zeros(len(X), dtype=float)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=np.nan).astype(float)
+        return self._predict_array(frame, self.params_)
+
+    def _start_vector(self, frame: pd.DataFrame, target: pd.Series) -> tuple[np.ndarray, list[str]]:
+        values: list[float] = []
+        names: list[str] = []
+        offset = 0
+        if self.fit_intercept:
+            values.append(float(target.mean()))
+            names.append("intercept")
+            offset = 1
+        for group, members in self.groups_.items():
+            ordered = sorted(members, key=lambda item: item[1])
+            length = len(ordered)
+            start = self._group_start(group, length)
+            self.group_param_slices_[group] = (offset, offset + len(start))
+            values.extend(start)
+            names.extend(f"{group}_theta{i}" for i in range(len(start)))
+            offset += len(start)
+        return np.asarray(values, dtype=float), names
+
+    def _group_start(self, group: str, length: int) -> list[float]:
+        supplied = self.start_params
+        if isinstance(supplied, Mapping) and group in supplied:
+            raw = [float(value) for value in supplied[group]]
+        elif supplied is not None and not isinstance(supplied, Mapping):
+            raw = [float(value) for value in supplied]
+        else:
+            raw = _restricted_default_start(
+                self.weighting,
+                length,
+                polynomial_order=self.polynomial_order,
+                n_steps=self.n_steps,
+                step_bounds=self.step_bounds,
+            )
+        expected = _restricted_param_count(
+            self.weighting,
+            length,
+            polynomial_order=self.polynomial_order,
+            n_steps=self.n_steps,
+            step_bounds=self.step_bounds,
+        )
+        if len(raw) != expected:
+            raise ValueError(
+                f"start_params for group {group!r} must contain {expected} values; got {len(raw)}"
+            )
+        if not np.isfinite(raw).all():
+            raise ValueError("start_params must contain finite values")
+        return raw
+
+    def _predict_array(self, frame: pd.DataFrame, params: np.ndarray) -> np.ndarray:
+        values = np.full(len(frame), float(params[0]) if self.fit_intercept else 0.0, dtype=float)
+        for group, members in self.groups_.items():
+            start, end = self.group_param_slices_[group]
+            weights = _restricted_midas_weights(
+                [lag for _, lag in sorted(members, key=lambda item: item[1])],
+                weighting=self.weighting,
+                params=params[start:end],
+                polynomial_order=self.polynomial_order,
+                n_steps=self.n_steps,
+                step_bounds=self.step_bounds,
+            )
+            columns = [column for column, _ in sorted(members, key=lambda item: item[1])]
+            values += frame.loc[:, columns].to_numpy(dtype=float) @ weights
+        return values
+
+    def _full_coefficients(self, params: np.ndarray) -> np.ndarray:
+        coefficients: dict[str, float] = {}
+        for group, members in self.groups_.items():
+            start, end = self.group_param_slices_[group]
+            ordered = sorted(members, key=lambda item: item[1])
+            weights = _restricted_midas_weights(
+                [lag for _, lag in ordered],
+                weighting=self.weighting,
+                params=params[start:end],
+                polynomial_order=self.polynomial_order,
+                n_steps=self.n_steps,
+                step_bounds=self.step_bounds,
+            )
+            for (column, _), weight in zip(ordered, weights, strict=False):
+                coefficients[str(column)] = float(weight)
+        return np.asarray([coefficients[name] for name in self.feature_names_in_], dtype=float)
+
+
+def restricted_midas(
+    X: Any,
+    y: Any | None = None,
+    *,
+    weighting: str = "almon",
+    polynomial_order: int = 2,
+    start_params: Mapping[str, Sequence[float]] | Sequence[float] | None = None,
+    n_steps: int = 3,
+    step_bounds: tuple[int, ...] | None = None,
+    fit_intercept: bool = True,
+    maxiter: int = 1000,
+    tolerance: float = 1e-8,
+) -> ModelFit:
+    """Fit a midasr::midas_r-style nonlinear restricted MIDAS regression."""
+
+    weighting_value = _normalize_restricted_weighting(weighting)
+    polynomial_order = _validate_polynomial_order(polynomial_order)
+    n_steps = _validate_positive_int("n_steps", n_steps)
+    step_bounds = _normalize_step_bounds(step_bounds)
+    if tolerance <= 0:
+        raise ValueError("tolerance must be positive")
+    estimator = _RestrictedMIDASRegressor(
+        weighting=weighting_value,
+        polynomial_order=polynomial_order,
+        start_params=start_params,
+        n_steps=n_steps,
+        step_bounds=step_bounds,
+        fit_intercept=fit_intercept,
+        maxiter=maxiter,
+        tolerance=tolerance,
+    )
+    fit = fit_estimator(
+        estimator,
+        X,
+        y,
+        model="restricted_midas",
+        metadata={
+            "weighting": weighting_value,
+            "polynomial_order": int(polynomial_order),
+            "start_params": _jsonable_start_params(start_params),
+            "n_steps": int(n_steps),
+            "step_bounds": step_bounds,
+            "fit_intercept": bool(fit_intercept),
+            "maxiter": int(maxiter),
+            "tolerance": float(tolerance),
+            "backend": "internal scipy.optimize.least_squares",
+            "implementation_note": (
+                "midasr::midas_r-aligned nonlinear least-squares objective over "
+                "explicit lag columns. Weight maps use nealmon, nbetaMT, or "
+                "polystep logic; optimizer differs from R's default optim(BFGS)."
+            ),
+        },
+    )
+    fit.metadata["lag_groups"] = {
+        group: [column for column, _ in members]
+        for group, members in estimator.groups_.items()
+    }
+    fit.metadata["lag_group_details"] = _lag_group_metadata(estimator.groups_)
+    fit.metadata["param_names"] = list(estimator.param_names_)
+    fit.metadata["converged"] = bool(estimator.converged_)
+    fit.metadata["n_iter"] = int(estimator.n_iter_)
+    fit.diagnostics["effective_lag_coefficients"] = estimator.effective_lag_coefficients_
+    fit.diagnostics["restricted_parameters"] = pd.Series(
+        estimator.params_,
+        index=list(estimator.param_names_),
+        name="parameter",
+    )
+    fit.diagnostics["optimizer"] = {
+        "converged": bool(estimator.converged_),
+        "n_iter": int(estimator.n_iter_),
+        "cost": estimator.cost_,
+        "message": estimator.message_,
+    }
+    return fit
 
 
 def midas_almon(
@@ -757,6 +1479,11 @@ def midas_almon(
         "theta": None if theta is None else theta_value,
         "alpha": alpha,
         "fit_intercept": bool(fit_intercept),
+        "implementation_note": (
+            "Fixed-shape MIDAS design aligned with the scale-free part of "
+            "midasr::nealmon; macroforecast estimates the aggregate coefficient "
+            "with a linear/ridge head rather than midasr's joint NLS optimizer."
+        ),
     }
     fit = fit_estimator(
         _MIDASRegressor(
@@ -790,6 +1517,11 @@ def midas_beta(
         "beta_params": beta_params,
         "alpha": alpha,
         "fit_intercept": bool(fit_intercept),
+        "implementation_note": (
+            "Fixed-shape MIDAS design aligned with midasr::nbetaMT using "
+            "p=(1, a, b, 0); macroforecast estimates the aggregate coefficient "
+            "with a linear/ridge head rather than midasr's joint NLS optimizer."
+        ),
     }
     fit = fit_estimator(
         _MIDASRegressor(
@@ -811,22 +1543,35 @@ def midas_step(
     y: Any | None = None,
     *,
     n_steps: int = 3,
+    step_bounds: tuple[int, ...] | None = None,
+    step_weights: tuple[float, ...] | None = None,
     alpha: float = 0.0,
     fit_intercept: bool = True,
 ) -> ModelFit:
     """Fit linear MIDAS using equal step-function lag buckets."""
 
     n_steps = _validate_positive_int("n_steps", n_steps)
+    step_bounds = _normalize_step_bounds(step_bounds)
+    step_weights = _normalize_step_weights(step_weights)
     alpha = _validate_nonnegative_float("alpha", alpha)
     params = {
         "n_steps": n_steps,
+        "step_bounds": step_bounds,
+        "step_weights": step_weights,
         "alpha": alpha,
         "fit_intercept": bool(fit_intercept),
+        "implementation_note": (
+            "Fixed-shape MIDAS design aligned with midasr::polystep-style "
+            "piecewise-constant lag coefficients. Defaults use equal raw step "
+            "heights and normalize the block to a scale-free weight shape."
+        ),
     }
     fit = fit_estimator(
         _MIDASRegressor(
             weighting="step",
             n_steps=n_steps,
+            step_bounds=step_bounds,
+            step_weights=step_weights,
             alpha=alpha,
             fit_intercept=bool(fit_intercept),
         ),
@@ -886,8 +1631,9 @@ def unrestricted_midas(
         "alpha": alpha,
         "fit_intercept": bool(fit_intercept),
         "implementation_note": (
-            "Unrestricted MIDAS: every supplied lag column receives its own "
-            "coefficient. Build X with feature_engineering.mixed_frequency_lags()."
+            "Aligned with midasr::midas_u when alpha=0: every supplied lag column "
+            "receives its own OLS coefficient. alpha>0 is a macroforecast ridge "
+            "extension. Build X with feature_engineering.mixed_frequency_lags()."
         ),
     }
     fit = fit_estimator(
@@ -1030,6 +1776,461 @@ def theta_method(
         model="theta_method",
         metadata=params,
     )
+
+
+def _normalize_vars_type(value: str) -> str:
+    mapping = {
+        "const": "const",
+        "constant": "const",
+        "c": "const",
+        "trend": "trend",
+        "t": "trend",
+        "both": "both",
+        "ct": "both",
+        "none": "none",
+        "n": "none",
+        "no_const": "none",
+    }
+    key = str(value).lower()
+    if key not in mapping:
+        allowed = "', '".join(sorted(mapping))
+        raise ValueError(f"type must be one of '{allowed}'")
+    return mapping[key]
+
+
+def _vars_rhs(
+    values: np.ndarray,
+    names: tuple[str, ...],
+    n_lag: int,
+    *,
+    type: str,
+    season: int | None,
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    n_obs, n_vars = values.shape
+    yend = values[n_lag:, :]
+    rows: list[list[float]] = []
+    lag_names: list[str] = []
+    for lag in range(1, n_lag + 1):
+        lag_names.extend([f"{name}.l{lag}" for name in names])
+    for i in range(n_lag, n_obs):
+        row: list[float] = []
+        for lag in range(1, n_lag + 1):
+            row.extend(values[i - lag, :].tolist())
+        rows.append(row)
+    rhs = np.asarray(rows, dtype=float)
+    rhs_names = list(lag_names)
+    sample = n_obs - n_lag
+    if type in {"const", "both"}:
+        rhs = np.column_stack([rhs, np.ones(sample, dtype=float)])
+        rhs_names.append("const")
+    if type in {"trend", "both"}:
+        rhs = np.column_stack([rhs, np.arange(n_lag + 1, n_obs + 1, dtype=float)])
+        rhs_names.append("trend")
+    if season is not None:
+        seasonal = _vars_seasonal_dummies(n_obs, season)[n_lag:, :]
+        rhs = np.column_stack([rhs, seasonal])
+        rhs_names.extend([f"sd{i}" for i in range(1, season)])
+    return yend, rhs, rhs_names
+
+
+def _vars_forecast(
+    coef: np.ndarray,
+    values: np.ndarray,
+    steps: int,
+    n_lag: int,
+    *,
+    type: str,
+    season: int | None,
+) -> np.ndarray:
+    if steps <= 0:
+        return np.empty((0, values.shape[1]), dtype=float)
+    n_obs, _ = values.shape
+    history = [row.copy() for row in values[-n_lag:]]
+    seasonal = _vars_seasonal_dummies(n_obs + steps, season)[n_obs:, :] if season else None
+    forecasts: list[np.ndarray] = []
+    for h in range(steps):
+        row: list[float] = []
+        for lag in range(1, n_lag + 1):
+            row.extend(history[-lag].tolist())
+        if type in {"const", "both"}:
+            row.append(1.0)
+        if type in {"trend", "both"}:
+            row.append(float(n_obs + h + 1))
+        if seasonal is not None:
+            row.extend(seasonal[h].tolist())
+        pred = coef @ np.asarray(row, dtype=float)
+        forecasts.append(pred)
+        history.append(np.asarray(pred, dtype=float))
+    return np.vstack(forecasts)
+
+
+def _vars_seasonal_dummies(n_obs: int, season: int | None) -> np.ndarray:
+    if season is None:
+        return np.empty((n_obs, 0), dtype=float)
+    base = np.eye(int(season), dtype=float) - 1.0 / float(season)
+    base = base[:, : int(season) - 1]
+    reps = int(np.ceil(n_obs / float(season)))
+    return np.tile(base, (reps, 1))[:n_obs]
+
+
+def _favar_bvar_draws(
+    values: np.ndarray,
+    n_lag: int,
+    *,
+    prior: str,
+    b0: float,
+    vb0: float,
+    nu0: float,
+    s0: float | Sequence[Sequence[float]] | None,
+    kappa0: float | None,
+    kappa1: float | None,
+    n_iter: int,
+    burnin: int,
+    random_state: int,
+) -> dict[str, Any]:
+    # R FAVAR::BVAR first calls bvartools::gen_var(..., deterministic='none')
+    # and then works with y=t(Y), x=t(Z). _var_design(..., intercept=False)
+    # creates the same lag-only VAR design.
+    from scipy.stats import wishart
+
+    design, response = _var_design(values, n_lag, intercept=False)
+    y = response.T
+    x = design.T
+    k, tnum = y.shape
+    n_reg = x.shape[0]
+    n_coef = k * n_reg
+    if prior == "minnesota":
+        if kappa0 is None or kappa1 is None:
+            raise ValueError("Minnesota BVAR requires kappa0 and kappa1")
+        a_mu_prior, a_v_i_prior = _favar_minnesota_prior(values, n_lag, kappa0, kappa1)
+    else:
+        a_mu_prior = np.full(n_coef, float(b0), dtype=float)
+        a_v_i_prior = np.eye(n_coef, dtype=float) * float(vb0)
+    s0_matrix = _prior_scale_matrix(s0, k)
+    sigma_df_post = int(tnum + float(nu0))
+    if sigma_df_post <= k - 1:
+        sigma_df_post = k
+    rng = np.random.default_rng(random_state)
+    sigma_i = np.eye(k, dtype=float) * 1e-5
+    coef_draws: list[np.ndarray] = []
+    sigma_draws: list[np.ndarray] = []
+    for draw in range(1, n_iter + 1):
+        a = _draw_bvar_coefficients(y, x, sigma_i, a_mu_prior, a_v_i_prior, rng)
+        a_matrix = a.reshape((k, n_reg), order="F")
+        residual = y - a_matrix @ x
+        scale_post = s0_matrix + residual @ residual.T
+        # R calls rWishart(..., solve(s0 + tcrossprod(u))). SciPy requires the
+        # scale argument to be strictly positive definite; nearly collinear
+        # macro panels can make the algebraic equivalent only semidefinite.
+        # Eigenvalue flooring is a numerical guard, not a different prior.
+        precision_scale = _positive_definite(np.linalg.pinv(scale_post))
+        sigma_i = np.asarray(
+            wishart.rvs(df=sigma_df_post, scale=precision_scale, random_state=rng),
+            dtype=float,
+        ).reshape(k, k)
+        sigma = np.linalg.pinv(sigma_i)
+        if draw > burnin:
+            coef_draws.append(a_matrix)
+            sigma_draws.append(sigma)
+    coef_arr = np.stack(coef_draws, axis=0)
+    sigma_arr = np.stack(sigma_draws, axis=0)
+    summary = {
+        "mean": coef_arr.mean(axis=0),
+        "se": coef_arr.std(axis=0, ddof=1) / np.sqrt(max(1, coef_arr.shape[0])),
+        "q025": np.quantile(coef_arr, 0.025, axis=0),
+        "q975": np.quantile(coef_arr, 0.975, axis=0),
+    }
+    return {"coef_draws": coef_arr, "sigma_draws": sigma_arr, "summary": summary}
+
+
+def _draw_bvar_coefficients(
+    y: np.ndarray,
+    x: np.ndarray,
+    sigma_i: np.ndarray,
+    prior_mean: np.ndarray,
+    prior_precision: np.ndarray,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    k, tnum = y.shape
+    n_reg = x.shape[0]
+    z = np.zeros((tnum * k, n_reg * k), dtype=float)
+    y_vec = np.empty(tnum * k, dtype=float)
+    for t in range(tnum):
+        z[t * k : (t + 1) * k, :] = np.kron(x[:, t].reshape(1, -1), np.eye(k))
+        y_vec[t * k : (t + 1) * k] = y[:, t]
+    omega = np.kron(np.eye(tnum), sigma_i)
+    precision = z.T @ omega @ z + prior_precision
+    rhs = z.T @ omega @ y_vec + prior_precision @ prior_mean
+    cov = _positive_definite(_stable_inverse(precision))
+    mean = cov @ rhs
+    return rng.multivariate_normal(mean, cov, check_valid="ignore")
+
+
+def _favar_minnesota_prior(
+    values: np.ndarray,
+    n_lag: int,
+    kappa0: float,
+    kappa1: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    _, response = _var_design(values, n_lag, intercept=False)
+    k = response.shape[1]
+    n_reg = k * n_lag
+    sigma = _favar_univariate_ar_sigma(values, n_lag)
+    variance = np.empty((k, n_reg), dtype=float)
+    for lag in range(1, n_lag + 1):
+        for eq in range(k):
+            for reg in range(k):
+                col = (lag - 1) * k + reg
+                if eq == reg:
+                    variance[eq, col] = float(kappa0) / float(lag * lag)
+                else:
+                    variance[eq, col] = (
+                        float(kappa0)
+                        * float(kappa1)
+                        / float(lag * lag)
+                        * (sigma[eq] ** 2)
+                        / max(sigma[reg] ** 2, 1e-12)
+                    )
+    prior_mean = np.zeros(k * n_reg, dtype=float)
+    prior_precision = np.diag(1.0 / np.maximum(variance.flatten(order="F"), 1e-12))
+    return prior_mean, prior_precision
+
+
+def _favar_univariate_ar_sigma(values: np.ndarray, n_lag: int) -> np.ndarray:
+    n_obs, k = values.shape
+    if n_obs <= n_lag:
+        return np.std(values, axis=0, ddof=1).clip(min=1e-8)
+    out = np.empty(k, dtype=float)
+    for j in range(k):
+        y = values[n_lag:, j]
+        rows = []
+        for i in range(n_lag, n_obs):
+            rows.append([values[i - lag, j] for lag in range(1, n_lag + 1)])
+        x = np.asarray(rows, dtype=float)
+        coef = np.linalg.lstsq(x, y, rcond=None)[0]
+        residual = y - x @ coef
+        denom = max(1, len(y) - x.shape[1])
+        out[j] = float(np.sqrt(max(float(residual @ residual) / denom, 1e-12)))
+    return out
+
+
+def _prior_scale_matrix(value: float | Sequence[Sequence[float]] | None, k: int) -> np.ndarray:
+    if value is None:
+        raise ValueError("s0 must not be None for FAVAR::BVAR-compatible fitting")
+    if np.isscalar(value):
+        return np.full((k, k), float(value), dtype=float)
+    arr = np.asarray(value, dtype=float)
+    if arr.shape != (k, k):
+        raise ValueError(f"s0 must be scalar or a {k}x{k} matrix")
+    return arr
+
+
+def _stable_inverse(matrix: np.ndarray) -> np.ndarray:
+    mat = _symmetrize(np.asarray(matrix, dtype=float))
+    jitter = 0.0
+    for _ in range(6):
+        try:
+            return np.linalg.inv(mat + jitter * np.eye(mat.shape[0]))
+        except np.linalg.LinAlgError:
+            jitter = 1e-10 if jitter == 0.0 else jitter * 10.0
+    return np.linalg.pinv(mat)
+
+
+def _symmetrize(matrix: np.ndarray) -> np.ndarray:
+    return 0.5 * (matrix + matrix.T)
+
+
+def _positive_definite(matrix: np.ndarray, *, floor: float = 1e-8) -> np.ndarray:
+    mat = _symmetrize(np.asarray(matrix, dtype=float))
+    eigvals, eigvecs = np.linalg.eigh(mat)
+    scale = max(float(np.nanmax(np.abs(eigvals))) if eigvals.size else 1.0, 1.0)
+    clipped = np.maximum(eigvals, float(floor) * scale)
+    return _symmetrize((eigvecs * clipped) @ eigvecs.T)
+
+
+def _jsonable_prior_matrix(value: float | Sequence[Sequence[float]] | None) -> Any:
+    if value is None or np.isscalar(value):
+        return None if value is None else float(value)
+    return np.asarray(value, dtype=float).tolist()
+
+
+def _bvar_diagnostics(estimator: _BayesianVAR) -> dict[str, Any]:
+    diagnostics: dict[str, Any] = {}
+    if estimator.summary_:
+        for key, value in estimator.summary_.items():
+            diagnostics[f"coef_{key}"] = pd.DataFrame(
+                np.asarray(value, dtype=float),
+                index=list(estimator.names_),
+                columns=_var_lag_column_names(estimator.names_, estimator.n_lag),
+            )
+    if estimator.sigma_draws_ is not None:
+        diagnostics["sigma_mean"] = pd.DataFrame(
+            estimator.sigma_draws_.mean(axis=0),
+            index=list(estimator.names_),
+            columns=list(estimator.names_),
+        )
+    return diagnostics
+
+
+def _var_lag_column_names(names: tuple[str, ...], n_lag: int) -> list[str]:
+    out: list[str] = []
+    for lag in range(1, n_lag + 1):
+        out.extend([f"{name}.l{lag}" for name in names])
+    return out
+
+
+def _r_scale_matrix(values: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    mean = np.mean(values, axis=0)
+    scale = np.std(values, axis=0, ddof=1)
+    scale = np.where(np.isfinite(scale) & (scale > 1e-12), scale, 1.0)
+    return mean, scale, (values - mean) / scale
+
+
+def _favar_extr_pc(values: np.ndarray, n_factors: int) -> tuple[np.ndarray, np.ndarray]:
+    # FAVAR/R/ExtrPC.R:
+    #   xx <- t(X_st) %*% X_st
+    #   lam <- sqrt(ncol(X_st)) * eigen(xx)$vectors[, 1:K]
+    #   fac <- X_st %*% lam / ncol(X_st)
+    xx = values.T @ values
+    eigvals, eigvecs = np.linalg.eigh(_symmetrize(xx))
+    order = np.argsort(eigvals)[::-1]
+    loadings = np.sqrt(values.shape[1]) * eigvecs[:, order[:n_factors]]
+    factors = values @ loadings / float(values.shape[1])
+    return factors, loadings
+
+
+def _favar_olssvd(y: np.ndarray, x: np.ndarray) -> np.ndarray:
+    # FAVAR/R/facrot.R olssvd(F0, ly):
+    #   svd(ly); b = (v * repmat(1/d, ...)) %*% t(u) %*% F0
+    u, s, vt = np.linalg.svd(x, full_matrices=False)
+    inv_s = np.divide(1.0, s, out=np.zeros_like(s), where=s > 1e-12)
+    return vt.T @ np.diag(inv_s) @ u.T @ y
+
+
+def _favar_facrot(factors: np.ndarray, fast: np.ndarray, slow_factors: np.ndarray) -> np.ndarray:
+    design = np.column_stack([np.ones(fast.shape[0], dtype=float), fast, slow_factors])
+    b = _favar_olssvd(factors, design)
+    return factors - fast @ b[1 : fast.shape[1] + 1, :]
+
+
+def _favar_bgm(
+    values: np.ndarray,
+    response: np.ndarray,
+    n_factors: int,
+    *,
+    tolerance: float = 0.001,
+    nmax: int = 100,
+) -> np.ndarray:
+    x_work = np.asarray(values, dtype=float).copy()
+    previous: np.ndarray | None = None
+    factors = _favar_extr_pc(x_work, n_factors)[0]
+    for iteration in range(1, int(nmax) + 1):
+        factors = _favar_extr_pc(x_work, n_factors)[0]
+        if previous is not None and not bool(np.any(np.abs(factors - previous) > tolerance)):
+            break
+        previous = factors.copy()
+        design = np.column_stack([factors, response])
+        beta = np.linalg.pinv(design.T @ design) @ design.T @ x_work
+        x_work = x_work - response.reshape(-1, 1) @ beta[-1:, :]
+        if iteration >= int(nmax):
+            break
+    return factors
+
+
+def _favar_loading_draws(
+    x: np.ndarray,
+    fy: np.ndarray,
+    loading_matrix: np.ndarray,
+    n_factors: int,
+    factorprior: Mapping[str, Any],
+    nburn: int,
+    nrep: int,
+    random_state: int,
+) -> np.ndarray:
+    b0 = float(factorprior.get("b0", 0.0))
+    b0_vec = np.full(fy.shape[1], b0, dtype=float)
+    b0_arg = factorprior.get("B0", factorprior.get("vb0", None))
+    if b0_arg is None:
+        precision = 4.0 * np.eye(fy.shape[1], dtype=float)
+    elif np.isscalar(b0_arg):
+        precision = float(b0_arg) * np.eye(fy.shape[1], dtype=float)
+    else:
+        precision = np.asarray(b0_arg, dtype=float)
+    c0 = float(factorprior.get("c0", 0.01))
+    d0 = float(factorprior.get("d0", 0.01))
+    rng = np.random.default_rng(random_state + 7919)
+    draws = np.empty((nrep, fy.shape[1], x.shape[1]), dtype=float)
+    xtx = fy.T @ fy
+    for j in range(x.shape[1]):
+        if j < n_factors:
+            draws[:, :, j] = loading_matrix[j, :]
+            continue
+        y = x[:, j]
+        post_precision = xtx + precision
+        post_cov = _stable_inverse(post_precision)
+        post_mean = post_cov @ (fy.T @ y + precision @ b0_vec)
+        residual = y - fy @ post_mean
+        shape = 0.5 * (c0 + len(y))
+        scale = 0.5 * (d0 + float(residual @ residual))
+        for draw in range(nrep):
+            sigma2 = 1.0 / rng.gamma(shape=shape, scale=1.0 / max(scale, 1e-12))
+            draws[draw, :, j] = rng.multivariate_normal(
+                post_mean,
+                _positive_definite(post_cov * sigma2),
+                check_valid="ignore",
+            )
+    return draws
+
+
+def _parse_favar_varprior(prior: Mapping[str, Any]) -> dict[str, Any]:
+    mn = prior.get("mn", {}) if prior else {}
+    if isinstance(mn, Mapping) and mn.get("kappa0") is not None:
+        return {
+            "prior": "minnesota",
+            "b0": 0.0,
+            "vb0": 0.0,
+            "nu0": float(prior.get("nu0", 0.0)),
+            "s0": prior.get("s0", 0.0),
+            "kappa0": float(mn.get("kappa0")),
+            "kappa1": float(mn.get("kappa1", 0.5)),
+        }
+    return {
+        "prior": "normal_inverse_wishart",
+        "b0": float(prior.get("b0", 0.0)) if prior else 0.0,
+        "vb0": float(prior.get("vb0", 0.0)) if prior else 0.0,
+        "nu0": float(prior.get("nu0", 0.0)) if prior else 0.0,
+        "s0": prior.get("s0", 0.0) if prior else 0.0,
+        "kappa0": None,
+        "kappa1": None,
+    }
+
+
+def _favar_diagnostics(estimator: _FAVAR) -> dict[str, Any]:
+    diagnostics: dict[str, Any] = {}
+    if estimator.factorx_ is not None:
+        diagnostics["factorx"] = estimator.factorx_
+    if estimator.loading_draws_ is not None:
+        diagnostics["loading_mean"] = pd.DataFrame(
+            estimator.loading_draws_.mean(axis=0),
+            index=[f"state_{i + 1}" for i in range(estimator.loading_draws_.shape[1])],
+            columns=list(estimator.feature_names_in_),
+        )
+    if estimator.var_summary_:
+        names = tuple([f"factor_{i + 1}" for i in range(estimator.n_factors)] + [estimator.target_name_ or "Y"])
+        for key, value in estimator.var_summary_.items():
+            diagnostics[f"var_coef_{key}"] = pd.DataFrame(
+                np.asarray(value, dtype=float),
+                index=list(names),
+                columns=_var_lag_column_names(names, estimator.n_lag),
+            )
+    if estimator.var_sigma_draws_ is not None:
+        names = tuple([f"factor_{i + 1}" for i in range(estimator.n_factors)] + [estimator.target_name_ or "Y"])
+        diagnostics["var_sigma_mean"] = pd.DataFrame(
+            estimator.var_sigma_draws_.mean(axis=0),
+            index=list(names),
+            columns=list(names),
+        )
+    return diagnostics
 
 
 def _var_design(values: np.ndarray, n_lag: int, *, intercept: bool) -> tuple[np.ndarray, np.ndarray]:
@@ -1374,12 +2575,12 @@ def _normalize_almon_theta(
     polynomial_order: int,
 ) -> tuple[float, ...]:
     if theta is None:
-        return tuple(0.0 for _ in range(polynomial_order + 1))
+        return tuple(0.0 for _ in range(polynomial_order))
     values = tuple(float(value) for value in theta)
-    expected = polynomial_order + 1
+    expected = polynomial_order
     if len(values) != expected:
         raise ValueError(
-            f"theta must contain polynomial_order + 1 values; expected {expected}, got {len(values)}"
+            f"theta must contain polynomial_order values; expected {expected}, got {len(values)}"
         )
     return values
 
@@ -1400,6 +2601,155 @@ def _validate_positive_int(name: str, value: Any) -> int:
     return result
 
 
+def _normalize_step_bounds(value: tuple[int, ...] | None) -> tuple[int, ...] | None:
+    if value is None:
+        return None
+    bounds = tuple(int(item) for item in value)
+    if any(item <= 0 for item in bounds):
+        raise ValueError("step_bounds must contain positive interior cut points")
+    if tuple(sorted(set(bounds))) != bounds:
+        raise ValueError("step_bounds must be strictly increasing")
+    return bounds
+
+
+def _normalize_step_weights(value: tuple[float, ...] | None) -> tuple[float, ...] | None:
+    if value is None:
+        return None
+    weights = tuple(float(item) for item in value)
+    if not weights:
+        raise ValueError("step_weights must not be empty")
+    if not np.isfinite(weights).all() or sum(abs(item) for item in weights) <= 1e-12:
+        raise ValueError("step_weights must contain finite, nonzero values")
+    return weights
+
+
+def _normalize_restricted_weighting(value: str) -> str:
+    mapping = {
+        "almon": "almon",
+        "nealmon": "almon",
+        "exponential_almon": "almon",
+        "beta": "beta",
+        "nbeta": "beta",
+        "nbetamt": "beta",
+        "step": "step",
+        "polystep": "step",
+    }
+    key = str(value).lower()
+    if key not in mapping:
+        raise ValueError("weighting must be one of 'almon', 'beta', or 'step'")
+    return mapping[key]
+
+
+def _restricted_param_count(
+    weighting: str,
+    n_lags: int,
+    *,
+    polynomial_order: int,
+    n_steps: int,
+    step_bounds: tuple[int, ...] | None,
+) -> int:
+    if weighting == "almon":
+        return 1 + int(polynomial_order)
+    if weighting == "beta":
+        return 4
+    if weighting == "step":
+        return len(_restricted_step_buckets(n_lags, n_steps=n_steps, step_bounds=step_bounds))
+    raise ValueError("weighting must be one of 'almon', 'beta', or 'step'")
+
+
+def _restricted_default_start(
+    weighting: str,
+    n_lags: int,
+    *,
+    polynomial_order: int,
+    n_steps: int,
+    step_bounds: tuple[int, ...] | None,
+) -> list[float]:
+    if weighting == "almon":
+        return [1.0, *[0.0 for _ in range(polynomial_order)]]
+    if weighting == "beta":
+        return [1.0, 1.0, 1.0, 0.0]
+    if weighting == "step":
+        return [1.0 for _ in _restricted_step_buckets(n_lags, n_steps=n_steps, step_bounds=step_bounds)]
+    raise ValueError("weighting must be one of 'almon', 'beta', or 'step'")
+
+
+def _restricted_midas_weights(
+    lags: list[int],
+    *,
+    weighting: str,
+    params: Sequence[float],
+    polynomial_order: int,
+    n_steps: int,
+    step_bounds: tuple[int, ...] | None,
+) -> np.ndarray:
+    n = len(lags)
+    if n == 0:
+        return np.empty(0, dtype=float)
+    p = np.asarray(params, dtype=float)
+    if weighting == "almon":
+        if len(p) != 1 + polynomial_order:
+            raise ValueError("almon restricted MIDAS parameters must be scale plus polynomial_order shape values")
+        positions = np.arange(1, n + 1, dtype=float)
+        raw = np.zeros(n, dtype=float)
+        for power, value in enumerate(p[1:], start=1):
+            raw += float(value) * np.power(positions, power)
+        exp_raw = np.exp(raw - raw.max())
+        return float(p[0]) * exp_raw / float(exp_raw.sum())
+    if weighting == "beta":
+        if len(p) != 4:
+            raise ValueError("beta restricted MIDAS parameters must match midasr::nbetaMT p=(scale,a,b,offset)")
+        if n == 1:
+            return np.asarray([float(p[0])], dtype=float)
+        eps = np.finfo(float).eps
+        z = (np.arange(1, n + 1, dtype=float) - 1.0) / float(n - 1)
+        z[0] += eps
+        z[-1] -= eps
+        nb = np.power(z, float(p[1]) - 1.0) * np.power(1.0 - z, float(p[2]) - 1.0)
+        if float(nb.sum()) < eps:
+            if abs(float(p[3])) < eps:
+                return np.zeros(n, dtype=float)
+            return float(p[0]) * np.full(n, 1.0 / n, dtype=float)
+        weights = nb / float(nb.sum()) + float(p[3])
+        denominator = float(weights.sum())
+        if abs(denominator) < eps:
+            return np.zeros(n, dtype=float)
+        return float(p[0]) * weights / denominator
+    if weighting == "step":
+        buckets = _restricted_step_buckets(n, n_steps=n_steps, step_bounds=step_bounds)
+        if len(p) != len(buckets):
+            raise ValueError("step restricted MIDAS parameters must contain one value per step bucket")
+        weights = np.zeros(n, dtype=float)
+        for bucket, value in zip(buckets, p, strict=False):
+            weights[bucket] = float(value)
+        return weights
+    raise ValueError("weighting must be one of 'almon', 'beta', or 'step'")
+
+
+def _restricted_step_buckets(
+    n_lags: int,
+    *,
+    n_steps: int,
+    step_bounds: tuple[int, ...] | None,
+) -> list[np.ndarray]:
+    if n_lags <= 0:
+        return []
+    if step_bounds is None:
+        return [bucket for bucket in np.array_split(np.arange(n_lags), max(1, min(n_steps, n_lags))) if len(bucket)]
+    if step_bounds[-1] >= n_lags:
+        raise ValueError("step_bounds must be interior cut points smaller than the number of lag columns")
+    cuts = (0, *step_bounds, n_lags)
+    return [np.arange(left, right) for left, right in zip(cuts[:-1], cuts[1:], strict=False)]
+
+
+def _jsonable_start_params(value: Mapping[str, Sequence[float]] | Sequence[float] | None) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, Mapping):
+        return {str(key): [float(item) for item in sequence] for key, sequence in value.items()}
+    return [float(item) for item in value]
+
+
 def _validate_nonnegative_float(name: str, value: Any) -> float:
     result = float(value)
     if result < 0.0:
@@ -1415,6 +2765,8 @@ def _midas_weights(
     theta: tuple[float, ...] | None,
     beta_params: tuple[float, float],
     n_steps: int,
+    step_bounds: tuple[int, ...] | None = None,
+    step_weights: tuple[float, ...] | None = None,
 ) -> np.ndarray:
     n = len(lags)
     if n == 0:
@@ -1423,28 +2775,45 @@ def _midas_weights(
         raise ValueError("polynomial_order must be non-negative")
     if n_steps <= 0:
         raise ValueError("n_steps must be positive")
-    x = np.linspace(0.0, 1.0, n)
     if weighting == "almon":
-        theta_values = theta or tuple(0.0 for _ in range(polynomial_order + 1))
+        theta_values = theta or tuple(0.0 for _ in range(polynomial_order))
+        positions = np.arange(1, n + 1, dtype=float)
         raw: np.ndarray = np.zeros(n, dtype=float)
-        for power, value in enumerate(theta_values):
-            raw += float(value) * np.power(x, power)
+        for power, value in enumerate(theta_values, start=1):
+            raw += float(value) * np.power(positions, power)
         weights = np.exp(raw - raw.max())
     elif weighting == "beta":
         a, b = beta_params
         if a <= 0.0 or b <= 0.0:
             raise ValueError("beta_params must be positive")
-        z = np.linspace(1.0 / (n + 1.0), n / (n + 1.0), n)
+        if n == 1:
+            return np.ones(1, dtype=float)
+        eps = np.finfo(float).eps
+        z = (np.arange(1, n + 1, dtype=float) - 1.0) / float(n - 1)
+        z[0] += eps
+        z[-1] -= eps
         weights = np.power(z, a - 1.0) * np.power(1.0 - z, b - 1.0)
     elif weighting == "step":
-        buckets = np.array_split(np.arange(n), max(1, min(n_steps, n)))
+        if step_bounds is None:
+            buckets = np.array_split(np.arange(n), max(1, min(n_steps, n)))
+            heights = np.ones(len(buckets), dtype=float)
+        else:
+            if step_bounds[-1] >= n:
+                raise ValueError("step_bounds must be interior cut points smaller than the number of lag columns")
+            cuts = (0, *step_bounds, n)
+            buckets = [np.arange(left, right) for left, right in zip(cuts[:-1], cuts[1:], strict=False)]
+            heights = np.ones(len(buckets), dtype=float)
+        if step_weights is not None:
+            if len(step_weights) != len(buckets):
+                raise ValueError("step_weights must contain one value per step bucket")
+            heights = np.asarray(step_weights, dtype=float)
         weights = np.zeros(n, dtype=float)
-        for bucket in buckets:
-            weights[bucket] = 1.0 / (len(buckets) * max(1, len(bucket)))
+        for bucket, height in zip(buckets, heights, strict=False):
+            weights[bucket] = float(height)
     else:
         raise ValueError("weighting must be 'almon', 'beta', or 'step'")
-    total = float(weights.sum())
-    if total <= 1e-12:
+    total = float(np.sum(np.abs(weights))) if np.any(weights < 0.0) else float(weights.sum())
+    if abs(total) <= 1e-12:
         return np.full(n, 1.0 / n, dtype=float)
     return weights / total
 
@@ -1462,6 +2831,7 @@ __all__ = [
     "midas_almon",
     "midas_beta",
     "midas_step",
+    "restricted_midas",
     "theta_method",
     "unrestricted_midas",
     "var",

@@ -28,6 +28,7 @@ def _matlab_style_spca_reference(
     n_components: int,
     n_selected: int,
     slope_scale: bool,
+    quadratic_factors: bool = False,
 ) -> np.ndarray:
     x_train = X_train.to_numpy(dtype=float)
     x_test = X_test.to_numpy(dtype=float)
@@ -46,6 +47,7 @@ def _matlab_style_spca_reference(
     work_y = y_residual.copy()
     loadings: list[np.ndarray] = []
     factor_coefs: list[float] = []
+    factor_square_coefs: list[float] = []
     for _ in range(n_components):
         scores = _reference_abs_corr(work_x, work_y)
         selected = np.argsort(-scores)[:n_selected]
@@ -55,17 +57,22 @@ def _matlab_style_spca_reference(
         factor = work_x @ loading
         denom = float(factor @ factor)
         alpha = float(work_y @ factor / denom)
+        squared = factor**2
+        denom2 = float(squared @ squared)
+        alpha2 = 0.0 if not quadratic_factors else float(work_y @ squared / denom2)
         lambdas = work_x.T @ factor / denom
         loadings.append(loading)
         factor_coefs.append(alpha)
-        work_y = work_y - alpha * factor
+        factor_square_coefs.append(alpha2)
+        work_y = work_y - alpha * factor - alpha2 * squared
         work_x = work_x - np.outer(factor, lambdas)
 
     loading_matrix = np.vstack(loadings)
-    return (
-        x_test @ loading_matrix.T @ np.asarray(factor_coefs)
-        + control_test @ control_coef
-    )
+    factors = x_test @ loading_matrix.T
+    prediction = factors @ np.asarray(factor_coefs) + control_test @ control_coef
+    if quadratic_factors:
+        prediction = prediction + (factors**2) @ np.asarray(factor_square_coefs)
+    return prediction
 
 
 def _reference_marginal_slopes(X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -98,6 +105,7 @@ def _huang_scaled_pca_reference(
     X_test: pd.DataFrame,
     *,
     n_components: int,
+    quadratic_factors: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     x_mean = X_train.mean(axis=0)
     x_scale = X_train.std(axis=0, ddof=1).where(lambda s: s > 1e-12, 1.0)
@@ -119,7 +127,11 @@ def _huang_scaled_pca_reference(
     control_coef = np.linalg.pinv(control_train) @ y_values
     residual = y_values - control_train @ control_coef
     factor_coef = np.linalg.pinv(factors) @ residual
-    return factors, control_test @ control_coef + factor_test @ factor_coef
+    prediction = control_test @ control_coef + factor_test @ factor_coef
+    if quadratic_factors:
+        factor_square_coef = np.linalg.pinv(factors**2) @ residual
+        prediction = prediction + (factor_test**2) @ factor_square_coef
+    return factors, prediction
 
 
 def test_linear_models_return_model_fit_with_series_predictions() -> None:
@@ -132,6 +144,25 @@ def test_linear_models_return_model_fit_with_series_predictions() -> None:
     assert list(pred.index) == list(X.index[:5])
     assert pred.name == "prediction"
     assert fit.metadata["alpha"] == 0.5
+
+
+def test_basic_linear_models_fit_and_predict() -> None:
+    X, y = _xy()
+
+    fits = [
+        mf.models.ols(X, y),
+        mf.models.elastic_net(X, y, alpha=0.01, l1_ratio=0.5),
+        mf.models.bayesian_ridge(X, y),
+        mf.models.huber(X, y, max_iter=100),
+        mf.models.glmboost(X, y, n_iter=5),
+    ]
+
+    for fit in fits:
+        pred = fit.predict(X.iloc[:4])
+        assert isinstance(fit, mf.models.ModelFit)
+        assert len(pred) == 4
+        assert np.isfinite(pred.to_numpy(dtype=float)).all()
+        assert "coefficients" in fit.diagnostics
 
 
 def test_ridge_variants_fit_and_record_constraints() -> None:
@@ -163,6 +194,117 @@ def test_ridge_variants_fit_and_record_constraints() -> None:
         pred = fit.predict(X.iloc[:3])
         assert pred.shape == (3,)
         assert fit.metadata["alpha"] > 0.0
+
+
+def test_nonneg_ridge_matches_augmented_nnls_objective() -> None:
+    from scipy.optimize import nnls
+
+    X, y = _xy()
+    alpha = 0.1
+    fit = mf.models.nonneg_ridge(X, y, alpha=alpha)
+    x_values = X.to_numpy(dtype=float)
+    y_values = y.to_numpy(dtype=float)
+    x_centered = x_values - x_values.mean(axis=0)
+    y_centered = y_values - y_values.mean()
+    x_aug = np.vstack([x_centered, np.sqrt(alpha) * np.eye(X.shape[1])])
+    y_aug = np.concatenate([y_centered, np.zeros(X.shape[1])])
+    expected_coef, _ = nnls(x_aug, y_aug)
+
+    np.testing.assert_allclose(fit.estimator.coef_, expected_coef, rtol=1e-10, atol=1e-10)
+    assert fit.estimator.intercept_ == pytest.approx(
+        float(y_values.mean() - x_values.mean(axis=0) @ expected_coef)
+    )
+
+
+def test_shrink_to_target_ridge_matches_unconstrained_target_ridge_solution() -> None:
+    X, y = _xy()
+    alpha = 0.25
+    prior = {"x1": 0.25, "x2": -0.1}
+
+    fit = mf.models.shrink_to_target_ridge(X, y, alpha=alpha, prior_target=prior)
+    x_values = X.to_numpy(dtype=float)
+    y_values = y.to_numpy(dtype=float)
+    x_centered = x_values - x_values.mean(axis=0)
+    y_centered = y_values - y_values.mean()
+    prior_vector = np.asarray([prior["x1"], prior["x2"]], dtype=float)
+    lhs = x_centered.T @ x_centered + alpha * np.eye(X.shape[1])
+    rhs = x_centered.T @ y_centered + alpha * prior_vector
+    expected_coef = np.linalg.solve(lhs, rhs)
+
+    np.testing.assert_allclose(fit.estimator.coef_, expected_coef, rtol=1e-8, atol=1e-8)
+    assert fit.estimator.intercept_ == pytest.approx(
+        float(y_values.mean() - x_values.mean(axis=0) @ expected_coef)
+    )
+
+
+def test_fused_difference_ridge_matches_unconstrained_difference_penalty_solution() -> None:
+    X, y = _xy()
+    alpha = 0.4
+
+    fit = mf.models.fused_difference_ridge(X, y, alpha=alpha, difference_order=1)
+    x_values = X.to_numpy(dtype=float)
+    y_values = y.to_numpy(dtype=float)
+    x_centered = x_values - x_values.mean(axis=0)
+    y_centered = y_values - y_values.mean()
+    difference = np.diff(np.eye(X.shape[1]), axis=0)
+    lhs = x_centered.T @ x_centered + alpha * (difference.T @ difference)
+    rhs = x_centered.T @ y_centered
+    expected_coef = np.linalg.solve(lhs, rhs)
+
+    np.testing.assert_allclose(fit.estimator.coef_, expected_coef, rtol=1e-8, atol=1e-8)
+    assert fit.estimator.intercept_ == pytest.approx(
+        float(y_values.mean() - x_values.mean(axis=0) @ expected_coef)
+    )
+
+
+def test_random_walk_ridge_matches_augmented_path_least_squares() -> None:
+    X, y = _xy(12)
+    alpha = 0.5
+    initial_alpha = 0.2
+
+    fit = mf.models.random_walk_ridge(
+        X,
+        y,
+        alpha=alpha,
+        initial_alpha=initial_alpha,
+    )
+    x_values = X.to_numpy(dtype=float)
+    y_values = y.to_numpy(dtype=float)
+    x_centered = x_values - x_values.mean(axis=0)
+    y_centered = y_values - y_values.mean()
+    n_obs, n_features = x_centered.shape
+    design = np.zeros((n_obs, n_obs * n_features), dtype=float)
+    for row in range(n_obs):
+        start = row * n_features
+        design[row, start : start + n_features] = x_centered[row]
+    initial_penalty = np.zeros((n_features, n_obs * n_features), dtype=float)
+    initial_penalty[:, :n_features] = np.sqrt(initial_alpha) * np.eye(n_features)
+    walk_penalty = np.zeros(((n_obs - 1) * n_features, n_obs * n_features), dtype=float)
+    cursor = 0
+    for row in range(1, n_obs):
+        previous = (row - 1) * n_features
+        current = row * n_features
+        walk_penalty[cursor : cursor + n_features, previous : previous + n_features] = (
+            -np.sqrt(alpha) * np.eye(n_features)
+        )
+        walk_penalty[cursor : cursor + n_features, current : current + n_features] = (
+            np.sqrt(alpha) * np.eye(n_features)
+        )
+        cursor += n_features
+    expected_vector = np.linalg.lstsq(
+        np.vstack([design, initial_penalty, walk_penalty]),
+        np.concatenate([y_centered, np.zeros(n_features), np.zeros((n_obs - 1) * n_features)]),
+        rcond=None,
+    )[0]
+    expected_path = expected_vector.reshape(n_obs, n_features)
+
+    np.testing.assert_allclose(
+        fit.estimator.coef_path_.to_numpy(dtype=float),
+        expected_path,
+        rtol=1e-10,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(fit.estimator.coef_, expected_path[-1])
 
 
 def test_lasso_path_is_not_public_model_family() -> None:
@@ -199,6 +341,14 @@ def test_top_level_model_exports_include_new_model_families() -> None:
     assert not hasattr(mf, "mlp")
 
 
+def test_all_registered_models_are_public_exports() -> None:
+    for name in mf.models.MODEL_SPECS:
+        assert hasattr(mf.models, name), name
+        assert name in mf.models.__all__, name
+        assert hasattr(mf, name), name
+        assert getattr(mf, name) is getattr(mf.models, name), name
+
+
 def test_model_specs_own_default_params_and_search_spaces() -> None:
     spec = mf.models.get_model("lasso", preset="small")
 
@@ -233,6 +383,35 @@ def test_model_spec_parameter_metadata_is_consistent() -> None:
             assert tunable_names.issubset(search_names), name
 
 
+def test_model_spec_defaults_match_callable_signatures() -> None:
+    for name, spec in mf.models.MODEL_SPECS.items():
+        signature = inspect.signature(spec.fit_func)
+        parameters = signature.parameters
+        accepts_kwargs = any(
+            parameter.kind == inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters.values()
+        )
+
+        for key, default in spec.default_params.items():
+            assert key in parameters or accepts_kwargs, (name, key)
+            if key in parameters and parameters[key].default is not inspect._empty:
+                assert parameters[key].default == default, (name, key)
+
+        for parameter in spec.parameters:
+            assert parameter.name in parameters or accepts_kwargs, (name, parameter.name)
+            if parameter.name in parameters and parameters[parameter.name].default is not inspect._empty:
+                assert parameters[parameter.name].default == parameter.default, (
+                    name,
+                    parameter.name,
+                )
+
+        parameter_names = {parameter.name for parameter in spec.parameters}
+        for preset, space in spec.search_spaces.items():
+            for key in space:
+                assert key in parameters or accepts_kwargs, (name, preset, key)
+                assert key in parameter_names, (name, preset, key)
+
+
 def test_model_spec_can_fit_like_model_callable() -> None:
     X, y = _xy()
     spec = mf.models.get_model("ridge", params={"alpha": 0.5})
@@ -257,9 +436,23 @@ def test_kernel_knn_and_mars_models_fit_and_predict() -> None:
 
     assert krr.predict(X.iloc[:4]).shape == (4,)
     assert knn.predict(X.iloc[:4]).shape == (4,)
+    assert krr.metadata["kernel"] == "rbf"
+    assert "sklearn.kernel_ridge.KernelRidge" in krr.metadata["implementation_note"]
+    assert knn.metadata["n_neighbors"] == 3
+    assert "small-window" in knn.metadata["implementation_note"]
     assert mars.predict(X.iloc[:4]).shape == (4,)
     assert mars.estimator.n_terms_ > 1
     assert "Package-native" in mars.metadata["implementation_note"]
+
+
+def test_knn_resolves_neighbors_for_small_training_windows() -> None:
+    X, y = _xy(3)
+
+    fit = mf.models.knn(X, y, n_neighbors=10)
+
+    assert fit.metadata["n_neighbors"] == 3
+    assert fit.metadata["requested_n_neighbors"] == 10
+    assert fit.predict(X).shape == (3,)
 
 
 def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
@@ -267,8 +460,8 @@ def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
     panel = pd.concat([y.rename("y"), X], axis=1)
     future = pd.DataFrame(index=pd.date_range(panel.index[-1] + pd.offsets.MonthEnd(), periods=3, freq="ME"))
 
-    bvar = mf.models.bvar_minnesota(panel, target="y", n_lag=2)
-    niw = mf.models.bvar_normal_inverse_wishart(panel, target="y", n_lag=2)
+    bvar = mf.models.bvar_minnesota(panel, target="y", n_lag=2, iter=30, burnin=10, random_state=1)
+    niw = mf.models.bvar_normal_inverse_wishart(panel, target="y", n_lag=2, iter=30, burnin=10, random_state=2)
     ets = mf.models.ets(y, trend="add")
     hw = mf.models.holt_winters(y, trend="add")
     theta = mf.models.theta_method(y, deseasonalize=False)
@@ -277,6 +470,10 @@ def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
         pred = fit.predict(future)
         assert len(pred) == 3
         assert np.isfinite(pred).all()
+    assert "posterior draw sampler" in bvar.metadata["implementation_note"]
+    assert "posterior draw sampler" in niw.metadata["implementation_note"]
+    assert set(bvar.diagnostics) == {"coef_mean", "coef_se", "coef_q025", "coef_q975", "sigma_mean"}
+    assert "sigma_mean" in niw.diagnostics
 
 
 def test_midas_variants_group_lagged_predictors() -> None:
@@ -314,6 +511,44 @@ def test_midas_variants_group_lagged_predictors() -> None:
         "x_lag1",
         "x_lag2",
     }
+    assert "midasr::nealmon" in almon.metadata["implementation_note"]
+    assert "midasr::nbetaMT" in beta.metadata["implementation_note"]
+    assert "midasr::polystep" in step.metadata["implementation_note"]
+
+
+def test_midas_weights_match_midasr_shape_formulas() -> None:
+    idx = pd.date_range("2000-01-01", periods=10, freq="MS")
+    lagged = pd.DataFrame(
+        {
+            "x_lag0": np.arange(10, dtype=float),
+            "x_lag1": np.arange(10, dtype=float) + 1.0,
+            "x_lag2": np.arange(10, dtype=float) + 2.0,
+            "x_lag3": np.arange(10, dtype=float) + 3.0,
+        },
+        index=idx,
+    )
+    target = pd.Series(np.arange(10, dtype=float), index=idx, name="y")
+
+    almon = mf.models.midas_almon(lagged, target, polynomial_order=2, theta=(0.1, -0.02))
+    positions = np.arange(1, 5, dtype=float)
+    raw = 0.1 * positions + -0.02 * positions**2
+    expected_almon = np.exp(raw - raw.max())
+    expected_almon = expected_almon / expected_almon.sum()
+
+    beta = mf.models.midas_beta(lagged, target, beta_params=(1.5, 2.0))
+    z = (np.arange(1, 5, dtype=float) - 1.0) / 3.0
+    z[0] += np.finfo(float).eps
+    z[-1] -= np.finfo(float).eps
+    expected_beta = z**0.5 * (1.0 - z)
+    expected_beta = expected_beta / expected_beta.sum()
+
+    step = mf.models.midas_step(lagged, target, step_bounds=(2,), step_weights=(1.0, 3.0))
+    expected_step = np.asarray([1.0, 1.0, 3.0, 3.0], dtype=float)
+    expected_step = expected_step / expected_step.sum()
+
+    np.testing.assert_allclose(almon.metadata["weights"]["x"], expected_almon)
+    np.testing.assert_allclose(beta.metadata["weights"]["x"], expected_beta)
+    np.testing.assert_allclose(step.metadata["weights"]["x"], expected_step)
 
 
 def test_midas_weighted_design_requires_complete_lag_blocks() -> None:
@@ -336,9 +571,11 @@ def test_midas_weighted_design_requires_complete_lag_blocks() -> None:
     ("factory", "kwargs", "message"),
     [
         (mf.models.midas_almon, {"polynomial_order": -1}, "polynomial_order"),
-        (mf.models.midas_almon, {"polynomial_order": 2, "theta": (0.0, 0.1)}, "theta"),
+        (mf.models.midas_almon, {"polynomial_order": 2, "theta": (0.0,)}, "theta"),
         (mf.models.midas_beta, {"beta_params": (1.0, 0.0)}, "beta_params"),
         (mf.models.midas_step, {"n_steps": 0}, "n_steps"),
+        (mf.models.midas_step, {"step_bounds": (2, 1)}, "step_bounds"),
+        (mf.models.midas_step, {"step_weights": ()}, "step_weights"),
         (mf.models.unrestricted_midas, {"alpha": -0.1}, "alpha"),
     ],
 )
@@ -451,10 +688,55 @@ def test_dfm_unrestricted_midas_builds_composite_design() -> None:
     assert isinstance(design, pd.DataFrame)
     assert "dfm_factor1_lag0" in design.columns
     assert "m1_lag2" in design.columns
-    assert fit.metadata["prediction_contract"].startswith("predict() expects")
+    assert fit.metadata["prediction_contract"].startswith("predict() accepts")
     pred = fit.predict(design.iloc[-2:])
     assert len(pred) == 2
     assert np.isfinite(pred.to_numpy(dtype=float)).all()
+    masked = mixed.panel.copy()
+    masked.loc[quarterly_idx[-1:], "q_target"] = np.nan
+    future_pred = fit.estimator.predict_from_panel(
+        mf.data.DataBundle(masked, mixed.metadata),
+        anchor_dates=quarterly_idx[-1:],
+    )
+    assert len(future_pred) == 1
+    assert np.isfinite(future_pred).all()
+
+
+def test_restricted_midas_estimates_midasr_style_nls_weights() -> None:
+    idx = pd.RangeIndex(18)
+    rng = np.random.default_rng(123)
+    X = pd.DataFrame(
+        rng.normal(size=(len(idx), 4)),
+        index=idx,
+        columns=["x_lag0", "x_lag1", "x_lag2", "x_lag3"],
+    )
+    true_weights = np.array([0.35, 0.35, 0.15, 0.15])
+    y = pd.Series(1.5 + X.to_numpy() @ true_weights, index=idx, name="y")
+
+    fit = mf.models.restricted_midas(
+        X,
+        y,
+        weighting="step",
+        step_bounds=(2,),
+        start_params={"x": (0.2, 0.2)},
+        fit_intercept=True,
+        tolerance=1e-10,
+    )
+
+    effective = fit.diagnostics["effective_lag_coefficients"]
+    assert fit.metadata["converged"] is True
+    assert np.isclose(float(fit.diagnostics["intercept"]), 1.5, atol=1e-6)
+    assert np.allclose(
+        effective.reindex(["x_lag0", "x_lag1"]).to_numpy(dtype=float),
+        [0.35, 0.35],
+        atol=1e-6,
+    )
+    assert np.allclose(
+        effective.reindex(["x_lag2", "x_lag3"]).to_numpy(dtype=float),
+        [0.15, 0.15],
+        atol=1e-6,
+    )
+    assert "midasr::midas_r" in fit.metadata["implementation_note"]
 
 
 def test_model_fit_and_spec_export_metadata() -> None:
@@ -519,7 +801,22 @@ def test_save_fit_can_write_metadata_when_pickle_fails(tmp_path) -> None:
 
 
 def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
+    ols_spec = mf.models.get_model("ols")
+    ridge_spec = mf.models.get_model("ridge")
+    lasso_spec = mf.models.get_model("lasso")
+    adaptive_lasso_spec = mf.models.get_model("adaptive_lasso")
+    group_lasso_spec = mf.models.get_model("group_lasso")
+    glmboost_spec = mf.models.get_model("glmboost")
+    pls_spec = mf.models.get_model("pls")
+    kernel_ridge_spec = mf.models.get_model("kernel_ridge")
+    knn_spec = mf.models.get_model("knn")
+    decision_tree_spec = mf.models.get_model("decision_tree")
+    random_forest_spec = mf.models.get_model("random_forest")
+    extra_trees_spec = mf.models.get_model("extra_trees")
+    gradient_boosting_spec = mf.models.get_model("gradient_boosting")
     svr_spec = mf.models.get_model("svr")
+    linear_svr_spec = mf.models.get_model("linear_svr")
+    nu_svr_spec = mf.models.get_model("nu_svr")
     nn_spec = mf.models.get_model("nn")
     lstm_spec = mf.models.get_model("lstm")
     transformer_spec = mf.models.get_model("transformer")
@@ -527,15 +824,48 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     xgb_spec = mf.models.get_model("xgboost")
     lightgbm_spec = mf.models.get_model("lightgbm")
     catboost_spec = mf.models.get_model("catboost")
+    qrf_spec = mf.models.get_model("quantile_regression_forest")
     mrf_spec = mf.models.get_model("macro_random_forest")
     garch_spec = mf.models.get_model("garch11")
     egarch_spec = mf.models.get_model("egarch")
     realized_garch_spec = mf.models.get_model("realized_garch")
 
+    assert ols_spec.backend == "sklearn.linear_model.LinearRegression"
+    assert ridge_spec.backend == "sklearn.linear_model.Ridge"
+    assert lasso_spec.backend == "sklearn.linear_model.Lasso"
+    assert (
+        adaptive_lasso_spec.backend
+        == "internal adaptive weights + sklearn.linear_model.Lasso"
+    )
+    assert group_lasso_spec.backend == "internal proximal-gradient solver"
+    assert glmboost_spec.backend == "internal componentwise L2 boosting"
+    assert glmboost_spec.default_params["center"] is True
+    assert pls_spec.backend == "sklearn.cross_decomposition.PLSRegression"
+    assert pls_spec.default_params["include_constant"] is True
+    assert kernel_ridge_spec.backend == "sklearn.kernel_ridge.KernelRidge"
+    assert kernel_ridge_spec.family == "nonparametric"
+    assert kernel_ridge_spec.requires_scaling is True
+    assert "nonlinear kernels" in kernel_ridge_spec.recommended_preprocessing[0]
+    assert knn_spec.backend == "sklearn.neighbors.KNeighborsRegressor"
+    assert knn_spec.requires_scaling is True
+    assert "distance-based" in knn_spec.recommended_preprocessing[0]
+
+    assert decision_tree_spec.backend == "sklearn.tree.DecisionTreeRegressor"
+    assert random_forest_spec.backend == "sklearn.ensemble.RandomForestRegressor"
+    assert extra_trees_spec.backend == "sklearn.ensemble.ExtraTreesRegressor"
+    assert (
+        gradient_boosting_spec.backend
+        == "sklearn.ensemble.GradientBoostingRegressor"
+    )
+
     assert svr_spec.backend == "sklearn.svm.SVR"
     assert svr_spec.requires_scaling is True
     assert svr_spec.to_metadata()["requires_scaling"] is True
     assert "standardize predictors" in svr_spec.recommended_preprocessing[0]
+    assert linear_svr_spec.backend == "sklearn.svm.LinearSVR"
+    assert linear_svr_spec.requires_scaling is True
+    assert nu_svr_spec.backend == "sklearn.svm.NuSVR"
+    assert nu_svr_spec.requires_scaling is True
 
     assert nn_spec.backend == "torch.nn.Sequential"
     assert nn_spec.requires_extra == "deep"
@@ -563,6 +893,10 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert catboost_spec.backend == "catboost.CatBoostRegressor"
     assert catboost_spec.requires_extra == "catboost"
     assert (
+        qrf_spec.backend
+        == "sklearn.ensemble.RandomForestRegressor + internal leaf quantiles"
+    )
+    assert (
         mrf_spec.backend
         == "macroforecast.models._mrf_reference.MacroRandomForest"
     )
@@ -571,7 +905,10 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert garch_spec.requires_extra == "arch"
     assert egarch_spec.backend == "arch.arch_model"
     assert egarch_spec.requires_extra == "arch"
-    assert realized_garch_spec.backend == "internal"
+    assert (
+        realized_garch_spec.backend
+        == "internal rugarch-realGARCH-style p=q=1 log-linear MLE"
+    )
     assert realized_garch_spec.requires_extra is None
 
 
@@ -586,11 +923,30 @@ def test_pls_and_far_fit() -> None:
     assert len(far_fit.predict(X.iloc[-3:])) == 3
 
 
+def test_favar_model_fits_and_predicts() -> None:
+    X, y = _xy(80)
+
+    fit = mf.models.favar(X, y, n_factors=2, n_lag=2, fctmethod="BGM", nburn=5, nrep=15)
+    pred = fit.predict(X.iloc[-4:])
+
+    assert isinstance(fit, mf.models.ModelFit)
+    assert len(pred) == 4
+    assert np.isfinite(pred.to_numpy(dtype=float)).all()
+    assert fit.metadata["n_factors"] == 2
+    assert fit.metadata["fctmethod"] == "BGM"
+    assert fit.metadata["backend"] == "internal FAVAR::FAVAR-aligned Bayesian sampler"
+    assert "predict.favar" in fit.metadata["implementation_note"]
+    assert set(fit.diagnostics) >= {"factorx", "loading_mean", "var_coef_mean", "var_sigma_mean"}
+    assert fit.feature_names == tuple(X.columns)
+
+
 def test_support_vector_models_fit() -> None:
     X, y = _xy()
 
     rbf = mf.models.svr(X, y, C=1.0, epsilon=0.01)
-    linear = mf.models.linear_svr(X, y, C=1.0, epsilon=0.0, max_iter=5000)
+    linear = mf.models.linear_svr(
+        X, y, C=1.0, epsilon=0.0, max_iter=5000, random_state=None
+    )
     nu = mf.models.nu_svr(X, y, C=1.0, nu=0.5)
 
     assert len(rbf.predict(X.iloc[-3:])) == 3
@@ -598,7 +954,17 @@ def test_support_vector_models_fit() -> None:
     assert len(nu.predict(X.iloc[-3:])) == 3
     assert rbf.metadata["kernel"] == "rbf"
     assert linear.metadata["loss"] == "epsilon_insensitive"
+    assert linear.metadata["random_state"] is None
     assert nu.metadata["nu"] == 0.5
+
+
+def test_support_vector_models_reject_precomputed_kernel() -> None:
+    X, y = _xy()
+
+    with pytest.raises(ValueError, match="feature-matrix ModelFit contract"):
+        mf.models.svr(X, y, kernel="precomputed")
+    with pytest.raises(ValueError, match="feature-matrix ModelFit contract"):
+        mf.models.nu_svr(X, y, kernel="precomputed")
 
 
 def test_adaptive_and_group_penalized_models_fit() -> None:
@@ -623,8 +989,24 @@ def test_adaptive_and_group_penalized_models_fit() -> None:
 
     assert adaptive.metadata["gamma"] == 1.0
     assert adaptive.estimator.adaptive_weights_.shape == (X.shape[1],)
+    assert np.isclose(float(adaptive.estimator.adaptive_weights_.mean()), 1.0)
+    assert adaptive.metadata["normalize_weights"] is True
     assert grouped.estimator.groups_ == groups
+    assert grouped.estimator.resolved_group_weights_["trend"] == pytest.approx(1.0)
+    assert grouped.estimator.resolved_group_weights_["cycle"] == pytest.approx(1.0)
     assert sparse_grouped.metadata["l1_ratio"] == 0.25
+
+
+def test_group_lasso_records_default_sqrt_group_weights() -> None:
+    X, y = _xy()
+    X = X.assign(x3=0.5 * X["x1"] + 0.1)
+    groups = ("macro", "macro", "cycle")
+
+    fit = mf.models.group_lasso(X, y, groups=groups, alpha=0.001)
+
+    assert fit.estimator.groups_ == groups
+    assert fit.estimator.resolved_group_weights_["macro"] == pytest.approx(np.sqrt(2.0))
+    assert fit.estimator.resolved_group_weights_["cycle"] == pytest.approx(1.0)
 
 
 def test_group_lasso_validates_group_length() -> None:
@@ -632,6 +1014,25 @@ def test_group_lasso_validates_group_length() -> None:
 
     with pytest.raises(ValueError, match="one entry per X column"):
         mf.models.group_lasso(X, y, groups=("only_one",))
+
+
+def test_glmboost_matches_mboost_componentwise_selection_rule() -> None:
+    values = np.asarray([1.0, -1.0, 1.0, -1.0])
+    orthogonal = np.asarray([1.0, 1.0, -1.0, -1.0])
+    X = pd.DataFrame(
+        {
+            "large_low_corr": 100.0 * (values + np.sqrt(3.0) * orthogonal),
+            "exact": values,
+        }
+    )
+    y = pd.Series(values)
+
+    fit = mf.models.glmboost(X, y, n_iter=1, learning_rate=1.0)
+
+    assert fit.estimator.n_iter_ == 1
+    assert fit.estimator.coef_[0] == pytest.approx(0.0)
+    assert fit.estimator.coef_[1] == pytest.approx(1.0)
+    assert fit.metadata["center"] is True
 
 
 def test_tree_model_records_feature_importance_diagnostics() -> None:
@@ -645,6 +1046,29 @@ def test_tree_model_records_feature_importance_diagnostics() -> None:
         "x2",
     }
     assert np.isfinite(importance.to_numpy(dtype=float)).all()
+
+
+def test_basic_tree_models_fit_and_predict() -> None:
+    X, y = _xy()
+
+    fits = [
+        mf.models.decision_tree(X, y, max_depth=2, random_state=0),
+        mf.models.extra_trees(
+            X,
+            y,
+            n_estimators=8,
+            max_depth=3,
+            random_state=0,
+            n_jobs=1,
+        ),
+    ]
+
+    for fit in fits:
+        pred = fit.predict(X.iloc[:4])
+        assert isinstance(fit, mf.models.ModelFit)
+        assert len(pred) == 4
+        assert np.isfinite(pred.to_numpy(dtype=float)).all()
+        assert "feature_importance" in fit.diagnostics
 
 
 def test_composite_models_record_factor_diagnostics() -> None:
@@ -749,8 +1173,39 @@ def test_realized_garch_records_volatility_diagnostics() -> None:
 
     assert "params" in fit.diagnostics
     assert "conditional_volatility" in fit.diagnostics
+    assert {"alpha", "beta", "delta", "eta_1", "eta_2", "persistence"}.issubset(
+        fit.diagnostics["params"]
+    )
+    assert "rugarch-style" in fit.metadata["implementation_note"]
     assert len(fit.diagnostics["conditional_volatility"]) == len(returns)
     assert len(fit.predict_variance(2)) == 2
+
+
+def test_volatility_models_validate_orders_and_horizon() -> None:
+    idx = pd.date_range("2000-01-31", periods=40, freq="ME")
+    returns = pd.Series(0.01 * np.sin(np.arange(40)), index=idx, name="returns")
+    realized = (returns.abs() + 0.01) ** 2
+
+    with pytest.raises(ValueError, match="p must be positive"):
+        mf.models.GARCHEstimator(variant="garch11", p=0)
+    with pytest.raises(ValueError, match="q must be positive"):
+        mf.models.GARCHEstimator(variant="garch11", q=0)
+    with pytest.raises(ValueError, match="o must be non-negative"):
+        mf.models.GARCHEstimator(variant="egarch", o=-1)
+    with pytest.raises(ValueError, match="max_iter must be positive"):
+        mf.models.realized_garch(returns, rv=realized, max_iter=0)
+    with pytest.raises(ValueError, match="n_starts must be positive"):
+        mf.models.realized_garch(returns, rv=realized, n_starts=0)
+
+    fit = mf.models.realized_garch(
+        returns,
+        rv=realized,
+        max_iter=20,
+        n_starts=1,
+        random_state=0,
+    )
+    with pytest.raises(ValueError, match="horizon must be positive"):
+        fit.predict_variance(0)
 
 
 def test_pls_default_clamps_components_to_available_predictors() -> None:
@@ -762,6 +1217,31 @@ def test_pls_default_clamps_components_to_available_predictors() -> None:
     assert fit.metadata["resolved_n_components"] == 2
     assert fit.metadata["n_components"] == 2
     assert len(fit.predict(X.iloc[-3:])) == 3
+    assert fit.estimator.control_names_ == ("const",)
+
+
+def test_pls_supports_hounyo_li_control_residualization() -> None:
+    X, y = _xy(48)
+    X = X.assign(control=y.shift(1).bfill())
+
+    fit = mf.models.pls(
+        X,
+        y,
+        n_components=2,
+        control_columns=["control"],
+        include_constant=True,
+        drop_control_columns=True,
+        quadratic_factors=True,
+    )
+
+    assert fit.metadata["resolved_n_components"] == 2
+    assert fit.metadata["quadratic_factors"] is True
+    assert fit.estimator.control_names_ == ("control", "const")
+    assert "control" not in fit.estimator.factor_features_
+    assert fit.estimator.factor_square_coefs_.shape == (2,)
+    assert fit.diagnostics["factor_loadings"].shape[1] == 2
+    assert "PLS_emp002.m" in fit.metadata["implementation_note"]
+    assert len(fit.predict(X.iloc[-4:])) == 4
 
 
 def test_nn_model_fit() -> None:
@@ -783,6 +1263,44 @@ def test_nn_model_fit() -> None:
     assert np.isfinite(pred).all()
     assert fit.metadata["hidden_layer_sizes"] == (8,)
     assert fit.metadata["device"] == "cpu"
+
+
+def test_neural_models_validate_learning_rate_before_backend_import() -> None:
+    X, y = _xy()
+
+    factories = [
+        lambda: mf.models.nn(X, y, learning_rate=0.0),
+        lambda: mf.models.lstm(X, y, learning_rate=0.0),
+        lambda: mf.models.gru(X, y, learning_rate=0.0),
+        lambda: mf.models.transformer(X, y, learning_rate=0.0),
+        lambda: mf.models.hemisphere_nn(X, y, learning_rate=0.0),
+    ]
+
+    for factory in factories:
+        with pytest.raises(ValueError, match="learning_rate"):
+            factory()
+
+
+def test_nn_spec_documents_all_supported_activations() -> None:
+    spec = mf.models.get_model("nn")
+    activation = next(
+        parameter for parameter in spec.parameters if parameter.name == "activation"
+    )
+
+    for name in ("identity", "logistic", "sigmoid", "tanh", "relu", "gelu"):
+        assert name in activation.description
+
+
+def test_neural_prediction_scaling_maps_nonfinite_values_to_fit_mean() -> None:
+    from macroforecast.models import neural
+
+    values = np.asarray([[1.0, np.nan], [np.inf, -np.inf]])
+    mean = np.asarray([1.0, 2.0])
+    scale = np.asarray([2.0, 4.0])
+
+    scaled = neural._standardize_prediction_matrix(values, mean, scale)
+
+    np.testing.assert_allclose(scaled, np.zeros_like(values))
 
 
 def test_recurrent_neural_models_fit_when_torch_is_available() -> None:
@@ -940,6 +1458,33 @@ def test_scaled_pca_matches_huang_spcaest_factor_extraction() -> None:
     )
 
 
+def test_scaled_pca_supports_hounyo_li_pc2_squared_factor_head() -> None:
+    X, y = _xy(42)
+    X_train = X.iloc[:34]
+    y_train = y.iloc[:34]
+    X_test = X.iloc[34:38]
+
+    fit = mf.models.scaled_pca(
+        X_train,
+        y_train,
+        n_components=2,
+        quadratic_factors=True,
+    )
+    _, expected_pred = _huang_scaled_pca_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        quadratic_factors=True,
+    )
+
+    assert fit.metadata["quadratic_factors"] is True
+    assert fit.estimator.factor_square_coefs_.shape == (2,)
+    np.testing.assert_allclose(
+        fit.predict(X_test).to_numpy(), expected_pred, atol=1e-10
+    )
+
+
 def test_supervised_pca_matches_matlab_style_spca_recursion() -> None:
     X, y = _xy(42)
     X_train = X.iloc[:34]
@@ -992,10 +1537,39 @@ def test_supervised_scaled_pca_matches_matlab_style_sspca_recursion() -> None:
     np.testing.assert_allclose(fit.predict(X_test).to_numpy(), expected, atol=1e-10)
 
 
+def test_supervised_scaled_pca_supports_pc2_recursion() -> None:
+    X, y = _xy(42)
+    X_train = X.iloc[:34]
+    y_train = y.iloc[:34]
+    X_test = X.iloc[34:38]
+
+    fit = mf.models.supervised_scaled_pca(
+        X_train,
+        y_train,
+        n_components=2,
+        n_selected=2,
+        scale=False,
+        include_constant=True,
+        quadratic_factors=True,
+    )
+    expected = _matlab_style_spca_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        n_selected=2,
+        slope_scale=True,
+        quadratic_factors=True,
+    )
+
+    assert fit.metadata["quadratic_factors"] is True
+    assert fit.estimator.factor_square_coefs_.shape == (2,)
+    np.testing.assert_allclose(fit.predict(X_test).to_numpy(), expected, atol=1e-10)
+
+
 def test_tree_models_include_custom_macro_callables() -> None:
     X, y = _xy()
 
-    sgt = mf.models.slow_growing_tree(X, y, max_depth=2, min_leaf_size=3)
     qrf = mf.models.quantile_regression_forest(
         X,
         y,
@@ -1004,29 +1578,59 @@ def test_tree_models_include_custom_macro_callables() -> None:
         random_state=0,
     )
 
-    assert len(sgt.predict(X.iloc[:4])) == 4
     quantiles = qrf.estimator.predict_quantiles(X.iloc[:4], levels=(0.1, 0.9))
     assert set(quantiles) == {0.1, 0.9}
     assert quantiles[0.1].shape == (4,)
 
 
-def test_bagging_and_booging_are_callable_with_small_budgets() -> None:
+def test_quantile_regression_forest_uses_tree_equal_leaf_weights() -> None:
+    class FakeForest:
+        def apply(self, X):
+            return np.asarray([[1, 2]] * len(X), dtype=int)
+
+        def predict(self, X):
+            return np.zeros(len(X), dtype=float)
+
+    reg = mf.models.QuantileRegressionForestRegressor(quantile_levels=(0.75,))
+    reg._forest = FakeForest()
+    reg._leaf_targets = [
+        {1: np.zeros(100, dtype=float)},
+        {2: np.asarray([10.0], dtype=float)},
+    ]
+
+    quantiles = reg.predict_quantiles(pd.DataFrame({"x1": [0.0]}))
+
+    assert quantiles[0.75][0] == pytest.approx(10.0)
+
+
+def test_hybrid_quantile_levels_are_validated() -> None:
     X, y = _xy()
 
-    bag = mf.models.bagging(
-        X, y, base="ridge", n_estimators=4, max_samples=0.7, random_state=0
-    )
-    boo = mf.models.booging(
-        X,
-        y,
-        B=3,
-        inner_n_estimators=5,
-        sample_frac=0.8,
-        random_state=0,
-    )
+    with pytest.raises(ValueError, match="quantile levels"):
+        mf.models.quantile_regression_forest(X, y, quantile_levels=(0.0, 0.5))
 
-    assert len(bag.predict(X.iloc[:3])) == 3
-    assert len(boo.predict(X.iloc[:3])) == 3
+
+def test_macro_random_forest_prediction_values_validate_backend_shape() -> None:
+    output = {"pred_ensemble": pd.DataFrame({"a": [1.0, 2.0], "b": [3.0, 4.0]})}
+
+    values = mf.models.MacroRandomForestRegressor._prediction_values(output, 2)
+
+    np.testing.assert_allclose(values, [2.0, 3.0])
+    with pytest.raises(RuntimeError, match="did not return"):
+        mf.models.MacroRandomForestRegressor._prediction_values({}, 2)
+
+
+def test_macro_random_forest_position_validation() -> None:
+    features = pd.Index(["x1", "x2"])
+
+    with pytest.raises(ValueError, match="positions"):
+        mf.models.MacroRandomForestRegressor._resolve_positions(None, (0,), features)
+    with pytest.raises(ValueError, match="y_pos must be 0"):
+        mf.models.macro_random_forest(
+            pd.DataFrame({"x1": [1.0, 2.0]}),
+            [1.0, 2.0],
+            y_pos=1,
+        )
 
 
 @pytest.mark.parametrize(
@@ -1169,15 +1773,14 @@ def test_model_metadata_records_all_fit_params() -> None:
     assert rf.metadata["n_estimators"] == 7
     assert rf.metadata["min_samples_leaf"] == 3
     assert rf.metadata["bootstrap"] is False
+    assert "RandomForestRegressor" in rf.metadata["implementation_note"]
     assert gb.metadata["loss"] == "absolute_error"
+    assert "Booging" in gb.metadata["implementation_note"]
 
 
 def test_tree_ensemble_public_signatures_match_specs() -> None:
     for name in (
-        "slow_growing_tree",
         "quantile_regression_forest",
-        "bagging",
-        "booging",
         "macro_random_forest",
     ):
         spec = mf.models.get_model(name)
@@ -1195,12 +1798,42 @@ def test_tree_ensemble_public_signatures_match_specs() -> None:
         assert set(spec.default_params).issubset(public_params), name
 
 
+def test_quantile_regression_forest_records_feature_importance_diagnostics() -> None:
+    X, y = _xy()
+
+    fit = mf.models.quantile_regression_forest(
+        X, y, n_estimators=8, min_samples_leaf=2, random_state=0
+    )
+
+    assert "feature_importance" in fit.diagnostics
+    assert np.isfinite(fit.diagnostics["feature_importance"].to_numpy(dtype=float)).all()
+
+
+def test_macro_random_forest_rejects_duplicate_selector_styles() -> None:
+    X, y = _xy()
+
+    with pytest.raises(ValueError, match="x_columns or x_pos"):
+        mf.models.macro_random_forest(X, y, x_columns=["x1"], x_pos=(1,))
+    with pytest.raises(ValueError, match="S_columns or S_pos"):
+        mf.models.macro_random_forest(X, y, S_columns=["x1"], S_pos=(1,))
+
+
 def test_ar_and_var_fit() -> None:
     X, y = _xy()
     panel = pd.concat([y, X], axis=1)
 
     ar_fit = mf.models.ar(y, n_lag=2)
-    var_fit = mf.models.var(panel, target="y", n_lag=1)
+    var_fit = mf.models.var(panel, target="y", n_lag=1, type="both")
 
     assert len(ar_fit.predict(pd.DataFrame(index=y.index[-4:]))) == 4
     assert len(var_fit.predict(panel.iloc[-4:])) == 4
+    assert var_fit.metadata["backend"] == "internal vars::VAR-aligned OLS"
+    assert var_fit.metadata["type"] == "both"
+
+
+def test_var_rejects_invalid_type_label() -> None:
+    X, y = _xy()
+    panel = pd.concat([y, X], axis=1)
+
+    with pytest.raises(ValueError, match="type must be one of"):
+        mf.models.var(panel, target="y", type="ctt")

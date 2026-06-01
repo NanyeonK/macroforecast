@@ -16,6 +16,7 @@ REFERENCE_MODULES = (
     "feature_analysis",
     "forecast_analysis",
     "models",
+    "model_ensemble",
     "model_selection",
     "forecasting",
     "metrics",
@@ -80,6 +81,15 @@ def test_reference_pages_mention_module_public_symbols() -> None:
         missing = sorted(symbol for symbol in module.__all__ if symbol not in documented)
 
         assert missing == [], f"{module_name} reference page is missing: {missing}"
+
+
+def test_models_reference_has_one_heading_per_registered_model() -> None:
+    models = importlib.import_module("macroforecast.models")
+    documented = Path("docs/reference/models.md").read_text()
+    headings = set(re.findall(r"^### ([^\n]+)$", documented, re.M))
+    missing = sorted(name for name in models.MODEL_SPECS if name not in headings)
+
+    assert missing == []
 
 
 def test_module_reference_page_titles_use_qualified_module_names() -> None:

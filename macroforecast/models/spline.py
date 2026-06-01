@@ -61,6 +61,27 @@ class MARSRegressor:
     callable API. It uses forward pair insertion and optional backward pruning
     by generalized cross-validation. It does not claim bit-level equivalence to
     proprietary or unmaintained MARS backends.
+
+    Source comparison:
+    - Friedman (1991), "Multivariate Adaptive Regression Splines", represents
+      the model as a linear expansion over products of one-sided hinge basis
+      functions and uses a forward pass followed by pruning.
+    - R `earth` is the main open implementation surface to compare against:
+      CRAN `earth` documents that it builds models using Friedman's "Fast
+      MARS" and "Multivariate Adaptive Regression Splines"; `R/earth.R` routes
+      to `earth.fit()`, whose default forward/pruning controls include
+      `degree`, `nk`, `thresh`, `minspan`, `endspan`, `fast.k`, and
+      `pmethod`.
+    - This estimator aligns with the core numeric regression skeleton:
+      paired hinge basis functions, product interactions up to `max_degree`,
+      least-squares refits after each candidate insertion, and GCV-style
+      backward deletion.
+    - It intentionally does not reproduce the full `earth` implementation:
+      no formula/factor expansion, case or response weights, GLM mode,
+      minspan/endspan rules, Fast MARS parent ageing, exhaustive/seqrep/CV
+      pruning, leverage calculations, variance models, or earth object
+      compatibility. Candidate knots are a quantile grid controlled by
+      `n_knots`, not every eligible observed cut used by `earth`.
     """
 
     def __init__(
@@ -103,6 +124,11 @@ class MARSRegressor:
             for parent in parent_terms:
                 for feature, knots in candidate_knots.items():
                     for knot in knots:
+                        # Friedman/earth forward pass logic adds paired
+                        # reflected hinge functions from an existing parent
+                        # basis. We keep that structural rule but score a
+                        # smaller quantile-knot candidate set for callable
+                        # package stability and speed.
                         left = parent.extend(_HingeFactor(feature, float(knot), "left"))
                         right = parent.extend(_HingeFactor(feature, float(knot), "right"))
                         if left in terms or right in terms:
@@ -181,6 +207,10 @@ class MARSRegressor:
             improved = False
             candidate: tuple[float, list[_BasisTerm]] | None = None
             for idx in range(1, len(best_terms)):
+                # R earth's default `pmethod="backward"` prunes the forward
+                # model by GCV. This compact version performs greedy
+                # one-term-at-a-time deletion instead of earth's full pruning
+                # machinery and subset bookkeeping.
                 trial = [term for pos, term in enumerate(best_terms) if pos != idx]
                 gcv = self._gcv(frame, target, trial)
                 if candidate is None or gcv < candidate[0]:
@@ -193,6 +223,11 @@ class MARSRegressor:
     def _gcv(self, frame: pd.DataFrame, target: pd.Series, terms: list[_BasisTerm]) -> float:
         rss, _ = self._fit_terms(frame, target, terms)
         n_obs = max(1, len(frame))
+        # earth.fit's `get.gcv()` uses Friedman's MARS GCV shape
+        # rss / (n * (1 - nparams / n)^2). Its effective parameter count
+        # derives from term and knot counts. Here each paired hinge insertion
+        # contributes roughly one knot, so (len(terms)-1)/2 is the compact
+        # analogue used in the penalty term.
         effective = len(terms) + self.penalty * max(0, len(terms) - 1) / 2.0
         denom = max((1.0 - effective / n_obs) ** 2, 1e-12)
         return float((rss / n_obs) / denom)
@@ -222,7 +257,10 @@ def mars(
         "min_improvement": float(min_improvement),
         "penalty": float(penalty),
         "prune": bool(prune),
-        "implementation_note": "Package-native hinge-basis MARS-style estimator.",
+        "implementation_note": (
+            "Package-native Friedman/earth-aligned hinge-basis MARS-style "
+            "estimator; not a full R earth clone."
+        ),
     }
     return fit_estimator(
         MARSRegressor(

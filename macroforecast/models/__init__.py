@@ -12,8 +12,6 @@ from .linear import (
     glmboost,
     group_lasso,
     huber,
-    kernel_ridge,
-    knn,
     lasso,
     nonneg_ridge,
     ols,
@@ -27,6 +25,7 @@ from .linear import (
     supervised_scaled_pca,
 )
 from .neural import gru, hemisphere_nn, lstm, nn, transformer
+from .nonparametric import kernel_ridge, knn
 from .persistence import SavedModel, load_fit, save_fit
 from .spline import MARSRegressor, mars
 from .specs import (
@@ -53,18 +52,14 @@ from .timeseries import (
     midas_almon,
     midas_beta,
     midas_step,
+    restricted_midas,
     theta_method,
     unrestricted_midas,
     var,
 )
 from .tree import (
-    BaggingRegressor,
-    BoogingRegressor,
     MacroRandomForestRegressor,
     QuantileRegressionForestRegressor,
-    SlowGrowingTreeRegressor,
-    bagging,
-    booging,
     catboost,
     decision_tree,
     extra_trees,
@@ -73,7 +68,6 @@ from .tree import (
     macro_random_forest,
     quantile_regression_forest,
     random_forest,
-    slow_growing_tree,
     xgboost,
 )
 from .types import ModelFit, VolatilityFit
@@ -86,8 +80,6 @@ from .volatility import (
 )
 
 __all__ = [
-    "BaggingRegressor",
-    "BoogingRegressor",
     "GARCHEstimator",
     "MODEL_SPECS",
     "MacroRandomForestRegressor",
@@ -99,16 +91,13 @@ __all__ = [
     "RealizedGARCHEstimator",
     "SavedModel",
     "ScaledPCARegressor",
-    "SlowGrowingTreeRegressor",
     "SupervisedPCARegressor",
     "SupervisedScaledPCARegressor",
     "VolatilityFit",
     "adaptive_elastic_net",
     "adaptive_lasso",
     "ar",
-    "bagging",
     "bayesian_ridge",
-    "booging",
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
     "catboost",
@@ -146,6 +135,7 @@ __all__ = [
     "midas_almon",
     "midas_beta",
     "midas_step",
+    "restricted_midas",
     "nn",
     "model_search_space",
     "nonneg_ridge",
@@ -160,7 +150,6 @@ __all__ = [
     "save_fit",
     "scaled_pca",
     "shrink_to_target_ridge",
-    "slow_growing_tree",
     "sparse_group_lasso",
     "supervised_pca",
     "supervised_scaled_pca",

@@ -4,7 +4,8 @@
 
 `macroforecast.model_selection` chooses model hyperparameters. It does not
 select variables or create features; feature selection belongs to
-`macroforecast.feature_engineering`.
+`macroforecast.feature_engineering`. It can resolve specs from both
+`macroforecast.models` and `macroforecast.model_ensemble`.
 
 Use:
 
@@ -102,7 +103,7 @@ Output fields:
 | `metric` | str or callable | Metric used during model selection. |
 | `method` | str | Search method used. |
 | `window` | str | Canonical window method used. |
-| `metadata` | dict | Model, window, search, and runtime metadata. |
+| `metadata` | dict | Model, fixed model params, window, search, and runtime metadata. |
 
 `SearchResult.to_frame()` returns a copy of the trial table.
 `to_metadata()`, `to_dict()`, and `to_json()` provide JSON-ready exports.
@@ -345,12 +346,15 @@ Input:
 
 | Argument | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `model` | str, callable, or `ModelSpec` | required | Registered model or model spec. |
+| `model` | str, callable, or `ModelSpec` | required | Registered model, fit-time model ensemble, or model spec. |
 | `preset` | str or `None` | `None` | Model search-space preset. |
 | `method` | str or `None` | model default | Override search method. |
 | stochastic options | int/float or `None` | `None` | Passed to stochastic search builders. |
 
-Output: `SearchSpec` with model metadata.
+Output: `SearchSpec` with model metadata. The same resolver is used for
+`macroforecast.models` and `macroforecast.model_ensemble`, so
+`search_spec("bagging", preset="small")` returns a fit-time ensemble search
+space with `metadata["model_family"] == "model_ensemble"`.
 
 ## Distributions
 
@@ -400,7 +404,7 @@ Input:
 
 | Argument | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `model` | str, callable, or `ModelSpec` | required | Model to fit for each candidate. |
+| `model` | str, callable, or `ModelSpec` | required | Model or fit-time model ensemble to fit for each candidate. |
 | `X` | pandas object | required | Predictors, panel, or target series depending on model input kind. |
 | `y` | pandas Series or `None` | `None` | Supervised target when separate from `X`. |
 | `search` | `SearchSpec` or `None` | `None` | Explicit search spec. If absent, model-owned search space is used. |
@@ -418,7 +422,7 @@ Output: `SearchResult`.
 Example:
 
 ```python
-window = mf.window.expanding(min_train_size=120, horizon=1)
+window = mf.window.poos(min_train_size=120, validation_size=24, horizon=1)
 search = mf.model_selection.search_spec("lasso", preset="small", method="cv_path")
 
 result = mf.model_selection.select_params(
@@ -462,3 +466,8 @@ result = mf.model_selection.select_params(
 `SearchResult.window` is `"explicit_splits"` when `splits` is used. Metadata
 stores `split_source`, `n_splits`, and a compact `split_summary` with counts and
 position bounds for each split.
+
+When a `ModelSpec` already carries fixed parameters, `select_params()` keeps
+those fixed during every candidate fit and stores them in
+`SearchResult.metadata["fixed_model_params"]`. The selected `best_params` remain
+the searched candidate parameters.

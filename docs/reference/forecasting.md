@@ -3,8 +3,8 @@
 [Back to reference](index.md)
 
 `macroforecast.forecasting` is the workflow composition module. It connects
-`window`, `preprocessing`, `feature_engineering`, `model_selection`, `models`, and
-`metrics`/`tests`.
+`window`, `preprocessing`, `feature_engineering`, `model_selection`, `models`,
+`model_ensemble`, and `metrics`/`tests`.
 
 ## run
 
@@ -42,7 +42,7 @@ macroforecast.forecasting.run(
 | Input | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `data` | `FeatureSet`, `DataBundle`, `DataSpec`, `(panel, metadata)`, or pandas-like panel | required | Prebuilt model matrix or canonical panel. `DataBundle` metadata, including native frequencies, is preserved. |
-| `model` | str, callable, `ModelSpec`, list, or mapping | required | One or more models to fit at each origin. |
+| `model` | str, callable, `ModelSpec`, list, or mapping | required | One or more model or fit-time model-ensemble specs to fit at each origin. |
 | `window` | `WindowSpec`, str, or `None` | `None` | Forecast experiment design: estimation mode, validation, test origins, retrain and retune cadence. |
 | `preprocessing` | `PreprocessSpec` or `None` | `None` | Callable preprocessing operations. |
 | `preprocessing_policy` | `StagePolicy`, str, or `None` | `origin_available` when preprocessing is supplied | Where preprocessing may fit and apply: `full_panel`, `origin_available`, `fit_window`, or `fixed_reference`. |
@@ -271,7 +271,7 @@ For raw panel input, `run()` executes one test origin at a time:
 | 3 | `preprocessing` | Fit or reuse the preprocessing state according to `preprocessing_policy`; transform the rows needed by the origin. |
 | 4 | `feature_engineering` | Fit or reuse the feature builder according to `feature_policy`; create `X_fit`, `y_fit`, `X_selection`, `y_selection`, `X_test`, and `y_test`. |
 | 5 | `model_selection` | If enabled, evaluate model parameter candidates on validation splits supplied by the window. |
-| 6 | `models` | Fit the model on the origin fit window with selected or fixed parameters. |
+| 6 | `models` or `model_ensemble` | Fit the model or fit-time ensemble on the origin fit window with selected or fixed parameters. |
 | 7 | `models` | Save the fitted object and JSON sidecar when `save_models=True`. |
 | 8 | `forecasting` | Collect point, variance, and quantile forecasts. |
 | 9 | `forecasting` | Append requested forecast-combination rows and write the run metadata ledger. |
@@ -312,7 +312,7 @@ The result metadata records which execution path was used:
 | `variance_prediction` | Forecast variance when the fitted model exposes `predict_variance(...)`; otherwise `None`. |
 | `quantile_predictions` | Per-row quantile dictionary when the fitted model exposes `predict_quantiles(X)`; otherwise `None`. |
 | `actual` | Realized target value when available. |
-| `params` | Parameters used for the origin fit after model selection or fixed overrides. |
+| `params` | Actual fixed-plus-selected parameters used for the origin fit. |
 | `model_selection` | Model-selection ledger for the origin/model, including `retuned`. |
 | `stored_model` | Model and metadata sidecar paths when `save_models=True`; otherwise `None`. |
 | `window` | Full window row used for the origin. |
@@ -464,7 +464,8 @@ This keeps fixed feature state fitted on one well-defined processed panel.
 ### Multiple Models with Model-Keyed Model Selection
 
 `model_selection` can be one shared `SearchSpec` or a model-keyed mapping. A
-model-keyed `None` disables model selection for that model.
+model-keyed `None` disables model selection for that model. Mapping keys can be
+the output alias, such as `linear`, or the registered spec name, such as `ridge`.
 
 ```python
 result = mf.forecasting.run(
@@ -492,12 +493,26 @@ result = mf.forecasting.run(
 )
 ```
 
+`params` and `preset` follow the same alias-or-spec-key rule. Unknown keys raise
+an error instead of being silently ignored. For a single model, direct parameter
+names are also accepted, including dict-valued parameters such as
+`params={"base_params": {"alpha": 0.1}}` for a fit-time ensemble spec.
+
+Forecast rows record the actual fixed-plus-selected parameter set in the
+`params` column. For example, if `params={"ridge": {"fit_intercept": False}}`
+and model selection picks `{"alpha": 0.1}`, the row records both values.
+
 ### Forecast Combination In The Runner
 
 `combination` asks the runner to append combined forecasts after all base model
 forecasts have been collected. Combination rows use the same `date`, `origin`,
 `origin_pos`, `horizon`, `actual`, and `window` fields as the base rows, with
 `model` set to the combination name.
+
+The `models=` filter inside a combination spec refers to the output `model`
+column, not the registry `model_spec`. If `model={"bagged": "bagging"}`, use
+`models=["bagged"]` when selecting that fit-time ensemble for a forecast
+combination.
 
 ```python
 result = mf.forecasting.run(
@@ -763,7 +778,8 @@ Methods:
 ## Direct Forecast Combination Functions
 
 Forecast combination lives in `macroforecast.forecasting` because it combines
-forecast outputs, not model fits.
+forecast outputs, not model fits. Fit-time member-model composition lives in
+`macroforecast.model_ensemble`.
 
 | Function | Meaning |
 | --- | --- |

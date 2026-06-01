@@ -19,7 +19,8 @@ Use this page as the inspection order for the current callable-first
 | How do I create targets and predictors? | [Feature Engineering](feature_engineering.md) | Target construction, lags, rolling features, factors, selection, runner-safe specs. |
 | How do I define time windows? | [Window](window.md) | Train/validation/test windows, expanding/rolling/fixed policies, stage policies. |
 | Which models are available? | [Models](models.md) | Model groups, parameter defaults, optional dependencies, model-owned search spaces. |
-| How does the runner combine everything? | [Forecasting](forecasting.md) | Runner inputs, direct/recursive/path-average forecasts, combinations. |
+| How do I fit several member models as one model? | [Model Ensemble](model_ensemble.md) | Bagging, subagging, random subspace, stacking, Super Learner, and Booging. |
+| How does the runner combine everything? | [Forecasting](forecasting.md) | Runner inputs, direct/recursive/path-average forecasts, forecast-output combinations. |
 | How do I score and test forecasts? | [Evaluation](evaluation.md) | Evaluation reports, metrics/tests split, benchmark/regime/decomposition tables. |
 | How do I inspect model behavior? | [Interpretation](interpretation.md) | Importance, SHAP, attribution, VAR interpretation, neural attribution. |
 | How do I save outputs? | [Output](output.md) | Output bundles, artifact writing, manifests, hashes, compression. |
@@ -40,17 +41,18 @@ Use this sequence when auditing the whole docs site.
 8. [Feature Engineering](feature_engineering.md)
 9. [Window](window.md)
 10. [Models](models.md)
-11. [Model Selection](model_selection.md)
-12. [Forecasting](forecasting.md)
-13. [Metrics](metrics.md)
-14. [Tests](tests.md)
-15. [Evaluation](evaluation.md)
-16. [Feature Analysis](feature_analysis.md)
-17. [Forecast Analysis](forecast_analysis.md)
-18. [Interpretation](interpretation.md)
-19. [Output](output.md)
-20. [Reporting](reporting.md)
-21. [Reference Verification](reference_verification.md)
+11. [Model Ensemble](model_ensemble.md)
+12. [Model Selection](model_selection.md)
+13. [Forecasting](forecasting.md)
+14. [Metrics](metrics.md)
+15. [Tests](tests.md)
+16. [Evaluation](evaluation.md)
+17. [Feature Analysis](feature_analysis.md)
+18. [Forecast Analysis](forecast_analysis.md)
+19. [Interpretation](interpretation.md)
+20. [Output](output.md)
+21. [Reporting](reporting.md)
+22. [Reference Verification](reference_verification.md)
 
 ## Reference Page Format
 

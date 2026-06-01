@@ -11,7 +11,7 @@ convenience exports are documented on their module reference pages.
 
 | Symbol | Source | Description |
 | --- | --- | --- |
-| `meta`, `data`, `preprocessing`, `feature_engineering`, `data_analysis`, `feature_analysis`, `feature_diagnostic`, `forecast_analysis`, `forecast_diagnostic`, `models`, `model_selection`, `forecasting`, `metrics`, `tests`, `evaluation`, `window`, `interpretation`, `output`, `reporting` | package namespaces | Top-level module namespaces. `feature_diagnostic` and `forecast_diagnostic` are compatibility aliases for the corresponding analysis modules. |
+| `meta`, `data`, `preprocessing`, `feature_engineering`, `data_analysis`, `feature_analysis`, `feature_diagnostic`, `forecast_analysis`, `forecast_diagnostic`, `models`, `model_ensemble`, `model_selection`, `forecasting`, `metrics`, `tests`, `evaluation`, `window`, `interpretation`, `output`, `reporting` | package namespaces | Top-level module namespaces. `feature_diagnostic` and `forecast_diagnostic` are compatibility aliases for the corresponding analysis modules. |
 | `configure`, `get_config`, `get_option`, `reset_config`, `use_config`, `DEFAULT_RANDOM_SEED`, `StageDefaultScope`, `MetadataLevel` | `macroforecast.meta` | Global package defaults and config types. |
 | `DataBundle`, `DataSpec`, `RegimeDirection`, `SamePeriodPolicy`, `as_panel`, `attach_metadata`, `custom_dataset`, `metadata`, `panel_info`, `set_frequencies`, `spec`, `validate_panel` | `macroforecast.data` | Canonical panel and metadata helpers. |
 | `align_frequency`, `chow_lin_disaggregate`, `infer_frequencies`, `frequency_hardening_issues`, `availability_lag`, `same_period_predictors`, `define_regime` | `macroforecast.data` | Frequency alignment/inference, Chow-Lin disaggregation, data availability, same-period predictor, and regime metadata policies. |
@@ -32,11 +32,12 @@ convenience exports are documented on their module reference pages.
 | `svr`, `linear_svr`, `nu_svr` | `macroforecast.models` | Support-vector regression models. |
 | `nn`, `lstm`, `gru`, `transformer`, `hemisphere_nn` | `macroforecast.models` | Torch-backed neural-network regressors; require `macroforecast[deep]`. |
 | `ar`, `var`, `bvar_minnesota`, `bvar_normal_inverse_wishart`, `ets`, `holt_winters`, `theta_method`, `far`, `favar` | `macroforecast.models` | Time-series, Bayesian VAR, exponential-smoothing, and factor-augmented forecasting models. |
-| `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas`, `midas_almon`, `midas_beta`, `midas_step`, `unrestricted_midas` | `macroforecast.models` | Mixed-frequency dynamic-factor and MIDAS models. |
+| `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas`, `midas_almon`, `midas_beta`, `midas_step`, `restricted_midas`, `unrestricted_midas` | `macroforecast.models` | Mixed-frequency dynamic-factor and MIDAS models. |
 | `decision_tree`, `random_forest`, `extra_trees`, `gradient_boosting`, `mars`, `xgboost`, `lightgbm`, `catboost` | `macroforecast.models` | Tree, spline, and ML regressors. |
-| `slow_growing_tree`, `quantile_regression_forest`, `bagging`, `booging`, `macro_random_forest` | `macroforecast.models` | Macro-specific tree and ensemble models. |
+| `quantile_regression_forest`, `macro_random_forest` | `macroforecast.models` | Macro-specific tree models. |
 | `garch11`, `egarch`, `realized_garch` | `macroforecast.models` | Volatility models. |
 | `ModelSpec`, `ModelParameter`, `custom_model`, `get_model`, `list_model_specs`, `describe_model`, `model_search_space` | `macroforecast.models` | Model-owned defaults and hyperparameter spaces. |
+| `BaggingRegressor`, `BoogingRegressor`, `RandomSubspaceRegressor`, `StackingRegressor`, `SuperLearnerRegressor`, `MODEL_ENSEMBLE_BASE_ESTIMATORS`, `MODEL_ENSEMBLE_SPECS`, `bagging`, `subagging`, `random_subspace`, `stacking`, `super_learner`, `booging`, `custom_model_ensemble`, `get_model_ensemble`, `list_model_ensemble_bases`, `list_model_ensemble_specs`, `describe_model_ensemble`, `model_ensemble_search_space` | `macroforecast.model_ensemble` | Fit-time model-composition callables, estimator classes, and specs. |
 | `WindowSpec`, `EstimationWindow`, `ValWindow`, `TestWindow`, `AlignmentWindow`, `StagePolicy`, `Split` | `macroforecast.window` | Forecast experiment and stage timing objects. |
 | `from_cutoffs`, `estimation_expanding`, `estimation_rolling`, `estimation_fixed`, `val_last_block`, `val_poos`, `val_expanding`, `val_rolling_blocks`, `val_blocked_kfold`, `test_origins`, `alignment_drop_incomplete`, `alignment_keep_missing` | `macroforecast.window` | Component window builders. |
 | `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold` | `macroforecast.window` | Shortcut temporal window specs. |
@@ -67,6 +68,7 @@ convenience exports are documented on their module reference pages.
 | `macroforecast.feature_analysis` | Feature-matrix analysis after feature engineering. |
 | `macroforecast.feature_diagnostic` | Compatibility alias for `macroforecast.feature_analysis`. |
 | `macroforecast.models` | Callable model fits. |
+| `macroforecast.model_ensemble` | Fit-time model composition over multiple member models. |
 | `macroforecast.window` | Macro forecasting time-frame specs. |
 | `macroforecast.model_selection` | Hyperparameter search and parameter selection. |
 | `macroforecast.forecasting` | Windowed runner and forecast combination. |

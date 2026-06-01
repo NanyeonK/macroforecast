@@ -149,6 +149,10 @@ def _fit_diagnostics(estimator: Any, X: pd.DataFrame, y: pd.Series) -> dict[str,
     if sequence_context:
         diagnostics["sequence_context"] = sequence_context
 
+    ensemble_diagnostics = _ensemble_diagnostics(estimator)
+    if ensemble_diagnostics:
+        diagnostics["model_ensemble"] = ensemble_diagnostics
+
     return diagnostics
 
 
@@ -270,6 +274,31 @@ def _as_scalar_or_list(value: Any) -> Any:
     if arr.ndim == 0:
         return arr.item()
     return arr.tolist()
+
+
+def _ensemble_diagnostics(estimator: Any) -> dict[str, Any]:
+    """Collect fit-time ensemble diagnostics exposed by ensemble estimators."""
+
+    diagnostics: dict[str, Any] = {}
+    attr_map = {
+        "oob_predictions": "oob_predictions_",
+        "oob_residuals": "oob_residuals_",
+        "oob_metrics": "oob_metrics_",
+        "oof_predictions": "oof_predictions_",
+        "oof_risk": "oof_risk_",
+        "weights": "weights_",
+        "folds": "folds_",
+        "member_features": "member_features_",
+        "member_samples": "member_samples_",
+    }
+    for key, attr in attr_map.items():
+        value = getattr(estimator, attr, None)
+        if value is not None:
+            diagnostics[key] = value
+    models = getattr(estimator, "_models", None)
+    if models is not None:
+        diagnostics["n_members"] = int(len(models))
+    return diagnostics
 
 
 __all__ = [

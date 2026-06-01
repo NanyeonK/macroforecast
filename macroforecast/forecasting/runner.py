@@ -19,6 +19,7 @@ from macroforecast.data import (
 )
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec, feature_spec
 from macroforecast.meta import get_config
+from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.models import ModelSpec, get_model, save_fit
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
 from macroforecast.model_selection import SearchSpec, select_params
@@ -182,6 +183,7 @@ def run(
         )
     config = get_config()
     model_runs = _resolve_model_runs(model, preset=preset, params=params)
+    _validate_selection_mapping(selection, model_runs)
     combination_specs = resolve_combinations(combination)
     preprocessing_stage_policy = (
         resolve_stage_policy(
@@ -977,14 +979,8 @@ def _fit_predict_panel_origin(
     for model_run in model_runs:
         model_spec = model_run.spec
         _validate_panel_selection(selection, model_run)
-        if model_spec.name == "dfm_unrestricted_midas":
-            raise ValueError(
-                "dfm_unrestricted_midas is callable as a panel model, but the "
-                "forecasting runner needs a future MIDAS design matrix for predict(). "
-                "Use dfm_mixed_mariano_murasawa in forecasting.run, or build "
-                "mixed_frequency_lags() plus unrestricted_midas explicitly."
-            )
         best_params = _panel_fit_params(model_spec, target=target)
+        fit_params = _actual_model_params(model_spec, best_params)
         fit = model_spec(DataBundle(fit_panel, dict(metadata)), **best_params)
         stored_model = (
             _store_model_fit(
@@ -993,13 +989,29 @@ def _fit_predict_panel_origin(
                 alias=model_run.alias,
                 model_spec=model_spec,
                 row=row,
-                params=best_params,
+                params=fit_params,
                 selection_metadata=None,
             )
             if save_models
             else None
         )
-        pred = _prediction_series(fit.predict(test_panel), index=test_panel.index)
+        if model_spec.name == "dfm_unrestricted_midas" and hasattr(fit.estimator, "predict_from_panel"):
+            pred_input = _panel_prediction_input_without_test_target(
+                fit_panel,
+                test_panel,
+                target=target,
+                metadata=metadata,
+            )
+            pred = _prediction_series(
+                fit.estimator.predict_from_panel(
+                    pred_input,
+                    metadata=metadata,
+                    anchor_dates=test_panel.index,
+                ),
+                index=test_panel.index,
+            )
+        else:
+            pred = _prediction_series(fit.predict(test_panel), index=test_panel.index)
         y_test = test_panel[target] if target in test_panel.columns else pd.Series(dtype=float)
         for date, value in pred.items():
             step_horizon = _panel_prediction_horizon(
@@ -1026,7 +1038,7 @@ def _fit_predict_panel_origin(
                     "variance_prediction": None,
                     "quantile_predictions": None,
                     "actual": None if actual is None or pd.isna(actual) else float(actual),
-                    "params": best_params,
+                    "params": fit_params,
                     "model_selection": {
                         "policy": selection_policy.to_dict(),
                         "retuned": False,
@@ -1145,6 +1157,7 @@ def _fit_predict_origin(
             best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
+        fit_params = _actual_model_params(model_spec, best_params)
         fit = model_spec(X_fit, y_fit, **best_params)
         stored_model = (
             _store_model_fit(
@@ -1153,7 +1166,7 @@ def _fit_predict_origin(
                 alias=model_run.alias,
                 model_spec=model_spec,
                 row=row,
-                params=best_params,
+                params=fit_params,
                 selection_metadata=selection_metadata,
             )
             if save_models
@@ -1196,7 +1209,7 @@ def _fit_predict_origin(
                     "variance_prediction": variance_value,
                     "quantile_predictions": quantile_value,
                     "actual": actual_value,
-                    "params": dict(best_params),
+                    "params": dict(fit_params),
                     "model_selection": selection_metadata,
                     "stored_model": stored_model,
                     "window": row,
@@ -1290,6 +1303,7 @@ def _fit_predict_recursive_origin(
             best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
+        fit_params = _actual_model_params(model_spec, best_params)
         fit = model_spec(X_fit, y_fit, **best_params)
         working_panel = recursive_panel.copy()
         step_predictions: list[float] = []
@@ -1331,7 +1345,7 @@ def _fit_predict_recursive_origin(
                 alias=model_run.alias,
                 model_spec=model_spec,
                 row=row,
-                params=best_params,
+                params=fit_params,
                 selection_metadata=selection_metadata,
             )
             if save_models
@@ -1353,7 +1367,7 @@ def _fit_predict_recursive_origin(
                 "quantile_predictions": None,
                 "actual": float(actual_value),
                 "params": {
-                    **dict(best_params),
+                    **dict(fit_params),
                     "recursive": {
                         "future_feature_policy": future_policy,
                         "step_predictions": step_predictions,
@@ -1472,6 +1486,7 @@ def _fit_predict_path_average_origin(
                 best_params = dict(param_cache.get(step_key, {}))
             else:
                 best_params = {}
+            fit_params = _actual_model_params(model_spec, best_params)
             fit = model_spec(X_fit_step, y_fit_aligned, **best_params)
             step_row = {**row, "target_key": f"{row.get('target_key')}_step{step}"}
             stored_by_step[str(step)] = (
@@ -1481,7 +1496,7 @@ def _fit_predict_path_average_origin(
                     alias=model_run.alias,
                     model_spec=model_spec,
                     row=step_row,
-                    params=best_params,
+                    params=fit_params,
                     selection_metadata=selection_metadata,
                 )
                 if save_models
@@ -1492,7 +1507,7 @@ def _fit_predict_path_average_origin(
                 index=X_test.index,
             )
             selection_by_step[str(step)] = selection_metadata
-            params_by_step[str(step)] = dict(best_params)
+            params_by_step[str(step)] = dict(fit_params)
 
         prediction_frame = pd.concat(predictions_by_step, axis=1)
         actual_frame = y_test.reindex(columns=step_columns)
@@ -1752,6 +1767,23 @@ def _panel_fit_params(model_spec: ModelSpec, *, target: str) -> dict[str, Any]:
     return params
 
 
+def _panel_prediction_input_without_test_target(
+    fit_panel: pd.DataFrame,
+    test_panel: pd.DataFrame,
+    *,
+    target: str,
+    metadata: Mapping[str, Any],
+) -> DataBundle:
+    """Return panel available at prediction time with test target values masked."""
+
+    combined = pd.concat([fit_panel, test_panel], axis=0)
+    combined = combined.loc[~combined.index.duplicated(keep="last")].sort_index()
+    if target in combined.columns:
+        combined.loc[test_panel.index, target] = np.nan
+    combined.attrs["macroforecast_metadata"] = dict(metadata)
+    return DataBundle(combined, dict(metadata))
+
+
 def _validate_panel_selection(
     selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
     model_run: _ModelRun,
@@ -1783,14 +1815,19 @@ def _resolve_model_runs(
     if isinstance(model, Mapping):
         runs = []
         for alias, value in model.items():
-            base = get_model(value)
+            base = _get_model_or_ensemble(value)
             runs.append(
                 _ModelRun(
                     alias=str(alias),
-                    spec=get_model(
+                    spec=_get_model_or_ensemble(
                         value,
                         preset=_preset_for_model(preset, str(alias), base.name),
-                        params=_params_for_model(params, str(alias), base.name),
+                        params=_params_for_model(
+                            params,
+                            str(alias),
+                            base.name,
+                            model_spec=base,
+                        ),
                     ),
                 )
             )
@@ -1799,11 +1836,11 @@ def _resolve_model_runs(
         seen: dict[str, int] = {}
         model_sequence = cast(Sequence[str | Callable[..., Any] | ModelSpec], model)
         for value in model_sequence:
-            base = get_model(value)
-            spec = get_model(
+            base = _get_model_or_ensemble(value)
+            spec = _get_model_or_ensemble(
                 value,
                 preset=_preset_for_model(preset, None, base.name),
-                params=_params_for_model(params, None, base.name),
+                params=_params_for_model(params, None, base.name, model_spec=base),
             )
             count = seen.get(spec.name, 0) + 1
             seen[spec.name] = count
@@ -1811,16 +1848,33 @@ def _resolve_model_runs(
             runs.append(_ModelRun(alias=alias, spec=spec))
     else:
         single_model = cast(str | Callable[..., Any] | ModelSpec, model)
-        base = get_model(single_model)
-        spec = get_model(
+        base = _get_model_or_ensemble(single_model)
+        spec = _get_model_or_ensemble(
             single_model,
             preset=_preset_for_model(preset, None, base.name),
-            params=_params_for_model(params, None, base.name),
+            params=_params_for_model(params, None, base.name, model_spec=base),
         )
         runs = [_ModelRun(alias=spec.name, spec=spec)]
     if not runs:
         raise ValueError("model must contain at least one model")
+    _validate_preset_mapping(preset, runs)
+    _validate_params_mapping(params, runs)
     return runs
+
+
+def _get_model_or_ensemble(
+    model: str | Callable[..., Any] | ModelSpec,
+    *,
+    preset: str | None = None,
+    params: Mapping[str, Any] | None = None,
+) -> ModelSpec:
+    try:
+        return get_model(model, preset=preset, params=params)
+    except ValueError as model_error:
+        try:
+            return get_model_ensemble(model, preset=preset, params=params)
+        except ValueError:
+            raise model_error from None
 
 
 def _is_model_sequence(value: Any) -> bool:
@@ -1847,6 +1901,8 @@ def _params_for_model(
     params: Mapping[str, Any] | None,
     alias: str | None,
     model_name: str | None,
+    *,
+    model_spec: ModelSpec | None = None,
 ) -> Mapping[str, Any] | None:
     if params is None:
         return None
@@ -1855,8 +1911,88 @@ def _params_for_model(
     if model_name is not None and isinstance(params.get(model_name), Mapping):
         return params[model_name]
     if all(isinstance(value, Mapping) for value in params.values()):
+        if model_spec is not None and set(params).issubset(
+            _known_model_param_names(model_spec)
+        ):
+            return params
         return None
     return params
+
+
+def _actual_model_params(model_spec: ModelSpec, params: Mapping[str, Any]) -> dict[str, Any]:
+    return {**dict(model_spec.params), **dict(params)}
+
+
+def _known_model_param_names(model_spec: ModelSpec) -> set[str]:
+    return {
+        *model_spec.default_params,
+        *model_spec.params,
+        *(parameter.name for parameter in model_spec.parameters),
+    }
+
+
+def _run_keys(model_runs: Sequence[_ModelRun]) -> set[str]:
+    return {
+        key
+        for model_run in model_runs
+        for key in (model_run.alias, model_run.spec.name)
+    }
+
+
+def _validate_preset_mapping(
+    preset: str | Mapping[str, str | None] | None,
+    model_runs: Sequence[_ModelRun],
+) -> None:
+    if preset is None or isinstance(preset, str):
+        return
+    unknown = set(preset) - _run_keys(model_runs)
+    if unknown:
+        allowed = ", ".join(sorted(_run_keys(model_runs)))
+        raise ValueError(
+            f"preset contains keys that do not match a model alias or spec: "
+            f"{sorted(unknown)}. Available keys: {allowed}."
+        )
+
+
+def _validate_params_mapping(
+    params: Mapping[str, Any] | None,
+    model_runs: Sequence[_ModelRun],
+) -> None:
+    if params is None or not all(isinstance(value, Mapping) for value in params.values()):
+        return
+    keys = set(params)
+    run_keys = _run_keys(model_runs)
+    if keys & run_keys:
+        unknown = keys - run_keys
+        if unknown:
+            allowed = ", ".join(sorted(run_keys))
+            raise ValueError(
+                f"params contains keys that do not match a model alias or spec: "
+                f"{sorted(unknown)}. Available keys: {allowed}."
+            )
+        return
+    if all(keys.issubset(_known_model_param_names(model_run.spec)) for model_run in model_runs):
+        return
+    allowed = ", ".join(sorted(run_keys))
+    raise ValueError(
+        "params looks model-keyed but no key matches a model alias or spec. "
+        f"Use one of: {allowed}; or pass direct parameter names accepted by every model."
+    )
+
+
+def _validate_selection_mapping(
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    model_runs: Sequence[_ModelRun],
+) -> None:
+    if selection is None or isinstance(selection, SearchSpec):
+        return
+    unknown = set(selection) - _run_keys(model_runs)
+    if unknown:
+        allowed = ", ".join(sorted(_run_keys(model_runs)))
+        raise ValueError(
+            f"model_selection contains keys that do not match a model alias or spec: "
+            f"{sorted(unknown)}. Available keys: {allowed}."
+        )
 
 
 def _selection_for_model(

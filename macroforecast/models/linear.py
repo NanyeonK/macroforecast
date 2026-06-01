@@ -66,6 +66,16 @@ class _NonNegativeRidge:
         else:
             x_aug = x_work
             y_aug = y_work
+        # R source cue, nnls/R/nnls.R:
+        #   sol <- .Fortran("nnls", A = as.numeric(A), ..., B = as.numeric(b))
+        #   nnls.out <- list(x = sol$X, deviance = sol$RNORM^2, ...)
+        # This aligns with the same mathematical problem, not with the exact
+        # Fortran/SciPy backend: solve min ||A b_hat - b||^2 subject to
+        # b_hat >= 0. The ridge penalty is represented by the standard
+        # augmented design [X; sqrt(alpha) I] and response [y; 0]. When
+        # fit_intercept=True, centering is done before the NNLS call and the
+        # intercept is recovered after solving the constrained coefficient
+        # problem, matching how an R user would manually build A and b.
         coef, _ = nnls(x_aug, y_aug)
         self.coef_ = np.asarray(coef, dtype=float)
         self.intercept_ = (
@@ -164,6 +174,24 @@ class _ShrinkToTargetRidge:
             y_work = y_values
 
         def objective(coef: np.ndarray) -> float:
+            # R comparison:
+            # - R source cue, rags2ridges/R/rags2ridges.R:
+            #     ridgeP <- function(S, lambda, type = "Alt",
+            #                        target = default.target(S)) { ... }
+            #     P <- .armaRidgeP(S, target, lambda)
+            # - rags2ridges implements target-ridge shrinkage for covariance /
+            #   precision matrices, not this regression API. The shared logic
+            #   is the Tikhonov target penalty: shrink parameters toward a
+            #   user-specified target rather than toward zero.
+            # - Alignment here is the regression objective below, not identical
+            #   rags2ridges API, domain, or solver output.
+            # - In unconstrained regression form, this objective is
+            #   ||y - X beta||^2 + alpha ||beta - beta0||^2. The closed-form
+            #   normal equation is
+            #   (X'X + alpha I) beta = X'y + alpha beta0.
+            # - simplex=True is a forecasting-combination variant: coefficients
+            #   sum to one, no intercept is fitted, and the uniform prior target
+            #   is used when prior_target is omitted.
             residual = y_work - x_work @ coef
             shrink = coef - self.prior_target_
             return float(residual @ residual + self.alpha * (shrink @ shrink))
@@ -304,6 +332,22 @@ class _FusedDifferenceRidge:
             y_work = y_values
 
         def objective(coef: np.ndarray) -> float:
+            # R comparison:
+            # - R source cue, rags2ridges/R/rags2ridgesFused.R:
+            #     ridgeP.fused <- function(Slist, ns, Tlist, lambda, ...)
+            #     Plist <- .armaRidgeP.fused(Slist = Slist, ns = ns,
+            #                                Tlist = Tlist, lambda = lambda)
+            # - rags2ridges::ridgeP.fused applies L2 fusion to precision
+            #   matrices across related groups. This callable applies the same
+            #   L2 fusion idea to an ordered regression-coefficient vector.
+            # - Alignment here is the L2 fusion/smoothness objective below,
+            #   not identical rags2ridges matrix-estimation API or solver.
+            # - D is a finite-difference matrix over adjacent coefficients. In
+            #   the unconstrained regression case, the objective is
+            #   ||y - X beta||^2 + alpha ||D beta||^2 and the normal equation is
+            #   (X'X + alpha D'D) beta = X'y.
+            # - mean_equality=True is a macro forecasting mass-conservation
+            #   variant and has no direct rags2ridges analogue.
             residual = y_work - x_work @ coef
             smooth = self.difference_matrix_ @ coef
             return float(residual @ residual + self.alpha * (smooth @ smooth))
@@ -426,6 +470,22 @@ class _RandomWalkRidge:
             x_work = values
             y_work = y_values
         n_obs, n_features = x_work.shape
+        # R comparison:
+        # - R source cue, walker/R/walker_rw1.R:
+        #     xreg <- model.matrix(attr(mf, "terms"), mf)
+        #     stan_data <- list(k = k, n = n, y = y, xreg = t(xreg), ...)
+        #     do.call(sampling, list(object = stanmodels$rw1_model, ...))
+        # - walker::walker_rw1 models beta_t as random-walk state variables and
+        #   estimates a Bayesian posterior with Stan / state-space smoothing.
+        # - This callable keeps the same RW1 prior idea but uses the MAP-style
+        #   penalized least-squares objective:
+        #   sum_t (y_t - x_t beta_t)^2 + initial_alpha ||beta_1||^2
+        #   + alpha sum_t ||beta_t - beta_{t-1}||^2.
+        # - Alignment here is the RW1 prior / MAP objective, not posterior
+        #   sampling, credible intervals, or a Kalman/Stan implementation.
+        # - The objective is encoded as one augmented least-squares system over
+        #   vec(beta_1, ..., beta_T). Predictions intentionally use the final
+        #   coefficient vector, not posterior simulations or a Kalman smoother.
         design = np.zeros((n_obs, n_obs * n_features), dtype=float)
         for row in range(n_obs):
             start = row * n_features
@@ -566,6 +626,7 @@ class _AdaptiveLinear:
         initial: str = "ridge",
         initial_alpha: float = 1.0,
         eps: float = 1e-4,
+        normalize_weights: bool = True,
         max_iter: int = 20000,
         tol: float = 1e-4,
         random_state: int | None = None,
@@ -581,6 +642,7 @@ class _AdaptiveLinear:
         self.initial = initial
         self.initial_alpha = float(initial_alpha)
         self.eps = max(float(eps), 1e-12)
+        self.normalize_weights = bool(normalize_weights)
         self.max_iter = int(max_iter)
         self.tol = float(tol)
         self.random_state = random_state
@@ -589,6 +651,7 @@ class _AdaptiveLinear:
         self.x_scale_: np.ndarray | None = None
         self.y_mean_: float = 0.0
         self.initial_coef_: np.ndarray | None = None
+        self.raw_adaptive_weights_: np.ndarray | None = None
         self.adaptive_weights_: np.ndarray | None = None
         self.coef_: np.ndarray | None = None
         self.intercept_: float = 0.0
@@ -614,7 +677,25 @@ class _AdaptiveLinear:
             initial_estimator = LinearRegression(fit_intercept=False)
         initial_estimator.fit(x_scaled, y_centered)
         initial_coef = np.asarray(initial_estimator.coef_, dtype=float).reshape(-1)
-        weights = 1.0 / np.power(np.abs(initial_coef) + self.eps, self.gamma)
+        raw_weights = 1.0 / np.power(np.abs(initial_coef) + self.eps, self.gamma)
+        weights = raw_weights.copy()
+        if self.normalize_weights:
+            # R source cue, glmnet/R/glmnetFlex.R:
+            #   vp = pmax(0, penalty.factor)
+            #   vp = as.double(vp * nvars / sum(vp))
+            # This aligns with glmnet's weighted lasso/elastic-net objective,
+            # not glmnet's full path solver. glmnet(penalty.factor=...) treats
+            # penalty factors as relative multipliers and rescales them
+            # internally to sum to the number of predictors. Mean-one
+            # normalization keeps alpha on the same scale while preserving
+            # adaptive-lasso relative weights.
+            weight_sum = float(np.sum(weights))
+            if np.isfinite(weight_sum) and weight_sum > 1e-12:
+                weights = weights * (len(weights) / weight_sum)
+        # sklearn Lasso/ElasticNet do not expose per-coordinate penalty
+        # factors. Rescaling each standardized predictor by 1 / weight_j gives
+        # the same weighted L1 penalty after mapping coefficients back:
+        # beta_j = theta_j / weight_j.
         weighted_x = x_scaled / weights
 
         if self.kind == "lasso":
@@ -638,6 +719,7 @@ class _AdaptiveLinear:
         weighted_coef = np.asarray(estimator.coef_, dtype=float).reshape(-1)
         scaled_coef = weighted_coef / weights
         self.initial_coef_ = initial_coef
+        self.raw_adaptive_weights_ = raw_weights
         self.adaptive_weights_ = weights
         self.coef_ = scaled_coef / self.x_scale_
         self.intercept_ = self.y_mean_ - float(self.x_mean_ @ self.coef_)
@@ -660,6 +742,7 @@ def adaptive_lasso(
     initial: str = "ridge",
     initial_alpha: float = 1.0,
     eps: float = 1e-4,
+    normalize_weights: bool = True,
     max_iter: int = 20000,
     tol: float = 1e-4,
     random_state: int | None = None,
@@ -672,6 +755,7 @@ def adaptive_lasso(
         "initial": initial,
         "initial_alpha": float(initial_alpha),
         "eps": float(eps),
+        "normalize_weights": bool(normalize_weights),
         "max_iter": int(max_iter),
         "tol": float(tol),
         "random_state": random_state,
@@ -684,6 +768,7 @@ def adaptive_lasso(
             initial=initial,
             initial_alpha=float(initial_alpha),
             eps=float(eps),
+            normalize_weights=bool(normalize_weights),
             max_iter=int(max_iter),
             tol=float(tol),
             random_state=random_state,
@@ -705,6 +790,7 @@ def adaptive_elastic_net(
     initial: str = "ridge",
     initial_alpha: float = 1.0,
     eps: float = 1e-4,
+    normalize_weights: bool = True,
     max_iter: int = 20000,
     tol: float = 1e-4,
     random_state: int | None = None,
@@ -718,6 +804,7 @@ def adaptive_elastic_net(
         "initial": initial,
         "initial_alpha": float(initial_alpha),
         "eps": float(eps),
+        "normalize_weights": bool(normalize_weights),
         "max_iter": int(max_iter),
         "tol": float(tol),
         "random_state": random_state,
@@ -731,6 +818,7 @@ def adaptive_elastic_net(
             initial=initial,
             initial_alpha=float(initial_alpha),
             eps=float(eps),
+            normalize_weights=bool(normalize_weights),
             max_iter=int(max_iter),
             tol=float(tol),
             random_state=random_state,
@@ -766,6 +854,7 @@ class _GroupLinear:
         self.feature_names_in_: np.ndarray | None = None
         self.groups_: tuple[str, ...] = ()
         self.group_index_: dict[str, np.ndarray] = {}
+        self.resolved_group_weights_: dict[str, float] = {}
         self.x_mean_: np.ndarray | None = None
         self.x_scale_: np.ndarray | None = None
         self.y_mean_: float = 0.0
@@ -795,6 +884,10 @@ class _GroupLinear:
             group: np.flatnonzero(np.asarray(groups, dtype=object) == group)
             for group in dict.fromkeys(groups)
         }
+        self.resolved_group_weights_ = {
+            group: float(self.group_weights.get(group, np.sqrt(len(index))))
+            for group, index in self.group_index_.items()
+        }
         coef_scaled = self._solve(x_work, y_centered)
         self.coef_ = coef_scaled / self.x_scale_
         self.intercept_ = self.y_mean_ - float(self.x_mean_ @ self.coef_)
@@ -822,6 +915,21 @@ class _GroupLinear:
         coef = np.zeros(n_features, dtype=float)
         l1_penalty = self.alpha * self.l1_ratio
         group_penalty = self.alpha * (1.0 - self.l1_ratio)
+        # R source cues:
+        #   grpreg/R/newXG.R:
+        #     std <- .Call("standardize", X)
+        #     if (all(is.na(m))) m <- sqrt(table(g[g != 0]))
+        #   sparsegl/R/sparsegl.R:
+        #     lambda = NULL, pf_group = sqrt(bs), pf_sparse = rep(1, nvars)
+        #     pf_sparse <- pf_sparse / sum(pf_sparse) * nvars
+        #   grpreg/R/grpreg.R objective:
+        #     Q(beta|X,y) = (1/n) * L(beta|X,y) + P_lambda(beta)
+        # This aligns with the Gaussian group-lasso / sparse-group-lasso
+        # objective and the default sqrt(group-size) group weights. It does not
+        # reproduce grpreg's full lambda path, GLM families, C backend, or its
+        # within-group orthogonalization step for group penalties. l1_ratio=0
+        # gives the grLasso-style group penalty; l1_ratio>0 adds sparsegl-style
+        # feature-level soft-thresholding before group shrinkage.
         for iteration in range(1, self.max_iter + 1):
             previous = coef.copy()
             residual = X @ coef - y
@@ -832,7 +940,7 @@ class _GroupLinear:
                 for group, index in self.group_index_.items():
                     block = coef[index]
                     norm = float(np.linalg.norm(block, ord=2))
-                    weight = self.group_weights.get(group, np.sqrt(len(index)))
+                    weight = self.resolved_group_weights_.get(group, np.sqrt(len(index)))
                     threshold = step * group_penalty * float(weight)
                     if norm <= threshold:
                         coef[index] = 0.0
@@ -931,68 +1039,6 @@ def bayesian_ridge(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
     return fit_estimator(BayesianRidge(**kwargs), X, y, model="bayesian_ridge", metadata=dict(kwargs))
 
 
-def kernel_ridge(
-    X: Any,
-    y: Any | None = None,
-    *,
-    alpha: float = 1.0,
-    kernel: str = "linear",
-    gamma: float | None = None,
-    degree: int = 3,
-    coef0: float = 1.0,
-    **kwargs: Any,
-) -> ModelFit:
-    """Fit kernel ridge regression."""
-
-    from sklearn.kernel_ridge import KernelRidge
-
-    params = {
-        "alpha": float(alpha),
-        "kernel": str(kernel),
-        "gamma": gamma,
-        "degree": int(degree),
-        "coef0": float(coef0),
-        **kwargs,
-    }
-    return fit_estimator(
-        KernelRidge(**params),
-        X,
-        y,
-        model="kernel_ridge",
-        metadata=params,
-    )
-
-
-def knn(
-    X: Any,
-    y: Any | None = None,
-    *,
-    n_neighbors: int = 5,
-    weights: str = "uniform",
-    metric: str = "minkowski",
-    p: int = 2,
-    **kwargs: Any,
-) -> ModelFit:
-    """Fit k-nearest-neighbor regression."""
-
-    from sklearn.neighbors import KNeighborsRegressor
-
-    params = {
-        "n_neighbors": int(n_neighbors),
-        "weights": str(weights),
-        "metric": str(metric),
-        "p": int(p),
-        **kwargs,
-    }
-    return fit_estimator(
-        KNeighborsRegressor(**params),
-        X,
-        y,
-        model="knn",
-        metadata=params,
-    )
-
-
 def huber(
     X: Any,
     y: Any | None = None,
@@ -1018,35 +1064,71 @@ def huber(
 class _GLMBoost:
     """Componentwise L2 boosting with linear base learners."""
 
-    def __init__(self, *, n_iter: int = 100, learning_rate: float = 0.1) -> None:
+    def __init__(
+        self,
+        *,
+        n_iter: int = 100,
+        learning_rate: float = 0.1,
+        center: bool = True,
+    ) -> None:
         self.n_iter = max(1, int(n_iter))
         self.learning_rate = float(learning_rate)
+        self.center = bool(center)
         self.coef_: np.ndarray | None = None
         self.intercept_: float = 0.0
         self.feature_names_in_: np.ndarray | None = None
+        self.x_mean_: np.ndarray | None = None
+        self.n_iter_: int = 0
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_GLMBoost":
         self.feature_names_in_ = np.asarray(X.columns, dtype=object)
-        x = X.fillna(0.0).to_numpy(dtype=float)
+        x_raw = X.fillna(0.0).to_numpy(dtype=float)
+        if self.center:
+            self.x_mean_ = x_raw.mean(axis=0)
+            x = x_raw - self.x_mean_
+        else:
+            self.x_mean_ = np.zeros(x_raw.shape[1], dtype=float)
+            x = x_raw
         target = np.asarray(y, dtype=float)
         self.intercept_ = float(np.mean(target)) if target.size else 0.0
         residual = target - self.intercept_
         self.coef_ = np.zeros(x.shape[1], dtype=float)
-        for _ in range(self.n_iter):
+        # R source cues, mboost/R/mboost.R and mboost/R/bolscw.R:
+        #   glmboost.matrix <- function(x, y, center = TRUE, ...)
+        #   if (center) X <- scale(X, center = cm, scale = FALSE)
+        #   xtx <- colSums(X^2 * weights); sxtx <- sqrt(xtx)
+        #   mu <- crossprod(X, y * weights) / sxtx
+        #   xselect <- which(abs(mu) == max(abs(mu)))[1]
+        #   coef <- mu[xselect] / sxtx[xselect]
+        # This aligns with mboost's Gaussian componentwise L2 update for a
+        # matrix input: center predictors by default, select the best one-step
+        # base learner by normalized correlation, then apply the shrinkage
+        # update. It does not reproduce mboost's formula handling, weights,
+        # alternative families, hat values, or stopping machinery.
+        for iteration in range(1, self.n_iter + 1):
             covariances = x.T @ residual
-            best = int(np.argmax(np.abs(covariances)))
-            denom = float(x[:, best] @ x[:, best])
+            denominators = np.sum(x * x, axis=0)
+            usable = denominators > 1e-12
+            if not bool(np.any(usable)):
+                break
+            scores = np.zeros_like(covariances, dtype=float)
+            scores[usable] = covariances[usable] / np.sqrt(denominators[usable])
+            best = int(np.argmax(np.abs(scores)))
+            denom = float(denominators[best])
             if denom <= 1e-12:
                 break
             step = self.learning_rate * float(covariances[best]) / denom
             self.coef_[best] += step
             residual = residual - step * x[:, best]
+            self.n_iter_ = iteration
+        self.intercept_ = self.intercept_ - float(self.x_mean_ @ self.coef_)
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        if self.coef_ is None:
+        if self.coef_ is None or self.feature_names_in_ is None:
             return np.zeros(len(X), dtype=float)
-        return X.fillna(0.0).to_numpy(dtype=float) @ self.coef_ + self.intercept_
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
+        return frame.fillna(0.0).to_numpy(dtype=float) @ self.coef_ + self.intercept_
 
 
 def glmboost(
@@ -1055,16 +1137,162 @@ def glmboost(
     *,
     n_iter: int = 100,
     learning_rate: float = 0.1,
+    center: bool = True,
 ) -> ModelFit:
     """Fit componentwise linear boosting."""
 
     return fit_estimator(
-        _GLMBoost(n_iter=n_iter, learning_rate=learning_rate),
+        _GLMBoost(n_iter=n_iter, learning_rate=learning_rate, center=center),
         X,
         y,
         model="glmboost",
-        metadata={"n_iter": int(n_iter), "learning_rate": float(learning_rate)},
+        metadata={
+            "n_iter": int(n_iter),
+            "learning_rate": float(learning_rate),
+            "center": bool(center),
+        },
     )
+
+
+class _PLSCompositeRegressor:
+    """PLS regression with optional Hounyo-Li-style control residualization."""
+
+    # Source alignment:
+    # - Hounyo-Li's MATLAB baseline PLS_emp002.m first residualizes ytplush on
+    #   wt, then calls plsregress() on standardized predictors and the residual,
+    #   extracts stats.W, builds factors, re-estimates factor coefficients, and
+    #   adds the control forecast back.
+    # - macroforecast keeps that forecasting contract but delegates the PLS
+    #   component extraction to sklearn.cross_decomposition.PLSRegression. The
+    #   optional control block mirrors wt. With no controls, include_constant=True
+    #   gives the usual intercept-only residualization.
+
+    def __init__(
+        self,
+        *,
+        n_components: int = 3,
+        scale: bool = True,
+        max_iter: int = 500,
+        tol: float = 1e-6,
+        control_columns: Sequence[str] | None = None,
+        include_constant: bool = True,
+        drop_control_columns: bool = True,
+        quadratic_factors: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        self.n_components = max(1, int(n_components))
+        self.scale = bool(scale)
+        self.max_iter = int(max_iter)
+        self.tol = float(tol)
+        self.control_columns = tuple(str(column) for column in (control_columns or ()))
+        self.include_constant = bool(include_constant)
+        self.drop_control_columns = bool(drop_control_columns)
+        self.quadratic_factors = bool(quadratic_factors)
+        self.kwargs = dict(kwargs)
+        self.x_mean_: pd.Series | None = None
+        self.x_scale_: pd.Series | None = None
+        self.factor_features_: tuple[str, ...] = ()
+        self.factor_loadings_: np.ndarray | None = None
+        self.factor_coefs_: np.ndarray | None = None
+        self.factor_square_coefs_: np.ndarray | None = None
+        self.control_coef_: np.ndarray = np.empty(0, dtype=float)
+        self.control_names_: tuple[str, ...] = ()
+        self.n_components_: int = 0
+        self.pls_model_: Any | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_PLSCompositeRegressor":
+        from sklearn.cross_decomposition import PLSRegression
+
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        if frame.shape[1] == 0:
+            raise ValueError("pls requires at least one predictor")
+        if self.scale:
+            self.x_mean_ = frame.mean(axis=0)
+            self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
+            standardized_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+        else:
+            self.x_mean_ = pd.Series(0.0, index=frame.columns)
+            self.x_scale_ = pd.Series(1.0, index=frame.columns)
+            standardized_values = frame.to_numpy(dtype=float)
+        standardized = pd.DataFrame(standardized_values, index=frame.index, columns=frame.columns)
+
+        control_frame = _control_matrix(
+            standardized,
+            self.control_columns,
+            include_constant=self.include_constant,
+        )
+        self.control_names_ = tuple(str(column) for column in control_frame.columns)
+        factor_columns = _factor_columns(
+            standardized.columns,
+            self.control_columns,
+            drop_controls=self.drop_control_columns,
+        )
+        factor_frame = standardized.loc[:, factor_columns]
+        if factor_frame.shape[1] == 0:
+            raise ValueError("pls requires at least one factor predictor")
+
+        y_values = target.to_numpy(dtype=float)
+        control_values = control_frame.to_numpy(dtype=float)
+        self.control_coef_ = _least_squares_coef(control_values, y_values)
+        residual = y_values - control_values @ self.control_coef_ if control_values.size else y_values.copy()
+        resolved_components = min(self.n_components, factor_frame.shape[1], len(factor_frame))
+        resolved_components = max(1, int(resolved_components))
+        model = PLSRegression(
+            n_components=resolved_components,
+            scale=False,
+            max_iter=self.max_iter,
+            tol=self.tol,
+            **self.kwargs,
+        )
+        model.fit(factor_frame.to_numpy(dtype=float), residual)
+        factors = np.asarray(model.transform(factor_frame.to_numpy(dtype=float)), dtype=float)
+        self.factor_coefs_ = _least_squares_coef(factors, residual)
+        self.factor_square_coefs_ = (
+            _least_squares_coef(factors**2, residual)
+            if self.quadratic_factors
+            else np.zeros(resolved_components, dtype=float)
+        )
+        self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
+        self.factor_loadings_ = np.asarray(model.x_weights_, dtype=float)
+        self.n_components_ = resolved_components
+        self.pls_model_ = model
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if self.pls_model_ is None:
+            raise ValueError("pls is not fitted")
+        frame = X.astype(float).copy()
+        if self.x_mean_ is None or self.x_scale_ is None:
+            raise ValueError("pls is missing fitted scaling state")
+        frame = frame.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
+        values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float) if self.scale else frame.to_numpy(dtype=float)
+        standardized = pd.DataFrame(values, index=frame.index, columns=self.x_mean_.index)
+        factor_values = standardized.reindex(columns=list(self.factor_features_), fill_value=0.0).to_numpy(dtype=float)
+        factors = np.asarray(self.pls_model_.transform(factor_values), dtype=float)
+        columns = [f"pls_factor{i}" for i in range(1, self.n_components_ + 1)]
+        return pd.DataFrame(factors, index=frame.index, columns=columns)
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.factor_coefs_ is None:
+            raise ValueError("pls is not fitted")
+        factors = self.transform(X).to_numpy(dtype=float)
+        frame = X.astype(float).copy()
+        if self.x_mean_ is None or self.x_scale_ is None:
+            raise ValueError("pls is missing fitted scaling state")
+        frame = frame.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
+        values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float) if self.scale else frame.to_numpy(dtype=float)
+        standardized = pd.DataFrame(values, index=frame.index, columns=self.x_mean_.index)
+        control_values = _control_matrix(
+            standardized,
+            self.control_columns,
+            include_constant=self.include_constant,
+        ).to_numpy(dtype=float)
+        control_part = control_values @ self.control_coef_ if control_values.size else 0.0
+        factor_part = factors @ self.factor_coefs_
+        if self.quadratic_factors and self.factor_square_coefs_ is not None:
+            factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
+        return np.asarray(control_part + factor_part, dtype=float)
 
 
 def pls(
@@ -1075,30 +1303,60 @@ def pls(
     scale: bool = True,
     max_iter: int = 500,
     tol: float = 1e-6,
+    control_columns: Sequence[str] | None = None,
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    quadratic_factors: bool = False,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit partial least squares regression."""
 
-    from sklearn.cross_decomposition import PLSRegression
-
     frame, target = resolve_xy(X, y)
     requested_components = max(1, int(n_components))
-    max_components = max(1, min(frame.shape[1], len(frame)))
+    factor_columns = _factor_columns(
+        frame.columns,
+        tuple(str(column) for column in (control_columns or ())),
+        drop_controls=bool(drop_control_columns),
+    )
+    max_components = max(1, min(len(factor_columns), len(frame)))
     resolved_components = min(requested_components, max_components)
     params = {
         "n_components": resolved_components,
         "scale": bool(scale),
         "max_iter": int(max_iter),
         "tol": float(tol),
+        "control_columns": tuple(str(column) for column in (control_columns or ())),
+        "include_constant": bool(include_constant),
+        "drop_control_columns": bool(drop_control_columns),
+        "quadratic_factors": bool(quadratic_factors),
+        "source": "sklearn PLSRegression with optional Hounyo-Li PLS_emp002-style controls",
         **kwargs,
     }
     metadata = {
         **params,
         "requested_n_components": requested_components,
         "resolved_n_components": resolved_components,
+        "backend": "sklearn.cross_decomposition.PLSRegression",
+        "implementation_note": (
+            "Uses sklearn PLS latent components; when control_columns or "
+            "include_constant are set, y is residualized on the control block "
+            "and the control forecast is added back, matching the Hounyo-Li "
+            "PLS_emp002.m forecasting contract. quadratic_factors=True adds "
+            "the PLS_PC2.m squared-factor forecast head."
+        ),
     }
     return fit_estimator(
-        PLSRegression(**params),
+        _PLSCompositeRegressor(
+            n_components=resolved_components,
+            scale=bool(scale),
+            max_iter=int(max_iter),
+            tol=float(tol),
+            control_columns=control_columns,
+            include_constant=bool(include_constant),
+            drop_control_columns=bool(drop_control_columns),
+            quadratic_factors=bool(quadratic_factors),
+            **kwargs,
+        ),
         frame,
         target,
         model="pls",
@@ -1119,6 +1377,7 @@ class ScaledPCARegressor:
         include_constant: bool = True,
         drop_control_columns: bool = True,
         winsorize_slopes: tuple[float, float] | None = None,
+        quadratic_factors: bool = False,
     ) -> None:
         self.n_components = max(1, int(n_components))
         self.scale = bool(scale)
@@ -1126,6 +1385,7 @@ class ScaledPCARegressor:
         self.include_constant = bool(include_constant)
         self.drop_control_columns = bool(drop_control_columns)
         self.winsorize_slopes = winsorize_slopes
+        self.quadratic_factors = bool(quadratic_factors)
         self.x_mean_: pd.Series | None = None
         self.x_scale_: pd.Series | None = None
         self.factor_features_: tuple[str, ...] = ()
@@ -1134,6 +1394,7 @@ class ScaledPCARegressor:
         self.factor_loadings_: np.ndarray | None = None
         self.factor_projection_: np.ndarray | None = None
         self.factor_coefs_: np.ndarray = np.empty(0, dtype=float)
+        self.factor_square_coefs_: np.ndarray = np.empty(0, dtype=float)
         self.control_coef_: np.ndarray = np.empty(0, dtype=float)
         self.control_names_: tuple[str, ...] = ()
         self.n_components_: int = 0
@@ -1178,6 +1439,11 @@ class ScaledPCARegressor:
         self.control_coef_ = _least_squares_coef(control_values, target_values)
         residual = target_values - control_values @ self.control_coef_ if control_values.size else target_values.copy()
         self.factor_coefs_ = _least_squares_coef(state["factors"], residual)
+        self.factor_square_coefs_ = (
+            _least_squares_coef(state["factors"] ** 2, residual)
+            if self.quadratic_factors
+            else np.zeros(state["n_components"], dtype=float)
+        )
         self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
         self.scaling_slopes_ = pd.Series(slopes, index=factor_frame.columns)
         self.factor_scores_ = state["factors"]
@@ -1215,7 +1481,10 @@ class ScaledPCARegressor:
             include_constant=self.include_constant,
         ).to_numpy(dtype=float)
         control_part = control_values @ self.control_coef_ if control_values.size else 0.0
-        return np.asarray(control_part + factors @ self.factor_coefs_, dtype=float)
+        factor_part = factors @ self.factor_coefs_
+        if self.quadratic_factors:
+            factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
+        return np.asarray(control_part + factor_part, dtype=float)
 
 
 class SupervisedPCARegressor:
@@ -1237,6 +1506,7 @@ class SupervisedPCARegressor:
         elastic_net_alpha: float = 0.0002,
         elastic_net_l1_ratio: float = 0.5,
         slope_scale: bool = False,
+        quadratic_factors: bool = False,
         random_state: int = 0,
     ) -> None:
         self.n_components = max(1, int(n_components))
@@ -1251,6 +1521,7 @@ class SupervisedPCARegressor:
         self.elastic_net_alpha = float(max(0.0, elastic_net_alpha))
         self.elastic_net_l1_ratio = float(min(1.0, max(0.0, elastic_net_l1_ratio)))
         self.slope_scale = bool(slope_scale)
+        self.quadratic_factors = bool(quadratic_factors)
         self.random_state = int(random_state)
         self.selected_features_: tuple[str, ...] = ()
         self.screening_scores_: dict[str, float] = {}
@@ -1264,6 +1535,7 @@ class SupervisedPCARegressor:
         self.scaling_slopes_: pd.Series | None = None
         self.loadings_: np.ndarray | None = None
         self.factor_coefs_: np.ndarray | None = None
+        self.factor_square_coefs_: np.ndarray | None = None
         self.control_coef_: np.ndarray = np.empty(0, dtype=float)
         self.control_names_: tuple[str, ...] = ()
 
@@ -1333,6 +1605,7 @@ class SupervisedPCARegressor:
             n_components=self.n_components,
             n_selected=self.n_selected,
             min_abs_corr=self.min_abs_corr,
+            quadratic_factors=self.quadratic_factors,
         )
         self.n_components_ = extracted["n_components"]
         self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
@@ -1341,6 +1614,7 @@ class SupervisedPCARegressor:
         self.component_selected_features_ = extracted["component_features"]
         self.loadings_ = extracted["loadings"]
         self.factor_coefs_ = extracted["factor_coefs"]
+        self.factor_square_coefs_ = extracted["factor_square_coefs"]
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -1360,7 +1634,10 @@ class SupervisedPCARegressor:
         factor_values = standardized.reindex(columns=list(self.factor_features_), fill_value=0.0).to_numpy(dtype=float)
         if self.scaling_slopes_ is not None:
             factor_values = factor_values * self.scaling_slopes_.reindex(self.factor_features_).to_numpy(dtype=float)
-        factor_part = factor_values @ self.loadings_.T @ self.factor_coefs_
+        factors = factor_values @ self.loadings_.T
+        factor_part = factors @ self.factor_coefs_
+        if self.quadratic_factors and self.factor_square_coefs_ is not None:
+            factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
         control_part = control_values @ self.control_coef_ if control_values.size else 0.0
         y_scaled = np.asarray(factor_part + control_part, dtype=float)
         return y_scaled * self.y_scale_ + self.y_mean_
@@ -1395,9 +1672,9 @@ def _resolve_prior_target(
         return np.zeros(n_features, dtype=float)
     if isinstance(prior_target, dict):
         return np.asarray([float(prior_target.get(str(column), 0.0)) for column in columns], dtype=float)
-    if np.isscalar(prior_target):
+    if isinstance(prior_target, (int, float, np.integer, np.floating)):
         return np.full(n_features, float(prior_target), dtype=float)
-    out = np.asarray(tuple(prior_target), dtype=float).reshape(-1)
+    out = np.asarray(tuple(float(value) for value in prior_target), dtype=float).reshape(-1)
     if len(out) != n_features:
         raise ValueError("prior_target must be scalar, mapping by column, or one value per X column")
     return out
@@ -1438,7 +1715,7 @@ def _ridge_start(X: np.ndarray, y: np.ndarray, *, alpha: float) -> np.ndarray:
 def _difference_matrix(n_features: int, order: int) -> np.ndarray:
     if n_features <= int(order):
         return np.zeros((0, n_features), dtype=float)
-    matrix = np.eye(n_features, dtype=float)
+    matrix: np.ndarray = np.eye(n_features, dtype=float)
     for _ in range(int(order)):
         matrix = np.diff(matrix, axis=0)
     return matrix
@@ -1609,6 +1886,7 @@ def _extract_supervised_components(
     n_components: int,
     n_selected: int | None,
     min_abs_corr: float,
+    quadratic_factors: bool,
 ) -> dict[str, Any]:
     n_samples, n_features = X.shape
     n_out = min(max(1, int(n_components)), n_features, n_samples)
@@ -1616,6 +1894,7 @@ def _extract_supervised_components(
     work_y = y_residual.copy()
     loadings = np.zeros((n_out, n_features), dtype=float)
     factor_coefs = np.zeros(n_out, dtype=float)
+    factor_square_coefs = np.zeros(n_out, dtype=float)
     component_features: list[tuple[str, ...]] = []
     first_scores: dict[str, float] = {}
     for component in range(n_out):
@@ -1638,11 +1917,17 @@ def _extract_supervised_components(
         if denom <= 1e-12:
             break
         alpha = float(work_y @ factor / denom)
+        alpha2 = 0.0
+        if quadratic_factors:
+            squared = factor**2
+            denom2 = float(squared @ squared)
+            alpha2 = 0.0 if denom2 <= 1e-12 else float(work_y @ squared / denom2)
         lambdas = work_x.T @ factor / denom
         factor_coefs[component] = alpha
+        factor_square_coefs[component] = alpha2
         loadings[component, :] = loading
         component_features.append(tuple(columns[int(idx)] for idx in selected))
-        work_y = work_y - alpha * factor
+        work_y = work_y - alpha * factor - alpha2 * (factor**2)
         work_x = work_x - np.outer(factor, lambdas)
     active = int(sum(np.linalg.norm(row) > 1e-12 for row in loadings))
     if active == 0:
@@ -1651,6 +1936,7 @@ def _extract_supervised_components(
         "n_components": active,
         "loadings": loadings[:active],
         "factor_coefs": factor_coefs[:active],
+        "factor_square_coefs": factor_square_coefs[:active],
         "component_features": component_features[:active],
         "first_scores": first_scores,
     }
@@ -1688,6 +1974,7 @@ def supervised_pca(
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
     """Fit original-style supervised PCA regression."""
@@ -1704,6 +1991,7 @@ def supervised_pca(
         "t_threshold": float(t_threshold),
         "elastic_net_alpha": float(elastic_net_alpha),
         "elastic_net_l1_ratio": float(elastic_net_l1_ratio),
+        "quadratic_factors": bool(quadratic_factors),
         "random_state": int(random_state),
     }
     return fit_estimator(
@@ -1719,6 +2007,7 @@ def supervised_pca(
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),
         X,
@@ -1738,6 +2027,7 @@ def scaled_pca(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     winsorize_slopes: tuple[float, float] | None = None,
+    quadratic_factors: bool = False,
 ) -> ModelFit:
     """Fit Huang et al. scaled PCA with a linear forecast head."""
 
@@ -1748,6 +2038,7 @@ def scaled_pca(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "winsorize_slopes": winsorize_slopes,
+        "quadratic_factors": bool(quadratic_factors),
         "source": "Huang et al. Management Science 2022 scaled PCA spcaest.m",
     }
     return fit_estimator(
@@ -1758,6 +2049,7 @@ def scaled_pca(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             winsorize_slopes=winsorize_slopes,
+            quadratic_factors=bool(quadratic_factors),
         ),
         X,
         y,
@@ -1781,6 +2073,7 @@ def supervised_scaled_pca(
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
     """Fit Hounyo-Li supervised scaled PCA regression."""
@@ -1797,6 +2090,7 @@ def supervised_scaled_pca(
         "t_threshold": float(t_threshold),
         "elastic_net_alpha": float(elastic_net_alpha),
         "elastic_net_l1_ratio": float(elastic_net_l1_ratio),
+        "quadratic_factors": bool(quadratic_factors),
         "random_state": int(random_state),
         "source": "Hounyo and Li IJF 2026 SsPCA MATLAB reproducibility package",
     }
@@ -1813,6 +2107,7 @@ def supervised_scaled_pca(
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),
         X,
@@ -1834,8 +2129,6 @@ __all__ = [
     "glmboost",
     "group_lasso",
     "huber",
-    "kernel_ridge",
-    "knn",
     "lasso",
     "nonneg_ridge",
     "ols",

@@ -91,6 +91,8 @@ class _TorchNNRegressor:
             raise ValueError("optimizer must be 'adam', 'sgd', or 'rmsprop'")
         if loss not in {"mse", "huber"}:
             raise ValueError("loss must be 'mse' or 'huber'")
+        if float(learning_rate) <= 0.0:
+            raise ValueError("learning_rate must be positive")
         self.hidden_layer_sizes = tuple(
             max(1, int(value)) for value in hidden_layer_sizes
         )
@@ -118,6 +120,9 @@ class _TorchNNRegressor:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_TorchNNRegressor":
         torch = optional_import("torch", extra="deep")
         device = _resolve_torch_device(torch, self.device)
+        # Torch-native implementation: no R parity target. The model contract is
+        # tabular X/y input, fit-window scaling, deterministic seeds, and
+        # predictions mapped back to target units.
         frame = X.astype(float).copy()
         target = pd.Series(y, index=frame.index).astype(float)
         self.feature_names_in_ = tuple(str(column) for column in frame.columns)
@@ -178,7 +183,11 @@ class _TorchNNRegressor:
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(
             float
         )
-        values = (frame.to_numpy(dtype=float) - self.x_mean_) / self.x_scale_
+        values = _standardize_prediction_matrix(
+            frame.to_numpy(dtype=float),
+            self.x_mean_,
+            self.x_scale_,
+        )
         if len(values) == 0:
             return np.array([], dtype=float)
         device = torch.device(self.device_ or "cpu")
@@ -211,6 +220,10 @@ class _TorchRecurrentRegressor:
         random_state: int = 0,
         device: TorchDevice = "auto",
     ) -> None:
+        if kind not in {"lstm", "gru", "transformer"}:
+            raise ValueError("kind must be 'lstm', 'gru', or 'transformer'")
+        if float(learning_rate) <= 0.0:
+            raise ValueError("learning_rate must be positive")
         self.kind = kind
         self.sequence_length = max(1, int(sequence_length))
         self.hidden_size = max(1, int(hidden_size))
@@ -237,6 +250,9 @@ class _TorchRecurrentRegressor:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_TorchRecurrentRegressor":
         torch = optional_import("torch", extra="deep")
         device = _resolve_torch_device(torch, self.device)
+        # Recurrent models are torch-native. Sequence construction is deliberately
+        # local: each test row receives only the last fitted rows as prefix, so
+        # forecasting runners can pass contiguous test blocks without leakage.
 
         frame = X.astype(float).copy()
         target = pd.Series(y, index=frame.index).astype(float)
@@ -244,11 +260,13 @@ class _TorchRecurrentRegressor:
             raise ValueError("sequence_length cannot exceed the fitted sample size")
         self.feature_names_in_ = tuple(str(column) for column in frame.columns)
         values = frame.to_numpy(dtype=float)
+        _require_finite(values, "X")
         self.x_mean_ = np.nanmean(values, axis=0)
         x_std = np.nanstd(values, axis=0, ddof=1)
         self.x_scale_ = np.where(np.isfinite(x_std) & (x_std > 1e-12), x_std, 1.0)
         x_scaled = (values - self.x_mean_) / self.x_scale_
         y_values = target.to_numpy(dtype=float)
+        _require_finite(y_values, "y")
         self.y_mean_ = float(np.nanmean(y_values))
         y_std = float(np.nanstd(y_values, ddof=1))
         self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
@@ -309,7 +327,11 @@ class _TorchRecurrentRegressor:
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(
             float
         )
-        values = (frame.to_numpy(dtype=float) - self.x_mean_) / self.x_scale_
+        values = _standardize_prediction_matrix(
+            frame.to_numpy(dtype=float),
+            self.x_mean_,
+            self.x_scale_,
+        )
         if len(values) == 0:
             return np.array([], dtype=float)
         prefix = (
@@ -345,6 +367,7 @@ def _resolve_torch_device(torch: Any, requested: TorchDevice) -> Any:
 def _standardize_matrix(
     values: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    _require_finite(values, "X")
     mean = np.nanmean(values, axis=0)
     std = np.nanstd(values, axis=0, ddof=1)
     scale = np.where(np.isfinite(std) & (std > 1e-12), std, 1.0)
@@ -352,10 +375,28 @@ def _standardize_matrix(
 
 
 def _standardize_vector(values: np.ndarray) -> tuple[float, float, np.ndarray]:
+    _require_finite(values, "y")
     mean = float(np.nanmean(values))
     std = float(np.nanstd(values, ddof=1))
     scale = std if np.isfinite(std) and std > 1e-12 else 1.0
     return mean, scale, (values - mean) / scale
+
+
+def _require_finite(values: np.ndarray, name: str) -> None:
+    if not np.isfinite(values).all():
+        raise ValueError(f"{name} must contain only finite values")
+
+
+def _standardize_prediction_matrix(
+    values: np.ndarray,
+    mean: np.ndarray,
+    scale: np.ndarray,
+) -> np.ndarray:
+    scaled = (values - mean) / scale
+    # Fit-time rows are required finite. At prediction time, nonfinite cells are
+    # mapped to the fit-window mean in standardized space instead of letting
+    # torch propagate invalid values through the network.
+    return np.nan_to_num(scaled, nan=0.0, posinf=0.0, neginf=0.0)
 
 
 def _torch_activation(torch: Any, activation: str) -> Any:
@@ -582,6 +623,8 @@ class _TorchHemisphereNNRegressor:
         self.lv = max(1, int(lv))
         self.neurons = max(2, int(neurons))
         self.dropout = float(np.clip(dropout, 0.0, 0.9))
+        if float(learning_rate) <= 0.0:
+            raise ValueError("learning_rate must be positive")
         self.learning_rate = float(learning_rate)
         self.max_epochs = max(1, int(max_epochs))
         self.n_estimators = max(1, int(n_estimators))
@@ -595,7 +638,9 @@ class _TorchHemisphereNNRegressor:
             raise ValueError("device must be 'auto', 'cpu', or 'cuda'")
         self.device = device
         self.quantile_levels = tuple(float(level) for level in quantile_levels)
-        if not self.quantile_levels or any(level <= 0.0 or level >= 1.0 for level in self.quantile_levels):
+        if not self.quantile_levels or any(
+            level <= 0.0 or level >= 1.0 for level in self.quantile_levels
+        ):
             raise ValueError("quantile_levels must contain values in (0, 1)")
         self.device_: str | None = None
         self.feature_names_in_: tuple[str, ...] = ()
@@ -610,6 +655,10 @@ class _TorchHemisphereNNRegressor:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_TorchHemisphereNNRegressor":
         torch = optional_import("torch", extra="deep")
         device = _resolve_torch_device(torch, self.device)
+        self.device_ = str(device)
+        # Hemisphere is implemented as a compact torch-native dual-head density
+        # model. The logical contract is mean/variance prediction with blocked
+        # bagging and a chronological validation block, not R source parity.
         torch.manual_seed(self.random_state)
         if hasattr(torch, "cuda") and torch.cuda.is_available():
             torch.cuda.manual_seed_all(self.random_state)
@@ -640,7 +689,11 @@ class _TorchHemisphereNNRegressor:
         x_val = torch.tensor(x_scaled[val_idx], dtype=torch.float32, device=device)
         y_val = torch.tensor(y_values[val_idx], dtype=torch.float32, device=device)
         x_all = torch.tensor(x_scaled, dtype=torch.float32, device=device)
-        target_variance_tensor = torch.tensor(target_variance_mean, dtype=torch.float32, device=device)
+        target_variance_tensor = torch.tensor(
+            target_variance_mean,
+            dtype=torch.float32,
+            device=device,
+        )
         self.models_ = []
         losses = []
         for bag in range(self.n_estimators):
@@ -729,8 +782,12 @@ class _TorchHemisphereNNRegressor:
         mean, variance = self.predict_distribution(X)
         sigma = np.sqrt(np.maximum(variance, 1e-12))
         normal = NormalDist()
-        quantile_levels = self.quantile_levels if levels is None else tuple(float(level) for level in levels)
-        if not quantile_levels or any(level <= 0.0 or level >= 1.0 for level in quantile_levels):
+        quantile_levels = (
+            self.quantile_levels if levels is None else tuple(float(level) for level in levels)
+        )
+        if not quantile_levels or any(
+            level <= 0.0 or level >= 1.0 for level in quantile_levels
+        ):
             raise ValueError("quantile levels must be in (0, 1)")
         return {
             float(level): mean + sigma * normal.inv_cdf(float(level))
@@ -746,7 +803,11 @@ class _TorchHemisphereNNRegressor:
                 np.full(n, self.target_variance_, dtype=float),
             )
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(float)
-        values = (frame.to_numpy(dtype=float) - self.x_mean_) / self.x_scale_
+        values = _standardize_prediction_matrix(
+            frame.to_numpy(dtype=float),
+            self.x_mean_,
+            self.x_scale_,
+        )
         if len(values) == 0:
             return np.array([], dtype=float), np.array([], dtype=float)
         device = torch.device(self.device_ or "cpu")
@@ -872,7 +933,10 @@ def _blocked_subsample_indices(
     rng: np.random.Generator,
 ) -> np.ndarray:
     block_size = max(2, n_obs // 10)
-    blocks = [np.arange(start, min(start + block_size, n_obs)) for start in range(0, n_obs, block_size)]
+    blocks = [
+        np.arange(start, min(start + block_size, n_obs))
+        for start in range(0, n_obs, block_size)
+    ]
     n_blocks = max(1, int(round(float(subsample) * len(blocks))))
     chosen = rng.choice(len(blocks), size=n_blocks, replace=False)
     return np.sort(np.concatenate([blocks[int(index)] for index in chosen]))

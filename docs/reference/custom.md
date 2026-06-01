@@ -4,8 +4,9 @@
 
 `macroforecast` keeps custom extension points as normal callable functions, not
 as a second registry layer. The user can add a dataset, preprocessing function,
-feature transform, model, stage policy, or forecast-combination rule by passing
-a Python callable at the stage that owns that behavior.
+feature transform, model, fit-time model ensemble, stage policy, or
+forecast-combination rule by passing a Python callable at the stage that owns
+that behavior.
 
 The package still enforces the same contracts around each custom hook:
 
@@ -17,6 +18,7 @@ The package still enforces the same contracts around each custom hook:
 | Feature engineering | `mf.feature_engineering.custom_features(...)` | Selected feature panel. | Numeric feature `DataFrame`. |
 | Feature spec | `mf.feature_engineering.custom_step(...)` | Stateless or fitted feature callable for `feature_spec(steps=[...])`. | Step dictionary consumed by `FeatureSpec`. |
 | Models | `mf.models.custom_model(...)` | Fit callable with model metadata and optional search spaces. | `ModelSpec`. |
+| Model ensemble | `mf.model_ensemble.custom_model_ensemble(...)` | Fit-time composition callable returning a model-like fit. | `ModelSpec` with `family="model_ensemble"`. |
 | Window | `mf.window.custom_stage_policy(...)` | Selector callable for origin-specific sample labels. | `StagePolicy(scope="custom")`. |
 | Selection | `mf.model_selection.custom_search(...)` | User search callable over model, data, splits, metric, and candidate evaluation helper. | `SearchSpec(method="custom")`. |
 | Forecasting | `mf.forecasting.custom_combination(...)` | Callable over base forecast matrix. | `CombinationSpec`. |
@@ -605,9 +607,10 @@ Custom extensions should remain stage-local:
 | New cleaning or preprocessing operation | `custom_preprocess()` or `custom_preprocess_step()`. |
 | New feature transform | `custom_features()` or `custom_step()`. |
 | New estimator | `custom_model()`. |
+| New fit-time model ensemble | `custom_model_ensemble()`. |
 | New sample policy | `custom_stage_policy()`. |
 | New hyperparameter-search algorithm | `custom_search()`. |
-| New forecast averaging or ensemble rule | `custom_combination()`. |
+| New forecast-output averaging or combination rule | `custom_combination()`. |
 | New scalar forecast metric | Pass a callable to `metrics=...`. |
 | New forecast-comparison test | `mf.tests.custom_test()`. |
 | New evaluation slice | Pass a grouping map to `evaluate_report(..., aggregations=...)`. |

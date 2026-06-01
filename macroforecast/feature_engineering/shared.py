@@ -191,6 +191,22 @@ def _fit_transform_pca(
     return transformed
 
 
+def _effective_pls_components(values: pd.DataFrame, requested: int) -> int:
+    """Return PLS components supported by sample size, feature count, and rank."""
+
+    n_value = int(requested)
+    if n_value <= 0:
+        raise ValueError("n_components must be positive")
+    if values.empty:
+        return 0
+    matrix = values.to_numpy(dtype=float)
+    if matrix.shape[0] < 2 or matrix.shape[1] == 0:
+        return 0
+    centered = matrix - matrix.mean(axis=0, keepdims=True)
+    rank = int(np.linalg.matrix_rank(centered))
+    return min(n_value, matrix.shape[1], matrix.shape[0] - 1, rank)
+
+
 def _fit_sparse_pca_chen_rohe(
     train: pd.DataFrame,
     *,

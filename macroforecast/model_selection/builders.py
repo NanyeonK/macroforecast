@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 
+from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.models.specs import ModelSpec, get_model
 from macroforecast.model_selection.optimizers import sample_params
 from macroforecast.model_selection.types import ParamDistribution, SearchSpec
@@ -64,7 +65,7 @@ def search_spec(
 ) -> SearchSpec:
     """Build a SearchSpec from a registered model's owned search space."""
 
-    model_spec = get_model(model, preset=preset)
+    model_spec = _get_model_or_ensemble(model, preset=preset)
     return _search_from_model(
         model_spec,
         method=method,
@@ -277,6 +278,20 @@ def _normalize_method(method: str) -> str:
         "path": "cv_path",
     }
     return aliases.get(key, key)
+
+
+def _get_model_or_ensemble(
+    model: str | Callable[..., Any] | ModelSpec,
+    *,
+    preset: str | None = None,
+) -> ModelSpec:
+    try:
+        return get_model(model, preset=preset)
+    except ValueError as model_error:
+        try:
+            return get_model_ensemble(model, preset=preset)
+        except ValueError:
+            raise model_error from None
 
 
 def _as_tuple(value: Iterable[Any] | Any) -> tuple[Any, ...]:

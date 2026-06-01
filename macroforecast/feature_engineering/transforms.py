@@ -19,6 +19,7 @@ from macroforecast.feature_engineering.shared import (
     _component_records,
     _apply_sparse_pca_chen_rohe,
     _apply_varimax_rotation,
+    _effective_pls_components,
     _fit_sparse_factor_var1,
     _fit_sparse_pca_chen_rohe,
     _fit_varimax_rotation,
@@ -1073,22 +1074,24 @@ def partial_least_squares_features(
     joined = pd.concat([source, target_series.rename("__target__")], axis=1).dropna()
     if len(joined) < 2:
         raise ValueError("partial_least_squares_features() requires at least two target-aligned complete rows")
-    resolved = min(n_value, len(selected), max(1, len(joined) - 1))
+    resolved = _effective_pls_components(joined.loc[:, selected], n_value)
     _warn_if_full_sample_fit(
         "full_sample",
         context="partial_least_squares_features()",
         enabled=warn_full_sample,
     )
-    model = PLSRegression(n_components=resolved)
-    scores = model.fit_transform(
-        joined.loc[:, selected].to_numpy(dtype=float),
-        joined["__target__"].to_numpy(dtype=float).reshape(-1, 1),
-    )[0]
-    result = pd.DataFrame(
-        scores,
-        index=joined.index,
-        columns=[f"{prefix}{idx}" for idx in range(1, resolved + 1)],
-    ).reindex(panel.index)
+    result = pd.DataFrame(index=panel.index, dtype=float)
+    if resolved > 0:
+        model = PLSRegression(n_components=resolved)
+        scores = model.fit_transform(
+            joined.loc[:, selected].to_numpy(dtype=float),
+            joined["__target__"].to_numpy(dtype=float).reshape(-1, 1),
+        )[0]
+        result = pd.DataFrame(
+            scores,
+            index=joined.index,
+            columns=[f"{prefix}{idx}" for idx in range(1, resolved + 1)],
+        ).reindex(panel.index)
     if resolved < n_value:
         for idx in range(resolved + 1, n_value + 1):
             result[f"{prefix}{idx}"] = np.nan

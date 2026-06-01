@@ -1619,7 +1619,101 @@ def _var_results(model: Any) -> Any:
     for candidate in candidates:
         if candidate is not None and hasattr(candidate, "irf"):
             return candidate
+    if all(hasattr(estimator, attr) for attr in ("coef_", "names_", "n_lag")):
+        return _InternalVARResults(estimator)
     raise ValueError("model does not expose fitted VAR results")
+
+
+class _InternalVARIRF:
+    def __init__(self, irfs: np.ndarray, sigma_u: np.ndarray) -> None:
+        self.irfs = np.asarray(irfs, dtype=float)
+        try:
+            chol = np.linalg.cholesky(_positive_definite_covariance(sigma_u))
+        except np.linalg.LinAlgError:
+            chol = np.eye(self.irfs.shape[1], dtype=float)
+        self.orth_irfs = np.asarray([phi @ chol for phi in self.irfs], dtype=float)
+
+
+class _InternalVARFEVD:
+    def __init__(self, ma: np.ndarray, sigma_u: np.ndarray, n_periods: int) -> None:
+        irf = _InternalVARIRF(ma[: int(n_periods)], sigma_u)
+        orth = irf.orth_irfs
+        k = orth.shape[1]
+        out = np.zeros((k, int(n_periods), k), dtype=float)
+        for horizon in range(int(n_periods)):
+            squared = np.square(orth[: horizon + 1]).sum(axis=0)
+            denom = squared.sum(axis=1)
+            denom = np.where(denom > 1e-12, denom, 1.0)
+            out[:, horizon, :] = squared / denom.reshape(-1, 1)
+        self.decomp = out
+
+
+class _InternalVARResults:
+    """Minimal statsmodels-like VAR result adapter for macroforecast's internal VAR."""
+
+    def __init__(self, estimator: Any) -> None:
+        self._estimator = estimator
+        self.names = [str(name) for name in getattr(estimator, "names_", ())]
+        self.endog_names = self.names
+        self.sigma_u = self._sigma_u()
+        self.resid = self._residuals()
+
+    def irf(self, periods: int, var_decomp: Any | None = None) -> _InternalVARIRF:
+        del var_decomp
+        return _InternalVARIRF(self.ma_rep(maxn=int(periods)), self.sigma_u)
+
+    def ma_rep(self, maxn: int) -> np.ndarray:
+        coef = np.asarray(getattr(self._estimator, "coef_", None), dtype=float)
+        if coef.ndim != 2 or coef.size == 0:
+            k = max(1, len(self.names))
+            return np.repeat(np.eye(k, dtype=float)[None, :, :], int(maxn) + 1, axis=0)
+        k = len(self.names)
+        p = int(getattr(self._estimator, "n_lag", 1))
+        lag_coef = np.zeros((p, k, k), dtype=float)
+        for lag in range(p):
+            left = lag * k
+            right = left + k
+            lag_coef[lag] = coef[:, left:right]
+        ma = np.zeros((int(maxn) + 1, k, k), dtype=float)
+        ma[0] = np.eye(k, dtype=float)
+        for horizon in range(1, int(maxn) + 1):
+            total = np.zeros((k, k), dtype=float)
+            for lag in range(1, min(p, horizon) + 1):
+                total += lag_coef[lag - 1] @ ma[horizon - lag]
+            ma[horizon] = total
+        return ma
+
+    def fevd(self, periods: int) -> _InternalVARFEVD:
+        return _InternalVARFEVD(self.ma_rep(maxn=int(periods) - 1), self.sigma_u, int(periods))
+
+    def _residuals(self) -> np.ndarray:
+        datamat = getattr(self._estimator, "datamat_", None)
+        coef = np.asarray(getattr(self._estimator, "coef_", None), dtype=float)
+        if datamat is None or coef.ndim != 2 or coef.size == 0:
+            return np.empty((0, max(1, len(self.names))), dtype=float)
+        frame = pd.DataFrame(datamat)
+        k = len(self.names)
+        y = frame.iloc[:, :k].to_numpy(dtype=float)
+        rhs = frame.iloc[:, k:].to_numpy(dtype=float)
+        return y - rhs @ coef.T
+
+    def _sigma_u(self) -> np.ndarray:
+        resid = self._residuals()
+        k = max(1, len(self.names))
+        if resid.size == 0:
+            return np.eye(k, dtype=float)
+        denom = max(1, resid.shape[0] - k)
+        sigma = resid.T @ resid / float(denom)
+        return _positive_definite_covariance(sigma)
+
+
+def _positive_definite_covariance(matrix: Any) -> np.ndarray:
+    cov = np.asarray(matrix, dtype=float)
+    cov = 0.5 * (cov + cov.T)
+    eigvals, eigvecs = np.linalg.eigh(cov)
+    scale = max(float(np.nanmax(np.abs(eigvals))) if eigvals.size else 1.0, 1.0)
+    clipped = np.maximum(eigvals, 1e-10 * scale)
+    return 0.5 * ((eigvecs * clipped) @ eigvecs.T + ((eigvecs * clipped) @ eigvecs.T).T)
 
 
 def _var_names(results: Any) -> list[str]:

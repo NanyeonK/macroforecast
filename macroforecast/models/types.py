@@ -141,6 +141,8 @@ def _json_ready(value: Any) -> Any:
         return value.item()
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
+    if isinstance(value, (pd.Period, pd.Timedelta)):
+        return str(value)
     return value
 
 

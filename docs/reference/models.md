@@ -88,10 +88,7 @@ type checks; the normal user entry point remains the lowercase fit function.
 | Estimator class | Fit function | Meaning |
 | --- | --- | --- |
 | `MARSRegressor` | `mars(...)` | Internal MARS-style spline regressor. |
-| `SlowGrowingTreeRegressor` | `slow_growing_tree(...)` | Slow-growing tree backend. |
 | `QuantileRegressionForestRegressor` | `quantile_regression_forest(...)` | Quantile forest backend. |
-| `BaggingRegressor` | `bagging(...)` | Bagging backend. |
-| `BoogingRegressor` | `booging(...)` | Booging backend. |
 | `MacroRandomForestRegressor` | `macro_random_forest(...)` | Macro Random Forest backend. |
 | `SupervisedPCARegressor` | `supervised_pca(...)` | Supervised PCA backend. |
 | `SupervisedScaledPCARegressor` | `supervised_scaled_pca(...)` | Supervised scaled-PCA backend. |
@@ -234,7 +231,7 @@ defaults, fixed params, parameter descriptions, and all preset search spaces.
     "model_family": "linear",
     "model_preset": "small",
     "input_kind": "supervised",
-    "backend": "internal",
+    "backend": "sklearn.linear_model.Ridge",
     "requires_extra": None,
     "requires_scaling": False,
     "recommended_preprocessing": [],
@@ -402,7 +399,7 @@ Output:
 
 | Input kind | Callable shape | Use case |
 | --- | --- | --- |
-| `supervised` | `model(X, y, **params)` | Most regression, factor, tree, and ensemble models. |
+| `supervised` | `model(X, y, **params)` | Most regression, factor, and tree models. Fit-time ensembles use the same shape in `macroforecast.model_ensemble`. |
 | `target` | `model(y, **params)` | Univariate target-only models such as `ar`. |
 | `panel` | `model(panel, **params)` | Multivariate time-series models such as `var`. |
 | `volatility` | `model(y, X=None, **params)` | Return and volatility models. |
@@ -419,7 +416,7 @@ return `VolatilityFit`.
 The clean model API does not silently standardize predictors for models that
 are traditionally scale-sensitive. Instead, those models advertise
 `requires_scaling=True` through `ModelSpec`, `list_model_specs()`,
-`search_spec()`, and `select_params()` metadata.
+`model_search_space()`, and `select_params()` metadata.
 
 Current scale-sensitive callable models:
 
@@ -456,7 +453,7 @@ head is a density-forecast object. Their metadata records
 | `sparse_group_lasso` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `bayesian_ridge` | linear | supervised | `grid` | none |
 | `huber` | linear | supervised | `grid` | `small`, `standard`, `wide` |
-| `kernel_ridge` | kernel | supervised | `random` | `small`, `standard`, `wide` |
+| `kernel_ridge` | nonparametric | supervised | `random` | `small`, `standard`, `wide` |
 | `knn` | nonparametric | supervised | `random` | `small`, `standard`, `wide` |
 | `glmboost` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `svr` | support_vector | supervised | `random` | `small`, `standard`, `wide` |
@@ -482,6 +479,7 @@ head is a density-forecast object. Their metadata records
 | `midas_almon` | mixed_frequency | supervised | `grid` | `small`, `standard`, `wide` |
 | `midas_beta` | mixed_frequency | supervised | `grid` | `small`, `standard`, `wide` |
 | `midas_step` | mixed_frequency | supervised | `grid` | `small`, `standard`, `wide` |
+| `restricted_midas` | mixed_frequency | supervised | `grid` | `small`, `standard`, `wide` |
 | `unrestricted_midas` | mixed_frequency | supervised | `grid` | `small`, `standard`, `wide` |
 | `dfm_unrestricted_midas` | mixed_frequency | panel | `grid` | `small`, `standard`, `wide` |
 | `far` | factor | supervised | `grid` | `small`, `standard`, `wide` |
@@ -494,16 +492,72 @@ head is a density-forecast object. Their metadata records
 | `xgboost` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `lightgbm` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `catboost` | tree | supervised | `random` | `small`, `standard`, `wide` |
-| `slow_growing_tree` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `quantile_regression_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
-| `bagging` | ensemble | supervised | `random` | `small`, `standard`, `wide` |
-| `booging` | ensemble | supervised | `random` | `small`, `standard`, `wide` |
 | `macro_random_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `garch11` | volatility | volatility | `grid` | `small`, `standard`, `wide` |
 | `egarch` | volatility | volatility | `grid` | `small`, `standard`, `wide` |
 | `realized_garch` | volatility | volatility | `grid` | `small`, `standard`, `wide` |
 
 ## Linear Models
+
+### Linear implementation map
+
+The `linear` family mixes thin sklearn wrappers, hybrid macroforecast code, and
+package-native solvers. `backend` in `ModelSpec` records that distinction so
+metadata exported by `describe_model()`, `list_model_specs()`, and saved
+`ModelFit` objects is inspectable.
+
+| Model | Implementation class | Runtime backend |
+| --- | --- | --- |
+| `ols` | external wrapper | `sklearn.linear_model.LinearRegression` |
+| `ridge` | external wrapper | `sklearn.linear_model.Ridge` |
+| `lasso` | external wrapper | `sklearn.linear_model.Lasso` |
+| `elastic_net` | external wrapper | `sklearn.linear_model.ElasticNet` |
+| `bayesian_ridge` | external wrapper | `sklearn.linear_model.BayesianRidge` |
+| `huber` | external wrapper | `sklearn.linear_model.HuberRegressor` |
+| `adaptive_lasso` | hybrid | macroforecast adaptive weights, final `sklearn.linear_model.Lasso` |
+| `adaptive_elastic_net` | hybrid | macroforecast adaptive weights, final `sklearn.linear_model.ElasticNet` |
+| `nonneg_ridge` | package-native | augmented ridge design solved by `scipy.optimize.nnls` |
+| `shrink_to_target_ridge` | package-native | custom objective solved by `scipy.optimize.minimize(method="SLSQP")` |
+| `fused_difference_ridge` | package-native | custom difference-penalty objective solved by SLSQP |
+| `random_walk_ridge` | package-native | expanded time-varying design solved by `numpy.linalg.lstsq` |
+| `group_lasso` | package-native | proximal-gradient group-lasso solver |
+| `sparse_group_lasso` | package-native | proximal-gradient sparse-group-lasso solver |
+| `glmboost` | package-native | componentwise L2 boosting loop |
+
+`external wrapper` means the statistical estimator is delegated to an external
+package and macroforecast only standardizes the callable contract, metadata,
+diagnostics, and persistence. `hybrid` means macroforecast owns the macro-level
+algorithmic transformation and delegates the final convex solver. `package-native`
+means the objective, iteration, or coefficient path logic is implemented inside
+macroforecast, using NumPy/SciPy only for basic numerical linear algebra or
+generic optimization.
+
+### R source comparison map
+
+The following R sources are the comparison surface for the linear models where
+macroforecast owns nontrivial logic. These sources are not vendored into the
+package. They are used as independent algorithm references; the Python code
+keeps short source cues in comments and implements the corresponding
+mathematical objective in macroforecast's callable API.
+
+| macroforecast model | R package/source to inspect | Comparison target | Current equivalence status |
+| --- | --- | --- | --- |
+| `adaptive_lasso` | `glmnet`, `R/glmnet.R`: <https://rdrr.io/cran/glmnet/src/R/glmnet.R> | Adaptive lasso is expressible in R by computing initial weights and passing them as `penalty.factor` to lasso. | Same fixed-weight objective after macroforecast standardizes `X`, rescales columns, and normalizes weights to mean one; macroforecast fits one chosen `alpha`, while `glmnet` usually builds a lambda path. |
+| `adaptive_elastic_net` | `glmnet`, `R/glmnet.R`: <https://rdrr.io/cran/glmnet/src/R/glmnet.R> | Adaptive elastic net uses the same adaptive weights with elastic-net mixing. | Same fixed-weight idea with mean-one penalty weights; macroforecast delegates the final fit to sklearn `ElasticNet` rather than glmnet's path solver. |
+| `nonneg_ridge` | `nnls`, `R/nnls.R`: <https://rdrr.io/cran/nnls/src/R/nnls.R>; also `glmnet` lower bounds | NNLS solves least squares under coefficient non-negativity. | Equivalent to NNLS on the augmented design `[X; sqrt(alpha) I]` and response `[y; 0]`, after optional centering. |
+| `shrink_to_target_ridge` | `penalized`: <https://search.r-project.org/CRAN/refmans/penalized/html/penalized.html>; target ridge family in `rags2ridges`: <https://rdrr.io/cran/rags2ridges/src/R/rags2ridges.R> | Compare target-shrinkage/tikhonov logic, not an identical regression API. | No exact same R regression callable found. macroforecast solves `||y-Xb||^2 + alpha ||b-b0||^2` with optional simplex/nonnegative constraints. |
+| `fused_difference_ridge` | fused L2 ridge family in `rags2ridgesFused.R`: <https://rdrr.io/cran/rags2ridges/src/R/rags2ridgesFused.R> | Compare L2 fusion/smoothness penalty structure. | Not identical domain: R source is primarily fused ridge for precision matrices; macroforecast applies an L2 finite-difference penalty directly to regression coefficients. |
+| `random_walk_ridge` | `walker`, `R/walker.R`: <https://rdrr.io/cran/walker/man/walker.html> | Random-walk coefficients in a time-varying regression. | Same modeling prior idea, different inference: `walker` is Bayesian/state-space via Stan; macroforecast computes the penalized least-squares MAP-style coefficient path and predicts with the final vector. |
+| `group_lasso` | `grpreg`, `R/grpreg.R`: <https://rdrr.io/cran/grpreg/src/R/grpreg.R> | Group penalty over coefficient blocks. | Same group-lasso penalty family for Gaussian loss; macroforecast uses a single-alpha proximal-gradient solver rather than a full regularization path. |
+| `sparse_group_lasso` | `sparsegl`, `R/sparsegl.R`: <https://rdrr.io/cran/sparsegl/src/R/sparsegl.R> | Sparse group lasso objective with group and feature-level penalties. | Same penalty decomposition; macroforecast uses one selected `alpha` and `l1_ratio`, while `sparsegl` is a full path solver with additional bounds/families. |
+| `glmboost` | `mboost`, `R/mboost.R`: <https://rdrr.io/cran/mboost/src/R/mboost.R>; component learner in `R/bolscw.R` | Componentwise gradient/L2 boosting. | Same Gaussian componentwise L2 update: center predictors by default, select the base learner by normalized correlation, and apply shrinkage. macroforecast omits formula handling, weights, families, hat values, and stopping machinery. |
+
+The direct implementations should be reviewed against the objective, scaling,
+intercept handling, penalty normalization, and solver stopping rule separately.
+Matching an R package name is not enough: several R implementations solve a
+path problem, a Bayesian state-space problem, or a matrix-estimation problem,
+whereas macroforecast exposes a single callable forecasting estimator.
 
 ### ols
 
@@ -517,6 +571,7 @@ Fits ordinary least squares.
 | --- | --- |
 | Input | `X`, `y` |
 | Output | `ModelFit` |
+| Backend | `sklearn.linear_model.LinearRegression` |
 | Default params | none |
 | Tunable params | none |
 | Preset search spaces | none |
@@ -528,6 +583,8 @@ macroforecast.models.ridge(X, y, *, alpha=1.0)
 ```
 
 Fits ridge regression with an L2 penalty.
+
+Backend: `sklearn.linear_model.Ridge`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -549,6 +606,8 @@ macroforecast.models.nonneg_ridge(X, y, *, alpha=1.0, fit_intercept=True)
 
 Fits ridge regression with coefficients constrained to be non-negative. This
 uses SciPy NNLS on an augmented ridge design, so it does not require `cvxpy`.
+
+Backend: package-native augmented ridge design plus `scipy.optimize.nnls`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -581,6 +640,28 @@ columns, or a mapping from column name to target coefficient. If
 target is a uniform coefficient vector. `simplex=True` constrains coefficients
 to sum to one and uses no intercept; `nonneg=True` also enforces non-negative
 coefficients. The solver is SciPy SLSQP.
+
+Backend: package-native objective plus `scipy.optimize.minimize(method="SLSQP")`.
+
+R comparison: this is a regression analogue of target-ridge/Tikhonov
+shrinkage. `rags2ridges` uses target ridge for covariance and precision
+matrices, not a direct `X, y` regression callable, but the same target idea is
+present: shrink an estimated parameter object toward a target rather than
+toward zero. In the unconstrained regression case, macroforecast solves
+
+```text
+min_beta ||y - X beta||^2 + alpha ||beta - beta0||^2
+```
+
+with closed-form normal equation
+
+```text
+(X'X + alpha I) beta = X'y + alpha beta0
+```
+
+after optional centering for the intercept. `simplex=True` changes the problem
+into a forecast-combination form: coefficients must sum to one, no intercept is
+fit, and `prior_target=None` means a uniform target vector.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -617,6 +698,28 @@ age, maturity, or horizon and neighboring coefficients should vary smoothly.
 `difference_order=1` penalizes first differences; larger orders penalize higher
 order coefficient curvature. `mean_equality=True` adds a conservation-style
 constraint that the fitted and observed sums match and uses no intercept.
+
+Backend: package-native finite-difference objective plus SLSQP.
+
+R comparison: `rags2ridges::ridgeP.fused` uses a fused L2 penalty for related
+precision matrices. `fused_difference_ridge()` uses the same penalty idea on a
+single ordered regression-coefficient vector. With no sign or equality
+constraints, macroforecast solves
+
+```text
+min_beta ||y - X beta||^2 + alpha ||D beta||^2
+```
+
+where `D` is the finite-difference matrix over adjacent coefficients. The
+closed-form normal equation is
+
+```text
+(X'X + alpha D'D) beta = X'y
+```
+
+after optional centering for the intercept. `mean_equality=True` is a
+macro-forecasting conservation variant; it constrains fitted and observed sums
+to match and is intentionally outside the rags2ridges precision-matrix API.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -655,6 +758,27 @@ Predictions use the final estimated coefficient vector. The full fitted path is
 stored on the estimator as `coef_path_`, and standard `ModelFit` diagnostics
 record the final coefficients, fitted values, and residuals.
 
+Backend: package-native expanded design solved by `numpy.linalg.lstsq`.
+
+R comparison: `walker::walker_rw1` is the closest R source. It treats
+coefficients as random-walk state variables and estimates a Bayesian posterior
+with Stan / state-space smoothing. `random_walk_ridge()` keeps the same RW1
+prior idea but solves the penalized least-squares MAP-style objective as one
+augmented linear system over the full coefficient path:
+
+```text
+min_{beta_1,...,beta_T}
+sum_t (y_t - x_t beta_t)^2
++ initial_alpha ||beta_1||^2
++ alpha sum_t ||beta_t - beta_{t-1}||^2
+```
+
+The fitted `coef_path_` is the estimated path. `predict()` uses only the final
+coefficient vector, because this callable is a deterministic forecasting model,
+not a posterior simulation or Kalman-smoothing interface. `fit_intercept=True`
+centers the fit and recovers a static intercept from the final coefficient
+vector.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `alpha` | `1.0` | yes | Penalty on adjacent coefficient changes. |
@@ -671,6 +795,8 @@ macroforecast.models.lasso(X, y, *, alpha=1.0, max_iter=20000)
 
 Fits lasso regression with an L1 penalty. There is no `lasso_path()` model
 callable; use `get_model("lasso")` and `model_selection.select_params()`.
+
+Backend: `sklearn.linear_model.Lasso`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -700,6 +826,8 @@ macroforecast.models.elastic_net(
 
 Fits elastic net regression.
 
+Backend: `sklearn.linear_model.ElasticNet`.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `alpha` | `1.0` | yes | Overall penalty strength. |
@@ -724,6 +852,7 @@ macroforecast.models.adaptive_lasso(
     initial="ridge",
     initial_alpha=1.0,
     eps=1e-4,
+    normalize_weights=True,
     max_iter=20000,
     tol=1e-4,
     random_state=None,
@@ -735,6 +864,16 @@ Fits adaptive lasso. The model first estimates initial coefficients with
 `1 / (abs(beta_init) + eps) ** gamma`, and fits lasso on weighted standardized
 predictors. Predictions are mapped back to the original target scale.
 
+Backend: macroforecast adaptive-weight construction plus final
+`sklearn.linear_model.Lasso`.
+
+R/glmnet comparison: `glmnet` accepts the same idea through `penalty.factor`.
+It internally rescales penalty factors to sum to the number of predictors, so
+macroforecast defaults to `normalize_weights=True`, which rescales adaptive
+weights to mean one before fitting the final lasso. Set
+`normalize_weights=False` only when the absolute weight scale should change the
+effective penalty strength.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `alpha` | `1.0` | yes | Final adaptive lasso penalty strength. |
@@ -742,6 +881,7 @@ predictors. Predictions are mapped back to the original target scale.
 | `initial` | `"ridge"` | manual | Initial model: `"ridge"` or `"ols"`. |
 | `initial_alpha` | `1.0` | fixed by preset | Initial ridge penalty. |
 | `eps` | `1e-4` | fixed by preset | Small denominator floor for adaptive weights. |
+| `normalize_weights` | `True` | fixed by preset | Rescale adaptive weights to mean one, matching `glmnet` penalty-factor scaling. |
 | `max_iter` | `20000` | fixed by preset | Final solver iteration cap. |
 | `tol` | `1e-4` | fixed by preset | Final solver convergence tolerance. |
 | `random_state` | `None` | fixed by preset | Final solver random seed. |
@@ -765,6 +905,7 @@ macroforecast.models.adaptive_elastic_net(
     initial="ridge",
     initial_alpha=1.0,
     eps=1e-4,
+    normalize_weights=True,
     max_iter=20000,
     tol=1e-4,
     random_state=None,
@@ -775,6 +916,14 @@ Fits an adaptive elastic-net variant with the same initial coefficient weights
 as `adaptive_lasso`, followed by an elastic-net fit on weighted standardized
 predictors.
 
+Backend: macroforecast adaptive-weight construction plus final
+`sklearn.linear_model.ElasticNet`.
+
+R/glmnet comparison: this is the elastic-net analogue of adaptive lasso.
+`normalize_weights=True` gives the same mean-one penalty-factor convention as
+`glmnet`; the remaining difference is solver style, because macroforecast fits
+one selected `alpha` while `glmnet` usually estimates a regularization path.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `alpha` | `1.0` | yes | Final adaptive elastic-net penalty strength. |
@@ -783,6 +932,7 @@ predictors.
 | `initial` | `"ridge"` | manual | Initial model: `"ridge"` or `"ols"`. |
 | `initial_alpha` | `1.0` | fixed by preset | Initial ridge penalty. |
 | `eps` | `1e-4` | fixed by preset | Small denominator floor for adaptive weights. |
+| `normalize_weights` | `True` | fixed by preset | Rescale adaptive weights to mean one, matching `glmnet` penalty-factor scaling. |
 | `max_iter` | `20000` | fixed by preset | Final solver iteration cap. |
 | `tol` | `1e-4` | fixed by preset | Final solver convergence tolerance. |
 | `random_state` | `None` | fixed by preset | Final solver random seed. |
@@ -813,11 +963,20 @@ Fits group lasso with a package-native proximal-gradient solver. `groups`
 must contain one label per predictor column. If `groups=None`, each predictor
 is treated as its own group.
 
+Backend: package-native proximal-gradient solver.
+
+R comparison: this follows the Gaussian group-lasso objective used by
+`grpreg::grpreg(..., penalty = "grLasso")`: standardized predictors,
+group-level L2 shrinkage, and default group weights proportional to
+`sqrt(group_size)`. macroforecast fits one selected `alpha` and does not
+reproduce `grpreg`'s full path solver, GLM families, C backend, or within-group
+orthogonalization step.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `groups` | `None` | manual | One group label per predictor. |
 | `alpha` | `1.0` | yes | Group penalty strength. |
-| `group_weights` | `None` | manual | Optional group penalty weights. |
+| `group_weights` | `None` | manual | Optional group penalty weights; default is `sqrt(group_size)`. |
 | `max_iter` | `5000` | fixed by preset | Proximal-gradient iteration cap. |
 | `tol` | `1e-5` | fixed by preset | Proximal-gradient convergence tolerance. |
 | `scale` | `True` | fixed by preset | Whether to standardize predictors inside the model. |
@@ -848,12 +1007,20 @@ macroforecast.models.sparse_group_lasso(
 Fits sparse group lasso. `l1_ratio` controls the feature-level L1 share; the
 remaining penalty share is applied at the group level.
 
+Backend: package-native proximal-gradient solver.
+
+R comparison: this follows the sparse-group penalty decomposition used by
+`sparsegl::sparsegl`: a feature-level L1 part plus a group L2 part with default
+`sqrt(group_size)` group weights. macroforecast fits one selected `alpha` and
+`l1_ratio`; it does not reproduce `sparsegl`'s full lambda path, bounds, GLM
+families, or C++ backend.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `groups` | `None` | manual | One group label per predictor. |
 | `alpha` | `1.0` | yes | Total sparse-group penalty strength. |
 | `l1_ratio` | `0.5` | yes | Feature-level L1 share. |
-| `group_weights` | `None` | manual | Optional group penalty weights. |
+| `group_weights` | `None` | manual | Optional group penalty weights; default is `sqrt(group_size)`. |
 | `max_iter` | `5000` | fixed by preset | Proximal-gradient iteration cap. |
 | `tol` | `1e-5` | fixed by preset | Proximal-gradient convergence tolerance. |
 | `scale` | `True` | fixed by preset | Whether to standardize predictors inside the model. |
@@ -876,6 +1043,7 @@ Fits sklearn empirical-Bayes Bayesian ridge.
 | --- | --- |
 | Input | `X`, `y` |
 | Output | `ModelFit` |
+| Backend | `sklearn.linear_model.BayesianRidge` |
 | Default params | sklearn defaults |
 | Tunable params | none in the clean preset catalog |
 | Preset search spaces | none |
@@ -887,6 +1055,8 @@ macroforecast.models.huber(X, y, *, epsilon=1.35, max_iter=1000)
 ```
 
 Fits robust Huber regression.
+
+Backend: `sklearn.linear_model.HuberRegressor`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -900,6 +1070,10 @@ Fits robust Huber regression.
 | `wide` | `(1.01, 1.1, 1.35, 1.5, 1.75, 2.0, 2.5)` |
 
 ## Kernel And Nonparametric Models
+
+These models are external sklearn wrappers, not package-native numerical
+solvers. They live in `macroforecast.models.nonparametric` and are re-exported
+from `macroforecast.models` and top-level `macroforecast`.
 
 ### kernel_ridge
 
@@ -920,6 +1094,20 @@ Fits sklearn kernel ridge regression. This model is scale-sensitive for
 nonlinear kernels, so standardize predictors before `rbf`, `poly`, or
 `sigmoid` kernels.
 
+Backend: `sklearn.kernel_ridge.KernelRidge`.
+
+R parity is intentionally not claimed for this callable. It is a thin sklearn
+backend wrapper; macroforecast owns only the pandas `X, y` contract, `ModelFit`
+metadata/diagnostics, and search-space registration.
+
+| Item | Value |
+| --- | --- |
+| Input | `X`, `y` |
+| Output | `ModelFit` |
+| Internal scaling | none |
+| `ModelSpec.requires_scaling` | `True` |
+| Default model-selection method | `random` |
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `alpha` | `1.0` | yes | Ridge penalty strength. |
@@ -927,6 +1115,12 @@ nonlinear kernels, so standardize predictors before `rbf`, `poly`, or
 | `gamma` | `None` | search option | Kernel coefficient. |
 | `degree` | `3` | search option | Polynomial kernel degree. |
 | `coef0` | `1.0` | fixed by preset | Independent term for polynomial/sigmoid kernels. |
+
+| Preset | `alpha` | `kernel` | extra searched params |
+| --- | --- | --- | --- |
+| `small` | `(0.1, 1.0, 10.0)` | `("linear", "rbf")` | none |
+| `standard` | `(0.01, 0.1, 1.0, 10.0)` | `("linear", "rbf", "poly")` | `gamma=(None, 0.01, 0.1)` |
+| `wide` | `(0.001, 0.01, 0.1, 1.0, 10.0, 100.0)` | `("linear", "rbf", "poly", "sigmoid")` | `gamma=(None, 0.001, 0.01, 0.1, 1.0)`, `degree=(2, 3, 4)` |
 
 ### knn
 
@@ -945,6 +1139,27 @@ macroforecast.models.knn(
 Fits sklearn k-nearest-neighbor regression. This is distance-based and should
 usually receive standardized predictors.
 
+Backend: `sklearn.neighbors.KNeighborsRegressor`.
+
+R parity is intentionally not claimed for this callable. It is a thin sklearn
+backend wrapper; macroforecast owns only the pandas `X, y` contract, small-window
+`n_neighbors` resolution, `ModelFit` metadata/diagnostics, and search-space
+registration.
+
+If the requested `n_neighbors` is larger than the fitted sample size,
+macroforecast resolves it down to `n_obs` before constructing the sklearn
+estimator. The fit metadata records the effective `n_neighbors` and, when
+different, `requested_n_neighbors`. This avoids small-window forecasting runs
+failing at prediction time.
+
+| Item | Value |
+| --- | --- |
+| Input | `X`, `y` |
+| Output | `ModelFit` |
+| Internal scaling | none |
+| `ModelSpec.requires_scaling` | `True` |
+| Default model-selection method | `random` |
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `n_neighbors` | `5` | yes | Number of nearest neighbors. |
@@ -952,20 +1167,40 @@ usually receive standardized predictors.
 | `metric` | `"minkowski"` | fixed by preset | Distance metric. |
 | `p` | `2` | search option | Minkowski distance order. |
 
+| Preset | `n_neighbors` | `weights` | extra searched params |
+| --- | --- | --- | --- |
+| `small` | `(3, 5, 10)` | `("uniform", "distance")` | none |
+| `standard` | `(3, 5, 10, 20)` | `("uniform", "distance")` | `p=(1, 2)` |
+| `wide` | `(1, 3, 5, 10, 20, 40)` | `("uniform", "distance")` | `p=(1, 2)` |
+
 ## Linear Boosting
 
 ### glmboost
 
 ```python
-macroforecast.models.glmboost(X, y, *, n_iter=100, learning_rate=0.1)
+macroforecast.models.glmboost(
+    X,
+    y,
+    *,
+    n_iter=100,
+    learning_rate=0.1,
+    center=True,
+)
 ```
 
 Fits componentwise L2 boosting with linear base learners.
+
+Backend: package-native componentwise L2 boosting loop. The R comparison target
+is `mboost::glmboost`. macroforecast implements the matrix-input Gaussian path:
+predictors are centered by default, each iteration selects the column with the
+largest normalized correlation with the current residual, and the selected
+least-squares coefficient is shrunk by `learning_rate`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `n_iter` | `100` | yes | Number of boosting iterations. |
 | `learning_rate` | `0.1` | yes | Shrinkage applied to each update. |
+| `center` | `True` | no | Center predictors before componentwise updates, matching `mboost::glmboost(..., center = TRUE)`. |
 
 | Preset | `n_iter` | `learning_rate` |
 | --- | --- | --- |
@@ -1030,9 +1265,23 @@ macroforecast.models.svr(
 
 Fits sklearn `SVR`.
 
+Backend: `sklearn.svm.SVR`.
+
+`kernel="precomputed"` is intentionally not supported because macroforecast
+`ModelFit` expects `X` to be a feature matrix with stable column names. Use
+`"linear"`, `"poly"`, `"rbf"`, or `"sigmoid"`.
+
+| Item | Value |
+| --- | --- |
+| Input | `X`, `y` |
+| Output | `ModelFit` |
+| Internal scaling | none |
+| `ModelSpec.requires_scaling` | `True` |
+| Default model-selection method | `random` |
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `kernel` | `"rbf"` | fixed by preset | Kernel: `"linear"`, `"poly"`, `"rbf"`, `"sigmoid"`, or `"precomputed"`. |
+| `kernel` | `"rbf"` | fixed by preset | Kernel: `"linear"`, `"poly"`, `"rbf"`, or `"sigmoid"`. |
 | `C` | `1.0` | yes | Inverse regularization strength. |
 | `epsilon` | `0.1` | yes | Epsilon-insensitive tube width. |
 | `gamma` | `"scale"` | yes | Kernel coefficient for RBF/poly/sigmoid kernels. |
@@ -1068,6 +1317,16 @@ macroforecast.models.linear_svr(
 Fits sklearn `LinearSVR`. Use this when a linear support-vector loss is wanted
 without kernel overhead.
 
+Backend: `sklearn.svm.LinearSVR`.
+
+| Item | Value |
+| --- | --- |
+| Input | `X`, `y` |
+| Output | `ModelFit` |
+| Internal scaling | none |
+| `ModelSpec.requires_scaling` | `True` |
+| Default model-selection method | `random` |
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `C` | `1.0` | yes | Inverse regularization strength. |
@@ -1075,7 +1334,7 @@ without kernel overhead.
 | `loss` | `"epsilon_insensitive"` | fixed by preset | LinearSVR loss function. |
 | `tol` | `1e-4` | fixed by preset | Optimization tolerance. |
 | `max_iter` | `10000` | fixed by preset | Solver iteration cap. |
-| `random_state` | `0` | fixed by preset | Random seed. |
+| `random_state` | `0` | fixed by preset | Random seed; can be `None`. |
 
 | Preset | `C` | `epsilon` |
 | --- | --- | --- |
@@ -1106,9 +1365,22 @@ macroforecast.models.nu_svr(
 Fits sklearn `NuSVR`, where `nu` controls the admissible training-error and
 support-vector fractions.
 
+Backend: `sklearn.svm.NuSVR`.
+
+`kernel="precomputed"` is intentionally not supported for the same feature-matrix
+contract reason as `svr()`.
+
+| Item | Value |
+| --- | --- |
+| Input | `X`, `y` |
+| Output | `ModelFit` |
+| Internal scaling | none |
+| `ModelSpec.requires_scaling` | `True` |
+| Default model-selection method | `random` |
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `kernel` | `"rbf"` | fixed by preset | Kernel: `"linear"`, `"poly"`, `"rbf"`, `"sigmoid"`, or `"precomputed"`. |
+| `kernel` | `"rbf"` | fixed by preset | Kernel: `"linear"`, `"poly"`, `"rbf"`, or `"sigmoid"`. |
 | `C` | `1.0` | yes | Inverse regularization strength. |
 | `nu` | `0.5` | yes | Upper/lower control for training-error and support-vector fractions. |
 | `gamma` | `"scale"` | yes | Kernel coefficient for RBF/poly/sigmoid kernels. |
@@ -1193,7 +1465,7 @@ result = macroforecast.forecasting.run(
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `hidden_layer_sizes` | `(100,)` | yes | Feed-forward hidden layer widths. |
-| `activation` | `"relu"` | fixed by preset | Activation: `"identity"`, `"logistic"`, `"tanh"`, or `"relu"`. |
+| `activation` | `"relu"` | fixed by preset | Activation: `"identity"`, `"logistic"`, `"sigmoid"`, `"tanh"`, `"relu"`, or `"gelu"`. |
 | `dropout` | `0.0` | yes | Dropout rate between hidden layers. |
 | `learning_rate` | `0.001` | yes | Optimizer learning rate. |
 | `max_epochs` | `100` | fixed by preset | Training epoch cap. |
@@ -1398,6 +1670,10 @@ macroforecast.models.pls(
     scale=True,
     max_iter=500,
     tol=1e-6,
+    control_columns=None,
+    include_constant=True,
+    drop_control_columns=True,
+    quadratic_factors=False,
 )
 ```
 
@@ -1406,17 +1682,54 @@ target while constructing latent components, so it belongs in `models` rather
 than `preprocessing` or `feature_engineering`.
 
 `n_components` is treated as a requested upper bound. At fit time, the model
-resolves it to `min(requested, n_predictors, n_observations)` so the default is
-safe for small feature sets. Metadata records both `requested_n_components` and
-`resolved_n_components`; `n_components` stores the resolved value used by
-`sklearn.cross_decomposition.PLSRegression`.
+resolves it to `min(requested, n_factor_predictors, n_observations)` so the
+default is safe for small feature sets. Metadata records both
+`requested_n_components` and `resolved_n_components`; `n_components` stores the
+resolved value used by `sklearn.cross_decomposition.PLSRegression`.
+
+Implementation map:
+
+| Item | Value |
+| --- | --- |
+| Backend | `sklearn.cross_decomposition.PLSRegression` |
+| Paper-code comparison | Hounyo-Li `PLS_emp002.m` and `PLS_tune.m` |
+| Control handling | Optional `control_columns` block is fitted first, target residuals are passed to PLS, and the control forecast is added back. |
+| Difference from MATLAB code | MATLAB `plsregress` exposes `stats.W`; macroforecast uses sklearn PLS latent scores and records factor loadings/metadata. The forecasting contract is the same control-residualized PLS factor regression. |
+| PC2 support | Set `quadratic_factors=True` to add the `PLS_PC2.m` squared-factor forecast head. |
+
+Hounyo-Li PLS baseline:
+
+```text
+alphawhat = y_insample * wt_insample' * inv(wt_insample * wt_insample')
+y_resid   = y_insample - alphawhat * wt_insample
+[~,~,~,~,~,~,~,stats] = plsregress(X_insample', y_resid', K)
+B         = stats.W
+Fhat      = B' * X_insample
+alphahat  = y_resid * Fhat' * inv(Fhat * Fhat')
+yhat      = (alphahat * B') * X_out + alphawhat * wt_out
+```
+
+`macroforecast.models.pls()` mirrors this as:
+
+| MATLAB step | `macroforecast` implementation |
+| --- | --- |
+| `wt` | `control_columns` plus optional constant |
+| residualize `ytplush` on `wt` | `_PLSCompositeRegressor.control_coef_` and target residual |
+| `plsregress(..., K)` | `sklearn.cross_decomposition.PLSRegression` |
+| `Fhat` PLS scores | `transform(...)` / `x_scores_` |
+| `alphahat` on PLS scores | `factor_coefs_` |
+| add `alphawhat * wt_out` | `predict()` control block addition |
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `n_components` | `3` | yes | Requested maximum number of latent PLS components. |
-| `scale` | `True` | fixed by preset | Whether to scale predictors inside PLS. |
+| `scale` | `True` | fixed by preset | Whether to standardize predictors before PLS. |
 | `max_iter` | `500` | fixed by preset | NIPALS iteration cap. |
 | `tol` | `1e-6` | fixed by preset | NIPALS convergence tolerance. |
+| `control_columns` | `None` | fixed by preset | Optional X columns used as forecasting controls. |
+| `include_constant` | `True` | fixed by preset | Whether to include a constant in the control block. |
+| `drop_control_columns` | `True` | fixed by preset | Whether controls are excluded from the PLS block. |
+| `quadratic_factors` | `False` | fixed by preset | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 
 | Preset | `n_components` |
 | --- | --- |
@@ -1437,6 +1750,7 @@ macroforecast.models.scaled_pca(
     include_constant=True,
     drop_control_columns=True,
     winsorize_slopes=None,
+    quadratic_factors=False,
 )
 ```
 
@@ -1487,6 +1801,18 @@ controls on these factors, then projects new scaled observations into the
 same factor space. This forecast head is the package wrapper; the factor
 extraction itself matches Huang's `spcaest.m` design.
 
+Set `quadratic_factors=True` to reproduce the Hounyo-Li `scaledPCA_PC2.m`
+forecast head:
+
+$$
+\hat y_* =
+w_*\hat a_W + \hat\alpha_1 \hat f_*
++ \hat\alpha_2 \hat f_*^2.
+$$
+
+For multiple factors, the squared term is applied componentwise, matching the
+MATLAB code's `alphahat2 * ((leftvector * scaleXs_outofsample).^2)` contract.
+
 Original-code match:
 
 | Huang `spcaest.m` step | `macroforecast` implementation |
@@ -1515,6 +1841,7 @@ mapped back to the target units.
 | `include_constant` | `True` | fixed by preset | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | fixed by preset | Whether controls are excluded from the PCA block. |
 | `winsorize_slopes` | `None` | fixed by preset | Optional percentile winsorization for scaling slopes. |
+| `quadratic_factors` | `False` | fixed by preset | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 
 The presets tune `n_components`. Inspect exact candidate lists with
 `describe_model("scaled_pca")`.
@@ -1537,6 +1864,7 @@ macroforecast.models.supervised_pca(
     t_threshold=1.28,
     elastic_net_alpha=0.0002,
     elastic_net_l1_ratio=0.5,
+    quadratic_factors=False,
     random_state=0,
 )
 ```
@@ -1606,6 +1934,25 @@ w_*\hat a_W
 + x_*\left(\sum_{k=1}^{K}\hat\alpha_k\ell_k'\right).
 $$
 
+Set `quadratic_factors=True` for the Hounyo-Li `SPCA_PC2.m` variant. In that
+case each extraction step also estimates
+
+$$
+\hat\alpha_{2,k}
+=
+\frac{r_y^{(k-1)\prime}(f_k^2)}{(f_k^2)'(f_k^2)}
+$$
+
+and updates the target residual as
+
+$$
+r_y^{(k)}
+=
+r_y^{(k-1)}
+-\hat\alpha_{1,k}f_k
+-\hat\alpha_{2,k}f_k^2.
+$$
+
 Original-code match:
 
 | MATLAB variable / step | `macroforecast` implementation |
@@ -1637,6 +1984,7 @@ recursion for both SPCA and SsPCA and compare generated predictions against
 | `t_threshold` | `1.28` | fixed by preset | Hard t-stat pre-selection threshold. |
 | `elastic_net_alpha` | `0.0002` | fixed by preset | Elastic-net pre-selection penalty. |
 | `elastic_net_l1_ratio` | `0.5` | fixed by preset | Elastic-net pre-selection L1 ratio. |
+| `quadratic_factors` | `False` | fixed by preset | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 | `random_state` | `0` | fixed by preset | Elastic-net pre-selection random seed. |
 
 The presets tune `n_components`, `n_selected`, and `min_abs_corr`.
@@ -1660,6 +2008,7 @@ macroforecast.models.supervised_scaled_pca(
     t_threshold=1.28,
     elastic_net_alpha=0.0002,
     elastic_net_l1_ratio=0.5,
+    quadratic_factors=False,
     random_state=0,
 )
 ```
@@ -1708,6 +2057,10 @@ Source checked: the local MATLAB reproducibility package for Hounyo and Li,
 `inflation_linear_tune.m`. The Python implementation is a clean port of the
 algorithmic contract, not copied MATLAB code.
 
+Set `quadratic_factors=True` for the `SsPCA_PC2.m` variant. This keeps the same
+predictive-slope scaling and supervised selection recursion, then adds the
+componentwise squared-factor forecast head used in the paper's PC2 scripts.
+
 Original-code match for the scaling step:
 
 | MATLAB variable / step | `macroforecast` implementation |
@@ -1740,6 +2093,7 @@ than a different screening or projection rule.
 | `t_threshold` | `1.28` | fixed by preset | Hard t-stat pre-selection threshold. |
 | `elastic_net_alpha` | `0.0002` | fixed by preset | Elastic-net pre-selection penalty. |
 | `elastic_net_l1_ratio` | `0.5` | fixed by preset | Elastic-net pre-selection L1 ratio. |
+| `quadratic_factors` | `False` | fixed by preset | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 | `random_state` | `0` | fixed by preset | Elastic-net pre-selection random seed. |
 
 The original empirical MATLAB code uses lagged target plus constant controls.
@@ -1767,16 +2121,22 @@ Fits a univariate autoregression on the target series.
 ### var
 
 ```python
-macroforecast.models.var(panel, *, target=None, n_lag=1)
+macroforecast.models.var(panel, *, target=None, n_lag=1, type="const", season=None)
 ```
 
 Fits a VAR on a multivariate panel. `target` chooses the forecast output
-column. If omitted, the first column is used.
+column. If omitted, the first column is used. The callable now uses an internal
+OLS implementation aligned with R `vars::VAR` and `predict.varest`: lagged
+endogenous variables are stacked in lag order, deterministic terms are controlled
+by R-style `type`, and `predict()` recursively rolls the VAR state forward for
+point forecasts.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `target` | `None` | fixed by preset | Target column in the panel. |
 | `n_lag` | `1` | yes | VAR lag order. |
+| `type` | `"const"` | fixed by preset | R `vars::VAR` deterministic terms: `"const"`, `"trend"`, `"both"`, or `"none"`. Short aliases `"c"`, `"t"`, `"ct"`, and `"n"` are accepted. |
+| `season` | `None` | fixed by preset | Optional centered seasonal dummies, matching `vars::VAR(season=...)`. |
 
 | Preset | `n_lag` |
 | --- | --- |
@@ -1792,15 +2152,35 @@ macroforecast.models.bvar_minnesota(
     *,
     target=None,
     n_lag=1,
-    shrinkage=0.2,
-    intercept=True,
-    random_walk_prior=True,
+    kappa0=2.0,
+    kappa1=0.5,
+    nu0=0.0,
+    s0=0.0,
+    iter=10000,
+    burnin=5000,
+    random_state=0,
 )
 ```
 
-Fits a compact Minnesota-prior Bayesian VAR for point forecasts. The estimator
-uses the conjugate-prior posterior mean for the VAR coefficients. It is a
-callable forecasting model, not a full posterior simulation engine.
+Fits a Bayesian VAR posterior sampler with the Minnesota prior variance logic
+used by R `FAVAR::BVAR` and `bvartools::minnesota_prior`. Saved posterior
+coefficient and covariance draws are available in diagnostics; `predict()` uses
+posterior-mean VAR coefficients for recursive point forecasts. BVAR forecasting
+is not a macroforecast-only extension: CRAN `BVAR` exposes `predict.bvar`, while
+this callable is macroforecast's R-aligned ModelFit surface for the same class
+of BVAR forecast object.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `target` | `None` | fixed by preset | Target column in the panel. |
+| `n_lag` | `1` | yes | VAR lag order. |
+| `kappa0` | `2.0` | yes | Minnesota own-lag prior scale. |
+| `kappa1` | `0.5` | yes | Minnesota lag-decay exponent. |
+| `nu0` | `0.0` | fixed by preset | Inverse-Wishart degrees-of-freedom prior parameter. |
+| `s0` | `0.0` | fixed by preset | Inverse-Wishart scale prior parameter. |
+| `iter` | `10000` | fixed by preset | Total Gibbs iterations. |
+| `burnin` | `5000` | fixed by preset | Burn-in iterations removed before summaries. |
+| `random_state` | `0` | fixed by preset | Random seed for posterior draws. |
 
 ### bvar_normal_inverse_wishart
 
@@ -1810,26 +2190,98 @@ macroforecast.models.bvar_normal_inverse_wishart(
     *,
     target=None,
     n_lag=1,
-    shrinkage=1.0,
-    intercept=True,
+    b0=0.0,
+    vb0=0.0,
+    nu0=0.0,
+    s0=0.0,
+    iter=10000,
+    burnin=5000,
+    random_state=0,
 )
 ```
 
-Fits a compact normal-inverse-Wishart-style Bayesian VAR point-forecast model.
-The inverse-Wishart variance prior matters for posterior uncertainty; the
-current callable records the prior family and uses the posterior coefficient
-mean for point forecasts.
+Fits the same FAVAR-style Bayesian VAR posterior sampler with direct controls
+for coefficient prior mean/variance and inverse-Wishart covariance prior terms.
+Saved diagnostics include coefficient posterior mean, standard deviation,
+credible interval bounds, and posterior mean covariance.
 
-### ets, holt_winters, theta_method
+### ets
 
 ```python
-macroforecast.models.ets(y, *, error="add", trend=None, seasonal=None, seasonal_periods=None)
-macroforecast.models.holt_winters(y, *, trend="add", seasonal=None, seasonal_periods=None)
-macroforecast.models.theta_method(y, *, period=None, deseasonalize=True, use_test=True)
+macroforecast.models.ets(
+    y,
+    *,
+    error="add",
+    trend=None,
+    seasonal=None,
+    seasonal_periods=None,
+    damped_trend=False,
+)
 ```
 
-These are target-only statsmodels forecasting wrappers. In the forecasting
-runner they ignore `X` and fit on the stage target vector.
+Fits a target-only statsmodels exponential-smoothing model through ETS-style
+arguments. In `forecasting.run(...)`, this model ignores `X` and fits on the
+stage target vector.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `error` | `"add"` | fixed by preset | Error component; currently additive by default. |
+| `trend` | `None` | fixed by preset | Optional trend component such as `"add"`. |
+| `seasonal` | `None` | fixed by preset | Optional seasonal component such as `"add"`. |
+| `seasonal_periods` | `None` | fixed by preset | Seasonal period length. |
+| `damped_trend` | `False` | fixed by preset | Whether to damp the trend component. |
+
+Output is `ModelFit`; `predict(X_future)` uses only the number of requested
+future rows and preserves the provided index.
+
+### holt_winters
+
+```python
+macroforecast.models.holt_winters(
+    y,
+    *,
+    trend="add",
+    seasonal=None,
+    seasonal_periods=None,
+    damped_trend=False,
+)
+```
+
+Fits a target-only Holt-Winters exponential-smoothing model. In the forecasting
+runner it is a target-input model: feature matrices are used only to provide
+the forecast index and horizon length.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `trend` | `"add"` | fixed by preset | Trend component. |
+| `seasonal` | `None` | fixed by preset | Optional seasonal component. |
+| `seasonal_periods` | `None` | fixed by preset | Seasonal period length. |
+| `damped_trend` | `False` | fixed by preset | Whether to damp the trend component. |
+
+Output is `ModelFit`; predictions are indexed like the supplied future frame.
+
+### theta_method
+
+```python
+macroforecast.models.theta_method(
+    y,
+    *,
+    period=None,
+    deseasonalize=True,
+    use_test=True,
+)
+```
+
+Fits statsmodels' target-only Theta method wrapper. Use it as a benchmark
+univariate model; it does not consume predictor columns.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `period` | `None` | fixed by preset | Seasonal period passed to statsmodels. |
+| `deseasonalize` | `True` | fixed by preset | Whether statsmodels deseasonalizes before fitting. |
+| `use_test` | `True` | fixed by preset | Whether statsmodels uses its internal seasonality test. |
+
+Output is `ModelFit`; `predict(X_future)` returns a point forecast series.
 
 ### dfm_mixed_mariano_murasawa
 
@@ -1856,6 +2308,14 @@ Fits a monthly/quarterly dynamic factor model through
 uses the Mariano-Murasawa state-space aggregation for quarterly variables by
 ordering monthly columns first, quarterly columns second, and passing
 `k_endog_monthly` to statsmodels.
+
+R comparison: this is a backend-wrapper analogue of the mixed-frequency DFM
+contract used by `dfms::DFM(X, quarterly.vars=...)` and archived
+`nowcasting::nowcast(method="EM")`. Those R implementations require quarterly
+series to be positioned after monthly series and impose the
+Mariano-Murasawa `[1, 2, 3, 2, 1]` temporal aggregation restriction for
+quarterly growth/flow variables. macroforecast delegates the Kalman/EM
+likelihood to statsmodels rather than reimplementing the R/C++ filter code.
 
 The preferred input is a native mixed-frequency bundle:
 
@@ -1900,6 +2360,7 @@ macroforecast.models.dfm_unrestricted_midas(
     panel,
     *,
     target,
+    metadata=None,
     lag_columns=None,
     lags=(0, 1, 2),
     factor_lags=(0,),
@@ -1907,7 +2368,13 @@ macroforecast.models.dfm_unrestricted_midas(
     anchor_position="period_end",
     n_factors=1,
     factor_order=1,
+    idiosyncratic_ar1=True,
+    standardize=True,
+    maxiter=500,
+    tolerance=1e-6,
     alpha=0.0,
+    fit_intercept=True,
+    drop_missing=True,
 )
 ```
 
@@ -1919,15 +2386,23 @@ Fits a composite mixed-frequency model:
 4. Fit `unrestricted_midas(...)` as the forecast head.
 
 This is a convenience composite, not a new state-space likelihood. The returned
-fit's `predict()` method expects a prepared feature matrix with the same
-columns as `fit.estimator.design_`. Use it directly after building the needed
-mixed-frequency lag design, or use `dfm_mixed_mariano_murasawa` in
-`forecasting.run(...)`. The runner does not yet rebuild the future composite
-MIDAS design automatically.
+fit's `predict()` method accepts a prepared feature matrix with the same
+columns as `fit.estimator.design_`. The lower-level
+`fit.estimator.predict_from_panel(...)` method rebuilds the composite design
+from a native mixed-frequency panel. `forecasting.run(...)` uses that method:
+it fits the MIDAS head on the training panel, masks the test target values, then
+refits the DFM on the available native panel so current monthly information can
+enter the test-origin factor design without using the held-out target.
+
+R comparison: this is the explicit callable version of a two-stage workflow,
+not a single R estimator. The first stage follows the DFM contract above. The
+forecast head is aligned with `midasr::midas_u` when `alpha=0`; `alpha>0` is a
+macroforecast ridge extension.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `target` | required | fixed by preset | Forecasted target column. |
+| `metadata` | `None` | fixed by preset | Metadata with native frequencies; normally supplied by `DataBundle`. |
 | `lag_columns` | `None` | fixed by preset | Observed columns added as unrestricted MIDAS lags. |
 | `lags` | `(0, 1, 2)` | yes | Native-frequency lags for observed columns. |
 | `factor_lags` | `(0,)` | yes | Monthly lags of filtered DFM factors. |
@@ -1935,16 +2410,199 @@ MIDAS design automatically.
 | `anchor_position` | `"period_end"` | fixed by preset | Anchor positioning; useful for FRED-QD quarter-start dates. |
 | `n_factors` | `1` | yes | Number of DynamicFactorMQ factors. |
 | `factor_order` | `1` | yes | VAR order for factor dynamics. |
+| `idiosyncratic_ar1` | `True` | fixed by preset | Model DFM idiosyncratic components as AR(1). |
+| `standardize` | `True` | fixed by preset | Let DynamicFactorMQ standardize observed variables. |
+| `maxiter` | `500` | fixed by preset | DFM EM iteration cap. |
+| `tolerance` | `1e-6` | fixed by preset | DFM EM convergence tolerance. |
 | `alpha` | `0.0` | yes | Ridge penalty on the unrestricted MIDAS head. |
+| `fit_intercept` | `True` | fixed by preset | Whether the unrestricted MIDAS head includes an intercept. |
+| `drop_missing` | `True` | fixed by preset | Drop incomplete composite design rows before fitting the head. |
 
-### MIDAS variants
+### midas_almon
 
 ```python
-macroforecast.models.midas_almon(X, y, *, polynomial_order=2, theta=None, alpha=0.0)
-macroforecast.models.midas_beta(X, y, *, beta_params=(1.0, 1.0), alpha=0.0)
-macroforecast.models.midas_step(X, y, *, n_steps=3, alpha=0.0)
-macroforecast.models.unrestricted_midas(X, y, *, alpha=0.0)
+macroforecast.models.midas_almon(
+    X,
+    y,
+    *,
+    polynomial_order=2,
+    theta=None,
+    alpha=0.0,
+    fit_intercept=True,
+)
 ```
+
+Fits a MIDAS regression where each lag group is compressed with normalized
+exponential Almon weights before a linear or ridge head is fit.
+
+R comparison: `midasr::midas_r(..., nealmon)` jointly estimates the aggregate
+scale and Almon shape by nonlinear least squares. macroforecast keeps the shape
+fixed as a hyperparameter and estimates only the aggregate regression
+coefficient in a linear/ridge head. The weight shape matches the scale-free part
+of `midasr::nealmon`.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `polynomial_order` | `2` | yes | Degree of the Almon polynomial. |
+| `theta` | `None` | fixed by preset | Shape coefficients for the scale-free part of `midasr::nealmon`. `None` gives equal weights. |
+| `alpha` | `0.0` | yes | Ridge penalty on the regression head. |
+| `fit_intercept` | `True` | fixed by preset | Whether the regression head includes an intercept. |
+
+Weight formula:
+
+```text
+h_j = j, j = 1, ..., d
+w_j = exp(theta_1 h_j + ... + theta_p h_j^p) / sum_j exp(...)
+```
+
+If `theta` is supplied, it must contain `polynomial_order` values. The aggregate
+coefficient scale is estimated by the regression head, corresponding to the
+first scale parameter in `midasr::nealmon`.
+
+### midas_beta
+
+```python
+macroforecast.models.midas_beta(
+    X,
+    y,
+    *,
+    beta_params=(1.0, 1.0),
+    alpha=0.0,
+    fit_intercept=True,
+)
+```
+
+Fits a MIDAS regression where each lag group is compressed with normalized beta
+weights before a linear or ridge head is fit.
+
+R comparison: this uses the scale-free form of `midasr::nbetaMT` with
+`p=(1, a, b, 0)`: endpoints are shifted by machine epsilon, the beta density is
+normalized, and the aggregate scale is estimated by the regression head.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `beta_params` | `(1.0, 1.0)` | yes | Positive beta-shape parameters `(a, b)`. |
+| `alpha` | `0.0` | yes | Ridge penalty on the regression head. |
+| `fit_intercept` | `True` | fixed by preset | Whether the regression head includes an intercept. |
+
+Weight formula:
+
+```text
+z_j = (j - 1) / (d - 1), with endpoint epsilon adjustment
+w_j = z_j^(a-1) (1-z_j)^(b-1) / sum_j z_j^(a-1) (1-z_j)^(b-1)
+```
+
+Both beta parameters must be strictly positive.
+
+### midas_step
+
+```python
+macroforecast.models.midas_step(
+    X,
+    y,
+    *,
+    n_steps=3,
+    step_bounds=None,
+    step_weights=None,
+    alpha=0.0,
+    fit_intercept=True,
+)
+```
+
+Fits a MIDAS regression where lags are grouped into piecewise-constant step
+blocks. If `step_bounds` and `step_weights` are omitted, the lag range is split
+into `n_steps` blocks with equal raw step heights, then normalized to a
+scale-free weight vector.
+
+R comparison: `midasr::polystep(p, d, m, a)` repeats raw step coefficients
+between interior cut points. macroforecast exposes the same idea through
+`step_bounds=a` and `step_weights=p`, then normalizes the resulting shape
+because the aggregate scale is estimated by the regression head.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_steps` | `3` | yes | Number of lag buckets when `step_bounds` is omitted. |
+| `step_bounds` | `None` | fixed by preset | Optional interior cut points, matching `midasr::polystep(..., a=...)`. |
+| `step_weights` | `None` | fixed by preset | Optional raw step heights, one per bucket. |
+| `alpha` | `0.0` | yes | Ridge penalty on the regression head. |
+| `fit_intercept` | `True` | fixed by preset | Whether the regression head includes an intercept. |
+
+`n_steps` must be positive. If supplied, `step_bounds` must be strictly
+increasing and smaller than the number of lag columns; `step_weights` must
+contain one value per resulting bucket.
+
+### restricted_midas
+
+```python
+macroforecast.models.restricted_midas(
+    X,
+    y,
+    *,
+    weighting="almon",
+    polynomial_order=2,
+    start_params=None,
+    n_steps=3,
+    step_bounds=None,
+    fit_intercept=True,
+    maxiter=1000,
+    tolerance=1e-8,
+)
+```
+
+Fits a nonlinear restricted MIDAS regression over an explicit lag matrix. This
+is the direct callable counterpart to `midasr::midas_r` when the formula has
+already been expanded into columns such as `PAYEMS_lag0`, `PAYEMS_lag1`, and
+`PAYEMS_lag2`.
+
+R comparison: `midasr::midas_r` maps each low-dimensional restriction parameter
+vector into full lag coefficients and minimizes the nonlinear least-squares
+objective. `restricted_midas()` uses the same objective and the same `nealmon`,
+`nbetaMT`, or `polystep` coefficient maps. It uses SciPy `least_squares`
+instead of R's default `optim(method="BFGS")`, so optimizer traces are not
+bit-identical, but the restricted regression equation is the same. Formula
+parsing, AR* common-factor terms, HAC covariance, model tables, and S3 forecast
+utilities are not reproduced here.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `weighting` | `"almon"` | yes | Restriction map: `"almon"`/`"nealmon"`, `"beta"`/`"nbetaMT"`, or `"step"`/`"polystep"`. |
+| `polynomial_order` | `2` | yes | Number of Almon shape terms after the aggregate scale parameter. |
+| `start_params` | `None` | fixed by preset | Starting values. Pass one sequence for all lag groups, or a mapping from group name to sequence. |
+| `n_steps` | `3` | yes | Number of step buckets when `weighting="step"` and `step_bounds` is omitted. |
+| `step_bounds` | `None` | fixed by preset | Interior cut points for `polystep`-style step coefficients. |
+| `fit_intercept` | `True` | fixed by preset | Whether to estimate an intercept outside the restricted lag coefficients. |
+| `maxiter` | `1000` | fixed by preset | Maximum SciPy least-squares function evaluations. |
+| `tolerance` | `1e-8` | fixed by preset | Shared `xtol`, `ftol`, and `gtol` stopping tolerance. |
+
+Outputs include fitted values, residuals, unrestricted effective lag
+coefficients, the optimized restricted parameter vector, convergence metadata,
+and the lag-group metadata used to expand coefficients.
+
+### unrestricted_midas
+
+```python
+macroforecast.models.unrestricted_midas(
+    X,
+    y,
+    *,
+    alpha=0.0,
+    fit_intercept=True,
+)
+```
+
+Fits an unrestricted MIDAS regression. Unlike the weighted variants, it does
+not collapse lag groups; each supplied lag column receives its own coefficient.
+
+R comparison: this matches `midasr::midas_u` when `alpha=0`, because every lag
+coefficient is free and the regression is ordinary least squares. `alpha>0` is
+a macroforecast ridge extension for high-dimensional lag matrices.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `alpha` | `0.0` | yes | Ridge penalty. `0.0` gives an ordinary linear head. |
+| `fit_intercept` | `True` | fixed by preset | Whether the regression head includes an intercept. |
+
+### MIDAS Input Contract
 
 The MIDAS callables expect lag-grouped predictor columns, typically names like
 `PAYEMS_lag0`, `PAYEMS_lag1`, and `PAYEMS_lag2`. Columns sharing the same
@@ -1958,21 +2616,13 @@ infer target anchors, release calendars, or future design matrices. Build the
 lag matrix explicitly with `mixed_frequency_lags(...)`, align `X` and `y`, then
 call the model.
 
-The constrained MIDAS variants use supplied weight-shape parameters:
+The weighted MIDAS callables `midas_almon()`, `midas_beta()`, and
+`midas_step()` treat shape parameters as fixed or selected hyperparameters.
+Use `restricted_midas()` when the shape and scale parameters should be
+estimated jointly by nonlinear least squares, matching the `midasr::midas_r`
+estimation target.
 
-| Function | Weight shape | Notes |
-| --- | --- | --- |
-| `midas_almon` | `w_j = exp(theta_0 + theta_1 x_j + ... + theta_p x_j^p) / sum_j exp(...)` | `theta=None` gives equal weights. If `theta` is supplied, it must have `polynomial_order + 1` values. |
-| `midas_beta` | `w_j = z_j^(a-1) (1-z_j)^(b-1) / sum_j ...` | `beta_params=(a, b)` must be strictly positive. |
-| `midas_step` | Equal total weight per lag bucket, equal weight within each bucket. | `n_steps` must be positive. |
-
-The package currently treats these shape parameters as fixed or selected
-hyperparameters. It does not yet implement nonlinear joint estimation of the
-weight shape and regression coefficients inside one likelihood/objective.
-
-`unrestricted_midas()` is the exception: it does not collapse lag groups.
-Every supplied lag column receives its own coefficient, with optional ridge
-shrinkage through `alpha`. Build its input matrix with
+For `unrestricted_midas()`, build its input matrix with
 `mf.feature_engineering.mixed_frequency_lags(...)` when the source data are
 native mixed-frequency panels.
 
@@ -2042,19 +2692,43 @@ macroforecast.models.favar(
     X,
     y,
     *,
-    n_factors=3,
-    n_lag=1,
+    n_factors=2,
+    n_lag=2,
+    fctmethod="BBE",
+    slowcode=None,
+    factorprior=None,
+    varprior=None,
+    nburn=5000,
+    nrep=15000,
+    standardize=True,
     random_state=0,
 )
 ```
 
-Fits PCA factors and a VAR on the target plus factors.
+Fits a Bayesian FAVAR aligned with CRAN `FAVAR::FAVAR`: optional R-style
+standardization, `ExtrPC()` factor extraction, BBE `facrot()` or BGM factor
+identification, conjugate loading-equation draws, and the internal
+`FAVAR::BVAR` posterior sampler for the `[factors, y]` VAR block.
+
+Important boundary: BVAR forecasting is standard, and CRAN `BVAR` has
+`predict.bvar`. The macroforecast-specific extension here is narrower:
+CRAN `FAVAR` exposes summaries, coefficients, and impulse responses for `favar`
+objects, but not `predict.favar`. Therefore `macroforecast.models.favar(...).predict(...)`
+is a ModelFit forecast wrapper over the fitted FAVAR posterior VAR state using
+posterior-mean coefficients.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `n_factors` | `3` | yes | Number of PCA factors. |
-| `n_lag` | `1` | yes | VAR lag order on the target plus factors. |
-| `random_state` | `0` | fixed by preset | PCA random seed. |
+| `n_factors` | `2` | yes | Number of latent factors. |
+| `n_lag` | `2` | yes | VAR lag order on the target plus factors. |
+| `fctmethod` | `"BBE"` | fixed by preset | Factor identification method: `"BBE"` or `"BGM"`. |
+| `slowcode` | `None` | fixed by preset | Boolean slow-variable mask required by BBE. |
+| `factorprior` | `None` | fixed by preset | Factor loading prior controls. |
+| `varprior` | `None` | fixed by preset | BVAR prior controls for the factor VAR block. |
+| `nburn` | `5000` | fixed by preset | Burn-in iterations for posterior draws. |
+| `nrep` | `15000` | fixed by preset | Saved posterior draw count. |
+| `standardize` | `True` | fixed by preset | Use R `scale()` semantics for X and y before factor extraction. |
+| `random_state` | `0` | fixed by preset | Random seed for posterior draws. |
 
 | Preset | `n_factors` | `n_lag` |
 | --- | --- | --- |
@@ -2063,6 +2737,31 @@ Fits PCA factors and a VAR on the target plus factors.
 | `wide` | `(1, 2, 3, 5, 8, 10, 12)` | `(1, 2, 3, 4, 6, 9, 12, 18, 24)` |
 
 ## Tree And Machine-Learning Models
+
+### Tree Implementation Map
+
+Tree callables use backend wrappers, hybrid wrappers, or package-native code.
+Fit-time model ensembles such as bagging, subagging, stacking, Super Learner,
+and Booging live in [Model Ensemble](model_ensemble.md).
+
+| Model | Implementation class | Runtime backend |
+| --- | --- | --- |
+| `decision_tree` | backend wrapper | `sklearn.tree.DecisionTreeRegressor` |
+| `random_forest` | backend wrapper | `sklearn.ensemble.RandomForestRegressor` |
+| `extra_trees` | backend wrapper | `sklearn.ensemble.ExtraTreesRegressor` |
+| `gradient_boosting` | backend wrapper | `sklearn.ensemble.GradientBoostingRegressor` |
+| `xgboost` | optional backend wrapper | `xgboost.XGBRegressor` |
+| `lightgbm` | optional backend wrapper | `lightgbm.LGBMRegressor` |
+| `catboost` | optional backend wrapper | `catboost.CatBoostRegressor` |
+| `quantile_regression_forest` | hybrid | sklearn forest plus macroforecast leaf-target quantile store |
+| `macro_random_forest` | hybrid adapter | vendored `macroforecast.models._mrf_reference.MacroRandomForest` |
+
+`backend wrapper` means the statistical estimator is delegated to the named
+package and macroforecast standardizes callable input, metadata, diagnostics,
+and persistence. `hybrid` means macroforecast owns part of the algorithmic
+contract, such as resampling, leaf-distribution storage, feature augmentation,
+or pandas-to-reference-package adaptation. `package-native` means the estimator
+logic itself is implemented inside macroforecast.
 
 ### decision_tree
 
@@ -2078,6 +2777,10 @@ macroforecast.models.decision_tree(
 ```
 
 Fits sklearn CART regression.
+
+R parity is intentionally not claimed for the sklearn tree wrappers. The named
+backend owns the estimator; macroforecast owns the pandas `X, y` contract,
+metadata, diagnostics, and search-space registration.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -2107,6 +2810,9 @@ macroforecast.models.random_forest(
 ```
 
 Fits sklearn random forest regression.
+
+The fitted wrapper exposes sklearn feature importances through
+`fit.diagnostics["feature_importance"]`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -2159,6 +2865,9 @@ macroforecast.models.gradient_boosting(
 ```
 
 Fits sklearn gradient-boosted regression trees.
+
+This is one boosting estimator. Fit-time boosting ensembles such as Booging live
+in [Model Ensemble](model_ensemble.md).
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -2300,48 +3009,7 @@ Fits `catboost.CatBoostRegressor`. Requires `macroforecast[catboost]`.
 Preset spaces match `gradient_boosting`. Default model-selection method:
 `random`.
 
-## Macro-Specific Tree And Ensemble Models
-
-### slow_growing_tree
-
-```python
-macroforecast.models.slow_growing_tree(
-    X,
-    y,
-    *,
-    eta=0.1,
-    herfindahl_threshold=0.25,
-    eta_depth_step=0.01,
-    eta_max_plateau=0.5,
-    mtry_frac=1.0,
-    max_depth=10,
-    random_state=0,
-    min_leaf_size=5,
-)
-```
-
-Fits a soft-split Slow-Growing Tree. At each split, rows on the non-followed
-side keep fractional weight `1 - eta`, so prediction uses soft path
-membership rather than a hard single leaf.
-
-| Parameter | Default | Tunable | Meaning |
-| --- | --- | --- | --- |
-| `eta` | `0.1` | yes | Soft split leakage parameter. |
-| `herfindahl_threshold` | `0.25` | yes | Node concentration threshold for stopping. |
-| `eta_depth_step` | `0.01` | fixed by preset | Per-depth increase in soft split leakage. |
-| `eta_max_plateau` | `0.5` | fixed by preset | Upper plateau for depth-adjusted leakage. |
-| `mtry_frac` | `1.0` | yes | Fraction of candidate features considered at each split. |
-| `max_depth` | `10` | yes | Maximum tree depth. |
-| `min_leaf_size` | `5` | yes | Minimum effective leaf size. |
-| `random_state` | `0` | fixed by preset | Tree random seed. |
-
-| Preset | `eta` | `herfindahl_threshold` | `mtry_frac` | `max_depth` | `min_leaf_size` |
-| --- | --- | --- | --- | --- | --- |
-| `small` | `(0.05, 0.1)` | `(0.2, 0.3)` | `(0.75, 1.0)` | `(5, 10)` | `(3, 5)` |
-| `standard` | `(0.03, 0.05, 0.1)` | `(0.15, 0.25, 0.35)` | `(0.5, 0.75, 1.0)` | `(5, 10, None)` | `(3, 5, 10)` |
-| `wide` | `(0.01, 0.03, 0.05, 0.1, 0.2)` | `(0.1, 0.15, 0.25, 0.35, 0.5)` | `(0.33, 0.5, 0.75, 1.0)` | `(3, 5, 10, 20, None)` | `(2, 3, 5, 10)` |
-
-Default model-selection method: `random`.
+## Macro-Specific Tree Models
 
 ### quantile_regression_forest
 
@@ -2363,6 +3031,14 @@ underlying estimator exposes `predict_quantiles(X, levels=None)`. The
 forecasting runner stores those outputs in the `quantile_predictions` column
 as per-row dictionaries keyed by quantile level.
 
+The fitted wrapper also exposes sklearn forest feature importances through
+`fit.diagnostics["feature_importance"]`.
+
+Quantiles use tree-equal leaf weighting: within each tree, all training
+observations that share the test row's terminal leaf receive equal weight, and
+each tree contributes the same total weight. This avoids letting large leaves
+dominate the empirical quantile solely because they contain more observations.
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `n_estimators` | `200` | yes | Number of trees. |
@@ -2372,83 +3048,6 @@ as per-row dictionaries keyed by quantile level.
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default levels returned by `predict_quantiles()`. |
 
 Preset spaces match `random_forest`. Default model-selection method: `random`.
-
-### bagging
-
-```python
-macroforecast.models.bagging(
-    X,
-    y,
-    *,
-    base="ridge",
-    n_estimators=50,
-    max_samples=0.8,
-    random_state=0,
-    base_params=None,
-    strategy="standard",
-    block_length=4,
-)
-```
-
-Fits bootstrap aggregation over a supported base estimator. `strategy="block"`
-uses moving-block bootstrap indices.
-
-| Parameter | Default | Tunable | Meaning |
-| --- | --- | --- | --- |
-| `base` | `"ridge"` | yes | Base estimator name. |
-| `n_estimators` | `50` | yes | Number of bootstrap models. |
-| `max_samples` | `0.8` | yes | Bootstrap sample fraction. |
-| `base_params` | `{}` | fixed by preset | Parameters passed to each base estimator. |
-| `strategy` | `"standard"` | yes | Bootstrap strategy: `standard` or `block`. |
-| `block_length` | `4` | yes | Block length when `strategy="block"`. |
-| `random_state` | `0` | fixed by preset | Ensemble random seed. |
-
-| Preset | `base` | `n_estimators` | `max_samples` | `strategy` | `block_length` |
-| --- | --- | --- | --- | --- | --- |
-| `small` | `("ridge", "lasso")` | `(10, 25)` | `(0.6, 0.8)` | `("standard",)` | `(4,)` |
-| `standard` | `("ridge", "lasso", "decision_tree")` | `(25, 50, 100)` | `(0.5, 0.7, 0.9)` | `("standard", "block")` | `(4, 8)` |
-| `wide` | `("ridge", "lasso", "elastic_net", "decision_tree", "random_forest")` | `(25, 50, 100, 200)` | `(0.4, 0.6, 0.8, 1.0)` | `("standard", "block")` | `(2, 4, 8, 12)` |
-
-Default model-selection method: `random`.
-
-### booging
-
-```python
-macroforecast.models.booging(
-    X,
-    y,
-    *,
-    B=100,
-    sample_frac=0.75,
-    inner_n_estimators=1500,
-    inner_learning_rate=0.1,
-    inner_max_depth=3,
-    inner_subsample=0.5,
-    da_noise_frac=1/3,
-    da_drop_rate=0.2,
-    random_state=0,
-)
-```
-
-Fits bagged overfit stochastic gradient boosting with Gaussian data
-augmentation.
-
-| Parameter | Default | Tunable | Meaning |
-| --- | --- | --- | --- |
-| `B` | `100` | yes | Number of overfit boosting models. |
-| `sample_frac` | `0.75` | yes | Row sample fraction per model. |
-| `inner_n_estimators` | `1500` | yes | Boosting stages inside each model. |
-| `inner_learning_rate` | `0.1` | yes | Inner boosting learning rate. |
-| `inner_max_depth` | `3` | yes | Inner boosting tree depth. |
-| `inner_subsample` | `0.5` | yes | Inner boosting subsample share. |
-| `da_noise_frac` | `1/3` | yes | Scale of feature-noise augmentation. |
-| `da_drop_rate` | `0.2` | yes | Share of augmented columns dropped per model. |
-| `random_state` | `0` | fixed by preset | Ensemble random seed. |
-
-The presets tune all Booging parameters marked `yes`; use
-`describe_model("booging")` to inspect the exact candidate lists.
-
-Default model-selection method: `random`.
 
 ### macro_random_forest
 
@@ -2502,6 +3101,12 @@ the in-sample `X/y` and calls the reference `_ensemble_loop()` during
 reuse the previous reference-backend output, so repeated result materialization
 does not rerun the expensive forest loop.
 
+If the reference backend returns multiple prediction columns for the requested
+test rows, the adapter averages them row by row. If the backend returns no
+recognized prediction field or fewer than the requested number of predictions,
+the adapter raises a runtime error instead of silently returning a misaligned
+forecast vector.
+
 By default all columns in `X` are used both as the time-varying linear equation
 variables (`x_columns`) and the forest state variables (`S_columns`). Pass
 `x_columns` and `S_columns` when those sets should differ.
@@ -2512,6 +3117,10 @@ The reference backend distinguishes two predictor sets:
 | --- | --- |
 | `x_columns` | Columns in the local linear forecasting equation. These are the variables whose coefficients are allowed to vary over time. |
 | `S_columns` | State variables used by the forest to split the sample and estimate those local coefficients. |
+
+Use either column names or reference-style positions for each role. Passing both
+`x_columns` and `x_pos`, or both `S_columns` and `S_pos`, raises an error rather
+than silently prioritizing one selector.
 
 For example, a compact MRF can use a small local-linear equation but a wider
 state vector for the tree:
@@ -2597,7 +3206,7 @@ is considered at each split. Small training samples can also fail when
 | `S_columns` | `None` | fixed by preset | Feature columns used as forest state variables. |
 | `x_pos` | `None` | fixed by preset | Reference-package predictor positions after the target column. |
 | `S_pos` | `None` | fixed by preset | Reference-package state positions after the target column. |
-| `y_pos` | `0` | fixed by preset | Reference-package target column position. |
+| `y_pos` | `0` | fixed by preset | Fixed target position for the separated `X/y` adapter; must remain `0`. |
 | `B` | `50` | yes | Number of MRF trees. |
 | `minsize` | `10` | yes | Minimum node size before split attempts. |
 | `mtry_frac` | `1/3` | yes | Fraction of state variables considered at each split. |
@@ -2637,6 +3246,34 @@ Volatility model fits return `VolatilityFit`. In addition to
 estimates under `params` and the in-sample `conditional_volatility` path when
 the backend exposes it.
 
+These models are for volatility/variance forecasting, not ordinary conditional
+mean macro forecasting. They accept a univariate return-like series `y` and
+return both a point-mean prediction interface and a variance forecast interface.
+
+| Function | Implementation | R/source comparison | Boundary |
+| --- | --- | --- | --- |
+| `garch11` | Optional Python `arch.arch_model` backend. | Same surface as `rugarch::ugarchspec(variance.model=list(model="sGARCH"))` plus `ugarchfit()`, but the likelihood is delegated to `arch`, not reimplemented. | Backend controls solver details, distribution aliases, convergence behavior, and forecast internals. |
+| `egarch` | Optional Python `arch.arch_model` backend. | Same surface as `rugarch::ugarchspec(variance.model=list(model="eGARCH"))` plus `ugarchfit()`, but the likelihood is delegated to `arch`, not reimplemented. | Backend controls solver details, distribution aliases, convergence behavior, and forecast internals. |
+| `realized_garch` | Internal compact Gaussian log-linear MLE. | Aligned with the p=q=1 Hansen-Huang-Shek / `rugarch` `realGARCH` state and measurement equations. | Not a full `rugarch` clone: no ARMA/ARFIMA mean, variance regressors, non-Gaussian distributions, fixed-parameter SE machinery, simulation/path/roll helpers, or xts-specific checks. |
+
+### Common Output
+
+```python
+fit = macroforecast.models.garch11(y)
+variance = fit.predict_variance(horizon=12)
+sigma = fit.conditional_volatility
+metadata = fit.to_metadata()
+```
+
+| Output | Type | Meaning |
+| --- | --- | --- |
+| `fit` | `VolatilityFit` | Fitted wrapper with `predict()`, `predict_variance()`, `summary()`, `to_dict()`, and `to_metadata()`. |
+| `fit.predict(X)` | `pandas.Series` | Conditional mean prediction. For these models this is usually a constant mean from the volatility backend. |
+| `fit.predict_variance(horizon)` | `pandas.Series` | Variance forecast indexed from `0` to `horizon - 1`. `horizon` must be positive. |
+| `fit.conditional_volatility` | `pandas.Series` or `None` | In-sample conditional volatility path if available. |
+| `fit.diagnostics["params"]` | `dict` | Fitted parameters. Names depend on the backend/model. |
+| `fit.diagnostics["conditional_volatility"]` | `pandas.Series` | Same path as `fit.conditional_volatility`, stored for metadata export. |
+
 ### garch11
 
 ```python
@@ -2653,6 +3290,18 @@ macroforecast.models.garch11(
 ```
 
 Fits GARCH using the optional `arch` package. Requires `macroforecast[arch]`.
+The default is GARCH(1,1):
+
+$$
+r_t = \mu + \epsilon_t,\qquad \epsilon_t = \sigma_t z_t
+$$
+
+$$
+\sigma_t^2 = \omega + \alpha_1 \epsilon_{t-1}^2 + \beta_1 \sigma_{t-1}^2.
+$$
+
+For higher `p`/`q`, the lag orders are passed directly to
+`arch.arch_model(vol="GARCH", p=p, q=q)`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -2667,6 +3316,16 @@ Fits GARCH using the optional `arch` package. Requires `macroforecast[arch]`.
 | `small` | `(1,)` | `(1,)` | `("normal", "t")` |
 | `standard` | `(1, 2)` | `(1, 2)` | `("normal", "t")` |
 | `wide` | `(1, 2, 3)` | `(1, 2, 3)` | `("normal", "t", "skewt")` |
+
+Implementation notes:
+
+| Item | Value |
+| --- | --- |
+| Backend | `arch.arch_model` |
+| Required extra | `macroforecast[arch]` |
+| R comparison | `rugarch::ugarchspec(variance.model=list(model="sGARCH", garchOrder=c(p, q)))` |
+| Internal likelihood? | No. macroforecast validates orders, passes inputs to `arch`, and records metadata/diagnostics. |
+| Minimum data | 30 non-missing observations. |
 
 ### egarch
 
@@ -2685,6 +3344,16 @@ macroforecast.models.egarch(
 ```
 
 Fits EGARCH using the optional `arch` package. Requires `macroforecast[arch]`.
+The backend receives:
+
+```python
+arch.arch_model(y, vol="EGARCH", p=p, o=o, q=q, mean=mean_model, dist=dist)
+```
+
+For EGARCH(1,1), the log-variance structure is backend-defined by `arch`;
+conceptually it is the exponential GARCH family where log variance reacts to
+standardized shock magnitude and asymmetry terms rather than modeling variance
+directly in levels.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -2701,6 +3370,16 @@ Fits EGARCH using the optional `arch` package. Requires `macroforecast[arch]`.
 | `standard` | `(1, 2)` | `(0, 1)` | `(1, 2)` | `("normal", "t")` |
 | `wide` | `(1, 2, 3)` | `(0, 1, 2)` | `(1, 2, 3)` | `("normal", "t", "skewt")` |
 
+Implementation notes:
+
+| Item | Value |
+| --- | --- |
+| Backend | `arch.arch_model` |
+| Required extra | `macroforecast[arch]` |
+| R comparison | `rugarch::ugarchspec(variance.model=list(model="eGARCH", garchOrder=c(p, q)))` |
+| Internal likelihood? | No. macroforecast validates orders, passes inputs to `arch`, and records metadata/diagnostics. |
+| Minimum data | 30 non-missing observations. |
+
 ### realized_garch
 
 ```python
@@ -2716,8 +3395,45 @@ macroforecast.models.realized_garch(
 )
 ```
 
-Fits a compact realized-GARCH joint likelihood. Provide `rv` directly or set
-`realized_variance` to the column in `X` containing the realized measure.
+Fits a compact p=q=1 Gaussian log-linear realized-GARCH joint likelihood.
+Provide `rv` directly or set `realized_variance` to the column in `X`
+containing the realized measure. If neither is supplied, macroforecast uses
+`y ** 2` as an explicit `rv_proxy` so the caller can still inspect the model
+contract. For empirical realized-GARCH work, pass a true realized variance or
+realized volatility measure.
+
+The implemented state and measurement equations are:
+
+$$
+\log h_t = \omega + \alpha \log x_{t-1} + \beta \log h_{t-1},
+$$
+
+$$
+z_t = \frac{r_t - \mu}{\sqrt{h_t}},
+\qquad
+\tau(z_t) = \eta_1 z_t + \eta_2(z_t^2 - 1),
+$$
+
+$$
+\log x_t = \xi + \delta \log h_t + \tau(z_t) + u_t,
+\qquad u_t \sim N(0, \sigma_u^2).
+$$
+
+This matches the compact `rugarch` realGARCH recursion in
+`rugarch/src/filters.c::realgarchfilter()` for the p=q=1 case:
+lagged log realized volatility enters through `alpha`, lagged log latent
+variance enters through `beta`, and the measurement equation uses
+`xi`, `delta`, `eta1`, and `eta2`. The stationarity-style persistence diagnostic
+is:
+
+$$
+\text{persistence} = \beta + \delta \alpha.
+$$
+
+The multi-step variance forecast uses the conditional expectation recursion:
+the first step uses the latest observed realized measure, then future
+`tau(z_t)` and measurement shocks are set to zero so
+`E[\log x_t \mid h_t] = \xi + \delta \log h_t`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -2731,6 +3447,32 @@ Fits a compact realized-GARCH joint likelihood. Provide `rv` directly or set
 | `small` | `(3, 5)` |
 | `standard` | `(3, 5, 10)` |
 | `wide` | `(3, 5, 10, 20)` |
+
+Implementation notes:
+
+| Item | Value |
+| --- | --- |
+| Backend | Internal SciPy `L-BFGS-B` optimizer. |
+| Required extra | None beyond base SciPy stack. |
+| R comparison | Compact p=q=1 version of `rugarch::ugarchspec(variance.model=list(model="realGARCH"))` with `realizedVol`. |
+| Parameter names | `mu`, `omega`, `alpha`, `beta`, `xi`, `delta`, `eta_1`, `eta_2`, `log_sigma_u`, `persistence`. |
+| Restrictions | `alpha > 0`, `beta > 0`, `delta > 0`, and `beta + delta * alpha < 1` during optimization. |
+| Minimum data | 30 aligned observations of `y` and realized measure. |
+
+Example:
+
+```python
+fit = macroforecast.models.realized_garch(
+    returns,
+    rv=realized_variance,
+    max_iter=2000,
+    n_starts=5,
+    random_state=0,
+)
+
+fit.diagnostics["params"]
+fit.predict_variance(horizon=12)
+```
 
 ## Omitted From The Clean Model API
 

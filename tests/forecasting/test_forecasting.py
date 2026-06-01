@@ -834,30 +834,39 @@ def test_forecasting_runner_rejects_conflicting_panel_model_target() -> None:
         )
 
 
-def test_forecasting_runner_rejects_composite_dfm_midas_until_design_is_explicit() -> None:
+def test_forecasting_runner_supports_composite_dfm_midas_panel_model() -> None:
     bundle = _mixed_panel()
     window = mf.window.spec(
-        estimation=mf.window.estimation_expanding(min_size=30),
+        estimation=mf.window.estimation_expanding(min_size=36),
         val=mf.window.val_last_block(size=6),
-        test=mf.window.test_origins(first_origin="2002-09-30", horizon=1, step=3),
+        test=mf.window.test_origins(first_origin="2003-06-30", horizon=1, step=3),
     )
 
-    with pytest.raises(ValueError, match="future MIDAS design matrix"):
-        mf.forecasting.run(
-            bundle,
-            "dfm_unrestricted_midas",
-            window=window,
-            target="q_target",
-            params={
-                "dfm_unrestricted_midas": {
-                    "target": "q_target",
-                    "maxiter": 5,
-                    "tolerance": 1e-3,
-                }
-            },
-            model_selection={"dfm_unrestricted_midas": None},
-            save_models=False,
-        )
+    result = mf.forecasting.run(
+        bundle,
+        "dfm_unrestricted_midas",
+        window=window,
+        target="q_target",
+        params={
+            "dfm_unrestricted_midas": {
+                "target": "q_target",
+                "lag_columns": ["m1"],
+                "lags": (0, 1, 2),
+                "factor_lags": (0,),
+                "maxiter": 10,
+                "tolerance": 1e-3,
+            }
+        },
+        model_selection={"dfm_unrestricted_midas": None},
+        save_models=False,
+    )
+    table = result.to_frame()
+
+    assert not table.empty
+    assert table["model_spec"].eq("dfm_unrestricted_midas").all()
+    assert table["prediction"].notna().all()
+    assert table["actual"].notna().all()
+    assert table["model_selection"].map(lambda value: value["retuned"]).eq(False).all()
 
 
 def test_forecasting_runner_accepts_explicit_mixed_frequency_midas_feature_set() -> None:
@@ -1044,6 +1053,113 @@ def test_forecasting_runner_can_disable_model_owned_selection() -> None:
 
     assert table["model_selection"].isna().all()
     assert result.metadata["models"][0]["spec"]["params"]["alpha"] == 0.1
+
+
+def test_forecasting_runner_records_fixed_and_selected_model_params() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    fixed = mf.forecasting.run(
+        panel,
+        "ridge",
+        window=_window(),
+        features=features,
+        params={"ridge": {"alpha": 0.1}},
+        model_selection={"ridge": None},
+        save_models=False,
+    )
+    fixed_table = fixed.to_frame()
+
+    assert fixed.metadata["models"][0]["spec"]["params"] == {"alpha": 0.1}
+    assert {row["alpha"] for row in fixed_table["params"]} == {0.1}
+
+    selected = mf.forecasting.run(
+        panel,
+        "ridge",
+        window=_window(),
+        features=features,
+        params={"ridge": {"fit_intercept": False}},
+        model_selection={"ridge": mf.model_selection.grid({"alpha": [0.1]})},
+        save_models=False,
+    )
+    selected_params = selected.to_frame()["params"].iloc[0]
+
+    assert selected_params == {"fit_intercept": False, "alpha": 0.1}
+
+
+def test_forecasting_runner_accepts_direct_dict_valued_model_params() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+    bagging_spec = mf.model_ensemble.get_model_ensemble(
+        "bagging",
+        params={"n_estimators": 2},
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        bagging_spec,
+        window=_window(),
+        features=features,
+        params={"base_params": {"alpha": 0.2}},
+        model_selection={"bagging": None},
+        save_models=False,
+    )
+    recorded = result.metadata["models"][0]["spec"]["params"]
+
+    assert recorded == {"n_estimators": 2, "base_params": {"alpha": 0.2}}
+    assert result.to_frame()["params"].iloc[0] == recorded
+
+
+def test_forecasting_runner_rejects_unknown_model_keyed_options() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    with pytest.raises(ValueError, match="model_selection contains keys"):
+        mf.forecasting.run(
+            panel,
+            "ridge",
+            window=_window(),
+            features=features,
+            model_selection={"typo": None},
+            save_models=False,
+        )
+
+    with pytest.raises(ValueError, match="params looks model-keyed"):
+        mf.forecasting.run(
+            panel,
+            "ridge",
+            window=_window(),
+            features=features,
+            params={"typo": {"alpha": 0.1}},
+            model_selection={"ridge": None},
+            save_models=False,
+        )
+
+    with pytest.raises(ValueError, match="preset contains keys"):
+        mf.forecasting.run(
+            panel,
+            "ridge",
+            window=_window(),
+            features=features,
+            preset={"typo": "small"},
+            model_selection={"ridge": None},
+            save_models=False,
+        )
 
 
 def test_forecasting_runner_supports_pls_model(tmp_path) -> None:

@@ -13,7 +13,8 @@ composition in the forecasting runner.
 | `macroforecast.preprocessing` | Callable data-cleaning transforms and reusable preprocessing specs. | Expanding/rolling schedule decisions. |
 | `macroforecast.feature_engineering` | Callable feature/target transforms and reusable feature specs. | Forecast-origin scheduling. |
 | `macroforecast.window` | Estimation mode, validation/test time frames, retrain/retune cadence, and reusable stage policies. | Low-level transformation formulas. |
-| `macroforecast.models` | Model callables and model-owned hyperparameter spaces. | Forecast loops or forecast combination. |
+| `macroforecast.models` | Single-estimator model callables and model-owned hyperparameter spaces. | Forecast loops, forecast combination, or fit-time model ensembles. |
+| `macroforecast.model_ensemble` | Fit-time composition of multiple member models into one `ModelFit`. | Forecast-output combination after runner execution. |
 | `macroforecast.model_selection` | Parameter search over supplied data and validation windows. | Global run orchestration. |
 | `macroforecast.forecasting` | Runner-level composition and forecast combination. | Low-level transformation formulas. |
 | `macroforecast.metrics` | Forecast scoring, forecast ranking, and metric resolution. | Data splits, model fitting, or statistical tests. |

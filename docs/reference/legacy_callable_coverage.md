@@ -38,8 +38,9 @@ These old surfaces are not gaps.
 | Feature analysis | `macroforecast.feature_analysis` | Overview, correlation, target correlation, factor diagnostics, lag diagnostics, MARX diagnostics, stage shift, selection stability/similarity, custom diagnostics. |
 | Window and policies | `macroforecast.window` | Estimation/validation/test windows, expanding/rolling/fixed modes, blocked splits, origin generation, retrain/retune timing policies, stage panels. |
 | Model selection | `macroforecast.model_selection` | Fixed/grid/random/Bayesian/genetic/custom search specs, distributions, parameter selection over supplied windows. |
-| Models | `macroforecast.models` | Linear/penalized/group/adaptive, supervised factor models, PCR-style composites through factor models, SVR, tree/ensemble, MARS, Macro Random Forest, MIDAS/mixed-frequency, AR/VAR/BVAR/FAR/FAVAR/DFM, volatility, torch-backed NN/LSTM/GRU/Transformer/HNN, model-owned search spaces, save/load helpers. |
-| Forecast runner | `macroforecast.forecasting` | Runner composition across windows, preprocessing specs, feature specs, model specs, model selection, direct/recursive/path-average policies, forecast combinations. |
+| Models | `macroforecast.models` | Linear/penalized/group/adaptive, supervised factor models, PCR-style composites through factor models, SVR, tree, MARS, Macro Random Forest, MIDAS/mixed-frequency, AR/VAR/BVAR/FAR/FAVAR/DFM, volatility, torch-backed NN/LSTM/GRU/Transformer/HNN, model-owned search spaces, save/load helpers. |
+| Model ensemble | `macroforecast.model_ensemble` | Fit-time member-model composition: bagging, subagging, random subspace, stacking, Super Learner, Booging, and model-ensemble-owned search spaces. |
+| Forecast runner | `macroforecast.forecasting` | Runner composition across windows, preprocessing specs, feature specs, model specs, model ensembles, model selection, direct/recursive/path-average policies, forecast-output combinations. |
 | Metrics | `macroforecast.metrics` | Point, relative, directional, interval, density, quantile, QLIKE, Theil, OOS R-squared, ranking. |
 | Tests | `macroforecast.tests` | DM/GW/DMP/HN, nested/encompassing tests, CPA, single-step and iterative MCS, SPA/StepM approximation, blocked OOB reality check, density/interval tests, PIT diagnostics, residual diagnostics, custom tests. |
 | Evaluation reports | `macroforecast.evaluation` | Multi-slice evaluation, OOS filtering, benchmark comparisons, regime scoring, error decomposition, aggregation and ranking. |
@@ -47,7 +48,7 @@ These old surfaces are not gaps.
 | Interpretation | `macroforecast.interpretation` | Native coefficients/importances, permutation/Strobl/LOFO, PDP/ALE/Friedman-H, SHAP variants, forecast decomposition, cumulative contribution, group/lineage/transformation attribution, OLS attention, MRF GTVP, VAR IRF/FEVD/historical decomposition, neural attribution, LSTM hidden states, custom interpretation. |
 | Output | `macroforecast.output` | Output table generation, selection/naming/bundling, artifact writing, manifest, hashes, provenance, gzip/zip compression. |
 | Reporting | `macroforecast.reporting` | Report-table formatting, LaTeX/HTML/Markdown rendering, figure-ready data, report bundles. |
-| Custom extensions | `macroforecast.custom` and per-module custom functions | Custom datasets, preprocessing, feature steps, models, stage policies, combinations, diagnostics, interpretation, and artifacts. |
+| Custom extensions | `macroforecast.custom` and per-module custom functions | Custom datasets, preprocessing, feature steps, models, model ensembles, stage policies, combinations, diagnostics, interpretation, and artifacts. |
 
 ## Remaining Real Gaps
 

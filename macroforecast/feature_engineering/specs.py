@@ -15,6 +15,7 @@ from macroforecast.feature_engineering.shared import (
     _apply_varimax_rotation,
     _component_records,
     _coerce_input,
+    _effective_pls_components,
     _fit_sparse_factor_var1,
     _fit_sparse_pca_chen_rohe,
     _fit_varimax_rotation,
@@ -691,7 +692,7 @@ class _PartialLeastSquaresState:
         valid = source.dropna()
         output_columns = [f"{self.prefix}{idx}" for idx in range(1, self.n_components + 1)]
         result = pd.DataFrame(index=panel.index, columns=output_columns, dtype=float)
-        if valid.empty:
+        if valid.empty or self.resolved_n_components == 0 or self.model is None:
             result.index.name = "date"
             return result
         scores = np.asarray(self.model.transform(valid.to_numpy(dtype=float)), dtype=float)
@@ -2082,14 +2083,16 @@ def _fit_feature_step(
                 f"feature step {plan.name!r} has fewer than {min_size} target-aligned complete rows "
                 "to fit partial least squares"
             )
-        resolved = min(n_components, len(selected), max(1, len(joined) - 1))
+        resolved = _effective_pls_components(joined.loc[:, selected], n_components)
         from sklearn.cross_decomposition import PLSRegression
 
-        model = PLSRegression(n_components=resolved)
-        model.fit(
-            joined.loc[:, selected].to_numpy(dtype=float),
-            joined["__target__"].to_numpy(dtype=float).reshape(-1, 1),
-        )
+        model = None
+        if resolved > 0:
+            model = PLSRegression(n_components=resolved)
+            model.fit(
+                joined.loc[:, selected].to_numpy(dtype=float),
+                joined["__target__"].to_numpy(dtype=float).reshape(-1, 1),
+            )
         pls_state = _PartialLeastSquaresState(
             columns=selected,
             target=target_name,

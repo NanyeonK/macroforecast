@@ -6,6 +6,16 @@ from macroforecast.models.types import ModelFit
 from macroforecast.models.utils import fit_estimator
 
 
+def _feature_kernel(kernel: str) -> str:
+    value = str(kernel)
+    if value == "precomputed":
+        raise ValueError(
+            "kernel='precomputed' is not supported by macroforecast's "
+            "feature-matrix ModelFit contract"
+        )
+    return value
+
+
 def svr(
     X: Any,
     y: Any | None = None,
@@ -26,8 +36,13 @@ def svr(
 
     from sklearn.svm import SVR
 
+    # R comparison is intentionally skipped for this callable. This is a thin
+    # sklearn backend wrapper, so the algorithmic contract is sklearn SVR
+    # behavior plus macroforecast ModelFit metadata, diagnostics, and
+    # feature-matrix IO. kernel="precomputed" is blocked because it violates
+    # that feature-matrix contract, not because of an R-source mismatch.
     params = {
-        "kernel": str(kernel),
+        "kernel": _feature_kernel(kernel),
         "C": float(C),
         "epsilon": float(epsilon),
         "gamma": gamma,
@@ -51,20 +66,25 @@ def linear_svr(
     loss: str = "epsilon_insensitive",
     tol: float = 1e-4,
     max_iter: int = 10000,
-    random_state: int = 0,
+    random_state: int | None = 0,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit linear support-vector regression."""
 
     from sklearn.svm import LinearSVR
 
+    # R comparison is intentionally skipped for this callable. This is a thin
+    # sklearn backend wrapper, so the algorithmic contract is sklearn LinearSVR
+    # behavior plus macroforecast ModelFit metadata, diagnostics, and
+    # feature-matrix IO. No package-native support-vector objective is
+    # implemented here.
     params = {
         "C": float(C),
         "epsilon": float(epsilon),
         "loss": str(loss),
         "tol": float(tol),
         "max_iter": int(max_iter),
-        "random_state": int(random_state),
+        "random_state": None if random_state is None else int(random_state),
         **kwargs,
     }
     return fit_estimator(LinearSVR(**params), X, y, model="linear_svr", metadata=params)
@@ -90,8 +110,13 @@ def nu_svr(
 
     from sklearn.svm import NuSVR
 
+    # R comparison is intentionally skipped for this callable. This is a thin
+    # sklearn backend wrapper, so the algorithmic contract is sklearn NuSVR
+    # behavior plus macroforecast ModelFit metadata, diagnostics, and
+    # feature-matrix IO. kernel="precomputed" is blocked because it violates
+    # that feature-matrix contract, not because of an R-source mismatch.
     params = {
-        "kernel": str(kernel),
+        "kernel": _feature_kernel(kernel),
         "C": float(C),
         "nu": float(nu),
         "gamma": gamma,
