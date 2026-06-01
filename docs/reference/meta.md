@@ -1,11 +1,19 @@
 # macroforecast.meta
 
+[Back to reference](index.md)
+
+## Purpose
+
 `macroforecast.meta` stores package-wide execution settings. These settings are
 used when a run does not pass a more specific value through a direct function
 argument. They do not choose data, preprocessing, features, models, evaluation
 metrics, or output files.
 
-The current public surface is:
+The module is intentionally small. It owns defaults and temporary overrides;
+direct function arguments and runner policies always take precedence over
+global settings.
+
+## Public Functions
 
 | Function | Purpose |
 | --- | --- |
@@ -15,7 +23,7 @@ The current public surface is:
 | `reset_config` | Restore package defaults. |
 | `use_config` | Temporarily override settings inside a `with` block. |
 
-Public constants and type aliases:
+## Public Values
 
 | Symbol | Meaning |
 | --- | --- |
@@ -41,8 +49,8 @@ Public constants and type aliases:
 | `verbose` | `int` | `0` | Default verbosity level for future logging surfaces. |
 | `default_preprocessing_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"origin_available"` | Default `forecasting.run(..., preprocessing_policy=...)` scope when preprocessing is supplied and no explicit policy is passed. |
 | `default_feature_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `feature_policy` scope. |
-| `default_selection_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `selection_policy` scope. |
-| `metadata_level` | `"minimal"`, `"standard"`, or `"full"` | `"standard"` | Runner metadata detail. `standard` records stage records; `minimal` suppresses per-origin stage records. |
+| `default_selection_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `model_selection_policy` scope. |
+| `metadata_level` | `"minimal"`, `"standard"`, or `"full"` | `"standard"` | Runner metadata detail. `minimal` suppresses per-origin stage records; `standard` and `full` currently keep the same stage ledger. |
 
 The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
 is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
@@ -53,6 +61,17 @@ is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
 | --- | --- | --- |
 | Stop on error | `raise` | Stop immediately when a supported execution cell fails. |
 | Continue where supported | `continue` | Record the failure and continue for call sites that support non-fatal errors. |
+
+### Stage Scope Aliases
+
+Stage-scope inputs are normalized before storage. Docs and metadata use the
+canonical stored values.
+
+| Accepted input | Stored value | Meaning |
+| --- | --- | --- |
+| `"full"`, `"full_panel"`, `"global"` | `"full_panel"` | Fit the stage on the full panel. |
+| `"origin"`, `"origin_available"`, `"available"` | `"origin_available"` | Fit the stage on observations available at each forecast origin. |
+| `"fit"`, `"fit_window"`, `"train"`, `"train_window"` | `"fit_window"` | Fit the stage on the model fit window. |
 
 Example output:
 
@@ -103,6 +122,10 @@ All inputs are keyword-only. Omitted inputs keep their current values.
 | `default_feature_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default feature-engineering stage scope. |
 | `default_selection_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default model-selection stage scope. |
 | `metadata_level` | str | keep current value | `"minimal"`, `"standard"`, `"full"` | Sets the default runner metadata detail. |
+
+Stage-scope inputs also accept the aliases listed in
+[Stage Scope Aliases](#stage-scope-aliases). The returned `MetaConfig` always
+stores the canonical value.
 
 ### Output
 
@@ -304,6 +327,8 @@ The inputs match `configure`.
 | `default_selection_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary model-selection default scope. |
 | `metadata_level` | str | keep current value inside context | `"minimal"`, `"standard"`, `"full"` | Temporary metadata detail. |
 
+Stage-scope inputs use the same alias normalization as `configure`.
+
 ### Output
 
 Yields `MetaConfig`, the active configuration inside the context.
@@ -345,8 +370,8 @@ value is provided by the caller.
 | `verbose` | Reserved as the package-wide verbosity setting. |
 | `default_preprocessing_scope` | Used by `forecasting.run(...)` when `preprocessing` is supplied without `preprocessing_policy`. |
 | `default_feature_scope` | Used by `forecasting.run(...)` when `feature_policy` is omitted. |
-| `default_selection_scope` | Used by `forecasting.run(...)` when `selection_policy` is omitted. |
-| `metadata_level` | Controls how much run-level metadata is recorded. `standard` keeps stage records; `minimal` drops per-origin stage records. |
+| `default_selection_scope` | Used by `forecasting.run(...)` when `model_selection_policy` is omitted. |
+| `metadata_level` | Controls how much run-level metadata is recorded. `minimal` drops per-origin stage records; `standard` and `full` currently keep the same stage ledger. |
 
 Forecast results record the active config under `metadata["run"]["config"]` so
 a completed run can be audited against the settings in force at execution time.
