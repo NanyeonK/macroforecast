@@ -2,6 +2,8 @@
 
 [Back to reference](index.md)
 
+## Purpose
+
 `macroforecast.feature_engineering` is the direct pandas surface for building
 forecast targets and model-ready feature matrices. It accepts the same direct Python inputs used by
 previous stages: `PreprocessedData`, `DataSpec`, `DataBundle`,
@@ -55,6 +57,31 @@ y_path = mf.feature_engineering.path_targets(processed, target="INDPRO", horizon
 X_lag = mf.feature_engineering.lag(processed, columns=["PAYEMS", "INDPRO"], lags=range(0, 13))
 ```
 
+## Public Functions
+
+| Group | Functions | Purpose |
+| --- | --- | --- |
+| Target construction | `direct_target`, `average_target`, `path_targets` | Build direct, average, or step-path forecast targets. |
+| Basic predictor transforms | `lag`, `rolling_mean`, `moving_average_ladder`, `mixed_frequency_lags`, `seasonal_lag`, `season_dummy`, `time_features`, `fourier_features` | Add lags, rolling blocks, mixed-frequency lag blocks, and deterministic date features. |
+| ML-side value transforms | `transform_features`, `log_features`, `diff_features`, `log_diff_features`, `pct_change_features`, `cumsum_features`, `scale_features` | Add post-preprocessing transformations and scaling used as model features. |
+| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. |
+| Trend/cycle filters | `hamilton_filter_features`, `hp_filter_features` | Add Hamilton or HP trend/cycle columns with leakage warnings where needed. |
+| Factor features | `pca_features`, `dfm_features`, `group_pca`, `varimax_features`, `sparse_pca_chen_rohe_features`, `partial_least_squares_features`, `sliced_inverse_regression_features`, `random_projection_features`, `nystroem_features` | Build fitted factor, supervised-factor, sparse-factor, rotation, random projection, and kernel approximation features. |
+| Paper-style combinations | `feature_matrix`, `maf_features`, `moving_average_pca_lags`, `pca_then_lags`, `lags_then_pca` | Materialize named macro-ML blocks such as `X`, `F`, `MARX`, `MAF`, and compositions. |
+| Composition | `compose_features`, `custom_features`, `custom_step` | Run sequential feature steps or user-supplied transforms. |
+| Runner-safe specs | `feature_spec` plus step builders ending in `_step` | Store fit-aware feature construction for `forecasting.run(...)`. |
+| Feature selection | `select_features`, `variance_selection`, `correlation_selection`, `lasso_selection`, `lasso_path_selection`, `rfe_selection`, `boruta_selection`, `stability_selection`, `genetic_selection` | Select columns with variance, target association, sparse-model, wrapper, or search rules. |
+| Selection utilities | `normalize_feature_selection_method`, `feature_selection_requires_target` | Normalize selection aliases and report whether a target is required. |
+| End-to-end builder | `build_features` | Return aligned `X`, `y`, metadata, feature provenance, and target provenance. |
+
+Runner-safe step builders are direct functions too: `lag_step`,
+`rolling_step`, `moving_average_step`, `marx_step`, `transform_step`,
+`seasonal_lag_step`, `season_dummy_step`, `fourier_step`, `time_step`,
+`polynomial_step`, `interaction_step`, `scale_step`, `pca_step`,
+`sparse_pca_chen_rohe_step`, `varimax_step`, `group_pca_step`, `maf_step`,
+`hamilton_step`, `random_projection_step`, `nystroem_step`,
+`partial_least_squares_step`, and `sliced_inverse_regression_step`.
+
 ## Code Structure
 
 The public namespace stays `macroforecast.feature_engineering`, while the
@@ -71,7 +98,7 @@ implementation is split by responsibility:
 | `shared.py` | Internal normalization, metadata, fitting, and validation helpers. |
 | `core.py` | Compatibility re-export only. |
 
-Public contracts and convenience aliases:
+## Public Classes And Types
 
 | Symbol | Meaning |
 | --- | --- |
@@ -86,6 +113,62 @@ Public contracts and convenience aliases:
 | `pca_then_lags` | Convenience composition: PCA factors first, then lags. |
 | `lags_then_pca` | Convenience composition: lag panel first, then PCA. |
 | `moving_average_pca_lags` | Convenience composition for moving-average blocks, PCA, and lags. |
+
+## FeatureSet
+
+```python
+macroforecast.feature_engineering.FeatureSet(
+    X: pandas.DataFrame,
+    y: pandas.DataFrame,
+    metadata: dict,
+    feature_metadata: pandas.DataFrame,
+    target_metadata: pandas.DataFrame,
+    target: str | None = None,
+    targets: tuple[str, ...] = (),
+    horizons: tuple[int, ...] = (),
+    predictors: tuple[str, ...] = (),
+)
+```
+
+### Output Schema
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `X` | `pandas.DataFrame` | Predictor matrix aligned on forecast-origin dates. |
+| `y` | `pandas.DataFrame` | Direct horizon targets or path step targets aligned to `X`. |
+| `metadata` | `dict` | Input metadata plus feature-engineering stage metadata. |
+| `feature_metadata` | `pandas.DataFrame` | One row per generated feature with provenance columns. |
+| `target_metadata` | `pandas.DataFrame` | One row per target column with horizon, transform, and formula provenance. |
+| `target`, `targets`, `horizons`, `predictors` | scalar or tuple fields | Resolved study choices. |
+
+### Methods
+
+| Method | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `attach(stage, values)` | `stage: str`, `values: Mapping` | `FeatureSet` | Return a new object with one metadata stage added. |
+
+`FeatureSet` also supports tuple unpacking:
+
+```python
+X, y, metadata = features
+```
+
+## FeatureSelectionResult
+
+`select_features(...)` returns `FeatureSelectionResult`; direct selection
+wrappers return a selected-column `DataFrame` and store the same selection
+metadata on the returned frame.
+
+| Field | Meaning |
+| --- | --- |
+| `selected_columns` | Final selected columns in source order. |
+| `scores` | Per-column score dictionary. |
+| `method` | Canonical selection method. |
+| `n_features`, `resolved_n_features` | Requested and resolved selected-feature counts. |
+| `n_fit_rows` | Rows used by the selection fit. |
+| `fit_policy` | Fit contract, such as target-aligned rows or column-only rows. |
+| `target_required` | Whether the method requires a target. |
+| `metadata` | Method-specific score and fit details. |
 
 ## Feature Boundary
 

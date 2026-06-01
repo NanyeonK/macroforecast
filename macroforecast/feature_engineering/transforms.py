@@ -1354,13 +1354,13 @@ def adaptive_ma_rf_features(
         raise ValueError("sided must be 'one' or 'two'")
     if sided_value == "two":
         _warn_if_full_sample_fit("full_sample", context="adaptive_ma_rf_features()", enabled=warn_full_sample)
-    time_values = np.arange(len(panel), dtype=float).reshape(-1, 1)
+    time_values: np.ndarray = np.arange(len(panel), dtype=float).reshape(-1, 1)
     result = pd.DataFrame(index=panel.index)
     for offset, column in enumerate(selected):
         series = panel[column].astype(float)
         if sided_value == "two":
             mask = series.notna().to_numpy()
-            fitted = np.full(len(series), np.nan, dtype=float)
+            fitted: np.ndarray = np.full(len(series), np.nan, dtype=float)
             if int(mask.sum()) >= 2:
                 model = RandomForestRegressor(
                     n_estimators=n_tree,
@@ -2097,7 +2097,7 @@ def _one_sided_adaptive_ma_rf(
 ) -> np.ndarray:
     from sklearn.ensemble import RandomForestRegressor
 
-    out = np.full(len(series), np.nan, dtype=float)
+    out: np.ndarray = np.full(len(series), np.nan, dtype=float)
     values = series.to_numpy(dtype=float)
     observed = np.isfinite(values)
     row_numbers = np.arange(len(series))

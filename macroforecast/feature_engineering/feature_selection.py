@@ -891,7 +891,7 @@ def _subset_fitness(
 
 
 def _random_mask(n_features: int, n_keep: int, rng: np.random.Generator) -> np.ndarray:
-    mask = np.zeros(n_features, dtype=bool)
+    mask: np.ndarray = np.zeros(n_features, dtype=bool)
     mask[rng.choice(n_features, size=n_keep, replace=False)] = True
     return mask
 

@@ -1394,28 +1394,28 @@ def _fit_feature_step(
         drop_missing = bool(params.pop("drop_missing", False))
         params.pop("warn_full_sample", None)
         _reject_extra_params(params, plan.name)
-        min_size = None
+        marx_min_size: int | None = None
         center = None
         divisor = None
         if scale_lags:
-            min_size = _normalize_min_train_size(min_train_size, minimum=2)
+            marx_min_size = _normalize_min_train_size(min_train_size, minimum=2)
             lag_values = tuple(range(1, max_lag + 1))
             lag_matrix = _marx_lag_matrix(source, columns=selected, lag_values=lag_values)
             train = lag_matrix.dropna().astype(float)
-            if len(train) < min_size:
+            if len(train) < marx_min_size:
                 raise ValueError(
-                    f"feature step {plan.name!r} has fewer than {min_size} complete rows to fit MARX"
+                    f"feature step {plan.name!r} has fewer than {marx_min_size} complete rows to fit MARX"
                 )
             # Match the author R-code option: scale each lag-matrix column
             # with sample standard deviations before taking increasing lag
             # averages. The fitted center/divisor are then fixed for test rows.
             center = train.mean(axis=0)
             divisor = train.std(axis=0, ddof=1).replace(0.0, np.nan)
-        state = _MARXState(
+        marx_state = _MARXState(
             columns=selected,
             max_lag=max_lag,
             scale_lags=scale_lags,
-            min_train_size=min_size,
+            min_train_size=marx_min_size,
             center=center,
             divisor=divisor,
         )
@@ -1428,11 +1428,11 @@ def _fit_feature_step(
                 "columns": selected,
                 "max_lag": max_lag,
                 "scale_lags": scale_lags,
-                "min_train_size": min_size,
+                "min_train_size": marx_min_size,
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel" if scale_lags else "deterministic",
             },
-            state=state,
+            state=marx_state,
         )
     if plan.method == "transform":
         transform = str(params.pop("transform", plan.name))
@@ -1576,7 +1576,7 @@ def _fit_feature_step(
         if len(train) < min_size:
             raise ValueError(f"feature step {plan.name!r} has fewer than {min_size} complete rows to fit scaling")
         center, divisor = _scale_parameters(train, method=method)
-        state = _ScaleState(columns=selected, method=method, center=center, divisor=divisor)
+        scale_state = _ScaleState(columns=selected, method=method, center=center, divisor=divisor)
         return _FittedFeatureStep(
             name=plan.name,
             method=plan.method,
@@ -1589,7 +1589,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=scale_state,
         )
     if plan.method == "pca":
         selected = _resolve_columns(source, columns=columns)
@@ -1602,7 +1602,7 @@ def _fit_feature_step(
         random_state = params.pop("random_state", None)
         params.pop("warn_full_sample", None)
         _reject_extra_params(params, plan.name)
-        state = _fit_pca_state(
+        pca_state = _fit_pca_state(
             source,
             predictors=selected,
             columns=selected,
@@ -1610,14 +1610,14 @@ def _fit_feature_step(
             scale=scale,
             prefix=prefix,
         )
-        if state is None:
+        if pca_state is None:
             raise ValueError(f"feature step {plan.name!r} did not fit PCA state")
         if min_train_size is not None:
             min_size = _normalize_min_train_size(min_train_size, minimum=n_components + 1)
             if len(source.loc[:, selected].dropna()) < min_size:
                 raise ValueError(f"feature step {plan.name!r} has fewer than {min_size} complete rows to fit PCA")
         if random_state is not None:
-            state = _fit_pca_state_with_random_state(
+            pca_state = _fit_pca_state_with_random_state(
                 source,
                 columns=selected,
                 n_components=n_components,
@@ -1641,7 +1641,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=pca_state,
         )
     if plan.method == "sparse_pca_chen_rohe":
         selected = _resolve_columns(source, columns=columns)
@@ -1679,7 +1679,7 @@ def _fit_feature_step(
         var_coef = _fit_sparse_factor_var1(train_scores) if var_innovations else None
         if var_innovations and var_coef is None:
             raise ValueError("var_innovations requires at least three complete rows")
-        state = _SparsePCAChenRoheState(
+        sparse_state = _SparsePCAChenRoheState(
             columns=selected,
             n_components=n_components,
             resolved_n_components=int(theta.shape[1]),
@@ -1716,7 +1716,7 @@ def _fit_feature_step(
                 "random_state": None if random_state is None else int(random_state),
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=sparse_state,
         )
     if plan.method == "varimax":
         selected = _resolve_columns(source, columns=columns)
@@ -1738,7 +1738,7 @@ def _fit_feature_step(
                 f"feature step {plan.name!r} has fewer than {min_size} complete rows to fit varimax rotation"
             )
         rotation, n_iter = _fit_varimax_rotation(train, max_iter=max_iter, tol=tol)
-        state = _VarimaxState(
+        varimax_state = _VarimaxState(
             columns=selected,
             max_iter=max_iter,
             tol=tol,
@@ -1762,7 +1762,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=varimax_state,
         )
     if plan.method == "group_pca":
         groups = params.pop("groups", None)
@@ -1800,7 +1800,7 @@ def _fit_feature_step(
                 min_train_size=min_size,
                 step_name=plan.name,
             )
-        state = _GroupPCAState(
+        group_state = _GroupPCAState(
             groups=resolved_groups,
             states=states,
             n_components=component_counts,
@@ -1821,7 +1821,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=group_state,
         )
     if plan.method == "maf":
         selected = _resolve_columns(source, columns=columns)
@@ -1865,7 +1865,7 @@ def _fit_feature_step(
                 step_name=plan.name,
             )
             column_states.append(_MAFColumnState(source_column=column, lag_values=lag_values, pca_state=pca_state))
-        state = _MAFState(
+        maf_state = _MAFState(
             columns=selected,
             lag_values=lag_values,
             n_components=n_components,
@@ -1889,7 +1889,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=maf_state,
         )
     if plan.method == "hamilton_filter":
         selected = _resolve_columns(source, columns=columns)
@@ -1924,7 +1924,7 @@ def _fit_feature_step(
                 )
             beta_by_column[column] = _ols_beta(x_matrix, y_vector)
             fit_rows_by_column[column] = int(len(y_vector))
-        state = _HamiltonState(
+        hamilton_state = _HamiltonState(
             columns=selected,
             h=h_value,
             p=p_value,
@@ -1948,7 +1948,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=hamilton_state,
         )
     if plan.method == "random_projection":
         selected = _resolve_columns(source, columns=columns)
@@ -1975,7 +1975,7 @@ def _fit_feature_step(
             random_state=None if random_state is None else int(random_state),
         )
         transformer.fit(train.to_numpy(dtype=float))
-        state = _RandomProjectionState(
+        random_projection_state = _RandomProjectionState(
             columns=selected,
             n_components=n_components,
             prefix=prefix,
@@ -1998,7 +1998,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=random_projection_state,
         )
     if plan.method == "nystroem":
         selected = _resolve_columns(source, columns=columns)
@@ -2028,7 +2028,7 @@ def _fit_feature_step(
             random_state=None if random_state is None else int(random_state),
         )
         transformer.fit(train.to_numpy(dtype=float))
-        state = _NystroemState(
+        nystroem_state = _NystroemState(
             columns=selected,
             n_components=n_components,
             kernel=kernel,
@@ -2055,7 +2055,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel",
             },
-            state=state,
+            state=nystroem_state,
         )
     if plan.method == "partial_least_squares":
         selected = _resolve_columns(source, columns=columns)
@@ -2090,7 +2090,7 @@ def _fit_feature_step(
             joined.loc[:, selected].to_numpy(dtype=float),
             joined["__target__"].to_numpy(dtype=float).reshape(-1, 1),
         )
-        state = _PartialLeastSquaresState(
+        pls_state = _PartialLeastSquaresState(
             columns=selected,
             target=target_name,
             n_components=n_components,
@@ -2115,7 +2115,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel_target_aligned_rows",
             },
-            state=state,
+            state=pls_state,
         )
     if plan.method == "sliced_inverse_regression":
         selected = _resolve_columns(source, columns=columns)
@@ -2190,11 +2190,11 @@ def _fit_feature_step(
             vectors = np.eye(between_slice_cov.shape[0])
         selected_order = np.argsort(-np.abs(values))[:resolved_components]
         directions = vectors[:, selected_order]
-        for component in range(directions.shape[1]):
-            max_index = int(np.argmax(np.abs(directions[:, component])))
-            if directions[max_index, component] < 0:
-                directions[:, component] = -directions[:, component]
-        state = _SlicedInverseRegressionState(
+        for component_index in range(directions.shape[1]):
+            max_index = int(np.argmax(np.abs(directions[:, component_index])))
+            if directions[max_index, component_index] < 0:
+                directions[:, component_index] = -directions[:, component_index]
+        sir_state = _SlicedInverseRegressionState(
             columns=selected,
             target=target_name,
             n_components=n_components,
@@ -2228,7 +2228,7 @@ def _fit_feature_step(
                 "drop_missing": drop_missing,
                 "fit_policy": "fixed_fit_panel_target_aligned_rows",
             },
-            state=state,
+            state=sir_state,
         )
     if plan.method in {
         "variance_selection",
@@ -2270,7 +2270,7 @@ def _fit_feature_step(
             **params,
         )
         keep = selection.selected_columns
-        state = _FeatureSelectionState(
+        selection_state = _FeatureSelectionState(
             columns=selected,
             selected_columns=keep,
             target=target_name,
@@ -2302,7 +2302,7 @@ def _fit_feature_step(
                 "random_state": None if random_state is None else int(random_state),
                 "fit_policy": selection.fit_policy,
             },
-            state=state,
+            state=selection_state,
         )
     raise ValueError(f"unsupported feature method {plan.method!r}")
 
