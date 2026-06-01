@@ -2,6 +2,8 @@
 
 [Back to reference](index.md)
 
+## Purpose
+
 `macroforecast.preprocessing` turns a canonical pandas panel from
 [`macroforecast.data`](data.md) into a processed panel plus metadata. It accepts
 a `DataSpec`, `DataBundle`, `(panel, metadata)` tuple, or `pandas.DataFrame`,
@@ -20,6 +22,27 @@ Preprocessing fails closed on transformation metadata. If
 `ValueError`. If explicit transform-code keys do not match panel columns, it
 also raises. This prevents accidental no-op preprocessing.
 
+## Public Functions
+
+| Function | Purpose | Output |
+| --- | --- | --- |
+| `reprocess` | Run the full-sample preprocessing sequence. | `PreprocessedData` |
+| `preprocess_spec` | Store preprocessing choices for runner-fitted execution. | `PreprocessSpec` |
+| `custom_preprocess` | Apply one user callable directly to data. | `PreprocessedData` |
+| `custom_preprocess_step` | Build a custom step for `preprocess_spec(custom_steps=[...])`. | `dict` |
+| `plan` | Validate and summarize configured preprocessing choices without changing data. | `dict` |
+| `report` | Summarize a completed preprocessing result. | `dict` |
+| `apply_transform_codes` | Apply McCracken-Ng t-code formulas to matching panel columns. | `pandas.DataFrame` |
+| `fred_sd_transform_codes` | Expand FRED-SD variable/state t-code choices and suggestions. | `dict` or `(dict, DataFrame)` |
+| `handle_tcode_lag` | Keep or remove transform-induced leading missing rows. | `pandas.DataFrame` |
+| `handle_outliers` | Apply one outlier rule. | `pandas.DataFrame` |
+| `impute_missing` | Fill missing panel values with one imputation rule. | `pandas.DataFrame` |
+| `standardize_panel` | Fit and apply one full-panel scaling rule. | `pandas.DataFrame` |
+| `handle_frame_edges` | Keep, truncate, drop, or fill remaining unbalanced edges. | `pandas.DataFrame` |
+
+Low-level clean helpers are also public for exact single-operation use. They
+are listed in [Low-Level Clean Helpers](#low-level-clean-helpers).
+
 ## Public Flow
 
 ```python
@@ -34,7 +57,7 @@ panel = processed.panel
 metadata = processed.metadata
 ```
 
-## Public Contracts
+## Public Classes And Values
 
 | Symbol | Meaning |
 | --- | --- |
@@ -42,6 +65,45 @@ metadata = processed.metadata
 | `PreprocessInput` | Accepted direct preprocessing input type: `DataSpec`, `DataBundle`, `(panel, metadata)`, or `DataFrame`. |
 | `PreprocessSpec` | Runner-compatible fit/transform preprocessing contract. |
 | `FittedPreprocessor` | Fitted preprocessing state used by the runner for fit-window or fixed-reference policies. |
+| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | High-confidence package t-code suggestions for FRED-SD variables with national analogs. |
+| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | Broader provisional FRED-SD t-code suggestions. |
+
+## PreprocessedData
+
+```python
+macroforecast.preprocessing.PreprocessedData(
+    panel: pandas.DataFrame,
+    metadata: dict,
+    target: str | None = None,
+    targets: tuple[str, ...] = (),
+    horizons: tuple[int, ...] = (),
+    start: str | None = None,
+    end: str | None = None,
+    predictors = "all",
+    steps: tuple[dict, ...] = (),
+)
+```
+
+### Output Schema
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `panel` | `pandas.DataFrame` | Processed canonical date-indexed panel. |
+| `metadata` | `dict` | Input metadata plus preprocessing stages and transform/standardization state. |
+| `target`, `targets`, `horizons`, `start`, `end`, `predictors` | copied from `DataSpec` when supplied | Run-level data choices preserved for downstream stages. |
+| `steps` | `tuple[dict, ...]` | Ordered preprocessing step log. |
+
+### Methods
+
+| Method | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `attach(stage, values)` | `stage: str`, `values: Mapping` | `PreprocessedData` | Return a new object with one metadata stage added. |
+
+`PreprocessedData` also supports tuple unpacking:
+
+```python
+panel, metadata = processed
+```
 
 ## Default Order
 
@@ -227,6 +289,41 @@ to `forecasting.run(..., preprocessing_policy=...)`, not hidden inside the
 preprocessing spec.
 
 ```python
+macroforecast.preprocessing.preprocess_spec(
+    **options,
+) -> PreprocessSpec
+```
+
+### Input
+
+`**options` may include any `reprocess(...)` option except `data` and
+`metadata`. It also accepts:
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `custom_steps` | sequence or omitted | omitted | Custom preprocessing steps created by `custom_preprocess_step(...)`. |
+| `warn_metadata` | `bool` | `False` inside runner specs unless supplied | Whether to warn when input lacks `macroforecast.data` metadata. |
+
+Do not pass window timing, stage scope, or split choices here. Those belong to
+`forecasting.run(..., preprocessing_policy=...)`.
+
+### Output
+
+Returns `PreprocessSpec`.
+
+| Method | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `fit(data, metadata=None, policy="origin_available")` | preprocessing input | `FittedPreprocessor` | Fit preprocessing choices on a training/history panel. |
+| `fit_transform(data, metadata=None, policy="origin_available")` | preprocessing input | `PreprocessedData` | Fit and return the processed training panel. |
+| `to_dict()` | none | `dict` | JSON-ready preprocessing options. |
+| `to_metadata()` | none | `dict` | Compact runner metadata. |
+
+`FittedPreprocessor.transform(data, metadata=None, history=None, policy=None)`
+returns `PreprocessedData` for new rows. `policy="origin_available"` replays
+preprocessing on `history + data`; `policy="fit_window"` applies state fitted
+on the training window where supported.
+
+```python
 pre = mf.preprocessing.preprocess_spec(
     transform="official",
     outliers="iqr",
@@ -351,25 +448,30 @@ These helpers return `pandas.DataFrame` unless noted.
 Low-level callable variants are public for users who want one exact operation
 without the full `reprocess(...)` sequence.
 
-| Symbol | Meaning |
-| --- | --- |
-| `apply_tcode_transform` | Apply one McCracken-Ng t-code to one series. |
-| `iqr_outlier_clean` | IQR outlier rule used by `handle_outliers(method="iqr")`. |
-| `zscore_outlier_clean` | Z-score outlier rule used by `handle_outliers(method="zscore")`. |
-| `winsorize_clean` | Winsorization rule used by `handle_outliers(method="winsorize")`. |
-| `em_factor_impute_clean` | PCA-EM imputation used by `impute_missing(method="em_factor")`. |
-| `em_multivariate_impute_clean` | Multivariate EM imputation used by `impute_missing(method="em_multivariate")`. |
-| `mean_impute_clean` | Column-mean imputation. |
-| `forward_fill_clean` | Forward-fill imputation. |
-| `linear_interpolate_clean` | Time interpolation imputation. |
-| `fit_standardization_state` | Fit reusable scaling state. |
-| `apply_standardization_state` | Apply previously fitted scaling state. |
-| `standardize_clean` | One-shot panel standardization. |
-| `truncate_to_balanced_clean` | Keep the largest balanced sample. |
-| `drop_unbalanced_series_clean` | Drop series that keep unbalanced sample edges. |
-| `zero_fill_leading_clean` | Fill leading missing values with zero. |
-| `freq_align_quarterly_to_monthly_clean` | Low-level quarterly-to-monthly alignment helper. |
-| `freq_align_monthly_to_quarterly_clean` | Low-level monthly-to-quarterly alignment helper. |
+## Low-Level Clean Helpers
+
+These helpers accept a `pandas.DataFrame` and return a new `pandas.DataFrame`
+unless the output column says otherwise.
+
+| Function | Key options | Output | Meaning |
+| --- | --- | --- | --- |
+| `iqr_outlier_clean(panel, threshold=10.0, action="flag_as_nan")` | `threshold`, `action` | DataFrame | IQR outlier rule used by `handle_outliers(method="iqr")`. |
+| `zscore_outlier_clean(panel, threshold=3.0, action="flag_as_nan")` | `threshold`, `action` | DataFrame | Z-score outlier rule used by `handle_outliers(method="zscore")`. |
+| `winsorize_clean(panel, lower_quantile=0.01, upper_quantile=0.99)` | quantile bounds | DataFrame | Winsorization rule used by `handle_outliers(method="winsorize")`. |
+| `em_factor_impute_clean(panel, n_factors=8, max_iter=50, tol=1e-6, factor_selection="baing_p2", demean=2)` | EM factor controls | DataFrame | PCA-EM imputation used by `impute_missing(method="em_factor")`. |
+| `em_multivariate_impute_clean(panel, max_iter=20, tol=1e-4)` | EM controls | DataFrame | Multivariate EM imputation used by `impute_missing(method="em_multivariate")`. |
+| `mean_impute_clean(panel)` | none | DataFrame | Column-mean imputation. |
+| `forward_fill_clean(panel)` | none | DataFrame | Forward-fill imputation. |
+| `linear_interpolate_clean(panel)` | none | DataFrame | Time interpolation imputation. |
+| `truncate_to_balanced_clean(panel)` | none | DataFrame | Keep the largest balanced sample. |
+| `drop_unbalanced_series_clean(panel)` | none | DataFrame | Drop series that keep unbalanced sample edges. |
+| `zero_fill_leading_clean(panel)` | none | DataFrame | Fill leading missing values with zero. |
+| `fit_standardization_state(panel, method="zscore", ddof=0)` | scaling method | `dict` | Fit reusable scaling state. |
+| `apply_standardization_state(panel, state)` | fitted state | DataFrame | Apply previously fitted scaling state. |
+| `standardize_clean(panel, method="zscore", ddof=0)` | scaling method | DataFrame | One-shot panel standardization. |
+| `apply_tcode_transform(panel, tcode_map)` | t-code map | DataFrame | Apply McCracken-Ng t-code formulas to matching panel columns. |
+| `freq_align_quarterly_to_monthly_clean(panel, quarterly_columns, rule="step_backward")` | column list, rule | DataFrame | Low-level quarterly-to-monthly alignment helper. |
+| `freq_align_monthly_to_quarterly_clean(panel, monthly_columns, rule="quarterly_average")` | column list, rule | DataFrame | Low-level monthly-to-quarterly alignment helper. |
 
 ## plan
 
