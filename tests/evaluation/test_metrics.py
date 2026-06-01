@@ -25,6 +25,7 @@ def test_point_relative_and_direction_metrics() -> None:
     assert mf.metrics.mse(actual, model) == np.mean([0.0, 0.25, 0.25])
     assert mf.metrics.rmse(actual, model) == np.sqrt(mf.metrics.mse(actual, model))
     assert mf.metrics.mae(actual, model) == np.mean([0.0, 0.5, 0.5])
+    assert mf.metrics.bias(actual, model) == np.mean([0.0, -0.5, 0.5])
     assert mf.metrics.medae(actual, model) == 0.5
     assert np.isclose(mf.metrics.mape(actual, model), np.mean([0.0, 0.25, 0.125]) * 100.0)
     assert np.isfinite(mf.metrics.theil_u1(actual, model))
@@ -72,7 +73,7 @@ def test_forecast_table_evaluation_scores_variance_quantiles_and_benchmark() -> 
 
     out = mf.metrics.evaluate_forecasts(
         forecasts,
-        metrics=("mse", "rmse", "mae", "relative_mse", "r2_oos", "qlike"),
+        metrics=("mse", "rmse", "mae", "bias", "relative_mse", "r2_oos", "qlike"),
         benchmark_model="bench",
     )
     row = out.loc[out["model"] == "a"].iloc[0]
@@ -81,6 +82,7 @@ def test_forecast_table_evaluation_scores_variance_quantiles_and_benchmark() -> 
     assert out.attrs["macroforecast_metadata_schema"]["version"] == 1
     assert row["n"] == 3
     assert np.isclose(row["mse"], ((0.0**2 + 0.5**2 + 0.5**2) / 3.0))
+    assert np.isclose(row["bias"], np.mean([0.0, -0.5, -0.5]))
     assert np.isclose(row["relative_mse"], row["mse"] / (2.0 / 3.0))
     assert np.isclose(row["r2_oos"], 1.0 - row["relative_mse"])
     assert row["variance_n"] == 3
@@ -119,6 +121,7 @@ def test_forecast_result_evaluate_method_and_ranking() -> None:
 def test_get_metric_exposes_legacy_metric_names() -> None:
     assert mf.metrics.get_metric("msfe") is mf.metrics.mse
     assert mf.metrics.get_metric("validation_mse") is mf.metrics.mse
+    assert mf.metrics.get_metric("mean_error") is mf.metrics.bias
     assert mf.metrics.get_metric("relative_mse") is mf.metrics.relative_mse
     assert mf.metrics.get_metric("crps") is mf.metrics.crps
     assert mf.metrics.get_metric("qlike") is mf.metrics.qlike

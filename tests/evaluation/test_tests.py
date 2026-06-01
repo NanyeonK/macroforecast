@@ -12,16 +12,27 @@ import macroforecast as mf
 def test_equal_predictive_accuracy_callables_return_test_results() -> None:
     loss_a = pd.Series([0.2, 0.3, 0.1, 0.4, 0.2, 0.3])
     loss_b = pd.Series([0.4, 0.5, 0.2, 0.5, 0.3, 0.6])
+    error_a = np.sqrt(loss_a)
+    error_b = np.sqrt(loss_b)
 
     dm = mf.tests.dm_test(loss_a, loss_b, horizon=1)
     gw = mf.tests.gw_test(loss_a, loss_b, horizon=1)
     dmp = mf.tests.dmp_test([loss_a - loss_b, (loss_a - loss_b) * 0.5])
+    stacked = mf.tests.equal_predictive_tests(
+        loss_a,
+        loss_b,
+        tests=("dm", "gw", "dmp", "hn"),
+        error_a=error_a,
+        error_b=error_b,
+    )
 
     assert isinstance(dm, mf.tests.TestResult)
     assert dm.metadata["name"] == "Diebold-Mariano"
     assert gw.metadata["name"] == "Giacomini-White"
     assert dmp.n_obs == 12
     assert 0.0 <= dmp.p_value <= 1.0
+    assert set(stacked["test"]) == {"dm", "gw", "dmp", "hn"}
+    assert stacked.attrs["macroforecast_metadata_schema"]["kind"] == "equal_predictive_tests"
     dm_payload = json.loads(dm.to_json())
     assert dm_payload["metadata_schema"]["kind"] == "forecast_test_result"
     assert dm_payload["metadata_schema"]["version"] == 1
@@ -69,11 +80,19 @@ def test_nested_and_encompassing_callables_return_one_sided_results() -> None:
     enc_new = mf.tests.enc_new_test(loss_small, loss_large)
     enc_t = mf.tests.enc_t_test(loss_small, loss_large)
     hn = mf.tests.harvey_newbold_test(loss_small**0.5, loss_large**0.5)
+    stacked = mf.tests.nested_tests(
+        loss_small,
+        loss_large,
+        forecast_small=forecast_small,
+        forecast_large=forecast_large,
+    )
 
     assert cw.alternative == "one_sided"
     assert enc_new.metadata["name"] == "Enc-New"
     assert enc_t.metadata["name"] == "Enc-T"
     assert hn.metadata["name"] == "Harvey-Newbold"
+    assert set(stacked["test"]) == {"clark_west", "enc_new", "enc_t"}
+    assert stacked.attrs["macroforecast_metadata_schema"]["kind"] == "nested_tests"
 
 
 def test_direction_density_and_residual_diagnostics() -> None:
@@ -84,7 +103,15 @@ def test_direction_density_and_residual_diagnostics() -> None:
 
     pt = mf.tests.pesaran_timmermann_test(y_true, y_pred)
     hm = mf.tests.henriksson_merton_test(y_true, y_pred)
-    density = mf.tests.density_interval_tests(pit, alpha=0.1)
+    density = mf.tests.density_interval_tests(pit, alpha=0.1, n_bins=5, pit_lag=1)
+    histogram = mf.tests.pit_histogram(pit, n_bins=5)
+    pit_acf = mf.tests.pit_autocorrelation_test(pit, lag=1)
+    interval = mf.tests.interval_coverage_test(
+        y_true=[1.0, 2.0, 3.0, 4.0],
+        lower=[0.5, 1.5, 2.5, 3.5],
+        upper=[1.5, 2.5, 3.5, 4.5],
+        alpha=0.1,
+    )
     diagnostics = mf.tests.residual_diagnostics(residuals)
 
     assert pt.metadata["method"] == "pesaran_timmermann"
@@ -93,6 +120,11 @@ def test_direction_density_and_residual_diagnostics() -> None:
         density
     )
     assert density["metadata_schema"]["kind"] == "density_interval_tests"
+    assert len(density["pit_histogram"]) == 5
+    assert histogram.attrs["macroforecast_metadata_schema"]["kind"] == "pit_histogram"
+    assert pit_acf.metadata["name"] == "PIT autocorrelation"
+    assert interval["metadata_schema"]["kind"] == "interval_coverage_test"
+    assert interval["coverage_rate"] == 1.0
     assert set(diagnostics["test"]) == {
         "ljung_box_q",
         "arch_lm",

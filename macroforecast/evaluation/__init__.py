@@ -9,7 +9,9 @@ from .report import (
     EvaluationReport,
     aggregate_scores,
     benchmark_comparison,
+    error_decomposition,
     evaluate_report,
+    filter_oos_period,
     regime_scores,
 )
 
@@ -23,7 +25,9 @@ __all__ = [
     "EvaluationReport",
     "aggregate_scores",
     "benchmark_comparison",
+    "error_decomposition",
     "evaluate_report",
+    "filter_oos_period",
     "metrics",
     "regime_scores",
     "tests",

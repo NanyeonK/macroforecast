@@ -37,9 +37,9 @@ The importable surface is intentionally narrow and pandas-first.
 | `from_cutoffs`, `estimation_expanding`, `estimation_rolling`, `estimation_fixed`, `val_last_block`, `val_poos`, `val_expanding`, `val_rolling_blocks`, `val_blocked_kfold`, `test_origins`, `alignment_drop_incomplete`, `alignment_keep_missing` | `macroforecast.window` | Component window builders. |
 | `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold` | `macroforecast.window` | Shortcut temporal window specs. |
 | `stage_policy`, `custom_stage_policy`, `stage_index`, `stage_panel`, `last_block_split`, `poos_split`, `expanding_split`, `rolling_blocks_split`, `blocked_kfold_split`, `split_table`, `normalize_window_name` | `macroforecast.window` | Stage timing and train/val split inspection. |
-| `metrics` | `macroforecast.metrics` | Forecast scoring namespace. Use `mf.metrics.rmse`, not `mf.rmse`. |
-| `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`. Use `mf.tests.dm_test`, not `mf.dm_test`. |
-| `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, benchmark comparisons, and regime scoring. |
+| `metrics` | `macroforecast.metrics` | Forecast scoring namespace, including `mf.metrics.bias`. Use `mf.metrics.rmse`, not `mf.rmse`. |
+| `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`, `mf.tests.equal_predictive_tests`, interval coverage, and PIT diagnostics. Use `mf.tests.dm_test`, not `mf.dm_test`. |
+| `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `filter_oos_period`, `error_decomposition`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, OOS filtering, error decomposition, benchmark comparisons, and regime scoring. |
 | `evaluation` | `macroforecast.evaluation` | Evaluation namespace exposing report functions plus `metrics` and `tests`; raw metric/test functions are not re-exported directly from it. |
 | `SearchSpec`, `SearchResult`, `SearchError`, `search_spec`, `select_params` | `macroforecast.selection` | Parameter selection over a supplied window and metric. |
 | `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search`, `custom_search` | `macroforecast.selection` | Search specification builders. |
@@ -69,7 +69,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `macroforecast.forecast_diagnostic` | Compatibility alias for `macroforecast.forecast_analysis`. |
 | `macroforecast.metrics` | Scoring metrics, forecast ranking, and metric resolution. |
 | `macroforecast.tests` | Forecast-comparison tests and residual diagnostics. |
-| `macroforecast.evaluation` | Evaluation reports, benchmark comparisons, regime scoring, and namespace links to `metrics` and `tests`. |
+| `macroforecast.evaluation` | Evaluation reports, OOS filtering, error decomposition, benchmark comparisons, regime scoring, and namespace links to `metrics` and `tests`. |
 | `macroforecast.interpretation` | Model-native importance and model-agnostic effects. |
 | `macroforecast.output` | Artifact writing and provenance collection. |
 | `macroforecast.data_summary` | Single-panel diagnostics and summaries. |

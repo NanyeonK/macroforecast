@@ -19,7 +19,7 @@ The public API contract is:
 | --- | --- | --- |
 | `macroforecast.metrics` | Forecast scoring, ranking, metric resolution. | Statistical comparison tests. |
 | `macroforecast.tests` | Forecast-comparison tests, density diagnostics, residual diagnostics. | General scoring tables. |
-| `macroforecast.evaluation` | Multi-slice evaluation reports, benchmark comparisons, and regime scoring. | Raw metric functions or statistical test functions. |
+| `macroforecast.evaluation` | Multi-slice evaluation reports, OOS-period filtering, benchmark comparisons, regime scoring, and error decomposition. | Raw metric functions or statistical test functions. |
 
 ## Public Flow
 
@@ -49,6 +49,8 @@ macroforecast.evaluation.evaluate_report(
     rank_by=None,
     benchmark_model=None,
     benchmark_metrics=("mse", "mae", "relative_mse", "relative_mae", "mse_reduction", "r2_oos"),
+    oos_start=None,
+    oos_end=None,
     regimes=None,
     regime_column="regime",
     target_column="target",
@@ -56,6 +58,8 @@ macroforecast.evaluation.evaluate_report(
     time_frequency=None,
     time_column="date",
     time_bucket_column="time_bucket",
+    include_decomposition=False,
+    decomposition_by=None,
     include_combined=True,
 ) -> EvaluationReport
 ```
@@ -72,10 +76,13 @@ macroforecast.evaluation.evaluate_report(
 | `rank_by` | sequence or `None` | `score_by` without `model` | Ranking groups. |
 | `benchmark_model` | str or `None` | `None` | Model name used for relative metrics and benchmark table. |
 | `benchmark_metrics` | sequence | default benchmark metrics | Metrics for `benchmark_comparison`. |
+| `oos_start`, `oos_end` | date-like or `None` | `None` | Restrict forecast rows before scoring. Dates are inclusive. |
 | `regimes` | mapping, Series, str, or `None` | `None` | Date-to-regime labels, existing regime column name, or no extra regime attachment. |
 | `regime_column` | str | `"regime"` | Column used for regime scoring. |
 | `target_column`, `state_column` | str | `"target"`, `"state"` | Optional slice columns when present. |
 | `time_frequency` | str or `None` | `None` | Pandas period frequency such as `"M"`, `"Q"`, `"A"` for time-bucket aggregation. |
+| `include_decomposition` | bool | `False` | Add MSE decomposition into squared bias and residual variance. |
+| `decomposition_by` | sequence or `None` | `score_by` | Grouping used by `error_decomposition`. |
 | `include_combined` | bool | `True` | Include forecast-combination rows. |
 
 Custom scoring belongs in the `metrics` argument:
@@ -109,6 +116,7 @@ Returns `EvaluationReport`.
 | `aggregations` | `dict[str, DataFrame]` | Extra metric tables by requested or auto-discovered slices. |
 | `benchmark` | `DataFrame` or `None` | Candidate rows relative to `benchmark_model`. |
 | `regime` | `DataFrame` or `None` | Regime-specific metric table when regime labels are available. |
+| `decomposition` | `DataFrame` or `None` | Error decomposition table when requested. |
 | `metadata` | `dict` | Input metadata plus compact `evaluation_report` stage. |
 
 `EvaluationReport.to_dict()` serializes all tables into JSON-ready records.
@@ -146,6 +154,45 @@ tables = mf.evaluation.aggregate_scores(
 
 All requested columns must exist. This function fails loudly instead of silently
 dropping unavailable dimensions.
+
+## filter_oos_period
+
+```python
+macroforecast.evaluation.filter_oos_period(
+    forecasts,
+    *,
+    start=None,
+    end=None,
+    date_column="date",
+) -> pandas.DataFrame
+```
+
+Returns forecast rows inside an inclusive out-of-sample date interval. This is
+the callable replacement for an `oos_period` setting. Use it directly when you
+want to score only a subsample, or pass `oos_start`/`oos_end` to
+`evaluate_report(...)`.
+
+## error_decomposition
+
+```python
+macroforecast.evaluation.error_decomposition(
+    forecasts,
+    *,
+    by=("model", "horizon"),
+    actual="actual",
+    prediction="prediction",
+) -> pandas.DataFrame
+```
+
+Decomposes MSE within each group as:
+
+```text
+mse = bias_squared + residual_variance
+```
+
+where `bias` is the mean residual `actual - prediction`. Output columns
+include `n`, `mse`, `bias`, `bias_squared`, `residual_variance`,
+`bias_share`, and `variance_share`.
 
 ## benchmark_comparison
 
@@ -190,5 +237,5 @@ macroforecast.evaluation.regime_scores(
 | Question | Use |
 | --- | --- |
 | One metric value or one metric table | `mf.metrics` |
-| Multi-slice report with ranking, benchmark, regime, target/state/time aggregation | `mf.evaluation` |
+| Multi-slice report with ranking, OOS filtering, benchmark, regime, target/state/time aggregation, decomposition | `mf.evaluation` |
 | Diebold-Mariano, Clark-West, MCS, residual tests | `mf.tests` |

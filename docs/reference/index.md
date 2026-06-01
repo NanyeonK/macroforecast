@@ -16,9 +16,9 @@ Function-level reference for the clean public Python API.
 | Selection | [Selection](selection.md) | Hyperparameter search specs and parameter selection. |
 | Forecasting | [Forecasting](forecasting.md) | Windowed runner and forecast combination. |
 | Forecast Analysis | [Forecast Analysis](forecast_analysis.md) | Forecast-vs-actual, scale, residual, rolling-loss, training-loss, tuning, coefficient, DFM, ensemble-weight, and stage-update analysis. |
-| Metrics | [Metrics](metrics.md) | Scoring metrics, ranking, and metric resolution. |
-| Tests | [Tests](tests.md) | Forecast-comparison tests and residual diagnostics. |
-| Evaluation | [Evaluation Namespace](evaluation.md) | Thin wrapper exposing `metrics` and `tests`. |
+| Metrics | [Metrics](metrics.md) | Scoring metrics, bias, ranking, and metric resolution. |
+| Tests | [Tests](tests.md) | Forecast-comparison tests, interval/PIT diagnostics, and residual diagnostics. |
+| Evaluation | [Evaluation Namespace](evaluation.md) | Reports, OOS filtering, error decomposition, and links to `metrics`/`tests`. |
 | Interpretation | [Interpretation](interpretation.md) | Model-native importance and model-agnostic effect summaries. |
 | Output | [Output](output.md) | Artifact writing and schema-aware provenance manifest. |
 | Data Summary | [Data Summary](data_summary.md) | One-panel summary tables. |

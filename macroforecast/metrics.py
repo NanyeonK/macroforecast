@@ -45,6 +45,13 @@ def mae(y_true: Any, y_pred: Any) -> float:
     return float(np.mean(np.abs(truth - pred)))
 
 
+def bias(y_true: Any, y_pred: Any) -> float:
+    """Mean forecast residual, computed as ``actual - prediction``."""
+
+    truth, pred = _aligned_values(y_true, y_pred)
+    return float(np.mean(truth - pred))
+
+
 def medae(y_true: Any, y_pred: Any) -> float:
     """Median absolute error."""
 
@@ -423,6 +430,9 @@ _METRICS: dict[str, Callable[..., float]] = {
     "validation_rmse": rmse,
     "mae": mae,
     "validation_mae": mae,
+    "bias": bias,
+    "mean_error": bias,
+    "me": bias,
     "medae": medae,
     "median_absolute_error": medae,
     "mape": mape,
@@ -633,6 +643,7 @@ def _level_label(level: float) -> str:
 
 __all__ = [
     "MetricLike",
+    "bias",
     "coverage_rate",
     "crps",
     "evaluate_forecasts",

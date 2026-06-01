@@ -46,7 +46,7 @@ Forecast-table behavior:
 
 | Available input | Added scores |
 | --- | --- |
-| `actual`, `prediction` | Requested point metrics such as `mse`, `rmse`, `mae`. |
+| `actual`, `prediction` | Requested point metrics such as `mse`, `rmse`, `mae`, `bias`. |
 | `benchmark_model` plus benchmark rows | Relative metrics such as `relative_mse`, `relative_mae`, `mse_reduction`, `r2_oos`. |
 | `previous_actual` | `theil_u2` and `success_ratio`. |
 | `variance_prediction` | `gaussian_nll`, `crps`, and requested `qlike`. |
@@ -88,7 +88,8 @@ macroforecast.metrics.get_metric(metric)
 Input: a metric name or callable.
 
 Output: the resolved callable. Name aliases include `msfe -> mse`,
-`validation_mse -> mse`, and `validation_rmse -> rmse`.
+`validation_mse -> mse`, `validation_rmse -> rmse`, and
+`mean_error -> bias`.
 
 Custom metrics do not need registration. Pass a callable directly anywhere a
 metric is accepted:
@@ -120,6 +121,7 @@ observations, and return a single `float`.
 | `mse` | `mse(y_true, y_pred)` | Mean squared error. |
 | `rmse` | `rmse(y_true, y_pred)` | Root mean squared error. |
 | `mae` | `mae(y_true, y_pred)` | Mean absolute error. |
+| `bias` | `bias(y_true, y_pred)` | Mean residual `actual - prediction`. |
 | `medae` | `medae(y_true, y_pred)` | Median absolute error. |
 | `mape` | `mape(y_true, y_pred, *, eps=1e-10)` | Mean absolute percentage error on the 0-100 scale. |
 | `smape` | `smape(y_true, y_pred, *, eps=1e-10)` | Symmetric MAPE on the 0-100 scale. |

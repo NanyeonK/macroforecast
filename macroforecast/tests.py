@@ -409,12 +409,20 @@ def henriksson_merton_test(*args: Any, **kwargs: Any) -> TestResult:
     return directional_accuracy_test(*args, **kwargs)
 
 
-def density_interval_tests(pit: Any, *, alpha: float = 0.05) -> dict[str, Any]:
+def density_interval_tests(
+    pit: Any,
+    *,
+    alpha: float = 0.05,
+    n_bins: int = 10,
+    pit_lag: int = 1,
+) -> dict[str, Any]:
     """Berkowitz, KS, Kupiec, Christoffersen, and DQ tests for PIT values."""
 
     from scipy import stats as _stats
 
     _validate_alpha(alpha)
+    n_bins = _validate_positive_int(n_bins, "n_bins")
+    pit_lag = _validate_positive_int(pit_lag, "pit_lag")
     values = np.clip(pd.Series(pit).dropna().to_numpy(dtype=float), 1e-9, 1 - 1e-9)
     if values.size == 0:
         return {
@@ -424,6 +432,7 @@ def density_interval_tests(pit: Any, *, alpha: float = 0.05) -> dict[str, Any]:
             },
             "status": "empty",
             "n_obs": 0,
+            "n_bins": int(n_bins),
         }
     z = _stats.norm.ppf(values)
     z_mean = z.mean()
@@ -489,8 +498,117 @@ def density_interval_tests(pit: Any, *, alpha: float = 0.05) -> dict[str, Any]:
         "kupiec_pof": kupiec,
         "christoffersen_independence": christoffersen,
         "engle_manganelli_dq": dq,
+        "pit_histogram": pit_histogram(values, n_bins=n_bins).to_dict(orient="records"),
+        "pit_autocorrelation": pit_autocorrelation_test(values, lag=pit_lag, alpha=alpha).to_dict(),
         "n_obs": int(values.size),
+        "n_bins": int(n_bins),
     })
+
+
+def pit_histogram(pit: Any, *, n_bins: int = 10) -> pd.DataFrame:
+    """Return PIT histogram counts against a uniform reference."""
+
+    n_bins = _validate_positive_int(n_bins, "n_bins")
+    values = np.clip(pd.Series(pit).dropna().to_numpy(dtype=float), 0.0, 1.0)
+    counts, edges = np.histogram(values, bins=n_bins, range=(0.0, 1.0))
+    expected = values.size / n_bins if n_bins else 0.0
+    rows = [
+        {
+            "bin": int(idx + 1),
+            "lower": float(edges[idx]),
+            "upper": float(edges[idx + 1]),
+            "count": int(count),
+            "expected_count": float(expected),
+            "deviation": float(count - expected),
+        }
+        for idx, count in enumerate(counts)
+    ]
+    out = pd.DataFrame(rows)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "pit_histogram",
+        "version": 1,
+        "n_bins": int(n_bins),
+        "n_obs": int(values.size),
+    }
+    return out
+
+
+def pit_autocorrelation_test(
+    pit: Any,
+    *,
+    lag: int = 1,
+    alpha: float = 0.05,
+) -> TestResult:
+    """Normal approximation test for serial dependence in PIT values."""
+
+    _validate_alpha(alpha)
+    lag = _validate_positive_int(lag, "lag")
+    values = pd.Series(pit).astype(float).dropna().to_numpy(dtype=float)
+    n = int(values.size)
+    if n <= lag + 2:
+        return TestResult(None, None, False, "two_sided", None, n, {"name": "PIT autocorrelation", "lag": lag})
+    left = values[lag:]
+    right = values[:-lag]
+    if np.std(left) == 0.0 or np.std(right) == 0.0:
+        return TestResult(None, None, False, "two_sided", None, n, {"name": "PIT autocorrelation", "lag": lag})
+    rho = float(np.corrcoef(left, right)[0, 1])
+    statistic = rho * np.sqrt(n - lag)
+    p_value = _normal_two_sided_p(statistic)
+    return TestResult(
+        statistic=float(statistic),
+        p_value=p_value,
+        decision=p_value is not None and p_value < alpha,
+        alternative="two_sided",
+        correction_policy="normal_approximation",
+        n_obs=n,
+        metadata={"name": "PIT autocorrelation", "lag": lag, "autocorrelation": rho},
+    )
+
+
+def interval_coverage_test(
+    y_true: Any,
+    lower: Any,
+    upper: Any,
+    *,
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Kupiec and Christoffersen coverage diagnostics for forecast intervals."""
+
+    _validate_alpha(alpha)
+    frame = _aligned_frame(y_true, lower, upper, names=("truth", "lower", "upper"))
+    truth = frame["truth"].to_numpy(dtype=float)
+    lo = frame["lower"].to_numpy(dtype=float)
+    hi = frame["upper"].to_numpy(dtype=float)
+    misses = ((truth < lo) | (truth > hi)).astype(int)
+    coverage = float(1.0 - misses.mean()) if misses.size else None
+    kupiec = _kupiec_test(misses, alpha)
+    christoffersen = _christoffersen_independence_test(misses, alpha)
+    conditional_stat = None
+    conditional_p = None
+    if kupiec.get("lr_statistic") is not None and christoffersen.get("lr_statistic") is not None:
+        from scipy import stats as _stats
+
+        conditional_stat = float(kupiec["lr_statistic"] + christoffersen["lr_statistic"])
+        conditional_p = float(1.0 - _stats.chi2.cdf(conditional_stat, df=2))
+    return _json_ready(
+        {
+            "metadata_schema": {
+                "kind": "interval_coverage_test",
+                "version": 1,
+            },
+            "coverage_rate": coverage,
+            "expected_coverage": float(1.0 - alpha),
+            "miss_rate": None if coverage is None else float(1.0 - coverage),
+            "n_obs": int(misses.size),
+            "kupiec_pof": kupiec,
+            "christoffersen_independence": christoffersen,
+            "christoffersen_conditional_coverage": {
+                "lr_statistic": conditional_stat,
+                "p_value": conditional_p,
+                "reject": bool(conditional_p is not None and conditional_p < alpha),
+            },
+        }
+    )
 
 
 def residual_diagnostics(
@@ -526,6 +644,90 @@ def residual_diagnostics(
         "row_unit": "test",
     }
     return frame
+
+
+def equal_predictive_tests(
+    loss_a: Any,
+    loss_b: Any,
+    *,
+    tests: Sequence[str] = ("dm", "gw", "dmp"),
+    error_a: Any | None = None,
+    error_b: Any | None = None,
+    horizon: int = 1,
+    correction: str = "hln",
+    kernel: str = "newey_west",
+    alpha: float = 0.05,
+) -> pd.DataFrame:
+    """Run multiple equal-predictive-ability tests and stack results."""
+
+    rows: list[dict[str, Any]] = []
+    for name in tests:
+        key = str(name).lower().replace("-", "_")
+        if key in {"dm", "dm_test", "diebold_mariano"}:
+            result = dm_test(loss_a, loss_b, horizon=horizon, correction=correction, kernel=kernel, alpha=alpha)
+        elif key in {"gw", "gw_test", "giacomini_white"}:
+            result = gw_test(loss_a, loss_b, horizon=horizon, correction=correction, kernel=kernel, alpha=alpha)
+        elif key in {"dmp", "dmp_test", "diebold_mariano_pesaran"}:
+            diff = pd.Series(loss_a).sub(pd.Series(loss_b))
+            result = dmp_test(diff, kernel=kernel, alpha=alpha)
+        elif key in {"hn", "harvey_newbold", "harvey_newbold_test"}:
+            if error_a is None or error_b is None:
+                raise ValueError("error_a and error_b are required for harvey_newbold in equal_predictive_tests")
+            result = harvey_newbold_test(error_a, error_b, horizon=horizon, kernel=kernel, alpha=alpha)
+        else:
+            raise ValueError(f"unknown equal predictive test {name!r}")
+        rows.append(_test_result_row(result, requested_name=str(name)))
+    out = pd.DataFrame(rows)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "equal_predictive_tests",
+        "version": 1,
+        "tests": [str(name) for name in tests],
+    }
+    return out
+
+
+def nested_tests(
+    loss_small: Any,
+    loss_large: Any,
+    *,
+    forecast_small: Any | None = None,
+    forecast_large: Any | None = None,
+    tests: Sequence[str] = ("clark_west", "enc_new", "enc_t"),
+    horizon: int = 1,
+    kernel: str = "newey_west",
+    alpha: float = 0.05,
+) -> pd.DataFrame:
+    """Run multiple nested-model forecast tests and stack results."""
+
+    rows: list[dict[str, Any]] = []
+    for name in tests:
+        key = str(name).lower().replace("-", "_")
+        if key in {"clark_west", "cw", "cw_test"}:
+            if forecast_small is None or forecast_large is None:
+                raise ValueError("forecast_small and forecast_large are required for clark_west in nested_tests")
+            result = clark_west_test(
+                loss_small,
+                loss_large,
+                forecast_small,
+                forecast_large,
+                horizon=horizon,
+                kernel=kernel,
+                alpha=alpha,
+            )
+        elif key in {"enc_new", "enc_new_test"}:
+            result = enc_new_test(loss_small, loss_large, horizon=horizon, kernel=kernel, alpha=alpha)
+        elif key in {"enc_t", "enc_t_test"}:
+            result = enc_t_test(loss_small, loss_large, horizon=horizon, kernel=kernel, alpha=alpha)
+        else:
+            raise ValueError(f"unknown nested test {name!r}")
+        rows.append(_test_result_row(result, requested_name=str(name)))
+    out = pd.DataFrame(rows)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "nested_tests",
+        "version": 1,
+        "tests": [str(name) for name in tests],
+    }
+    return out
 
 
 def conditional_predictive_ability_test(
@@ -800,6 +1002,20 @@ def _replace_metadata(result: TestResult, **metadata: Any) -> TestResult:
         result.n_obs,
         merged,
     )
+
+
+def _test_result_row(result: TestResult, *, requested_name: str) -> dict[str, Any]:
+    return {
+        "test": requested_name,
+        "name": result.metadata.get("name", requested_name),
+        "statistic": result.statistic,
+        "p_value": result.p_value,
+        "decision": result.decision,
+        "alternative": result.alternative,
+        "correction_policy": result.correction_policy,
+        "n_obs": result.n_obs,
+        "metadata": dict(result.metadata),
+    }
 
 
 def _coerce_custom_test_output(
@@ -1304,13 +1520,18 @@ __all__ = [
     "directional_accuracy_test",
     "dm_test",
     "dmp_test",
+    "equal_predictive_tests",
     "enc_new_test",
     "enc_t_test",
     "gw_test",
     "harvey_newbold_test",
     "henriksson_merton_test",
     "hn_test",
+    "interval_coverage_test",
     "model_confidence_set",
+    "nested_tests",
     "pesaran_timmermann_test",
+    "pit_autocorrelation_test",
+    "pit_histogram",
     "residual_diagnostics",
 ]

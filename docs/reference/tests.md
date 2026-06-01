@@ -140,6 +140,27 @@ macroforecast.tests.dmp_test(
 Input: one loss-difference series or a sequence of loss-difference series.
 Output: `TestResult` for a stacked Diebold-Mariano-Pesaran-style joint test.
 
+### equal_predictive_tests
+
+```python
+macroforecast.tests.equal_predictive_tests(
+    loss_a,
+    loss_b,
+    *,
+    tests=("dm", "gw", "dmp"),
+    error_a=None,
+    error_b=None,
+    horizon=1,
+    correction="hln",
+    kernel="newey_west",
+    alpha=0.05,
+) -> pandas.DataFrame
+```
+
+Runs multiple equal-predictive-ability tests and stacks one row per test.
+Supported names are `dm`, `gw`, `dmp`, and `hn`. `hn` requires `error_a` and
+`error_b` because Harvey-Newbold is an encompassing test on forecast errors.
+
 ### harvey_newbold_test
 
 ```python
@@ -198,6 +219,26 @@ macroforecast.tests.enc_t_test(loss_small, loss_large, *, horizon=1)
 
 Input: nested-model loss series. Output: one-sided `TestResult`.
 
+### nested_tests
+
+```python
+macroforecast.tests.nested_tests(
+    loss_small,
+    loss_large,
+    *,
+    forecast_small=None,
+    forecast_large=None,
+    tests=("clark_west", "enc_new", "enc_t"),
+    horizon=1,
+    kernel="newey_west",
+    alpha=0.05,
+) -> pandas.DataFrame
+```
+
+Runs multiple nested-model tests and stacks one row per test. Clark-West
+requires `forecast_small` and `forecast_large`; `enc_new` and `enc_t` need only
+the nested-model loss series.
+
 ## Directional Accuracy Tests
 
 ### directional_accuracy_test
@@ -228,13 +269,58 @@ Aliases:
 ### density_interval_tests
 
 ```python
-macroforecast.tests.density_interval_tests(pit, *, alpha=0.05)
+macroforecast.tests.density_interval_tests(
+    pit,
+    *,
+    alpha=0.05,
+    n_bins=10,
+    pit_lag=1,
+)
 ```
 
 Input: probability integral transform values. Output: JSON-ready dictionary
 with `metadata_schema.kind="density_interval_tests"` plus Berkowitz, KS,
 Kupiec POF, Christoffersen independence, and Engle-Manganelli DQ diagnostics
-when the sample is large enough.
+when the sample is large enough. The output also includes a PIT histogram and
+a PIT autocorrelation test.
+
+### pit_histogram
+
+```python
+macroforecast.tests.pit_histogram(pit, *, n_bins=10) -> pandas.DataFrame
+```
+
+Returns one row per PIT histogram bin with observed count, expected count under
+uniformity, and deviation.
+
+### pit_autocorrelation_test
+
+```python
+macroforecast.tests.pit_autocorrelation_test(
+    pit,
+    *,
+    lag=1,
+    alpha=0.05,
+) -> TestResult
+```
+
+Runs a normal-approximation test for serial dependence in PIT values.
+
+### interval_coverage_test
+
+```python
+macroforecast.tests.interval_coverage_test(
+    y_true,
+    lower,
+    upper,
+    *,
+    alpha=0.05,
+) -> dict
+```
+
+Runs Kupiec POF, Christoffersen independence, and combined conditional
+coverage diagnostics for forecast intervals. `alpha` is the expected
+non-coverage rate, so a 90% interval uses `alpha=0.10`.
 
 ## Conditional Predictive Ability
 
