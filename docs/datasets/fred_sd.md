@@ -16,6 +16,11 @@ the database as state-level monthly and quarterly observations. The package
 loads the official Data by Series workbook and infers each column's native
 frequency from its observed dates.
 
+This page is intentionally kept separate from the national FRED-MD/FRED-QD
+pages. FRED-SD needs its own audit because state-series frequencies and edge
+cases can differ by variable and state, including weekly or otherwise
+non-monthly/non-quarterly observed spacing in raw files.
+
 The current official workbook checked during this implementation pass had:
 
 | Native frequency | Number of state-series columns |
@@ -188,39 +193,18 @@ metadata. The provenance table uses `suggestion_confidence` to distinguish:
 | `medium` | Built-in national-analog suggestion with weaker match. |
 | `none` | No t-code was assigned. |
 
-## Combined With National Data
+## Related Combined Loaders
 
-Use FRED-SD alone when the analysis only needs state-level variables. Use a
-combined loader when national controls should be attached.
+Use FRED-SD alone when the analysis only needs state-level variables. Combined
+national/state loaders are documented separately:
 
-Monthly state analysis:
+- [FRED-MD + FRED-SD](fred_md_sd.md) for monthly state analysis with national controls.
+- [FRED-QD + FRED-SD](fred_qd_sd.md) for quarterly state analysis with national controls.
 
-```python
-bundle = mf.data.load_fred_md_sd(
-    states=["CA", "TX"],
-    variables=["UR", "ICLAIMS", "NQGSP"],
-)
-```
-
-Quarterly state analysis:
-
-```python
-bundle = mf.data.load_fred_qd_sd(
-    states=["CA", "TX"],
-    variables=["UR", "NQGSP"],
-)
-```
-
-If FRED-SD native frequencies do not match the combined panel frequency, the
-data module emits `UserWarning` and records the conversion in
-`metadata["frequency_conversion_warnings"]`.
-
-Examples:
-
-- `fred_md+fred_sd` monthly panel with quarterly `NQGSP_CA`: quarterly to
-  monthly using `quarterly_to_monthly`.
-- `fred_qd+fred_sd` quarterly panel with monthly `UR_CA`: monthly to quarterly
-  using `monthly_to_quarterly`.
+The FRED-SD frequency contract needs a separate audit because state series can
+have different observed frequencies and edge cases. That audit should decide
+how monthly, quarterly, weekly, and unknown-frequency state series are exposed
+in loader metadata and downstream alignment.
 
 ## Example
 

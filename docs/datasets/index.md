@@ -9,7 +9,7 @@ two combined data loaders.
 | --- | --- | --- | --- |
 | FRED-MD | `mf.data.load_fred_md()` | Monthly national macro panel | Monthly targets and monthly national controls. |
 | FRED-QD | `mf.data.load_fred_qd()` | Quarterly national macro panel | Quarterly targets and quarterly national controls. |
-| FRED-SD | `mf.data.load_fred_sd()` | State-level mixed monthly/quarterly panel | State-level predictors, targets, or controls. |
+| FRED-SD | `mf.data.load_fred_sd()` | State-level mixed-frequency panel | State-level predictors, targets, or controls. |
 | FRED-MD + FRED-SD | `mf.data.load_fred_md_sd()` | Combined monthly panel by default | Monthly state analysis with national controls. |
 | FRED-QD + FRED-SD | `mf.data.load_fred_qd_sd()` | Combined quarterly panel by default | Quarterly state analysis with national controls. |
 
@@ -22,12 +22,9 @@ Dataset-specific pages live under this FRED Datasets section.
 fred_md
 fred_qd
 fred_sd
+fred_md_sd
+fred_qd_sd
 ```
-
-## Source Pages
-
-- FRED-MD and FRED-QD: <https://www.stlouisfed.org/research/economists/mccracken/fred-databases>
-- FRED-SD: <https://www.stlouisfed.org/research/economists/owyang/fred-sd>
 
 ## Loader Boundary
 
@@ -79,3 +76,11 @@ bundle.metadata["frequency_conversion_warnings"]
 
 This lets users inspect exactly which variables changed frequency and which
 rule was used.
+
+## Official URLs
+
+| Dataset | Official page | Direct current source used by package |
+| --- | --- | --- |
+| FRED-MD | <https://www.stlouisfed.org/research/economists/mccracken/fred-databases> | <https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv> |
+| FRED-QD | <https://www.stlouisfed.org/research/economists/mccracken/fred-databases> | <https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/current.csv> |
+| FRED-SD | <https://www.stlouisfed.org/research/economists/owyang/fred-sd> | The loader resolves the latest official "Data by Series" workbook from the FRED-SD page. |

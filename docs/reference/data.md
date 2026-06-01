@@ -89,7 +89,6 @@ Every loader writes a metadata dictionary with these common keys.
 | Key | Type | Meaning |
 | --- | --- | --- |
 | `dataset` | `str` | Dataset identifier such as `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`. |
-| `source_family` | `str` | Source family. Official loaders use `fred-md`, `fred-qd`, `fred-sd`, or `combined`. |
 | `frequency` | `str` | Loader-level frequency label: `monthly`, `quarterly`, `state_monthly`, `mixed`, or the chosen combined frequency. |
 | `version_mode` | `str` | `current`, `vintage`, or `mixed` for combined inputs with different modes. |
 | `vintage` | `str` or `None` | Requested vintage label in `YYYY-MM` form, or `None` for current data. |
@@ -103,6 +102,7 @@ Combined bundles add:
 
 | Key | Type | Meaning |
 | --- | --- | --- |
+| `source_family` | `str` | Combined-source label currently set to `"combined"`. |
 | `combined_sources` | `list[dict]` | Full metadata dictionaries from the source bundles. |
 | `source_by_column` | `dict[str, str]` | Source dataset for each output column. |
 | `native_frequency_by_column` | `dict[str, str]` | Original frequency for each output column before alignment. |
@@ -187,6 +187,8 @@ CSV transform row is parsed into `metadata["transform_codes"]` and
 `panel.attrs["macroforecast_transform_codes"]`.
 
 See [FRED-MD](../datasets/fred_md.md) for dataset-specific details.
+See [FRED-MD + FRED-SD](../datasets/fred_md_sd.md) for the combined monthly
+national/state loader.
 
 ## load_fred_qd
 
@@ -207,6 +209,8 @@ into `metadata["transform_codes"]` and
 `panel.attrs["macroforecast_transform_codes"]`.
 
 See [FRED-QD](../datasets/fred_qd.md) for dataset-specific details.
+See [FRED-QD + FRED-SD](../datasets/fred_qd_sd.md) for the combined quarterly
+national/state loader.
 
 ## load_fred_sd
 
@@ -236,8 +240,10 @@ adds `panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]`, which
 records each column's state, FRED-SD variable, observed date range, non-missing
 count, and native frequency inferred from the official series workbook.
 
-See [FRED-SD](../datasets/fred_sd.md) for monthly/quarterly series details and t-code
-limitations.
+See [FRED-SD](../datasets/fred_sd.md) for mixed-frequency state-series details
+and t-code limitations.
+See [FRED-MD + FRED-SD](../datasets/fred_md_sd.md) and
+[FRED-QD + FRED-SD](../datasets/fred_qd_sd.md) for combined-loader behavior.
 
 ## load_fred_md_sd
 

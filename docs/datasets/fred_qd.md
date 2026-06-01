@@ -471,21 +471,8 @@ official appendix table has not changed.
 | 247 | `S&P div yield` | 13: Stock Markets | 2 | 0 | 0 | 1959-03 | 2026-03 | 269 |  | S&P's Composite Common Stock: Dividend Yield |
 | 248 | `S&P PE ratio` | 13: Stock Markets | 5 | 0 | 0 | 1959-03 | 2026-03 | 269 |  | S&P's Composite Common Stock: Price-Earnings Ratio |
 
-## Combined With FRED-SD
+## Related Combined Loader
 
-`load_fred_qd_sd()` loads FRED-QD and FRED-SD and combines them.
-
-```python
-bundle = mf.data.load_fred_qd_sd(
-    states=["CA", "TX"],
-    variables=["UR", "NQGSP"],
-    frequency="quarterly",
-    monthly_to_quarterly="quarterly_average",
-)
-```
-
-FRED-SD includes both monthly and quarterly state series. If a selected FRED-SD
-series is monthly, the default rule
-`monthly_to_quarterly="quarterly_average"` averages monthly observations
-within each quarter. The function emits `UserWarning` and records the
-conversion in `metadata["frequency_conversion_warnings"]`.
+For quarterly state analysis with national controls, see
+[FRED-QD + FRED-SD](fred_qd_sd.md). The combined-loader page documents
+frequency alignment, conversion warnings, and returned metadata.

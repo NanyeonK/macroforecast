@@ -336,20 +336,8 @@ vintage is released, even if the official appendix table has not changed.
 | 133 | `DTCTHFNM` | 5: Money and credit | 6 | 1959-01 | 2026-02 | 806 | Total Consumer Loans and Leases Outstanding |
 | 134 | `INVEST` | 5: Money and credit | 6 | 1959-01 | 2026-03 | 807 | Securities in Bank Credit at All Commercial Banks |
 | 135 | `VIXCLSx` | 8: Stock market | 1 | 1962-07 | 2026-03 | 765 | VIX |
-## Combined With FRED-SD
+## Related Combined Loader
 
-`load_fred_md_sd()` loads FRED-MD and FRED-SD and combines them.
-
-```python
-bundle = mf.data.load_fred_md_sd(
-    states=["CA", "TX"],
-    variables=["UR", "ICLAIMS", "NQGSP"],
-    frequency="monthly",
-)
-```
-
-FRED-SD includes both monthly and quarterly state series. If a selected FRED-SD
-series is quarterly, the default rule
-`quarterly_to_monthly="repeat_within_quarter"` assigns the quarterly value to
-each month in that quarter. The function emits `UserWarning` and records the
-conversion in `metadata["frequency_conversion_warnings"]`.
+For monthly state analysis with national controls, see
+[FRED-MD + FRED-SD](fred_md_sd.md). The combined-loader page documents
+frequency alignment, conversion warnings, and returned metadata.
