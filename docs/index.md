@@ -10,6 +10,7 @@ structure. Start with the map below before opening individual API pages.
 | If you want to check... | Open first | Then open |
 | --- | --- | --- |
 | Current package structure | [Documentation Map](reference/documentation_map.md) | [Workflow Contract](reference/workflow.md), [Public Python API](reference/public_api.md) |
+| Package-wide defaults | [Meta](reference/meta.md) | [Forecasting](reference/forecasting.md) for runner policy usage. |
 | Whether old runtime features are covered | [Legacy Callable Coverage](reference/legacy_callable_coverage.md) | [Reference Verification](reference/reference_verification.md) |
 | Data and preprocessing behavior | [Data](reference/data.md) | [FRED Datasets](datasets/index.md), [Preprocessing](reference/preprocessing.md) |
 | Forecast runner behavior | [Workflow Contract](reference/workflow.md) | [Window](reference/window.md), [Forecasting](reference/forecasting.md) |

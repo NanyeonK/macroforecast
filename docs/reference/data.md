@@ -28,6 +28,14 @@ data_spec = mf.data.spec(
 )
 ```
 
+`mf.data.spec(...)` is not a wrapper that runs data loading, preprocessing,
+feature engineering, or modeling. It is a small contract builder for the
+already-loaded panel. It validates the requested target, horizons, sample
+window, and predictor set; subsets the panel to those columns and dates; expands
+`predictors="all"` to concrete non-target columns; and records the choices in
+metadata. Later callable stages can consume the same `DataSpec` without
+guessing which columns or horizons the run intended to use.
+
 ## Canonical Panel
 
 Every public loader returns a `DataBundle`.
@@ -741,7 +749,8 @@ macroforecast.data.metadata(obj) -> dict
 
 ## spec
 
-Attach run-level data choices to a bundle or panel.
+Attach run-level data choices to a bundle or panel. This function creates a
+`DataSpec`; it does not execute downstream pipeline steps.
 
 ```python
 macroforecast.data.spec(
@@ -785,6 +794,20 @@ target, targets, horizons, sample dates, expanded predictor list, and panel
 summary. This expansion is deliberate: downstream model stages should consume a
 concrete non-target predictor list, not infer from the full panel and risk
 target leakage.
+
+### What It Does And Does Not Do
+
+| Action | Done by `mf.data.spec(...)`? |
+| --- | --- |
+| Validate the canonical panel contract | Yes |
+| Validate target and predictor columns | Yes |
+| Expand `predictors="all"` to all non-target columns | Yes |
+| Apply `start` and `end` sample bounds | Yes |
+| Attach `metadata["data_spec"]` | Yes |
+| Load raw data | No |
+| Transform, clean, impute, or standardize values | No |
+| Create forecast targets or lagged predictors | No |
+| Fit models or run evaluation | No |
 
 ## Data Policy Helpers
 

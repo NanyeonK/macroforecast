@@ -68,11 +68,7 @@ def compare_panels(
         raise ValueError("tolerance must be non-negative")
     common_columns = list(raw.columns.intersection(clean.columns))
     common_index = raw.index.intersection(clean.index)
-    changed_cells = _count_changed_cells(
-        raw.loc[common_index, common_columns],
-        clean.loc[common_index, common_columns],
-        tolerance=tolerance,
-    )
+    changed_cells = changed_cell_count(raw, clean, tolerance=tolerance)
     return {
         "raw_shape": tuple(raw.shape),
         "clean_shape": tuple(clean.shape),
@@ -91,6 +87,68 @@ def compare_panels(
         "raw_only_index_count": int(len(raw.index.difference(clean.index))),
         "clean_only_index_count": int(len(clean.index.difference(raw.index))),
         "changed_cell_count": int(changed_cells),
+    }
+
+
+def panel_snapshots(raw: pd.DataFrame, clean: pd.DataFrame) -> dict[str, dict[str, Any]]:
+    """Return compact before/after panel snapshots."""
+
+    raw = _validate_panel(raw, "raw")
+    clean = _validate_panel(clean, "clean")
+    return {"before": _panel_snapshot(raw), "after": _panel_snapshot(clean)}
+
+
+def changed_cells(
+    raw: pd.DataFrame,
+    clean: pd.DataFrame,
+    *,
+    tolerance: float = 0.0,
+) -> pd.DataFrame:
+    """Return a boolean mask of changed common-index/common-column cells."""
+
+    raw = _validate_panel(raw, "raw")
+    clean = _validate_panel(clean, "clean")
+    if tolerance < 0:
+        raise ValueError("tolerance must be non-negative")
+    common_columns = list(raw.columns.intersection(clean.columns))
+    common_index = raw.index.intersection(clean.index)
+    return _changed_cell_mask(
+        raw.loc[common_index, common_columns],
+        clean.loc[common_index, common_columns],
+        tolerance=tolerance,
+    )
+
+
+def changed_cell_count(
+    raw: pd.DataFrame,
+    clean: pd.DataFrame,
+    *,
+    tolerance: float = 0.0,
+) -> int:
+    """Return the number of changed common-index/common-column cells."""
+
+    mask = changed_cells(raw, clean, tolerance=tolerance)
+    return int(mask.sum().sum()) if not mask.empty else 0
+
+
+def changed_cell_summary(
+    raw: pd.DataFrame,
+    clean: pd.DataFrame,
+    *,
+    tolerance: float = 0.0,
+) -> dict[str, Any]:
+    """Return changed-cell count and rate for the common sample."""
+
+    mask = changed_cells(raw, clean, tolerance=tolerance)
+    n_cells = int(mask.size)
+    n_changed = int(mask.sum().sum()) if n_cells else 0
+    return {
+        "common_rows": int(mask.shape[0]),
+        "common_columns": int(mask.shape[1]),
+        "common_cells": n_cells,
+        "changed_cells": n_changed,
+        "changed_cell_rate": float(n_changed / n_cells) if n_cells else 0.0,
+        "tolerance": float(tolerance),
     }
 
 
@@ -400,14 +458,14 @@ def _effect_snapshot(effects: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _count_changed_cells(
+def _changed_cell_mask(
     raw: pd.DataFrame,
     clean: pd.DataFrame,
     *,
     tolerance: float,
-) -> int:
+) -> pd.DataFrame:
     if raw.empty or clean.empty:
-        return 0
+        return pd.DataFrame(False, index=raw.index, columns=raw.columns)
     equal = raw.eq(clean) | (raw.isna() & clean.isna())
     numeric_columns = [
         column
@@ -417,7 +475,7 @@ def _count_changed_cells(
     if numeric_columns and tolerance > 0:
         close = (raw[numeric_columns] - clean[numeric_columns]).abs() <= tolerance
         equal.loc[:, numeric_columns] = equal[numeric_columns] | close
-    return int((~equal).sum().sum())
+    return ~equal
 
 
 def _analysis_frames(

@@ -6,12 +6,16 @@ from scipy.stats import ks_2samp
 
 from macroforecast.data_analysis import (
     DataAnalysisReport,
+    changed_cell_count,
+    changed_cell_summary,
+    changed_cells,
     cleaning_effect_summary,
     compare_panels,
     correlation_shift,
     analyze_data,
     distribution_shift,
     missing_shift,
+    panel_snapshots,
 )
 
 
@@ -48,6 +52,36 @@ def test_compare_panels_reports_shape_missing_and_changed_cells():
     assert out["clean_missing_total"] == 0
     assert out["common_columns"] == ["y", "x1", "x2"]
     assert out["changed_cell_count"] == 2
+
+
+def test_changed_cell_helpers_return_mask_count_and_summary():
+    raw, clean = _panels()
+
+    mask = changed_cells(raw, clean)
+    summary = changed_cell_summary(raw, clean)
+
+    assert mask.loc[raw.index[1], "x1"]
+    assert mask.loc[raw.index[3], "x1"]
+    assert not mask.loc[raw.index[0], "y"]
+    assert changed_cell_count(raw, clean) == 2
+    assert summary == {
+        "common_rows": 4,
+        "common_columns": 3,
+        "common_cells": 12,
+        "changed_cells": 2,
+        "changed_cell_rate": pytest.approx(2 / 12),
+        "tolerance": 0.0,
+    }
+
+
+def test_panel_snapshots_return_before_after_compact_views():
+    raw, clean = _panels()
+
+    snapshots = panel_snapshots(raw, clean)
+
+    assert snapshots["before"]["missing_values"] == 1
+    assert snapshots["after"]["missing_values"] == 0
+    assert snapshots["before"]["n_columns"] == 3
 
 
 def test_missing_shift_returns_per_column_dataframe():

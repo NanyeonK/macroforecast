@@ -30,6 +30,42 @@ analysis = mf.data_analysis.analyze_data(
 )
 ```
 
+Example output shape:
+
+```python
+analysis.comparison
+```
+
+```python
+{
+    "raw_shape": (4, 3),
+    "clean_shape": (4, 3),
+    "raw_missing_total": 1,
+    "clean_missing_total": 0,
+    "common_columns": ["y", "x1", "x2"],
+    "common_index_count": 4,
+    "changed_cell_count": 2,
+}
+```
+
+```python
+analysis.missing_shift.loc["x1"].to_dict()
+```
+
+```python
+{
+    "column_status": "common",
+    "raw_n": 4,
+    "clean_n": 4,
+    "raw_missing": 1,
+    "clean_missing": 0,
+    "delta_missing": -1,
+    "raw_missing_rate": 0.25,
+    "clean_missing_rate": 0.0,
+    "delta_missing_rate": -0.25,
+}
+```
+
 ## analyze_data
 
 ```python
@@ -118,6 +154,10 @@ full available sample.
 | Function | Input | Output | Purpose |
 | --- | --- | --- | --- |
 | `compare_panels(raw, clean, tolerance=...)` | two DataFrames | `dict` | Panel shape/date/column/index comparison and changed-cell count. |
+| `panel_snapshots(raw, clean)` | two DataFrames | `dict` | Compact before/after rows, columns, dates, and missingness. |
+| `changed_cells(raw, clean, tolerance=...)` | two DataFrames | `DataFrame` | Boolean mask over common-index/common-column cells. |
+| `changed_cell_count(raw, clean, tolerance=...)` | two DataFrames | `int` | Number of changed common cells. |
+| `changed_cell_summary(raw, clean, tolerance=...)` | two DataFrames | `dict` | Changed-cell count, denominator, and rate. |
 | `missing_shift(raw, clean)` | two DataFrames | `DataFrame` | Missing-count and missing-rate changes with `column_status` (`common`, `raw_only`, `clean_only`). |
 | `distribution_shift(raw, clean, metrics=..., sample=...)` | two DataFrames | `DataFrame` | Mean, variance, tail-shape, and KS-style distribution changes. |
 | `correlation_shift(raw, clean, method=..., sample=...)` | two DataFrames | `DataFrame` | Cleaned-minus-raw correlation matrix. |
@@ -129,8 +169,11 @@ duplicate column labels, because those make cell-level comparison ambiguous.
 
 ## Boundary
 
-| Question | Use |
-| --- | --- |
-| Describe one raw or processed panel | `mf.data_summary.summarize_data(panel)` |
-| Compare raw and processed panels | `mf.data_analysis.analyze_data(raw, processed)` |
-| Report preprocessing choices and ordered steps | `mf.preprocessing.report(processed)` |
+`data_analysis` is the two-panel counterpart to `data_summary`.
+
+| Question | Use | Why |
+| --- | --- | --- |
+| Describe one raw or processed panel | `mf.data_summary.summarize_data(panel)` | One input, level summary. |
+| Compare raw and processed panels | `mf.data_analysis.analyze_data(raw, processed)` | Two inputs, before/after deltas. |
+| Count only changed cells | `mf.data_analysis.changed_cell_summary(raw, processed)` | Narrow callable when the full report is too much. |
+| Report preprocessing choices and ordered steps | `mf.preprocessing.report(processed)` | Execution log rather than before/after statistics. |

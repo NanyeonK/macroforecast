@@ -55,6 +55,26 @@ def test_data_summary_accepts_preprocessed_data() -> None:
     assert report.metadata["data_summary"]["input"]["has_preprocessing"] is True
 
 
+def test_data_summary_small_helpers_return_compact_outputs() -> None:
+    panel = _panel()
+
+    snapshot = mf.data_summary.panel_snapshot(panel)
+    counts = mf.data_summary.observation_counts(panel)
+    rates = mf.data_summary.missing_rates(panel)
+
+    assert snapshot == {
+        "n_rows": 4,
+        "n_columns": 2,
+        "start": "2020-01-01",
+        "end": "2020-04-01",
+        "missing_values": 1,
+        "frequency": "MS",
+    }
+    assert counts.to_dict() == {"y": 3, "x": 4}
+    assert rates.loc["y"] == pytest.approx(0.25)
+    assert rates.loc["x"] == 0.0
+
+
 def test_summary_metric_and_correlation_validation() -> None:
     with pytest.raises(ValueError, match="unknown summary metric"):
         mf.data_summary.univariate_summary(_panel(), metrics=["bad_metric"])  # type: ignore[list-item]

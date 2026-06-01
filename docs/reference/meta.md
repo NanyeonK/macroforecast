@@ -26,7 +26,7 @@ The current public surface is:
 | --- | --- | --- | --- |
 | `random_seed` | <code>int &#124; None</code> | `42` | Seed used by stochastic functions when no run-specific seed is supplied. `None` leaves stochastic components unseeded. |
 | `n_jobs` | <code>int &#124; "auto"</code> | `1` | Default worker count. `1` means serial execution; `"auto"` lets the package choose a bounded worker count. |
-| `on_error` | <code>"raise" &#124; "continue"</code> | `"raise"` | Default cell failure behavior. `"raise"` stops on failure; `"continue"` records the failure and continues where supported. |
+| `on_error` | failure mode | stop on error | Default cell failure behavior. See [Failure Mode Values](#failure-mode-values). |
 | `verbose` | `int` | `0` | Default verbosity level for future logging surfaces. |
 | `default_preprocessing_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"origin_available"` | Default `forecasting.run(..., preprocessing_policy=...)` scope when preprocessing is supplied and no explicit policy is passed. |
 | `default_feature_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `feature_policy` scope. |
@@ -35,6 +35,13 @@ The current public surface is:
 
 The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
 is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
+
+### Failure Mode Values
+
+| User-facing mode | Stored value | Meaning |
+| --- | --- | --- |
+| Stop on error | `raise` | Stop immediately when a supported execution cell fails. |
+| Continue where supported | `continue` | Record the failure and continue for call sites that support non-fatal errors. |
 
 Example output:
 
@@ -62,7 +69,7 @@ macroforecast.meta.configure(
     *,
     random_seed: int | None = ...,
     n_jobs: int | "auto" = ...,
-    on_error: "raise" | "continue" = ...,
+    on_error: str = ...,
     verbose: int = ...,
     default_preprocessing_scope: "full_panel" | "origin_available" | "fit_window" = ...,
     default_feature_scope: "full_panel" | "origin_available" | "fit_window" = ...,
@@ -79,7 +86,7 @@ All inputs are keyword-only. Omitted inputs keep their current values.
 | --- | --- | --- | --- | --- |
 | `random_seed` | <code>int &#124; None</code> | keep current value | non-negative integer or `None` | Sets the default seed for stochastic components. |
 | `n_jobs` | <code>int &#124; "auto"</code> | keep current value | positive integer or `"auto"` | Sets the default worker count. |
-| `on_error` | <code>"raise" &#124; "continue"</code> | keep current value | `"raise"`, `"continue"` | Sets default failure behavior. |
+| `on_error` | failure mode | keep current value | Stop on error (`raise`) or continue where supported (`continue`) | Sets default failure behavior. |
 | `verbose` | `int` | keep current value | non-negative integer | Sets default verbosity. |
 | `default_preprocessing_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default preprocessing stage scope for `forecasting.run(...)`. |
 | `default_feature_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default feature-engineering stage scope. |
@@ -106,7 +113,7 @@ Returns `MetaConfig`, a copy of the full active configuration after the update.
 | `random_seed` is negative | `ValueError` |
 | `random_seed` is not `int` or `None` | `TypeError` |
 | `n_jobs` is not a positive integer or `"auto"` | `TypeError` or `ValueError` |
-| `on_error` is not `"raise"` or `"continue"` | `ValueError` |
+| `on_error` is not a supported failure mode | `ValueError` |
 | `verbose` is not a non-negative integer | `TypeError` or `ValueError` |
 | stage default scope is not one of the allowed scopes | `ValueError` |
 | `metadata_level` is not `"minimal"`, `"standard"`, or `"full"` | `ValueError` |
@@ -185,7 +192,7 @@ Returns the value for `name`.
 | --- | --- |
 | `"random_seed"` | <code>int &#124; None</code> |
 | `"n_jobs"` | <code>int &#124; "auto"</code> |
-| `"on_error"` | <code>"raise" &#124; "continue"</code> |
+| `"on_error"` | failure mode string |
 | `"verbose"` | `int` |
 | `"default_preprocessing_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
 | `"default_feature_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
@@ -262,7 +269,7 @@ macroforecast.meta.use_config(
     *,
     random_seed: int | None = ...,
     n_jobs: int | "auto" = ...,
-    on_error: "raise" | "continue" = ...,
+    on_error: str = ...,
     verbose: int = ...,
     default_preprocessing_scope: "full_panel" | "origin_available" | "fit_window" = ...,
     default_feature_scope: "full_panel" | "origin_available" | "fit_window" = ...,
@@ -279,7 +286,7 @@ The inputs match `configure`.
 | --- | --- | --- | --- | --- |
 | `random_seed` | <code>int &#124; None</code> | keep current value inside context | non-negative integer or `None` | Temporary default seed. |
 | `n_jobs` | <code>int &#124; "auto"</code> | keep current value inside context | positive integer or `"auto"` | Temporary worker count. |
-| `on_error` | <code>"raise" &#124; "continue"</code> | keep current value inside context | `"raise"`, `"continue"` | Temporary failure behavior. |
+| `on_error` | failure mode | keep current value inside context | Stop on error (`raise`) or continue where supported (`continue`) | Temporary failure behavior. |
 | `verbose` | `int` | keep current value inside context | non-negative integer | Temporary verbosity. |
 | `default_preprocessing_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary preprocessing default scope. |
 | `default_feature_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary feature default scope. |
@@ -323,7 +330,7 @@ value is provided by the caller.
 | --- | --- |
 | `random_seed` | Used as the default run seed and propagated to stochastic estimators where supported. |
 | `n_jobs` | Used as the default worker count for run-level and selected model-level parallel work. |
-| `on_error` | Default failure handling: `"raise"` stops on failure, `"continue"` continues where supported. |
+| `on_error` | Default failure handling. `raise` stops on failure; `continue` continues where supported. |
 | `verbose` | Reserved as the package-wide verbosity setting. |
 | `default_preprocessing_scope` | Used by `forecasting.run(...)` when `preprocessing` is supplied without `preprocessing_policy`. |
 | `default_feature_scope` | Used by `forecasting.run(...)` when `feature_policy` is omitted. |

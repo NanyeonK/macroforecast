@@ -72,6 +72,13 @@ def panel_overview(data: Any) -> dict[str, Any]:
     return info
 
 
+def panel_snapshot(data: Any) -> dict[str, Any]:
+    """Return a compact single-panel snapshot for reports and provenance."""
+
+    panel, metadata = _coerce_panel(data)
+    return _compact_panel_info(DataBundle(panel, metadata))
+
+
 def sample_coverage(data: Any) -> pd.DataFrame:
     """Return per-series sample start, end, observation count, and missingness."""
 
@@ -94,6 +101,24 @@ def sample_coverage(data: Any) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows).set_index("column") if rows else pd.DataFrame()
+
+
+def observation_counts(data: Any) -> pd.Series:
+    """Return per-series non-missing observation counts."""
+
+    coverage = sample_coverage(data)
+    if coverage.empty:
+        return pd.Series(dtype="int64", name="n_obs")
+    return coverage["n_obs"].rename("n_obs")
+
+
+def missing_rates(data: Any) -> pd.Series:
+    """Return per-series missing rates."""
+
+    coverage = sample_coverage(data)
+    if coverage.empty:
+        return pd.Series(dtype="float64", name="missing_rate")
+    return coverage["missing_rate"].rename("missing_rate")
 
 
 def univariate_summary(
@@ -591,8 +616,11 @@ __all__ = [
     "correlation_matrix",
     "mackinnon_pp_pvalue",
     "missing_summary",
+    "missing_rates",
+    "observation_counts",
     "outlier_summary",
     "panel_overview",
+    "panel_snapshot",
     "phillips_perron_test",
     "sample_coverage",
     "stationarity_tests",

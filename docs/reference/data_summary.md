@@ -30,6 +30,33 @@ summary.univariate
 summary.missing
 ```
 
+Example output shape:
+
+```python
+summary.overview
+```
+
+```python
+{
+    "n_rows": 4,
+    "n_columns": 2,
+    "start": "2020-01-01",
+    "end": "2020-04-01",
+    "missing_values": 1,
+    "frequency": "monthly",
+    "metadata_keys": ["dataset", "frequency"],
+}
+```
+
+```python
+summary.coverage.head()
+```
+
+| column | first_valid | last_valid | n_obs | n_missing | missing_rate |
+| --- | --- | --- | ---: | ---: | ---: |
+| `y` | 2020-01-01 | 2020-04-01 | 3 | 1 | 0.25 |
+| `x` | 2020-01-01 | 2020-04-01 | 4 | 0 | 0.00 |
+
 ## summarize_data
 
 ```python
@@ -108,7 +135,10 @@ data" without turning `data_summary` into a before/after comparison tool.
 | Function | Input | Output | Purpose |
 | --- | --- | --- | --- |
 | `panel_overview(data)` | canonical panel input | `dict` | Shape, dates, frequency, total missingness, metadata keys. |
+| `panel_snapshot(data)` | canonical panel input | `dict` | Compact rows/columns/dates/missingness/frequency snapshot. |
 | `sample_coverage(data)` | canonical panel input | `DataFrame` | Per-series sample coverage and missing rate. |
+| `observation_counts(data)` | canonical panel input | `Series` | Per-series non-missing observation counts. |
+| `missing_rates(data)` | canonical panel input | `Series` | Per-series missing rates. |
 | `univariate_summary(data, metrics=...)` | canonical panel input | `DataFrame` | Per-series descriptive statistics. |
 | `missing_summary(data)` | canonical panel input | `DataFrame` | Missing count/rate and longest missing run. |
 | `correlation_matrix(data, method=...)` | canonical panel input | `DataFrame` | Numeric correlation matrix for one panel. |
@@ -233,9 +263,11 @@ statistics and non-positive sample sizes raise `ValueError`.
 
 ## Boundary
 
-| Question | Use |
-| --- | --- |
-| What does this single raw panel look like? | `mf.data_summary.summarize_data(raw)` |
-| What does the processed panel look like? | `mf.data_summary.summarize_data(processed)` |
-| What changed from raw to processed? | `mf.data_analysis.analyze_data(raw, processed.panel)` |
-| Which preprocessing choices ran? | `mf.preprocessing.report(processed)` |
+`data_summary` and `data_analysis` are deliberately separate.
+
+| Question | Use | Why |
+| --- | --- | --- |
+| What does this single raw panel look like? | `mf.data_summary.summarize_data(raw)` | One input, no before/after comparison. |
+| What does the processed panel look like? | `mf.data_summary.summarize_data(processed)` | One input, useful after preprocessing too. |
+| What changed from raw to processed? | `mf.data_analysis.analyze_data(raw, processed.panel)` | Two inputs, computes shifts and changed cells. |
+| Which preprocessing choices ran? | `mf.preprocessing.report(processed)` | Execution log, not a statistical summary. |

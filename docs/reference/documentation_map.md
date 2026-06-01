@@ -10,6 +10,7 @@ Use this page as the inspection order for the current callable-first
 | Question | Open this page | What to verify there |
 | --- | --- | --- |
 | What is the current package shape? | [Workflow Contract](workflow.md) | Module ownership, runner loop, and stage policies. |
+| How do I set package-wide defaults? | [Meta](meta.md) | Seed, worker count, error handling, default runner stage scopes, and metadata level. |
 | Did we preserve old statistical functionality? | [Legacy Callable Coverage](legacy_callable_coverage.md) | Covered callables, intentional removals, and remaining future work. |
 | Which imports are public? | [Public Python API](public_api.md) | Top-level exports and module namespaces. |
 | How do I load and shape data? | [Data](data.md) | Panel contract, metadata, custom loaders, FRED loaders, frequency policies. |
@@ -30,30 +31,32 @@ Use this page as the inspection order for the current callable-first
 Use this sequence when auditing the whole docs site.
 
 1. [Workflow Contract](workflow.md)
-2. [Legacy Callable Coverage](legacy_callable_coverage.md)
-3. [Public Python API](public_api.md)
-4. [Data](data.md)
-5. [FRED Datasets](../datasets/index.md)
-6. [Preprocessing](preprocessing.md)
-7. [Feature Engineering](feature_engineering.md)
-8. [Window](window.md)
-9. [Models](models.md)
-10. [Selection](selection.md)
-11. [Forecasting](forecasting.md)
-12. [Metrics](metrics.md)
-13. [Tests](tests.md)
-14. [Evaluation](evaluation.md)
-15. [Feature Analysis](feature_analysis.md)
-16. [Forecast Analysis](forecast_analysis.md)
-17. [Interpretation](interpretation.md)
-18. [Output](output.md)
-19. [Reporting](reporting.md)
-20. [Reference Verification](reference_verification.md)
+2. [Meta](meta.md)
+3. [Legacy Callable Coverage](legacy_callable_coverage.md)
+4. [Public Python API](public_api.md)
+5. [Data](data.md)
+6. [FRED Datasets](../datasets/index.md)
+7. [Preprocessing](preprocessing.md)
+8. [Feature Engineering](feature_engineering.md)
+9. [Window](window.md)
+10. [Models](models.md)
+11. [Selection](selection.md)
+12. [Forecasting](forecasting.md)
+13. [Metrics](metrics.md)
+14. [Tests](tests.md)
+15. [Evaluation](evaluation.md)
+16. [Feature Analysis](feature_analysis.md)
+17. [Forecast Analysis](forecast_analysis.md)
+18. [Interpretation](interpretation.md)
+19. [Output](output.md)
+20. [Reporting](reporting.md)
+21. [Reference Verification](reference_verification.md)
 
 ## Module Boundaries
 
 | Boundary | Rule |
 | --- | --- |
+| `meta` vs data pipeline | `meta` stores package defaults; it does not load, clean, summarize, or compare data. |
 | `data` vs `preprocessing` | `data` creates canonical panels and metadata; `preprocessing` transforms values. |
 | `preprocessing` vs `feature_engineering` | `preprocessing` cleans variables; `feature_engineering` creates targets and predictors. |
 | `feature_engineering` vs `window` | Feature functions build matrices; `window` decides which dates belong to train/validation/test. |

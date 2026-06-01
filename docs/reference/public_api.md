@@ -50,8 +50,8 @@ The importable surface is intentionally narrow and pandas-first.
 | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `selection_table`, `interpretation_table`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index`, `OutputBundle` | `macroforecast.output` | Output-generating helpers. These create named tables and JSON summaries without writing files. |
 | `write_artifacts`, `collect_provenance`, `ArtifactManifest`, `ArtifactRecord`, `CompressionFormat` | `macroforecast.output` | Artifact export, custom artifact storage, file hashing, compression, and provenance manifest helpers. |
 | `ReportTable`, `ReportBundle`, `report_table`, `latex_table`, `html_table`, `markdown_table`, `figure_data`, `report_bundle`, `render_tables` | `macroforecast.reporting` | Paper/report table formatting, LaTeX/HTML/Markdown rendering, and figure-ready data. |
-| `summarize_data`, `DataSummaryReport` | `macroforecast.data_summary` | Single-panel summaries. |
-| `analyze_data`, `DataAnalysisReport` | `macroforecast.data_analysis` | Before/after panel analysis. |
+| `summarize_data`, `panel_overview`, `panel_snapshot`, `sample_coverage`, `observation_counts`, `missing_rates`, `univariate_summary`, `missing_summary`, `correlation_matrix`, `outlier_summary`, `stationarity_tests`, `DataSummaryReport` | `macroforecast.data_summary` | Single-panel summaries and narrow summary helpers. |
+| `analyze_data`, `compare_panels`, `panel_snapshots`, `changed_cells`, `changed_cell_count`, `changed_cell_summary`, `missing_shift`, `distribution_shift`, `correlation_shift`, `cleaning_effect_summary`, `DataAnalysisReport` | `macroforecast.data_analysis` | Before/after panel analysis and narrow comparison helpers. |
 
 ## Submodules
 
