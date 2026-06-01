@@ -18,7 +18,7 @@ The package still enforces the same contracts around each custom hook:
 | Feature spec | `mf.feature_engineering.custom_step(...)` | Stateless or fitted feature callable for `feature_spec(steps=[...])`. | Step dictionary consumed by `FeatureSpec`. |
 | Models | `mf.models.custom_model(...)` | Fit callable with model metadata and optional search spaces. | `ModelSpec`. |
 | Window | `mf.window.custom_stage_policy(...)` | Selector callable for origin-specific sample labels. | `StagePolicy(scope="custom")`. |
-| Selection | `mf.selection.custom_search(...)` | User search callable over model, data, splits, metric, and candidate evaluation helper. | `SearchSpec(method="custom")`. |
+| Selection | `mf.model_selection.custom_search(...)` | User search callable over model, data, splits, metric, and candidate evaluation helper. | `SearchSpec(method="custom")`. |
 | Forecasting | `mf.forecasting.custom_combination(...)` | Callable over base forecast matrix. | `CombinationSpec`. |
 | Metrics | metric callable | Custom `(y_true, y_pred) -> float` scorer. | Metric column in score tables. |
 | Tests | `mf.tests.custom_test(...)` | User forecast-test callable. | `TestResult`. |
@@ -72,7 +72,7 @@ model = mf.models.custom_model(
     default_params={"offset": 0.0},
 )
 
-search = mf.selection.custom_search(
+search = mf.model_selection.custom_search(
     "ordered_offset",
     ordered_offset_search,
     values=(-0.1, 0.0, 0.1),
@@ -84,8 +84,8 @@ result = mf.forecasting.run(
     window=window,
     preprocessing=pre,
     features=features,
-    selection={"ols": None, "mean_tuned": search},
-    selection_policy=mf.window.custom_stage_policy(last_fit_half),
+    model_selection={"ols": None, "mean_tuned": search},
+    model_selection_policy=mf.window.custom_stage_policy(last_fit_half),
     combination=mf.forecasting.custom_combination("blend", blend),
 )
 ```
@@ -337,7 +337,7 @@ def last_half_of_fit(index, *, item, policy):
     fit_idx = item["fit_idx"]
     return fit_idx[len(fit_idx) // 2 :]
 
-selection_policy = mf.window.custom_stage_policy(last_half_of_fit)
+model_selection_policy = mf.window.custom_stage_policy(last_half_of_fit)
 ```
 
 The selector receives:
@@ -348,10 +348,10 @@ selector(index: pandas.Index, *, item: dict, policy: StagePolicy)
 
 It may return a boolean mask, a slice, integer positions, or index labels.
 The output must select at least one label. Use this for unusual validation or
-selection-sample definitions; standard expanding, rolling, fixed-reference, and
+model-selection-sample definitions; standard expanding, rolling, fixed-reference, and
 origin-available designs should use `stage_policy(...)`.
 
-## Selection
+## Model Selection
 
 Use `custom_search()` when the hyperparameter search algorithm itself is
 project-specific.
@@ -383,7 +383,7 @@ def ordered_alpha_search(
         for trial, value in enumerate(values)
     ]
 
-search = mf.selection.custom_search(
+search = mf.model_selection.custom_search(
     "ordered_alpha",
     ordered_alpha_search,
     values=(0.01, 0.1, 1.0),

@@ -14,7 +14,7 @@ structure. Start with the map below before opening individual API pages.
 | Whether old runtime features are covered | [Legacy Callable Coverage](reference/legacy_callable_coverage.md) | [Reference Verification](reference/reference_verification.md) |
 | Data and preprocessing behavior | [Data](reference/data.md) | [FRED Datasets](datasets/index.md), [Preprocessing](reference/preprocessing.md) |
 | Forecast runner behavior | [Workflow Contract](reference/workflow.md) | [Window](reference/window.md), [Forecasting](reference/forecasting.md) |
-| Models and parameter search | [Models](reference/models.md) | [Selection](reference/selection.md) |
+| Models and parameter search | [Models](reference/models.md) | [Model Selection](reference/model_selection.md) |
 | Evaluation and tests | [Evaluation](reference/evaluation.md) | [Metrics](reference/metrics.md), [Tests](reference/tests.md) |
 | Interpretation, output, and reporting | [Interpretation](reference/interpretation.md) | [Output](reference/output.md), [Reporting](reference/reporting.md) |
 

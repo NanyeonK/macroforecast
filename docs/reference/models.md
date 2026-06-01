@@ -7,7 +7,7 @@ accepts pandas data, fits immediately, and returns a fitted result object with
 `predict()`.
 
 `lasso_path` is intentionally not a public model family. Use `lasso()` with a
-chosen `alpha`, or use `get_model("lasso")` with `selection.select_params()`
+chosen `alpha`, or use `get_model("lasso")` with `model_selection.select_params()`
 to choose `alpha` from the lasso-owned search space.
 
 ## Return Objects
@@ -94,7 +94,7 @@ saved = macroforecast.models.save_fit(
     metadata={
         "alias": "ridge",
         "params": {"alpha": 0.1},
-        "selection": selection_metadata,
+        "model_selection": selection_metadata,
     },
 )
 loaded = macroforecast.models.load_fit(saved.model_path)
@@ -144,13 +144,13 @@ fit.diagnostics["feature_importance"].head()
 
 ## Model Specs And Hyperparameter Spaces
 
-Model functions fit immediately. Model specs are the selection objects:
+Model functions fit immediately. Model specs are the model-selection objects:
 they keep the fit callable together with model-owned defaults, tunable
 parameters, and preset search spaces.
 
 ```python
 model = macroforecast.models.get_model("lasso", preset="standard")
-result = macroforecast.selection.select_params(
+result = macroforecast.model_selection.select_params(
     model,
     X,
     y,
@@ -319,7 +319,7 @@ result = mf.forecasting.run(
 ```
 
 `custom_model()` does not mutate the global registry. Pass the returned
-`ModelSpec` directly to `forecasting.run(...)`, `selection.select_params(...)`,
+`ModelSpec` directly to `forecasting.run(...)`, `model_selection.select_params(...)`,
 or `model_search_space(...)`.
 
 ### list_model_specs
@@ -520,7 +520,7 @@ Fits ridge regression with an L2 penalty.
 | `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` |
 | `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0)` |
 
-Default selection method: `cv_path`.
+Default model-selection method: `cv_path`.
 
 ### nonneg_ridge
 
@@ -536,7 +536,7 @@ uses SciPy NNLS on an augmented ridge design, so it does not require `cvxpy`.
 | `alpha` | `1.0` | yes | L2 penalty strength. |
 | `fit_intercept` | `True` | fixed by preset | Fit an intercept outside the constrained coefficients. |
 
-Default selection method: `cv_path`.
+Default model-selection method: `cv_path`.
 
 ### shrink_to_target_ridge
 
@@ -573,7 +573,7 @@ coefficients. The solver is SciPy SLSQP.
 | `max_iter` | `1000` | fixed by preset | SLSQP iteration cap. |
 | `tol` | `1e-9` | fixed by preset | SLSQP tolerance. |
 
-Default selection method: `cv_path`.
+Default model-selection method: `cv_path`.
 
 ### fused_difference_ridge
 
@@ -609,7 +609,7 @@ constraint that the fitted and observed sums match and uses no intercept.
 | `max_iter` | `1000` | fixed by preset | SLSQP iteration cap. |
 | `tol` | `1e-9` | fixed by preset | SLSQP tolerance. |
 
-Default selection method: `cv_path`.
+Default model-selection method: `cv_path`.
 
 ### random_walk_ridge
 
@@ -642,7 +642,7 @@ record the final coefficients, fitted values, and residuals.
 | `initial_alpha` | `1.0` | fixed by preset | Penalty on the first coefficient vector. |
 | `fit_intercept` | `True` | fixed by preset | Fit an intercept outside the time-varying coefficient path. |
 
-Default selection method: `cv_path`.
+Default model-selection method: `cv_path`.
 
 ### lasso
 
@@ -651,7 +651,7 @@ macroforecast.models.lasso(X, y, *, alpha=1.0, max_iter=20000)
 ```
 
 Fits lasso regression with an L1 penalty. There is no `lasso_path()` model
-callable; use `get_model("lasso")` and `selection.select_params()`.
+callable; use `get_model("lasso")` and `model_selection.select_params()`.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
@@ -664,7 +664,7 @@ callable; use `get_model("lasso")` and `selection.select_params()`.
 | `standard` | `(0.001, 0.01, 0.1, 1.0, 10.0)` |
 | `wide` | `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0)` |
 
-Default selection method: `cv_path`.
+Default model-selection method: `cv_path`.
 
 ### elastic_net
 
@@ -960,7 +960,7 @@ Support-vector models are sklearn-backed and live in the base dependency set.
 They are useful when nonlinear margins or robust epsilon-insensitive losses
 are preferred over a pure least-squares fit. The forecasting runner treats
 them as ordinary supervised models: call `model(X, y, **params)`, tune only
-model-owned hyperparameters through `selection`, and let `window` decide the
+model-owned hyperparameters through `model_selection`, and let `window` decide the
 train/validation/test dates.
 
 Forecasting-runner example:
@@ -985,7 +985,7 @@ result = macroforecast.forecasting.run(
     preprocessing=pre,
     features=features,
     window=macroforecast.window.last_block(validation_size=24),
-    selection=macroforecast.selection.grid({"C": [0.1, 1.0], "epsilon": [0.01, 0.1]}),
+    model_selection=macroforecast.model_selection.grid({"C": [0.1, 1.0], "epsilon": [0.01, 0.1]}),
 )
 ```
 
@@ -1125,7 +1125,7 @@ result = macroforecast.forecasting.run(
     features=features,
     window=macroforecast.window.last_block(validation_size=24),
     params={"lstm": {"sequence_length": 4, "hidden_size": 32, "device": "auto"}},
-    selection={"lstm": None},
+    model_selection={"lstm": None},
 )
 ```
 
@@ -1164,7 +1164,7 @@ result = macroforecast.forecasting.run(
     features=features,
     window=macroforecast.window.last_block(validation_size=24),
     params={"nn": {"max_epochs": 100, "device": "auto"}},
-    selection=macroforecast.selection.grid({
+    model_selection=macroforecast.model_selection.grid({
         "hidden_layer_sizes": [(32,), (64,)],
         "weight_decay": [0.0, 0.0001],
     }),
@@ -2103,7 +2103,7 @@ Fits sklearn random forest regression.
 | `standard` | `(100, 200, 500)` | `(3, 5, 10, None)` | `(1, 3, 5)` |
 | `wide` | `(100, 200, 500, 1000)` | `(3, 5, 10, 20, None)` | `(1, 2, 3, 5, 10)` |
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### extra_trees
 
@@ -2123,7 +2123,7 @@ macroforecast.models.extra_trees(
 Fits sklearn extremely randomized trees. Parameters and presets match
 `random_forest`.
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### gradient_boosting
 
@@ -2154,7 +2154,7 @@ Fits sklearn gradient-boosted regression trees.
 | `standard` | `(100, 200, 500)` | `(0.03, 0.05, 0.1)` | `(2, 3, 5)` |
 | `wide` | `(100, 200, 500, 1000)` | `(0.01, 0.03, 0.05, 0.1)` | `(2, 3, 5, 8)` |
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### mars
 
@@ -2187,7 +2187,7 @@ other MARS backends.
 | `penalty` | `2.0` | fixed by preset | GCV pruning complexity penalty. |
 | `prune` | `True` | fixed by preset | Whether to prune terms by GCV. |
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### xgboost
 
@@ -2216,7 +2216,7 @@ Fits `xgboost.XGBRegressor`. Requires `macroforecast[xgboost]`.
 | `random_state` | `0` | fixed by preset | Boosting random seed. |
 
 Preset spaces match `gradient_boosting` plus `subsample=(0.6, 0.8, 1.0)`.
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### lightgbm
 
@@ -2250,7 +2250,7 @@ Fits `lightgbm.LGBMRegressor`. Requires `macroforecast[lightgbm]`.
 | `standard` | `(100, 200, 500)` | `(0.03, 0.05, 0.1)` | `(-1, 3, 5, 10)` | `(15, 31, 63)` |
 | `wide` | `(100, 200, 500, 1000)` | `(0.01, 0.03, 0.05, 0.1)` | `(-1, 3, 5, 10, 20)` | `(15, 31, 63, 127)` |
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### catboost
 
@@ -2278,7 +2278,7 @@ Fits `catboost.CatBoostRegressor`. Requires `macroforecast[catboost]`.
 | `random_state` | `0` | fixed by preset | Boosting random seed. |
 | `verbose` | `False` | fixed by preset | CatBoost console output flag. |
 
-Preset spaces match `gradient_boosting`. Default selection method:
+Preset spaces match `gradient_boosting`. Default model-selection method:
 `random`.
 
 ## Macro-Specific Tree And Ensemble Models
@@ -2322,7 +2322,7 @@ membership rather than a hard single leaf.
 | `standard` | `(0.03, 0.05, 0.1)` | `(0.15, 0.25, 0.35)` | `(0.5, 0.75, 1.0)` | `(5, 10, None)` | `(3, 5, 10)` |
 | `wide` | `(0.01, 0.03, 0.05, 0.1, 0.2)` | `(0.1, 0.15, 0.25, 0.35, 0.5)` | `(0.33, 0.5, 0.75, 1.0)` | `(3, 5, 10, 20, None)` | `(2, 3, 5, 10)` |
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### quantile_regression_forest
 
@@ -2352,7 +2352,7 @@ as per-row dictionaries keyed by quantile level.
 | `random_state` | `0` | fixed by preset | Forest random seed. |
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default levels returned by `predict_quantiles()`. |
 
-Preset spaces match `random_forest`. Default selection method: `random`.
+Preset spaces match `random_forest`. Default model-selection method: `random`.
 
 ### bagging
 
@@ -2390,7 +2390,7 @@ uses moving-block bootstrap indices.
 | `standard` | `("ridge", "lasso", "decision_tree")` | `(25, 50, 100)` | `(0.5, 0.7, 0.9)` | `("standard", "block")` | `(4, 8)` |
 | `wide` | `("ridge", "lasso", "elastic_net", "decision_tree", "random_forest")` | `(25, 50, 100, 200)` | `(0.4, 0.6, 0.8, 1.0)` | `("standard", "block")` | `(2, 4, 8, 12)` |
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### booging
 
@@ -2429,7 +2429,7 @@ augmentation.
 The presets tune all Booging parameters marked `yes`; use
 `describe_model("booging")` to inspect the exact candidate lists.
 
-Default selection method: `random`.
+Default model-selection method: `random`.
 
 ### macro_random_forest
 
@@ -2523,7 +2523,7 @@ pred = fit.predict(X_test)
 
 With the forecasting runner, pass model parameters through the model-keyed
 `params` mapping. If you want fixed parameters rather than model-owned tuning,
-also disable selection for this model:
+also disable model selection for this model:
 
 ```python
 features = macroforecast.feature_engineering.feature_spec(
@@ -2561,7 +2561,7 @@ result = macroforecast.forecasting.run(
             "print_b": False,
         }
     },
-    selection={"macro_random_forest": None},
+    model_selection={"macro_random_forest": None},
 )
 ```
 
@@ -2717,5 +2717,5 @@ Fits a compact realized-GARCH joint likelihood. Provide `rv` directly or set
 
 | Legacy name | Decision |
 | --- | --- |
-| `lasso_path` | Removed. Use `get_model("lasso")` and `selection.select_params()`. |
+| `lasso_path` | Removed. Use `get_model("lasso")` and `model_selection.select_params()`. |
 | `pcr` | Removed. Use `feature_engineering.feature_spec(pca_components=...)` with a regression model. |

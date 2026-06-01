@@ -210,7 +210,7 @@ def test_output_generation_supports_tests_models_selection_and_metadata() -> Non
         target_name="y",
         metadata={"alpha": 1.0},
     )
-    search = mf.selection.SearchResult(
+    search = mf.model_selection.SearchResult(
         best_params={"alpha": 1.0},
         best_score=0.1,
         trials=pd.DataFrame({"alpha": [0.1, 1.0], "score": [0.2, 0.1], "status": ["ok", "ok"]}),
@@ -221,13 +221,13 @@ def test_output_generation_supports_tests_models_selection_and_metadata() -> Non
 
     tests = mf.output.test_table({"dm": test_result})
     models = mf.output.model_table({"ridge_fit": fit})
-    selection = mf.output.selection_table(search)
+    search_table = mf.output.model_selection_table(search)
     metadata = mf.output.metadata_table({"data": {"source": "FRED-MD"}, "seed": 42})
 
     assert tests.loc[0, "name"] == "dm"
     assert models.loc[0, "model"] == "ridge"
     assert models.loc[0, "n_features"] == 2
-    assert selection.shape[0] == 2
+    assert search_table.shape[0] == 2
     assert "data.source" in set(metadata["path"])
 
 

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.metrics import MetricLike, get_metric
-from macroforecast.selection.builders import (
+from macroforecast.model_selection.builders import (
     _as_tuple,
     _candidates,
     _coerce_distribution,
@@ -27,13 +27,13 @@ from macroforecast.selection.builders import (
     search_spec,
     uniform,
 )
-from macroforecast.selection.optimizers import run_bayesian, run_genetic
-from macroforecast.selection.runner import (
+from macroforecast.model_selection.optimizers import run_bayesian, run_genetic
+from macroforecast.model_selection.runner import (
     evaluate_candidate,
     parameter_columns,
     trial_frame,
 )
-from macroforecast.selection.types import (
+from macroforecast.model_selection.types import (
     SearchError,
     SearchResult,
     SearchSpec,

@@ -32,24 +32,29 @@ from macroforecast.feature_engineering.compose import (
 )
 from macroforecast.feature_engineering.matrix import feature_matrix
 from macroforecast.feature_engineering.targets import average_target, direct_target, path_targets
+from macroforecast.feature_engineering.feature_selection import (
+    boruta_selection,
+    correlation_selection,
+    genetic_selection,
+    lasso_path_selection,
+    lasso_selection,
+    rfe_selection,
+    stability_selection,
+    variance_selection,
+)
 from macroforecast.feature_engineering.transforms import (
     adaptive_ma_rf_features,
     asymmetric_trim_features,
-    boruta_selection,
-    correlation_selection,
     cumsum_features,
     custom_features,
     dfm_features,
     diff_features,
-    genetic_selection,
     fourier_features,
     group_pca,
     hamilton_filter_features,
     hp_filter_features,
     interaction_features,
     lag,
-    lasso_path_selection,
-    lasso_selection,
     log_diff_features,
     log_features,
     maf_features,
@@ -61,7 +66,6 @@ from macroforecast.feature_engineering.transforms import (
     pct_change_features,
     polynomial_features,
     random_projection_features,
-    rfe_selection,
     rolling_mean,
     savitzky_golay_features,
     scale_features,
@@ -69,11 +73,9 @@ from macroforecast.feature_engineering.transforms import (
     seasonal_lag,
     sliced_inverse_regression_features,
     sparse_pca_chen_rohe_features,
-    stability_selection,
     time_features,
     transform_features,
     varimax_features,
-    variance_selection,
     wavelet_features,
 )
 

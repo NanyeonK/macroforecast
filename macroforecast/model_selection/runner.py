@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from macroforecast.selection.types import SearchTrial
+from macroforecast.model_selection.types import SearchTrial
 from macroforecast.window import Split
 
 

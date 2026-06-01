@@ -1,22 +1,23 @@
-# Selection
+# Model Selection
 
 [Back to reference](index.md)
 
-`macroforecast.selection` chooses model hyperparameters. It does not own time
-windows or scoring metrics.
+`macroforecast.model_selection` chooses model hyperparameters. It does not
+select variables or create features; feature selection belongs to
+`macroforecast.feature_engineering`.
 
 Use:
 
 - `macroforecast.window` to define train/val splits.
 - `macroforecast.metrics` to define the score.
-- `macroforecast.selection` to evaluate parameter candidates and return the best
+- `macroforecast.model_selection` to evaluate parameter candidates and return the best
   parameter set.
 
 ```python
 window = mf.window.last_block(validation_size=24)
-search = mf.selection.grid({"alpha": [0.01, 0.1, 1.0]})
+search = mf.model_selection.grid({"alpha": [0.01, 0.1, 1.0]})
 
-result = mf.selection.select_params(
+result = mf.model_selection.select_params(
     "ridge",
     X,
     y,
@@ -32,13 +33,13 @@ result = mf.selection.select_params(
 | --- | --- |
 | Build a search spec | `fixed()`, `grid()`, `random_search()`, `cv_path()`, `bayesian_search()`, `genetic_search()`, `custom_search()`, `search_spec()` |
 | Define stochastic distributions | `uniform()`, `log_uniform()`, `randint()`, `choice()` |
-| Run selection | `select_params()` |
+| Run model selection | `select_params()` |
 | Store results | `SearchSpec`, `SearchResult`, `SearchError`, `ParamDistribution` |
 
 ## SearchSpec
 
 ```python
-macroforecast.selection.SearchSpec(
+macroforecast.model_selection.SearchSpec(
     method,
     param_grid={},
     param_distributions={},
@@ -80,7 +81,7 @@ to `select_params()`.
 ## SearchResult
 
 ```python
-macroforecast.selection.SearchResult(
+macroforecast.model_selection.SearchResult(
     best_params,
     best_score,
     trials,
@@ -98,7 +99,7 @@ Output fields:
 | `best_params` | dict | Selected parameter values. |
 | `best_score` | float | Score for the selected trial. |
 | `trials` | pandas DataFrame | One row per evaluated candidate. |
-| `metric` | str or callable | Metric used during selection. |
+| `metric` | str or callable | Metric used during model selection. |
 | `method` | str | Search method used. |
 | `window` | str | Canonical window method used. |
 | `metadata` | dict | Model, window, search, and runtime metadata. |
@@ -109,7 +110,7 @@ Output fields:
 ## SearchError
 
 ```python
-macroforecast.selection.SearchError(message, *, trials=None)
+macroforecast.model_selection.SearchError(message, *, trials=None)
 ```
 
 Raised when every candidate fit fails. The exception carries attempted trial
@@ -117,15 +118,15 @@ rows on `.trials`.
 
 ```python
 try:
-    result = mf.selection.select_params(model, X, y, search, window=window)
-except mf.selection.SearchError as err:
+    result = mf.model_selection.select_params(model, X, y, search, window=window)
+except mf.model_selection.SearchError as err:
     failed_trials = err.trials
 ```
 
 ## fixed
 
 ```python
-macroforecast.selection.fixed(params=None, *, random_state=None)
+macroforecast.model_selection.fixed(params=None, *, random_state=None)
 ```
 
 Input:
@@ -140,7 +141,7 @@ Output: `SearchSpec(method="fixed")`.
 ## grid
 
 ```python
-macroforecast.selection.grid(param_grid)
+macroforecast.model_selection.grid(param_grid)
 ```
 
 Input:
@@ -154,7 +155,7 @@ Output: `SearchSpec(method="grid")`.
 ## random_search
 
 ```python
-macroforecast.selection.random_search(param_distributions, *, n_iter=20, random_state=None)
+macroforecast.model_selection.random_search(param_distributions, *, n_iter=20, random_state=None)
 ```
 
 Input:
@@ -170,7 +171,7 @@ Output: `SearchSpec(method="random")`.
 ## cv_path
 
 ```python
-macroforecast.selection.cv_path(param="alpha", values=None)
+macroforecast.model_selection.cv_path(param="alpha", values=None)
 ```
 
 Input:
@@ -185,7 +186,7 @@ Output: `SearchSpec(method="cv_path")`.
 ## bayesian_search
 
 ```python
-macroforecast.selection.bayesian_search(param_distributions, *, n_iter=20, random_state=None)
+macroforecast.model_selection.bayesian_search(param_distributions, *, n_iter=20, random_state=None)
 ```
 
 Creates a sampled-pool Bayesian optimization request. Runtime behavior:
@@ -201,7 +202,7 @@ Output: `SearchSpec(method="bayesian")`.
 ## genetic_search
 
 ```python
-macroforecast.selection.genetic_search(
+macroforecast.model_selection.genetic_search(
     param_distributions,
     *,
     population_size=12,
@@ -216,7 +217,7 @@ Output: `SearchSpec(method="genetic")`.
 ## custom_search
 
 ```python
-macroforecast.selection.custom_search(
+macroforecast.model_selection.custom_search(
     name,
     func,
     *,
@@ -255,7 +256,7 @@ func(
 | Argument | Meaning |
 | --- | --- |
 | `model` | Fit callable resolved from the model name, callable, or `ModelSpec`. |
-| `X`, `y` | Aligned selection sample. |
+| `X`, `y` | Aligned model-selection sample. |
 | `splits` | List of temporal train/validation position splits. |
 | `metric` | Resolved metric callable. |
 | `fixed_params` | Parameters applied to every candidate. |
@@ -304,13 +305,13 @@ def ordered_search(
         for trial, value in enumerate(values)
     ]
 
-search = mf.selection.custom_search(
+search = mf.model_selection.custom_search(
     "ordered_alpha",
     ordered_search,
     values=(0.01, 0.1, 1.0),
 )
 
-result = mf.selection.select_params(
+result = mf.model_selection.select_params(
     "ridge",
     X,
     y,
@@ -325,7 +326,7 @@ name and user parameters. The callable source code is not serialized.
 ## search_spec
 
 ```python
-macroforecast.selection.search_spec(
+macroforecast.model_selection.search_spec(
     model,
     *,
     preset=None,
@@ -354,10 +355,10 @@ Output: `SearchSpec` with model metadata.
 ## Distributions
 
 ```python
-macroforecast.selection.uniform(low, high)
-macroforecast.selection.log_uniform(low, high)
-macroforecast.selection.randint(low, high)
-macroforecast.selection.choice(values)
+macroforecast.model_selection.uniform(low, high)
+macroforecast.model_selection.log_uniform(low, high)
+macroforecast.model_selection.randint(low, high)
+macroforecast.model_selection.choice(values)
 ```
 
 Output: `ParamDistribution`.
@@ -374,7 +375,7 @@ Rules:
 ## select_params
 
 ```python
-macroforecast.selection.select_params(
+macroforecast.model_selection.select_params(
     model,
     X,
     y=None,
@@ -418,9 +419,9 @@ Example:
 
 ```python
 window = mf.window.expanding(min_train_size=120, horizon=1)
-search = mf.selection.search_spec("lasso", preset="small", method="cv_path")
+search = mf.model_selection.search_spec("lasso", preset="small", method="cv_path")
 
-result = mf.selection.select_params(
+result = mf.model_selection.select_params(
     "lasso",
     X,
     y,
@@ -442,11 +443,11 @@ splits = [
     (range(0, 132), range(132, 144)),
 ]
 
-result = mf.selection.select_params(
+result = mf.model_selection.select_params(
     "ridge",
     X,
     y,
-    search=mf.selection.grid({"alpha": [0.01, 0.1, 1.0]}),
+    search=mf.model_selection.grid({"alpha": [0.01, 0.1, 1.0]}),
     splits=splits,
 )
 ```

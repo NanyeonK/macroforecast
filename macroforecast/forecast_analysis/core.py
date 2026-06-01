@@ -137,7 +137,7 @@ def forecast_overview(forecasts: Any) -> dict[str, Any]:
     dates = pd.to_datetime(table["date"], errors="coerce")
     combined = _bool_series(table.get("combined"), len(table))
     stored_model = table.get("stored_model", pd.Series([None] * len(table)))
-    selection = table.get("selection", pd.Series([None] * len(table)))
+    selection = table.get("model_selection", pd.Series([None] * len(table)))
     return {
         "n_forecasts": int(len(table)),
         "n_models": int(table["model"].nunique(dropna=True)),
@@ -982,7 +982,7 @@ def tuning_trace(forecasts: Any) -> pd.DataFrame:
     _validate_forecast_table(table)
     rows: list[dict[str, Any]] = []
     for _, row in table.iterrows():
-        selection = _mapping_or_none(row.get("selection"))
+        selection = _mapping_or_none(row.get("model_selection"))
         if selection is None:
             continue
         rows.append(

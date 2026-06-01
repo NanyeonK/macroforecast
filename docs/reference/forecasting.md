@@ -3,7 +3,7 @@
 [Back to reference](index.md)
 
 `macroforecast.forecasting` is the workflow composition module. It connects
-`window`, `preprocessing`, `feature_engineering`, `selection`, `models`, and
+`window`, `preprocessing`, `feature_engineering`, `model_selection`, `models`, and
 `metrics`/`tests`.
 
 ## run
@@ -18,10 +18,10 @@ macroforecast.forecasting.run(
     preprocessing_policy=None,
     features=None,
     feature_policy=None,
-    selection=None,
-    selection_policy=None,
-    selection_metric="mse",
-    maximize_selection=False,
+    model_selection=None,
+    model_selection_policy=None,
+    model_selection_metric="mse",
+    maximize_model_selection=False,
     preset=None,
     params=None,
     target=None,
@@ -45,10 +45,10 @@ macroforecast.forecasting.run(
 | `preprocessing_policy` | `StagePolicy`, str, or `None` | `origin_available` when preprocessing is supplied | Where preprocessing may fit and apply: `full_panel`, `origin_available`, `fit_window`, or `fixed_reference`. |
 | `features` | `FeatureSpec` or `None` | `None` | Feature and target construction operations. For panel-input models such as `dfm_mixed_mariano_murasawa`, leave this as `None`. |
 | `feature_policy` | `StagePolicy`, str, or `None` | `fit_window` | Where stateful feature engineering such as PCA may fit. |
-| `selection` | `SearchSpec`, model-keyed mapping, or `None` | `None` | Hyperparameter candidate generation and search method. `None` uses each model's owned default search space; a model-keyed value of `None` disables selection for that model. |
-| `selection_policy` | `StagePolicy`, str, or `None` | `fit_window` | Which feature rows are supplied to model selection. |
-| `selection_metric` | str or callable | `"mse"` | Objective used during model selection. |
-| `maximize_selection` | bool | `False` | Whether larger selection scores are better. |
+| `model_selection` | `SearchSpec`, model-keyed mapping, or `None` | `None` | Hyperparameter candidate generation and search method. `None` uses each model's owned default search space; a model-keyed value of `None` disables model selection for that model. |
+| `model_selection_policy` | `StagePolicy`, str, or `None` | `fit_window` | Which feature rows are supplied to model selection. |
+| `model_selection_metric` | str or callable | `"mse"` | Objective used during model selection. |
+| `maximize_model_selection` | bool | `False` | Whether larger selection scores are better. |
 | `preset` | str, mapping, or `None` | `None` | Model-owned search-space preset. |
 | `params` | mapping or `None` | `None` | Fixed model parameters. |
 | `target` | str or `None` | `None` | Required for raw panel input when `features` is omitted, and required for panel-input models unless every model spec sets the same `target` parameter. |
@@ -94,17 +94,17 @@ result = mf.forecasting.run(
     preprocessing_policy=mf.window.stage_policy("origin_available"),
     features=features,
     feature_policy=mf.window.stage_policy("fit_window"),
-    selection=mf.selection.search_spec("ridge", preset="small"),
-    selection_policy=mf.window.stage_policy("fit_window"),
+    model_selection=mf.model_selection.search_spec("ridge", preset="small"),
+    model_selection_policy=mf.window.stage_policy("fit_window"),
     preset="small",
 )
 ```
 
-`selection=None` means “use registered model defaults” when a model has a
+`model_selection=None` means “use registered model defaults” when a model has a
 search space. To run fixed parameters with no tuning, pass a model-keyed
-mapping such as `selection={"ridge": None}`. To evaluate a single explicit
-candidate through the selection ledger, pass `selection={"ridge":
-mf.selection.fixed({"alpha": 0.1})}`.
+mapping such as `model_selection={"ridge": None}`. To evaluate a single explicit
+candidate through the model-selection ledger, pass `model_selection={"ridge":
+mf.model_selection.fixed({"alpha": 0.1})}`.
 
 ### Forecast Policies
 
@@ -127,7 +127,7 @@ direct = mf.forecasting.run(
     "ridge",
     target="INDPRO",
     horizons=[1, 3, 12],
-    selection={"ridge": None},
+    model_selection={"ridge": None},
 )
 
 # Direct average growth target over the next 12 months.
@@ -138,7 +138,7 @@ direct_avg = mf.forecasting.run(
     horizon=12,
     forecast_policy="direct_average",
     target_transform="growth",
-    selection={"ridge": None},
+    model_selection={"ridge": None},
 )
 
 # Fit step 1..12 models and average the step growth forecasts.
@@ -149,7 +149,7 @@ path_avg = mf.forecasting.run(
     horizon=12,
     forecast_policy="path_average",
     target_transform="growth",
-    selection={"ridge": None},
+    model_selection={"ridge": None},
 )
 
 # Recursive / iterated forecast: fit one-step AR-style model and iterate to h=12.
@@ -160,7 +160,7 @@ recursive = mf.forecasting.run(
     horizon=12,
     forecast_policy="recursive",
     target_transform="level",
-    selection={"ridge": None},
+    model_selection={"ridge": None},
 )
 ```
 
@@ -226,7 +226,7 @@ result = mf.forecasting.run(
     "midas_beta",
     window=mf.window.poos(min_size=40, horizon=1, step=1),
     params={"midas_beta": {"beta_params": (1.0, 2.0), "alpha": 0.1}},
-    selection={"midas_beta": None},
+    model_selection={"midas_beta": None},
 )
 ```
 
@@ -236,7 +236,7 @@ preprocessing=None)`. If the analysis is a real-time forecasting exercise, pass
 `preprocess_spec(...)` plus an explicit `preprocessing_policy`.
 
 Stage policies are intentionally shared across preprocessing, feature
-engineering, and selection:
+engineering, and model selection:
 
 | Scope | Meaning |
 | --- | --- |
@@ -253,7 +253,7 @@ full re-estimation designs and fixed-reference designs such as “fit PCA
 loadings once, then keep the loadings fixed while origins roll forward.”
 
 The runner metadata records the window, each stage policy, preprocessing
-options, feature-engineering options, selection spec, model specs, and origin
+options, feature-engineering options, model-selection spec, model specs, and origin
 stage records. Each origin stage record includes an `updated` flag showing
 whether that stage fitted new state at that origin.
 
@@ -267,7 +267,7 @@ For raw panel input, `run()` executes one test origin at a time:
 | 2 | `window` | Resolve estimation, validation, test, retrain, and retune rows. |
 | 3 | `preprocessing` | Fit or reuse the preprocessing state according to `preprocessing_policy`; transform the rows needed by the origin. |
 | 4 | `feature_engineering` | Fit or reuse the feature builder according to `feature_policy`; create `X_fit`, `y_fit`, `X_selection`, `y_selection`, `X_test`, and `y_test`. |
-| 5 | `selection` | If enabled, evaluate model parameter candidates on validation splits supplied by the window. |
+| 5 | `model_selection` | If enabled, evaluate model parameter candidates on validation splits supplied by the window. |
 | 6 | `models` | Fit the model on the origin fit window with selected or fixed parameters. |
 | 7 | `models` | Save the fitted object and JSON sidecar when `save_models=True`. |
 | 8 | `forecasting` | Collect point, variance, and quantile forecasts. |
@@ -275,7 +275,7 @@ For raw panel input, `run()` executes one test origin at a time:
 
 If `data` is already a `FeatureSet`, preprocessing and feature construction are
 skipped. The runner slices the supplied `X` and `y` by the window plan and then
-runs selection, model fitting, prediction, and optional model storage.
+runs model selection, model fitting, prediction, and optional model storage.
 
 If every selected model has `input_kind="panel"` and `features=None`, the runner
 uses the window plan to slice the panel directly into fit and test panels. This
@@ -287,8 +287,8 @@ The result metadata records which execution path was used:
 
 | `run.input_path` | Input | Stages run inside `run()` |
 | --- | --- | --- |
-| `panel_to_features` | Raw canonical panel, `DataBundle`, `DataSpec`, or `(panel, metadata)` with feature-matrix models | Optional preprocessing, feature engineering, selection, model fitting, optional combination. |
-| `feature_set` | Prebuilt `FeatureSet` | Selection, model fitting, optional combination. Preprocessing and feature construction are assumed to have already happened. |
+| `panel_to_features` | Raw canonical panel, `DataBundle`, `DataSpec`, or `(panel, metadata)` with feature-matrix models | Optional preprocessing, feature engineering, model selection, model fitting, optional combination. |
+| `feature_set` | Prebuilt `FeatureSet` | Model selection, model fitting, optional combination. Preprocessing and feature construction are assumed to have already happened. |
 | `panel_model` | Canonical panel with panel-input models such as mixed-frequency DFM | Panel slicing, panel-model fitting, optional combination. Runner-level preprocessing and feature engineering are skipped. |
 
 ## Forecast Table
@@ -309,8 +309,8 @@ The result metadata records which execution path was used:
 | `variance_prediction` | Forecast variance when the fitted model exposes `predict_variance(...)`; otherwise `None`. |
 | `quantile_predictions` | Per-row quantile dictionary when the fitted model exposes `predict_quantiles(X)`; otherwise `None`. |
 | `actual` | Realized target value when available. |
-| `params` | Parameters used for the origin fit after selection or fixed overrides. |
-| `selection` | Selection ledger for the origin/model, including `retuned`. |
+| `params` | Parameters used for the origin fit after model selection or fixed overrides. |
+| `model_selection` | Model-selection ledger for the origin/model, including `retuned`. |
 | `stored_model` | Model and metadata sidecar paths when `save_models=True`; otherwise `None`. |
 | `window` | Full window row used for the origin. |
 | `preprocessed` | `True` when runner-level preprocessing was active for the row; otherwise `False`. |
@@ -327,11 +327,11 @@ The result metadata records which execution path was used:
 | `run` | Forecast count, model count, execution path, forecast policy, horizons, meta config, metadata level, and model storage settings. |
 | `data` | Input panel summary from `macroforecast.data.panel_info(...)`. |
 | `window` | Complete `WindowSpec.to_dict()` output. |
-| `stage_policies` | Resolved preprocessing, feature-engineering, and selection policies. |
+| `stage_policies` | Resolved preprocessing, feature-engineering, and model-selection policies. |
 | `preprocessing` | `PreprocessSpec.to_dict()` output, or `None`. |
 | `forecast_policy` | Policy metadata including method, horizons, `future_feature_policy`, and whether observed future predictors were used. |
 | `features` | `FeatureSpec.to_dict()` output or supplied `FeatureSet` metadata. |
-| `selection` | Search spec metadata, model-keyed search metadata, or `None`. |
+| `model_selection` | Search spec metadata, model-keyed search metadata, or `None`. |
 | `combination` | List of resolved forecast-combination specs. |
 | `models` | Runner aliases plus model spec metadata. |
 | `stages` | Origin-level preprocessing and feature-engineering fit records unless `metadata_level="minimal"`. |
@@ -458,10 +458,10 @@ When `feature_policy` is `full_panel` or `fixed_reference`, runner-level
 preprocessing must be absent or `preprocessing_policy` must be `full_panel`.
 This keeps fixed feature state fitted on one well-defined processed panel.
 
-### Multiple Models with Model-Keyed Selection
+### Multiple Models with Model-Keyed Model Selection
 
-`selection` can be one shared `SearchSpec` or a model-keyed mapping. A
-model-keyed `None` disables selection for that model.
+`model_selection` can be one shared `SearchSpec` or a model-keyed mapping. A
+model-keyed `None` disables model selection for that model.
 
 ```python
 result = mf.forecasting.run(
@@ -469,23 +469,23 @@ result = mf.forecasting.run(
     {"linear": "ridge", "sparse": "lasso", "tree": "random_forest"},
     window=window,
     features=features,
-    selection={
-        "linear": mf.selection.grid({"alpha": [0.01, 0.1, 1.0]}),
-        "sparse": mf.selection.cv_path(
+    model_selection={
+        "linear": mf.model_selection.grid({"alpha": [0.01, 0.1, 1.0]}),
+        "sparse": mf.model_selection.cv_path(
             param="alpha",
             values=[0.001, 0.01, 0.1, 1.0],
         ),
-        "tree": mf.selection.random_search(
+        "tree": mf.model_selection.random_search(
             {
-                "n_estimators": mf.selection.randint(100, 500),
-                "max_depth": mf.selection.choice([2, 3, 4, None]),
+                "n_estimators": mf.model_selection.randint(100, 500),
+                "max_depth": mf.model_selection.choice([2, 3, 4, None]),
             },
             n_iter=12,
             random_state=123,
         ),
     },
-    selection_policy=mf.window.stage_policy("fit_window"),
-    selection_metric="mse",
+    model_selection_policy=mf.window.stage_policy("fit_window"),
+    model_selection_metric="mse",
 )
 ```
 
@@ -594,7 +594,7 @@ result = mf.forecasting.run(
             "factor_order": 1,
         }
     },
-    selection={"dfm_mixed_mariano_murasawa": None},
+    model_selection={"dfm_mixed_mariano_murasawa": None},
     features=None,
 )
 ```
@@ -632,7 +632,7 @@ quantile_result = mf.forecasting.run(
             "random_state": 123,
         }
     },
-    selection={"quantile_regression_forest": None},
+    model_selection={"quantile_regression_forest": None},
 )
 
 quantile_result.to_frame()[["prediction", "quantile_predictions"]]
@@ -644,7 +644,7 @@ variance_result = mf.forecasting.run(
     "garch11",
     window=window,
     features=mf.feature_engineering.feature_spec(target="y", horizon=1),
-    selection={"garch11": None},
+    model_selection={"garch11": None},
 )
 
 variance_result.to_frame()[["prediction", "variance_prediction"]]
@@ -682,7 +682,7 @@ preview = mf.forecasting.run(
 ## Trained Model Storage
 
 By default, `run()` saves the fitted model object produced at each forecast
-origin. The runner decides which object to save: after selection, it refits the
+origin. The runner decides which object to save: after model selection, it refits the
 model on the origin fit window with the selected best parameters, then delegates
 the actual pickle and JSON write to `macroforecast.models.save_fit()`.
 
@@ -693,8 +693,8 @@ trained_model/{model_name}/origin_{origin_pos}_h{horizon}_{origin}.pkl
 trained_model/{model_name}/origin_{origin_pos}_h{horizon}_{origin}.json
 ```
 
-Selection remains a runner responsibility because it depends on the window,
-validation split, selection policy, and model-owned search space. Model
+Model selection remains a runner responsibility because it depends on the window,
+validation split, model-selection policy, and model-owned search space. Model
 persistence remains a model-module utility because it only knows how to save a
 fitted object and a metadata sidecar.
 
@@ -707,7 +707,7 @@ The forecast table includes a `stored_model` dictionary for each row:
 | `save_error` | `None` on success, otherwise the pickle error string. |
 
 The sidecar JSON records the model alias, canonical model spec, fit metadata,
-fit diagnostics, selected parameters, selection ledger, and window row used for
+fit diagnostics, selected parameters, model-selection ledger, and window row used for
 the fit. For custom/local callables that cannot be pickled, the runner still
 writes the JSON sidecar and records `save_error`; forecasting continues.
 
@@ -738,7 +738,7 @@ macroforecast.forecasting.ForecastResult(forecasts, metadata={})
 | Attribute | Type | Meaning |
 | --- | --- | --- |
 | `forecasts` | pandas DataFrame | One row per emitted forecast. |
-| `metadata` | dict | Window, preprocessing, feature, model, and selection metadata. |
+| `metadata` | dict | Window, preprocessing, feature, model, and model-selection metadata. |
 
 The forecast table always includes `prediction`. If the fitted model exposes
 `predict_variance(X_test)` or `predict_variance(horizon=...)`, the runner also

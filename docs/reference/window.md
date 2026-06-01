@@ -3,7 +3,7 @@
 [Back to reference](index.md)
 
 `macroforecast.window` defines the estimation/val/test time frame. It is the object
-passed between data, feature engineering, selection, models, and evaluation to
+passed between data, feature engineering, model selection, models, and evaluation to
 answer five questions:
 
 - how the pre-test estimation sample expands or rolls
@@ -36,16 +36,16 @@ All major macro-forecasting time-frame choices are explicit:
 | How often are hyperparameters reselected? | positive integer or pandas offset | `val_* (retune_every=12)`, `val_* (retune_every="12ME")` |
 | Should retuning happen only when the model is refit? | `retune_on_retrain` | `val_* (retune_on_retrain=True/False)` |
 | Can skipped retune origins reuse the previous selected parameters? | `reuse_params` | `val_* (reuse_params=True/False)` |
-| Where may preprocessing, feature engineering, or selection fit state? | `scope` | `stage_policy("full_panel")`, `stage_policy("origin_available")`, `stage_policy("fit_window")`, `stage_policy("fixed_reference")` |
+| Where may preprocessing, feature engineering, or model selection fit state? | `scope` | `stage_policy("full_panel")`, `stage_policy("origin_available")`, `stage_policy("fit_window")`, `stage_policy("fixed_reference")` |
 
 Validation choices are time-aware:
 
 | Function | Design | Typical use |
 | --- | --- | --- |
-| `val_last_block(size=...)` | One final holdout block inside the estimation sample. | Simple holdout selection. |
-| `val_poos(size=...)` | Pseudo-out-of-sample one-step tail splits. | Recursive historical selection with many tail origins. |
+| `val_last_block(size=...)` | One final holdout block inside the estimation sample. | Simple holdout model selection. |
+| `val_poos(size=...)` | Pseudo-out-of-sample one-step tail splits. | Recursive historical model selection with many tail origins. |
 | `val_expanding(min_train_size=..., step=..., horizon=...)` | Expanding inner training sample and forward validation blocks. | Walk-forward validation inside each estimation window. |
-| `val_rolling_blocks(n_blocks=..., block_size=...)` | Several consecutive tail time blocks. | Time-block selection over recent history. |
+| `val_rolling_blocks(n_blocks=..., block_size=...)` | Several consecutive tail time blocks. | Time-block model selection over recent history. |
 | `val_blocked_kfold(n_splits=...)` | Chronological blocked folds with only past data used for training. | Time-aware CV. This is not random iid k-fold. |
 
 ```python
@@ -183,7 +183,7 @@ loadings, and other feature-engineering states.
 the low-level handoff helpers used by runners. They resolve the exact rows
 allowed by a policy for an origin item returned by `WindowSpec.iter_origins()`.
 This keeps policy-to-index logic in `macroforecast.window`, not in
-preprocessing, feature engineering, model, or selection code.
+preprocessing, feature engineering, model, or model selection code.
 
 ```python
 feature_policy = mf.window.stage_policy(
@@ -237,7 +237,7 @@ result = mf.forecasting.run(
     "ridge",
     window=window,
     features=features,
-    selection_policy=mf.window.custom_stage_policy(last_half_of_fit),
+    model_selection_policy=mf.window.custom_stage_policy(last_half_of_fit),
 )
 ```
 
@@ -262,13 +262,13 @@ macroforecast.window.WindowSpec(
 ```
 
 The explicit component fields are the preferred API. The scalar validation
-fields remain to preserve the older selection split behavior.
+fields remain to preserve the older model-selection split behavior.
 
 Output methods:
 
 | Method | Output | Meaning |
 | --- | --- | --- |
-| `split(n_samples)` | list of inner train/val integer positions | Validation splits for parameter selection. |
+| `split(n_samples)` | list of inner train/val integer positions | Validation splits for model-parameter selection. |
 | `to_table(n_samples, index=None)` | DataFrame | Inspectable inner train/val split ranges. |
 | `plan(index)` | DataFrame | Combined estimation/val/test execution plan. |
 | `origins(index)` | DataFrame | Test-origin rows with estimation, fit, and test ranges. |
@@ -302,8 +302,8 @@ Output methods:
 | `retune_cadence` | Hyperparameter retuning cadence metadata. |
 | `retune_on_retrain` | Whether scheduled retunes are allowed only at retrain origins. |
 | `reuse_params` | Whether non-retune origins may reuse the last selected parameters. |
-| `selection_start`, `selection_end` | Label range of the estimation sample used for the active hyperparameter selection run. Non-retune origins reuse the previous range. |
-| `selection_start_pos`, `selection_end_pos`, `n_selection` | Integer positions and length for the active selection sample. |
+| `selection_start`, `selection_end` | Label range of the estimation sample used for the active model-parameter selection run. Non-retune origins reuse the previous range. |
+| `selection_start_pos`, `selection_end_pos`, `n_selection` | Integer positions and length for the active model-selection sample. |
 | `n_val_splits` | Number of inner train/val splits evaluated at this origin. Zero when `retune=False`. |
 | `val_start`, `val_end` | Label range covered by the validation folds at retune origins. |
 | `val_start_pos`, `val_end_pos` | Integer positions for the validation-fold label range. |
@@ -663,7 +663,7 @@ horizon is incomplete.
 
 ## Shortcuts
 
-Shortcuts create a full `WindowSpec` and still support selection-style use.
+Shortcuts create a full `WindowSpec` and still support model-selection-style use.
 
 ### last_block
 

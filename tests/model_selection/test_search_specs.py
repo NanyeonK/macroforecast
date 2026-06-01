@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 import macroforecast as mf
-from tests.selection.helpers import first_prediction, score_model, xy
+from tests.model_selection.helpers import first_prediction, score_model, xy
 
 
 def custom_ordered_search(
@@ -37,7 +37,7 @@ def custom_ordered_search(
 
 
 def test_search_spec_uses_model_owned_space_without_fitting() -> None:
-    search = mf.selection.search_spec(
+    search = mf.model_selection.search_spec(
         "random_forest",
         preset="small",
         method="random",
@@ -59,7 +59,7 @@ def test_search_spec_uses_model_owned_space_without_fitting() -> None:
 
 
 def test_search_spec_threads_genetic_options_from_model_space() -> None:
-    search = mf.selection.search_spec(
+    search = mf.model_selection.search_spec(
         "decision_tree",
         preset="small",
         method="genetic",
@@ -78,7 +78,7 @@ def test_search_spec_threads_genetic_options_from_model_space() -> None:
 
 
 def test_search_spec_includes_model_preprocessing_metadata() -> None:
-    search = mf.selection.search_spec("svr", preset="small", method="grid")
+    search = mf.model_selection.search_spec("svr", preset="small", method="grid")
 
     assert search.metadata["model"] == "svr"
     assert search.metadata["backend"] == "sklearn.svm.SVR"
@@ -90,7 +90,7 @@ def test_search_spec_includes_model_preprocessing_metadata() -> None:
 
 def test_search_spec_and_result_export_json_ready(tmp_path) -> None:
     X, y = xy()
-    search = mf.selection.search_spec(
+    search = mf.model_selection.search_spec(
         "ridge",
         preset="small",
     )
@@ -104,7 +104,7 @@ def test_search_spec_and_result_export_json_ready(tmp_path) -> None:
     assert search.to_metadata()["metadata"]["model_preset"] == "small"
     assert search_dict["param_grid"]["alpha"] == [0.01, 0.1, 1.0]
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         "ridge", X, y, search, window=mf.window.last_block(validation_size=8)
     )
     result_path = tmp_path / "result.json"
@@ -122,14 +122,14 @@ def test_search_spec_and_result_export_json_ready(tmp_path) -> None:
 
 def test_custom_search_runs_user_supplied_search_callable() -> None:
     X, y = xy()
-    search = mf.selection.custom_search(
+    search = mf.model_selection.custom_search(
         "ordered_score",
         custom_ordered_search,
         values=(1.0, 3.0, 2.0),
         random_state=123,
     )
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         score_model,
         X,
         y,
@@ -149,14 +149,14 @@ def test_custom_search_runs_user_supplied_search_callable() -> None:
 
 def test_explicit_search_spec_is_normalized_and_coerced() -> None:
     X, y = xy()
-    search = mf.selection.SearchSpec(
+    search = mf.model_selection.SearchSpec(
         method="RANDOM_SEARCH",
         param_distributions={"alpha": [0.01, 0.1]},
         n_iter=2,
         random_state=0,
     )
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         mf.models.ridge,
         X,
         y,
@@ -172,11 +172,11 @@ def test_explicit_search_spec_is_normalized_and_coerced() -> None:
 def test_support_vector_selection_runs_with_model_owned_space() -> None:
     X, y = xy()
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         "svr",
         X,
         y,
-        search=mf.selection.grid({"C": [0.1, 1.0], "epsilon": [0.01]}),
+        search=mf.model_selection.grid({"C": [0.1, 1.0], "epsilon": [0.01]}),
         window=mf.window.last_block(validation_size=6),
     )
 
@@ -190,11 +190,11 @@ def test_nn_selection_runs_with_fixed_training_params() -> None:
     pytest.importorskip("torch")
     X, y = xy()
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         "nn",
         X,
         y,
-        search=mf.selection.grid(
+        search=mf.model_selection.grid(
             {"hidden_layer_sizes": [(4,)], "weight_decay": [0.0, 0.0001]}
         ),
         window=mf.window.last_block(validation_size=6),
@@ -216,16 +216,16 @@ def test_nn_selection_runs_with_fixed_training_params() -> None:
 
 def test_invalid_explicit_search_spec_errors_early() -> None:
     X, y = xy()
-    search = mf.selection.SearchSpec(method="random", param_distributions={}, n_iter=2)
+    search = mf.model_selection.SearchSpec(method="random", param_distributions={}, n_iter=2)
 
     with pytest.raises(
         ValueError, match="requires at least one parameter distribution"
     ):
-        mf.selection.select_params(mf.models.ridge, X, y, search)
+        mf.model_selection.select_params(mf.models.ridge, X, y, search)
 
 
 def test_search_json_export_falls_back_for_custom_metadata() -> None:
-    search = mf.selection.fixed({"alpha": 0.1})
+    search = mf.model_selection.fixed({"alpha": 0.1})
     search.metadata["callable"] = lambda x: x
 
     exported = search.to_dict()
@@ -235,27 +235,27 @@ def test_search_json_export_falls_back_for_custom_metadata() -> None:
 
 def test_distribution_builders_validate_bounds_early() -> None:
     with pytest.raises(ValueError, match="low < high"):
-        mf.selection.uniform(1.0, 1.0)
+        mf.model_selection.uniform(1.0, 1.0)
     with pytest.raises(ValueError, match="positive bounds"):
-        mf.selection.log_uniform(0.0, 1.0)
+        mf.model_selection.log_uniform(0.0, 1.0)
     with pytest.raises(ValueError, match="low <= high"):
-        mf.selection.randint(5, 4)
+        mf.model_selection.randint(5, 4)
     with pytest.raises(ValueError, match="at least one choice"):
-        mf.selection.choice([])
+        mf.model_selection.choice([])
 
 
 def test_explicit_search_spec_validates_distribution_bounds() -> None:
     X, y = xy()
-    search = mf.selection.SearchSpec(
+    search = mf.model_selection.SearchSpec(
         method="random",
         param_distributions={
-            "alpha": mf.selection.ParamDistribution("log_float", low=-1.0, high=1.0)
+            "alpha": mf.model_selection.ParamDistribution("log_float", low=-1.0, high=1.0)
         },
         n_iter=2,
     )
 
     with pytest.raises(ValueError, match="invalid distribution for 'alpha'"):
-        mf.selection.select_params(
+        mf.model_selection.select_params(
             mf.models.ridge,
             X,
             y,
@@ -264,21 +264,21 @@ def test_explicit_search_spec_validates_distribution_bounds() -> None:
         )
 
 
-def test_public_top_level_selection_exports() -> None:
-    assert mf.select_params is mf.selection.select_params
-    assert mf.search_spec is mf.selection.search_spec
+def test_public_top_level_model_selection_exports() -> None:
+    assert mf.select_params is mf.model_selection.select_params
+    assert mf.search_spec is mf.model_selection.search_spec
     assert not hasattr(mf, "make_search")
     assert not hasattr(mf, "SearchTrial")
-    assert not hasattr(mf.selection, "SearchTrial")
-    assert not hasattr(mf.selection, "split_table")
-    assert not hasattr(mf.selection, "rmse")
-    assert mf.SearchSpec is mf.selection.SearchSpec
-    assert mf.SearchError is mf.selection.SearchError
+    assert not hasattr(mf.model_selection, "SearchTrial")
+    assert not hasattr(mf.model_selection, "split_table")
+    assert not hasattr(mf.model_selection, "rmse")
+    assert mf.SearchSpec is mf.model_selection.SearchSpec
+    assert mf.SearchError is mf.model_selection.SearchError
     assert not hasattr(mf, "rmse")
     assert mf.metrics.rmse is mf.metrics.rmse
     assert mf.split_table is mf.window.split_table
     assert mf.normalize_window_name("holdout") == "last_block"
-    assert "selection" in dir(mf)
+    assert "model_selection" in dir(mf)
     assert "metrics" in dir(mf)
     assert "tests" in dir(mf)
     assert "evaluation" in dir(mf)

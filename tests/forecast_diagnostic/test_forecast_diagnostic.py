@@ -43,7 +43,7 @@ def test_diagnose_forecasts_reads_runner_outputs(tmp_path) -> None:
         "ridge",
         window=_window(),
         features=_features(),
-        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
         model_store=tmp_path / "trained_model",
     )
 
@@ -112,7 +112,7 @@ def test_forecast_overview_counts_combination_and_uncertainty(tmp_path) -> None:
                 "random_state": 123,
             },
         },
-        selection={"ridge": None, "quantile_regression_forest": None},
+        model_selection={"ridge": None, "quantile_regression_forest": None},
         combination="mean",
         model_store=tmp_path / "trained_model",
     )
@@ -132,7 +132,7 @@ def test_ensemble_weights_over_time_reconstructs_equal_and_inverse_weights() -> 
         window=_window(),
         features=_features(),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ols": None, "ridge": None},
+        model_selection={"ols": None, "ridge": None},
         combination=[
             "mean",
             mf.forecasting.combination_spec("inverse_mspe", name="combined_dmspe"),
@@ -159,7 +159,7 @@ def test_residual_and_tuning_callable_views() -> None:
         "ridge",
         window=_window(),
         features=_features(),
-        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
         save_models=False,
     )
 
@@ -252,7 +252,7 @@ def test_stage_update_trace_is_empty_for_feature_set_input() -> None:
         "ridge",
         window=_window(),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
 

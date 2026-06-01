@@ -4,18 +4,18 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
-from tests.selection.helpers import failing_model, first_prediction, score_model, xy
+from tests.model_selection.helpers import failing_model, first_prediction, score_model, xy
 
 
 def test_bayesian_search_runs_gaussian_process_optimizer() -> None:
     X, y = xy()
-    search = mf.selection.bayesian_search(
+    search = mf.model_selection.bayesian_search(
         {"score_value": [1.0, 3.0, 2.0]},
         n_iter=5,
         random_state=3,
     )
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         score_model,
         X,
         y,
@@ -38,17 +38,17 @@ def test_bayesian_search_runs_gaussian_process_optimizer() -> None:
 
 def test_bayesian_search_is_reproducible_with_mixed_distributions() -> None:
     X, y = xy()
-    search = mf.selection.bayesian_search(
+    search = mf.model_selection.bayesian_search(
         {
-            "score_value": mf.selection.uniform(0.0, 4.0),
-            "max_leaf": mf.selection.randint(1, 3),
+            "score_value": mf.model_selection.uniform(0.0, 4.0),
+            "max_leaf": mf.model_selection.randint(1, 3),
             "kind": ["a", "b"],
         },
         n_iter=6,
         random_state=17,
     )
 
-    first = mf.selection.select_params(
+    first = mf.model_selection.select_params(
         score_model,
         X,
         y,
@@ -57,7 +57,7 @@ def test_bayesian_search_is_reproducible_with_mixed_distributions() -> None:
         metric=first_prediction,
         maximize=True,
     )
-    second = mf.selection.select_params(
+    second = mf.model_selection.select_params(
         score_model,
         X,
         y,
@@ -77,13 +77,13 @@ def test_bayesian_search_is_reproducible_with_mixed_distributions() -> None:
 
 def test_bayesian_search_handles_small_finite_spaces() -> None:
     X, y = xy()
-    search = mf.selection.bayesian_search(
+    search = mf.model_selection.bayesian_search(
         {"score_value": [1.0, 2.0]},
         n_iter=5,
         random_state=5,
     )
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         score_model,
         X,
         y,
@@ -100,14 +100,14 @@ def test_bayesian_search_handles_small_finite_spaces() -> None:
 
 def test_bayesian_search_error_table_when_all_trials_fail() -> None:
     X, y = xy()
-    search = mf.selection.bayesian_search(
+    search = mf.model_selection.bayesian_search(
         {"alpha": [0.1, 1.0]},
         n_iter=4,
         random_state=0,
     )
 
-    with pytest.raises(mf.selection.SearchError) as excinfo:
-        mf.selection.select_params(failing_model, X, y, search, window=mf.window.last_block(validation_size=6))
+    with pytest.raises(mf.model_selection.SearchError) as excinfo:
+        mf.model_selection.select_params(failing_model, X, y, search, window=mf.window.last_block(validation_size=6))
 
     assert len(excinfo.value.trials) == 4
     assert set(excinfo.value.trials["status"]) == {"error"}
@@ -115,14 +115,14 @@ def test_bayesian_search_error_table_when_all_trials_fail() -> None:
 
 def test_direct_bayesian_search_spec_gets_runtime_optimizer_metadata() -> None:
     X, y = xy()
-    search = mf.selection.SearchSpec(
+    search = mf.model_selection.SearchSpec(
         method="bayesian",
         param_distributions={"score_value": [1.0, 2.0]},
         n_iter=3,
         random_state=2,
     )
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         score_model,
         X,
         y,
@@ -146,13 +146,13 @@ def test_bayesian_search_falls_back_when_surrogate_fails(monkeypatch) -> None:
         raise RuntimeError("surrogate failed")
 
     monkeypatch.setattr(GaussianProcessRegressor, "fit", fail_fit)
-    search = mf.selection.bayesian_search(
+    search = mf.model_selection.bayesian_search(
         {"score_value": [0.0, 1.0, 2.0, 3.0]},
         n_iter=5,
         random_state=9,
     )
 
-    result = mf.selection.select_params(
+    result = mf.model_selection.select_params(
         score_model,
         X,
         y,

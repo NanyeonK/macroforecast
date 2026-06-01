@@ -64,7 +64,7 @@ implementation is split by responsibility:
 | --- | --- |
 | `targets.py` | `direct_target()`, `average_target()`, and `path_targets()`. |
 | `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA, wavelet-style decomposition, custom feature callables, and time features. |
-| `selection.py` | Shared fitted feature-selection algorithms used by direct selection callables and runner-safe `feature_spec()` method names. |
+| `feature_selection.py` | Shared fitted feature-selection algorithms used by direct selection callables and runner-safe `feature_spec()` method names. |
 | `compose.py` | Reusable step builders and sequential feature composition. |
 | `matrix.py` | Paper-style `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. |
 | `builder.py` | End-to-end `build_features()` alignment of `X`, `y`, and metadata. |

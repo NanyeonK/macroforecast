@@ -302,7 +302,7 @@ def test_forecasting_runner_recursive_works_with_preprocessing_and_feature_polic
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         horizon=2,
         forecast_policy="recursive",
         save_models=False,
@@ -327,7 +327,7 @@ def test_forecasting_runner_recursive_saves_trained_model(tmp_path) -> None:
         target="y",
         horizon=2,
         forecast_policy="recursive",
-        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
         model_store=tmp_path / "trained_model",
     )
     row = result.to_frame()["stored_model"].dropna().iloc[0]
@@ -352,7 +352,7 @@ def test_forecasting_runner_combines_recursive_rows() -> None:
         horizon=2,
         forecast_policy="recursive",
         params={"ridge": {"alpha": 0.1}},
-        selection={"ols": None, "ridge": None},
+        model_selection={"ols": None, "ridge": None},
         combination="mean",
         save_models=False,
     )
@@ -467,7 +467,7 @@ def test_forecasting_runner_supports_fit_aware_feature_steps() -> None:
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -504,7 +504,7 @@ def test_forecasting_runner_supports_target_aware_feature_steps() -> None:
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -538,7 +538,7 @@ def test_forecasting_runner_supports_fit_aware_marx_step() -> None:
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -573,7 +573,7 @@ def test_forecasting_runner_supports_fit_aware_hamilton_step() -> None:
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -617,7 +617,7 @@ def test_forecasting_runner_supports_fit_aware_projection_steps() -> None:
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -655,7 +655,7 @@ def test_forecasting_runner_supports_deterministic_feature_steps() -> None:
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -708,7 +708,7 @@ def test_forecasting_runner_smoke_preprocess_feature_chain_and_selection() -> No
         preprocessing_policy=mf.window.stage_policy("fit_window"),
         features=features,
         feature_policy=mf.window.stage_policy("fit_window"),
-        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
         save_models=False,
     )
     table = result.to_frame()
@@ -717,10 +717,10 @@ def test_forecasting_runner_smoke_preprocess_feature_chain_and_selection() -> No
     assert not table.empty
     assert table["prediction"].notna().all()
     assert result.metadata["features"]["feature_steps"][0]["method"] == "transform"
-    assert result.metadata["selection"]["method"] == "grid"
-    assert result.metadata["selection"]["param_grid"] == {"alpha": [0.01, 0.1]}
+    assert result.metadata["model_selection"]["method"] == "grid"
+    assert result.metadata["model_selection"]["param_grid"] == {"alpha": [0.01, 0.1]}
     assert feature_stage["metadata"]["feature_steps"][2]["fit_state"]["n_components"] == 1
-    assert {selection["retuned"] for selection in table["selection"]} == {True}
+    assert {selection["retuned"] for selection in table["model_selection"]} == {True}
 
 
 def test_forecasting_runner_preserves_data_bundle_metadata() -> None:
@@ -772,7 +772,7 @@ def test_forecasting_runner_supports_panel_input_dfm_mixed_frequency() -> None:
                 "tolerance": 1e-3,
             }
         },
-        selection={"dfm_mixed_mariano_murasawa": None},
+        model_selection={"dfm_mixed_mariano_murasawa": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -829,7 +829,7 @@ def test_forecasting_runner_rejects_conflicting_panel_model_target() -> None:
                     "tolerance": 1e-3,
                 }
             },
-            selection={"dfm_mixed_mariano_murasawa": None},
+            model_selection={"dfm_mixed_mariano_murasawa": None},
             save_models=False,
         )
 
@@ -855,7 +855,7 @@ def test_forecasting_runner_rejects_composite_dfm_midas_until_design_is_explicit
                     "tolerance": 1e-3,
                 }
             },
-            selection={"dfm_unrestricted_midas": None},
+            model_selection={"dfm_unrestricted_midas": None},
             save_models=False,
         )
 
@@ -909,7 +909,7 @@ def test_forecasting_runner_accepts_explicit_mixed_frequency_midas_feature_set()
             test=mf.window.test_origins(horizon=1, step=2),
         ),
         params={"midas_beta": {"beta_params": (1.0, 2.0), "alpha": 0.1}},
-        selection={"midas_beta": None},
+        model_selection={"midas_beta": None},
         save_models=False,
     )
     table = result.to_frame()
@@ -946,7 +946,7 @@ def test_forecasting_runner_supports_multiple_models_and_stage_policies() -> Non
         == "fit_window"
     )
     assert len(result.metadata["models"]) == 2
-    ridge_selection = table.loc[table["model"] == "ridge", "selection"].dropna().iloc[0]
+    ridge_selection = table.loc[table["model"] == "ridge", "model_selection"].dropna().iloc[0]
     assert ridge_selection["window"] == "explicit_splits"
     assert ridge_selection["metadata"]["split_source"] == "explicit"
 
@@ -982,7 +982,7 @@ def test_forecasting_runner_adds_combination_rows() -> None:
     assert base["combination"].isna().all()
     assert combined["combined"].all()
     assert combined["preprocessed"].eq(False).all()
-    assert combined["selection"].isna().all()
+    assert combined["model_selection"].isna().all()
     assert combined["stored_model"].isna().all()
     assert {item["method"] for item in combined["combination"]} == {"mean"}
     for key, group in base.groupby(["date", "origin_pos", "horizon"], sort=False):
@@ -1038,11 +1038,11 @@ def test_forecasting_runner_can_disable_model_owned_selection() -> None:
         window=_window(),
         features=features,
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
     )
     table = result.to_frame()
 
-    assert table["selection"].isna().all()
+    assert table["model_selection"].isna().all()
     assert result.metadata["models"][0]["spec"]["params"]["alpha"] == 0.1
 
 
@@ -1060,7 +1060,7 @@ def test_forecasting_runner_supports_pls_model(tmp_path) -> None:
         "pls",
         window=_window(),
         features=features,
-        selection={"pls": None},
+        model_selection={"pls": None},
         model_store=tmp_path / "trained_model",
     )
     table = result.to_frame()
@@ -1088,7 +1088,7 @@ def test_forecasting_runner_saves_trained_models(tmp_path) -> None:
         "ridge",
         window=_window(),
         features=features,
-        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
         model_store=tmp_path / "trained_model",
     )
     table = result.to_frame()
@@ -1125,7 +1125,7 @@ def test_forecasting_runner_supports_scaled_pca_model() -> None:
         window=_window(),
         features=features,
         params={"scaled_pca": {"n_components": 1}},
-        selection={"scaled_pca": None},
+        model_selection={"scaled_pca": None},
     )
     table = result.to_frame()
 
@@ -1149,7 +1149,7 @@ def test_forecasting_runner_supports_supervised_pca_model() -> None:
         window=_window(),
         features=features,
         params={"supervised_pca": {"n_components": 1, "n_selected": 2}},
-        selection={"supervised_pca": None},
+        model_selection={"supervised_pca": None},
     )
     table = result.to_frame()
 
@@ -1174,7 +1174,7 @@ def test_forecasting_runner_supports_supervised_scaled_pca_model() -> None:
         window=_window(),
         features=features,
         params={"supervised_scaled_pca": {"n_components": 1, "n_selected": 2}},
-        selection={"supervised_scaled_pca": None},
+        model_selection={"supervised_scaled_pca": None},
     )
     table = result.to_frame()
 
@@ -1198,7 +1198,7 @@ def test_forecasting_runner_supports_svr_model() -> None:
         window=_window(),
         features=features,
         params={"svr": {"C": 1.0, "epsilon": 0.01}},
-        selection={"svr": None},
+        model_selection={"svr": None},
     )
     table = result.to_frame()
 
@@ -1229,7 +1229,7 @@ def test_forecasting_runner_supports_random_forest_model() -> None:
                 "n_jobs": 1,
             }
         },
-        selection={"random_forest": None},
+        model_selection={"random_forest": None},
     )
     table = result.to_frame()
 
@@ -1259,7 +1259,7 @@ def test_forecasting_runner_records_quantile_predictions() -> None:
                 "quantile_levels": (0.1, 0.5, 0.9),
             }
         },
-        selection={"quantile_regression_forest": None},
+        model_selection={"quantile_regression_forest": None},
     )
     table = result.to_frame()
 
@@ -1288,7 +1288,7 @@ def test_forecasting_runner_supports_timeseries_and_ensemble_models() -> None:
             "ar": {"n_lag": 2},
             "bagging": {"base": "ridge", "n_estimators": 3, "random_state": 0},
         },
-        selection={"ar": None, "bagging": None},
+        model_selection={"ar": None, "bagging": None},
     )
     table = result.to_frame()
 
@@ -1333,7 +1333,7 @@ def test_forecasting_runner_supports_optional_tree_backends_when_installed(
         window=_window(),
         features=features,
         params={model: params},
-        selection={model: None},
+        model_selection={model: None},
         model_store=tmp_path / "trained_model",
     )
     table = result.to_frame()
@@ -1367,7 +1367,7 @@ def test_forecasting_runner_supports_nn_model_when_torch_is_available() -> None:
                 "device": "cpu",
             },
         },
-        selection={"nn": None},
+        model_selection={"nn": None},
     )
     table = result.to_frame()
 
@@ -1393,7 +1393,7 @@ def test_forecasting_runner_accepts_feature_set_input() -> None:
         "ridge",
         window=_window(),
         params={"ridge": {"alpha": 0.1}},
-        selection={"ridge": None},
+        model_selection={"ridge": None},
     )
     table = result.to_frame()
 
@@ -1472,7 +1472,7 @@ def test_forecasting_runner_supports_macro_random_forest_with_reference_backend(
                 "S_columns": ["x1_lag0", "x2_lag0"],
             }
         },
-        selection={"macro_random_forest": None},
+        model_selection={"macro_random_forest": None},
     )
     table = result.to_frame()
 
@@ -1502,7 +1502,7 @@ def test_forecasting_runner_records_calendar_step_and_retune_reuse() -> None:
         "ridge",
         window=window,
         features=features,
-        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
     )
     table = result.to_frame()
 
@@ -1512,7 +1512,7 @@ def test_forecasting_runner_records_calendar_step_and_retune_reuse() -> None:
     assert {row["test_step"] for row in table["window"]} == {"2ME"}
     assert {bool(row["retrain"]) for row in table["window"]} == {False, True}
     assert {bool(row["retune"]) for row in table["window"]} == {False, True}
-    assert {selection["retuned"] for selection in table["selection"]} == {False, True}
+    assert {selection["retuned"] for selection in table["model_selection"]} == {False, True}
 
 
 def test_forecasting_runner_applies_feature_update_never() -> None:
@@ -2003,7 +2003,7 @@ def _assert_forecast_result_metadata(
         "preprocessing",
         "features",
         "forecast_policy",
-        "selection",
+        "model_selection",
         "combination",
         "models",
         "stages",
@@ -2029,7 +2029,7 @@ def _assert_forecast_result_metadata(
         "quantile_predictions",
         "actual",
         "params",
-        "selection",
+        "model_selection",
         "stored_model",
         "window",
         "preprocessed",

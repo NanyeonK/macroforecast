@@ -40,7 +40,7 @@ Use this sequence when auditing the whole docs site.
 8. [Feature Engineering](feature_engineering.md)
 9. [Window](window.md)
 10. [Models](models.md)
-11. [Selection](selection.md)
+11. [Model Selection](model_selection.md)
 12. [Forecasting](forecasting.md)
 13. [Metrics](metrics.md)
 14. [Tests](tests.md)
@@ -60,8 +60,8 @@ Use this sequence when auditing the whole docs site.
 | `data` vs `preprocessing` | `data` creates canonical panels and metadata; `preprocessing` transforms values. |
 | `preprocessing` vs `feature_engineering` | `preprocessing` cleans variables; `feature_engineering` creates targets and predictors. |
 | `feature_engineering` vs `window` | Feature functions build matrices; `window` decides which dates belong to train/validation/test. |
-| `models` vs `selection` | Models own fit functions and search spaces; `selection` runs parameter search on supplied windows. |
-| `selection` vs `forecasting` | `selection` picks parameters; `forecasting` orchestrates repeated fits and predictions. |
+| `models` vs `model_selection` | Models own fit functions and search spaces; `model_selection` runs parameter search on supplied windows. |
+| `model_selection` vs `forecasting` | `model_selection` picks model parameters; `forecasting` orchestrates repeated fits and predictions. |
 | `metrics` vs `tests` vs `evaluation` | `metrics` score errors; `tests` run statistical tests; `evaluation` assembles reports and slices. |
 | `output` vs `reporting` | `output` creates/writes artifacts; `reporting` formats presentation tables and figure data. |
 | callable API vs future recipes | Current docs describe direct Python callables. YAML/recipe wrappers are intentionally deferred. |

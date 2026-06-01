@@ -21,7 +21,7 @@ from macroforecast.feature_engineering import FeatureSet, FeatureSpec, feature_s
 from macroforecast.meta import get_config
 from macroforecast.models import ModelSpec, get_model, save_fit
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
-from macroforecast.selection import SearchSpec, select_params
+from macroforecast.model_selection import SearchSpec, select_params
 from macroforecast.window import (
     Split,
     StagePolicy,
@@ -57,7 +57,7 @@ _FORECAST_TABLE_COLUMNS = (
     "quantile_predictions",
     "actual",
     "params",
-    "selection",
+    "model_selection",
     "stored_model",
     "window",
     "preprocessed",
@@ -110,10 +110,10 @@ def run(
     preprocessing_policy: StagePolicy | str | None = None,
     features: FeatureSpec | None = None,
     feature_policy: StagePolicy | str | None = None,
-    selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None,
-    selection_policy: StagePolicy | str | None = None,
-    selection_metric: str | Callable[..., float] = "mse",
-    maximize_selection: bool = False,
+    model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None,
+    model_selection_policy: StagePolicy | str | None = None,
+    model_selection_metric: str | Callable[..., float] = "mse",
+    maximize_model_selection: bool = False,
     preset: str | Mapping[str, str | None] | None = None,
     params: Mapping[str, Any] | None = None,
     target: str | None = None,
@@ -133,10 +133,15 @@ def run(
     """Run a windowed macro forecasting experiment.
 
     The runner composes small stage callables. ``window`` owns the temporal
-    design, stage policies decide where preprocessing/features/selection are
-    fitted, model specs fit predictors to targets, and the result records a
-    run-level metadata ledger.
+    design, stage policies decide where preprocessing, features, and model
+    selection are fitted, model specs fit predictors to targets, and the result
+    records a run-level metadata ledger.
     """
+
+    selection = model_selection
+    selection_policy = model_selection_policy
+    selection_metric = model_selection_metric
+    maximize_selection = maximize_model_selection
 
     window_spec = resolve_window(window)
     horizon_values = _resolve_runner_horizons(horizon=horizon, horizons=horizons)
@@ -522,10 +527,10 @@ def _run_multiple_horizons(
             preprocessing_policy=preprocessing_policy,
             features=features,
             feature_policy=feature_policy,
-            selection=selection,
-            selection_policy=selection_policy,
-            selection_metric=selection_metric,
-            maximize_selection=maximize_selection,
+            model_selection=selection,
+            model_selection_policy=selection_policy,
+            model_selection_metric=selection_metric,
+            maximize_model_selection=maximize_selection,
             preset=preset,
             params=params,
             target=target,
@@ -1022,7 +1027,7 @@ def _fit_predict_panel_origin(
                     "quantile_predictions": None,
                     "actual": None if actual is None or pd.isna(actual) else float(actual),
                     "params": best_params,
-                    "selection": {
+                    "model_selection": {
                         "policy": selection_policy.to_dict(),
                         "retuned": False,
                         "metadata": {
@@ -1192,7 +1197,7 @@ def _fit_predict_origin(
                     "quantile_predictions": quantile_value,
                     "actual": actual_value,
                     "params": dict(best_params),
-                    "selection": selection_metadata,
+                    "model_selection": selection_metadata,
                     "stored_model": stored_model,
                     "window": row,
                     "preprocessed": bool(item.get("preprocessed", False)),
@@ -1355,7 +1360,7 @@ def _fit_predict_recursive_origin(
                         "step_levels": step_levels,
                     },
                 },
-                "selection": selection_metadata,
+                "model_selection": selection_metadata,
                 "stored_model": stored_model,
                 "window": row,
                 "preprocessed": bool(item.get("preprocessed", False)),
@@ -1514,7 +1519,7 @@ def _fit_predict_path_average_origin(
                     "quantile_predictions": None,
                     "actual": actual_value,
                     "params": {"steps": params_by_step},
-                    "selection": {
+                    "model_selection": {
                         "policy": selection_policy.to_dict(),
                         "retuned": any(
                             bool(value and value.get("retuned"))
@@ -1755,7 +1760,7 @@ def _validate_panel_selection(
     if selected is not None:
         raise ValueError(
             "panel-input forecasting does not tune model parameters yet; pass "
-            f"selection={{'{model_run.alias}': None}} or selection=None"
+            f"model_selection={{'{model_run.alias}': None}} or model_selection=None"
         )
     if isinstance(selection, Mapping) and (
         model_run.alias in selection or model_run.spec.name in selection
@@ -1991,7 +1996,7 @@ def _store_model_fit(
         "model": model_spec.name,
         "model_spec": model_spec.to_metadata(),
         "params": dict(params),
-        "selection": selection_metadata,
+        "model_selection": selection_metadata,
         "window": dict(row),
     }
     return save_fit(
@@ -2341,7 +2346,7 @@ def _result_metadata(
             "feature_engineering": None
             if feature_policy is None
             else feature_policy.to_dict(),
-            "selection": selection_policy.to_dict(),
+            "model_selection": selection_policy.to_dict(),
         },
         "preprocessing": preprocessing,
         "features": features,
@@ -2351,7 +2356,7 @@ def _result_metadata(
             "uses_observed_future_predictors": future_feature_policy == "observed_future",
             "horizons": [int(value) for value in horizons],
         },
-        "selection": _selection_metadata(selection),
+        "model_selection": _selection_metadata(selection),
         "combination": [spec.to_dict() for spec in combination_specs],
         "models": [
             {"alias": model_run.alias, "spec": model_run.spec.to_metadata()}

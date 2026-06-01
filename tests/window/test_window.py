@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
-from tests.selection.helpers import xy
+from tests.model_selection.helpers import xy
 
 
 def test_expanding_split_uses_past_data_only() -> None:

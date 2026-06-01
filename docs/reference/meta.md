@@ -290,7 +290,7 @@ The inputs match `configure`.
 | `verbose` | `int` | keep current value inside context | non-negative integer | Temporary verbosity. |
 | `default_preprocessing_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary preprocessing default scope. |
 | `default_feature_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary feature default scope. |
-| `default_selection_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary selection default scope. |
+| `default_selection_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary model-selection default scope. |
 | `metadata_level` | str | keep current value inside context | `"minimal"`, `"standard"`, `"full"` | Temporary metadata detail. |
 
 ### Output

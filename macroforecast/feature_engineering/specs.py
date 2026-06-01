@@ -41,7 +41,7 @@ from macroforecast.feature_engineering.shared import (
     _target_metadata_frame,
     _target_transform_to_path_transform,
 )
-from macroforecast.feature_engineering.selection import (
+from macroforecast.feature_engineering.feature_selection import (
     normalize_feature_selection_method,
     select_features,
 )

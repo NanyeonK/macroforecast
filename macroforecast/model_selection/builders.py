@@ -7,8 +7,8 @@ from typing import Any
 import numpy as np
 
 from macroforecast.models.specs import ModelSpec, get_model
-from macroforecast.selection.optimizers import sample_params
-from macroforecast.selection.types import ParamDistribution, SearchSpec
+from macroforecast.model_selection.optimizers import sample_params
+from macroforecast.model_selection.types import ParamDistribution, SearchSpec
 
 
 def uniform(low: float, high: float) -> ParamDistribution:

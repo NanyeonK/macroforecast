@@ -14,7 +14,7 @@ composition in the forecasting runner.
 | `macroforecast.feature_engineering` | Callable feature/target transforms and reusable feature specs. | Forecast-origin scheduling. |
 | `macroforecast.window` | Estimation mode, validation/test time frames, retrain/retune cadence, and reusable stage policies. | Low-level transformation formulas. |
 | `macroforecast.models` | Model callables and model-owned hyperparameter spaces. | Forecast loops or forecast combination. |
-| `macroforecast.selection` | Parameter search over supplied data and validation windows. | Global run orchestration. |
+| `macroforecast.model_selection` | Parameter search over supplied data and validation windows. | Global run orchestration. |
 | `macroforecast.forecasting` | Runner-level composition and forecast combination. | Low-level transformation formulas. |
 | `macroforecast.metrics` | Forecast scoring, forecast ranking, and metric resolution. | Data splits, model fitting, or statistical tests. |
 | `macroforecast.tests` | Forecast-comparison statistical tests and residual diagnostics. | Forecast scoring or model fitting. |
@@ -52,8 +52,8 @@ for origin in window.iter_origins(panel.index):
     train_features = builder.transform(processed, index=train_dates)
     test_features = builder.transform(processed, index=test_dates)
 
-    selection_features = rows_allowed_by(selection_policy, origin)
-    selected_params = selection.select_params(model, selection_features, ...)
+    model_selection_features = rows_allowed_by(model_selection_policy, origin)
+    selected_params = model_selection.select_params(model, model_selection_features, ...)
     fit = model(train_features.X, train_features.y, **selected_params)
     forecast = fit.predict(test_features.X)
 ```
@@ -100,7 +100,7 @@ mf.window.stage_policy(
 ```
 
 The same policy object can be supplied as `preprocessing_policy`,
-`feature_policy`, or `selection_policy` in `forecasting.run(...)`. This makes
+`feature_policy`, or `model_selection_policy` in `forecasting.run(...)`. This makes
 full-sample, expanding, rolling, fixed-reference, and scheduled-refit designs
 expressible without putting time logic inside low-level transformation
 functions.

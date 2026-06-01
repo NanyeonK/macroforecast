@@ -185,14 +185,14 @@ def test_custom_model_combination_and_stage_policy_work_in_runner() -> None:
         model,
         window=_window(),
         features=features,
-        selection_policy=selection_policy,
+        model_selection_policy=selection_policy,
         combination=mf.forecasting.custom_combination("blend", blend, weight=0.25),
     )
     table = result.to_frame()
 
     assert "blend" in set(table["model"])
     assert table.loc[table["model"] == "blend", "combined"].all()
-    assert result.metadata["stage_policies"]["selection"]["scope"] == "custom"
+    assert result.metadata["stage_policies"]["model_selection"]["scope"] == "custom"
     assert result.metadata["combination"][0]["callable"].endswith("blend")
 
 
@@ -231,7 +231,7 @@ def test_custom_extension_flow_runs_from_data_to_output(tmp_path) -> None:
         mean_model,
         default_params={"offset": 0.0},
     )
-    search = mf.selection.custom_search(
+    search = mf.model_selection.custom_search(
         "ordered_offset",
         ordered_offset_search,
         values=(-0.1, 0.0, 0.1),
@@ -242,15 +242,15 @@ def test_custom_extension_flow_runs_from_data_to_output(tmp_path) -> None:
         window=_window(),
         preprocessing=preprocessing,
         features=features,
-        selection={"ols": None, "mean_tuned": search},
-        selection_policy=mf.window.custom_stage_policy(last_fit_half),
+        model_selection={"ols": None, "mean_tuned": search},
+        model_selection_policy=mf.window.custom_stage_policy(last_fit_half),
         combination=mf.forecasting.custom_combination("blend", blend, weight=0.5),
         model_store=tmp_path / "trained_model",
     )
 
     forecast_table = result.to_frame()
     assert {"ols", "mean_tuned", "blend"}.issubset(set(forecast_table["model"]))
-    selected = forecast_table.loc[forecast_table["model"] == "mean_tuned", "selection"].dropna().iloc[0]
+    selected = forecast_table.loc[forecast_table["model"] == "mean_tuned", "model_selection"].dropna().iloc[0]
     assert selected["method"] == "custom"
     assert selected["metadata"]["custom_runtime"] == {"evaluated": 3}
 

@@ -253,7 +253,7 @@ def _combined_group_records(
             "quantile_predictions": None,
             "actual": None if pd.isna(actual.loc[key]) else float(actual.loc[key]),
             "params": dict(spec.params),
-            "selection": None,
+            "model_selection": None,
             "stored_model": None,
             "combined": True,
             "combination": spec.to_dict(),

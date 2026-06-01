@@ -7,8 +7,8 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from macroforecast.selection.runner import evaluate_candidate
-from macroforecast.selection.types import ParamDistribution, SearchSpec, SearchTrial
+from macroforecast.model_selection.runner import evaluate_candidate
+from macroforecast.model_selection.types import ParamDistribution, SearchSpec, SearchTrial
 from macroforecast.window import Split
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from macroforecast.selection.builders import (
+from macroforecast.model_selection.builders import (
     bayesian_search,
     choice,
     custom_search,
@@ -14,8 +14,8 @@ from macroforecast.selection.builders import (
     search_spec,
     uniform,
 )
-from macroforecast.selection.search import select_params
-from macroforecast.selection.types import (
+from macroforecast.model_selection.search import select_params
+from macroforecast.model_selection.types import (
     ParamDistribution,
     SearchError,
     SearchResult,

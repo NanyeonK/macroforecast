@@ -11,7 +11,7 @@ The output API is split into two parts:
 
 | Part | Functions | Role |
 | --- | --- | --- |
-| Output generation | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `selection_table`, `interpretation_table`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index` | Convert package objects into named pandas/JSON outputs. No files are written. |
+| Output generation | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `model_selection_table`, `interpretation_table`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index` | Convert package objects into named pandas/JSON outputs. No files are written. |
 | Artifact writing | `write_artifacts`, `collect_provenance`, `ArtifactManifest`, `ArtifactRecord` | Write selected outputs to disk and record file metadata. |
 
 This means a workflow can first build all candidate outputs, inspect or rename
@@ -86,17 +86,17 @@ For forecast results, returns one row per model/model-spec group with forecast
 counts, horizon counts, and stored-model counts. For `ModelFit` objects, returns
 compact fit metadata without serializing the estimator.
 
-### selection_table
+### model_selection_table
 
 ```python
-macroforecast.output.selection_table(selection) -> pandas.DataFrame
+macroforecast.output.model_selection_table(model_selection) -> pandas.DataFrame
 ```
 
 | Input | Type | Meaning |
 | --- | --- | --- |
-| `selection` | `SearchResult`, search-like object, `DataFrame`, or mapping | Parameter-selection result or trial table. |
+| `model_selection` | `SearchResult`, search-like object, `DataFrame`, or mapping | Model-selection result or trial table. |
 
-Returns the selection trial table when available. Best parameter metadata is
+Returns the model-selection trial table when available. Best parameter metadata is
 stored in the DataFrame attrs.
 
 ### interpretation_table
@@ -134,7 +134,7 @@ macroforecast.output.run_summary(
     *,
     evaluation=None,
     tests=None,
-    selection=None,
+    model_selection=None,
     models=None,
     metadata=None,
 ) -> dict
@@ -142,7 +142,7 @@ macroforecast.output.run_summary(
 
 Returns a JSON-ready summary with `metadata_schema.kind == "run_summary"`.
 It records row counts, forecast models, horizons, evaluation rows, test rows,
-selection best-score fields, model rows, and user metadata when supplied.
+model-selection best-score fields, model rows, and user metadata when supplied.
 
 ### OutputBundle
 
@@ -152,7 +152,7 @@ bundle = macroforecast.output.bundle_outputs(
     evaluation=None,
     tests=None,
     models=None,
-    selection=None,
+    model_selection=None,
     interpretation=None,
     metadata=None,
     include_summary=True,

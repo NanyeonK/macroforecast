@@ -223,29 +223,29 @@ def model_table(models: Any) -> pd.DataFrame:
     return _attach_output_schema(table, kind="model_table", metadata=metadata)
 
 
-def selection_table(selection: Any) -> pd.DataFrame:
-    """Return parameter-selection trial or metadata output."""
+def model_selection_table(model_selection: Any) -> pd.DataFrame:
+    """Return model-selection trial or metadata output."""
 
-    if isinstance(selection, pd.DataFrame):
-        table = selection.copy()
+    if isinstance(model_selection, pd.DataFrame):
+        table = model_selection.copy()
         metadata = {"source": "DataFrame"}
-    elif hasattr(selection, "to_frame"):
-        table = selection.to_frame()
+    elif hasattr(model_selection, "to_frame"):
+        table = model_selection.to_frame()
         metadata = {
-            "source": type(selection).__name__,
-            "best_params": _json_ready(getattr(selection, "best_params", None)),
-            "best_score": _json_ready(getattr(selection, "best_score", None)),
-            "method": _json_ready(getattr(selection, "method", None)),
+            "source": type(model_selection).__name__,
+            "best_params": _json_ready(getattr(model_selection, "best_params", None)),
+            "best_score": _json_ready(getattr(model_selection, "best_score", None)),
+            "method": _json_ready(getattr(model_selection, "method", None)),
         }
-    elif hasattr(selection, "to_metadata"):
-        table = pd.DataFrame([selection.to_metadata()])
-        metadata = {"source": type(selection).__name__}
-    elif isinstance(selection, Mapping):
-        table = pd.DataFrame([dict(selection)])
+    elif hasattr(model_selection, "to_metadata"):
+        table = pd.DataFrame([model_selection.to_metadata()])
+        metadata = {"source": type(model_selection).__name__}
+    elif isinstance(model_selection, Mapping):
+        table = pd.DataFrame([dict(model_selection)])
         metadata = {"source": "mapping"}
     else:
-        raise TypeError("selection_table expects a SearchResult, SearchSpec, DataFrame, or mapping")
-    return _attach_output_schema(table, kind="selection_table", metadata=metadata)
+        raise TypeError("model_selection_table expects a SearchResult, SearchSpec, DataFrame, or mapping")
+    return _attach_output_schema(table, kind="model_selection_table", metadata=metadata)
 
 
 def interpretation_table(value: Any) -> pd.DataFrame:
@@ -289,7 +289,7 @@ def run_summary(
     *,
     evaluation: Any | None = None,
     tests: Any | None = None,
-    selection: Any | None = None,
+    model_selection: Any | None = None,
     models: Any | None = None,
     metadata: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -318,12 +318,12 @@ def run_summary(
             out["evaluation"]["ranking_rows"] = int(len(evaluation.ranking))
     if tests is not None:
         out["tests"] = {"rows": int(len(test_table(tests)))}
-    if selection is not None:
-        table = selection_table(selection)
-        out["selection"] = {
+    if model_selection is not None:
+        table = model_selection_table(model_selection)
+        out["model_selection"] = {
             "rows": int(len(table)),
-            "best_params": _json_ready(getattr(selection, "best_params", None)),
-            "best_score": _json_ready(getattr(selection, "best_score", None)),
+            "best_params": _json_ready(getattr(model_selection, "best_params", None)),
+            "best_score": _json_ready(getattr(model_selection, "best_score", None)),
         }
     if models is not None:
         out["models"] = {"rows": int(len(model_table(models)))}
@@ -362,7 +362,7 @@ def bundle_outputs(
     evaluation: Any | None = None,
     tests: Any | None = None,
     models: Any | None = None,
-    selection: Any | None = None,
+    model_selection: Any | None = None,
     interpretation: Mapping[str, Any] | pd.DataFrame | None = None,
     metadata: Mapping[str, Any] | None = None,
     include_summary: bool = True,
@@ -397,8 +397,8 @@ def bundle_outputs(
         model_out = model_table(forecasts)
         if not model_out.empty:
             artifacts["models"] = model_out
-    if selection is not None:
-        artifacts["selection"] = selection_table(selection)
+    if model_selection is not None:
+        artifacts["model_selection"] = model_selection_table(model_selection)
     if interpretation is not None:
         if isinstance(interpretation, Mapping):
             for name, table in interpretation.items():
@@ -412,7 +412,7 @@ def bundle_outputs(
             forecasts,
             evaluation=evaluation,
             tests=tests,
-            selection=selection,
+            model_selection=model_selection,
             models=models,
             metadata=metadata,
         )
@@ -1078,7 +1078,7 @@ __all__ = [
     "name_outputs",
     "ranking_table",
     "run_summary",
-    "selection_table",
+    "model_selection_table",
     "select_outputs",
     "test_table",
     "write_artifacts",
