@@ -445,6 +445,7 @@ def load_fred_sd(
             "native_frequency_counts": report["native_frequency_counts"],
             "date_anchor_by_column": date_anchor_by_column,
             "date_anchor_counts": report["date_anchor_counts"],
+            "state_summary": report["state_summary"],
         },
         cache_root=cache_root,
     )
@@ -1629,6 +1630,7 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
     variables_seen = sorted({str(row["sd_variable"]) for row in series})
     frequency_counts = Counter(str(row["native_frequency"]) for row in series)
     date_anchor_counts = Counter(str(row["date_anchor"]) for row in series)
+    state_summary = _fred_sd_state_summary(series)
     return {
         "schema_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
         "contract_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
@@ -1646,8 +1648,43 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
         "sd_variables": variables_seen,
         "native_frequency_counts": dict(sorted(frequency_counts.items())),
         "date_anchor_counts": dict(sorted(date_anchor_counts.items())),
+        "state_summary": state_summary,
         "series": series,
     }
+
+
+def _fred_sd_state_summary(series: list[dict[str, object]]) -> list[dict[str, object]]:
+    rows_by_state: dict[str, list[dict[str, object]]] = {}
+    for row in series:
+        state = str(row.get("state") or "")
+        if not state:
+            continue
+        rows_by_state.setdefault(state, []).append(row)
+
+    summary: list[dict[str, object]] = []
+    for state, rows in sorted(rows_by_state.items()):
+        frequencies = Counter(str(row["native_frequency"]) for row in rows)
+        anchors = Counter(str(row["date_anchor"]) for row in rows)
+        observed_starts = sorted(str(row["observed_start"]) for row in rows if row.get("observed_start"))
+        observed_ends = sorted(str(row["observed_end"]) for row in rows if row.get("observed_end"))
+        unknown_variables = sorted(
+            str(row["sd_variable"])
+            for row in rows
+            if str(row.get("native_frequency")) == "unknown"
+        )
+        summary.append(
+            {
+                "state": state,
+                "series_count": len(rows),
+                "sd_variable_count": len({str(row["sd_variable"]) for row in rows}),
+                "native_frequency_counts": dict(sorted(frequencies.items())),
+                "date_anchor_counts": dict(sorted(anchors.items())),
+                "observed_start": observed_starts[0] if observed_starts else None,
+                "observed_end": observed_ends[-1] if observed_ends else None,
+                "unknown_variables": unknown_variables,
+            }
+        )
+    return summary
 
 
 __all__ = [

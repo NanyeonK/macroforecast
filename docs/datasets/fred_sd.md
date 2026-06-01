@@ -44,6 +44,12 @@ The latest workbook has these native frequency counts:
 | quarterly | 546 |
 | unknown | 21 |
 
+These are aggregate counts across all state-series columns. Because FRED-SD is
+state-level, the state axis must also be checked. The latest workbook has 28
+state-series columns for every state/DC, but the monthly/quarterly/unknown mix
+differs by state when some state-variable cells have too few observations for
+reliable frequency inference.
+
 The latest workbook has these date-anchor counts:
 
 | Date anchor | Number of state-series columns | Meaning |
@@ -97,6 +103,7 @@ macroforecast.data.load_fred_sd(
 | `bundle.metadata["native_frequency_counts"]` | Per-column native frequency counts. |
 | `bundle.metadata["date_anchor_by_column"]` | Per-column date-anchor map. |
 | `bundle.metadata["date_anchor_counts"]` | Per-column date-anchor counts. |
+| `bundle.metadata["state_summary"]` | Per-state coverage, frequency counts, date-anchor counts, observed span, and unknown variables. |
 | `bundle.metadata["transform_codes"]` | `{}` because FRED-SD has no official t-code map. |
 
 FRED-SD series metadata is stored in:
@@ -114,11 +121,77 @@ That report contains:
 | `sd_variable_count` | Number of FRED-SD variable groups represented. |
 | `native_frequency_counts` | Count of monthly, quarterly, weekly, annual, irregular, unknown, or other inferred frequencies. |
 | `date_anchor_counts` | Count of date-anchor patterns such as `month_start`, `quarter_start`, or `monthly_weekday_anchor`. |
+| `state_summary` | State-level coverage summary with frequency and date-anchor counts by state. |
 | `series` | Row-level metadata for each state-series column. |
 
 Each `series` row contains `column`, `sd_variable`, `state`, `source_sheet`,
 `native_frequency`, `date_anchor`, `observed_start`, `observed_end`, and
 `non_missing_observation_count`.
+
+Each `state_summary` row contains `state`, `series_count`, `sd_variable_count`,
+`native_frequency_counts`, `date_anchor_counts`, `observed_start`,
+`observed_end`, and `unknown_variables`.
+
+## State Coverage In Latest Workbook
+
+This table is computed from `series-2026-04.xlsx`. The key audit surface is not
+only the aggregate FRED-SD panel shape, but also whether each state/DC has the
+same number of columns and which state-variable pairs fall into `unknown`
+frequency.
+
+| State | State-series columns | Monthly | Quarterly | Unknown | Date-anchor pattern | Earliest obs. | Latest obs. | Unknown variables |
+| --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- |
+| `AK` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1950-01-01 | 2026-04-04 | NATURNQGSP |
+| `AL` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `AR` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `AZ` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `CA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `CO` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `CT` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | NATURNQGSP |
+| `DC` | 28 | 16 | 8 | 4 | month_start: 15, monthly_weekday_anchor: 1, none: 4, quarter_start: 8 | 1948-01-01 | 2026-04-04 | CONSTNQGSP, MANNQGSP, MINNG, NATURNQGSP |
+| `DE` | 28 | 16 | 10 | 2 | month_start: 15, monthly_weekday_anchor: 1, none: 2, quarter_start: 10 | 1948-01-01 | 2026-04-04 | MINNG, NATURNQGSP |
+| `FL` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `GA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `HI` | 28 | 16 | 10 | 2 | month_start: 15, monthly_weekday_anchor: 1, none: 2, quarter_start: 10 | 1950-01-01 | 2026-04-04 | MINNG, NATURNQGSP |
+| `IA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `ID` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | NATURNQGSP |
+| `IL` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `IN` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | NATURNQGSP |
+| `KS` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `KY` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `LA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `MA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `MD` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `ME` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | NATURNQGSP |
+| `MI` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `MN` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `MO` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `MS` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `MT` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `NC` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `ND` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `NE` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `NH` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `NJ` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `NM` | 28 | 16 | 11 | 1 | month_start: 15, monthly_weekday_anchor: 1, none: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | RENTS |
+| `NV` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `NY` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `OH` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `OK` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `OR` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `PA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `RI` | 28 | 16 | 9 | 3 | month_start: 15, monthly_weekday_anchor: 1, none: 3, quarter_start: 9 | 1948-01-01 | 2026-04-04 | CONSTNQGSP, NATURNQGSP, RENTS |
+| `SC` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `SD` | 28 | 16 | 11 | 1 | month_start: 15, monthly_weekday_anchor: 1, none: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | RENTS |
+| `TN` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `TX` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `UT` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `VA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `VT` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | NATURNQGSP |
+| `WA` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `WI` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | NATURNQGSP |
+| `WV` | 28 | 17 | 11 | 0 | month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11 | 1948-01-01 | 2026-04-04 | - |
+| `WY` | 28 | 17 | 10 | 1 | month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10 | 1948-01-01 | 2026-04-04 | MANNQGSP |
 
 ## Variable Coverage In Latest Workbook
 

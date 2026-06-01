@@ -244,7 +244,7 @@ count, native frequency, and date-anchor pattern inferred from the official
 series workbook. The same frequency and date-anchor maps are exposed in
 `metadata["native_frequency_by_column"]`,
 `metadata["native_frequency_counts"]`, `metadata["date_anchor_by_column"]`,
-and `metadata["date_anchor_counts"]`.
+`metadata["date_anchor_counts"]`, and `metadata["state_summary"]`.
 
 See [FRED-SD](../datasets/fred_sd.md) for mixed-frequency state-series details
 and t-code limitations.

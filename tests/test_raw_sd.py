@@ -17,6 +17,16 @@ def test_load_fred_sd_from_fixture_workbook(tmp_path: Path) -> None:
     assert metadata(bundle)["frequency"] == "monthly"
     assert metadata(bundle)["native_frequency_counts"] == {"monthly": 6}
     assert metadata(bundle)["date_anchor_counts"] == {"month_start": 6}
+    assert metadata(bundle)["state_summary"][0] == {
+        "state": "CA",
+        "series_count": 2,
+        "sd_variable_count": 2,
+        "native_frequency_counts": {"monthly": 2},
+        "date_anchor_counts": {"month_start": 2},
+        "observed_start": "2000-01-01",
+        "observed_end": "2000-04-01",
+        "unknown_variables": [],
+    }
     assert metadata(bundle)["support_tier"] == "stable"
     assert bundle.panel.shape[0] > 0
     assert any(col.startswith("UR_") for col in bundle.panel.columns)
@@ -40,6 +50,28 @@ def test_load_fred_sd_can_filter_variables_and_states(tmp_path: Path) -> None:
     assert report["sd_variable_count"] == 1
     assert report["native_frequency_counts"] == {"monthly": 2}
     assert report["date_anchor_counts"] == {"month_start": 2}
+    assert report["state_summary"] == [
+        {
+            "state": "CA",
+            "series_count": 1,
+            "sd_variable_count": 1,
+            "native_frequency_counts": {"monthly": 1},
+            "date_anchor_counts": {"month_start": 1},
+            "observed_start": "2000-01-01",
+            "observed_end": "2000-04-01",
+            "unknown_variables": [],
+        },
+        {
+            "state": "TX",
+            "series_count": 1,
+            "sd_variable_count": 1,
+            "native_frequency_counts": {"monthly": 1},
+            "date_anchor_counts": {"month_start": 1},
+            "observed_start": "2000-01-01",
+            "observed_end": "2000-04-01",
+            "unknown_variables": [],
+        },
+    ]
     assert report["series"][0]["column"] == "UR_CA"
     assert report["series"][0]["sd_variable"] == "UR"
     assert report["series"][0]["state"] == "CA"
@@ -81,5 +113,17 @@ def test_load_fred_sd_detects_weekly_and_monthly_columns(tmp_path: Path) -> None
     assert metadata(bundle)["native_frequency_counts"] == {"monthly": 1, "weekly": 1}
     assert metadata(bundle)["date_anchor_counts"] == {"month_start": 1, "weekly": 1}
     assert metadata(bundle)["native_frequency_by_column"] == {"M_CA": "monthly", "W_CA": "weekly"}
+    assert metadata(bundle)["state_summary"] == [
+        {
+            "state": "CA",
+            "series_count": 2,
+            "sd_variable_count": 2,
+            "native_frequency_counts": {"monthly": 1, "weekly": 1},
+            "date_anchor_counts": {"month_start": 1, "weekly": 1},
+            "observed_start": "2020-01-01",
+            "observed_end": "2020-02-19",
+            "unknown_variables": [],
+        }
+    ]
     assert report["series"][0]["native_frequency"] == "weekly"
     assert report["series"][0]["date_anchor"] == "weekly"
