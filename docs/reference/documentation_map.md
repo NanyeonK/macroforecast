@@ -52,6 +52,28 @@ Use this sequence when auditing the whole docs site.
 20. [Reporting](reporting.md)
 21. [Reference Verification](reference_verification.md)
 
+## Reference Page Format
+
+Reference pages should use the same contract-first structure when a page
+documents callable functions. Exact sections can vary by module, but each
+public callable should make these items easy to find:
+
+| Section | Required content |
+| --- | --- |
+| `Purpose` | What the module owns and what it explicitly does not own. |
+| `Public Functions` | Function list grouped by role, with one-line outputs and purpose. |
+| `Public Flow` | Minimal executable call sequence when the module has a normal workflow. |
+| Function `Signature` | Fully qualified callable name, arguments, defaults, and return type. |
+| Function `Input` | Parameter name, type, default, allowed values, and meaning. |
+| Function `Defaults` | Defaults that matter for reproducibility, especially hidden constants or metadata behavior. |
+| Function `Output` | Return object, fields, table columns, and serialization helpers. |
+| `Metadata` | Stage key and stored provenance when the function writes metadata. |
+| `Validation` or notes | Error conditions and boundary cases where they are non-obvious. |
+
+Use display labels for user-facing choices when possible, and put stored enum
+values in code formatting. Avoid bare lists such as `"raise" | "continue"`
+without explaining the meaning of each choice.
+
 ## Module Boundaries
 
 | Boundary | Rule |

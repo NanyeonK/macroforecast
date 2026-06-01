@@ -217,7 +217,7 @@ def outlier_summary(
         iqr_mask = pd.DataFrame(False, index=numeric.index, columns=numeric.columns)
     if include_zscore:
         # Match preprocessing.zscore_outlier_clean: population standard
-        # deviation with ddof=0. data_summary should describe the same outlier
+        # deviation with ddof=0. data_analysis should describe the same outlier
         # rule that preprocessing would apply, not a sample-std variant.
         sd = numeric.std(ddof=0).replace(0, pd.NA)
         zscore_mask = ((numeric - numeric.mean()).abs() / sd) > float(zscore_threshold)
@@ -399,8 +399,9 @@ def summarize_data(
     _validate_summary_metrics(selected_metrics)
     report_metadata = attach_metadata(
         metadata,
-        "data_summary",
+        "data_analysis",
         {
+            "analysis_type": "single_panel",
             "metrics": list(selected_metrics),
             "include_correlation": bool(include_correlation),
             "correlation_method": correlation_method if include_correlation else None,

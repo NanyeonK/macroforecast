@@ -19,7 +19,7 @@ def _trending_frame(n: int = 80) -> pd.DataFrame:
 
 def test_adf_runs_per_series():
     frame = _trending_frame()
-    results = mf.data_summary.stationarity_tests(
+    results = mf.data_analysis.stationarity_tests(
         frame,
         test="adf",
         scope="target_and_predictors",
@@ -36,7 +36,7 @@ def test_adf_runs_per_series():
 
 def test_kpss_runs_and_distinguishes_stationary_vs_trending():
     frame = _trending_frame()
-    results = mf.data_summary.stationarity_tests(
+    results = mf.data_analysis.stationarity_tests(
         frame,
         test="kpss",
         scope="target_and_predictors",
@@ -52,7 +52,7 @@ def test_kpss_runs_and_distinguishes_stationary_vs_trending():
 
 def test_multi_runs_all_three_when_available():
     frame = _trending_frame()
-    results = mf.data_summary.stationarity_tests(
+    results = mf.data_analysis.stationarity_tests(
         frame,
         test="multi",
         scope="target_and_predictors",
@@ -69,7 +69,7 @@ def test_multi_runs_all_three_when_available():
 
 def test_scope_target_only_filters_to_target():
     frame = _trending_frame()
-    results = mf.data_summary.stationarity_tests(
+    results = mf.data_analysis.stationarity_tests(
         frame,
         test="adf",
         scope="target_only",
@@ -81,7 +81,7 @@ def test_scope_target_only_filters_to_target():
 
 def test_scope_predictors_only_excludes_target():
     frame = _trending_frame()
-    results = mf.data_summary.stationarity_tests(
+    results = mf.data_analysis.stationarity_tests(
         frame,
         test="adf",
         scope="predictors_only",
@@ -101,7 +101,7 @@ def test_insufficient_data_does_not_crash():
         ),
         date="date",
     )
-    results = mf.data_summary.stationarity_tests(
+    results = mf.data_analysis.stationarity_tests(
         short, test="adf", scope="target_and_predictors", target=None, targets=()
     )
     assert results["by_series"]["x"]["status"] == "insufficient_data"
@@ -116,21 +116,21 @@ def test_phillips_perron_public_callable_runs_without_arch():
     rng = np.random.default_rng(0)
     # White noise -> stationary -> reject unit root.
     y_stationary = rng.normal(size=200)
-    res = mf.data_summary.phillips_perron_test(y_stationary, alpha=0.05)
+    res = mf.data_analysis.phillips_perron_test(y_stationary, alpha=0.05)
     assert "statistic" in res and "p_value" in res
     assert res["p_value"] < 0.05
     # Random walk -> unit root -> do not reject.
     y_rw = np.cumsum(rng.normal(size=200))
-    res_rw = mf.data_summary.phillips_perron_test(y_rw, alpha=0.05)
+    res_rw = mf.data_analysis.phillips_perron_test(y_rw, alpha=0.05)
     assert res_rw["p_value"] > 0.05
 
 
 def test_phillips_perron_validates_alpha_and_pvalue_inputs():
     with pytest.raises(ValueError, match="alpha"):
-        mf.data_summary.phillips_perron_test([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], alpha=0.0)
+        mf.data_analysis.phillips_perron_test([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], alpha=0.0)
 
     with pytest.raises(ValueError, match="z_tau"):
-        mf.data_summary.mackinnon_pp_pvalue(np.inf, n=100)
+        mf.data_analysis.mackinnon_pp_pvalue(np.inf, n=100)
 
     with pytest.raises(ValueError, match="n"):
-        mf.data_summary.mackinnon_pp_pvalue(-3.0, n=0)
+        mf.data_analysis.mackinnon_pp_pvalue(-3.0, n=0)

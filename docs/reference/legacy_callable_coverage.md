@@ -32,7 +32,7 @@ These old surfaces are not gaps.
 | --- | --- | --- |
 | Global defaults | `macroforecast.meta` | Package-level config, seed/default management, context manager. |
 | Data panels and metadata | `macroforecast.data` | Canonical pandas panel, metadata attachment, custom CSV/parquet loading, FRED-MD/QD/SD loaders, vintage listing, frequency inference/alignment, Chow-Lin disaggregation, same-period policy, regime metadata. |
-| Data summary and comparison | `macroforecast.data_summary`, `macroforecast.data_analysis` | Single-panel summary and before/after analysis. |
+| Data summary and comparison | `macroforecast.data_analysis` | Single-panel summary and before/after analysis. |
 | Preprocessing | `macroforecast.preprocessing` | FRED-style transform codes, FRED-SD code suggestions, outlier handling, imputation, standardization, frame-edge handling, frequency alignment, reusable fit/transform specs. |
 | Feature construction | `macroforecast.feature_engineering` | Direct, average, and path targets; lags; rolling means; MARX/MAF; mixed-frequency lags; time/season dummies; transforms; filters; polynomial/interactions; PCA, group PCA, sparse PCA, varimax, PLS, SIR, DFM; random projection/Nystroem; selection methods; reusable feature specs. |
 | Feature analysis | `macroforecast.feature_analysis` | Overview, correlation, target correlation, factor diagnostics, lag diagnostics, MARX diagnostics, stage shift, selection stability/similarity, custom diagnostics. |
@@ -68,7 +68,7 @@ intentionally excluded:
 
 | Item | Status |
 | --- | --- |
-| Legacy diagnostic ops | Covered by `feature_analysis`, `forecast_analysis`, `data_summary`, and `data_analysis`. |
+| Legacy diagnostic ops | Covered by `feature_analysis`, `forecast_analysis`, and `data_analysis`. |
 | Old output ops | Covered by `output` plus the new `reporting` module. |
 | Legacy MIDAS feature/model split | Covered by `mixed_frequency_lags()` and MIDAS model callables. |
 | Legacy Chow-Lin op | Covered by `data.chow_lin_disaggregate()` and `data.align_frequency(..., quarterly_to_monthly="chow_lin")`. |

@@ -404,6 +404,7 @@ def _data_analysis_metadata(
         base_metadata,
         "data_analysis",
         {
+            "analysis_type": "raw_vs_processed",
             "before": _panel_snapshot(raw),
             "after": _panel_snapshot(clean),
             "common": {

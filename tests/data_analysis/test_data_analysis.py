@@ -215,6 +215,7 @@ def test_analyze_data_returns_report_with_optional_correlation():
     assert report.metadata["stage"] == "preprocessed"
     assert report.metadata["data_analysis"]["before"]["missing_values"] == 1
     assert report.metadata["data_analysis"]["after"]["missing_values"] == 0
+    assert report.metadata["data_analysis"]["analysis_type"] == "raw_vs_processed"
     assert report.metadata["data_analysis"]["common"]["changed_cells"] == 2
     assert report.metadata["data_analysis"]["options"]["include_correlation"] is True
     assert report.metadata["data_analysis"]["options"]["sample"] == "common_index"
