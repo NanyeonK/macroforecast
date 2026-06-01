@@ -217,7 +217,6 @@ def test_reprocess_default_pipeline_matches_fred_md_order():
     )
     metadata = {
         "dataset": "fred_md",
-        "source_family": "fred-md",
         "frequency": "monthly",
         "transform_codes": {"level": 1, "diff": 2, "diff2": 3, "logdiff": 5},
     }

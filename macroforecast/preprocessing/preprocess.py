@@ -786,7 +786,7 @@ def _apply_tcode_lag_step(
 
 
 def _data_metadata_warning_message(metadata: Mapping[str, Any]) -> str | None:
-    if metadata.get("dataset") and metadata.get("source_family"):
+    if metadata.get("dataset"):
         return None
     return (
         "reprocess() works best with metadata produced by macroforecast.data. "

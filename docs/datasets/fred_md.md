@@ -13,8 +13,7 @@ It is loaded with `mf.data.load_fred_md()` and returned as a canonical
 | Dataset | FRED-MD |
 | Native frequency | Monthly |
 | Package loader | `macroforecast.data.load_fred_md()` |
-| Package dataset id | `"fred_md"` |
-| Package source family | `"fred-md"` |
+| Metadata dataset | `"fred_md"` |
 | Current package output | `DataBundle(panel, metadata)` |
 | Panel index | `DatetimeIndex` named `date` |
 | Panel columns | FRED-MD series mnemonics |
@@ -98,7 +97,6 @@ macroforecast.data.load_fred_md(
 | --- | --- |
 | `bundle.panel` | Monthly canonical panel with `DatetimeIndex` named `date`. |
 | `bundle.metadata["dataset"]` | `"fred_md"` |
-| `bundle.metadata["source_family"]` | `"fred-md"` |
 | `bundle.metadata["frequency"]` | `"monthly"` |
 | `bundle.metadata["version_mode"]` | `"current"` or `"vintage"` |
 | `bundle.metadata["vintage"]` | Requested vintage label, or `None` for current. |

@@ -59,6 +59,7 @@ def test_load_fred_md_from_fixture_copy(tmp_path: Path) -> None:
     assert isinstance(bundle, DataBundle)
     assert isinstance(bundle.panel, pd.DataFrame)
     assert metadata(bundle)["dataset"] == "fred_md"
+    assert "source_family" not in metadata(bundle)
     assert metadata(bundle)["frequency"] == "monthly"
     assert metadata(bundle)["artifact"]["file_format"] == "csv"
     assert metadata(bundle)["transform_codes"]["INDPRO"] == 5
@@ -119,6 +120,7 @@ def test_load_fred_qd_from_fixture_copy(tmp_path: Path) -> None:
 
     assert isinstance(bundle, DataBundle)
     assert metadata(bundle)["dataset"] == "fred_qd"
+    assert "source_family" not in metadata(bundle)
     assert metadata(bundle)["frequency"] == "quarterly"
     assert metadata(bundle)["artifact"]["file_format"] == "csv"
     assert bundle.panel.index[-1].strftime("%Y-%m") == "2001-04"

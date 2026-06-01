@@ -327,7 +327,6 @@ def load_fred_md(
     return _official_bundle(
         panel,
         dataset="fred_md",
-        source_family="fred-md",
         frequency="monthly",
         request=request,
         source_url=source_url,
@@ -369,7 +368,6 @@ def load_fred_qd(
     return _official_bundle(
         panel,
         dataset="fred_qd",
-        source_family="fred-qd",
         frequency="quarterly",
         request=request,
         source_url=source_url,
@@ -737,19 +735,18 @@ def _official_bundle(
     panel: pd.DataFrame,
     *,
     dataset: str,
-    source_family: str,
     frequency: str,
     request: _VersionRequest,
     source_url: str,
     local_path: Path,
     file_format: str,
     cache_hit: bool,
+    source_family: str | None = None,
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
 ) -> DataBundle:
     metadata = {
         "dataset": dataset,
-        "source_family": source_family,
         "frequency": frequency,
         "version_mode": request.mode,
         "vintage": request.vintage,
@@ -766,6 +763,8 @@ def _official_bundle(
         ),
         "transform_codes": dict(transform_codes or {}),
     }
+    if source_family is not None:
+        metadata["source_family"] = source_family
     bundle = _bundle(panel, metadata)
     _append_manifest_entry(metadata, cache_root=cache_root)
     return bundle
