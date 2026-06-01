@@ -1,4 +1,4 @@
-# Models
+# macroforecast.models
 
 [Back to reference](index.md)
 
@@ -80,6 +80,23 @@ for downstream forecasting and result records.
 
 Volatility functions return `VolatilityFit`, which extends `ModelFit` with
 `predict_variance(horizon=1)` and `conditional_volatility`.
+
+Some model families expose backend estimator classes as public symbols. These
+are useful when users need estimator-native attributes, custom wrappers, or
+type checks; the normal user entry point remains the lowercase fit function.
+
+| Estimator class | Fit function | Meaning |
+| --- | --- | --- |
+| `MARSRegressor` | `mars(...)` | Internal MARS-style spline regressor. |
+| `SlowGrowingTreeRegressor` | `slow_growing_tree(...)` | Slow-growing tree backend. |
+| `QuantileRegressionForestRegressor` | `quantile_regression_forest(...)` | Quantile forest backend. |
+| `BaggingRegressor` | `bagging(...)` | Bagging backend. |
+| `BoogingRegressor` | `booging(...)` | Booging backend. |
+| `MacroRandomForestRegressor` | `macro_random_forest(...)` | Macro Random Forest backend. |
+| `SupervisedPCARegressor` | `supervised_pca(...)` | Supervised PCA backend. |
+| `SupervisedScaledPCARegressor` | `supervised_scaled_pca(...)` | Supervised scaled-PCA backend. |
+| `GARCHEstimator` | `garch11(...)` and `egarch(...)` | ARCH/GARCH volatility backend. |
+| `RealizedGARCHEstimator` | `realized_garch(...)` | Realized-GARCH backend. |
 
 ### Fit Persistence
 
@@ -356,6 +373,8 @@ macroforecast.models.model_search_space(model, *, preset=None)
 ```
 
 Returns the model-owned candidate dictionary for the selected preset.
+`MODEL_SPECS` is the public registry backing `get_model(...)`,
+`list_model_specs()`, `describe_model(...)`, and `model_search_space(...)`.
 
 ```python
 macroforecast.models.model_search_space("random_forest", preset="small")

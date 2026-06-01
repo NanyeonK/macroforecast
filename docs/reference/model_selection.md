@@ -1,4 +1,4 @@
-# Model Selection
+# macroforecast.model_selection
 
 [Back to reference](index.md)
 

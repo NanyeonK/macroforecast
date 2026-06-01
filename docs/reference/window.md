@@ -1,4 +1,4 @@
-# Window
+# macroforecast.window
 
 [Back to reference](index.md)
 
@@ -137,7 +137,7 @@ window = mf.window.spec(
 | Shortcut windows | `last_block()`, `poos()`, `expanding()`, `rolling_blocks()`, `blocked_kfold()` |
 | Inspect windows | `WindowSpec.plan()`, `WindowSpec.origins()`, `WindowSpec.test_mask()`, `WindowSpec.align()`, `WindowSpec.to_table()` |
 | Runner handoff | `WindowSpec.val_splits_for_origin()`, `WindowSpec.iter_origins()`, `WindowSpec.iter_slices()` |
-| Low-level split generators | `last_block_split()`, `poos_split()`, `expanding_split()`, `rolling_blocks_split()`, `blocked_kfold_split()` |
+| Low-level split generators | `make_splitter()`, `last_block_split()`, `poos_split()`, `expanding_split()`, `rolling_blocks_split()`, `blocked_kfold_split()` |
 
 ## StagePolicy
 
@@ -747,7 +747,9 @@ Output columns:
 
 ## Aliases
 
-`normalize_window_name()` and `resolve_window()` accept these aliases:
+`normalize_window_name()` and `resolve_window()` accept these aliases.
+`resolve_stage_policy()` applies the same normalization idea to stage policies,
+accepting a `StagePolicy`, string scope, mapping, or `None`.
 
 | Alias | Canonical |
 | --- | --- |

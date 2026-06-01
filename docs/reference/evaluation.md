@@ -21,6 +21,14 @@ The public API contract is:
 | `macroforecast.tests` | Forecast-comparison tests, density diagnostics, residual diagnostics. | General scoring tables. |
 | `macroforecast.evaluation` | Multi-slice evaluation reports, OOS-period filtering, benchmark comparisons, regime scoring, and error decomposition. | Raw metric functions or statistical test functions. |
 
+Public defaults:
+
+| Symbol | Meaning |
+| --- | --- |
+| `DEFAULT_METRICS` | Default metric tuple used by `evaluate_report(...)`. |
+| `DEFAULT_SCORE_BY` | Default grouping columns for score aggregation. |
+| `BENCHMARK_METRICS` | Default benchmark-comparison metrics. |
+
 ## Public Flow
 
 ```python

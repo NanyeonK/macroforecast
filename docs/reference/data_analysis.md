@@ -148,7 +148,7 @@ macroforecast.data_analysis.summarize_data(
 
 | Default | Value |
 | --- | --- |
-| Summary metrics | `("mean", "sd", "min", "max", "n_obs", "n_missing")` |
+| Summary metrics | `DEFAULT_SUMMARY_METRICS = ("mean", "sd", "min", "max", "n_obs", "n_missing")` |
 | Correlation included | `False` |
 | Outlier summary included | `False` |
 | Stationarity tests included | `False` |

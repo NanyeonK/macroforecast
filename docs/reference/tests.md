@@ -1,4 +1,4 @@
-# Tests
+# macroforecast.tests
 
 [Back to reference](index.md)
 

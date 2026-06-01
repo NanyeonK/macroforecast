@@ -1,4 +1,4 @@
-# Interpretation
+# macroforecast.interpretation
 
 [Back to reference](index.md)
 
@@ -605,6 +605,7 @@ rejected because the recurrent hidden-state interpretation does not apply.
 
 ```python
 macroforecast.interpretation.saliency_map(model, X)
+macroforecast.interpretation.gradient_attribution(model, X, method="saliency")
 macroforecast.interpretation.integrated_gradients(model, X, baseline=None, n_steps=50)
 macroforecast.interpretation.gradient_shap(model, X, baseline=None, n_samples=20)
 macroforecast.interpretation.deep_lift(model, X, baseline=None)
@@ -616,10 +617,11 @@ Input: a fitted torch-backed model from `mf.models.nn(...)`, `mf.models.lstm(...
 Output columns: `feature`, `importance`, `mean_attribution`,
 `std_attribution`, and `method`.
 
-`saliency_map`, `integrated_gradients`, and `gradient_shap` are implemented
-directly with torch autograd. `deep_lift` uses Captum and therefore requires
-the `deep` extra. For recurrent models, attribution is averaged across sequence
-positions before feature-level aggregation.
+`gradient_attribution` is the method-dispatching helper. `saliency_map`,
+`integrated_gradients`, and `gradient_shap` are implemented directly with torch
+autograd. `deep_lift` uses Captum and therefore requires the `deep` extra. For
+recurrent models, attribution is averaged across sequence positions before
+feature-level aggregation.
 
 ## Custom Interpretation
 

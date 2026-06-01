@@ -34,6 +34,15 @@ panel = processed.panel
 metadata = processed.metadata
 ```
 
+## Public Contracts
+
+| Symbol | Meaning |
+| --- | --- |
+| `PreprocessedData` | Output object returned by `reprocess(...)` and `custom_preprocess(...)`. |
+| `PreprocessInput` | Accepted direct preprocessing input type: `DataSpec`, `DataBundle`, `(panel, metadata)`, or `DataFrame`. |
+| `PreprocessSpec` | Runner-compatible fit/transform preprocessing contract. |
+| `FittedPreprocessor` | Fitted preprocessing state used by the runner for fit-window or fixed-reference policies. |
+
 ## Default Order
 
 | Step | Default | Meaning |
@@ -339,6 +348,29 @@ These helpers return `pandas.DataFrame` unless noted.
 | `standardize_panel(panel, method=...)` | DataFrame | DataFrame | Apply one full-panel standardization policy. |
 | `handle_frame_edges(panel, method=...)` | DataFrame | DataFrame | Keep/drop/truncate/fill remaining unbalanced edges. |
 
+Low-level callable variants are public for users who want one exact operation
+without the full `reprocess(...)` sequence.
+
+| Symbol | Meaning |
+| --- | --- |
+| `apply_tcode_transform` | Apply one McCracken-Ng t-code to one series. |
+| `iqr_outlier_clean` | IQR outlier rule used by `handle_outliers(method="iqr")`. |
+| `zscore_outlier_clean` | Z-score outlier rule used by `handle_outliers(method="zscore")`. |
+| `winsorize_clean` | Winsorization rule used by `handle_outliers(method="winsorize")`. |
+| `em_factor_impute_clean` | PCA-EM imputation used by `impute_missing(method="em_factor")`. |
+| `em_multivariate_impute_clean` | Multivariate EM imputation used by `impute_missing(method="em_multivariate")`. |
+| `mean_impute_clean` | Column-mean imputation. |
+| `forward_fill_clean` | Forward-fill imputation. |
+| `linear_interpolate_clean` | Time interpolation imputation. |
+| `fit_standardization_state` | Fit reusable scaling state. |
+| `apply_standardization_state` | Apply previously fitted scaling state. |
+| `standardize_clean` | One-shot panel standardization. |
+| `truncate_to_balanced_clean` | Keep the largest balanced sample. |
+| `drop_unbalanced_series_clean` | Drop series that keep unbalanced sample edges. |
+| `zero_fill_leading_clean` | Fill leading missing values with zero. |
+| `freq_align_quarterly_to_monthly_clean` | Low-level quarterly-to-monthly alignment helper. |
+| `freq_align_monthly_to_quarterly_clean` | Low-level monthly-to-quarterly alignment helper. |
+
 ## plan
 
 ```python
@@ -584,6 +616,13 @@ Returns a new `pandas.DataFrame`.
 FRED-SD does not provide official t-codes. `reprocess(fred_sd_bundle)` with
 the default `transform="official"` raises an error. The user must choose one
 of these paths.
+
+Package suggestion tables are exposed as constants for inspection:
+
+| Symbol | Meaning |
+| --- | --- |
+| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | High-confidence t-code suggestions based on national FRED-MD/FRED-QD analogs. |
+| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | Broader provisional t-code suggestions; opt in with `include_medium_confidence=True`. |
 
 ## fred_sd_transform_codes
 

@@ -1,4 +1,4 @@
-# Reporting
+# macroforecast.reporting
 
 [Back to reference](index.md)
 

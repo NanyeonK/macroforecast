@@ -122,6 +122,14 @@ Combined bundles add:
 | `frequency_conversion_warnings` | `list[dict]` | Records of monthly-to-quarterly or quarterly-to-monthly conversions. |
 | `alignment` | `dict` | Chosen target frequency, alignment rules, and source-level alignment summaries. |
 
+Public metadata helpers and policy types:
+
+| Symbol | Meaning |
+| --- | --- |
+| `attach_metadata` | Return metadata with one stage key merged in a pandas-safe way. Used by loaders, preprocessing, analysis, and runner outputs. |
+| `RegimeDirection` | Stored threshold direction type for `define_regime(...)`: `"above"`, `"below"`, `"equal"`, or `"not_equal"`. |
+| `SamePeriodPolicy` | Stored same-period predictor policy type for `same_period_predictors(...)`: `"allow"`, `"lag"`, `"drop"`, or `"forbid"`. |
+
 ## DataBundle
 
 ```python

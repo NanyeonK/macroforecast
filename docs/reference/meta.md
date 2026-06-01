@@ -15,6 +15,17 @@ The current public surface is:
 | `reset_config` | Restore package defaults. |
 | `use_config` | Temporarily override settings inside a `with` block. |
 
+Public constants and type aliases:
+
+| Symbol | Meaning |
+| --- | --- |
+| `DEFAULT_RANDOM_SEED` | Package default seed value, currently `42`. |
+| `MetaConfig` | Dictionary-like output schema for active meta settings. |
+| `NJobs` | Accepted worker-count type: positive integer or `"auto"`. |
+| `OnError` | Stored failure-mode type: `"raise"` or `"continue"`. |
+| `StageDefaultScope` | Runner stage-scope type: `"full_panel"`, `"origin_available"`, or `"fit_window"`. |
+| `MetadataLevel` | Runner metadata detail type: `"minimal"`, `"standard"`, or `"full"`. |
+
 ## MetaConfig
 
 `MetaConfig` is the output schema returned by `configure`, `get_config`,

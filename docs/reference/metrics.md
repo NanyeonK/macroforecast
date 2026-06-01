@@ -1,4 +1,4 @@
-# Metrics
+# macroforecast.metrics
 
 [Back to reference](index.md)
 
@@ -14,6 +14,9 @@ mf.metrics.rmse(y_true, y_pred)
 ```
 
 Top-level shortcuts such as `mf.rmse(...)` are intentionally not exported.
+
+`MetricLike` is the public input type used by metric resolvers: a metric can
+be a registered metric name or a callable with the expected scoring signature.
 
 ## Forecast Table Helpers
 

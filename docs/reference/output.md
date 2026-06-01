@@ -328,6 +328,9 @@ Every written artifact record includes:
 | `sha256` | SHA-256 hash of the recorded file, or `None` when missing. |
 | `compression` | `"none"`, `"gzip"`, or `"zip"`. |
 
+`CompressionFormat` is the public type for supported compression choices:
+`"none"`, `"gzip"`, or `"zip"`.
+
 `compression="gzip"` rewrites each newly written study artifact as
 `<name>.<ext>.gz` and records the compressed path. Existing stored-model
 sidecars are not modified.

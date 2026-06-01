@@ -71,6 +71,22 @@ implementation is split by responsibility:
 | `shared.py` | Internal normalization, metadata, fitting, and validation helpers. |
 | `core.py` | Compatibility re-export only. |
 
+Public contracts and convenience aliases:
+
+| Symbol | Meaning |
+| --- | --- |
+| `FeatureInput` | Accepted feature-engineering input type. |
+| `FeatureSet` | Output object returned by `build_features(...)`. |
+| `FeatureSpec` | Runner-compatible feature-building contract. |
+| `FittedFeatureBuilder` | Fitted feature-builder state used by the runner. |
+| `FeatureSelectionResult` | Metadata-rich result for feature-selection helpers. |
+| `select_features` | Generic feature-selection dispatcher. |
+| `feature_selection_requires_target` | Return whether a feature-selection method requires a target. |
+| `normalize_feature_selection_method` | Normalize feature-selection method aliases. |
+| `pca_then_lags` | Convenience composition: PCA factors first, then lags. |
+| `lags_then_pca` | Convenience composition: lag panel first, then PCA. |
+| `moving_average_pca_lags` | Convenience composition for moving-average blocks, PCA, and lags. |
+
 ## Feature Boundary
 
 This stage is direct and pandas-first. It constructs target columns and

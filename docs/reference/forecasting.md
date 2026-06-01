@@ -1,4 +1,4 @@
-# Forecasting
+# macroforecast.forecasting
 
 [Back to reference](index.md)
 
@@ -7,6 +7,9 @@
 `metrics`/`tests`.
 
 ## run
+
+`run_forecast` is an alias for `run`. New code can call `run(...)`; use
+`run_forecast(...)` only when the longer name makes a script clearer.
 
 ```python
 macroforecast.forecasting.run(
