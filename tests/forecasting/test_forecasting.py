@@ -2020,6 +2020,7 @@ def _assert_forecast_result_metadata(
         "origin_pos",
         "horizon",
         "forecast_policy",
+        "target_transform",
         "target",
         "model",
         "model_spec",

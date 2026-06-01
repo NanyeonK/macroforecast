@@ -278,12 +278,12 @@ def test_custom_extension_flow_runs_from_data_to_output(tmp_path) -> None:
         lambda model, X, **_: {"mean_prediction": float(model.predict(X).mean())},
         name="mean_prediction",
     )
-    feature_diag = mf.feature_diagnostic.custom_feature_diagnostic(
+    feature_diag = mf.feature_analysis.custom_feature_diagnostic(
         feature_set,
         lambda X, **_: {"n_features": X.shape[1], "missing_cells": int(X.isna().sum().sum())},
         name="shape_check",
     )
-    forecast_diag = mf.forecast_diagnostic.custom_forecast_diagnostic(
+    forecast_diag = mf.forecast_analysis.custom_forecast_diagnostic(
         result,
         lambda forecasts, **_: forecasts.groupby("model", as_index=False)["prediction"].mean(),
         name="mean_prediction_by_model",

@@ -24,8 +24,8 @@ The package still enforces the same contracts around each custom hook:
 | Tests | `mf.tests.custom_test(...)` | User forecast-test callable. | `TestResult`. |
 | Evaluation | callable metrics and custom groupings | User metric functions and grouping tuples. | `EvaluationReport` tables. |
 | Interpretation | `mf.interpretation.custom_interpretation(...)` | Fitted model, feature frame, optional target, and user callable. | Interpretation `DataFrame` with macroforecast schema attrs. |
-| Feature diagnostic | `mf.feature_diagnostic.custom_feature_diagnostic(...)` | Feature matrix or `FeatureSet` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
-| Forecast diagnostic | `mf.forecast_diagnostic.custom_forecast_diagnostic(...)` | Forecast table or `ForecastResult` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
+| Feature diagnostic | `mf.feature_analysis.custom_feature_diagnostic(...)` | Feature matrix or `FeatureSet` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
+| Forecast diagnostic | `mf.forecast_analysis.custom_forecast_diagnostic(...)` | Forecast table or `ForecastResult` plus user diagnostic callable. | Diagnostic `DataFrame` with stage metadata. |
 | Output | `mf.output.write_artifacts({...})` | Mapping of named custom artifacts. | Files plus `ArtifactManifest`. |
 
 ## End-To-End Flow
@@ -104,13 +104,13 @@ interpretation = mf.interpretation.custom_interpretation(
     name="local_interpretation",
 )
 
-feature_diag = mf.feature_diagnostic.custom_feature_diagnostic(
+feature_diag = mf.feature_analysis.custom_feature_diagnostic(
     feature_set,
     feature_check,
     name="feature_check",
 )
 
-forecast_diag = mf.forecast_diagnostic.custom_forecast_diagnostic(
+forecast_diag = mf.forecast_analysis.custom_forecast_diagnostic(
     result,
     forecast_check,
     name="forecast_check",
@@ -531,7 +531,7 @@ def block_missingness(X, *, feature_metadata=None, metadata=None, block="all"):
         [{"block": block, "missing_rate": float(X.isna().mean().mean())}]
     )
 
-diag = mf.feature_diagnostic.custom_feature_diagnostic(
+diag = mf.feature_analysis.custom_feature_diagnostic(
     features,
     block_missingness,
     name="block_missingness",
@@ -553,7 +553,7 @@ def horizon_bias(forecasts, *, metadata=None):
     out["residual"] = out["actual"] - out["prediction"]
     return out.groupby("horizon", as_index=False)["residual"].mean()
 
-diag = mf.forecast_diagnostic.custom_forecast_diagnostic(
+diag = mf.forecast_analysis.custom_forecast_diagnostic(
     result,
     horizon_bias,
     name="horizon_bias",
@@ -612,6 +612,6 @@ Custom extensions should remain stage-local:
 | New forecast-comparison test | `mf.tests.custom_test()`. |
 | New evaluation slice | Pass a grouping map to `evaluate_report(..., aggregations=...)`. |
 | New model-interpretation table | `mf.interpretation.custom_interpretation()`. |
-| New feature diagnostic table | `mf.feature_diagnostic.custom_feature_diagnostic()`. |
-| New forecast diagnostic table | `mf.forecast_diagnostic.custom_forecast_diagnostic()`. |
+| New feature diagnostic table | `mf.feature_analysis.custom_feature_diagnostic()`. |
+| New forecast diagnostic table | `mf.forecast_analysis.custom_forecast_diagnostic()`. |
 | New saved artifact | Add it as a named mapping entry in `mf.output.write_artifacts(...)`. |

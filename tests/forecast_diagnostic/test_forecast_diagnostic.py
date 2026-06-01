@@ -47,25 +47,54 @@ def test_diagnose_forecasts_reads_runner_outputs(tmp_path) -> None:
         model_store=tmp_path / "trained_model",
     )
 
-    report = mf.diagnose_forecasts(result, rolling_window=2)
+    report = mf.diagnose_forecasts(
+        result,
+        rolling_window=2,
+        include_residual_acf=True,
+        include_residual_qq=True,
+        include_forecast_scale=True,
+        levels=_panel()["y"],
+        include_training_loss=True,
+        include_rolling_training_loss=True,
+        include_first_vs_last=True,
+    )
 
     assert report.overview["n_forecasts"] == len(result.forecasts)
     assert report.fitted is not None
     assert {"residual", "abs_error", "squared_error"}.issubset(report.fitted.columns)
     assert report.residuals is not None
     assert report.residuals.loc[0, "n"] > 0
+    assert report.residual_acf is not None
+    assert set(report.residual_acf["lag"]).issuperset({0, 1})
+    assert report.residual_qq is not None
+    assert {"sample_quantile", "normal_quantile"}.issubset(report.residual_qq.columns)
     assert report.rolling_loss is not None
     assert report.rolling_loss["rolling_rmse"].notna().any()
+    assert report.forecast_scale is not None
+    assert set(report.forecast_scale["scale"]) == {"transformed", "back_transformed"}
+    assert report.training_loss is not None
+    assert {"rmse", "mae", "mse"}.issubset(set(report.training_loss["metric"]))
+    assert report.rolling_training_loss is not None
+    assert report.rolling_training_loss["rolling_rmse"].notna().any()
+    assert report.first_vs_last is not None
+    assert {"first_prediction", "last_prediction", "prediction_change"}.issubset(report.first_vs_last.columns)
     assert report.coefficients is not None
     assert {"x1_lag0", "x1_lag1", "x2_lag0", "x2_lag1"}.intersection(
         set(report.coefficients["feature"])
     )
+    assert report.parameter_stability is not None
+    assert {"drift", "sign_changes"}.issubset(report.parameter_stability.columns)
     assert report.tuning is not None
     assert set(report.tuning["method"]) == {"grid"}
+    assert report.tuning_objective is not None
+    assert report.hyperparameters is not None
+    assert set(report.hyperparameters["parameter"]) == {"alpha"}
+    assert report.tuning_scores is not None
     assert report.stage_updates is not None
     assert {"feature_engineering"}.issubset(set(report.stage_updates["stage"]))
-    assert "forecast_diagnostic" in report.metadata
+    assert "forecast_analysis" in report.metadata
     assert report.fitted.attrs["macroforecast_metadata"] == report.metadata
+    assert mf.forecast_analysis.forecast_overview is mf.forecast_diagnostic.forecast_overview
 
 
 def test_forecast_overview_counts_combination_and_uncertainty(tmp_path) -> None:
@@ -88,7 +117,7 @@ def test_forecast_overview_counts_combination_and_uncertainty(tmp_path) -> None:
         model_store=tmp_path / "trained_model",
     )
 
-    overview = mf.forecast_diagnostic.forecast_overview(result)
+    overview = mf.forecast_analysis.forecast_overview(result)
 
     assert overview["n_models"] == 3
     assert overview["combined_count"] > 0
@@ -111,13 +140,105 @@ def test_ensemble_weights_over_time_reconstructs_equal_and_inverse_weights() -> 
         save_models=False,
     )
 
-    weights = mf.forecast_diagnostic.ensemble_weights_over_time(result)
+    weights = mf.forecast_analysis.ensemble_weights_over_time(result)
+    concentration = mf.forecast_analysis.ensemble_weight_concentration(result)
+    contribution = mf.forecast_analysis.ensemble_member_contribution(result)
 
     assert {"combined_mean", "combined_dmspe"}.issubset(set(weights["combination"]))
     grouped = weights.groupby(["combination", "date", "horizon"])["weight"].sum()
     assert np.allclose(grouped.dropna().to_numpy(dtype=float), 1.0)
     equal = weights.loc[weights["combination"] == "combined_mean"]
     assert set(equal["weight"]) == {0.5}
+    assert {"hhi", "effective_n", "entropy"}.issubset(concentration.columns)
+    assert {"member_prediction", "contribution", "combined_prediction"}.issubset(contribution.columns)
+
+
+def test_residual_and_tuning_callable_views() -> None:
+    result = mf.forecasting.run(
+        _panel(),
+        "ridge",
+        window=_window(),
+        features=_features(),
+        selection=mf.selection.grid({"alpha": [0.01, 0.1]}),
+        save_models=False,
+    )
+
+    acf = mf.forecast_analysis.residual_autocorrelation(result, max_lag=3)
+    qq = mf.forecast_analysis.residual_qq(result, n_quantiles=5)
+    objective = mf.forecast_analysis.tuning_objective_trace(result)
+    params = mf.forecast_analysis.hyperparameter_path(result)
+    scores = mf.forecast_analysis.tuning_score_distribution(result)
+
+    assert set(acf["lag"]) == {0, 1, 2, 3}
+    assert len(qq["probability"].unique()) == 5
+    assert objective["best_score"].notna().all()
+    assert set(params["parameter"]) == {"alpha"}
+    assert {"mean", "median", "q75"}.issubset(scores.columns)
+
+
+def test_forecast_origin_and_scale_views() -> None:
+    forecasts = pd.DataFrame(
+        {
+            "date": pd.date_range("2021-02-28", periods=4, freq="ME"),
+            "origin": pd.date_range("2021-01-31", periods=4, freq="ME"),
+            "origin_pos": [0, 1, 2, 3],
+            "horizon": [1, 1, 1, 1],
+            "forecast_policy": ["direct"] * 4,
+            "target_transform": ["change"] * 4,
+            "target": ["y"] * 4,
+            "model": ["ridge", "ridge", "lasso", "lasso"],
+            "prediction": [0.1, 0.2, 0.0, -0.1],
+            "actual": [0.0, 0.3, -0.2, -0.1],
+        }
+    )
+    levels = pd.Series(
+        [1.0, 1.0, 1.3, 1.1, 1.0],
+        index=pd.date_range("2021-01-31", periods=5, freq="ME"),
+        name="y",
+    )
+
+    selected = mf.forecast_analysis.select_forecast_origins(
+        forecasts,
+        view="every_n_origins",
+        every_n=2,
+    )
+    scale = mf.forecast_analysis.forecast_scale_view(
+        forecasts,
+        levels=levels,
+        target="y",
+        view="both_overlay",
+    )
+    first_last = mf.forecast_analysis.first_vs_last_forecast(forecasts)
+
+    assert set(selected["origin_pos"]) == {0, 2, 3}
+    assert set(scale["scale"]) == {"transformed", "back_transformed"}
+    assert scale.loc[scale["scale"] == "back_transformed", "back_transform_available"].all()
+    assert {"first_prediction", "last_prediction", "prediction_change"}.issubset(first_last.columns)
+
+
+def test_dfm_diagnostics_accept_model_fit() -> None:
+    idx = pd.date_range("2020-01-31", periods=8, freq="ME")
+    fit = mf.ModelFit(
+        estimator=object(),
+        model="dfm_mixed_mariano_murasawa",
+        diagnostics={
+            "residuals": pd.Series(np.linspace(-0.2, 0.2, 8), index=idx, name="y"),
+            "factors_filtered": pd.DataFrame(
+                {
+                    "factor_1": np.linspace(-1.0, 1.0, 8),
+                    "factor_2": np.cos(np.arange(8)),
+                },
+                index=idx,
+            ),
+        },
+    )
+
+    acf = mf.forecast_analysis.dfm_idiosyncratic_acf(fit, max_lag=2)
+    stability = mf.forecast_analysis.dfm_factor_stability(fit)
+
+    assert set(acf["lag"]) == {0, 1, 2}
+    assert set(stability["factor"]) == {"factor_1", "factor_2"}
+    assert {"drift", "autocorr1"}.issubset(stability.columns)
 
 
 def test_stage_update_trace_is_empty_for_feature_set_input() -> None:
@@ -135,7 +256,7 @@ def test_stage_update_trace_is_empty_for_feature_set_input() -> None:
         save_models=False,
     )
 
-    trace = mf.forecast_diagnostic.stage_update_trace(result)
+    trace = mf.forecast_analysis.stage_update_trace(result)
 
     assert trace.empty
     assert list(trace.columns) == [

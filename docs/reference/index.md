@@ -10,12 +10,12 @@ Function-level reference for the clean public Python API.
 | Workflow | [Workflow Contract](workflow.md) | Which module owns callable functions, windows, and runner composition. |
 | Preprocessing | [Preprocessing](preprocessing.md) | Frequency alignment, t-codes, outliers, imputation, and frame rules. |
 | Feature Engineering | [Feature Engineering](feature_engineering.md) | Direct/path-average targets, MAF/MARX-style transforms, sparse components, lag/window predictors, and aligned `X`, `y`. |
-| Feature Diagnostic | [Feature Diagnostic](feature_diagnostic.md) | Feature-matrix missingness, correlation, factor, lag, MARX, stage, and selection diagnostics. |
+| Feature Analysis | [Feature Analysis](feature_analysis.md) | Feature-matrix missingness, correlation, target-correlation, factor, lag, MARX, stage, and selection analysis. |
 | Models | [Models](models.md) | Callable model fits for linear, tree, factor, and volatility models. |
 | Window | [Window](window.md) | Estimation/validation/test windows shared across stages. |
 | Selection | [Selection](selection.md) | Hyperparameter search specs and parameter selection. |
 | Forecasting | [Forecasting](forecasting.md) | Windowed runner and forecast combination. |
-| Forecast Diagnostic | [Forecast Diagnostic](forecast_diagnostic.md) | Forecast-vs-actual, residual, rolling-loss, tuning, coefficient, ensemble-weight, and stage-update diagnostics. |
+| Forecast Analysis | [Forecast Analysis](forecast_analysis.md) | Forecast-vs-actual, scale, residual, rolling-loss, training-loss, tuning, coefficient, DFM, ensemble-weight, and stage-update analysis. |
 | Metrics | [Metrics](metrics.md) | Scoring metrics, ranking, and metric resolution. |
 | Tests | [Tests](tests.md) | Forecast-comparison tests and residual diagnostics. |
 | Evaluation | [Evaluation Namespace](evaluation.md) | Thin wrapper exposing `metrics` and `tests`. |
@@ -37,12 +37,12 @@ fred_sd
 fred_datasets
 preprocessing
 feature_engineering
-feature_diagnostic
+feature_analysis
 models
 window
 selection
 forecasting
-forecast_diagnostic
+forecast_analysis
 metrics
 tests
 evaluation
