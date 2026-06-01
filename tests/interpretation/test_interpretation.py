@@ -59,6 +59,162 @@ def test_model_agnostic_interpretation_helpers() -> None:
     assert ale.attrs["macroforecast_metadata_schema"]["kind"] == "accumulated_local_effect"
 
 
+def test_legacy_importance_gap_callables() -> None:
+    X, y = _xy()
+    fit = mf.models.ridge(X, y, alpha=0.1)
+
+    conditional = mf.interpretation.permutation_importance_strobl(
+        fit,
+        X,
+        y,
+        n_repeats=2,
+        n_bins=3,
+        random_state=0,
+    )
+    lofo = mf.interpretation.lofo_importance(fit, X, y)
+    hstat = mf.interpretation.friedman_h_interaction(fit, X, grid_size=4)
+    decomposition = mf.interpretation.forecast_decomposition(fit, X)
+    cumulative = mf.interpretation.cumulative_r2_contribution(fit, X, y)
+    inclusion = mf.interpretation.lasso_inclusion_frequency(fit)
+
+    assert conditional.attrs["macroforecast_metadata_schema"]["kind"] == "permutation_importance_strobl"
+    assert set(conditional["feature"]) == {"x1", "x2"}
+    assert lofo.attrs["macroforecast_metadata_schema"]["kind"] == "lofo_importance"
+    assert set(hstat.columns) >= {"feature_1", "feature_2", "h_statistic"}
+    assert decomposition.attrs["macroforecast_metadata_schema"]["kind"] == "forecast_decomposition"
+    assert "__intercept__" in set(decomposition["feature"])
+    assert cumulative.attrs["macroforecast_metadata_schema"]["kind"] == "cumulative_r2_contribution"
+    assert inclusion.attrs["macroforecast_metadata_schema"]["kind"] == "lasso_inclusion_frequency"
+
+
+def test_attribution_aggregation_and_attention_helpers() -> None:
+    importance = pd.DataFrame(
+        {
+            "feature": ["real_lag1", "real_lag2", "price_lag1"],
+            "importance": [1.0, 0.5, 0.25],
+        }
+    )
+    grouped = mf.interpretation.group_aggregate(
+        importance,
+        groups={"real_activity": ["real_lag1", "real_lag2"], "prices": ["price_lag1"]},
+    )
+    lineage = mf.interpretation.lineage_attribution(
+        importance,
+        {
+            "real_lag1": {"pipeline_name": "lags"},
+            "real_lag2": {"pipeline_name": "lags"},
+            "price_lag1": {"pipeline_name": "prices"},
+        },
+    )
+    evaluation = pd.DataFrame(
+        {
+            "model": ["raw", "processed", "raw", "processed"],
+            "target": ["y", "y", "y", "y"],
+            "horizon": [1, 1, 2, 2],
+            "mse": [2.0, 1.0, 3.0, 2.0],
+        }
+    )
+    transform = mf.interpretation.transformation_attribution(evaluation)
+    X, y = _xy()
+    weights = mf.interpretation.attention_weights(X.iloc[:8], X.iloc[8:10])
+    dual = mf.interpretation.dual_decomposition(X.iloc[:8], y.iloc[:8], X.iloc[8:10])
+
+    assert grouped.attrs["macroforecast_metadata_schema"]["kind"] == "group_aggregate"
+    assert grouped.loc[grouped["group"] == "real_activity", "importance"].iloc[0] == 1.5
+    assert lineage.attrs["macroforecast_metadata_schema"]["kind"] == "lineage_attribution"
+    assert "pipeline_name" in lineage.columns
+    assert transform.attrs["macroforecast_metadata_schema"]["kind"] == "transformation_attribution"
+    assert set(transform["pipeline"]) == {"raw", "processed"}
+    assert weights.attrs["macroforecast_metadata_schema"]["kind"] == "attention_weights"
+    assert len(weights) == 16
+    assert dual.attrs["macroforecast_metadata_schema"]["kind"] == "dual_decomposition"
+    assert "contribution" in dual.columns
+
+
+def test_temporal_and_mrf_interpretation_helpers() -> None:
+    X, y = _xy()
+    fit = mf.models.ridge(X, y, alpha=0.1)
+
+    rolling = mf.interpretation.rolling_recompute(
+        fit,
+        X,
+        y,
+        window=10,
+        step=10,
+        n_repeats=1,
+        random_state=0,
+    )
+    boot = mf.interpretation.bootstrap_jackknife(
+        fit,
+        X,
+        y,
+        n_replications=3,
+        random_state=0,
+    )
+    estimator = types.SimpleNamespace(
+        output_={
+            "betas": np.array([[1.0, 0.2, -0.1], [1.1, 0.3, -0.2]]),
+            "YandX": pd.DataFrame(columns=["y", "x1", "x2"]),
+        },
+        x_columns=("x1", "x2"),
+    )
+    mrf_fit = mf.models.ModelFit(
+        estimator=estimator,
+        model="macro_random_forest",
+        feature_names=("x1", "x2"),
+    )
+    gtvp = mf.interpretation.mrf_gtvp(mrf_fit, X.iloc[:2])
+
+    assert rolling.attrs["macroforecast_metadata_schema"]["kind"] == "rolling_recompute"
+    assert set(rolling["window_id"]) == {0, 1, 2, 3}
+    assert boot.attrs["macroforecast_metadata_schema"]["kind"] == "bootstrap_jackknife"
+    assert set(boot["feature"]) == {"x1", "x2"}
+    assert gtvp.attrs["macroforecast_metadata_schema"]["kind"] == "mrf_gtvp"
+    assert set(gtvp["feature"]) == {"__intercept__", "x1", "x2"}
+    assert "summary" in gtvp.attrs
+
+
+def test_gradient_helpers_report_missing_torch(monkeypatch: pytest.MonkeyPatch) -> None:
+    X, y = _xy()
+    fit = mf.models.ridge(X, y, alpha=0.1)
+
+    def missing_import(name: str):
+        if name == "torch":
+            raise ImportError("missing torch")
+        return __import__(name)
+
+    monkeypatch.setattr("macroforecast.interpretation.core.import_module", missing_import)
+
+    with pytest.raises(ImportError, match="macroforecast\\[deep\\]"):
+        mf.interpretation.saliency_map(fit, X.iloc[:3])
+
+
+def test_var_interpretation_callables() -> None:
+    idx = pd.date_range("2020-01-31", periods=80, freq="ME")
+    base = np.sin(np.arange(len(idx)) / 5.0)
+    panel = pd.DataFrame(
+        {
+            "y": base + np.linspace(0.0, 0.2, len(idx)),
+            "x": np.roll(base, 1),
+            "z": np.cos(np.arange(len(idx)) / 7.0),
+        },
+        index=idx,
+    ).iloc[2:]
+    fit = mf.models.var(panel, target="y", n_lag=1)
+
+    girf = mf.interpretation.generalized_irf(fit, n_periods=4, target="y")
+    orth = mf.interpretation.orthogonalised_irf(fit, n_periods=4, target="y")
+    variance = mf.interpretation.fevd(fit, n_periods=4, target="y")
+    history = mf.interpretation.historical_decomposition(fit, max_lag=4, target="y")
+
+    assert girf.attrs["macroforecast_metadata_schema"]["kind"] == "generalized_irf"
+    assert orth.attrs["macroforecast_metadata_schema"]["kind"] == "orthogonalised_irf"
+    assert variance.attrs["macroforecast_metadata_schema"]["kind"] == "fevd"
+    assert history.attrs["macroforecast_metadata_schema"]["kind"] == "historical_decomposition"
+    assert set(girf["feature"]) == {"y", "x", "z"}
+    assert np.isfinite(girf["importance"]).all()
+
+
 def test_custom_interpretation_wraps_user_callable() -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.1)
@@ -106,6 +262,7 @@ def test_shap_values_uses_optional_backend(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setitem(sys.modules, "shap", fake_shap)
 
     out = mf.interpretation.shap_values(fit, X.iloc[:3], background=X.iloc[:5])
+    importance = mf.interpretation.shap_importance(fit, X.iloc[:3], background=X.iloc[:5])
 
     assert len(out) == 3 * X.shape[1]
     assert set(out.columns) == {
@@ -119,6 +276,8 @@ def test_shap_values_uses_optional_backend(monkeypatch: pytest.MonkeyPatch) -> N
     assert set(out["shap_value"]) == {0.25}
     assert out.attrs["macroforecast_metadata_schema"]["kind"] == "shap_values"
     assert out.attrs["macroforecast_metadata_schema"]["metadata"]["background_n_obs"] == 5
+    assert importance.attrs["macroforecast_metadata_schema"]["kind"] == "shap_importance"
+    assert set(importance["importance"]) == {0.25}
 
 
 def test_shap_values_reports_optional_dependency(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -19,8 +19,8 @@ Function-level reference for the clean public Python API.
 | Metrics | [Metrics](metrics.md) | Scoring metrics, bias, ranking, and metric resolution. |
 | Tests | [Tests](tests.md) | Forecast-comparison tests, interval/PIT diagnostics, and residual diagnostics. |
 | Evaluation | [Evaluation Namespace](evaluation.md) | Reports, OOS filtering, error decomposition, and links to `metrics`/`tests`. |
-| Interpretation | [Interpretation](interpretation.md) | Model-native importance and model-agnostic effect summaries. |
-| Output | [Output](output.md) | Artifact writing and schema-aware provenance manifest. |
+| Interpretation | [Interpretation](interpretation.md) | Model-native importance, model-agnostic effects, attribution, and VAR interpretation. |
+| Output | [Output](output.md) | Output table generation, artifact writing, and schema-aware provenance manifest. |
 | Data Summary | [Data Summary](data_summary.md) | One-panel summary tables. |
 | Data Analysis | [Data Analysis](data_analysis.md) | Before/after preprocessing comparison. |
 

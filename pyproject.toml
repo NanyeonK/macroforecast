@@ -44,7 +44,7 @@ catboost = ["catboost>=1.2"]
 arch = ["arch>=6.0"]
 macro_random_forest = ["joblib>=1.5", "matplotlib>=3.8"]
 interpretation = ["shap>=0.45"]
-deep = ["torch>=2.2"]
+deep = ["torch>=2.2", "captum>=0.7"]
 docs = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
