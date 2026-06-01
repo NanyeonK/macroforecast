@@ -345,6 +345,54 @@ Supported methods: `giacomini_rossi`, `rossi_sekhposyan`.
 
 ## Multiple-Model Tests
 
+### blocked_oob_reality_check
+
+```python
+macroforecast.tests.blocked_oob_reality_check(
+    loss_panel,
+    *,
+    benchmark,
+    loss="squared_error",
+    alpha=0.05,
+    n_boot=1000,
+    block_length=4,
+    bootstrap_method="fixed_block_bootstrap",
+    random_state=0,
+    target="target",
+    horizon="horizon",
+    origin="origin",
+    model="model_id",
+) -> pandas.DataFrame
+```
+
+Block-bootstrap one-sided reality check against a named benchmark model. This
+is the direct callable replacement for the legacy `blocked_oob_reality_check`
+operation.
+
+Inputs:
+
+| Form | Required columns |
+| --- | --- |
+| Long panel | `origin`, `model_id`, `squared_error`; optional `target` and `horizon`. Column names are configurable. |
+| Wide matrix | One column per model, including the `benchmark` column. The index is treated as origin order. |
+
+Output: one row per candidate model and target/horizon group.
+
+| Column | Meaning |
+| --- | --- |
+| `target`, `horizon` | Group labels. Wide input uses `"all"` for both. |
+| `model` | Candidate model tested against the benchmark. |
+| `benchmark` | Benchmark model name. |
+| `mean_diff` | `benchmark_loss - candidate_loss`; positive means candidate has lower loss. |
+| `statistic` | Mean loss differential scaled by bootstrap standard error. |
+| `p_value` | One-sided block-bootstrap p-value for no improvement over benchmark. |
+| `decision` | `True` when `p_value < alpha`. |
+| `n_obs` | Number of aligned origins. |
+| `block_length`, `n_boot`, `bootstrap_method` | Bootstrap settings used. |
+
+The returned table carries
+`attrs["macroforecast_metadata_schema"]["kind"] = "blocked_oob_reality_check"`.
+
 ### model_confidence_set
 
 ```python

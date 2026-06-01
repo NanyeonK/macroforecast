@@ -316,6 +316,15 @@ _LAZY_EXPORTS = {
     "select_outputs": ".output",
     "test_table": ".output",
     "write_artifacts": ".output",
+    "ReportBundle": ".reporting",
+    "ReportTable": ".reporting",
+    "figure_data": ".reporting",
+    "html_table": ".reporting",
+    "latex_table": ".reporting",
+    "markdown_table": ".reporting",
+    "render_tables": ".reporting",
+    "report_bundle": ".reporting",
+    "report_table": ".reporting",
     "ParamDistribution": ".selection",
     "SearchError": ".selection",
     "SearchResult": ".selection",
@@ -406,6 +415,7 @@ _LAZY_MODULES: tuple[str, ...] = (
     "window",
     "interpretation",
     "output",
+    "reporting",
 )
 
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))

@@ -907,6 +907,102 @@ def model_confidence_set(
     })
 
 
+def blocked_oob_reality_check(
+    loss_panel: pd.DataFrame,
+    *,
+    benchmark: str,
+    loss: str = "squared_error",
+    alpha: float = 0.05,
+    n_boot: int = 1000,
+    block_length: int | str = 4,
+    bootstrap_method: str = "fixed_block_bootstrap",
+    random_state: int = 0,
+    target: str = "target",
+    horizon: str = "horizon",
+    origin: str = "origin",
+    model: str = "model_id",
+) -> pd.DataFrame:
+    """Block-bootstrap one-sided reality check against a benchmark model.
+
+    The input can be either a long per-origin loss panel with model and loss
+    columns, or a wide loss matrix whose columns are model names. Positive
+    ``mean_diff`` means the candidate has lower average loss than the
+    benchmark.
+    """
+
+    _validate_alpha(alpha)
+    n_boot = _validate_positive_int(n_boot, "n_boot")
+    bootstrap_method = _normalize_bootstrap_method(bootstrap_method)
+    panel = pd.DataFrame(loss_panel).copy()
+    groups = _reality_check_groups(
+        panel,
+        benchmark=benchmark,
+        loss=loss,
+        target=target,
+        horizon=horizon,
+        origin=origin,
+        model=model,
+    )
+    rng = np.random.default_rng(random_state)
+    rows: list[dict[str, Any]] = []
+    for target_value, horizon_value, wide in groups:
+        if benchmark not in wide.columns:
+            raise ValueError(
+                f"benchmark {benchmark!r} not in loss columns {list(wide.columns)}"
+            )
+        numeric = wide.apply(pd.to_numeric, errors="coerce")
+        for candidate in numeric.columns:
+            if candidate == benchmark:
+                continue
+            pair = numeric[[benchmark, candidate]].dropna()
+            if pair.shape[0] < 2:
+                continue
+            diff = pair[benchmark].to_numpy(dtype=float) - pair[candidate].to_numpy(dtype=float)
+            mean_diff = float(diff.mean())
+            resolved_block = _resolve_block_length(diff.reshape(-1, 1), block_length)
+            centered = (diff - mean_diff).reshape(-1, 1)
+            boot_means = _bootstrap_means(
+                centered,
+                n_boot=n_boot,
+                block_length=resolved_block,
+                method=bootstrap_method,
+                rng=rng,
+            )[:, 0]
+            boot_se = float(np.std(boot_means, ddof=1))
+            statistic = mean_diff / max(boot_se, 1e-12)
+            p_value = float(np.mean(boot_means >= mean_diff))
+            rows.append(
+                {
+                    "target": target_value,
+                    "horizon": horizon_value,
+                    "model": str(candidate),
+                    "benchmark": str(benchmark),
+                    "mean_diff": mean_diff,
+                    "statistic": float(statistic),
+                    "p_value": p_value,
+                    "decision": bool(p_value < alpha),
+                    "n_obs": int(pair.shape[0]),
+                    "alpha": float(alpha),
+                    "block_length": int(resolved_block),
+                    "n_boot": int(n_boot),
+                    "bootstrap_method": bootstrap_method,
+                }
+            )
+    out = pd.DataFrame(rows)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "blocked_oob_reality_check",
+        "version": 1,
+        "benchmark": str(benchmark),
+        "loss": str(loss),
+        "alpha": float(alpha),
+        "n_boot": int(n_boot),
+        "block_length": block_length,
+        "bootstrap_method": bootstrap_method,
+        "positive_mean_diff": "candidate lower loss than benchmark",
+    }
+    return out
+
+
 def _nested_loss_improvement_test(
     loss_small: Any,
     loss_large: Any,
@@ -979,6 +1075,57 @@ def _normalize_bootstrap_method(method: str) -> str:
     if key in {"fixed", "fixed_block", "fixed_block_bootstrap", "moving_block"}:
         return "fixed_block_bootstrap"
     raise ValueError("bootstrap_method must be 'stationary_bootstrap' or 'fixed_block_bootstrap'")
+
+
+def _reality_check_groups(
+    panel: pd.DataFrame,
+    *,
+    benchmark: str,
+    loss: str,
+    target: str,
+    horizon: str,
+    origin: str,
+    model: str,
+) -> list[tuple[Any, Any, pd.DataFrame]]:
+    long_required = {origin, model, loss}
+    if long_required <= set(panel.columns):
+        working = panel.copy()
+        group_columns: list[str] = []
+        if target in working.columns:
+            group_columns.append(target)
+        else:
+            working[target] = "all"
+            group_columns.append(target)
+        if horizon in working.columns:
+            group_columns.append(horizon)
+        else:
+            working[horizon] = "all"
+            group_columns.append(horizon)
+        groups: list[tuple[Any, Any, pd.DataFrame]] = []
+        for key, group in working.groupby(group_columns, dropna=False):
+            key_tuple = key if isinstance(key, tuple) else (key,)
+            wide = (
+                group.pivot_table(
+                    index=origin,
+                    columns=model,
+                    values=loss,
+                    aggfunc="mean",
+                )
+                .sort_index()
+                .rename_axis(columns=None)
+            )
+            groups.append((key_tuple[0], key_tuple[1], wide))
+        return groups
+    if benchmark not in panel.columns:
+        raise ValueError(
+            "loss_panel must be either a long panel with "
+            f"{sorted(long_required)!r} columns or a wide matrix containing "
+            f"benchmark column {benchmark!r}"
+        )
+    wide = panel.copy()
+    if origin in wide.columns:
+        wide = wide.set_index(origin)
+    return [("all", "all", wide)]
 
 
 def _normalize_correction(correction: str) -> str:
@@ -1528,6 +1675,7 @@ __all__ = [
     "henriksson_merton_test",
     "hn_test",
     "interval_coverage_test",
+    "blocked_oob_reality_check",
     "model_confidence_set",
     "nested_tests",
     "pesaran_timmermann_test",

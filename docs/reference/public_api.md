@@ -38,7 +38,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold` | `macroforecast.window` | Shortcut temporal window specs. |
 | `stage_policy`, `custom_stage_policy`, `stage_index`, `stage_panel`, `last_block_split`, `poos_split`, `expanding_split`, `rolling_blocks_split`, `blocked_kfold_split`, `split_table`, `normalize_window_name` | `macroforecast.window` | Stage timing and train/val split inspection. |
 | `metrics` | `macroforecast.metrics` | Forecast scoring namespace, including `mf.metrics.bias`. Use `mf.metrics.rmse`, not `mf.rmse`. |
-| `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`, `mf.tests.equal_predictive_tests`, interval coverage, and PIT diagnostics. Use `mf.tests.dm_test`, not `mf.dm_test`. |
+| `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`, `mf.tests.equal_predictive_tests`, `mf.tests.blocked_oob_reality_check`, interval coverage, and PIT diagnostics. Use `mf.tests.dm_test`, not `mf.dm_test`. |
 | `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `filter_oos_period`, `error_decomposition`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, OOS filtering, error decomposition, benchmark comparisons, and regime scoring. |
 | `evaluation` | `macroforecast.evaluation` | Evaluation namespace exposing report functions plus `metrics` and `tests`; raw metric/test functions are not re-exported directly from it. |
 | `SearchSpec`, `SearchResult`, `SearchError`, `search_spec`, `select_params` | `macroforecast.selection` | Parameter selection over a supplied window and metric. |
@@ -49,6 +49,7 @@ The importable surface is intentionally narrow and pandas-first.
 | `linear_coefficients`, `tree_importance`, `permutation_importance`, `permutation_importance_strobl`, `lofo_importance`, `partial_dependence`, `accumulated_local_effect`, `friedman_h_interaction`, `shap_values`, `shap_importance`, `forecast_decomposition`, `cumulative_r2_contribution`, `rolling_recompute`, `bootstrap_jackknife`, `group_aggregate`, `lineage_attribution`, `transformation_attribution`, `attention_weights`, `dual_decomposition`, `mrf_gtvp`, `generalized_irf`, `orthogonalised_irf`, `fevd`, `historical_decomposition`, `lasso_inclusion_frequency`, `lstm_hidden_state`, `saliency_map`, `integrated_gradients`, `gradient_shap`, `deep_lift`, `custom_interpretation` | `macroforecast.interpretation` | Model-native, model-agnostic, effect-curve, SHAP, group/pipeline attribution, OLS attention, MRF GTVP, VAR interpretation, neural attribution, and custom interpretation helpers. |
 | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `selection_table`, `interpretation_table`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index`, `OutputBundle` | `macroforecast.output` | Output-generating helpers. These create named tables and JSON summaries without writing files. |
 | `write_artifacts`, `collect_provenance`, `ArtifactManifest`, `ArtifactRecord`, `CompressionFormat` | `macroforecast.output` | Artifact export, custom artifact storage, file hashing, compression, and provenance manifest helpers. |
+| `ReportTable`, `ReportBundle`, `report_table`, `latex_table`, `html_table`, `markdown_table`, `figure_data`, `report_bundle`, `render_tables` | `macroforecast.reporting` | Paper/report table formatting, LaTeX/HTML/Markdown rendering, and figure-ready data. |
 | `summarize_data`, `DataSummaryReport` | `macroforecast.data_summary` | Single-panel summaries. |
 | `analyze_data`, `DataAnalysisReport` | `macroforecast.data_analysis` | Before/after panel analysis. |
 
@@ -73,5 +74,6 @@ The importable surface is intentionally narrow and pandas-first.
 | `macroforecast.evaluation` | Evaluation reports, OOS filtering, error decomposition, benchmark comparisons, regime scoring, and namespace links to `metrics` and `tests`. |
 | `macroforecast.interpretation` | Model-native importance, model-agnostic effects, attribution, VAR interpretation, and SHAP/deep optional helpers. |
 | `macroforecast.output` | Output generation, artifact writing, provenance collection, hashing, and compression. |
+| `macroforecast.reporting` | Presentation/report formatting and rendering without artifact writing. |
 | `macroforecast.data_summary` | Single-panel diagnostics and summaries. |
 | `macroforecast.data_analysis` | Raw-versus-processed comparison. |

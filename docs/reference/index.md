@@ -21,6 +21,7 @@ Function-level reference for the clean public Python API.
 | Evaluation | [Evaluation Namespace](evaluation.md) | Reports, OOS filtering, error decomposition, and links to `metrics`/`tests`. |
 | Interpretation | [Interpretation](interpretation.md) | Model-native importance, model-agnostic effects, attribution, and VAR interpretation. |
 | Output | [Output](output.md) | Output table generation, artifact writing, and schema-aware provenance manifest. |
+| Reporting | [Reporting](reporting.md) | Paper/report table formatting, LaTeX/HTML/Markdown rendering, and figure-ready data. |
 | Data Summary | [Data Summary](data_summary.md) | One-panel summary tables. |
 | Data Analysis | [Data Analysis](data_analysis.md) | Before/after preprocessing comparison. |
 
@@ -48,6 +49,7 @@ tests
 evaluation
 interpretation
 output
+reporting
 data_summary
 data_analysis
 public_api

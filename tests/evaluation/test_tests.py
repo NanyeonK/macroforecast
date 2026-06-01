@@ -162,6 +162,24 @@ def test_conditional_predictive_ability_and_model_confidence_set() -> None:
         spa_benchmark_model="a",
         random_state=123,
     )
+    reality = mf.tests.blocked_oob_reality_check(
+        loss_panel,
+        benchmark="a",
+        n_boot=20,
+        block_length=2,
+        random_state=123,
+    )
+    wide_reality = mf.tests.blocked_oob_reality_check(
+        loss_panel.pivot_table(
+            index="origin",
+            columns="model_id",
+            values="squared_error",
+        ),
+        benchmark="a",
+        n_boot=20,
+        block_length=2,
+        random_state=123,
+    )
 
     assert cpa["method"] == "giacomini_rossi"
     assert cpa["metadata_schema"]["kind"] == "conditional_predictive_ability"
@@ -176,6 +194,13 @@ def test_conditional_predictive_ability_and_model_confidence_set() -> None:
         for item in mcs["spa_p_values"]
     )
     assert mcs["bootstrap_n_replications"] == 20
+    assert reality.attrs["macroforecast_metadata_schema"]["kind"] == "blocked_oob_reality_check"
+    assert reality.loc[0, "model"] == "b"
+    assert reality.loc[0, "benchmark"] == "a"
+    assert reality.loc[0, "mean_diff"] < 0.0
+    assert 0.0 <= reality.loc[0, "p_value"] <= 1.0
+    assert wide_reality.loc[0, "target"] == "all"
+    assert wide_reality.loc[0, "horizon"] == "all"
     json.dumps(mcs)
 
 
