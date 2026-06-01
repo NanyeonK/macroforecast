@@ -89,7 +89,7 @@ Every loader writes a metadata dictionary with these common keys.
 | Key | Type | Meaning |
 | --- | --- | --- |
 | `dataset` | `str` | Dataset identifier such as `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`. |
-| `frequency` | `str` | Loader-level frequency label: `monthly`, `quarterly`, `state_monthly`, `mixed`, or the chosen combined frequency. |
+| `frequency` | `str` | Loader-level frequency label: `monthly`, `quarterly`, `weekly`, `annual`, `mixed`, `unknown`, or the chosen combined frequency. |
 | `version_mode` | `str` | `current`, `vintage`, or `mixed` for combined inputs with different modes. |
 | `vintage` | `str` or `None` | Requested vintage label in `YYYY-MM` form, or `None` for current data. |
 | `data_through` | `str` or `None` | Last date present in the loaded panel, formatted as `YYYY-MM`. |
@@ -238,7 +238,11 @@ macroforecast.data.load_fred_sd(
 FRED-SD columns are wide variable-state IDs such as `UR_CA`. The loader also
 adds `panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]`, which
 records each column's state, FRED-SD variable, observed date range, non-missing
-count, and native frequency inferred from the official series workbook.
+count, native frequency, and date-anchor pattern inferred from the official
+series workbook. The same frequency and date-anchor maps are exposed in
+`metadata["native_frequency_by_column"]`,
+`metadata["native_frequency_counts"]`, `metadata["date_anchor_by_column"]`,
+and `metadata["date_anchor_counts"]`.
 
 See [FRED-SD](../datasets/fred_sd.md) for mixed-frequency state-series details
 and t-code limitations.

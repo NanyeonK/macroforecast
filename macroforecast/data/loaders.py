@@ -421,16 +421,31 @@ def load_fred_sd(
     reports = dict(panel.attrs.get("macrocast_reports", {}))
     reports["fred_sd_series_metadata"] = report
     panel.attrs["macrocast_reports"] = reports
+    native_frequency_by_column = {
+        str(row["column"]): str(row["native_frequency"])
+        for row in report["series"]
+        if isinstance(row, Mapping)
+    }
+    date_anchor_by_column = {
+        str(row["column"]): str(row["date_anchor"])
+        for row in report["series"]
+        if isinstance(row, Mapping)
+    }
     return _official_bundle(
         panel,
         dataset="fred_sd",
-        source_family="fred-sd",
-        frequency="state_monthly",
+        frequency=_fred_sd_panel_frequency(report),
         request=request,
         source_url=source_url,
         local_path=target,
         file_format=source_format,
         cache_hit=cache_hit,
+        extra_metadata={
+            "native_frequency_by_column": native_frequency_by_column,
+            "native_frequency_counts": report["native_frequency_counts"],
+            "date_anchor_by_column": date_anchor_by_column,
+            "date_anchor_counts": report["date_anchor_counts"],
+        },
         cache_root=cache_root,
     )
 
@@ -742,6 +757,7 @@ def _official_bundle(
     file_format: str,
     cache_hit: bool,
     source_family: str | None = None,
+    extra_metadata: Mapping[str, Any] | None = None,
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
 ) -> DataBundle:
@@ -765,6 +781,8 @@ def _official_bundle(
     }
     if source_family is not None:
         metadata["source_family"] = source_family
+    if extra_metadata is not None:
+        metadata.update(dict(extra_metadata))
     bundle = _bundle(panel, metadata)
     _append_manifest_entry(metadata, cache_root=cache_root)
     return bundle
@@ -1467,18 +1485,64 @@ def _infer_native_frequency(series: pd.Series) -> str:
     observed = series.dropna()
     if observed.shape[0] < 2:
         return "unknown"
-    periods = pd.DatetimeIndex(observed.index).to_period("M")
-    deltas = [int(right.ordinal - left.ordinal) for left, right in zip(periods[:-1], periods[1:]) if right.ordinal > left.ordinal]
-    if not deltas:
+    index = pd.DatetimeIndex(observed.index).sort_values()
+    day_deltas = [
+        int((right - left).days)
+        for left, right in zip(index[:-1], index[1:], strict=False)
+        if right > left
+    ]
+    if not day_deltas:
         return "unknown"
-    most_common_delta, _ = Counter(deltas).most_common(1)[0]
-    if most_common_delta == 1:
+    median_days = float(pd.Series(day_deltas).median())
+    if 5 <= median_days <= 10:
+        return "weekly"
+    if 25 <= median_days <= 35:
         return "monthly"
-    if most_common_delta == 3:
+    if 80 <= median_days <= 100:
         return "quarterly"
-    if most_common_delta == 12:
+    if 350 <= median_days <= 380:
         return "annual"
     return "irregular"
+
+
+def _infer_date_anchor(series: pd.Series, native_frequency: str) -> str:
+    observed = series.dropna()
+    if observed.empty:
+        return "none"
+    index = pd.DatetimeIndex(observed.index).sort_values()
+    if native_frequency == "monthly":
+        month_start = index.to_period("M").to_timestamp()
+        month_end = index.to_period("M").asfreq("D", how="end").to_timestamp()
+        if index.equals(month_start):
+            return "month_start"
+        if index.equals(month_end):
+            return "month_end"
+        if len(set(index.weekday)) == 1:
+            return "monthly_weekday_anchor"
+        return "monthly_other_anchor"
+    if native_frequency == "quarterly":
+        quarter_start = index.to_period("Q").to_timestamp()
+        quarter_end = index.to_period("Q").asfreq("D", how="end").to_timestamp()
+        if index.equals(quarter_start):
+            return "quarter_start"
+        if index.equals(quarter_end):
+            return "quarter_end"
+        return "quarterly_other_anchor"
+    if native_frequency == "weekly":
+        return "weekly"
+    if native_frequency == "annual":
+        return "annual"
+    return native_frequency
+
+
+def _fred_sd_panel_frequency(report: Mapping[str, object]) -> str:
+    counts = report.get("native_frequency_counts", {})
+    if not isinstance(counts, Mapping) or not counts:
+        return "unknown"
+    nonzero = [str(name) for name, count in counts.items() if int(count) > 0]
+    if len(nonzero) == 1:
+        return nonzero[0]
+    return "mixed"
 
 
 def _fred_sd_column_parts(column: object) -> tuple[str, str]:
@@ -1495,6 +1559,7 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
         variable, state = _fred_sd_column_parts(column)
         observed_start, observed_end, non_missing_count = _column_observed_window(panel[column])
         native_frequency = _infer_native_frequency(panel[column])
+        date_anchor = _infer_date_anchor(panel[column], native_frequency)
         series.append(
             {
                 "column": str(column),
@@ -1502,6 +1567,7 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
                 "state": state,
                 "source_sheet": variable,
                 "native_frequency": native_frequency,
+                "date_anchor": date_anchor,
                 "observed_start": observed_start,
                 "observed_end": observed_end,
                 "non_missing_observation_count": non_missing_count,
@@ -1510,6 +1576,7 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
     states_seen = sorted({str(row["state"]) for row in series if row["state"]})
     variables_seen = sorted({str(row["sd_variable"]) for row in series})
     frequency_counts = Counter(str(row["native_frequency"]) for row in series)
+    date_anchor_counts = Counter(str(row["date_anchor"]) for row in series)
     return {
         "schema_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
         "contract_version": _FRED_SD_SERIES_METADATA_CONTRACT_VERSION,
@@ -1526,6 +1593,7 @@ def _fred_sd_series_metadata(panel: pd.DataFrame, *, states: list[str] | None, v
         "states": states_seen,
         "sd_variables": variables_seen,
         "native_frequency_counts": dict(sorted(frequency_counts.items())),
+        "date_anchor_counts": dict(sorted(date_anchor_counts.items())),
         "series": series,
     }
 

@@ -104,7 +104,7 @@ def test_load_fred_md_sd_combines_monthly_national_and_state_sources(tmp_path: P
 
 def test_md_sd_monthly_warns_when_state_series_are_quarterly(tmp_path: Path):
     national = mf.data.load_fred_md(local_source=FIXTURES / "fred_md_sample.csv", cache_root=tmp_path)
-    metadata = {"dataset": "fred_sd", "source_family": "fred-sd", "frequency": "state_monthly"}
+    metadata = {"dataset": "fred_sd", "frequency": "mixed"}
     panel = mf.data.as_panel(
         pd.DataFrame(
             {

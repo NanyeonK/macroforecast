@@ -21,7 +21,22 @@ pages. FRED-SD needs its own audit because state-series frequencies and edge
 cases can differ by variable and state, including weekly or otherwise
 non-monthly/non-quarterly observed spacing in raw files.
 
-The current official workbook checked during this implementation pass had:
+## Current Snapshot Checked For This Page
+
+This page was checked against the St. Louis Fed FRED-SD page and the latest
+official Data by Series workbook on 2026-06-01.
+
+| Item | Checked value |
+| --- | --- |
+| Latest workbook label | `series-2026-04.xlsx` |
+| Latest workbook URL | <https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-04.xlsx> |
+| Panel shape after package load | 1133 rows x 1428 state-series columns |
+| State count | 51 |
+| FRED-SD variable count | 28 |
+| Last date present in panel | 2026-04 |
+| Official page | <https://www.stlouisfed.org/research/economists/owyang/fred-sd> |
+
+The latest workbook has these native frequency counts:
 
 | Native frequency | Number of state-series columns |
 | --- | ---: |
@@ -29,8 +44,20 @@ The current official workbook checked during this implementation pass had:
 | quarterly | 546 |
 | unknown | 21 |
 
-The `unknown` category appears when a state-series has too few observed points
-to infer a reliable date spacing.
+The latest workbook has these date-anchor counts:
+
+| Date anchor | Number of state-series columns | Meaning |
+| --- | ---: | --- |
+| `month_start` | 810 | Monthly observations dated on the first day of the month. |
+| `monthly_weekday_anchor` | 51 | Monthly observations dated on a repeated weekday pattern rather than month start. In the latest workbook this is `ICLAIMS`. |
+| `quarter_start` | 546 | Quarterly observations dated on the first day of the quarter. |
+| `none` | 21 | Too few non-missing observations to infer an anchor. |
+
+The `unknown` frequency category appears when a state-series has too few
+observed points to infer a reliable date spacing. `ICLAIMS` is a special case:
+its dates look weekly because they fall on Saturdays, but each state has one
+observation per month in the latest workbook, so the package records
+`native_frequency="monthly"` and `date_anchor="monthly_weekday_anchor"`.
 
 ## Loader
 
@@ -65,8 +92,11 @@ macroforecast.data.load_fred_sd(
 | --- | --- |
 | `bundle.panel` | Wide state-level panel with columns such as `UR_CA` or `NQGSP_TX`. |
 | `bundle.metadata["dataset"]` | `"fred_sd"` |
-| `bundle.metadata["source_family"]` | `"fred-sd"` |
-| `bundle.metadata["frequency"]` | `"state_monthly"` |
+| `bundle.metadata["frequency"]` | `"monthly"`, `"quarterly"`, `"weekly"`, `"annual"`, `"mixed"`, or `"unknown"` depending on loaded columns. |
+| `bundle.metadata["native_frequency_by_column"]` | Per-column native frequency map. |
+| `bundle.metadata["native_frequency_counts"]` | Per-column native frequency counts. |
+| `bundle.metadata["date_anchor_by_column"]` | Per-column date-anchor map. |
+| `bundle.metadata["date_anchor_counts"]` | Per-column date-anchor counts. |
 | `bundle.metadata["transform_codes"]` | `{}` because FRED-SD has no official t-code map. |
 
 FRED-SD series metadata is stored in:
@@ -82,72 +112,55 @@ That report contains:
 | `series_count` | Number of loaded state-series columns. |
 | `state_count` | Number of states represented in the loaded panel. |
 | `sd_variable_count` | Number of FRED-SD variable groups represented. |
-| `native_frequency_counts` | Count of monthly, quarterly, unknown, or other inferred frequencies. |
+| `native_frequency_counts` | Count of monthly, quarterly, weekly, annual, irregular, unknown, or other inferred frequencies. |
+| `date_anchor_counts` | Count of date-anchor patterns such as `month_start`, `quarter_start`, or `monthly_weekday_anchor`. |
 | `series` | Row-level metadata for each state-series column. |
 
 Each `series` row contains `column`, `sd_variable`, `state`, `source_sheet`,
-`native_frequency`, `observed_start`, `observed_end`, and
+`native_frequency`, `date_anchor`, `observed_start`, `observed_end`, and
 `non_missing_observation_count`.
 
-## Monthly Variables
+## Variable Coverage In Latest Workbook
 
-The current official workbook check identified these variables as monthly in
-all loaded states:
+This table is computed from `series-2026-04.xlsx`. Frequency and date-anchor
+patterns are column counts across states. Start/end dates are the widest
+observed range across states for that variable. `Unknown states` lists states
+whose state-series has too few observations for reliable frequency inference.
 
-| Variable | Meaning in package |
-| --- | --- |
-| `BPPRIVSA` | Building permits, private housing units, seasonally adjusted. |
-| `CONS` | Construction employment. |
-| `EXPORTS` | State exports. |
-| `FIRE` | Financial activities employment. |
-| `GOVT` | Government employment. |
-| `ICLAIMS` | Initial unemployment insurance claims. |
-| `IMPORTS` | State imports. |
-| `INFO` | Information employment. |
-| `LF` | Labor force. |
-| `MFG` | Manufacturing employment. |
-| `MFGHRS` | Manufacturing hours. |
-| `NA` | Nonfarm payroll employment. |
-| `PARTRATE` | Labor force participation rate. |
-| `PSERV` | Private service-providing employment. |
-| `UR` | Unemployment rate. |
-
-## Quarterly Variables
-
-The current official workbook check identified these variables as quarterly in
-all loaded states:
-
-| Variable | Meaning in package |
-| --- | --- |
-| `FIRENQGSP` | Financial activities contribution to nominal GSP. |
-| `GOVNQGSP` | Government contribution to nominal GSP. |
-| `INFONQGSP` | Information contribution to nominal GSP. |
-| `NQGSP` | Nominal gross state product. |
-| `OTOT` | Total personal income. |
-| `PSERVNQGSP` | Private service-providing contribution to nominal GSP. |
-| `STHPI` | State house price index. |
-| `UTILNQGSP` | Utilities contribution to nominal GSP. |
+| Variable | Native frequency pattern | Date-anchor pattern | States | Earliest obs. | Latest obs. | Non-missing obs. | Unknown states |
+| --- | --- | --- | ---: | --- | --- | ---: | --- |
+| `BPPRIVSA` | monthly: 51 | month_start: 51 | 51 | 1988-01-01 | 2025-08-01 | 23052 | - |
+| `CONS` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2026-02-01 | 22034 | - |
+| `CONSTNQGSP` | quarterly: 49, unknown: 2 | none: 2, quarter_start: 49 | 51 | 2005-01-01 | 2025-10-01 | 4112 | DC, RI |
+| `EXPORTS` | monthly: 51 | month_start: 51 | 51 | 1995-08-01 | 2026-02-01 | 18717 | - |
+| `FIRE` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2025-12-01 | 22032 | - |
+| `FIRENQGSP` | quarterly: 51 | quarter_start: 51 | 51 | 2005-01-01 | 2025-10-01 | 4284 | - |
+| `GOVNQGSP` | quarterly: 51 | quarter_start: 51 | 51 | 2005-01-01 | 2025-10-01 | 4284 | - |
+| `GOVT` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2025-12-01 | 22032 | - |
+| `ICLAIMS` | monthly: 51 | monthly_weekday_anchor: 51 | 51 | 1985-09-28 | 2026-04-04 | 24662 | - |
+| `IMPORTS` | monthly: 51 | month_start: 51 | 51 | 2008-01-01 | 2026-02-01 | 11118 | - |
+| `INFO` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2025-12-01 | 22032 | - |
+| `INFONQGSP` | quarterly: 51 | quarter_start: 51 | 51 | 2005-01-01 | 2025-10-01 | 4244 | - |
+| `LF` | monthly: 51 | month_start: 51 | 51 | 1976-01-01 | 2025-08-01 | 30396 | - |
+| `MANNQGSP` | quarterly: 49, unknown: 2 | none: 2, quarter_start: 49 | 51 | 2005-01-01 | 2025-10-01 | 4100 | DC, WY |
+| `MFG` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2025-12-01 | 22032 | - |
+| `MFGHRS` | monthly: 51 | month_start: 51 | 51 | 2007-01-01 | 2025-12-01 | 11628 | - |
+| `MINNG` | monthly: 48, unknown: 3 | month_start: 48, none: 3 | 51 | 1990-01-01 | 2025-12-01 | 20364 | DC, DE, HI |
+| `NA` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2026-02-01 | 22048 | - |
+| `NATURNQGSP` | quarterly: 40, unknown: 11 | none: 11, quarter_start: 40 | 51 | 2005-01-01 | 2025-10-01 | 3340 | AK, CT, DC, DE, HI, ID, IN, ME, RI, VT, WI |
+| `NQGSP` | quarterly: 51 | quarter_start: 51 | 51 | 2005-01-01 | 2025-10-01 | 4284 | - |
+| `OTOT` | quarterly: 51 | quarter_start: 51 | 51 | 1948-01-01 | 2025-10-01 | 15896 | - |
+| `PARTRATE` | monthly: 51 | month_start: 51 | 51 | 1976-01-01 | 2025-08-01 | 30396 | - |
+| `PSERV` | monthly: 51 | month_start: 51 | 51 | 1990-01-01 | 2025-12-01 | 22032 | - |
+| `PSERVNQGSP` | quarterly: 51 | quarter_start: 51 | 51 | 2005-01-01 | 2025-10-01 | 4284 | - |
+| `RENTS` | monthly: 48, unknown: 3 | month_start: 48, none: 3 | 51 | 1990-01-01 | 2025-12-01 | 20736 | NM, RI, SD |
+| `STHPI` | quarterly: 51 | quarter_start: 51 | 51 | 1975-01-01 | 2025-10-01 | 10404 | - |
+| `UR` | monthly: 51 | month_start: 51 | 51 | 1976-01-01 | 2025-08-01 | 30396 | - |
+| `UTILNQGSP` | quarterly: 51 | quarter_start: 51 | 51 | 2005-01-01 | 2025-10-01 | 4268 | - |
 
 The official FRED-SD page includes a correction noting that `OTOT` and `STHPI`
-were previously described as monthly, but are quarterly.
-
-## Variables With Some Unknown State-Series
-
-Some variables are mostly monthly or quarterly, but have a small number of
-state-series columns with too few observations to infer frequency in the
-current workbook check.
-
-| Variable | Observed pattern |
-| --- | --- |
-| `CONSTNQGSP` | Mostly quarterly, with some unknown state-series. |
-| `MANNQGSP` | Mostly quarterly, with some unknown state-series. |
-| `MINNG` | Mostly monthly, with some unknown state-series. |
-| `NATURNQGSP` | Mostly quarterly, with some unknown state-series. |
-| `RENTS` | Mostly monthly, with some unknown state-series. |
-
-The loader records the exact per-column result in `fred_sd_series_metadata`.
-Downstream alignment uses that per-column metadata first and falls back to
-observed-date inference only when needed.
+were previously described as monthly, but are quarterly. The latest workbook
+confirms both as quarterly in all 51 states.
 
 ## No Official T-Codes
 
@@ -222,3 +235,10 @@ processed = mf.preprocessing.reprocess(
     transform_codes=codes,
 )
 ```
+
+## Official URLs
+
+| Source | URL |
+| --- | --- |
+| FRED-SD official page | <https://www.stlouisfed.org/research/economists/owyang/fred-sd> |
+| Latest Data by Series workbook checked here | <https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-04.xlsx> |

@@ -172,7 +172,7 @@ def test_fred_sd_requires_explicit_transform_choice():
             }
         ),
         date="date",
-        metadata={"dataset": "fred_sd", "source_family": "fred-sd"},
+        metadata={"dataset": "fred_sd"},
     )
 
     with np.testing.assert_raises_regex(ValueError, "FRED-SD has no official t-code map"):
@@ -190,7 +190,7 @@ def test_fred_sd_transform_codes_uses_suggestions_and_overrides():
             }
         ),
         date="date",
-        metadata={"dataset": "fred_sd", "source_family": "fred-sd"},
+        metadata={"dataset": "fred_sd"},
     )
 
     codes = mf.preprocessing.fred_sd_transform_codes(
@@ -564,7 +564,7 @@ def test_fred_sd_transform_codes_can_return_provenance_table():
             }
         ),
         date="date",
-        metadata={"dataset": "fred_sd", "source_family": "fred-sd"},
+        metadata={"dataset": "fred_sd"},
     )
 
     codes, table = mf.preprocessing.fred_sd_transform_codes(

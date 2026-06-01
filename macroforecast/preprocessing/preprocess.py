@@ -984,7 +984,7 @@ def _lookup(value: str, aliases: Mapping[str, str], name: str) -> str:
 
 
 def _is_fred_sd_metadata(metadata: Mapping[str, Any]) -> bool:
-    return str(metadata.get("dataset", "")).lower() == "fred_sd" or str(metadata.get("source_family", "")).lower() == "fred-sd"
+    return str(metadata.get("dataset", "")).lower() == "fred_sd"
 
 
 def _fred_sd_column_parts(column: str) -> tuple[str, str]:

@@ -71,7 +71,9 @@ def test_load_fred_sd_accepts_local_csv_fixture_without_excel_extra(tmp_path: Pa
     )
 
     assert metadata(bundle)["dataset"] == "fred_sd"
-    assert metadata(bundle)["frequency"] == "state_monthly"
+    assert "source_family" not in metadata(bundle)
+    assert metadata(bundle)["frequency"] == "monthly"
+    assert metadata(bundle)["native_frequency_counts"] == {"monthly": 4}
     assert metadata(bundle)["artifact"]["file_format"] == "csv"
     assert metadata(bundle)["artifact"]["source_url"].endswith("fred_sd_sample.csv")
     assert list(bundle.panel.columns) == ["BPPRIVSA_CA", "UR_CA", "BPPRIVSA_TX", "UR_TX"]

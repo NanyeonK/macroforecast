@@ -115,7 +115,7 @@ def test_align_frequency_warns_when_frequency_is_inferred_unknown() -> None:
 
 
 def test_align_frequency_quarterly_to_monthly_matches_data_combine() -> None:
-    metadata = {"dataset": "fred_sd", "source_family": "fred-sd", "frequency": "state_monthly"}
+    metadata = {"dataset": "fred_sd", "frequency": "mixed"}
     panel = mf.data.as_panel(
         pd.DataFrame(
             {
