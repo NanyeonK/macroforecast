@@ -1,60 +1,104 @@
 # Reference
 
-Function-level reference for the clean public Python API.
+[Back to documentation home](../index.md)
 
-| Stage | Page | Owns |
+Current workflow reference for the clean public Python API and callable module
+boundaries. Dataset descriptions live in [FRED Datasets](../datasets/index.md).
+
+Start with [Documentation Map](documentation_map.md) if you are deciding what
+to inspect. Use this page when you already know the part of the workflow you
+want to read.
+
+## First Review Path
+
+| Order | Page | Why it comes first |
 | --- | --- | --- |
-| Meta | [Meta](meta.md) | Global package defaults. |
-| Data | [Data](data.md) | Panels, metadata, loaders, targets, horizons, and sample windows. |
-| Custom Extensions | [Custom Extensions](custom.md) | User-supplied datasets, preprocessing, features, models, stage policies, forecast combinations, diagnostics, interpretation, and artifacts. |
-| Workflow | [Workflow Contract](workflow.md) | Which module owns callable functions, windows, and runner composition. |
-| Legacy Coverage | [Legacy Callable Coverage](legacy_callable_coverage.md) | Migration audit from old runtime/reference surfaces to current callable modules. |
-| Reference Verification | [Reference Verification](reference_verification.md) | Formula/reference anchors and verification-suite expansion rules. |
-| Preprocessing | [Preprocessing](preprocessing.md) | Frequency alignment, t-codes, outliers, imputation, and frame rules. |
-| Feature Engineering | [Feature Engineering](feature_engineering.md) | Direct/path-average targets, MAF/MARX-style transforms, sparse components, lag/window predictors, and aligned `X`, `y`. |
-| Feature Analysis | [Feature Analysis](feature_analysis.md) | Feature-matrix missingness, correlation, target-correlation, factor, lag, MARX, stage, and selection analysis. |
-| Models | [Models](models.md) | Callable model fits for linear, tree, factor, and volatility models. |
-| Window | [Window](window.md) | Estimation/validation/test windows shared across stages. |
-| Selection | [Selection](selection.md) | Hyperparameter search specs and parameter selection. |
-| Forecasting | [Forecasting](forecasting.md) | Windowed runner and forecast combination. |
-| Forecast Analysis | [Forecast Analysis](forecast_analysis.md) | Forecast-vs-actual, scale, residual, rolling-loss, training-loss, tuning, coefficient, DFM, ensemble-weight, and stage-update analysis. |
-| Metrics | [Metrics](metrics.md) | Scoring metrics, bias, ranking, and metric resolution. |
-| Tests | [Tests](tests.md) | Forecast-comparison tests, interval/PIT diagnostics, and residual diagnostics. |
-| Evaluation | [Evaluation Namespace](evaluation.md) | Reports, OOS filtering, error decomposition, and links to `metrics`/`tests`. |
-| Interpretation | [Interpretation](interpretation.md) | Model-native importance, model-agnostic effects, attribution, and VAR interpretation. |
-| Output | [Output](output.md) | Output table generation, artifact writing, and schema-aware provenance manifest. |
-| Reporting | [Reporting](reporting.md) | Paper/report table formatting, LaTeX/HTML/Markdown rendering, and figure-ready data. |
-| Data Summary | [Data Summary](data_summary.md) | One-panel summary tables. |
-| Data Analysis | [Data Analysis](data_analysis.md) | Before/after preprocessing comparison. |
+| 1 | [Documentation Map](documentation_map.md) | Shows which page answers which question. |
+| 2 | [Workflow Contract](workflow.md) | Defines module ownership and runner composition. |
+| 3 | [Legacy Callable Coverage](legacy_callable_coverage.md) | Confirms what old runtime functionality is covered, removed, or deferred. |
+| 4 | [Public Python API](public_api.md) | Lists importable public symbols. |
+| 5 | [Reference Verification](reference_verification.md) | Shows formula/reference anchors and future verification expansion. |
+
+## Workflow Groups
+
+| Group | Pages | Owns |
+| --- | --- | --- |
+| Orientation | [Documentation Map](documentation_map.md), [Workflow](workflow.md), [Legacy Coverage](legacy_callable_coverage.md), [Reference Verification](reference_verification.md), [Public API](public_api.md) | How the package is organized and what is currently covered. |
+| Data Pipeline | [Meta](meta.md), [Data](data.md), [Preprocessing](preprocessing.md), [Data Summary](data_summary.md), [Data Analysis](data_analysis.md) | Data loading, metadata, cleaning, summaries, and before/after checks. See [FRED Datasets](../datasets/index.md) for dataset pages. |
+| Feature Pipeline | [Feature Engineering](feature_engineering.md), [Feature Analysis](feature_analysis.md) | Targets, predictors, transforms, factors, feature selection, and feature diagnostics. |
+| Forecast Pipeline | [Window](window.md), [Models](models.md), [Selection](selection.md), [Forecasting](forecasting.md), [Forecast Analysis](forecast_analysis.md) | Timing, model fits, parameter search, runner execution, and forecast diagnostics. |
+| Evaluation And Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
+| Explanation And Delivery | [Interpretation](interpretation.md), [Output](output.md), [Reporting](reporting.md) | Attribution, output generation, artifact writing, and report/table rendering. |
+| Extension Surface | [Custom Extensions](custom.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
+
+## Orientation
 
 ```{toctree}
 :maxdepth: 1
+:caption: Orientation
 
-meta
-data
-custom
+documentation_map
 workflow
 legacy_callable_coverage
 reference_verification
-fred_md
-fred_qd
-fred_sd
-fred_datasets
+public_api
+custom
+```
+
+## Data Pipeline
+
+```{toctree}
+:maxdepth: 1
+:caption: Data Pipeline
+
+meta
+data
 preprocessing
+data_summary
+data_analysis
+```
+
+## Feature Pipeline
+
+```{toctree}
+:maxdepth: 1
+:caption: Feature Pipeline
+
 feature_engineering
 feature_analysis
-models
+```
+
+## Forecast Pipeline
+
+```{toctree}
+:maxdepth: 1
+:caption: Forecast Pipeline
+
 window
+models
 selection
 forecasting
 forecast_analysis
+```
+
+## Evaluation And Testing
+
+```{toctree}
+:maxdepth: 1
+:caption: Evaluation And Testing
+
 metrics
 tests
 evaluation
+```
+
+## Explanation And Delivery
+
+```{toctree}
+:maxdepth: 1
+:caption: Explanation And Delivery
+
 interpretation
 output
 reporting
-data_summary
-data_analysis
-public_api
 ```

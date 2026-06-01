@@ -20,7 +20,19 @@ composition in the forecasting runner.
 | `macroforecast.tests` | Forecast-comparison statistical tests and residual diagnostics. | Forecast scoring or model fitting. |
 | `macroforecast.evaluation` | Namespace wrapper for `metrics` and `tests`. | Callable metric/test functions. |
 | `macroforecast.interpretation` | Post-fit importance and effect summaries. | Model fitting, feature construction, or forecast testing. |
-| `macroforecast.output` | Writing artifacts and schema-aware provenance manifests. | Deciding model/window/evaluation design. |
+| `macroforecast.output` | Output tables/JSON summaries, artifact writing, schema-aware manifests, hashes, compression, and provenance. | Paper/report presentation style. |
+| `macroforecast.reporting` | Presentation table formatting, LaTeX/HTML/Markdown rendering, and figure-ready data. | Artifact writing or workflow design. |
+
+## Review Pages
+
+Use these pages before opening individual function references:
+
+| Page | Use |
+| --- | --- |
+| [Documentation Map](documentation_map.md) | Decide which page to inspect for a specific question. |
+| [Legacy Callable Coverage](legacy_callable_coverage.md) | Check whether an old runtime feature is covered, intentionally removed, or deferred. |
+| [Reference Verification](reference_verification.md) | Check formula/reference anchors and future verification priorities. |
+| [Public Python API](public_api.md) | Check importable public symbols. |
 
 ## Runner Loop
 
@@ -51,6 +63,26 @@ in `macroforecast.window` and `macroforecast.forecasting`, not inside individual
 preprocessing or feature functions. Full-sample preprocessing remains available
 through `reprocess(...)`; origin-local preprocessing uses `preprocess_spec(...)`
 inside the runner.
+
+Post-run objects follow the same separation:
+
+```python
+report = mf.evaluation.evaluate_report(result)
+tests = mf.tests.iterative_model_confidence_set(loss_panel)
+explain = mf.interpretation.permutation_importance(model, X, y)
+
+bundle = mf.output.bundle_outputs(
+    forecasts=result,
+    evaluation=report,
+    tests={"mcs": tests},
+    interpretation={"importance": explain},
+)
+paper_table = mf.reporting.report_table(report.scores)
+manifest = mf.output.write_artifacts(bundle, "results/run_001")
+```
+
+`output` handles named outputs and files. `reporting` handles presentation
+formatting. Neither module decides the modeling design.
 
 ## Stage Policies
 

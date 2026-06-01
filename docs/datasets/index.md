@@ -1,6 +1,6 @@
-# FRED Dataset Overview
+# FRED Datasets
 
-[Back to reference](index.md)
+[Back to documentation home](../index.md)
 
 `macroforecast` currently exposes three official FRED-family data sources and
 two combined data loaders.
@@ -13,11 +13,16 @@ two combined data loaders.
 | FRED-MD + FRED-SD | `mf.data.load_fred_md_sd()` | Combined monthly panel by default | Monthly state analysis with national controls. |
 | FRED-QD + FRED-SD | `mf.data.load_fred_qd_sd()` | Combined quarterly panel by default | Quarterly state analysis with national controls. |
 
-Dataset-specific pages:
+Dataset-specific pages live under this FRED Datasets section.
 
-- [FRED-MD](fred_md.md)
-- [FRED-QD](fred_qd.md)
-- [FRED-SD](fred_sd.md)
+```{toctree}
+:maxdepth: 1
+:caption: FRED Datasets
+
+fred_md
+fred_qd
+fred_sd
+```
 
 ## Source Pages
 

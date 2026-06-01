@@ -1,6 +1,6 @@
 # FRED-QD
 
-[Back to reference](index.md)
+[Back to FRED Datasets](index.md)
 
 FRED-QD is the package's quarterly national macroeconomic data source. In
 `macroforecast`, it is loaded through `mf.data.load_fred_qd()` and returned as a

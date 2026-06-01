@@ -1,6 +1,6 @@
 # FRED-MD
 
-[Back to reference](index.md)
+[Back to FRED Datasets](index.md)
 
 FRED-MD is the package's monthly national macroeconomic data source. In
 `macroforecast`, it is loaded through `mf.data.load_fred_md()` and returned as a

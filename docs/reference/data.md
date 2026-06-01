@@ -186,7 +186,7 @@ Returns `DataBundle` with a monthly FRED-MD panel and metadata. The official
 CSV transform row is parsed into `metadata["transform_codes"]` and
 `panel.attrs["macroforecast_transform_codes"]`.
 
-See [FRED-MD](fred_md.md) for dataset-specific details.
+See [FRED-MD](../datasets/fred_md.md) for dataset-specific details.
 
 ## load_fred_qd
 
@@ -206,7 +206,7 @@ Returns a quarterly canonical panel. The official CSV transform row is parsed
 into `metadata["transform_codes"]` and
 `panel.attrs["macroforecast_transform_codes"]`.
 
-See [FRED-QD](fred_qd.md) for dataset-specific details.
+See [FRED-QD](../datasets/fred_qd.md) for dataset-specific details.
 
 ## load_fred_sd
 
@@ -236,7 +236,7 @@ adds `panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]`, which
 records each column's state, FRED-SD variable, observed date range, non-missing
 count, and native frequency inferred from the official series workbook.
 
-See [FRED-SD](fred_sd.md) for monthly/quarterly series details and t-code
+See [FRED-SD](../datasets/fred_sd.md) for monthly/quarterly series details and t-code
 limitations.
 
 ## load_fred_md_sd

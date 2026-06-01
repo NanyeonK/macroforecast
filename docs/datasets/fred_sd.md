@@ -1,6 +1,6 @@
 # FRED-SD
 
-[Back to reference](index.md)
+[Back to FRED Datasets](index.md)
 
 FRED-SD is the package's state-level macroeconomic data source. In
 `macroforecast`, it is loaded through `mf.data.load_fred_sd()` and returned as a
