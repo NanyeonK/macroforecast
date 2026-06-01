@@ -2,6 +2,8 @@
 
 [Back to reference](index.md)
 
+## Purpose
+
 `macroforecast.data` is the data entry point for the package. It loads official
 or user-supplied data, normalizes it to one pandas panel contract, and attaches
 source metadata. It also creates run-level data specifications and combines
@@ -35,6 +37,44 @@ window, and predictor set; subsets the panel to those columns and dates; expands
 `predictors="all"` to concrete non-target columns; and records the choices in
 metadata. Later callable stages can consume the same `DataSpec` without
 guessing which columns or horizons the run intended to use.
+
+## Public Functions
+
+| Function | Purpose | Output |
+| --- | --- | --- |
+| `load_fred_md` | Load official FRED-MD current or vintage data. | `DataBundle` |
+| `load_fred_qd` | Load official FRED-QD current or vintage data. | `DataBundle` |
+| `load_fred_sd` | Load official FRED-SD state-level panel data. | `DataBundle` |
+| `load_fred_md_sd` | Load and combine FRED-MD with FRED-SD. | `DataBundle` |
+| `load_fred_qd_sd` | Load and combine FRED-QD with FRED-SD. | `DataBundle` |
+| `load_custom_csv` | Load a user CSV into the canonical panel contract. | `DataBundle` |
+| `load_custom_parquet` | Load a user Parquet file into the canonical panel contract. | `DataBundle` |
+| `custom_dataset` | Build a custom dataset from an in-memory `DataFrame`. | `DataBundle` |
+| `combine` | Concatenate loaded bundles and optionally align frequency. | `DataBundle` |
+| `list_vintages` | Generate supported monthly vintage labels for a dataset. | `list[str]` |
+| `as_panel` | Normalize a `DataFrame` to the canonical panel contract. | `pandas.DataFrame` |
+| `validate_panel` | Validate the canonical panel contract. | `None` |
+| `panel_info` | Summarize panel shape, dates, missingness, and frequency. | `dict` |
+| `metadata` | Extract explicit package metadata from data-like input. | `dict` |
+| `attach_metadata` | Merge one metadata stage into an existing metadata dictionary. | `dict` |
+| `set_frequencies` | Attach column-level native/output frequency metadata. | `DataBundle` |
+| `spec` | Attach target, horizon, sample, and predictor choices. | `DataSpec` |
+| `align_frequency` | Keep, filter, or align panel columns to a common frequency. | `DataBundle` |
+| `chow_lin_disaggregate` | Disaggregate low-frequency series with a high-frequency indicator. | `pandas.Series` |
+| `infer_frequencies` | Read or infer native frequency by column. | `(dict[str, str], str)` |
+| `frequency_hardening_issues` | Report columns with weak frequency classification. | `list[dict]` |
+| `availability_lag` | Delay selected columns to encode release availability. | `DataBundle` |
+| `same_period_predictors` | Allow, lag, drop, or reject same-period predictors in a `DataSpec`. | `DataSpec` |
+| `define_regime` | Attach a binary regime definition to metadata, optionally as a column. | `DataBundle` |
+
+## Public Classes And Types
+
+| Symbol | Meaning |
+| --- | --- |
+| `DataBundle` | Canonical panel plus metadata returned by loaders and data-policy helpers. |
+| `DataSpec` | Canonical panel plus target, horizon, sample, and predictor choices for a run. |
+| `RegimeDirection` | Stored threshold direction type: `"above"`, `"below"`, `"equal"`, or `"not_equal"`. |
+| `SamePeriodPolicy` | Stored same-period predictor policy type: `"allow"`, `"lag"`, `"drop"`, or `"forbid"`. |
 
 ## Canonical Panel
 
@@ -173,6 +213,30 @@ macroforecast.data.DataSpec(
 metadata together with the target, horizons, sample window, and predictor
 selection for a run.
 
+### Output
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `panel` | `pandas.DataFrame` | Canonical date-indexed data panel after sample and column selection. |
+| `metadata` | `dict` | Source metadata plus a `data_spec` stage. |
+| `target` | `str` or `None` | Single target column when `target=` was used. |
+| `targets` | `tuple[str, ...]` | Active target columns. |
+| `horizons` | `tuple[int, ...]` | Positive forecast horizons. |
+| `start`, `end` | `str` or `None` | Normalized sample bounds. |
+| `predictors` | `tuple[str, ...]` | Concrete non-target predictor columns. |
+
+### Methods
+
+| Method | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `attach(stage, values)` | `stage: str`, `values: Mapping` | `DataSpec` | Return a new spec with one metadata stage added. |
+
+`DataSpec` also supports tuple unpacking:
+
+```python
+panel, metadata = data_spec
+```
+
 ## load_fred_md
 
 Load FRED-MD and return `DataBundle`.
@@ -221,6 +285,17 @@ macroforecast.data.load_fred_qd(
     local_source: str | pathlib.Path | None = None,
 ) -> DataBundle
 ```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `vintage` | <code>str &#124; None</code> | `None` | Vintage in `YYYY-MM` form. `None` loads current. |
+| `force` | `bool` | `False` | Re-download or re-copy even if cache exists. |
+| `cache_root` | path-like or `None` | `None` | Raw cache root. |
+| `local_source` | path-like or `None` | `None` | Local CSV source instead of download. |
+
+### Output
 
 Returns a quarterly canonical panel. The official CSV transform row is parsed
 into `metadata["transform_codes"]` and
@@ -498,6 +573,7 @@ macroforecast.data.load_custom_csv(
     default_frequency: str | None = None,
     metadata: Mapping[str, object] | None = None,
     transform_codes: Mapping[str, int] | None = None,
+    cache_root: str | pathlib.Path | None = None,
     strict: bool = True,
 ) -> DataBundle
 ```
@@ -518,6 +594,7 @@ macroforecast.data.load_custom_csv(
 | `default_frequency` | `str` or `None` | `None` | Fill frequency for columns omitted from `frequency_by_column`. |
 | `metadata` | mapping or `None` | `None` | User metadata to attach. |
 | `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
+| `cache_root` | path-like or `None` | `None` | If supplied, append a raw-manifest entry under this cache root. Custom loaders do not write the default manifest unless this is supplied. |
 | `strict` | `bool` | `True` | Reject invalid date rows and non-numeric cells instead of silently coercing them. Set `False` only when you want a permissive load with a panel report. |
 
 ### Output
@@ -572,12 +649,35 @@ macroforecast.data.load_custom_parquet(
     default_frequency: str | None = None,
     metadata: Mapping[str, object] | None = None,
     transform_codes: Mapping[str, int] | None = None,
+    cache_root: str | pathlib.Path | None = None,
     strict: bool = True,
 ) -> DataBundle
 ```
 
-`date_col`, `series_columns`, `transform_codes`, and `strict` have the same
-meaning as in `load_custom_csv`.
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `path` | path-like | required | Parquet file path. |
+| `date` | <code>str &#124; None</code> | `None` | Date column. If omitted, uses a `DatetimeIndex` or parses the first column. |
+| `date_col` | <code>str &#124; int &#124; None</code> | `None` | Alias for `date`; integer values select the date column by zero-based position. |
+| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
+| `series_columns` | iterable or `None` | `None` | Alias for `columns`. |
+| `rename` | mapping or `None` | `None` | Column rename map. |
+| `dataset` | `str` | `"custom"` | Metadata dataset label. |
+| `frequency` | `str` | `"unknown"` | Metadata frequency label. |
+| `frequency_by_column` | mapping or `None` | `None` | Optional final-column frequency map. |
+| `default_frequency` | `str` or `None` | `None` | Fill frequency for columns omitted from `frequency_by_column`. |
+| `metadata` | mapping or `None` | `None` | User metadata to attach. |
+| `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
+| `cache_root` | path-like or `None` | `None` | If supplied, append a raw-manifest entry under this cache root. |
+| `strict` | `bool` | `True` | Reject invalid date rows and non-numeric cells instead of silently coercing them. |
+
+### Output
+
+Returns a `DataBundle` with the same canonical panel, metadata, transform-code,
+strict-normalization, and optional mixed-frequency contract as
+`load_custom_csv`.
 
 ## custom_dataset
 
@@ -755,6 +855,42 @@ tuple, or `DataFrame`.
 macroforecast.data.metadata(obj) -> dict
 ```
 
+### Input
+
+| Name | Type | Meaning |
+| --- | --- | --- |
+| `obj` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | Object carrying package metadata. |
+
+### Output
+
+Returns a shallow copy of the metadata dictionary. Mutating the returned object
+does not mutate the original bundle or panel attrs.
+
+## attach_metadata
+
+Merge one metadata stage into an existing metadata dictionary.
+
+```python
+macroforecast.data.attach_metadata(
+    metadata,
+    stage: str,
+    values,
+) -> dict
+```
+
+### Input
+
+| Name | Type | Meaning |
+| --- | --- | --- |
+| `metadata` | mapping | Existing metadata dictionary. |
+| `stage` | `str` | Non-empty stage key to write, such as `"data_spec"` or `"data_frequency_alignment"`. |
+| `values` | mapping | Stage payload to copy under `stage`. |
+
+### Output
+
+Returns a new dictionary. Existing metadata is copied, then `values` is copied
+under the requested stage. `attach_metadata()` does not mutate its input.
+
 ## spec
 
 Attach run-level data choices to a bundle or panel. This function creates a
@@ -917,13 +1053,29 @@ indicator and conserves `low_frequency` under `aggregation="mean"` or
 
 ```python
 macroforecast.data.infer_frequencies(data) -> tuple[dict[str, str], str]
-macroforecast.data.frequency_hardening_issues(frequencies) -> list[dict]
 ```
 
 `infer_frequencies()` returns `(frequency_by_column, source)`. The source is
 `"native_frequency_by_column"`, `"fred_sd_series_metadata"`, or
-`"observed_dates"`. `frequency_hardening_issues()` reports columns classified
-as `unknown`, `irregular`, or `annual` before a caller aligns frequencies.
+`"observed_dates"`.
+
+### frequency_hardening_issues
+
+```python
+macroforecast.data.frequency_hardening_issues(
+    frequencies,
+) -> list[dict]
+```
+
+Reports columns classified as `unknown`, `irregular`, or `annual` before a
+caller aligns frequencies. This is useful before forcing a mixed panel to
+monthly or quarterly frequency.
+
+| Output key | Meaning |
+| --- | --- |
+| `frequency` | Weak frequency class. |
+| `columns` | Columns assigned to that class. |
+| `n_columns` | Number of affected columns. |
 
 ### availability_lag
 
@@ -981,9 +1133,32 @@ aligned vector/Series. The regime is stored in `metadata["regimes"]`; set
 
 ## Vintage Helpers
 
-`list_vintages(dataset, start, end)` returns candidate vintage labels. The
-selected vintage is passed to `load_fred_md`, `load_fred_qd`, or `load_fred_sd`
-through `vintage=`.
+### list_vintages
+
+Generate monthly vintage labels for a supported dataset.
+
+```python
+macroforecast.data.list_vintages(
+    dataset: str,
+    start: str | None = None,
+    end: str | None = None,
+) -> list[str]
+```
+
+### Input
+
+| Name | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `dataset` | `str` | required | One of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`. |
+| `start` | <code>str &#124; None</code> | first supported vintage | Start vintage in `YYYY-MM` form. |
+| `end` | <code>str &#124; None</code> | required | End vintage in `YYYY-MM` form. |
+
+### Output
+
+Returns candidate monthly vintage labels. The selected vintage is passed to
+`load_fred_md`, `load_fred_qd`, or `load_fred_sd` through `vintage=`.
+
+`end` is required because the function does not inspect remote availability.
 
 ## Official Source Pages
 

@@ -901,6 +901,7 @@ __all__ = [
     "RegimeDirection",
     "align_frequency",
     "availability_lag",
+    "chow_lin_disaggregate",
     "define_regime",
     "frequency_hardening_issues",
     "infer_frequencies",
