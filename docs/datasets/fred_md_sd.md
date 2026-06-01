@@ -63,6 +63,9 @@ The function returns `DataBundle(panel, metadata)`.
 | `bundle.metadata["combined_sources"]` | Metadata snapshots from FRED-MD and FRED-SD. |
 | `bundle.metadata["source_by_column"]` | Source dataset for each column. |
 | `bundle.metadata["native_frequency_by_column"]` | Inferred source frequency before alignment. |
+| `bundle.metadata["native_frequency_counts"]` | Count of monthly, quarterly, weekly, and unknown native columns before alignment. |
+| `bundle.metadata["date_anchor_by_column"]` | FRED-SD date-anchor pattern for state columns when available. |
+| `bundle.metadata["date_anchor_counts"]` | Count of FRED-SD date-anchor patterns when available. |
 | `bundle.metadata["output_frequency_by_column"]` | Frequency represented in the returned panel. |
 | `bundle.metadata["frequency_conversion_warnings"]` | Conversion records for source columns that changed frequency. |
 | `bundle.metadata["alignment"]` | Target frequency and alignment rules. |
@@ -86,6 +89,26 @@ bundle = mf.data.load_fred_md_sd(
 This is the intended path for monthly state analysis. Monthly FRED-SD columns
 remain monthly. Quarterly FRED-SD columns are aligned to monthly output using
 `quarterly_to_monthly`.
+
+## FRED-SD Metadata Preserved In The Combined Panel
+
+FRED-SD is not a pure monthly dataset. The package keeps its source-frequency
+and date-anchor metadata even after the returned panel is aligned to monthly
+output.
+
+| Metadata | Meaning |
+| --- | --- |
+| `native_frequency_by_column` | Source frequency before combination, such as `"monthly"` or `"quarterly"`. |
+| `native_frequency_counts` | Count of native source frequencies in the combined panel. |
+| `date_anchor_by_column` | FRED-SD date-anchor pattern, such as `"month_start"`, `"quarter_start"`, or `"monthly_weekday_anchor"`. |
+| `date_anchor_counts` | Count of FRED-SD date-anchor patterns in selected state columns. |
+| `panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]` | Per-state/per-variable observed span, native frequency, and date-anchor report. |
+
+This matters most for selected FRED-SD variables that are quarterly in the
+official workbook. For example, the official FRED-SD page corrects the paper's
+description of `OTOT` and `STHPI`: both are quarterly, not monthly. When these
+variables are used in a monthly MD+SD panel, the loader proceeds but warns and
+records the exact rule used to convert them.
 
 ## Quarterly-To-Monthly Rules
 
@@ -116,11 +139,20 @@ that quarterly alignment of FRED-MD is supported but discouraged.
 
 ## Weekly Or Other FRED-SD Frequencies
 
-The default combined output is monthly. If a selected FRED-SD column is detected
-as weekly, the current combined loader does not silently aggregate it to
-monthly. Use `frequency="native"` to inspect the mixed native panel first, or
-wait for the dedicated FRED-SD frequency policy audit before relying on weekly
-state series in a monthly combined panel.
+The default combined output is monthly. The current official FRED-SD workbook
+has monthly and quarterly state series, plus columns whose observed dates do
+not support a reliable monthly or quarterly classification. The loader does
+not silently aggregate weekly or unknown-frequency columns into a combined
+monthly panel; it raises `ValueError` instead. Use `frequency="native"` to
+inspect the mixed native panel first, or call `mf.data.align_frequency()`
+explicitly when you want to decide how a non-monthly state series should enter
+a monthly design.
+
+`ICLAIMS` is treated as `native_frequency="monthly"` with
+`date_anchor="monthly_weekday_anchor"` because the workbook has one observation
+per month on a weekday/Saturday-style anchor rather than first-of-month dates.
+It can enter the default monthly MD+SD panel, but the anchor remains visible in
+metadata.
 
 ## Official URLs
 

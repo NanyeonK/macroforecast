@@ -875,6 +875,7 @@ def combine(
     transform_codes: dict[str, int] = {}
     source_by_column: dict[str, str] = {}
     native_frequency_by_column: dict[str, str] = {}
+    date_anchor_by_column: dict[str, str] = {}
     output_frequency_by_column: dict[str, str] = {}
     seen_columns: set[str] = set()
     alignment_reports: list[dict[str, Any]] = []
@@ -899,9 +900,12 @@ def combine(
         alignment_reports.append({"dataset": source_dataset, **alignment})
         combined_sources.append(dict(bundle.metadata))
         source_native_frequencies = dict(alignment.get("native_frequency_by_column", {}))
+        source_date_anchors = dict(alignment.get("date_anchor_by_column", {}))
         for column in panel.columns:
             name = str(column)
             native_frequency_by_column[name] = str(source_native_frequencies.get(name, "unknown"))
+            if name in source_date_anchors:
+                date_anchor_by_column[name] = str(source_date_anchors[name])
             output_frequency_by_column[name] = (
                 native_frequency_by_column[name] if target_frequency == "native" else target_frequency
             )
@@ -939,6 +943,9 @@ def combine(
             "sources": alignment_reports,
         },
     }
+    if date_anchor_by_column:
+        metadata["date_anchor_by_column"] = dict(sorted(date_anchor_by_column.items()))
+        metadata["date_anchor_counts"] = dict(sorted(Counter(date_anchor_by_column.values()).items()))
     if combined_reports:
         merged.attrs["macrocast_reports"] = combined_reports
     _emit_frequency_conversion_warnings(frequency_conversion_warnings)
@@ -988,10 +995,14 @@ def _align_bundle_for_combination(
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     panel = bundle.panel.copy()
     native_frequencies = _bundle_native_frequencies(bundle)
+    date_anchors = _bundle_date_anchors(bundle)
     native_frequency_summary = {
         "native_frequency_counts": dict(sorted(Counter(native_frequencies.values()).items())),
         "native_frequency_by_column": dict(sorted(native_frequencies.items())),
     }
+    if date_anchors:
+        native_frequency_summary["date_anchor_counts"] = dict(sorted(Counter(date_anchors.values()).items()))
+        native_frequency_summary["date_anchor_by_column"] = dict(sorted(date_anchors.items()))
     if frequency == "native":
         return panel, {
             "method": "native",
@@ -999,9 +1010,17 @@ def _align_bundle_for_combination(
             "frequency_conversions": [],
             **native_frequency_summary,
         }
-    if any(value == "weekly" for value in native_frequencies.values()):
-        weekly_columns = [column for column, value in native_frequencies.items() if value == "weekly"]
-        raise ValueError(f"weekly columns are not supported in data combination: {weekly_columns[:5]}")
+    unsupported = {
+        column: value
+        for column, value in native_frequencies.items()
+        if value not in {"monthly", "quarterly"}
+    }
+    if unsupported:
+        sample = list(unsupported.items())[:5]
+        raise ValueError(
+            "combined monthly/quarterly output supports only monthly and quarterly native columns; "
+            f"unsupported columns include {sample}. Use frequency='native' to inspect them first."
+        )
     if frequency == "monthly":
         conversions = _frequency_conversion_records(
             native_frequencies,
@@ -1070,6 +1089,39 @@ def _fred_sd_frequency_map(panel: pd.DataFrame) -> dict[str, str]:
         frequency = row.get("native_frequency")
         if column is not None and frequency:
             result[str(column)] = str(frequency)
+    return result
+
+
+def _bundle_date_anchors(bundle: DataBundle) -> dict[str, str]:
+    metadata_anchors = bundle.metadata.get("date_anchor_by_column")
+    if isinstance(metadata_anchors, Mapping):
+        column_names = {str(column) for column in bundle.panel.columns}
+        return {
+            str(column): str(anchor)
+            for column, anchor in metadata_anchors.items()
+            if str(column) in column_names
+        }
+    return _fred_sd_date_anchor_map(bundle.panel)
+
+
+def _fred_sd_date_anchor_map(panel: pd.DataFrame) -> dict[str, str]:
+    reports = getattr(panel, "attrs", {}).get("macrocast_reports", {})
+    if not isinstance(reports, Mapping):
+        return {}
+    report = reports.get("fred_sd_series_metadata", {})
+    if not isinstance(report, Mapping):
+        return {}
+    rows = report.get("series", ())
+    if not isinstance(rows, (list, tuple)):
+        return {}
+    result: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            continue
+        column = row.get("column")
+        anchor = row.get("date_anchor")
+        if column is not None and anchor:
+            result[str(column)] = str(anchor)
     return result
 
 

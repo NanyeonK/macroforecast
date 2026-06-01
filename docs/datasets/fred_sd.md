@@ -214,10 +214,19 @@ national/state loaders are documented separately:
 - [FRED-MD + FRED-SD](fred_md_sd.md) for monthly state analysis with national controls.
 - [FRED-QD + FRED-SD](fred_qd_sd.md) for quarterly state analysis with national controls.
 
-The FRED-SD frequency contract needs a separate audit because state series can
-have different observed frequencies and edge cases. That audit should decide
-how monthly, quarterly, weekly, and unknown-frequency state series are exposed
-in loader metadata and downstream alignment.
+FRED-SD state series can have different observed frequencies and date anchors.
+The current loader records that explicitly:
+
+- `native_frequency_by_column` records whether each state column is monthly,
+  quarterly, weekly, or unknown before any combination.
+- `date_anchor_by_column` records whether dates are first-of-month,
+  first-of-quarter, monthly weekday/Saturday-style anchors, or missing.
+- combined loaders preserve those maps and raise/record conversion warnings
+  when selected FRED-SD columns are aligned to the MD or QD output frequency.
+
+Use the combined pages for the default monthly and quarterly policies. Use
+`frequency="native"` or `mf.data.align_frequency()` when you need to inspect or
+manually govern unusual state-series timing.
 
 ## Example
 

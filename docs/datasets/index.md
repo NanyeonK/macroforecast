@@ -77,6 +77,23 @@ bundle.metadata["frequency_conversion_warnings"]
 This lets users inspect exactly which variables changed frequency and which
 rule was used.
 
+## Dataset Docs Status
+
+The FRED dataset pages now cover:
+
+- standalone FRED-MD, FRED-QD, and FRED-SD loaders,
+- official URLs and direct current-source links where applicable,
+- FRED-MD/FRED-QD official t-codes and source groups,
+- FRED-SD variable, state, native-frequency, observed-span, and date-anchor
+  metadata,
+- FRED-MD+FRED-SD and FRED-QD+FRED-SD combination behavior,
+- frequency conversion warnings and preserved combined-panel metadata.
+
+The remaining data-documentation surface is custom data ingestion:
+`load_custom_csv()`, `load_custom_parquet()`, and in-memory `custom_dataset()`
+are documented in [Data Reference](../reference/data.md), but they do not yet
+have a standalone dataset-guide page.
+
 ## Official URLs
 
 | Dataset | Official page | Direct current source used by package |

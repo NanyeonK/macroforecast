@@ -107,6 +107,8 @@ Combined bundles add:
 | `source_by_column` | `dict[str, str]` | Source dataset for each output column. |
 | `native_frequency_by_column` | `dict[str, str]` | Original frequency for each output column before alignment. |
 | `native_frequency_counts` | `dict[str, int]` | Count of columns by original frequency. |
+| `date_anchor_by_column` | `dict[str, str]` | FRED-SD date-anchor map for state columns when available. |
+| `date_anchor_counts` | `dict[str, int]` | Count of FRED-SD date-anchor patterns when available. |
 | `output_frequency_by_column` | `dict[str, str]` | Frequency represented in the returned panel for each output column. |
 | `output_frequency_counts` | `dict[str, int]` | Count of columns by returned-panel frequency. |
 | `frequency_conversion_warnings` | `list[dict]` | Records of monthly-to-quarterly or quarterly-to-monthly conversions. |
@@ -299,6 +301,9 @@ Returns a combined `DataBundle` with:
 - `metadata["frequency"] == frequency`
 - FRED-MD official t-codes in `metadata["transform_codes"]`
 - FRED-SD series metadata preserved in `panel.attrs["macrocast_reports"]`
+- FRED-SD source-frequency and date-anchor maps in
+  `metadata["native_frequency_by_column"]` and
+  `metadata["date_anchor_by_column"]`
 - any frequency conversions recorded in `metadata["frequency_conversion_warnings"]`
 
 If a quarterly FRED-SD series is included in a monthly panel, the function
@@ -356,6 +361,9 @@ Returns a combined `DataBundle` with:
 - `metadata["frequency"] == frequency`
 - FRED-QD official t-codes in `metadata["transform_codes"]`
 - FRED-SD series metadata preserved in `panel.attrs["macrocast_reports"]`
+- FRED-SD source-frequency and date-anchor maps in
+  `metadata["native_frequency_by_column"]` and
+  `metadata["date_anchor_by_column"]`
 - any frequency conversions recorded in `metadata["frequency_conversion_warnings"]`
 
 If a monthly FRED-SD series is included in a quarterly panel, the function
@@ -406,8 +414,12 @@ frequency from the overall index.
 | monthly to quarterly | `quarterly_endpoint` | Use the last monthly observation in the quarter. |
 | monthly to quarterly | `quarterly_sum` | Sum monthly observations in the quarter. |
 
-Weekly data are not supported in combined official-data bundles. If a source
-contains a native weekly column, `combine()` raises `ValueError`.
+Combined monthly/quarterly output supports only source columns identified as
+monthly or quarterly. If a source contains weekly, annual, irregular, or
+unknown-frequency columns, `combine()` raises `ValueError`. Use
+`frequency="native"` to inspect the mixed panel first, then call
+`mf.data.align_frequency()` explicitly if those columns should enter a common
+monthly or quarterly design.
 
 ### Output
 
@@ -420,6 +432,9 @@ For mixed outputs, the key metadata fields are:
 | --- | --- |
 | `metadata["frequency"]` | `"mixed"`. |
 | `metadata["native_frequency_by_column"]` | Native source frequency for each column. |
+| `metadata["native_frequency_counts"]` | Counts of native source frequencies. |
+| `metadata["date_anchor_by_column"]` | FRED-SD date-anchor map when available. |
+| `metadata["date_anchor_counts"]` | Counts of FRED-SD date-anchor patterns when available. |
 | `metadata["output_frequency_by_column"]` | Returned-panel frequency for each column; equal to native frequency in native mode. |
 | `metadata["alignment"]["frequency"]` | `"native"` when no conversion was applied. |
 

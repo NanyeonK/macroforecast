@@ -84,6 +84,30 @@ def test_combine_native_preserves_mixed_frequency_contract():
     assert info["native_frequency_counts"] == {"monthly": 1, "quarterly": 1}
 
 
+def test_combine_rejects_unknown_frequency_in_monthly_or_quarterly_output():
+    monthly = _bundle(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=4, freq="MS"),
+                "m": [1.0, 2.0, 3.0, 4.0],
+            }
+        ),
+        {"dataset": "monthly_source", "source_family": "test", "frequency": "monthly"},
+    )
+    unknown = _bundle(
+        pd.DataFrame(
+            {
+                "date": pd.to_datetime(["2020-01-01"]),
+                "u": [10.0],
+            }
+        ),
+        {"dataset": "unknown_source", "source_family": "test", "frequency": "mixed"},
+    )
+
+    with pytest.raises(ValueError, match="supports only monthly and quarterly native columns"):
+        mf.data.combine(monthly, unknown, dataset="custom_combo", frequency="monthly")
+
+
 def test_load_fred_md_sd_combines_monthly_national_and_state_sources(tmp_path: Path):
     bundle = mf.data.load_fred_md_sd(
         cache_root=tmp_path,
@@ -99,6 +123,9 @@ def test_load_fred_md_sd_combines_monthly_national_and_state_sources(tmp_path: P
     assert "UR_CA" in bundle.panel.columns
     assert bundle.metadata["transform_codes"]["INDPRO"] == 5
     assert bundle.metadata["source_by_column"]["UR_CA"] == "fred_sd"
+    assert bundle.metadata["native_frequency_by_column"]["UR_CA"] == "monthly"
+    assert bundle.metadata["date_anchor_by_column"]["UR_CA"] == "month_start"
+    assert bundle.metadata["date_anchor_counts"] == {"month_start": 1}
     assert "fred_sd_series_metadata" in bundle.panel.attrs["macrocast_reports"]
 
 
@@ -117,7 +144,15 @@ def test_md_sd_monthly_warns_when_state_series_are_quarterly(tmp_path: Path):
     )
     panel.attrs["macrocast_reports"] = {
         "fred_sd_series_metadata": {
-            "series": [{"column": "NQGSP_CA", "sd_variable": "NQGSP", "state": "CA", "native_frequency": "quarterly"}]
+            "series": [
+                {
+                    "column": "NQGSP_CA",
+                    "sd_variable": "NQGSP",
+                    "state": "CA",
+                    "native_frequency": "quarterly",
+                    "date_anchor": "quarter_start",
+                }
+            ]
         }
     }
     regional = mf.data.DataBundle(panel, metadata)
@@ -128,6 +163,7 @@ def test_md_sd_monthly_warns_when_state_series_are_quarterly(tmp_path: Path):
     warning = bundle.metadata["frequency_conversion_warnings"][0]
     assert warning["variables"] == ["NQGSP"]
     assert warning["rule"] == "repeat_within_quarter"
+    assert bundle.metadata["date_anchor_by_column"]["NQGSP_CA"] == "quarter_start"
 
 
 def test_load_fred_qd_sd_combines_quarterly_national_and_state_sources(tmp_path: Path):
@@ -147,6 +183,8 @@ def test_load_fred_qd_sd_combines_quarterly_national_and_state_sources(tmp_path:
     assert "UR_CA" in bundle.panel.columns
     assert bundle.panel.loc[pd.Timestamp("2000-01-01"), "UR_CA"] == 5.2
     assert bundle.metadata["transform_codes"]["GDPC1"] == 5
+    assert bundle.metadata["native_frequency_by_column"]["UR_CA"] == "monthly"
+    assert bundle.metadata["date_anchor_by_column"]["UR_CA"] == "month_start"
     warning = bundle.metadata["frequency_conversion_warnings"][0]
     assert warning["variables"] == ["UR"]
     assert warning["rule"] == "quarterly_endpoint"
