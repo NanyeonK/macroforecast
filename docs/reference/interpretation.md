@@ -19,6 +19,25 @@ Every table returned by this module carries
 `attrs["macroforecast_metadata_schema"]` with `kind`, `version`, `method`,
 `model`, `n_features`, output `columns`, and function-specific metadata.
 
+## Review Status
+
+`interpretation` functions are not all the same kind of evidence. Use this
+classification before treating a number as a paper table or structural claim.
+
+| Class | Functions | Reference implementation | Status |
+| --- | --- | --- | --- |
+| Native/backend extraction | `linear_coefficients`, `tree_importance`, `model_native_linear_coef`, `model_native_tree_importance` | scikit-learn-style `coef_` / `feature_importances_` estimator conventions | Direct attribute extraction. Validity depends on the fitted estimator. |
+| SHAP backend | `shap_values`, `shap_importance`, `shap_tree`, `shap_linear`, `shap_kernel`, `shap_deep` | Python `shap` package: `Explainer`, `TreeExplainer`, and `PermutationExplainer` | Backend call plus pandas reshaping. `shap_linear` and `shap_deep` are generic SHAP paths, not fixed `LinearExplainer` or `DeepExplainer` calls. |
+| Captum backend | `deep_lift` | Captum `DeepLift` | Direct Captum call. |
+| Standard model-agnostic diagnostics | `permutation_importance`, `lofo_importance(fit_func=...)`, `partial_dependence`, `individual_conditional_expectation`, `ice_curves`, `accumulated_local_effect`, `friedman_h_interaction` | scikit-learn permutation/PDP/ICE, R `pdp::partial`, R `ALEPlot`, R `iml`/`hstats` H-statistic conventions | Implements standard diagnostic definitions directly. Interpretation is predictive/associational, not causal. |
+| Approximate or fixed-model diagnostics | `permutation_importance_strobl`, `lofo_importance(fit_func=None)`, `cumulative_r2_contribution`, `rolling_recompute`, `bootstrap_jackknife`, non-linear `forecast_decomposition` fallback | Strobl conditional-permutation idea, LOFO refit idea, macroforecast fixed-model diagnostics | Metadata records approximation/fixed-model mode. Do not describe these as exact refit or additive decompositions. |
+| VAR/macroeconomic interpretation | `generalized_irf`, `orthogonalised_irf`, `fevd`, `historical_decomposition` | statsmodels VAR result API when available; Pesaran-Shin GIRF formula; internal statsmodels-like adapter for macroforecast VAR | `fevd` now falls back to manual orthogonalized FEVD rather than IRF. `historical_decomposition` is reduced-form, not structural identification. |
+| Neural manual attribution | `saliency_map`, `integrated_gradients`, `gradient_shap`, `lstm_hidden_state` | Captum-style torch-gradient methods | Manual torch autograd implementation, except `deep_lift`. Integrated gradients uses a straight-line Riemann approximation, not Captum's default Gauss-Legendre backend. |
+| Aggregation/report plumbing | `group_aggregate`, `lineage_attribution`, `transformation_attribution`, `custom_interpretation` | No external fitting backend; table aggregation and user callables | Aggregates existing evidence. `transformation_attribution` is not component-level causality unless the input table was designed as a component-removal experiment. |
+
+Every returned table includes this review classification in
+`attrs["macroforecast_metadata_schema"]["reference"]`.
+
 ## Function Summary
 
 | Function | Input | Output | Meaning |
@@ -31,6 +50,8 @@ Every table returned by this module carries
 | `permutation_importance_strobl(model, X, y, metric="mse", n_repeats=5, n_bins=5, random_state=None)` | fitted predictor, feature frame, target vector | `DataFrame` | Conditional permutation within bins of correlated features. |
 | `lofo_importance(model, X, y, fit_func=None, metric="mse")` | fitted predictor or refit callable, feature frame, target vector | `DataFrame` | Leave-one-feature-out or prediction-drop importance. |
 | `partial_dependence(model, X, features, grid_size=20)` | fitted predictor and feature frame | `DataFrame` | One-way manual partial-dependence curves. |
+| `individual_conditional_expectation(model, X, features, grid_size=20, center=False)` | fitted predictor and feature frame | long `DataFrame` | One-way individual conditional expectation curves. |
+| `ice_curves(model, X, features, grid_size=20, center=False)` | fitted predictor and feature frame | long `DataFrame` | Alias for `individual_conditional_expectation`. |
 | `accumulated_local_effect(model, X, feature, bins=10)` | fitted predictor and feature frame | `DataFrame` | First-order accumulated local effect curve. |
 | `friedman_h_interaction(model, X, features=None, grid_size=10)` | fitted predictor and feature frame | `DataFrame` | Pairwise Friedman-Popescu H interaction statistics. |
 | `shap_values(model, X, background=None, explainer="auto", check_additivity=True, **kwargs)` | fitted predictor and feature frame | long `DataFrame` | SHAP attribution values using optional `shap` backend. |
@@ -42,7 +63,7 @@ Every table returned by this module carries
 | `bootstrap_jackknife(model, X, y, fit_func=None, n_replications=50)` | fitted predictor or refit callable, feature frame, target vector | `DataFrame` | Bootstrap uncertainty summary for importance. |
 | `group_aggregate(table, groups=None, ...)` | feature-importance table | `DataFrame` | Aggregate feature importance by user or inferred groups. |
 | `lineage_attribution(table, lineage, level="pipeline_name")` | feature-importance table and lineage mapping | `DataFrame` | Aggregate importance by feature-engineering lineage metadata. |
-| `transformation_attribution(evaluation, ...)` | evaluation score table | `DataFrame` | Attribute loss differences to preprocessing/feature pipelines. |
+| `transformation_attribution(evaluation, ..., lower_is_better=True, baseline="worst")` | evaluation score table | `DataFrame` | Attribute score improvements to mutually exclusive preprocessing/feature pipelines. |
 | `attention_weights(X_train, X_test=None, ...)` | training and test feature frames | long `DataFrame` | OLS attention matrix weights. |
 | `dual_decomposition(X_train, y_train, X_test=None, ...)` | train features/outcomes and optional test features | long `DataFrame` | OLS prediction as weighted training-outcome contributions. |
 | `mrf_gtvp(model, X=None)` | fitted `macro_random_forest` after prediction | long `DataFrame` | Time-varying coefficient path from MacroRandomForest `betas`. |
@@ -138,11 +159,12 @@ Input: fitted predictor, feature `DataFrame`, and aligned target vector.
 Output columns: `feature`, `importance`, `std`, `baseline_loss`,
 `n_repeats`, `conditioning_feature`, and `n_bins`.
 
-This is the conditional-permutation variant. For each feature, the function
-finds the most correlated companion feature and permutes inside quantile bins
-of that companion. This is useful when macro predictors are strongly
-collinear and vanilla permutation overstates or understates importance by
-creating unrealistic feature combinations.
+This is a Strobl-style conditional-permutation approximation. For each
+feature, the function finds the most correlated companion feature and permutes
+inside quantile bins of that companion. The exact Strobl conditional
+permutation literature can condition on richer structures; this callable uses
+a single-companion quantile-bin rule and records
+`exact_reference_implementation=False` in metadata.
 
 ### lofo_importance
 
@@ -165,8 +187,10 @@ or a refit callable. If `fit_func` is supplied, it must have signature
 Output columns: `feature`, `importance`, `baseline_loss`, `heldout_loss`,
 and `mode`.
 
-`mode="refit"` means true leave-one-feature-out refitting. `mode="prediction_drop"`
-means the fitted model is reused and the held-out feature is set to zero.
+`mode="refit"` means true leave-one-feature-out refitting.
+`mode="prediction_drop"` means the fitted model is reused and the held-out
+feature is set to zero. The second mode is a fixed-model diagnostic, not an
+exact LOFO refit experiment.
 
 ## Effect Curves
 
@@ -187,6 +211,52 @@ features.
 
 Output columns: `feature`, `value`, `prediction`.
 
+Grid strategy: `linear_min_max`. For each selected feature, macroforecast uses
+`grid_size` equally spaced values between the observed minimum and maximum in
+`X`. This is the same brute-force averaging definition as sklearn/R PDP, with
+a simpler explicit grid rule.
+
+### individual_conditional_expectation / ice_curves
+
+```python
+macroforecast.interpretation.individual_conditional_expectation(
+    model,
+    X,
+    *,
+    features,
+    grid_size=20,
+    center=False,
+)
+
+macroforecast.interpretation.ice_curves(
+    model,
+    X,
+    *,
+    features,
+    grid_size=20,
+    center=False,
+)
+```
+
+Input: fitted predictor, feature `DataFrame`, and one feature or list of
+features.
+
+Output columns:
+
+| Column | Meaning |
+| --- | --- |
+| `feature` | Feature varied along the grid. |
+| `row` | Original row position. |
+| `index` | Original pandas index value. |
+| `value` | Grid value assigned to the feature. |
+| `prediction` | Individual prediction for that row and grid value. |
+| `centered_prediction` | Prediction minus the first grid prediction when `center=True`; otherwise `NaN`. |
+
+This matches the brute-force ICE idea used by scikit-learn's partial
+dependence with `kind="individual"` and R `pdp::partial(..., ice=TRUE)`.
+`partial_dependence()` averages over rows. ICE keeps the row dimension.
+The grid strategy is also `linear_min_max`.
+
 ### accumulated_local_effect
 
 ```python
@@ -202,6 +272,9 @@ macroforecast.interpretation.accumulated_local_effect(
 Input: fitted predictor, feature `DataFrame`, and one feature name.
 
 Output columns: `feature`, `bin`, `center`, `ale`, `local_effect`.
+
+Binning strategy: empirical quantile bins. The returned `ale` curve is
+centered to mean zero after accumulating local finite differences.
 
 ### friedman_h_interaction
 
@@ -300,9 +373,14 @@ Input: fitted model and feature `DataFrame`. `row` can be an integer position
 or an index label.
 
 Output columns for linear models: `feature`, `feature_value`, `coefficient`,
-`contribution`, and `abs_contribution`. If the model has no coefficients but
-does expose tree importance, the function returns a tree-importance fallback
-and records that fallback in metadata.
+`contribution`, and `abs_contribution`. For linear models, the contribution
+sum equals the selected row's prediction up to numerical precision.
+
+If the model has no coefficients but does expose tree importance, the function
+returns a non-additive fallback. In that case `contribution` is `NaN`,
+`status="tree_importance_fallback_not_additive"`, and metadata records
+`prediction_additivity=False`. Do not report that fallback as a forecast
+decomposition.
 
 ### cumulative_r2_contribution
 
@@ -322,7 +400,8 @@ Output columns: `step`, `feature`, `r2`, `incremental_r2`, and
 `cumulative_features`.
 
 Inactive features are set to zero. The default order is native coefficient
-ranking when available, otherwise one-repeat permutation importance.
+ranking when available, otherwise one-repeat permutation importance. This is a
+fixed-model masking diagnostic; the model is not refit as features enter.
 
 ### rolling_recompute
 
@@ -353,7 +432,8 @@ Supported methods:
 | `permutation_importance_strobl` | Conditional permutation within each rolling window. |
 
 This function does not refit the model. It asks whether the already fitted
-model relies on different variables in different evaluation windows.
+model relies on different variables in different evaluation windows. Metadata
+records `refits_model=False`.
 
 ### bootstrap_jackknife
 
@@ -372,7 +452,8 @@ macroforecast.interpretation.bootstrap_jackknife(
 Input: fitted predictor, feature frame, target vector, and optionally a refit
 callable. With `fit_func`, each bootstrap sample is refit and native
 coefficient importance is summarized. Without it, each bootstrap sample uses
-fixed-model permutation importance.
+fixed-model permutation importance. The current implementation is bootstrap
+with replacement; metadata records `jackknife=False`.
 
 Output columns: `feature`, `importance`, `std`, `lower`, `upper`, and
 `n_replications`.
@@ -448,6 +529,8 @@ macroforecast.interpretation.transformation_attribution(
     metric=None,
     method="shapley_over_pipelines",
     target_columns=("target", "horizon"),
+    lower_is_better=True,
+    baseline="worst",
 )
 ```
 
@@ -455,16 +538,29 @@ Input: an evaluation table with a pipeline/model column and a loss metric
 column. If not supplied, the function infers common names such as `model`,
 `model_id`, `pipeline`, `mse`, `rmse`, and `mae`.
 
-Output columns: grouping columns when present, `pipeline`, `loss`,
-`contribution`, `method`, and `metric`.
+Output columns: grouping columns when present, `pipeline`, `loss`, `utility`,
+`contribution`, `baseline`, `method`, `metric`, and `lower_is_better`.
+
+For the default loss setting, utility is:
+
+```text
+utility_i = baseline_loss - loss_i
+```
+
+where `baseline="worst"` uses the worst observed pipeline in each
+target/horizon group. `method="shapley_over_pipelines"` applies exact Shapley
+weights to the utility game whose coalition value is average utility. This is
+a coherent way to summarize mutually exclusive pipeline alternatives, but it
+is not a causal component decomposition unless the evaluation table itself was
+constructed from component-removal experiments.
 
 Supported methods:
 
 | Method | Meaning |
 | --- | --- |
-| `shapley_over_pipelines` | Exact Shapley contribution over pipeline loss coalitions. |
-| `marginal_addition` | Difference from the worst observed pipeline loss. |
-| `leave_one_out_pipeline` | Loss change after removing one pipeline from the average. |
+| `shapley_over_pipelines` | Exact Shapley contribution over average-utility coalitions. |
+| `marginal_addition` | Pipeline utility relative to the selected baseline. |
+| `leave_one_out_pipeline` | Average-utility change after removing one pipeline. |
 
 ## Attention And Dual Views
 
@@ -492,7 +588,9 @@ The implemented formula is:
 Omega = X_test (X_train' X_train)^-1 X_train'
 ```
 
-with a small ridge term for numerical stability.
+with a small ridge term for numerical stability. When `add_intercept=True`,
+the ridge term is not applied to the intercept column, matching the standard
+regression convention.
 
 ### dual_decomposition
 
@@ -621,7 +719,9 @@ Output columns: `feature`, `importance`, `mean_attribution`,
 `integrated_gradients`, and `gradient_shap` are implemented directly with torch
 autograd. `deep_lift` uses Captum and therefore requires the `deep` extra. For
 recurrent models, attribution is averaged across sequence positions before
-feature-level aggregation.
+feature-level aggregation. If a baseline is supplied as a pandas `DataFrame`
+for a standardized torch-backed model, macroforecast transforms the baseline
+into the fitted model's input scale before attribution.
 
 ## Custom Interpretation
 
@@ -687,6 +787,7 @@ perm = mf.interpretation.permutation_importance(
     random_state=123,
 )
 pdp = mf.interpretation.partial_dependence(fit, X_test, features=["PAYEMS"])
+ice = mf.interpretation.ice_curves(fit, X_test, features=["PAYEMS"])
 ale = mf.interpretation.accumulated_local_effect(fit, X_test, feature="PAYEMS")
 ```
 

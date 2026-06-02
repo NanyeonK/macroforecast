@@ -30,6 +30,7 @@ def test_linear_coefficients_and_tree_importance() -> None:
     assert set(coef["feature"]) == {"x1", "x2"}
     assert "coefficient" in coef.columns
     assert coef.attrs["macroforecast_metadata_schema"]["kind"] == "linear_coefficients"
+    assert coef.attrs["macroforecast_metadata_schema"]["reference"]["alignment"] == "direct_attribute_read"
     assert set(importance["feature"]) == {"x1", "x2"}
     assert importance["importance"].sum() > 0.0
     assert importance.attrs["macroforecast_metadata_schema"]["kind"] == "tree_importance"
@@ -47,6 +48,14 @@ def test_model_agnostic_interpretation_helpers() -> None:
         random_state=0,
     )
     pdp = mf.interpretation.partial_dependence(fit, X, features="x1", grid_size=5)
+    ice = mf.interpretation.individual_conditional_expectation(
+        fit,
+        X.iloc[:4],
+        features="x1",
+        grid_size=5,
+        center=True,
+    )
+    ice_alias = mf.interpretation.ice_curves(fit, X.iloc[:4], features="x1", grid_size=5)
     ale = mf.interpretation.accumulated_local_effect(fit, X, feature="x1", bins=5)
 
     assert set(perm["feature"]) == {"x1", "x2"}
@@ -54,9 +63,29 @@ def test_model_agnostic_interpretation_helpers() -> None:
     assert len(pdp) == 5
     assert set(pdp.columns) == {"feature", "value", "prediction"}
     assert pdp.attrs["macroforecast_metadata_schema"]["kind"] == "partial_dependence"
+    assert len(ice) == 20
+    assert set(ice.columns) == {
+        "feature",
+        "row",
+        "index",
+        "value",
+        "prediction",
+        "centered_prediction",
+    }
+    assert ice.attrs["macroforecast_metadata_schema"]["kind"] == "individual_conditional_expectation"
+    assert ice.attrs["macroforecast_metadata_schema"]["reference"]["reference"].endswith("ice=TRUE")
+    assert ice.loc[ice["value"] == ice["value"].min(), "centered_prediction"].abs().max() == 0.0
+    assert ice_alias.attrs["macroforecast_metadata_schema"]["method"] == "ice_curves_alias"
     assert len(ale) == 5
     assert set(ale.columns) == {"feature", "bin", "center", "ale", "local_effect"}
     assert ale.attrs["macroforecast_metadata_schema"]["kind"] == "accumulated_local_effect"
+
+
+def test_interpretation_helpers_are_namespace_scoped() -> None:
+    assert hasattr(mf.interpretation, "ice_curves")
+    assert hasattr(mf.interpretation, "partial_dependence")
+    assert not hasattr(mf, "ice_curves")
+    assert not hasattr(mf, "partial_dependence")
 
 
 def test_legacy_importance_gap_callables() -> None:
@@ -78,6 +107,7 @@ def test_legacy_importance_gap_callables() -> None:
     inclusion = mf.interpretation.lasso_inclusion_frequency(fit)
 
     assert conditional.attrs["macroforecast_metadata_schema"]["kind"] == "permutation_importance_strobl"
+    assert conditional.attrs["macroforecast_metadata_schema"]["reference"]["class"] == "approximation"
     assert set(conditional["feature"]) == {"x1", "x2"}
     assert lofo.attrs["macroforecast_metadata_schema"]["kind"] == "lofo_importance"
     assert set(hstat.columns) >= {"feature_1", "feature_2", "h_statistic"}
@@ -129,6 +159,54 @@ def test_attribution_aggregation_and_attention_helpers() -> None:
     assert len(weights) == 16
     assert dual.attrs["macroforecast_metadata_schema"]["kind"] == "dual_decomposition"
     assert "contribution" in dual.columns
+
+
+def test_transformation_attribution_uses_loss_improvement_scale() -> None:
+    evaluation = pd.DataFrame(
+        {
+            "model": ["worst", "middle", "best"],
+            "mse": [3.0, 2.0, 1.0],
+        }
+    )
+
+    out = mf.interpretation.transformation_attribution(evaluation)
+
+    schema = out.attrs["macroforecast_metadata_schema"]
+    assert schema["metadata"]["scale"] == "utility_improvement_from_baseline"
+    assert schema["metadata"]["component_decomposition"] is False
+    assert out.loc[out["pipeline"] == "best", "contribution"].iloc[0] > 0.0
+    assert out.loc[out["pipeline"] == "worst", "contribution"].iloc[0] < 0.0
+    assert np.isclose(out["contribution"].sum(), 1.0)
+
+
+def test_tree_forecast_decomposition_fallback_is_marked_non_additive() -> None:
+    X, y = _xy()
+    tree = mf.models.random_forest(X, y, n_estimators=10, random_state=0)
+
+    out = mf.interpretation.forecast_decomposition(tree, X)
+
+    schema = out.attrs["macroforecast_metadata_schema"]
+    assert schema["kind"] == "forecast_decomposition"
+    assert schema["method"] == "tree_importance_fallback_not_additive"
+    assert schema["metadata"]["prediction_additivity"] is False
+    assert set(out["status"]) == {"tree_importance_fallback_not_additive"}
+    assert out["contribution"].isna().all()
+
+
+def test_attention_weights_do_not_penalize_intercept() -> None:
+    X_train = pd.DataFrame({"x": [0.0, 1.0, 2.0]})
+    X_test = pd.DataFrame({"x": [10.0]})
+
+    weights = mf.interpretation.attention_weights(
+        X_train,
+        X_test,
+        add_intercept=True,
+        ridge=10.0,
+    )
+
+    schema = weights.attrs["macroforecast_metadata_schema"]
+    assert schema["metadata"]["intercept_penalized"] is False
+    assert np.isclose(weights["weight"].sum(), 1.0)
 
 
 def test_temporal_and_mrf_interpretation_helpers() -> None:
@@ -210,6 +288,7 @@ def test_var_interpretation_callables() -> None:
     assert girf.attrs["macroforecast_metadata_schema"]["kind"] == "generalized_irf"
     assert orth.attrs["macroforecast_metadata_schema"]["kind"] == "orthogonalised_irf"
     assert variance.attrs["macroforecast_metadata_schema"]["kind"] == "fevd"
+    assert variance.attrs["macroforecast_metadata_schema"]["reference"]["reference"] == "statsmodels VARResults.fevd"
     assert history.attrs["macroforecast_metadata_schema"]["kind"] == "historical_decomposition"
     assert set(girf["feature"]) == {"y", "x", "z"}
     assert np.isfinite(girf["importance"]).all()
@@ -226,7 +305,7 @@ def test_custom_interpretation_wraps_user_callable() -> None:
             "metadata_keys": len(metadata or {}),
         }
 
-    out = mf.custom_interpretation(
+    out = mf.interpretation.custom_interpretation(
         fit,
         X.iloc[:5],
         mean_prediction,

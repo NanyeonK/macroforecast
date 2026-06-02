@@ -13,6 +13,179 @@ from macroforecast.models import ModelFit
 
 _INTERPRETATION_SCHEMA_VERSION = 1
 
+_REFERENCE_CATALOG: dict[str, dict[str, Any]] = {
+    "linear_coefficients": {
+        "class": "native_attribute_extraction",
+        "reference": "scikit-learn-style estimator.coef_ convention",
+        "alignment": "direct_attribute_read",
+    },
+    "tree_importance": {
+        "class": "native_attribute_extraction",
+        "reference": "scikit-learn-style estimator.feature_importances_ convention",
+        "alignment": "direct_attribute_read",
+    },
+    "permutation_importance": {
+        "class": "standard_model_agnostic_diagnostic",
+        "reference": "sklearn.inspection.permutation_importance",
+        "alignment": "same score-drop logic, expressed as loss degradation for lower-is-better losses",
+    },
+    "permutation_importance_strobl": {
+        "class": "approximation",
+        "reference": "Strobl conditional permutation importance idea",
+        "alignment": "single most-correlated feature quantile-bin approximation, not exact party/partykit implementation",
+    },
+    "lofo_importance": {
+        "class": "standard_when_refit_else_diagnostic",
+        "reference": "lofo-importance Python package leave-one-feature-out refit idea",
+        "alignment": "refit mode matches leave-one-feature-out logic; prediction_drop mode is macroforecast diagnostic",
+    },
+    "partial_dependence": {
+        "class": "standard_model_agnostic_diagnostic",
+        "reference": "sklearn.inspection.partial_dependence and R pdp::partial brute-force PDP",
+        "alignment": "same average-prediction definition with a macroforecast min-max grid",
+    },
+    "individual_conditional_expectation": {
+        "class": "standard_model_agnostic_diagnostic",
+        "reference": "sklearn partial dependence kind='individual' and R pdp::partial ice=TRUE",
+        "alignment": "same brute-force feature-grid replacement, returned as long-form individual curves",
+    },
+    "ice_curves": {
+        "class": "standard_model_agnostic_diagnostic",
+        "reference": "sklearn partial dependence kind='individual' and R pdp::partial ice=TRUE",
+        "alignment": "alias for individual_conditional_expectation",
+    },
+    "accumulated_local_effect": {
+        "class": "standard_model_agnostic_diagnostic",
+        "reference": "Apley-Zhu first-order ALE / R ALEPlot",
+        "alignment": "first-order finite-difference ALE, no second-order ALE or bootstrap intervals",
+    },
+    "friedman_h_interaction": {
+        "class": "standard_formula_approximation",
+        "reference": "Friedman-Popescu H-statistic as exposed by R iml/hstats",
+        "alignment": "manual PDP-grid pairwise H diagnostic, no exact iml/hstats backend",
+    },
+    "shap_values": {
+        "class": "backend_wrapper",
+        "reference": "SHAP Python package",
+        "alignment": "direct shap.Explainer/TreeExplainer call, reshaped to long pandas output",
+    },
+    "shap_importance": {
+        "class": "backend_summary",
+        "reference": "SHAP Python package",
+        "alignment": "mean absolute SHAP value summary from macroforecast shap_values output",
+    },
+    "forecast_decomposition": {
+        "class": "exact_linear_else_marked_fallback",
+        "reference": "linear additive contribution x_j beta_j",
+        "alignment": "exact for linear coefficients; nonlinear fallback is explicitly non-additive",
+    },
+    "cumulative_r2_contribution": {
+        "class": "macroforecast_diagnostic",
+        "reference": "sequential fixed-model masking diagnostic",
+        "alignment": "not a refit sequential R2 package implementation",
+    },
+    "group_aggregate": {
+        "class": "aggregation_plumbing",
+        "reference": "feature-importance group aggregation",
+        "alignment": "macroforecast table aggregation",
+    },
+    "lineage_attribution": {
+        "class": "aggregation_plumbing",
+        "reference": "feature-lineage group aggregation",
+        "alignment": "macroforecast metadata aggregation",
+    },
+    "transformation_attribution": {
+        "class": "macroforecast_diagnostic",
+        "reference": "Shapley value over user-supplied pipeline utility table",
+        "alignment": "cooperative-game summary of mutually exclusive alternatives, not causal component decomposition",
+    },
+    "attention_weights": {
+        "class": "closed_form_linear_algebra",
+        "reference": "OLS/ridge hat-matrix dual weights",
+        "alignment": "closed-form X_test (X_train'X_train + lambda I)^-1 X_train' with unpenalized intercept",
+    },
+    "dual_decomposition": {
+        "class": "closed_form_linear_algebra",
+        "reference": "OLS/ridge hat-matrix prediction decomposition",
+        "alignment": "uses attention_weights to express prediction as weighted training outcomes",
+    },
+    "generalized_irf": {
+        "class": "econometric_formula",
+        "reference": "Pesaran-Shin generalized impulse response",
+        "alignment": "formula implementation using statsmodels-compatible VAR outputs",
+    },
+    "orthogonalised_irf": {
+        "class": "backend_or_adapter",
+        "reference": "statsmodels VARResults.irf orth_irfs / Cholesky IRF",
+        "alignment": "uses statsmodels output when available, otherwise internal statsmodels-like adapter",
+    },
+    "fevd": {
+        "class": "backend_or_adapter",
+        "reference": "statsmodels VARResults.fevd",
+        "alignment": "uses statsmodels FEVD when available, otherwise computes orthogonalized FEVD from MA representation",
+    },
+    "historical_decomposition": {
+        "class": "reduced_form_diagnostic",
+        "reference": "VAR moving-average residual contribution summary",
+        "alignment": "reduced-form diagnostic, not structural historical decomposition",
+    },
+    "lasso_inclusion_frequency": {
+        "class": "bootstrap_diagnostic",
+        "reference": "bootstrap nonzero-selection frequency",
+        "alignment": "macroforecast bootstrap/refit diagnostic, not a randomized-lasso backend",
+    },
+    "mrf_gtvp": {
+        "class": "backend_extraction",
+        "reference": "MacroRandomForest GTVP beta output",
+        "alignment": "direct extraction of backend betas after prediction",
+    },
+    "rolling_recompute": {
+        "class": "macroforecast_diagnostic",
+        "reference": "rolling fixed-model importance recomputation",
+        "alignment": "does not refit model per window",
+    },
+    "bootstrap_jackknife": {
+        "class": "bootstrap_diagnostic",
+        "reference": "bootstrap uncertainty summary",
+        "alignment": "bootstrap with replacement; no jackknife mode yet",
+    },
+    "gradient_attribution": {
+        "class": "manual_torch_attribution",
+        "reference": "Captum-style saliency/integrated-gradients/gradient-shap APIs",
+        "alignment": "manual torch autograd implementation except deep_lift",
+    },
+    "saliency_map": {
+        "class": "manual_torch_attribution",
+        "reference": "Captum Saliency",
+        "alignment": "raw input gradient with mean-absolute importance summary",
+    },
+    "integrated_gradients": {
+        "class": "manual_torch_attribution",
+        "reference": "Captum IntegratedGradients",
+        "alignment": "manual straight-line Riemann approximation, not Captum gausslegendre backend",
+    },
+    "gradient_shap": {
+        "class": "manual_torch_attribution",
+        "reference": "Captum GradientShap",
+        "alignment": "manual expected-gradient approximation, not Captum backend",
+    },
+    "deep_lift": {
+        "class": "backend_wrapper",
+        "reference": "Captum DeepLift",
+        "alignment": "direct captum.attr.DeepLift call",
+    },
+    "lstm_hidden_state": {
+        "class": "macroforecast_diagnostic",
+        "reference": "recurrent hidden-activation summary",
+        "alignment": "forward-hook activation magnitude, no external package equivalence",
+    },
+    "custom_interpretation": {
+        "class": "custom_plumbing",
+        "reference": "user-supplied callable",
+        "alignment": "macroforecast wrapper only",
+    },
+}
+
 
 def linear_coefficients(model: Any, *, sort: bool = True) -> pd.DataFrame:
     """Return native coefficients for linear-style fitted models."""
@@ -104,6 +277,9 @@ def permutation_importance(
         raise ValueError("X and y must have the same number of rows")
     rng = np.random.default_rng(random_state)
     loss = _loss_func(metric)
+    # Reference alignment: sklearn.inspection.permutation_importance computes
+    # s_reference - mean(s_permuted). With lower-is-better losses, the same
+    # diagnostic is expressed as mean(loss_permuted) - loss_reference.
     baseline = loss(target, _predict(model, frame))
     rows: list[dict[str, Any]] = []
     for feature in frame.columns:
@@ -222,6 +398,9 @@ def permutation_importance_strobl(
             "n_obs": int(len(eval_x)),
             "n_repeats": int(n_repeats),
             "n_bins": int(n_bins),
+            "reference": "Strobl-style conditional permutation approximation",
+            "conditioning_strategy": "single_most_correlated_feature_quantile_bins",
+            "exact_reference_implementation": False,
         },
     )
 
@@ -299,6 +478,9 @@ def partial_dependence(
         raise ValueError("grid_size must be greater than 1")
     rows: list[dict[str, Any]] = []
     for feature in selected:
+        # Reference alignment: sklearn.partial_dependence / R pdp::partial
+        # brute-force PDP replaces the target feature with grid values and
+        # averages predictions over the empirical complement-feature rows.
         grid = np.linspace(
             float(frame[feature].min()),
             float(frame[feature].max()),
@@ -321,8 +503,97 @@ def partial_dependence(
         model=model,
         method="manual_one_way_pdp",
         n_features=len(selected),
-        metadata={"grid_size": int(grid_size), "features": list(selected)},
+        metadata={
+            "grid_size": int(grid_size),
+            "features": list(selected),
+            "grid_strategy": "linear_min_max",
+        },
     )
+
+
+def individual_conditional_expectation(
+    model: Any,
+    X: pd.DataFrame,
+    *,
+    features: Iterable[str] | str,
+    grid_size: int = 20,
+    center: bool = False,
+) -> pd.DataFrame:
+    """Compute one-way individual conditional expectation curves."""
+
+    frame = _as_feature_frame(X)
+    selected = _resolve_features(frame, features)
+    if grid_size <= 1:
+        raise ValueError("grid_size must be greater than 1")
+    rows: list[dict[str, Any]] = []
+    for feature in selected:
+        # Reference alignment: sklearn PDP kind="individual" and R pdp ICE
+        # keep each observation's complement features fixed while replacing
+        # the target feature with each grid value.
+        grid = np.linspace(
+            float(frame[feature].min()),
+            float(frame[feature].max()),
+            int(grid_size),
+        )
+        baseline_prediction: np.ndarray | None = None
+        for grid_pos, value in enumerate(grid):
+            replaced = frame.copy()
+            replaced[feature] = value
+            pred = _predict(model, replaced)
+            if grid_pos == 0:
+                baseline_prediction = pred.copy()
+            centered = (
+                pred - baseline_prediction
+                if center and baseline_prediction is not None
+                else np.full_like(pred, np.nan, dtype=float)
+            )
+            for row_pos, (idx, prediction, centered_value) in enumerate(
+                zip(frame.index, pred, centered, strict=False)
+            ):
+                rows.append(
+                    {
+                        "feature": str(feature),
+                        "row": int(row_pos),
+                        "index": idx,
+                        "value": float(value),
+                        "prediction": float(prediction),
+                        "centered_prediction": float(centered_value),
+                    }
+                )
+    return _attach_schema(
+        pd.DataFrame(rows),
+        kind="individual_conditional_expectation",
+        model=model,
+        method="manual_one_way_ice",
+        n_features=len(selected),
+        metadata={
+            "grid_size": int(grid_size),
+            "features": list(selected),
+            "grid_strategy": "linear_min_max",
+            "center": bool(center),
+        },
+    )
+
+
+def ice_curves(
+    model: Any,
+    X: pd.DataFrame,
+    *,
+    features: Iterable[str] | str,
+    grid_size: int = 20,
+    center: bool = False,
+) -> pd.DataFrame:
+    """Alias for :func:`individual_conditional_expectation`."""
+
+    table = individual_conditional_expectation(
+        model,
+        X,
+        features=features,
+        grid_size=grid_size,
+        center=center,
+    )
+    table.attrs["macroforecast_metadata_schema"]["method"] = "ice_curves_alias"
+    return table
 
 
 def accumulated_local_effect(
@@ -346,6 +617,8 @@ def accumulated_local_effect(
     effects = []
     centers = []
     for low, high in zip(edges[:-1], edges[1:], strict=False):
+        # Reference alignment: first-order ALEPlot/Apley-Zhu finite difference
+        # within feature intervals, followed by cumulative centering.
         mask = (values >= low) & (values <= high if high == edges[-1] else values < high)
         if not mask.any():
             effects.append(0.0)
@@ -374,7 +647,12 @@ def accumulated_local_effect(
         model=model,
         method="first_order_ale",
         n_features=1,
-        metadata={"feature": str(feature), "bins": int(bins)},
+        metadata={
+            "feature": str(feature),
+            "bins": int(bins),
+            "binning": "empirical_quantile",
+            "centering": "mean_zero",
+        },
     )
 
 
@@ -400,6 +678,9 @@ def friedman_h_interaction(
         raise ValueError("grid_size must be greater than 1")
     rows: list[dict[str, Any]] = []
     for left, right in combinations(selected, 2):
+        # Reference alignment: Friedman-Popescu H from PDP surfaces. This is
+        # computed directly on a regular macroforecast grid rather than by
+        # delegating to R iml/hstats.
         left_grid = _grid_values(frame[left], int(grid_size))
         right_grid = _grid_values(frame[right], int(grid_size))
         joint = np.empty((len(left_grid), len(right_grid)), dtype=float)
@@ -456,12 +737,15 @@ def shap_values(
     resolved = _normalize_explainer(explainer)
 
     if resolved == "tree":
+        # Backend wrapper: SHAP TreeExplainer is called directly; macroforecast
+        # only reshapes SHAP's output into a long pandas table.
         target_model = model.estimator if isinstance(model, ModelFit) else model
         explainer_obj = shap.TreeExplainer(target_model, data=background_frame)
         explanation = explainer_obj.shap_values(frame, check_additivity=check_additivity)
         values = _coerce_shap_array(explanation, frame)
         base_values = _tree_base_values(explainer_obj, len(frame))
     else:
+        # Backend wrapper: generic SHAP Explainer / PermutationExplainer path.
         predict_fn = lambda values: _predict(  # noqa: E731 - SHAP expects callable.
             model,
             _shap_prediction_frame(values, frame),
@@ -585,13 +869,30 @@ def forecast_decomposition(
     estimator = _estimator(model)
     coef = getattr(estimator, "coef_", None)
     if coef is None:
-        fallback = tree_importance(model, sort=sort).rename(columns={"importance": "abs_contribution"})
-        fallback["contribution"] = fallback["abs_contribution"]
-        fallback["feature_value"] = np.nan
-        fallback["coefficient"] = np.nan
-        fallback.attrs["macroforecast_metadata_schema"]["kind"] = "forecast_decomposition"
-        fallback.attrs["macroforecast_metadata_schema"]["method"] = "tree_importance_fallback"
-        return fallback
+        native = tree_importance(model, sort=sort)
+        fallback = pd.DataFrame(
+            {
+                "feature": native["feature"].astype(str),
+                "importance": native["importance"].astype(float),
+                "feature_value": np.nan,
+                "coefficient": np.nan,
+                "contribution": np.nan,
+                "abs_contribution": native["importance"].astype(float),
+                "status": "tree_importance_fallback_not_additive",
+            }
+        )
+        return _attach_schema(
+            fallback.reset_index(drop=True),
+            kind="forecast_decomposition",
+            model=model,
+            method="tree_importance_fallback_not_additive",
+            n_features=len(fallback),
+            metadata={
+                "row": _jsonish_index(selected.name),
+                "prediction_additivity": False,
+                "warning": "Nonlinear estimators do not expose coefficient-level additive contributions here.",
+            },
+        )
     values = np.asarray(coef, dtype=float).reshape(-1)
     names = _feature_names(model, len(values))
     selected = selected.reindex(names, fill_value=0.0).astype(float)
@@ -678,7 +979,11 @@ def cumulative_r2_contribution(
         model=model,
         method="sequential_zero_fill_prediction",
         n_features=frame.shape[1],
-        metadata={"feature_order": order},
+        metadata={
+            "feature_order": order,
+            "mode": "fixed_model_zero_fill_prediction",
+            "refits_model": False,
+        },
     )
 
 
@@ -755,8 +1060,16 @@ def transformation_attribution(
     metric: str | None = None,
     method: str = "shapley_over_pipelines",
     target_columns: Sequence[str] = ("target", "horizon"),
+    lower_is_better: bool = True,
+    baseline: str | float = "worst",
 ) -> pd.DataFrame:
-    """Attribute forecast loss differences to preprocessing/feature pipelines."""
+    """Attribute forecast score differences to preprocessing/feature pipelines.
+
+    This helper works on mutually exclusive pipeline/model rows. It is not a
+    component-level causal decomposition unless the input table was designed as
+    a component-removal experiment. For loss metrics, the default converts loss
+    to improvement relative to the worst observed pipeline in each group.
+    """
 
     frame = evaluation.copy()
     pipeline_col = pipeline_column or _first_present(frame, ("pipeline", "pipeline_id", "model", "model_id"))
@@ -776,20 +1089,30 @@ def transformation_attribution(
         values = losses.to_numpy(dtype=float)
         if len(pipelines) == 0:
             continue
-        contribution = _pipeline_loss_contribution(values, method=method)
+        resolved_baseline = _resolve_pipeline_baseline(values, lower_is_better=lower_is_better, baseline=baseline)
+        contribution = _pipeline_value_contribution(
+            values,
+            method=method,
+            lower_is_better=lower_is_better,
+            baseline=resolved_baseline,
+        )
+        utility = _pipeline_utility(values, lower_is_better=lower_is_better, baseline=resolved_baseline)
         base: dict[str, Any] = {}
         if group_cols:
             key_tuple = key if isinstance(key, tuple) else (key,)
             base = dict(zip(group_cols, key_tuple, strict=False))
-        for pipeline, loss_value, contrib in zip(pipelines, values, contribution, strict=False):
+        for pipeline, loss_value, utility_value, contrib in zip(pipelines, values, utility, contribution, strict=False):
             rows.append(
                 {
                     **base,
                     "pipeline": pipeline,
                     "loss": float(loss_value),
+                    "utility": float(utility_value),
                     "contribution": float(contrib),
+                    "baseline": float(resolved_baseline),
                     "method": method,
                     "metric": metric_col,
+                    "lower_is_better": bool(lower_is_better),
                 }
             )
     return _attach_schema(
@@ -798,7 +1121,15 @@ def transformation_attribution(
         model=None,
         method=method,
         n_features=0,
-        metadata={"pipeline_column": pipeline_col, "metric": metric_col, "group_columns": group_cols},
+        metadata={
+            "pipeline_column": pipeline_col,
+            "metric": metric_col,
+            "group_columns": group_cols,
+            "lower_is_better": bool(lower_is_better),
+            "baseline": baseline,
+            "scale": "utility_improvement_from_baseline",
+            "component_decomposition": False,
+        },
     )
 
 
@@ -817,7 +1148,13 @@ def attention_weights(
     test_matrix = _design_matrix(test, add_intercept=add_intercept)
     gram = train_matrix.T @ train_matrix
     if ridge > 0:
-        gram = gram + float(ridge) * np.eye(gram.shape[0])
+        penalty = float(ridge) * np.eye(gram.shape[0])
+        if add_intercept and penalty.shape[0] > 0:
+            # OLS/ridge dual weights keep the intercept unpenalized, matching
+            # standard regression convention and preserving the affine weight
+            # identity when an intercept is included.
+            penalty[0, 0] = 0.0
+        gram = gram + penalty
     omega = test_matrix @ np.linalg.pinv(gram) @ train_matrix.T
     rows: list[dict[str, Any]] = []
     for test_pos, test_index in enumerate(test.index):
@@ -844,6 +1181,7 @@ def attention_weights(
             "n_test": int(len(test)),
             "add_intercept": bool(add_intercept),
             "ridge": float(ridge),
+            "intercept_penalized": False if add_intercept else None,
         },
     )
 
@@ -903,8 +1241,18 @@ def fevd(model: Any, *, n_periods: int = 12, target: str | int | None = None) ->
         decomp = np.asarray(results.fevd(int(n_periods)).decomp, dtype=float)
         # statsmodels shape is typically (equation, horizon, shock).
         values = decomp[target_pos, : int(n_periods), :].sum(axis=0)
+        method = "statsmodels_fevd"
     except Exception:
-        return orthogonalised_irf(model, n_periods=n_periods, target=target)
+        irf_obj = results.irf(int(n_periods))
+        orth = np.asarray(getattr(irf_obj, "orth_irfs", irf_obj.irfs), dtype=float)
+        horizons = orth[: int(n_periods)]
+        squared = np.square(horizons[:, target_pos, :])
+        cumulative = np.cumsum(squared, axis=0)
+        denom = cumulative.sum(axis=1)
+        denom = np.where(denom > 1e-12, denom, 1.0)
+        decomp = cumulative / denom.reshape(-1, 1)
+        values = decomp.sum(axis=0)
+        method = "manual_orthogonalized_fevd"
     table = pd.DataFrame(
         {
             "feature": names[: len(values)],
@@ -917,7 +1265,7 @@ def fevd(model: Any, *, n_periods: int = 12, target: str | int | None = None) ->
         table.sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
         kind="fevd",
         model=model,
-        method="statsmodels_fevd",
+        method=method,
         n_features=len(values),
         metadata={"n_periods": int(n_periods), "target": names[target_pos]},
     )
@@ -1131,7 +1479,13 @@ def rolling_recompute(
         model=model,
         method=method,
         n_features=frame.shape[1],
-        metadata={"window": width, "step": stride, "n_windows": len(rows)},
+        metadata={
+            "window": width,
+            "step": stride,
+            "n_windows": len(rows),
+            "refits_model": False,
+            "mode": "fixed_model_window_diagnostic",
+        },
     )
 
 
@@ -1193,7 +1547,12 @@ def bootstrap_jackknife(
         model=model,
         method=mode,
         n_features=frame.shape[1],
-        metadata={"n_replications": int(n_replications), "mode": mode},
+        metadata={
+            "n_replications": int(n_replications),
+            "mode": mode,
+            "resampling": "bootstrap_with_replacement",
+            "jackknife": False,
+        },
     )
 
 
@@ -1214,17 +1573,29 @@ def gradient_attribution(
     if key not in {"saliency_map", "integrated_gradients", "deep_lift", "gradient_shap"}:
         raise ValueError("method must be 'saliency_map', 'integrated_gradients', 'deep_lift', or 'gradient_shap'")
     torch, torch_model, tensor, feature_names = _torch_attribution_context(model, X)
-    baseline_tensor = _baseline_tensor(torch, tensor, baseline)
+    baseline_tensor, baseline_space = _baseline_tensor(
+        torch,
+        tensor,
+        baseline,
+        estimator=_estimator(model),
+        feature_names=feature_names,
+    )
     if key == "deep_lift":
         try:
             captum = import_module("captum.attr")
         except ImportError as exc:
             raise ImportError("deep_lift requires captum; install macroforecast[deep]") from exc
+        # Backend wrapper: DeepLift is delegated to Captum.
         attr_obj = captum.DeepLift(torch_model)
         attribution = attr_obj.attribute(tensor, baselines=baseline_tensor)
     elif key == "saliency_map":
+        # Captum-style manual path: raw input gradients. Captum Saliency
+        # defaults to absolute gradients; macroforecast reports signed mean
+        # attribution and mean-absolute importance separately.
         attribution = _torch_gradient(torch, torch_model, tensor)
     elif key == "integrated_gradients":
+        # Captum-style manual path: straight-line Riemann approximation.
+        # Captum's default implementation uses gausslegendre integration.
         attribution = _manual_integrated_gradients(
             torch,
             torch_model,
@@ -1233,6 +1604,8 @@ def gradient_attribution(
             n_steps=max(1, int(n_steps)),
         )
     else:
+        # Captum-style manual path: expected-gradient approximation with
+        # optional noise; not a direct Captum GradientShap backend call.
         attribution = _manual_gradient_shap(
             torch,
             torch_model,
@@ -1271,6 +1644,7 @@ def gradient_attribution(
             "n_steps": int(n_steps),
             "n_samples": int(n_samples),
             "noise_scale": float(noise_scale),
+            "baseline_space": baseline_space,
         },
     )
 
@@ -1575,30 +1949,61 @@ def _first_present(frame: pd.DataFrame, columns: Sequence[str]) -> str | None:
     return None
 
 
-def _pipeline_loss_contribution(values: np.ndarray, *, method: str) -> np.ndarray:
+def _resolve_pipeline_baseline(
+    values: np.ndarray,
+    *,
+    lower_is_better: bool,
+    baseline: str | float,
+) -> float:
+    arr = np.asarray(values, dtype=float)
+    if isinstance(baseline, (int, float)):
+        return float(baseline)
+    key = str(baseline).lower().replace("-", "_")
+    if key == "worst":
+        return float(np.max(arr) if lower_is_better else np.min(arr))
+    if key == "best":
+        return float(np.min(arr) if lower_is_better else np.max(arr))
+    if key == "mean":
+        return float(np.mean(arr))
+    raise ValueError("baseline must be 'worst', 'best', 'mean', or a numeric value")
+
+
+def _pipeline_utility(values: np.ndarray, *, lower_is_better: bool, baseline: float) -> np.ndarray:
+    arr = np.asarray(values, dtype=float)
+    return baseline - arr if lower_is_better else arr - baseline
+
+
+def _pipeline_value_contribution(
+    values: np.ndarray,
+    *,
+    method: str,
+    lower_is_better: bool,
+    baseline: float,
+) -> np.ndarray:
     n_items = len(values)
+    utility = _pipeline_utility(values, lower_is_better=lower_is_better, baseline=baseline)
     if method == "marginal_addition":
-        return float(np.max(values)) - values
+        return utility
     if method == "leave_one_out_pipeline":
-        full = float(np.mean(values))
+        full = float(np.mean(utility))
         out = np.zeros(n_items, dtype=float)
         for idx in range(n_items):
-            without = np.delete(values, idx)
-            out[idx] = float(np.mean(without) - full) if len(without) else 0.0
+            without = np.delete(utility, idx)
+            out[idx] = float(full - np.mean(without)) if len(without) else 0.0
         return out
     shapley = np.zeros(n_items, dtype=float)
     indices = list(range(n_items))
     for size in range(n_items):
         for subset in combinations(indices, size):
             subset_set = set(subset)
-            subset_loss = float(np.mean(values[list(subset)])) if subset else 0.0
+            subset_value = float(np.mean(utility[list(subset)])) if subset else 0.0
             weight = 1.0 / (n_items * comb(n_items - 1, size))
             for idx in indices:
                 if idx in subset_set:
                     continue
                 new_subset = list(subset) + [idx]
-                new_loss = float(np.mean(values[new_subset]))
-                shapley[idx] += weight * (subset_loss - new_loss if subset else -new_loss)
+                new_value = float(np.mean(utility[new_subset]))
+                shapley[idx] += weight * (new_value - subset_value)
     return shapley
 
 
@@ -1841,18 +2246,38 @@ def _torch_attribution_context(model: Any, X: pd.DataFrame) -> tuple[Any, Any, A
     return torch, torch_model, tensor, feature_names
 
 
-def _baseline_tensor(torch: Any, tensor: Any, baseline: float | pd.DataFrame | np.ndarray | None) -> Any:
+def _baseline_tensor(
+    torch: Any,
+    tensor: Any,
+    baseline: float | pd.DataFrame | np.ndarray | None,
+    *,
+    estimator: Any | None = None,
+    feature_names: Sequence[str] | None = None,
+) -> tuple[Any, str]:
     if baseline is None:
-        return torch.zeros_like(tensor)
+        return torch.zeros_like(tensor), "zero_tensor_model_input_space"
     if isinstance(baseline, (int, float)):
-        return torch.full_like(tensor, float(baseline))
-    arr = np.asarray(baseline, dtype=float)
+        return torch.full_like(tensor, float(baseline)), "scalar_model_input_space"
+    if isinstance(baseline, pd.DataFrame):
+        names = list(feature_names or baseline.columns)
+        frame = baseline.reindex(columns=names, fill_value=0.0).astype(float)
+        arr = frame.to_numpy(dtype=float)
+        x_mean = getattr(estimator, "x_mean_", None) if estimator is not None else None
+        x_scale = getattr(estimator, "x_scale_", None) if estimator is not None else None
+        if x_mean is not None and x_scale is not None:
+            arr = (arr - np.asarray(x_mean, dtype=float)) / np.asarray(x_scale, dtype=float)
+            space = "raw_dataframe_scaled_to_model_input_space"
+        else:
+            space = "dataframe_model_input_space"
+    else:
+        arr = np.asarray(baseline, dtype=float)
+        space = "array_model_input_space"
     if arr.shape != tuple(tensor.shape):
         if arr.ndim == 2 and tensor.ndim == 3 and arr.shape == (tensor.shape[0], tensor.shape[2]):
             arr = np.repeat(arr[:, None, :], tensor.shape[1], axis=1)
         else:
             arr = np.broadcast_to(arr, tuple(tensor.shape))
-    return torch.tensor(arr, dtype=tensor.dtype, device=tensor.device)
+    return torch.tensor(arr, dtype=tensor.dtype, device=tensor.device), space
 
 
 def _torch_model_output(model: Any, tensor: Any) -> Any:
@@ -1934,6 +2359,7 @@ def _attach_schema(
     n_features: int,
     metadata: dict[str, Any] | None = None,
 ) -> pd.DataFrame:
+    reference = dict(_REFERENCE_CATALOG.get(kind, {}))
     table.attrs["macroforecast_metadata_schema"] = {
         "kind": kind,
         "version": _INTERPRETATION_SCHEMA_VERSION,
@@ -1941,6 +2367,7 @@ def _attach_schema(
         "model": _model_label(model),
         "n_features": int(n_features),
         "columns": [str(column) for column in table.columns],
+        "reference": reference,
         "metadata": dict(metadata or {}),
     }
     return table
