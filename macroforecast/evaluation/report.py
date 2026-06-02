@@ -35,23 +35,27 @@ class EvaluationReport:
     regime: pd.DataFrame | None = None
     decomposition: pd.DataFrame | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    metadata_schema: dict[str, Any] = field(
+        default_factory=lambda: {"kind": "evaluation_report", "version": 1}
+    )
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
-            "scores": self.scores.to_dict(orient="records"),
-            "ranking": self.ranking.to_dict(orient="records"),
+            "metadata_schema": dict(self.metadata_schema),
+            "scores": _json_ready(self.scores.to_dict(orient="records")),
+            "ranking": _json_ready(self.ranking.to_dict(orient="records")),
             "aggregations": {
-                name: table.to_dict(orient="records")
+                name: _json_ready(table.to_dict(orient="records"))
                 for name, table in self.aggregations.items()
             },
-            "metadata": dict(self.metadata),
+            "metadata": _json_ready(dict(self.metadata)),
         }
         if self.benchmark is not None:
-            out["benchmark"] = self.benchmark.to_dict(orient="records")
+            out["benchmark"] = _json_ready(self.benchmark.to_dict(orient="records"))
         if self.regime is not None:
-            out["regime"] = self.regime.to_dict(orient="records")
+            out["regime"] = _json_ready(self.regime.to_dict(orient="records"))
         if self.decomposition is not None:
-            out["decomposition"] = self.decomposition.to_dict(orient="records")
+            out["decomposition"] = _json_ready(self.decomposition.to_dict(orient="records"))
         return out
 
 
@@ -118,6 +122,7 @@ def evaluate_report(
         table,
         aggregations=aggregations,
         score_by=score_groups,
+        require_model_grouping=_has_relative_metric(metrics),
         target_column=target_column,
         state_column=state_column,
         regime_column=regime_column,
@@ -465,6 +470,7 @@ def _resolve_aggregations(
     *,
     aggregations: Mapping[str, Sequence[str]] | Sequence[Sequence[str]] | None,
     score_by: Sequence[str],
+    require_model_grouping: bool,
     target_column: str,
     state_column: str,
     regime_column: str,
@@ -474,9 +480,10 @@ def _resolve_aggregations(
         return _normalize_groupings(aggregations)
     candidates: dict[str, tuple[str, ...]] = {
         "model": ("model",),
-        "horizon": ("horizon",),
         "model_horizon": tuple(score_by),
     }
+    if not require_model_grouping:
+        candidates["horizon"] = ("horizon",)
     optional = {
         "model_horizon_target": ("model", "horizon", target_column),
         "model_horizon_state": ("model", "horizon", state_column),
@@ -570,16 +577,37 @@ def _metric_label(metric: str | MetricLike) -> str:
     return str(metric)
 
 
+def _has_relative_metric(metrics: Sequence[str | MetricLike]) -> bool:
+    relative = {"relative_mse", "relative_mae", "mse_reduction", "r2_oos"}
+    return any(_metric_label(metric) in relative for metric in metrics)
+
+
 def _attach_metadata(frame: pd.DataFrame | None, metadata: Mapping[str, Any]) -> None:
     if frame is not None:
         frame.attrs["macroforecast_metadata"] = dict(metadata)
 
 
 def _json_ready(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, pd.DataFrame):
+        return _json_ready(value.to_dict(orient="records"))
+    if isinstance(value, pd.Series):
+        return _json_ready(value.to_list())
+    if isinstance(value, np.ndarray):
+        return _json_ready(value.tolist())
     if isinstance(value, np.generic):
-        return value.item()
+        return _json_ready(value.item())
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
+    if isinstance(value, float) and not np.isfinite(value):
+        return None
+    if value is pd.NaT or value is pd.NA:
+        return None
+    if isinstance(value, tuple):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
     return value
 
 
@@ -590,6 +618,8 @@ __all__ = [
     "EvaluationReport",
     "aggregate_scores",
     "benchmark_comparison",
+    "error_decomposition",
     "evaluate_report",
+    "filter_oos_period",
     "regime_scores",
 ]

@@ -669,6 +669,7 @@ def _test_record(name: str, result: Any) -> dict[str, Any]:
         payload = dict(result)
     else:
         payload = _object_metadata(result)
+    metadata = _json_ready(payload.get("metadata", {}))
     return {
         "name": name,
         "statistic": payload.get("statistic"),
@@ -677,7 +678,16 @@ def _test_record(name: str, result: Any) -> dict[str, Any]:
         "alternative": payload.get("alternative"),
         "correction_policy": payload.get("correction_policy"),
         "n_obs": payload.get("n_obs"),
-        "metadata": _json_ready(payload.get("metadata", {})),
+        "statistic_type": metadata.get("statistic_type") if isinstance(metadata, Mapping) else None,
+        "p_value_status": metadata.get("p_value_status") if isinstance(metadata, Mapping) else None,
+        "p_value_reference": metadata.get("p_value_reference") if isinstance(metadata, Mapping) else None,
+        "null_hypothesis": metadata.get("null_hypothesis") if isinstance(metadata, Mapping) else None,
+        "critical_value": metadata.get("critical_value") if isinstance(metadata, Mapping) else None,
+        "source_reference": metadata.get("source_reference") if isinstance(metadata, Mapping) else None,
+        "external_reference": metadata.get("external_reference") if isinstance(metadata, Mapping) else None,
+        "r_reference": metadata.get("r_reference") if isinstance(metadata, Mapping) else None,
+        "r_alignment": metadata.get("r_alignment") if isinstance(metadata, Mapping) else None,
+        "metadata": metadata,
     }
 
 

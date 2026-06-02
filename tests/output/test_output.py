@@ -225,6 +225,9 @@ def test_output_generation_supports_tests_models_selection_and_metadata() -> Non
     metadata = mf.output.metadata_table({"data": {"source": "FRED-MD"}, "seed": 42})
 
     assert tests.loc[0, "name"] == "dm"
+    assert tests.loc[0, "statistic_type"] == "t"
+    assert tests.loc[0, "p_value_status"] == "available"
+    assert tests.loc[0, "r_reference"] == "forecast/R/DM2.R::dm.test"
     assert models.loc[0, "model"] == "ridge"
     assert models.loc[0, "n_features"] == 2
     assert search_table.shape[0] == 2

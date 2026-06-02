@@ -368,6 +368,10 @@ def _normalize_splits(splits: Sequence[tuple[Any, Any]], n_obs: int) -> list[Spl
         )
         if np.intersect1d(train_idx, val_idx).size:
             raise ValueError(f"split {split_id} train and validation positions overlap")
+        if int(train_idx.max()) >= int(val_idx.min()):
+            raise ValueError(
+                f"split {split_id} train positions must precede validation positions"
+            )
         resolved.append((train_idx, val_idx))
     return resolved
 

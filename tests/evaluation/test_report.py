@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -51,9 +53,10 @@ def test_evaluation_report_scores_rankings_and_slices() -> None:
         report.scores.columns
     )
     assert report.ranking.loc[0, "model"] == "model_a"
-    assert {"model", "horizon", "model_horizon_target", "model_horizon_state", "model_horizon_regime", "model_horizon_time"}.issubset(
+    assert {"model", "model_horizon", "model_horizon_target", "model_horizon_state", "model_horizon_regime", "model_horizon_time"}.issubset(
         set(report.aggregations)
     )
+    assert "horizon" not in report.aggregations
     assert report.benchmark is not None
     assert set(report.benchmark["model"]) == {"model_a", "model_b"}
     assert report.regime is not None
@@ -61,10 +64,43 @@ def test_evaluation_report_scores_rankings_and_slices() -> None:
     assert report.decomposition is not None
     assert {"bias_squared", "residual_variance", "bias_share"}.issubset(report.decomposition.columns)
     assert "evaluation_report" in report.metadata
+    assert report.metadata_schema == {"kind": "evaluation_report", "version": 1}
     assert report.metadata["evaluation_report"]["options"]["oos_start"] == "2020-02-01"
     assert report.scores.attrs["macroforecast_metadata"] == report.metadata
+    assert report.to_dict()["metadata_schema"]["kind"] == "evaluation_report"
     assert report.to_dict()["metadata"]["evaluation_report"]["tables"]["scores"] == len(report.scores)
     assert "decomposition" in report.to_dict()
+
+
+def test_evaluation_report_to_dict_is_json_ready() -> None:
+    report = mf.evaluation.EvaluationReport(
+        scores=pd.DataFrame(
+            {
+                "date": [pd.Timestamp("2020-01-31")],
+                "model": ["a"],
+                "mse": [np.float64(np.nan)],
+            }
+        ),
+        ranking=pd.DataFrame(
+            {
+                "date": [pd.Timestamp("2020-01-31")],
+                "rank": [np.int64(1)],
+            }
+        ),
+        metadata={
+            "created_at": pd.Timestamp("2020-01-31"),
+            "bad_float": np.float64(np.nan),
+            "nested": {"value": np.int64(2)},
+        },
+    )
+
+    payload = report.to_dict()
+
+    assert payload["scores"][0]["date"] == "2020-01-31T00:00:00"
+    assert payload["scores"][0]["mse"] is None
+    assert payload["metadata"]["bad_float"] is None
+    assert payload["metadata"]["nested"]["value"] == 2
+    json.dumps(payload)
 
 
 def test_evaluation_namespace_keeps_raw_metrics_and_tests_separate() -> None:

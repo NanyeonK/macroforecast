@@ -193,14 +193,14 @@ origin row per forecast origin. This keeps `origin` as the information date and
 Panel-input models consume the canonical panel directly instead of an
 engineered `X, y` matrix. They cannot be mixed with feature-matrix models in one
 runner call. Currently `forecasting.run(..., features=None)` supports
-`dfm_mixed_mariano_murasawa` as a native mixed-frequency panel model. It keeps
-`DataBundle` metadata such as `native_frequency_by_column` so the model can
-separate monthly and quarterly columns inside each fit window. Composite
-`dfm_unrestricted_midas` remains callable in `macroforecast.models`, but the runner
-does not yet build its future MIDAS design matrix automatically.
+`dfm_mixed_mariano_murasawa` and `dfm_unrestricted_midas` as native
+mixed-frequency panel models. It keeps `DataBundle` metadata such as
+`native_frequency_by_column` so the model can separate monthly and quarterly
+columns inside each fit window. Panel-input runner calls currently fit fixed
+model parameters; pass `model_selection={model_name: None}` for these models.
 
-For MIDAS regressions, build the mixed-frequency lag matrix explicitly and pass
-it as a `FeatureSet`. This keeps calendar anchoring in
+For standard MIDAS regressions, build the mixed-frequency lag matrix explicitly
+and pass it as a `FeatureSet`. This keeps calendar anchoring in
 `mixed_frequency_lags()` and model weighting in `midas_almon()`,
 `midas_beta()`, `midas_step()`, or `unrestricted_midas()`:
 
@@ -227,7 +227,11 @@ features = mf.feature_engineering.FeatureSet(
 result = mf.forecasting.run(
     features,
     "midas_beta",
-    window=mf.window.poos(min_size=40, horizon=1, step=1),
+    window=mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=40),
+        val=mf.window.val_last_block(size=12),
+        test=mf.window.test_origins(horizon=1, step=1),
+    ),
     params={"midas_beta": {"beta_params": (1.0, 2.0), "alpha": 0.1}},
     model_selection={"midas_beta": None},
 )
@@ -259,6 +263,11 @@ The runner metadata records the window, each stage policy, preprocessing
 options, feature-engineering options, model-selection spec, model specs, and origin
 stage records. Each origin stage record includes an `updated` flag showing
 whether that stage fitted new state at that origin.
+
+Before any origin is fitted, `run()` validates the resolved `WindowSpec` against
+the input index. Window validation errors, such as invalid inner validation
+splits or `reuse_params=False` with skipped retune origins, stop the run with
+`window validation failed: ...`.
 
 ## Execution Order
 
@@ -746,6 +755,35 @@ result = mf.forecasting.run(
     save_models=False,
 )
 ```
+
+## Benchmark Forecasts
+
+Benchmark-relative metrics are evaluated after `run()`, but the benchmark
+forecast should normally be generated at the forecasting stage. Include the
+benchmark model in the same runner call so it uses the same preprocessing,
+feature policy, window, validation split, forecast origin, horizon, and target
+support as the candidate models.
+
+```python
+result = mf.forecasting.run(
+    panel,
+    ["ridge", "ols"],
+    window=window,
+    features=features,
+)
+
+scores = result.evaluate(
+    metrics=("mse", "relative_mse", "r2_oos"),
+    benchmark_model="ols",
+)
+```
+
+External benchmark forecasts are also allowed when they come from a published
+system or an existing CSV. Append those rows to the forecast table first, using
+the same `model`, `date` or origin, `horizon`, `target`, `actual`, and
+`prediction` contract. `macroforecast.metrics.evaluate_forecasts()` then
+checks that candidate and benchmark supports match before computing relative
+metrics.
 
 ## ForecastResult
 

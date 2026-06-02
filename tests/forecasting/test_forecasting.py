@@ -1162,6 +1162,35 @@ def test_forecasting_runner_rejects_unknown_model_keyed_options() -> None:
         )
 
 
+def test_forecasting_runner_rejects_invalid_window_plan() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+    invalid_window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=24),
+        val=mf.window.val_last_block(
+            size=8,
+            retune_every=2,
+            reuse_params=False,
+        ),
+        test=mf.window.test_origins(horizon=1, step=6),
+    )
+
+    with pytest.raises(ValueError, match="window validation failed: .*reuse_params"):
+        mf.forecasting.run(
+            panel,
+            "ridge",
+            window=invalid_window,
+            features=features,
+            model_selection=mf.model_selection.grid({"alpha": [0.1]}),
+            save_models=False,
+        )
+
+
 def test_forecasting_runner_supports_pls_model(tmp_path) -> None:
     panel = _panel()
     features = mf.feature_engineering.feature_spec(

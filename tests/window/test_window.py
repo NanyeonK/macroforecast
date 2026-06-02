@@ -59,6 +59,35 @@ def test_stage_policy_resolves_index_and_panel_rows() -> None:
     assert list(reference.index) == list(X.index[2:6])
 
 
+def test_custom_stage_policy_rejects_missing_or_duplicate_labels() -> None:
+    X, _ = xy(12)
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=4),
+        val=mf.window.val_last_block(size=2),
+        test=mf.window.test_origins(first_origin=X.index[6], horizon=1),
+    )
+    item = next(window.iter_origins(X.index))
+
+    def missing_label(index, *, item, policy):
+        return [index[0], pd.Timestamp("2099-01-31")]
+
+    def duplicate_label(index, *, item, policy):
+        return [index[0], index[0]]
+
+    with pytest.raises(ValueError, match="outside the supplied index"):
+        mf.window.stage_index(
+            X.index,
+            item,
+            mf.window.custom_stage_policy(missing_label),
+        )
+    with pytest.raises(ValueError, match="duplicate labels"):
+        mf.window.stage_index(
+            X.index,
+            item,
+            mf.window.custom_stage_policy(duplicate_label),
+        )
+
+
 def test_split_table_reports_label_ranges() -> None:
     X, _ = xy(12)
 

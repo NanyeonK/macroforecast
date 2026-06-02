@@ -73,7 +73,8 @@ def test_iterative_mcs_reference_anchor() -> None:
     assert "candidate" in included
     assert "benchmark" in rejected
     assert result["iteration_path"][0]["eliminated_model"] == "benchmark"
-    assert result["statistic"] == "range"
+    assert result["statistic"] == "max"
+    assert result["r_reference"] == "MCS/R/MCSprocedure.R::MCSprocedure"
     json.dumps(result)
 
 

@@ -31,6 +31,7 @@ macroforecast.metrics.evaluate_forecasts(
     actual="actual",
     prediction="prediction",
     variance_prediction="variance_prediction",
+    volatility_actual=None,
     quantile_predictions="quantile_predictions",
     previous_actual="previous_actual",
     benchmark_model=None,
@@ -44,6 +45,27 @@ values and forecast columns.
 Output: a pandas `DataFrame`, one row per `by` group. The result carries
 `attrs["macroforecast_metadata_schema"] = {"kind": "forecast_metrics",
 "version": 1, ...}`.
+The metadata schema also records `by`, `requested_metrics`, `benchmark_model`,
+`relative_support_columns`, input columns, and automatically added metric
+groups.
+
+Validation: every requested `by` column must exist in the forecast table.
+`evaluate_forecasts()` fails loudly instead of dropping unavailable grouping
+dimensions. Relative metrics such as `relative_mse`, `relative_mae`,
+`mse_reduction`, and `r2_oos` require `benchmark_model`, and the benchmark must
+have matching rows for every scored non-benchmark group. The grouping must
+include `model_column` because relative metrics compare each candidate model
+against a named benchmark model.
+
+`benchmark_model` does not create benchmark forecasts. It selects existing rows
+from the forecast table. For a fair comparison, generate the benchmark in the
+same forecasting run with the same window/origin/horizon/target contract, or
+append an external benchmark CSV only after validating that it has the same
+forecast-table schema and the same evaluation support. Relative metrics fail
+when candidate and benchmark supports differ. Forecast-table relative metrics
+require at least one support identity column: `date`, `origin`, or
+`origin_pos`. For matching support rows, candidate and benchmark `actual`
+values must also match; otherwise the forecast table is treated as inconsistent.
 
 Forecast-table behavior:
 
@@ -53,13 +75,29 @@ Forecast-table behavior:
 | `benchmark_model` plus benchmark rows | Relative metrics such as `relative_mse`, `relative_mae`, `mse_reduction`, `r2_oos`. |
 | `previous_actual` | `theil_u2` and `success_ratio`. |
 | `variance_prediction` | `gaussian_nll`, `crps`, and requested `qlike`. |
+| `volatility_actual` plus `variance_prediction` | `qlike` against an explicit realized-variance column. If omitted, `actual` is used. |
 | `quantile_predictions` dictionaries | Pinball loss by quantile and interval coverage/width/score for matched lower-upper pairs. |
+
+Malformed probabilistic inputs fail validation. Quantile forecasts must be
+per-row dictionaries mapping levels strictly inside `(0, 1)` to finite numeric
+predictions. Invalid variance, volatility, interval, or quantile values are not
+silently clipped or skipped.
+
+Requested specialized metrics fail loudly when their required support columns
+are absent:
+
+| Requested metric group | Required forecast-table column |
+| --- | --- |
+| `gaussian_nll`, `negative_log_score`, `log_score`, `crps` | `variance_prediction` |
+| `qlike` | `variance_prediction`; use `volatility_actual` when realized variance is not in `actual` |
+| `theil_u2`, `success_ratio` | `previous_actual` |
+| `pinball_loss`, `coverage_rate`, `interval_width`, `interval_score` | `quantile_predictions` |
 
 ```python
 scores = mf.metrics.evaluate_forecasts(
     result,
     metrics=("mse", "rmse", "relative_mse", "r2_oos"),
-    benchmark_model="historical_mean",
+    benchmark_model="ols",
 )
 ```
 
@@ -80,7 +118,13 @@ Input: an evaluation table from `evaluate_forecasts(...)` or an equivalent
 pandas table.
 
 Output: the same rows with a rank column. If `ascending=None`, lower is better
-for loss metrics and higher is better for `r2_oos` and `mse_reduction`.
+for recognized loss metrics and higher is better for recognized gain metrics
+such as `r2_oos`, `mse_reduction`, `success_ratio`, and
+`pesaran_timmermann_metric`. Every requested `by` column must exist in the
+evaluation table. Signed `bias`, coverage metrics, and custom metrics require
+an explicit `ascending=True` or `ascending=False`. Coverage is intentionally
+not treated as automatically higher-is-better because interval coverage should
+usually be assessed against a nominal level, not maximized.
 
 ### get_metric
 
@@ -91,8 +135,8 @@ macroforecast.metrics.get_metric(metric)
 Input: a metric name or callable.
 
 Output: the resolved callable. Name aliases include `msfe -> mse`,
-`validation_mse -> mse`, `validation_rmse -> rmse`, and
-`mean_error -> bias`.
+`validation_mse -> mse`, `validation_rmse -> rmse`,
+`mean_error -> bias`, and `negative_log_score -> gaussian_nll`.
 
 Custom metrics do not need registration. Pass a callable directly anywhere a
 metric is accepted:
@@ -136,6 +180,12 @@ observations, and return a single `float`.
 These functions require realized values, candidate forecasts, and benchmark
 forecasts aligned on the same index.
 
+The direct functions and `evaluate_forecasts(...)` require candidate and
+benchmark support to match exactly. They do not silently score only the
+intersection of two forecast histories. Forecast-table evaluation also checks
+that candidate and benchmark rows carry the same realized value for each support
+point.
+
 | Function | Signature | Interpretation |
 | --- | --- | --- |
 | `relative_mse` | `relative_mse(y_true, y_model, y_benchmark)` | Candidate MSE divided by benchmark MSE. Below 1 favors candidate. |
@@ -149,7 +199,8 @@ forecasts aligned on the same index.
 | --- | --- | --- |
 | `pinball_loss` | `pinball_loss(y_true, y_quantile, *, quantile)` | Mean quantile pinball loss. |
 | `gaussian_nll` | `gaussian_nll(y_true, y_pred, variance)` | Gaussian negative log likelihood. |
-| `log_score` | `log_score(y_true, y_pred, variance)` | Alias for Gaussian negative log score. |
+| `negative_log_score` | `negative_log_score(y_true, y_pred, variance)` | Gaussian negative log score. |
+| `log_score` | `log_score(y_true, y_pred, variance)` | Backward-compatible alias for `negative_log_score`; lower is better. |
 | `crps` | `crps(y_true, y_pred, variance)` | Gaussian continuous ranked probability score. |
 | `qlike` | `qlike(y_true, variance, *, eps=1e-12)` | QLIKE volatility loss using realized variance or squared realization. |
 | `coverage_rate` | `coverage_rate(y_true, lower, upper)` | Share of observations inside the interval. |
@@ -157,8 +208,16 @@ forecasts aligned on the same index.
 | `interval_score` | `interval_score(y_true, lower, upper, *, alpha=0.05)` | Winkler interval score. |
 
 `evaluate_forecasts(...)` uses `variance_prediction` for `gaussian_nll`,
-`log_score`, `crps`, and `qlike`. It uses `quantile_predictions` dictionaries
+`negative_log_score`, `log_score`, and `crps`. `qlike` should be evaluated
+against realized variance or squared realization. Pass `volatility_actual` when
+that column differs from `actual`. It uses `quantile_predictions` dictionaries
 for pinball and interval metrics.
+
+Variance inputs must be finite and strictly positive. QLIKE realized variance
+must be finite and nonnegative, while the forecast variance must be strictly
+positive. Interval metrics require `upper >= lower` for every evaluated row.
+Quantile levels must be strictly inside `(0, 1)`, and quantile predictions must
+be finite.
 
 ## Direction Metrics
 

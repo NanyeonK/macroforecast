@@ -69,8 +69,15 @@ macroforecast.output.test_table(results) -> pandas.DataFrame
 | --- | --- | --- |
 | `results` | `TestResult`, mapping, sequence, or `DataFrame` | One or more forecast-comparison test outputs. |
 
-Returns a flat table with `name`, `statistic`, `p_value`, `decision`,
-`alternative`, `correction_policy`, `n_obs`, and `metadata`.
+Returns a flat raw table with `name`, `statistic`, `p_value`, `decision`,
+`alternative`, `correction_policy`, `n_obs`, `metadata`, and any promoted
+test metadata fields such as `statistic_type`, `p_value_status`,
+`p_value_reference`, `null_hypothesis`, `source_reference`, `r_reference`, and
+`r_alignment`.
+
+Use `macroforecast.reporting.test_report_table(...)` for a compact paper table
+and `macroforecast.reporting.test_provenance_table(...)` for the source
+alignment appendix table.
 
 ### model_table
 

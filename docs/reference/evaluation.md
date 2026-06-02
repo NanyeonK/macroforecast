@@ -112,6 +112,9 @@ report = mf.evaluation.evaluate_report(
 Custom aggregation slices belong in `aggregations`. The value is a grouping
 tuple over existing forecast-table columns; evaluation still uses
 `mf.metrics.evaluate_forecasts()` to compute the metric table.
+When relative metrics are requested, every scoring or aggregation grouping must
+include `model`; the automatic aggregation set omits model-free slices such as
+`horizon` alone because benchmark-relative scores are candidate-model specific.
 
 ### Output
 
@@ -128,6 +131,8 @@ Returns `EvaluationReport`.
 | `metadata` | `dict` | Input metadata plus compact `evaluation_report` stage. |
 
 `EvaluationReport.to_dict()` serializes all tables into JSON-ready records.
+The serialized payload includes
+`metadata_schema={"kind": "evaluation_report", "version": 1}`.
 
 The metadata stage records options, table row counts, and forecast-table input
 shape:
@@ -135,6 +140,25 @@ shape:
 ```python
 report.metadata["evaluation_report"]
 ```
+
+For paper/report output, keep evaluation and presentation separate:
+
+```python
+main_table = mf.reporting.metric_report_table(
+    report,
+    columns=("model", "horizon", "rmse", "r2_oos"),
+    percent_columns=("r2_oos",),
+)
+
+paper_tables = mf.reporting.evaluation_report_tables(
+    report,
+    include=("scores", "ranking", "benchmark", "decomposition"),
+)
+```
+
+`metric_report_table(...)` creates one presentation-ready table.
+`evaluation_report_tables(...)` creates a named `ReportBundle` for the report's
+main components.
 
 ## aggregate_scores
 
@@ -216,7 +240,10 @@ macroforecast.evaluation.benchmark_comparison(
 
 Returns candidate model rows with benchmark-relative scores. The benchmark row
 itself is removed from the output. `benchmark_model` must be present in the
-forecast table.
+forecast table. The benchmark forecasts must already exist in the input table;
+this function does not generate them. Use the forecasting runner to generate a
+same-window benchmark, or append an external benchmark forecast table only after
+verifying identical date/origin/horizon/target support.
 
 ## regime_scores
 

@@ -221,9 +221,10 @@ It may return:
 | Boolean `Series` or boolean `ndarray` | Mask over the full index. |
 | `slice` | Positional slice into the full index. |
 | Integer positions | Positional labels from the full index. |
-| Index labels | Labels to keep. |
+| Index labels | Labels to keep. Every requested label must exist in the supplied index. Duplicate requested labels raise. |
 
-The selected labels must not be empty. The runner stores the policy under
+The selected labels must not be empty. Missing labels and duplicate label
+requests raise instead of being silently dropped. The runner stores the policy under
 `ForecastResult.metadata["stage_policies"]`; the callable itself is recorded by
 name in metadata.
 

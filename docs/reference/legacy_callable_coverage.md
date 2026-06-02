@@ -42,7 +42,7 @@ These old surfaces are not gaps.
 | Model ensemble | `macroforecast.model_ensemble` | Fit-time member-model composition: bagging, subagging, random subspace, stacking, Super Learner, Booging, and model-ensemble-owned search spaces. |
 | Forecast runner | `macroforecast.forecasting` | Runner composition across windows, preprocessing specs, feature specs, model specs, model ensembles, model selection, direct/recursive/path-average policies, forecast-output combinations. |
 | Metrics | `macroforecast.metrics` | Point, relative, directional, interval, density, quantile, QLIKE, Theil, OOS R-squared, ranking. |
-| Tests | `macroforecast.tests` | DM/GW/DMP/HN, nested/encompassing tests, CPA, single-step and iterative MCS, SPA/StepM approximation, blocked OOB reality check, density/interval tests, PIT diagnostics, residual diagnostics, custom tests. |
+| Tests | `macroforecast.tests` | DM/GW/DMP/HN, nested/encompassing tests, CPA, exact MCS, SPA/Reality/StepM benchmark tests, blocked OOB reality check, density/interval tests, PIT diagnostics, residual diagnostics, custom tests. |
 | Evaluation reports | `macroforecast.evaluation` | Multi-slice evaluation, OOS filtering, benchmark comparisons, regime scoring, error decomposition, aggregation and ranking. |
 | Forecast analysis | `macroforecast.forecast_analysis` | Forecast overview, fitted-vs-actual, residual views, rolling loss, scale view, tuning traces, coefficient/parameter stability, DFM diagnostics, ensemble diagnostics, stage update trace. |
 | Interpretation | `macroforecast.interpretation` | Native coefficients/importances, permutation/Strobl/LOFO, PDP/ALE/Friedman-H, SHAP variants, forecast decomposition, cumulative contribution, group/lineage/transformation attribution, OLS attention, MRF GTVP, VAR IRF/FEVD/historical decomposition, neural attribution, LSTM hidden states, custom interpretation. |
@@ -74,5 +74,5 @@ intentionally excluded:
 | Legacy MIDAS feature/model split | Covered by `mixed_frequency_lags()` and MIDAS model callables. |
 | Legacy Chow-Lin op | Covered by `data.chow_lin_disaggregate()` and `data.align_frequency(..., quarterly_to_monthly="chow_lin")`. |
 | Legacy blocked OOB reality check | Covered by `tests.blocked_oob_reality_check()`. |
-| Full iterative MCS | Covered by `tests.iterative_model_confidence_set()`; `tests.model_confidence_set()` remains the single-step compatibility approximation. |
+| Full iterative MCS | Covered by exact `tests.model_confidence_set()`; `tests.iterative_model_confidence_set()` remains a descriptive alias. |
 | Holiday features | Intentionally excluded for monthly/quarterly macro workflows. |

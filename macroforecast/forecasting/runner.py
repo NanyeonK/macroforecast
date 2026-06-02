@@ -323,6 +323,7 @@ def run(
     fitted_feature_cache: Any | None = None
 
     execution_window = _feature_window_for_policy(window_spec, horizon_values[0])
+    _validate_runner_window(execution_window, panel.index)
     for origin_count, item in enumerate(execution_window.iter_origins(panel.index)):
         preprocessing_updated = False
         if full_stage is None:
@@ -815,6 +816,7 @@ def _run_feature_set(
     X_all = data.X.copy()
     y_all = _single_target(data.y)
     validate_panel(X_all)
+    _validate_runner_window(window_spec, X_all.index)
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, dict[str, Any] | None] = {}
@@ -904,6 +906,7 @@ def _run_panel_models(
     """Run models that fit on the canonical panel rather than engineered X/y."""
 
     _validate_panel_target(panel, target)
+    _validate_runner_window(window_spec, panel.index)
     metadata = dict(panel.attrs.get("macroforecast_metadata", {}))
     records: list[dict[str, Any]] = []
     for item in window_spec.iter_origins(panel.index):
@@ -1800,6 +1803,19 @@ def _validate_panel_selection(
         return
     if use_model_default_selection and model_run.spec.search_spaces:
         return
+
+
+def _validate_runner_window(
+    window_spec: WindowSpec,
+    index: int | Sequence[Any] | pd.Index,
+) -> None:
+    report = window_spec.validate(index)
+    if bool(report.get("ok")):
+        return
+    errors = [str(error) for error in report.get("errors", [])]
+    if not errors:
+        errors = ["unknown window validation error"]
+    raise ValueError(f"window validation failed: {'; '.join(errors)}")
 
 
 def _resolve_model_runs(

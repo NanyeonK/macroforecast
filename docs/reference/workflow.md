@@ -69,7 +69,7 @@ Post-run objects follow the same separation:
 
 ```python
 report = mf.evaluation.evaluate_report(result)
-tests = mf.tests.iterative_model_confidence_set(loss_panel)
+tests = mf.tests.model_confidence_set(loss_panel)
 explain = mf.interpretation.permutation_importance(model, X, y)
 
 bundle = mf.output.bundle_outputs(

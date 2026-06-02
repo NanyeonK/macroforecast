@@ -97,4 +97,4 @@ without explaining the meaning of each choice.
 | [Legacy Callable Coverage](legacy_callable_coverage.md) | Confirms that intentional removals are not mistaken for missing work. |
 | [Reference Verification](reference_verification.md) | Tracks the verification suite that should grow as paper-code checks are added. |
 | [Output](output.md) and [Reporting](reporting.md) | These were recently split; check whether their responsibility boundary is clear. |
-| [Tests](tests.md) | Contains `blocked_oob_reality_check()` and `iterative_model_confidence_set()`, which close recent legacy gaps. |
+| [Tests](tests.md) | Contains `blocked_oob_reality_check()` and exact `model_confidence_set()`, which close recent legacy gaps. |

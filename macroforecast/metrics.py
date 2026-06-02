@@ -25,6 +25,20 @@ def _aligned_values(y_true: Any, y_pred: Any) -> tuple[np.ndarray, np.ndarray]:
     return joined["truth"].to_numpy(dtype=float), joined["pred"].to_numpy(dtype=float)
 
 
+def _aligned_relative_frame(y_true: Any, y_model: Any, y_benchmark: Any) -> pd.DataFrame:
+    truth = pd.Series(y_true).astype(float).rename("truth")
+    model = pd.Series(y_model).astype(float).rename("model")
+    benchmark = pd.Series(y_benchmark).astype(float).rename("benchmark")
+    candidate = pd.concat([truth, model], axis=1).dropna()
+    if candidate.empty:
+        raise ValueError("relative metric inputs have no candidate non-missing observations")
+    _validate_relative_metric_support(candidate["truth"], benchmark.dropna())
+    joined = pd.concat([candidate, benchmark], axis=1).dropna()
+    if joined.empty:
+        raise ValueError("relative metric inputs have no aligned non-missing observations")
+    return joined
+
+
 def mse(y_true: Any, y_pred: Any) -> float:
     """Mean squared error."""
 
@@ -106,7 +120,7 @@ def theil_u2(y_true: Any, y_pred: Any, y_prev: Any) -> float:
 def relative_mse(y_true: Any, y_model: Any, y_benchmark: Any) -> float:
     """Candidate model MSE divided by benchmark MSE."""
 
-    joined = _aligned_frame(y_true, y_model, y_benchmark, names=("truth", "model", "benchmark"))
+    joined = _aligned_relative_frame(y_true, y_model, y_benchmark)
     truth = joined["truth"].to_numpy(dtype=float)
     model = joined["model"].to_numpy(dtype=float)
     benchmark = joined["benchmark"].to_numpy(dtype=float)
@@ -118,7 +132,7 @@ def relative_mse(y_true: Any, y_model: Any, y_benchmark: Any) -> float:
 def relative_mae(y_true: Any, y_model: Any, y_benchmark: Any) -> float:
     """Candidate model MAE divided by benchmark MAE."""
 
-    joined = _aligned_frame(y_true, y_model, y_benchmark, names=("truth", "model", "benchmark"))
+    joined = _aligned_relative_frame(y_true, y_model, y_benchmark)
     truth = joined["truth"].to_numpy(dtype=float)
     model = joined["model"].to_numpy(dtype=float)
     benchmark = joined["benchmark"].to_numpy(dtype=float)
@@ -130,7 +144,7 @@ def relative_mae(y_true: Any, y_model: Any, y_benchmark: Any) -> float:
 def mse_reduction(y_true: Any, y_model: Any, y_benchmark: Any) -> float:
     """Benchmark MSE minus candidate model MSE."""
 
-    joined = _aligned_frame(y_true, y_model, y_benchmark, names=("truth", "model", "benchmark"))
+    joined = _aligned_relative_frame(y_true, y_model, y_benchmark)
     truth = joined["truth"].to_numpy(dtype=float)
     model = joined["model"].to_numpy(dtype=float)
     benchmark = joined["benchmark"].to_numpy(dtype=float)
@@ -159,7 +173,7 @@ def gaussian_nll(y_true: Any, y_pred: Any, variance: Any) -> float:
     """Gaussian negative log likelihood using supplied predictive variances."""
 
     joined = _aligned_frame(y_true, y_pred, variance, names=("truth", "pred", "variance"))
-    values = np.maximum(joined["variance"].to_numpy(dtype=float), 1e-12)
+    values = _positive_values(joined["variance"], label="variance")
     errors = joined["truth"].to_numpy(dtype=float) - joined["pred"].to_numpy(dtype=float)
     return float(np.mean(0.5 * (np.log(2.0 * np.pi * values) + errors**2 / values)))
 
@@ -170,13 +184,19 @@ def log_score(y_true: Any, y_pred: Any, variance: Any) -> float:
     return gaussian_nll(y_true, y_pred, variance)
 
 
+def negative_log_score(y_true: Any, y_pred: Any, variance: Any) -> float:
+    """Gaussian negative log score; lower is better."""
+
+    return gaussian_nll(y_true, y_pred, variance)
+
+
 def crps(y_true: Any, y_pred: Any, variance: Any) -> float:
     """Continuous ranked probability score for Gaussian predictive densities."""
 
     from scipy import stats as _stats
 
     joined = _aligned_frame(y_true, y_pred, variance, names=("truth", "pred", "variance"))
-    sigma = np.sqrt(np.maximum(joined["variance"].to_numpy(dtype=float), 1e-12))
+    sigma = np.sqrt(_positive_values(joined["variance"], label="variance"))
     z = (joined["truth"].to_numpy(dtype=float) - joined["pred"].to_numpy(dtype=float)) / sigma
     score = sigma * (z * (2.0 * _stats.norm.cdf(z) - 1.0) + 2.0 * _stats.norm.pdf(z) - 1.0 / np.sqrt(np.pi))
     return float(np.mean(score))
@@ -188,8 +208,9 @@ def qlike(y_true: Any, variance: Any, *, eps: float = 1e-12) -> float:
     if eps <= 0:
         raise ValueError("eps must be positive")
     joined = _aligned_frame(y_true, variance, names=("truth", "variance"))
-    realized = np.maximum(joined["truth"].to_numpy(dtype=float), eps)
-    forecast = np.maximum(joined["variance"].to_numpy(dtype=float), eps)
+    realized = _nonnegative_values(joined["truth"], label="realized variance")
+    forecast = _positive_values(joined["variance"], label="forecast variance")
+    realized = np.maximum(realized, eps)
     return float(np.mean(np.log(forecast) + realized / forecast))
 
 
@@ -197,6 +218,7 @@ def coverage_rate(y_true: Any, lower: Any, upper: Any) -> float:
     """Share of observations covered by lower/upper forecasts."""
 
     joined = _aligned_frame(y_true, lower, upper, names=("truth", "lower", "upper"))
+    _validate_interval_bounds(joined["lower"], joined["upper"])
     covered = (joined["truth"] >= joined["lower"]) & (joined["truth"] <= joined["upper"])
     return float(covered.mean())
 
@@ -205,6 +227,7 @@ def interval_width(lower: Any, upper: Any) -> float:
     """Mean forecast interval width."""
 
     joined = _aligned_frame(lower, upper, names=("lower", "upper"))
+    _validate_interval_bounds(joined["lower"], joined["upper"])
     return float((joined["upper"] - joined["lower"]).mean())
 
 
@@ -214,6 +237,7 @@ def interval_score(y_true: Any, lower: Any, upper: Any, *, alpha: float = 0.05) 
     if not 0.0 < alpha < 1.0:
         raise ValueError("alpha must be in (0, 1)")
     joined = _aligned_frame(y_true, lower, upper, names=("truth", "lower", "upper"))
+    _validate_interval_bounds(joined["lower"], joined["upper"])
     truth = joined["truth"].to_numpy(dtype=float)
     lo = joined["lower"].to_numpy(dtype=float)
     hi = joined["upper"].to_numpy(dtype=float)
@@ -268,6 +292,7 @@ def evaluate_forecasts(
     actual: str = "actual",
     prediction: str = "prediction",
     variance_prediction: str = "variance_prediction",
+    volatility_actual: str | None = None,
     quantile_predictions: str = "quantile_predictions",
     previous_actual: str = "previous_actual",
     benchmark_model: str | None = None,
@@ -277,13 +302,38 @@ def evaluate_forecasts(
 
     frame = _forecast_frame(forecasts)
     if frame.empty:
-        return _evaluation_frame([])
-    group_keys = [key for key in by if key in frame.columns]
+        return _evaluation_frame([], metadata={"input_rows": 0})
+    _validate_table_columns(frame, (actual, prediction), label="forecast table")
+    group_keys = _validate_group_columns(frame, by, label="by")
+    resolved_metrics = _resolve_metrics(metrics)
+    requested_metric_names = [metric_name for _metric_fn, metric_name in resolved_metrics]
+    relative_metrics_requested = any(
+        metric_name in _RELATIVE_METRIC_NAMES for metric_name in requested_metric_names
+    )
+    if relative_metrics_requested and benchmark_model is None:
+        raise ValueError("benchmark_model is required when relative metrics are requested")
+    if relative_metrics_requested and model_column not in group_keys:
+        raise ValueError(
+            f"by must include model_column {model_column!r} when relative metrics are requested"
+        )
+    if relative_metrics_requested:
+        _validate_relative_table_identity(frame)
+    qlike_actual = volatility_actual or actual
+    if volatility_actual is not None:
+        _validate_table_columns(frame, (volatility_actual,), label="forecast table")
+    _validate_requested_metric_columns(
+        frame,
+        requested_metric_names,
+        variance_prediction=variance_prediction,
+        quantile_predictions=quantile_predictions,
+        previous_actual=previous_actual,
+    )
     if group_keys:
         iterator = frame.groupby(group_keys, dropna=False, sort=True)
     else:
         iterator = [((), frame)]
     rows: list[dict[str, Any]] = []
+    support_columns = _relative_support_columns(frame)
     benchmark_lookup = _benchmark_lookup(
         frame,
         benchmark_model=benchmark_model,
@@ -291,28 +341,36 @@ def evaluate_forecasts(
         actual=actual,
         prediction=prediction,
         by=group_keys,
+        support_columns=support_columns,
     )
-    date_indexed = "date" in frame.columns
     for key, group in iterator:
         row = _group_row(key, group_keys)
         valid = group[[actual, prediction]].dropna()
         row["n"] = int(len(valid))
         if len(valid) > 0:
-            for metric in metrics:
-                metric_fn = get_metric(metric)
-                metric_name = getattr(metric_fn, "__name__", str(metric))
+            for metric_fn, metric_name in resolved_metrics:
                 if metric_name in _RELATIVE_METRIC_NAMES:
                     benchmark = benchmark_lookup.get(
                         _benchmark_key(row, group_keys, model_column=model_column)
                     )
-                    if benchmark is not None:
-                        truth, pred = _series_for_relative_metric(
-                            group,
-                            actual=actual,
-                            prediction=prediction,
-                            date_indexed=date_indexed,
+                    if benchmark is None:
+                        raise ValueError(
+                            f"benchmark_model {benchmark_model!r} has no matching "
+                            f"benchmark forecast for group {_benchmark_key(row, group_keys, model_column=model_column)}"
                         )
-                        row[metric_name] = float(metric_fn(truth, pred, benchmark))
+                    truth, pred = _series_for_relative_metric(
+                        group,
+                        actual=actual,
+                        prediction=prediction,
+                        support_columns=support_columns,
+                    )
+                    _validate_relative_metric_support(truth, benchmark[prediction])
+                    _validate_benchmark_actuals(
+                        truth,
+                        benchmark[actual],
+                        actual=actual,
+                    )
+                    row[metric_name] = float(metric_fn(truth, pred, benchmark[prediction]))
                     continue
                 if metric_name in _VARIANCE_METRIC_NAMES:
                     if variance_prediction in group.columns:
@@ -328,11 +386,11 @@ def evaluate_forecasts(
                     continue
                 if metric_name in _VOLATILITY_METRIC_NAMES:
                     if variance_prediction in group.columns:
-                        variance_valid = group[[actual, variance_prediction]].dropna()
+                        variance_valid = group[[qlike_actual, variance_prediction]].dropna()
                         if len(variance_valid) > 0:
                             row[metric_name] = float(
                                 metric_fn(
-                                    variance_valid[actual],
+                                    variance_valid[qlike_actual],
                                     variance_valid[variance_prediction],
                                 )
                             )
@@ -378,7 +436,30 @@ def evaluate_forecasts(
                 )
             )
         rows.append(row)
-    return _evaluation_frame(rows)
+    return _evaluation_frame(
+        rows,
+        metadata={
+            "by": list(group_keys),
+            "requested_metrics": requested_metric_names,
+            "benchmark_model": benchmark_model,
+            "model_column": model_column,
+            "actual": actual,
+            "prediction": prediction,
+            "variance_prediction": variance_prediction,
+            "volatility_actual": volatility_actual,
+            "quantile_predictions": quantile_predictions,
+            "previous_actual": previous_actual,
+            "relative_support_columns": support_columns,
+            "input_rows": int(frame.shape[0]),
+            "input_columns": [str(column) for column in frame.columns],
+            "auto_metric_groups": _auto_metric_groups(
+                frame,
+                variance_prediction=variance_prediction,
+                quantile_predictions=quantile_predictions,
+                previous_actual=previous_actual,
+            ),
+        },
+    )
 
 
 def rank_forecasts(
@@ -402,7 +483,7 @@ def rank_forecasts(
     if metric not in frame.columns:
         raise ValueError(f"metric column {metric!r} is not present")
     order = _metric_ascending(metric) if ascending is None else bool(ascending)
-    group_keys = [key for key in by if key in frame.columns]
+    group_keys = _validate_group_columns(frame, by, label="by")
     if group_keys:
         frame[rank_column] = frame.groupby(group_keys)[metric].rank(method="min", ascending=order)
         ranked = frame.sort_values([*group_keys, rank_column]).reset_index(drop=True)
@@ -410,6 +491,7 @@ def rank_forecasts(
             metric=metric,
             by=group_keys,
             rank_column=rank_column,
+            ascending=order,
         )
         return ranked
     frame[rank_column] = frame[metric].rank(method="min", ascending=order)
@@ -418,6 +500,7 @@ def rank_forecasts(
         metric=metric,
         by=group_keys,
         rank_column=rank_column,
+        ascending=order,
     )
     return ranked
 
@@ -446,6 +529,7 @@ _METRICS: dict[str, Callable[..., float]] = {
     "pinball_loss": pinball_loss,
     "gaussian_nll": gaussian_nll,
     "log_score": log_score,
+    "negative_log_score": negative_log_score,
     "crps": crps,
     "qlike": qlike,
     "coverage_rate": coverage_rate,
@@ -456,7 +540,7 @@ _METRICS: dict[str, Callable[..., float]] = {
 }
 
 _RELATIVE_METRIC_NAMES = {"relative_mse", "relative_mae", "mse_reduction", "r2_oos"}
-_VARIANCE_METRIC_NAMES = {"gaussian_nll", "log_score", "crps"}
+_VARIANCE_METRIC_NAMES = {"gaussian_nll", "log_score", "negative_log_score", "crps"}
 _VOLATILITY_METRIC_NAMES = {"qlike"}
 _DIRECTION_METRIC_NAMES = {"theil_u2", "success_ratio"}
 _QUANTILE_METRIC_NAMES = {
@@ -479,18 +563,32 @@ def get_metric(metric: MetricLike) -> Callable[..., float]:
     return _METRICS[key]
 
 
+def _resolve_metrics(metrics: Sequence[str | MetricLike]) -> list[tuple[Callable[..., float], str]]:
+    resolved = []
+    for metric in metrics:
+        metric_fn = get_metric(metric)
+        metric_name = getattr(metric_fn, "__name__", str(metric))
+        resolved.append((metric_fn, metric_name))
+    return resolved
+
+
 def _forecast_frame(forecasts: Any) -> pd.DataFrame:
     if hasattr(forecasts, "to_frame"):
         return forecasts.to_frame()
     return pd.DataFrame(forecasts).copy()
 
 
-def _evaluation_frame(rows: Sequence[Mapping[str, Any]]) -> pd.DataFrame:
+def _evaluation_frame(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    metadata: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
     frame = pd.DataFrame(rows)
     frame.attrs["macroforecast_metadata_schema"] = {
         "kind": "forecast_metrics",
         "version": 1,
         "row_unit": "by_group",
+        **dict(metadata or {}),
     }
     return frame
 
@@ -500,14 +598,35 @@ def _rank_metadata_schema(
     metric: str,
     by: Sequence[str],
     rank_column: str,
+    ascending: bool | None = None,
 ) -> dict[str, Any]:
-    return {
+    out = {
         "kind": "forecast_metric_ranking",
         "version": 1,
         "metric": str(metric),
         "by": list(by),
         "rank_column": str(rank_column),
     }
+    if ascending is not None:
+        out["ascending"] = bool(ascending)
+        out["direction"] = "lower_is_better" if ascending else "higher_is_better"
+    return out
+
+
+def _validate_table_columns(frame: pd.DataFrame, columns: Sequence[str], *, label: str) -> tuple[str, ...]:
+    values = tuple(str(column) for column in columns)
+    missing = [column for column in values if column not in frame.columns]
+    if missing:
+        raise ValueError(f"{label} missing required column(s): {missing}")
+    return values
+
+
+def _validate_group_columns(frame: pd.DataFrame, by: Sequence[str], *, label: str) -> list[str]:
+    values = [str(column) for column in by]
+    missing = [column for column in values if column not in frame.columns]
+    if missing:
+        raise ValueError(f"{label} column(s) are not present in the table: {missing}")
+    return values
 
 
 def _group_row(key: Any, group_keys: Sequence[str]) -> dict[str, Any]:
@@ -528,19 +647,35 @@ def _benchmark_lookup(
     actual: str,
     prediction: str,
     by: Sequence[str],
-) -> dict[tuple[Any, ...], pd.Series]:
-    if benchmark_model is None or model_column not in frame.columns:
+    support_columns: Sequence[str],
+) -> dict[tuple[Any, ...], pd.DataFrame]:
+    if benchmark_model is None:
         return {}
+    if model_column not in frame.columns:
+        raise ValueError(f"model_column {model_column!r} is not present")
     bench = frame.loc[frame[model_column] == benchmark_model]
-    if bench.empty or actual not in bench.columns or prediction not in bench.columns:
-        return {}
-    keys = [key for key in by if key != model_column and key in bench.columns]
+    if bench.empty:
+        raise ValueError(f"benchmark_model {benchmark_model!r} is not present in forecast rows")
+    _validate_table_columns(bench, (actual, prediction), label="benchmark rows")
+    keys = [key for key in by if key != model_column]
     if not keys:
-        return {(): bench.set_index("date")[prediction] if "date" in bench.columns else bench[prediction]}
-    out: dict[tuple[Any, ...], pd.Series] = {}
+        return {
+            (): _support_indexed_frame(
+                bench,
+                actual=actual,
+                prediction=prediction,
+                support_columns=support_columns,
+            )
+        }
+    out: dict[tuple[Any, ...], pd.DataFrame] = {}
     for key, group in bench.groupby(keys, dropna=False, sort=False):
         values = (key,) if len(keys) == 1 and not isinstance(key, tuple) else tuple(key)
-        out[values] = group.set_index("date")[prediction] if "date" in group.columns else group[prediction]
+        out[values] = _support_indexed_frame(
+            group,
+            actual=actual,
+            prediction=prediction,
+            support_columns=support_columns,
+        )
     return out
 
 
@@ -556,20 +691,209 @@ def _series_for_relative_metric(
     *,
     actual: str,
     prediction: str,
-    date_indexed: bool,
+    support_columns: Sequence[str],
 ) -> tuple[pd.Series, pd.Series]:
     columns = [actual, prediction]
-    if date_indexed:
-        columns.append("date")
+    columns.extend(column for column in support_columns if column not in columns)
     valid = group[columns].dropna()
-    if date_indexed:
-        indexed = valid.set_index("date")
+    if support_columns:
+        indexed = valid.set_index(list(support_columns))
         return indexed[actual], indexed[prediction]
-    return valid[actual], valid[prediction]
+    return valid[actual].reset_index(drop=True), valid[prediction].reset_index(drop=True)
+
+
+def _support_indexed_frame(
+    frame: pd.DataFrame,
+    *,
+    actual: str,
+    prediction: str,
+    support_columns: Sequence[str],
+) -> pd.DataFrame:
+    columns = [actual, prediction]
+    if support_columns:
+        columns = [*support_columns, actual, prediction]
+        return frame[columns].dropna().set_index(list(support_columns))[[actual, prediction]]
+    return frame[columns].dropna().reset_index(drop=True)
+
+
+def _relative_support_columns(frame: pd.DataFrame) -> list[str]:
+    identity = [column for column in ("date", "origin", "origin_pos") if column in frame.columns]
+    if not identity:
+        return []
+    return [
+        column
+        for column in ("date", "origin", "origin_pos", "target", "horizon")
+        if column in frame.columns
+    ]
+
+
+def _validate_relative_table_identity(frame: pd.DataFrame) -> None:
+    if not any(column in frame.columns for column in ("date", "origin", "origin_pos")):
+        raise ValueError(
+            "forecast table must contain at least one support column "
+            "('date', 'origin', or 'origin_pos') when relative metrics are requested"
+        )
+
+
+def _validate_relative_metric_support(candidate: pd.Series, benchmark: pd.Series) -> None:
+    if not candidate.index.is_unique:
+        raise ValueError("candidate forecast support is not unique for relative metric evaluation")
+    if not benchmark.index.is_unique:
+        raise ValueError("benchmark forecast support is not unique for relative metric evaluation")
+    missing = candidate.index.difference(benchmark.index)
+    extra = benchmark.index.difference(candidate.index)
+    if len(missing) > 0 or len(extra) > 0:
+        raise ValueError(
+            "benchmark forecast support must match candidate support for relative metrics; "
+            f"missing={list(missing[:5])}, extra={list(extra[:5])}"
+        )
+
+
+def _validate_benchmark_actuals(candidate: pd.Series, benchmark: pd.Series, *, actual: str) -> None:
+    benchmark_aligned = benchmark.loc[candidate.index]
+    candidate_values = pd.Series(candidate).to_numpy(dtype=float)
+    benchmark_values = pd.Series(benchmark_aligned).to_numpy(dtype=float)
+    if not np.allclose(candidate_values, benchmark_values, rtol=1e-12, atol=1e-12):
+        raise ValueError(
+            f"benchmark {actual!r} values must match candidate {actual!r} values "
+            "for relative metrics"
+        )
+
+
+def _validate_requested_metric_columns(
+    frame: pd.DataFrame,
+    requested_metrics: Sequence[str],
+    *,
+    variance_prediction: str,
+    quantile_predictions: str,
+    previous_actual: str,
+) -> None:
+    requested = set(requested_metrics)
+    if requested & _VARIANCE_METRIC_NAMES and variance_prediction not in frame.columns:
+        missing = sorted(requested & _VARIANCE_METRIC_NAMES)
+        raise ValueError(
+            f"variance_prediction column {variance_prediction!r} is required for requested "
+            f"variance/density metric(s): {missing}"
+        )
+    if requested & _VOLATILITY_METRIC_NAMES and variance_prediction not in frame.columns:
+        missing = sorted(requested & _VOLATILITY_METRIC_NAMES)
+        raise ValueError(
+            f"variance_prediction column {variance_prediction!r} is required for requested "
+            f"volatility metric(s): {missing}"
+        )
+    if requested & _DIRECTION_METRIC_NAMES and previous_actual not in frame.columns:
+        missing = sorted(requested & _DIRECTION_METRIC_NAMES)
+        raise ValueError(
+            f"previous_actual column {previous_actual!r} is required for requested "
+            f"direction metric(s): {missing}"
+        )
+    if requested & _QUANTILE_METRIC_NAMES and quantile_predictions not in frame.columns:
+        missing = sorted(requested & _QUANTILE_METRIC_NAMES)
+        raise ValueError(
+            f"quantile_predictions column {quantile_predictions!r} is required for requested "
+            f"quantile/interval metric(s): {missing}"
+        )
+
+
+def _auto_metric_groups(
+    frame: pd.DataFrame,
+    *,
+    variance_prediction: str,
+    quantile_predictions: str,
+    previous_actual: str,
+) -> list[str]:
+    groups: list[str] = []
+    if previous_actual in frame.columns:
+        groups.append("direction")
+    if variance_prediction in frame.columns:
+        groups.append("density")
+    if quantile_predictions in frame.columns:
+        groups.append("quantile_interval")
+    return groups
+
+
+def _positive_values(values: Any, *, label: str) -> np.ndarray:
+    array = pd.Series(values).to_numpy(dtype=float)
+    if not np.all(np.isfinite(array)):
+        raise ValueError(f"{label} must contain only finite values")
+    if np.any(array <= 0.0):
+        raise ValueError(f"{label} must be strictly positive")
+    return array
+
+
+def _nonnegative_values(values: Any, *, label: str) -> np.ndarray:
+    array = pd.Series(values).to_numpy(dtype=float)
+    if not np.all(np.isfinite(array)):
+        raise ValueError(f"{label} must contain only finite values")
+    if np.any(array < 0.0):
+        raise ValueError(f"{label} must be nonnegative")
+    return array
+
+
+def _validate_interval_bounds(lower: Any, upper: Any) -> None:
+    lo = pd.Series(lower).to_numpy(dtype=float)
+    hi = pd.Series(upper).to_numpy(dtype=float)
+    if not np.all(np.isfinite(lo)) or not np.all(np.isfinite(hi)):
+        raise ValueError("interval bounds must contain only finite values")
+    if np.any(hi < lo):
+        raise ValueError("interval upper bound must be greater than or equal to lower bound")
 
 
 def _metric_ascending(metric: str) -> bool:
-    return metric not in {"r2_oos", "mse_reduction"}
+    key = str(metric)
+    higher_is_better = {
+        "r2_oos",
+        "mse_reduction",
+        "success_ratio",
+        "pesaran_timmermann_metric",
+    }
+    lower_is_better = {
+        "mse",
+        "msfe",
+        "validation_mse",
+        "rmse",
+        "validation_rmse",
+        "mae",
+        "validation_mae",
+        "medae",
+        "median_absolute_error",
+        "mape",
+        "smape",
+        "theil_u1",
+        "theil_u2",
+        "relative_mse",
+        "relative_mae",
+        "pinball_loss",
+        "gaussian_nll",
+        "negative_log_score",
+        "log_score",
+        "crps",
+        "qlike",
+        "interval_width",
+        "interval_score",
+    }
+    if key in higher_is_better:
+        return False
+    if key == "coverage_rate" or key.startswith("coverage_"):
+        raise ValueError(
+            "ranking direction for coverage metrics is ambiguous; pass ascending explicitly "
+            "or rank an interval score metric"
+        )
+    if (
+        key in lower_is_better
+        or key.startswith("pinball_loss_")
+        or key.startswith("interval_width_")
+        or key.startswith("interval_score_")
+    ):
+        return True
+    if key in {"bias", "mean_error", "me"}:
+        raise ValueError(
+            "ranking direction for signed bias is ambiguous; pass ascending explicitly "
+            "or rank an absolute-error metric"
+        )
+    raise ValueError(
+        f"ranking direction for metric {metric!r} is unknown; pass ascending=True or ascending=False"
+    )
 
 
 def _quantile_evaluation(
@@ -577,7 +901,12 @@ def _quantile_evaluation(
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for row_id, (idx, value) in enumerate(group[quantile_predictions].dropna().items()):
-        if not isinstance(value, dict) or idx not in group.index:
+        if not isinstance(value, dict):
+            raise ValueError(
+                f"{quantile_predictions!r} values must be dictionaries mapping quantile levels "
+                "to finite predictions"
+            )
+        if idx not in group.index:
             continue
         observed = group.at[idx, actual]
         if pd.isna(observed):
@@ -587,7 +916,14 @@ def _quantile_evaluation(
                 q = float(level)
                 pred = float(quantile_value)
             except (TypeError, ValueError):
-                continue
+                raise ValueError(
+                    f"{quantile_predictions!r} dictionaries must contain numeric quantile "
+                    "levels and finite numeric predictions"
+                ) from None
+            if not 0.0 < q < 1.0:
+                raise ValueError("quantile prediction levels must be strictly between 0 and 1")
+            if not np.isfinite(pred):
+                raise ValueError("quantile prediction values must be finite")
             rows.append(
                 {
                     "row_id": row_id,
@@ -657,6 +993,7 @@ __all__ = [
     "medae",
     "mse",
     "mse_reduction",
+    "negative_log_score",
     "pesaran_timmermann_metric",
     "pinball_loss",
     "qlike",

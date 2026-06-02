@@ -7,7 +7,7 @@
 | Module | Owns | Does not own |
 | --- | --- | --- |
 | `macroforecast.output` | Generate output tables/JSON summaries and write artifacts. | Paper/table presentation style. |
-| `macroforecast.reporting` | Format tables, render LaTeX/HTML/Markdown, and create figure-ready data. | Model fitting, evaluation, testing, or artifact writing. |
+| `macroforecast.reporting` | Format tables, render LaTeX/HTML/Markdown, create figure-ready data, and produce paper-facing metric/test tables. | Model fitting, evaluation, testing, or artifact writing. |
 
 The reporting functions are callable and in-memory. They do not write files.
 
@@ -51,6 +51,140 @@ Output: `ReportTable(data, caption, label, notes, metadata)`.
 
 `ReportTable.data` is a formatted `DataFrame` and carries
 `attrs["macroforecast_metadata_schema"]["kind"] = "report_table"`.
+
+## metric_report_table
+
+```python
+macroforecast.reporting.metric_report_table(
+    results,
+    *,
+    table="scores",
+    columns=None,
+    rename=None,
+    sort_by=None,
+    ascending=True,
+    precision=3,
+    percent_columns=(),
+    missing="",
+    caption=None,
+    label=None,
+    notes=(),
+    metadata=None,
+) -> ReportTable
+```
+
+Creates a paper-facing metric table from an `EvaluationReport` or a raw
+metric-like `DataFrame`. For an `EvaluationReport`, `table` selects which
+component to display:
+
+| `table` | Source |
+| --- | --- |
+| `"scores"` | `report.scores` |
+| `"ranking"` | `report.ranking` |
+| `"benchmark"` | `report.benchmark` |
+| `"regime"` | `report.regime` |
+| `"decomposition"` | `report.decomposition` |
+
+Default display labels convert common columns such as `model`, `horizon`,
+`rmse`, `relative_mse`, and `r2_oos` to `Model`, `H`, `RMSE`,
+`Relative MSE`, and `R2 OOS`. Use `columns` to choose the paper table spine,
+`rename` to override labels, and `percent_columns` when a column should be
+displayed as a percentage.
+
+## evaluation_report_tables
+
+```python
+macroforecast.reporting.evaluation_report_tables(
+    report,
+    *,
+    include=("scores", "ranking", "benchmark", "regime", "decomposition"),
+    include_aggregations=False,
+    captions=None,
+    labels=None,
+    precision=3,
+    percent_columns=(),
+    missing="",
+    metadata=None,
+) -> ReportBundle
+```
+
+Creates a named `ReportBundle` from an `EvaluationReport`. Unavailable optional
+tables are skipped. Set `include_aggregations=True` or include `"aggregations"`
+in `include` to add all `report.aggregations` under names like
+`aggregation_model_horizon_target`.
+
+## test_report_table
+
+```python
+macroforecast.reporting.test_report_table(
+    results,
+    *,
+    columns=None,
+    include_reference=False,
+    stars=True,
+    star_levels=((0.01, "***"), (0.05, "**"), (0.1, "*")),
+    precision=3,
+    p_value_precision=3,
+    missing="",
+    caption=None,
+    label=None,
+    notes=(),
+    metadata=None,
+) -> ReportTable
+```
+
+Creates a paper-facing table from one or more forecast-test outputs. Input can
+be a `TestResult`, a mapping or sequence of `TestResult` objects, a raw
+`macroforecast.output.test_table(...)`, or a stacked table from functions such
+as `macroforecast.tests.equal_predictive_tests(...)`.
+
+Default output columns:
+
+| Column | Meaning |
+| --- | --- |
+| `Test` | Requested key, such as `dm`, `gw`, `dmp`, or `hn`. |
+| `Name` | Display name from component metadata. |
+| `Ref.` | Statistic reference family, such as `t` or `z`. |
+| `Statistic` | Formatted test statistic. |
+| `p-value` | Formatted p-value, optionally with significance markers. |
+| `Reject` | `Yes` or `No` based on the component decision flag. |
+| `N` | Number of aligned observations used by the component test. |
+
+Set `include_reference=True` to add a compact `Source` column. For detailed
+R/source alignment, use `test_provenance_table(...)` instead of placing long
+source text in the main paper table.
+
+## test_provenance_table
+
+```python
+macroforecast.reporting.test_provenance_table(
+    results,
+    *,
+    columns=None,
+    missing="",
+    caption=None,
+    label=None,
+    notes=(),
+    metadata=None,
+) -> ReportTable
+```
+
+Creates a source-alignment table for appendices, replication packages, or audit
+logs. It keeps the null hypothesis, p-value reference distribution, source
+reference, R reference, and alignment note separate from the compact paper
+table.
+
+Default output columns:
+
+| Column | Meaning |
+| --- | --- |
+| `Test`, `Name` | Requested key and display name. |
+| `Null` | Null hypothesis recorded by the component test. |
+| `P-value ref.` | Reference distribution for the p-value. |
+| `Status` | P-value availability flag. |
+| `Source` | Package/source formula reference. |
+| `R reference` | Exact R comparator when one is claimed; blank otherwise. |
+| `Alignment` | Text description of exact, partial, or unavailable source alignment. |
 
 ## Renderers
 
@@ -131,4 +265,49 @@ report = mf.reporting.report_table(
 )
 
 latex = report.to_latex()
+```
+
+Evaluation reporting example:
+
+```python
+report = mf.evaluation.evaluate_report(
+    forecast_result,
+    metrics=("rmse", "mae", "relative_mse", "r2_oos"),
+    benchmark_model="historical_mean",
+    include_decomposition=True,
+)
+
+accuracy_table = mf.reporting.metric_report_table(
+    report,
+    columns=("model", "horizon", "rmse", "r2_oos"),
+    percent_columns=("r2_oos",),
+    caption="Forecast accuracy",
+)
+
+paper_tables = mf.reporting.evaluation_report_tables(
+    report,
+    include=("scores", "ranking", "benchmark", "decomposition"),
+    percent_columns=("r2_oos",),
+)
+```
+
+Forecast-test reporting example:
+
+```python
+tests = mf.tests.equal_predictive_tests(
+    loss_a,
+    loss_b,
+    tests=("dm", "gw", "dmp", "hn"),
+    error_a=error_a,
+    error_b=error_b,
+)
+
+main_table = mf.reporting.test_report_table(
+    tests,
+    caption="Equal predictive ability tests",
+    label="tab:equal_predictive_tests",
+)
+appendix_table = mf.reporting.test_provenance_table(tests)
+
+latex = main_table.to_latex()
 ```

@@ -217,7 +217,15 @@ def _index_from_selector_output(labels: pd.Index, output: Any) -> pd.Index:
         if all(isinstance(value, (int, np.integer)) for value in values):
             selected = labels[np.asarray(values, dtype=int)]
         else:
-            selected = labels.intersection(pd.Index(values), sort=False)
+            requested = pd.Index(values)
+            if requested.has_duplicates:
+                raise ValueError("custom stage selector returned duplicate labels")
+            missing = requested.difference(labels, sort=False)
+            if len(missing):
+                raise ValueError(
+                    "custom stage selector returned labels outside the supplied index"
+                )
+            selected = labels.intersection(requested, sort=False)
     if len(selected) == 0:
         raise ValueError("custom stage selector returned no labels")
     return pd.Index(selected)

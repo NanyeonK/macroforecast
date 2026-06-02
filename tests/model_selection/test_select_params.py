@@ -343,6 +343,14 @@ def test_select_params_rejects_ambiguous_or_invalid_splits() -> None:
             search,
             splits=[(np.arange(0, 24), np.arange(20, 30))],
         )
+    with pytest.raises(ValueError, match="must precede validation"):
+        mf.model_selection.select_params(
+            mf.models.ridge,
+            X,
+            y,
+            search,
+            splits=[(np.arange(12, 24), np.arange(6, 12))],
+        )
     with pytest.raises(TypeError, match="integer positions"):
         mf.model_selection.select_params(
             mf.models.ridge,

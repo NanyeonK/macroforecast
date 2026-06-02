@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 import macroforecast as mf
@@ -63,6 +64,90 @@ def test_figure_data_and_report_bundle() -> None:
     assert bundle.to_dict()["metadata_schema"]["kind"] == "report_bundle"
 
 
+def test_test_report_table_formats_forecast_tests_for_papers() -> None:
+    loss_a = pd.Series([0.2, 0.3, 0.1, 0.4, 0.2, 0.3])
+    loss_b = pd.Series([0.4, 0.5, 0.2, 0.5, 0.3, 0.6])
+    tests = mf.tests.equal_predictive_tests(
+        loss_a,
+        loss_b,
+        tests=("dm", "gw", "dmp", "hn"),
+        error_a=np.sqrt(loss_a),
+        error_b=np.sqrt(loss_b),
+    )
+
+    report = mf.reporting.test_report_table(
+        tests,
+        caption="Equal predictive ability tests",
+        label="tab:equal_predictive_tests",
+    )
+    with_source = mf.reporting.test_report_table(tests, include_reference=True)
+    provenance = mf.reporting.test_provenance_table(tests)
+
+    assert list(report.data.columns) == ["Test", "Name", "Ref.", "Statistic", "p-value", "Reject", "N"]
+    assert report.data.loc[0, "Test"] == "dm"
+    assert report.data.loc[0, "Name"] == "Diebold-Mariano"
+    assert report.data.loc[0, "Ref."] == "t"
+    assert report.data.loc[0, "p-value"].endswith("***")
+    assert report.data.loc[0, "Reject"] == "Yes"
+    assert "\\caption{Equal predictive ability tests}" in report.to_latex()
+    assert "Source" in with_source.data.columns
+    assert with_source.data.loc[0, "Source"].startswith("R: forecast/R/DM2.R")
+    assert provenance.data.loc[0, "R reference"] == "forecast/R/DM2.R::dm.test"
+    assert "Partial alignment" in provenance.data.loc[0, "Alignment"]
+    assert "No exact R comparator" in provenance.data.loc[1, "Alignment"]
+
+
+def test_metric_report_tables_format_evaluation_reports_for_papers() -> None:
+    rows: list[dict[str, object]] = []
+    for horizon in (1, 2):
+        for date_pos, date in enumerate(pd.date_range("2020-01-31", periods=4, freq="ME")):
+            actual = 1.0 + date_pos + horizon
+            for model, offset in {"model_a": 0.1, "model_b": 0.4, "bench": 0.8}.items():
+                rows.append(
+                    {
+                        "date": date,
+                        "model": model,
+                        "horizon": horizon,
+                        "actual": actual,
+                        "prediction": actual + offset,
+                    }
+                )
+    report = mf.evaluation.evaluate_report(
+        pd.DataFrame(rows),
+        metrics=("mse", "rmse", "mae", "relative_mse", "r2_oos"),
+        benchmark_model="bench",
+        include_decomposition=True,
+    )
+
+    scores = mf.reporting.metric_report_table(
+        report,
+        columns=("model", "horizon", "rmse", "r2_oos"),
+        percent_columns=("r2_oos",),
+        caption="Forecast accuracy",
+    )
+    benchmark = mf.reporting.metric_report_table(report, table="benchmark")
+    bundle = mf.reporting.evaluation_report_tables(
+        report,
+        include=("scores", "ranking", "benchmark", "decomposition"),
+        include_aggregations=True,
+        percent_columns=("r2_oos",),
+    )
+
+    assert list(scores.data.columns) == ["Model", "H", "RMSE", "R2 OOS"]
+    model_a_h1 = scores.data.loc[(scores.data["Model"] == "model_a") & (scores.data["H"] == "1")].iloc[0]
+    assert model_a_h1["RMSE"] == "0.100"
+    assert model_a_h1["R2 OOS"] == "98.438%"
+    assert "\\caption{Forecast accuracy}" in scores.to_latex()
+    assert "Relative MSE" in benchmark.data.columns
+    assert {"scores", "ranking", "benchmark", "decomposition"}.issubset(bundle.tables)
+    assert any(name.startswith("aggregation_") for name in bundle.tables)
+    assert bundle.metadata["source_kind"] == "evaluation_report_tables"
+
+
 def test_reporting_exports_are_available_at_top_level() -> None:
     assert mf.report_table is mf.reporting.report_table
     assert mf.latex_table is mf.reporting.latex_table
+    assert mf.metric_report_table is mf.reporting.metric_report_table
+    assert mf.evaluation_report_tables is mf.reporting.evaluation_report_tables
+    assert mf.test_report_table is mf.reporting.test_report_table
+    assert mf.test_provenance_table is mf.reporting.test_provenance_table

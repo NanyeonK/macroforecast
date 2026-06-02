@@ -461,6 +461,8 @@ result = mf.model_selection.select_params(
 - each split must contain non-empty train and validation integer positions
 - positions must be inside `X`/`y`
 - train and validation positions cannot overlap
+- train positions must precede validation positions; explicit splits are still
+  temporal validation splits, not random iid folds
 - boolean masks are allowed only when mask length equals the aligned sample
 
 `SearchResult.window` is `"explicit_splits"` when `splits` is used. Metadata
